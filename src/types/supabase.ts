@@ -65,6 +65,43 @@ export interface Database extends SupabaseDatabase {
         };
         Relationships: [];
       };
+      leave_calendar: {
+        Row: {
+          id: string;
+          employee_id: string;
+          type: string;
+          start_date: string;
+          end_date: string;
+          status: string;
+          notes?: string | null;
+        };
+        Insert: {
+          id?: string;
+          employee_id: string;
+          type: string;
+          start_date: string;
+          end_date: string;
+          status?: string;
+          notes?: string | null;
+        };
+        Update: {
+          id?: string;
+          employee_id?: string;
+          type?: string;
+          start_date?: string;
+          end_date?: string;
+          status?: string;
+          notes?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "leave_calendar_employee_id_fkey";
+            columns: ["employee_id"];
+            referencedRelation: "employees";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: SupabaseDatabase['public']['Views'];
     Functions: SupabaseDatabase['public']['Functions'];

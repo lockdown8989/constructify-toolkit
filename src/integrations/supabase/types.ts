@@ -69,6 +69,44 @@ export type Database = {
         }
         Relationships: []
       }
+      leave_calendar: {
+        Row: {
+          employee_id: string
+          end_date: string
+          id: string
+          notes: string | null
+          start_date: string
+          status: string
+          type: string
+        }
+        Insert: {
+          employee_id: string
+          end_date: string
+          id?: string
+          notes?: string | null
+          start_date: string
+          status?: string
+          type: string
+        }
+        Update: {
+          employee_id?: string
+          end_date?: string
+          id?: string
+          notes?: string | null
+          start_date?: string
+          status?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_calendar_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
