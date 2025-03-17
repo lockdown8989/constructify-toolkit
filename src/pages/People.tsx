@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import PeopleTable from '@/components/people/PeopleTable';
 import { Plus, Search, AlertCircle } from 'lucide-react';
@@ -34,11 +35,20 @@ const People = () => {
     statusColor: employee.status === 'Active' ? 'green' as const : 'gray' as const,
   }));
   
-  const filteredEmployees = formattedEmployees.filter(employee => 
-    employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    employee.jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    employee.department.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Enhanced filtering logic to include all relevant fields
+  const filteredEmployees = formattedEmployees.filter(employee => {
+    const query = searchQuery.toLowerCase();
+    return (
+      employee.name.toLowerCase().includes(query) ||
+      employee.jobTitle.toLowerCase().includes(query) ||
+      employee.department.toLowerCase().includes(query) ||
+      employee.site.toLowerCase().includes(query) ||
+      employee.lifecycle.toLowerCase().includes(query) ||
+      employee.status.toLowerCase().includes(query) ||
+      employee.salary.toLowerCase().includes(query) ||
+      employee.startDate.toLowerCase().includes(query)
+    );
+  });
   
   const handleAddPerson = () => {
     toast({
@@ -83,7 +93,7 @@ const People = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search people..."
+              placeholder="Search across all employee fields..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 pr-4 py-2 rounded-full bg-gray-100 text-sm w-full focus:outline-none focus:ring-2 focus:ring-gray-200"

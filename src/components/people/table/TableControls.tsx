@@ -4,9 +4,15 @@ import { Search, Plus, SlidersHorizontal, Download } from 'lucide-react';
 
 interface TableControlsProps {
   isMobile: boolean;
+  searchQuery?: string;
+  onSearchChange?: (value: string) => void;
 }
 
-const TableControls: React.FC<TableControlsProps> = ({ isMobile }) => {
+const TableControls: React.FC<TableControlsProps> = ({ 
+  isMobile, 
+  searchQuery = '', 
+  onSearchChange 
+}) => {
   return (
     <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
       {!isMobile && (
@@ -63,8 +69,10 @@ const TableControls: React.FC<TableControlsProps> = ({ isMobile }) => {
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
           type="text"
-          placeholder="Search"
+          placeholder="Search all fields (name, title, status, etc.)"
           className="pl-9 pr-4 py-2 rounded-full bg-gray-100 text-sm w-full sm:w-[300px] focus:outline-none focus:ring-2 focus:ring-gray-200"
+          value={searchQuery}
+          onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
         />
       </div>
       

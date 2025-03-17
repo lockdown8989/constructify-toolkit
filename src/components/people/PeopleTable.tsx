@@ -16,6 +16,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
 }) => {
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const isMobile = useIsMobile();
   
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,7 +54,11 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
   return (
     <div className={cn("bg-white rounded-3xl card-shadow", className)}>
       {/* Table controls */}
-      <TableControls isMobile={isMobile} />
+      <TableControls 
+        isMobile={isMobile} 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
       
       {/* Desktop Table */}
       {!isMobile && (
