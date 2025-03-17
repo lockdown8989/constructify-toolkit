@@ -2,12 +2,20 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Employee } from '../types';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, CheckCircle, XCircle, Mail, Users } from 'lucide-react';
 
 interface EmployeeTableRowProps {
   employee: Employee;
   isSelected: boolean;
   onSelect: (id: string) => void;
   onRowClick?: (employee: Employee) => void;
+  onStatusChange?: (id: string, status: string) => void;
 }
 
 const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
@@ -15,16 +23,24 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
   isSelected,
   onSelect,
   onRowClick,
+  onStatusChange,
 }) => {
   const handleRowClick = (e: React.MouseEvent) => {
-    // Don't trigger row click when clicking the checkbox
+    // Don't trigger row click when clicking the checkbox or dropdown
     if ((e.target as HTMLElement).tagName === 'INPUT' || 
-        (e.target as HTMLElement).closest('input[type="checkbox"]')) {
+        (e.target as HTMLElement).closest('input[type="checkbox"]') ||
+        (e.target as HTMLElement).closest('[data-dropdown]')) {
       return;
     }
     
     if (onRowClick) {
       onRowClick(employee);
+    }
+  };
+
+  const handleStatusChange = (status: string) => {
+    if (onStatusChange) {
+      onStatusChange(employee.id, status);
     }
   };
 
@@ -72,13 +88,43 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
       <td className="py-4 px-6 text-gray-600">{employee.startDate}</td>
       <td className="py-4 px-6 text-gray-600">{employee.lifecycle}</td>
       <td className="py-4 px-6">
-        <span className={cn(
-          "inline-block px-3 py-1 rounded-full text-xs font-medium",
-          employee.statusColor === 'green' && "bg-crextio-success/20 text-green-700",
-          employee.statusColor === 'gray' && "bg-gray-200 text-gray-700"
-        )}>
-          {employee.status}
-        </span>
+        <div className="flex items-center justify-between">
+          <span className={cn(
+            "inline-block px-3 py-1 rounded-full text-xs font-medium",
+            employee.statusColor === 'green' && "bg-crextio-success/20 text-green-700",
+            employee.statusColor === 'gray' && "bg-gray-200 text-gray-700"
+          )}>
+            {employee.status}
+          </span>
+          
+          {onStatusChange && (
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()} data-dropdown>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100">
+                  <MoreHorizontal className="w-4 h-4 text-gray-500" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleStatusChange('Active')}>
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                    <span>Set as Active</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStatusChange('Inactive')}>
+                    <XCircle className="mr-2 h-4 w-4 text-gray-500" />
+                    <span>Set as Inactive</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStatusChange('Invited')}>
+                    <Mail className="mr-2 h-4 w-4 text-blue-500" />
+                    <span>Set as Invited</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStatusChange('Absent')}>
+                    <Users className="mr-2 h-4 w-4 text-orange-500" />
+                    <span>Set as Absent</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+        </div>
       </td>
     </tr>
   );

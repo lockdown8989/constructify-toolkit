@@ -12,6 +12,7 @@ import { PeopleTableProps } from './types';
 const PeopleTable: React.FC<PeopleTableProps> = ({
   employees,
   onSelectEmployee,
+  onUpdateStatus,
   className,
   isLoading = false
 }) => {
@@ -54,6 +55,12 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
+
+  const handleStatusChange = (id: string, status: string) => {
+    if (onUpdateStatus) {
+      onUpdateStatus(id, status);
+    }
+  };
   
   if (isLoading) {
     return (
@@ -70,6 +77,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
         isMobile={isMobile} 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        selectedCount={selectedEmployees.length}
       />
       
       {/* Desktop Table */}
@@ -80,6 +88,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
           onSelectEmployee={handleSelectEmployee}
           onSelectAll={handleSelectAll}
           onEmployeeClick={handleEmployeeClick}
+          onStatusChange={handleStatusChange}
         />
       )}
       
@@ -92,6 +101,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
           onSelectEmployee={handleSelectEmployee}
           onToggleExpand={toggleExpandEmployee}
           onEmployeeClick={handleEmployeeClick}
+          onStatusChange={handleStatusChange}
         />
       )}
 
@@ -100,6 +110,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
         employee={selectedEmployeeDetails}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+        onStatusChange={handleStatusChange}
       />
     </div>
   );

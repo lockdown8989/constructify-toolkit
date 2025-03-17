@@ -11,6 +11,7 @@ interface DesktopTableProps {
   onSelectEmployee: (id: string) => void;
   onSelectAll: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onEmployeeClick?: (employee: Employee) => void;
+  onStatusChange?: (id: string, status: string) => void;
 }
 
 const DesktopTable: React.FC<DesktopTableProps> = ({
@@ -19,6 +20,7 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
   onSelectEmployee,
   onSelectAll,
   onEmployeeClick,
+  onStatusChange,
 }) => {
   return (
     <div className="overflow-x-auto">
@@ -43,6 +45,7 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
                 isSelected={selectedEmployees.includes(employee.id)}
                 onSelect={onSelectEmployee}
                 onRowClick={onEmployeeClick}
+                onStatusChange={onStatusChange}
               />
             ))
           )}

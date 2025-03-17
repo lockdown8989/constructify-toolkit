@@ -18,6 +18,7 @@ export interface Employee {
 export interface PeopleTableProps {
   employees: Employee[];
   onSelectEmployee?: (id: string) => void;
+  onUpdateStatus?: (id: string, status: string) => void;
   className?: string;
   isLoading?: boolean;
 }

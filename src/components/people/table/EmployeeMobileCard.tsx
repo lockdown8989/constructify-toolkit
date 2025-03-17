@@ -1,8 +1,14 @@
 
 import React from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, MoreVertical, CheckCircle, XCircle, Mail, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Employee } from '../types';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface EmployeeMobileCardProps {
   employee: Employee;
@@ -11,6 +17,7 @@ interface EmployeeMobileCardProps {
   onSelect: (id: string) => void;
   onToggleExpand: (id: string) => void;
   onCardClick?: (employee: Employee) => void;
+  onStatusChange?: (id: string, status: string) => void;
 }
 
 const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
@@ -20,17 +27,25 @@ const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
   onSelect,
   onToggleExpand,
   onCardClick,
+  onStatusChange,
 }) => {
   const handleCardClick = (e: React.MouseEvent) => {
-    // Don't trigger card click when clicking the checkbox or expand button
+    // Don't trigger card click when clicking the checkbox, expand button, or dropdown
     if ((e.target as HTMLElement).tagName === 'INPUT' || 
         (e.target as HTMLElement).closest('input[type="checkbox"]') ||
-        (e.target as HTMLElement).closest('button')) {
+        (e.target as HTMLElement).closest('button') ||
+        (e.target as HTMLElement).closest('[data-dropdown]')) {
       return;
     }
     
     if (onCardClick) {
       onCardClick(employee);
+    }
+  };
+
+  const handleStatusChange = (status: string) => {
+    if (onStatusChange) {
+      onStatusChange(employee.id, status);
     }
   };
 
@@ -63,20 +78,50 @@ const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
           </div>
         </div>
         
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleExpand(employee.id);
-          }}
-          className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100"
-        >
-          <ChevronRight 
-            className={cn(
-              "w-4 h-4 text-gray-600 transition-transform",
-              isExpanded ? "transform rotate-90" : ""
-            )} 
-          />
-        </button>
+        <div className="flex items-center space-x-2">
+          {onStatusChange && (
+            <div onClick={e => e.stopPropagation()} data-dropdown>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100">
+                  <MoreVertical className="w-4 h-4 text-gray-500" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleStatusChange('Active')}>
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                    <span>Set as Active</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStatusChange('Inactive')}>
+                    <XCircle className="mr-2 h-4 w-4 text-gray-500" />
+                    <span>Set as Inactive</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStatusChange('Invited')}>
+                    <Mail className="mr-2 h-4 w-4 text-blue-500" />
+                    <span>Set as Invited</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStatusChange('Absent')}>
+                    <Users className="mr-2 h-4 w-4 text-orange-500" />
+                    <span>Set as Absent</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+          
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleExpand(employee.id);
+            }}
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100"
+          >
+            <ChevronRight 
+              className={cn(
+                "w-4 h-4 text-gray-600 transition-transform",
+                isExpanded ? "transform rotate-90" : ""
+              )} 
+            />
+          </button>
+        </div>
       </div>
       
       {isExpanded && (

@@ -11,6 +11,7 @@ interface MobileTableProps {
   onSelectEmployee: (id: string) => void;
   onToggleExpand: (id: string) => void;
   onEmployeeClick?: (employee: Employee) => void;
+  onStatusChange?: (id: string, status: string) => void;
 }
 
 const MobileTable: React.FC<MobileTableProps> = ({
@@ -20,6 +21,7 @@ const MobileTable: React.FC<MobileTableProps> = ({
   onSelectEmployee,
   onToggleExpand,
   onEmployeeClick,
+  onStatusChange,
 }) => {
   return (
     <div className="divide-y divide-gray-100">
@@ -37,6 +39,7 @@ const MobileTable: React.FC<MobileTableProps> = ({
             onSelect={onSelectEmployee}
             onToggleExpand={onToggleExpand}
             onCardClick={onEmployeeClick}
+            onStatusChange={onStatusChange}
           />
         ))
       )}
