@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import ProgressBar from '@/components/dashboard/ProgressBar';
 import StatCard from '@/components/dashboard/StatCard';
@@ -7,8 +8,11 @@ import AttendanceReport from '@/components/dashboard/AttendanceReport';
 import HiringStatistics from '@/components/dashboard/HiringStatistics';
 import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
 import { Users, Briefcase, FolderOpen } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Dashboard = () => {
+  const isMobile = useIsMobile();
+  
   // Sample data
   const sampleMeetings = [
     { id: '1', title: 'Daily Sync', time: '09:30', date: new Date(), dotColor: 'yellow' as const },
@@ -65,12 +69,12 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="pt-24 px-6 pb-10 animate-fade-in">
+    <div className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
       <div className="max-w-[1800px] mx-auto">
-        <h1 className="text-4xl font-bold mb-2">Hello Valentina</h1>
+        <h1 className="text-2xl md:text-4xl font-bold mb-2">Hello Valentina</h1>
         
         {/* Progress Bars */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <ProgressBar label="Interviews" value={70} color="black" />
           <ProgressBar label="Hired" value={10} color="yellow" />
           <ProgressBar label="Project time" value={15} color="gray" />
@@ -78,8 +82,8 @@ const Dashboard = () => {
         </div>
         
         {/* Stats */}
-        <div className="flex flex-wrap -mx-3 mb-6">
-          <div className="w-1/3 px-3">
+        <div className="flex flex-wrap -mx-2 mb-6">
+          <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
             <StatCard 
               title="Employee" 
               value="91" 
@@ -87,7 +91,7 @@ const Dashboard = () => {
               className="h-full"
             />
           </div>
-          <div className="w-1/3 px-3">
+          <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
             <StatCard 
               title="Hirings" 
               value="104" 
@@ -95,7 +99,7 @@ const Dashboard = () => {
               className="h-full"
             />
           </div>
-          <div className="w-1/3 px-3">
+          <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
             <StatCard 
               title="Projects" 
               value="185" 
@@ -106,14 +110,14 @@ const Dashboard = () => {
         </div>
         
         {/* Main Content */}
-        <div className="grid grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column */}
-          <div className="col-span-3">
+          <div className="lg:col-span-3">
             <Calendar meetings={sampleMeetings} />
           </div>
           
           {/* Middle Column */}
-          <div className="col-span-5">
+          <div className="lg:col-span-5">
             <SalaryTable 
               employees={sampleEmployees.map(emp => ({
                 ...emp,
@@ -124,10 +128,10 @@ const Dashboard = () => {
           </div>
           
           {/* Right Column */}
-          <div className="col-span-4">
+          <div className="lg:col-span-4">
             <AttendanceReport present={63} absent={12} className="mb-6" />
             
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <HiringStatistics data={hiringData} className="col-span-1" />
               <EmployeeComposition 
                 total={345} 
