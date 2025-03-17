@@ -41,6 +41,30 @@ export type Database = {
           },
         ]
       }
+      employee_composition: {
+        Row: {
+          female_percentage: number | null
+          id: string
+          male_percentage: number | null
+          total_employees: number
+          updated_at: string
+        }
+        Insert: {
+          female_percentage?: number | null
+          id?: string
+          male_percentage?: number | null
+          total_employees: number
+          updated_at?: string
+        }
+        Update: {
+          female_percentage?: number | null
+          id?: string
+          male_percentage?: number | null
+          total_employees?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       employees: {
         Row: {
           annual_leave_days: number | null
@@ -239,6 +263,41 @@ export type Database = {
           priority?: string
         }
         Relationships: []
+      }
+      schedules: {
+        Row: {
+          created_at: string
+          employee_id: string | null
+          end_time: string
+          id: string
+          start_time: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id?: string | null
+          end_time: string
+          id?: string
+          start_time: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string | null
+          end_time?: string
+          id?: string
+          start_time?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedules_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

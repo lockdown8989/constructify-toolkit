@@ -35,3 +35,20 @@ export interface AttendanceModel {
   check_out?: string;
   status: string;
 }
+
+export interface ScheduleModel {
+  id: string;
+  employee_id: string;
+  title: string;
+  start_time: string;
+  end_time: string;
+  created_at: string;
+}
+
+export interface EmployeeCompositionModel {
+  id: string;
+  total_employees: number;
+  male_percentage: number;
+  female_percentage: number;
+  updated_at: string;
+}

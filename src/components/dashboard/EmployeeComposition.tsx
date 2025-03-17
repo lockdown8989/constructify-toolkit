@@ -3,23 +3,28 @@ import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 import { MapPin, Users } from 'lucide-react';
+import { useEmployeeComposition } from '@/hooks/use-employee-composition';
 
 interface EmployeeCompositionProps {
-  total: number;
-  femalePercentage: number;
-  malePercentage: number;
   className?: string;
 }
 
-const EmployeeComposition: React.FC<EmployeeCompositionProps> = ({
-  total,
-  femalePercentage,
-  malePercentage,
-  className
-}) => {
+const EmployeeComposition: React.FC<EmployeeCompositionProps> = ({ className }) => {
+  const { data: compositionData, isLoading } = useEmployeeComposition();
+  
+  if (isLoading || !compositionData) {
+    return (
+      <div className={cn("bg-white rounded-3xl p-6 card-shadow h-72 flex items-center justify-center", className)}>
+        <div className="text-gray-500">Loading employee composition data...</div>
+      </div>
+    );
+  }
+  
+  const { total_employees, male_percentage, female_percentage } = compositionData;
+  
   const data = [
-    { name: 'Female', value: femalePercentage },
-    { name: 'Male', value: malePercentage }
+    { name: 'Female', value: female_percentage },
+    { name: 'Male', value: male_percentage }
   ];
   
   const COLORS = ['#FFCB45', '#000000'];
@@ -52,7 +57,7 @@ const EmployeeComposition: React.FC<EmployeeCompositionProps> = ({
           </ResponsiveContainer>
           
           <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
-            <span className="text-4xl font-semibold">{total}</span>
+            <span className="text-4xl font-semibold">{total_employees}</span>
             <span className="text-sm text-gray-500">Total</span>
           </div>
         </div>
@@ -60,12 +65,12 @@ const EmployeeComposition: React.FC<EmployeeCompositionProps> = ({
         <div className="flex justify-around w-full">
           <div className="flex items-center space-x-2">
             <span className="inline-block w-3 h-3 rounded-full bg-crextio-accent"></span>
-            <span className="text-lg font-medium">{femalePercentage}%</span>
+            <span className="text-lg font-medium">{female_percentage}%</span>
             <MapPin className="w-4 h-4 text-gray-400" />
           </div>
           <div className="flex items-center space-x-2">
             <span className="inline-block w-3 h-3 rounded-full bg-black"></span>
-            <span className="text-lg font-medium">{malePercentage}%</span>
+            <span className="text-lg font-medium">{male_percentage}%</span>
             <Users className="w-4 h-4 text-gray-400" />
           </div>
         </div>

@@ -20,7 +20,7 @@ const ScheduleList = ({
   className 
 }: ScheduleListProps) => {
   const sortedSchedules = [...schedules].sort((a, b) => {
-    return new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime();
+    return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
   });
 
   return (
@@ -45,16 +45,12 @@ const ScheduleList = ({
               className="flex items-start border-l-4 border-blue-500 pl-4 py-2"
             >
               <div className="mr-4 mt-1">
-                {schedule.status === 'Completed' ? (
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                ) : (
-                  <Clock className="h-5 w-5 text-amber-500" />
-                )}
+                <Clock className="h-5 w-5 text-amber-500" />
               </div>
               <div className="flex-1">
-                <h3 className="font-medium">{schedule.task}</h3>
+                <h3 className="font-medium">{schedule.title}</h3>
                 <p className="text-sm text-gray-500">
-                  {format(parseISO(`${schedule.date}T${schedule.time}`), 'h:mm a')}
+                  {format(parseISO(schedule.start_time), 'h:mm a')} - {format(parseISO(schedule.end_time), 'h:mm a')}
                 </p>
                 <p className="text-sm text-gray-500">
                   Assigned to: {employeeNames[schedule.employee_id] || 'Unknown'}

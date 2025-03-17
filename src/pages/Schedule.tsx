@@ -1,16 +1,36 @@
+
 import React, { useState, useEffect } from 'react';
-import MeetingSchedule from '@/components/dashboard/MeetingSchedule';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { useEmployees } from '@/hooks/use-employees';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useSchedules } from '@/hooks/use-schedules';
+import { useSchedules, useCreateSchedule } from '@/hooks/use-schedules';
 import ScheduleList from '@/components/schedule/ScheduleList';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface Meeting {
+  id: string;
+  title: string;
+  time: string;
+  participants: string[];
+  location?: string;
+}
 
 const SAMPLE_MEETINGS = [
   {
@@ -48,20 +68,21 @@ const SchedulePage = () => {
   const { data: employees = [] } = useEmployees();
   const { toast } = useToast();
   const { isAdmin, isHR } = useAuth();
+  const [isAddScheduleOpen, setIsAddScheduleOpen] = useState(false);
+  const [newSchedule, setNewSchedule] = useState({
+    title: '',
+    employeeId: '',
+    startTime: '',
+    endTime: ''
+  });
   
   const { data: schedules = [], isLoading: schedulesLoading, refetch: refetchSchedules } = useSchedules(date);
+  const { createSchedule } = useCreateSchedule();
   
   const employeeNames = employees.reduce<Record<string, string>>((acc, employee) => {
     acc[employee.id] = employee.name;
     return acc;
   }, {});
-  
-  const handleAddMeeting = () => {
-    toast({
-      title: "Feature coming soon",
-      description: "The ability to add new meetings will be available soon.",
-    });
-  };
   
   const handleAddSchedule = async () => {
     if (!isAdmin && !isHR) {
@@ -73,34 +94,41 @@ const SchedulePage = () => {
       return;
     }
     
-    if (employees.length === 0) {
+    setIsAddScheduleOpen(true);
+  };
+  
+  const handleSubmitSchedule = async () => {
+    if (!newSchedule.title || !newSchedule.employeeId || !newSchedule.startTime || !newSchedule.endTime) {
       toast({
-        title: "No employees found",
-        description: "Please add employees before creating schedules.",
+        title: "Invalid schedule details",
+        description: "Please fill in all required fields.",
         variant: "destructive",
       });
       return;
     }
     
-    const randomEmployee = employees[Math.floor(Math.random() * employees.length)];
-    
     try {
-      const { error } = await supabase.from('schedules').insert({
-        employee_id: randomEmployee.id,
-        date: date?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
-        task: 'New Task ' + new Date().toLocaleTimeString(),
-        time: new Date().toTimeString().split(' ')[0],
-        status: 'Pending'
-      });
+      const selectedDate = date ? format(date, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
       
-      if (error) throw error;
+      const schedule = {
+        employee_id: newSchedule.employeeId,
+        title: newSchedule.title,
+        start_time: `${selectedDate}T${newSchedule.startTime}:00`,
+        end_time: `${selectedDate}T${newSchedule.endTime}:00`
+      };
       
-      toast({
-        title: "Schedule created",
-        description: "A new schedule has been added.",
-      });
+      const result = await createSchedule(schedule);
       
-      refetchSchedules();
+      if (result) {
+        setNewSchedule({
+          title: '',
+          employeeId: '',
+          startTime: '',
+          endTime: ''
+        });
+        setIsAddScheduleOpen(false);
+        refetchSchedules();
+      }
     } catch (error: any) {
       toast({
         title: "Failed to create schedule",
@@ -108,6 +136,13 @@ const SchedulePage = () => {
         variant: "destructive",
       });
     }
+  };
+  
+  const handleAddMeeting = () => {
+    toast({
+      title: "Feature coming soon",
+      description: "The ability to add new meetings will be available soon.",
+    });
   };
   
   return (
@@ -142,9 +177,9 @@ const SchedulePage = () => {
                     {schedules.map(schedule => (
                       <li key={schedule.id} className="flex items-center">
                         <span className="w-16 text-sm text-gray-500">
-                          {format(new Date(`${schedule.date}T${schedule.time}`), 'h:mm a')}
+                          {format(new Date(schedule.start_time), 'h:mm a')}
                         </span>
-                        <span className="flex-1">{schedule.task}</span>
+                        <span className="flex-1">{schedule.title}</span>
                         <span className="text-sm text-gray-500">
                           {employeeNames[schedule.employee_id] || 'Unknown'}
                         </span>
@@ -170,10 +205,57 @@ const SchedulePage = () => {
             </div>
             
             <div className="md:col-span-1">
-              <MeetingSchedule 
-                meetings={SAMPLE_MEETINGS}
-                onAddMeeting={handleAddMeeting}
-              />
+              <div className="bg-white rounded-3xl p-6 card-shadow">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <h3 className="text-lg sm:text-xl font-medium">Meeting Schedule</h3>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full"
+                    onClick={handleAddMeeting}
+                  >
+                    <PlusCircle className="mr-1 h-4 w-4" />
+                    <span className="hidden sm:inline">Add Meeting</span>
+                  </Button>
+                </div>
+                
+                <div className="space-y-4">
+                  {SAMPLE_MEETINGS.map(meeting => {
+                    const [meetingDate] = meeting.time.split(" ");
+                    const isToday = meetingDate === format(new Date(), 'yyyy-MM-dd');
+                    const isTomorrow = meetingDate === format(new Date(new Date().setDate(new Date().getDate() + 1)), 'yyyy-MM-dd');
+                    const isAfterTomorrow = meetingDate === format(new Date(new Date().setDate(new Date().getDate() + 2)), 'yyyy-MM-dd');
+                    
+                    if (!isToday && !isTomorrow && !isAfterTomorrow) return null;
+                    
+                    return (
+                      <div 
+                        key={meeting.id}
+                        className="bg-white p-3 rounded-lg shadow-sm border border-gray-100"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-medium">{meeting.title}</h4>
+                          <div className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded">
+                            {isToday ? "Today" : isTomorrow ? "Tomorrow" : "In 2 days"}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center text-gray-500 text-xs mb-2">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {meeting.time.split(" ")[1]}
+                        </div>
+                        
+                        {meeting.location && (
+                          <div className="text-sm text-gray-500 mb-2">
+                            {meeting.location}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </TabsContent>
@@ -209,6 +291,87 @@ const SchedulePage = () => {
           </div>
         </TabsContent>
       </Tabs>
+      
+      <Dialog open={isAddScheduleOpen} onOpenChange={setIsAddScheduleOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Schedule</DialogTitle>
+            <DialogDescription>
+              Create a new schedule for an employee on {date ? format(date, 'MMMM d, yyyy') : 'the selected date'}.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="title" className="text-right">
+                Title
+              </Label>
+              <Input
+                id="title"
+                value={newSchedule.title}
+                onChange={(e) => setNewSchedule({ ...newSchedule, title: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="employee" className="text-right">
+                Employee
+              </Label>
+              <Select 
+                value={newSchedule.employeeId} 
+                onValueChange={(value) => setNewSchedule({ ...newSchedule, employeeId: value })}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select an employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map(employee => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="startTime" className="text-right">
+                Start Time
+              </Label>
+              <Input
+                id="startTime"
+                type="time"
+                value={newSchedule.startTime}
+                onChange={(e) => setNewSchedule({ ...newSchedule, startTime: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="endTime" className="text-right">
+                End Time
+              </Label>
+              <Input
+                id="endTime"
+                type="time"
+                value={newSchedule.endTime}
+                onChange={(e) => setNewSchedule({ ...newSchedule, endTime: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddScheduleOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitSchedule}>
+              Create Schedule
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

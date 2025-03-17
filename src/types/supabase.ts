@@ -1,4 +1,3 @@
-
 import type { Database as SupabaseDatabase } from '@/integrations/supabase/types';
 
 // Extend the Supabase Database type with our custom tables
@@ -240,28 +239,25 @@ export interface Database extends SupabaseDatabase {
         Row: {
           id: string;
           employee_id: string;
-          date: string;
-          task: string;
-          time: string;
-          status: 'Completed' | 'Pending';
+          title: string;
+          start_time: string;
+          end_time: string;
           created_at: string;
         };
         Insert: {
           id?: string;
           employee_id: string;
-          date: string;
-          task: string;
-          time: string;
-          status?: 'Completed' | 'Pending';
+          title: string;
+          start_time: string;
+          end_time: string;
           created_at?: string;
         };
         Update: {
           id?: string;
           employee_id?: string;
-          date?: string;
-          task?: string;
-          time?: string;
-          status?: 'Completed' | 'Pending';
+          title?: string;
+          start_time?: string;
+          end_time?: string;
           created_at?: string;
         };
         Relationships: [
@@ -273,6 +269,30 @@ export interface Database extends SupabaseDatabase {
             referencedColumns: ["id"];
           }
         ];
+      };
+      employee_composition: {
+        Row: {
+          id: string;
+          total_employees: number;
+          male_percentage: number;
+          female_percentage: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          total_employees: number;
+          male_percentage: number;
+          female_percentage: number;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          total_employees?: number;
+          male_percentage?: number;
+          female_percentage?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       user_roles: {
         Row: {
