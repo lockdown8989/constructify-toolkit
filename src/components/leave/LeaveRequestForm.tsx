@@ -1,46 +1,39 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { useAddLeaveCalendar } from "@/hooks/use-leave-calendar";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useProjectsForDepartment } from "@/hooks/use-projects";
+import { checkProjectConflicts, calculateBusinessDays } from "@/utils/leave-utils";
+import ProjectConflicts from "./ProjectConflicts";
+import type { ProjectConflict } from "@/utils/leave-utils";
 
 interface LeaveRequestFormProps {
   employeeId: string;
+  employeeDepartment: string;
 }
 
-const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({ employeeId }) => {
+const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({ 
+  employeeId,
+  employeeDepartment 
+}) => {
   const [leaveType, setLeaveType] = useState<string>("");
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [notes, setNotes] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [conflicts, setConflicts] = useState<ProjectConflict[]>([]);
+  const { data: departmentProjects = [] } = useProjectsForDepartment(employeeDepartment);
   
+  useEffect(() => {
+    if (startDate && endDate && departmentProjects.length > 0) {
+      const projectConflicts = checkProjectConflicts(startDate, endDate, departmentProjects);
+      setConflicts(projectConflicts);
+    }
+  }, [startDate, endDate, departmentProjects]);
+
   const { mutate: addLeave } = useAddLeaveCalendar();
   const { toast } = useToast();
   
@@ -65,20 +58,27 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({ employeeId }) => {
       return;
     }
     
+    const leaveDays = calculateBusinessDays(startDate, endDate);
+    
     setIsSubmitting(true);
     
-    // Format dates to ISO string format
     const formattedStartDate = format(startDate, "yyyy-MM-dd");
     const formattedEndDate = format(endDate, "yyyy-MM-dd");
     
-    // Create the leave request
+    const initialAuditLog = [{
+      action: 'REQUEST_CREATED',
+      timestamp: new Date().toISOString(),
+      details: `Request created for ${leaveDays} business days`
+    }];
+    
     addLeave(
       {
         employee_id: employeeId,
         type: leaveType,
         start_date: formattedStartDate,
         end_date: formattedEndDate,
-        notes: notes || null
+        notes: notes || null,
+        audit_log: initialAuditLog
       },
       {
         onSuccess: () => {
@@ -87,7 +87,6 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({ employeeId }) => {
             description: "Your leave request has been submitted successfully.",
           });
           
-          // Reset form
           setLeaveType("");
           setStartDate(undefined);
           setEndDate(undefined);
@@ -203,15 +202,25 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({ employeeId }) => {
               rows={4}
             />
           </div>
+          
+          {conflicts.length > 0 && (
+            <div className="space-y-2">
+              <Label>Potential Conflicts</Label>
+              <ProjectConflicts conflicts={conflicts} />
+            </div>
+          )}
         </CardContent>
         
         <CardFooter>
           <Button 
             type="submit" 
             className="w-full"
-            disabled={isSubmitting}
+            disabled={isSubmitting || conflicts.some(c => c.conflictSeverity === 'High')}
           >
-            {isSubmitting ? "Submitting..." : "Submit Request"}
+            {isSubmitting ? "Submitting..." : 
+             conflicts.some(c => c.conflictSeverity === 'High') ? 
+             "High Priority Conflict Detected" : 
+             "Submit Request"}
           </Button>
         </CardFooter>
       </form>

@@ -17,6 +17,8 @@ export interface Database extends SupabaseDatabase {
           lifecycle: string;
           status: string;
           avatar: string | null;
+          annual_leave_days: number;
+          sick_leave_days: number;
         };
         Insert: {
           id?: string;
@@ -29,6 +31,8 @@ export interface Database extends SupabaseDatabase {
           lifecycle?: string;
           status?: string;
           avatar?: string | null;
+          annual_leave_days?: number;
+          sick_leave_days?: number;
         };
         Update: {
           id?: string;
@@ -41,6 +45,8 @@ export interface Database extends SupabaseDatabase {
           lifecycle?: string;
           status?: string;
           avatar?: string | null;
+          annual_leave_days?: number;
+          sick_leave_days?: number;
         };
         Relationships: [];
       };
@@ -74,6 +80,7 @@ export interface Database extends SupabaseDatabase {
           end_date: string;
           status: string;
           notes: string | null;
+          audit_log: any | null;
         };
         Insert: {
           id?: string;
@@ -83,6 +90,7 @@ export interface Database extends SupabaseDatabase {
           end_date: string;
           status?: string;
           notes?: string | null;
+          audit_log?: any | null;
         };
         Update: {
           id?: string;
@@ -92,6 +100,7 @@ export interface Database extends SupabaseDatabase {
           end_date?: string;
           status?: string;
           notes?: string | null;
+          audit_log?: any | null;
         };
         Relationships: [
           {
@@ -102,6 +111,33 @@ export interface Database extends SupabaseDatabase {
             referencedColumns: ["id"];
           }
         ];
+      };
+      projects: {
+        Row: {
+          id: string;
+          name: string;
+          deadline: string;
+          department: string;
+          priority: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          deadline: string;
+          department: string;
+          priority?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          deadline?: string;
+          department?: string;
+          priority?: string;
+          created_at?: string;
+        };
+        Relationships: [];
       };
     };
     Views: SupabaseDatabase['public']['Views'];
