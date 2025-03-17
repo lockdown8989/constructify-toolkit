@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import SalaryTable from '@/components/dashboard/SalaryTable';
 import { useEmployees } from '@/hooks/use-employees';
@@ -7,7 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { format, subMonths } from 'date-fns';
-import { DollarSign, Calendar, ArrowUpRight, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { DollarSign, Calendar, ArrowUpRight, Clock, CheckCircle, XCircle, Download } from 'lucide-react';
+import { exportToCSV } from '@/utils/export-utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EmployeeSalary {
   id: string;
@@ -22,14 +23,12 @@ interface EmployeeSalary {
 
 const calculateSalaries = (employees: any[]): EmployeeSalary[] => {
   return employees.map(employee => {
-    // Generate a random status weighted towards 'Paid'
     const statusRand = Math.random();
     let status: 'Paid' | 'Absent' | 'Pending';
     let paymentDate: string | undefined;
     
     if (statusRand < 0.7) {
       status = 'Paid';
-      // Random date in the past week
       const randomDay = Math.floor(Math.random() * 7);
       const date = new Date();
       date.setDate(date.getDate() - randomDay);
@@ -59,11 +58,10 @@ const PayrollPage = () => {
   const { data: employeesData = [] } = useEmployees();
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const [isExporting, setIsExporting] = useState(false);
   
-  // Transform employee data to include salary status
   const [employees, setEmployees] = useState<EmployeeSalary[]>([]);
   
-  // Update employee data when the fetched data changes
   React.useEffect(() => {
     if (employeesData.length > 0) {
       setEmployees(calculateSalaries(employeesData));
@@ -102,7 +100,6 @@ const PayrollPage = () => {
   };
   
   const handleProcessPayroll = () => {
-    // Update all selected employees to 'Paid' status
     if (selectedEmployees.size === 0) {
       toast({
         title: "No employees selected",
@@ -132,19 +129,85 @@ const PayrollPage = () => {
     });
   };
   
-  // Calculate statistics
+  const handleExportPayroll = async () => {
+    setIsExporting(true);
+    try {
+      const { data, error } = await supabase
+        .from("payroll")
+        .select(`
+          id,
+          net_salary,
+          payment_status,
+          payment_date,
+          employee_id,
+          employees(name, job_title)
+        `);
+
+      if (error) {
+        console.error("Error fetching payroll:", error);
+        toast({
+          title: "Export failed",
+          description: "Could not fetch payroll data for export.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        toast({
+          title: "No data to export",
+          description: "There is no payroll data available for export.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const exportData = data.map(row => ({
+        ID: row.id,
+        Employee: row.employees?.name || 'Unknown',
+        Position: row.employees?.job_title || 'Unknown',
+        'Employee ID': row.employee_id,
+        'Net Salary': row.net_salary,
+        'Payment Date': row.payment_date,
+        Status: row.payment_status
+      }));
+
+      exportToCSV(exportData, `payroll_report_${format(new Date(), 'yyyy-MM-dd')}`, {
+        ID: 'ID',
+        Employee: 'Employee Name',
+        Position: 'Job Title',
+        'Employee ID': 'Employee ID',
+        'Net Salary': 'Net Salary',
+        'Payment Date': 'Payment Date',
+        Status: 'Payment Status'
+      });
+
+      toast({
+        title: "Export successful",
+        description: "Payroll data has been exported to CSV.",
+      });
+    } catch (err) {
+      console.error("Error exporting payroll:", err);
+      toast({
+        title: "Export failed",
+        description: "An unexpected error occurred while exporting payroll data.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+  
   const totalEmployees = employees.length;
   const paidEmployees = employees.filter(e => e.status === 'Paid').length;
   const pendingEmployees = employees.filter(e => e.status === 'Pending').length;
   const absentEmployees = employees.filter(e => e.status === 'Absent').length;
   
-  // Calculate total payroll amount
   const totalPayroll = employees.reduce((sum, emp) => {
     const salary = parseInt(emp.salary.replace(/\$|,/g, ''), 10);
     return sum + (emp.status !== 'Absent' ? salary : 0);
   }, 0);
   
-  // Get current month and previous month for comparison
   const currentMonth = format(new Date(), 'MMMM yyyy');
   const previousMonth = format(subMonths(new Date(), 1), 'MMMM yyyy');
   
@@ -214,12 +277,21 @@ const PayrollPage = () => {
             <CardDescription className="text-gray-300">Quick Actions</CardDescription>
             <CardTitle className="text-xl">Process Payroll</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-2">
             <Button 
               className="w-full bg-white text-black hover:bg-gray-100"
               onClick={handleProcessPayroll}
             >
               Process Selected ({selectedEmployees.size})
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full border-white text-white hover:bg-white/10"
+              onClick={handleExportPayroll}
+              disabled={isExporting}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {isExporting ? 'Exporting...' : 'Export Payroll CSV'}
             </Button>
           </CardContent>
         </Card>
