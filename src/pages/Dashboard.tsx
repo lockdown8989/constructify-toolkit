@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import ProgressBar from '@/components/dashboard/ProgressBar';
 import StatCard from '@/components/dashboard/StatCard';
@@ -12,9 +11,9 @@ import { Users, Briefcase, FolderOpen } from 'lucide-react';
 const Dashboard = () => {
   // Sample data
   const sampleMeetings = [
-    { id: '1', title: 'Daily Sync', time: '09:30', date: new Date(), dotColor: 'yellow' },
-    { id: '2', title: 'Task Review With Team', time: '11:00', date: new Date(), dotColor: 'black' },
-    { id: '3', title: 'Daily Meeting', time: '12:00', date: new Date(), dotColor: 'yellow' },
+    { id: '1', title: 'Daily Sync', time: '09:30', date: new Date(), dotColor: 'yellow' as const },
+    { id: '2', title: 'Task Review With Team', time: '11:00', date: new Date(), dotColor: 'black' as const },
+    { id: '3', title: 'Daily Meeting', time: '12:00', date: new Date(), dotColor: 'yellow' as const },
   ];
   
   const sampleEmployees = [
