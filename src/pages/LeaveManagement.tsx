@@ -88,7 +88,7 @@ const LeaveManagement = () => {
         <TabsContent value="employee" className="space-y-4">
           <div className="max-w-md mx-auto">
             <LeaveRequestForm 
-              employeeId={currentEmployeeId} 
+              employeeId={currentEmployeeId}
               employeeDepartment={currentEmployeeDepartment}
             />
           </div>
