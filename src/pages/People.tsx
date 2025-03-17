@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import PeopleTable from '@/components/people/PeopleTable';
 import { Plus, Search, AlertCircle } from 'lucide-react';
@@ -32,7 +31,7 @@ const People = () => {
     }),
     lifecycle: employee.lifecycle,
     status: employee.status,
-    statusColor: employee.status === 'Active' ? 'green' : 'gray',
+    statusColor: employee.status === 'Active' ? 'green' as const : 'gray' as const,
   }));
   
   const filteredEmployees = formattedEmployees.filter(employee => 

@@ -31,7 +31,7 @@ const Dashboard = () => {
     avatar: emp.avatar || `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'women' : 'men'}/${Math.floor(Math.random() * 99)}.jpg`,
     title: emp.job_title,
     salary: `$${emp.salary.toLocaleString()}`,
-    status: emp.status === 'Active' ? 'Paid' : emp.status === 'Leave' ? 'Absent' : 'Pending'
+    status: emp.status === 'Active' ? 'Paid' as const : emp.status === 'Leave' ? 'Absent' as const : 'Pending' as const
   }));
   
   // Get interview statistics
