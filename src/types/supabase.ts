@@ -139,6 +139,57 @@ export interface Database extends SupabaseDatabase {
         };
         Relationships: [];
       };
+      profiles: {
+        Row: {
+          id: string;
+          first_name: string | null;
+          last_name: string | null;
+          position: string | null;
+          department: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id: string;
+          first_name?: string | null;
+          last_name?: string | null;
+          position?: string | null;
+          department?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          first_name?: string | null;
+          last_name?: string | null;
+          position?: string | null;
+          department?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      user_roles: {
+        Row: {
+          id: string;
+          user_id: string;
+          role: 'admin' | 'hr' | 'employee';
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          role?: 'admin' | 'hr' | 'employee';
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          role?: 'admin' | 'hr' | 'employee';
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: SupabaseDatabase['public']['Views'];
     Functions: SupabaseDatabase['public']['Functions'];
