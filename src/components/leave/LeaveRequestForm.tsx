@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { useAddLeaveCalendar } from "@/hooks/use-leave-calendar";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,25 @@ import { useProjectsForDepartment } from "@/hooks/use-projects";
 import { checkProjectConflicts, calculateBusinessDays } from "@/utils/leave-utils";
 import ProjectConflicts from "./ProjectConflicts";
 import type { ProjectConflict } from "@/utils/leave-utils";
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription, 
+  CardContent, 
+  CardFooter 
+} from "@/components/ui/card";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface LeaveRequestFormProps {
   employeeId: string;
@@ -154,7 +174,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar
+                  <CalendarComponent
                     mode="single"
                     selected={startDate}
                     onSelect={setStartDate}
@@ -181,7 +201,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar
+                  <CalendarComponent
                     mode="single"
                     selected={endDate}
                     onSelect={setEndDate}

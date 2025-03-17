@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       employees: {
         Row: {
+          annual_leave_days: number | null
           avatar: string | null
           department: string
           id: string
@@ -18,11 +19,13 @@ export type Database = {
           lifecycle: string
           name: string
           salary: number
+          sick_leave_days: number | null
           site: string
           start_date: string
           status: string
         }
         Insert: {
+          annual_leave_days?: number | null
           avatar?: string | null
           department: string
           id?: string
@@ -30,11 +33,13 @@ export type Database = {
           lifecycle?: string
           name: string
           salary: number
+          sick_leave_days?: number | null
           site: string
           start_date?: string
           status?: string
         }
         Update: {
+          annual_leave_days?: number | null
           avatar?: string | null
           department?: string
           id?: string
@@ -42,6 +47,7 @@ export type Database = {
           lifecycle?: string
           name?: string
           salary?: number
+          sick_leave_days?: number | null
           site?: string
           start_date?: string
           status?: string
@@ -71,6 +77,7 @@ export type Database = {
       }
       leave_calendar: {
         Row: {
+          audit_log: Json | null
           employee_id: string
           end_date: string
           id: string
@@ -80,6 +87,7 @@ export type Database = {
           type: string
         }
         Insert: {
+          audit_log?: Json | null
           employee_id: string
           end_date: string
           id?: string
@@ -89,6 +97,7 @@ export type Database = {
           type: string
         }
         Update: {
+          audit_log?: Json | null
           employee_id?: string
           end_date?: string
           id?: string
@@ -106,6 +115,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      projects: {
+        Row: {
+          created_at: string | null
+          deadline: string
+          department: string
+          id: string
+          name: string
+          priority: string
+        }
+        Insert: {
+          created_at?: string | null
+          deadline: string
+          department: string
+          id?: string
+          name: string
+          priority?: string
+        }
+        Update: {
+          created_at?: string | null
+          deadline?: string
+          department?: string
+          id?: string
+          name?: string
+          priority?: string
+        }
+        Relationships: []
       }
     }
     Views: {

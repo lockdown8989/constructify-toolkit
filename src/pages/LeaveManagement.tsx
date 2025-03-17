@@ -27,6 +27,9 @@ const LeaveManagement = () => {
      currentEmployee.job_title.toLowerCase().includes("director") ||
      currentEmployee.department === "HR");
   
+  // Get the current employee's department
+  const currentEmployeeDepartment = currentEmployee?.department || "Engineering";
+  
   // Set up real-time listener for leave calendar changes
   useEffect(() => {
     const channel = supabase
@@ -84,7 +87,10 @@ const LeaveManagement = () => {
         
         <TabsContent value="employee" className="space-y-4">
           <div className="max-w-md mx-auto">
-            <LeaveRequestForm employeeId={currentEmployeeId} />
+            <LeaveRequestForm 
+              employeeId={currentEmployeeId} 
+              employeeDepartment={currentEmployeeDepartment}
+            />
           </div>
         </TabsContent>
         
