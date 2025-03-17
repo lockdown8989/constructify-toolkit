@@ -6,12 +6,14 @@ interface TableControlsProps {
   isMobile: boolean;
   searchQuery?: string;
   onSearchChange?: (value: string) => void;
+  selectedCount?: number;
 }
 
 const TableControls: React.FC<TableControlsProps> = ({ 
   isMobile, 
   searchQuery = '', 
-  onSearchChange 
+  onSearchChange,
+  selectedCount = 0
 }) => {
   return (
     <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
