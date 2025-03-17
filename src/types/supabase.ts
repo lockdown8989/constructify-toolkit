@@ -1,3 +1,4 @@
+
 import type { Database as SupabaseDatabase } from '@/integrations/supabase/types';
 
 // Extend the Supabase Database type with our custom tables
@@ -118,21 +119,21 @@ export interface Database extends SupabaseDatabase {
         Row: {
           id: string;
           employee_id: string;
-          net_salary: number;
+          salary_paid: number;
           payment_status: string;
           payment_date: string;
         };
         Insert: {
           id?: string;
           employee_id: string;
-          net_salary: number;
+          salary_paid: number;
           payment_status?: string;
           payment_date?: string;
         };
         Update: {
           id?: string;
           employee_id?: string;
-          net_salary?: number;
+          salary_paid?: number;
           payment_status?: string;
           payment_date?: string;
         };
@@ -153,6 +154,7 @@ export interface Database extends SupabaseDatabase {
           check_in: string;
           check_out: string | null;
           status: string;
+          date: string;
         };
         Insert: {
           id?: string;
@@ -160,6 +162,7 @@ export interface Database extends SupabaseDatabase {
           check_in?: string;
           check_out?: string | null;
           status?: string;
+          date?: string;
         };
         Update: {
           id?: string;
@@ -167,6 +170,7 @@ export interface Database extends SupabaseDatabase {
           check_in?: string;
           check_out?: string | null;
           status?: string;
+          date?: string;
         };
         Relationships: [
           {

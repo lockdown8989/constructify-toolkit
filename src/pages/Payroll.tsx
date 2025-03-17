@@ -144,12 +144,12 @@ const PayrollPage = () => {
       // Record payment in payroll table
       const { error: payrollError } = await supabase
         .from('payroll')
-        .insert([{
+        .insert({
           employee_id: employeeId,
-          salary_paid: finalSalary, // Updated from net_salary to salary_paid
+          salary_paid: finalSalary,
           payment_status: 'Paid',
           payment_date: new Date().toISOString().split('T')[0]
-        }]);
+        });
 
       if (payrollError) {
         console.error('Error inserting payroll record:', payrollError);
@@ -242,7 +242,7 @@ const PayrollPage = () => {
         .from("payroll")
         .select(`
           id,
-          salary_paid, // Updated from net_salary to salary_paid
+          salary_paid,
           payment_status,
           payment_date,
           employee_id,
@@ -273,7 +273,7 @@ const PayrollPage = () => {
         Employee: row.employees?.name || 'Unknown',
         Position: row.employees?.job_title || 'Unknown',
         'Employee ID': row.employee_id,
-        'Salary Paid': row.salary_paid, // Updated from net_salary to salary_paid
+        'Salary Paid': row.salary_paid,
         'Payment Date': row.payment_date,
         Status: row.payment_status
       }));
@@ -283,7 +283,7 @@ const PayrollPage = () => {
         Employee: 'Employee Name',
         Position: 'Job Title',
         'Employee ID': 'Employee ID',
-        'Salary Paid': 'Salary Paid', // Updated from Net Salary to Salary Paid
+        'Salary Paid': 'Salary Paid',
         'Payment Date': 'Payment Date',
         Status: 'Payment Status'
       });
