@@ -42,6 +42,7 @@ export interface Database extends SupabaseDatabase {
           status?: string;
           avatar?: string | null;
         };
+        Relationships: [];
       };
       interviews: {
         Row: {
@@ -62,6 +63,7 @@ export interface Database extends SupabaseDatabase {
           progress?: number;
           stage?: string;
         };
+        Relationships: [];
       };
     };
     Views: SupabaseDatabase['public']['Views'];
