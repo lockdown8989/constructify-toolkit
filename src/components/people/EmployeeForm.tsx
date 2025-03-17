@@ -58,13 +58,14 @@ export function EmployeeForm({ defaultValues, employeeId, onSuccess }: EmployeeF
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),
-    defaultValues: defaultValues || {
+    defaultValues: {
       name: '',
       job_title: '',
       department: '',
       site: '',
       salary: 0,
       status: 'Pending',
+      ...defaultValues, // Apply any provided default values on top of the base defaults
     },
   });
 
@@ -80,7 +81,17 @@ export function EmployeeForm({ defaultValues, employeeId, onSuccess }: EmployeeF
           description: 'Employee information has been successfully updated.',
         });
       } else {
-        await addEmployee.mutateAsync(values);
+        // Ensure all required fields are present
+        const newEmployee = {
+          name: values.name,
+          job_title: values.job_title,
+          department: values.department,
+          site: values.site,
+          salary: values.salary,
+          status: values.status,
+        };
+        
+        await addEmployee.mutateAsync(newEmployee);
         toast({
           title: 'Employee added',
           description: 'New employee has been successfully added.',

@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEmployees } from '@/hooks/use-employees';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { Calendar, Clock, ClockCheck, UserCheck } from 'lucide-react';
+import { Calendar, Clock, CheckCheck, UserCheck } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,7 +33,6 @@ export function AttendanceTracker() {
   
   const today = format(new Date(), 'yyyy-MM-dd');
   
-  // Fetch today's attendance records
   const { data: attendanceRecords = [] } = useQuery({
     queryKey: ['attendance', today],
     queryFn: async () => {
@@ -51,7 +49,6 @@ export function AttendanceTracker() {
     }
   });
   
-  // Mark attendance mutation
   const markAttendanceMutation = useMutation({
     mutationFn: async ({ employeeId, status }: { employeeId: string; status: string }) => {
       const { data, error } = await supabase
@@ -82,7 +79,6 @@ export function AttendanceTracker() {
     }
   });
   
-  // Check-out mutation
   const checkOutMutation = useMutation({
     mutationFn: async (attendanceId: string) => {
       const { data, error } = await supabase
@@ -130,7 +126,6 @@ export function AttendanceTracker() {
     checkOutMutation.mutate(attendanceId);
   };
   
-  // Get employee name by ID
   const getEmployeeName = (id: string) => {
     const employee = employees.find(emp => emp.id === id);
     return employee ? employee.name : 'Unknown';
@@ -259,7 +254,7 @@ export function AttendanceTracker() {
                             onClick={() => handleCheckOut(record.id)}
                             disabled={checkOutMutation.isPending}
                           >
-                            <ClockCheck className="mr-1 h-4 w-4" />
+                            <CheckCheck className="mr-1 h-4 w-4" />
                             Check Out
                           </Button>
                         )}
