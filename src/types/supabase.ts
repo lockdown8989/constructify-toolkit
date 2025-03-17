@@ -97,6 +97,7 @@ export interface Database extends SupabaseDatabase {
           {
             foreignKeyName: "leave_calendar_employee_id_fkey";
             columns: ["employee_id"];
+            isOneToOne: false;
             referencedRelation: "employees";
             referencedColumns: ["id"];
           }

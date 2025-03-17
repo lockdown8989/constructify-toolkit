@@ -49,6 +49,15 @@ const LeaveApprovalDashboard: React.FC = () => {
   const { mutate: updateEmployee } = useUpdateEmployee();
   const { toast } = useToast();
   
+  // Mock current user for demo purposes
+  // In a real app, this would come from authentication context
+  const currentUser = {
+    id: "550e8400-e29b-41d4-a716-446655440000",
+    name: "Valentina Cortez",
+    department: "HR",
+    isManager: true
+  };
+  
   const [selectedEmployee, setSelectedEmployee] = useState<string>("all");
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -56,9 +65,17 @@ const LeaveApprovalDashboard: React.FC = () => {
   // Get only pending leave requests for the approval table
   const pendingLeaves = leaves.filter(leave => leave.status === "Pending");
   
-  // Apply filters
+  // Apply filters and security permissions
   const filteredLeaves = pendingLeaves.filter(leave => {
     const employee = employees.find(emp => emp.id === leave.employee_id);
+    
+    // Security check: Only allow managers to see their department's leaves
+    // In a real app, this would be handled by Row Level Security
+    if (currentUser.isManager && !currentUser.department.includes("HR")) {
+      if (employee && employee.department !== currentUser.department) {
+        return false;
+      }
+    }
     
     const matchesEmployee = selectedEmployee === "all" || leave.employee_id === selectedEmployee;
     const matchesDepartment = selectedDepartment === "all" || (employee && employee.department === selectedDepartment);
@@ -104,9 +121,22 @@ const LeaveApprovalDashboard: React.FC = () => {
     }
   };
   
+  // Create audit log entry in notes field
+  const createAuditLog = (leave: LeaveCalendar, action: "Approved" | "Rejected"): string => {
+    const currentDate = format(new Date(), "yyyy-MM-dd HH:mm:ss");
+    const existingNotes = leave.notes || "";
+    const auditEntry = `${action} by ${currentUser.name} on ${currentDate}`;
+    
+    return existingNotes
+      ? `${existingNotes}\n\n${auditEntry}`
+      : auditEntry;
+  };
+  
   const handleApprove = (leave: LeaveCalendar) => {
+    const auditLog = createAuditLog(leave, "Approved");
+    
     updateLeave(
-      { id: leave.id, status: "Approved" },
+      { id: leave.id, status: "Approved", notes: auditLog },
       {
         onSuccess: () => {
           // Update employee status if leave includes current date
@@ -130,8 +160,10 @@ const LeaveApprovalDashboard: React.FC = () => {
   };
   
   const handleReject = (leave: LeaveCalendar) => {
+    const auditLog = createAuditLog(leave, "Rejected");
+    
     updateLeave(
-      { id: leave.id, status: "Rejected" },
+      { id: leave.id, status: "Rejected", notes: auditLog },
       {
         onSuccess: () => {
           toast({
@@ -154,6 +186,11 @@ const LeaveApprovalDashboard: React.FC = () => {
   const getEmployeeName = (employeeId: string): string => {
     const employee = employees.find(emp => emp.id === employeeId);
     return employee ? employee.name : "Unknown Employee";
+  };
+  
+  const getEmployeeDepartment = (employeeId: string): string => {
+    const employee = employees.find(emp => emp.id === employeeId);
+    return employee ? employee.department : "Unknown";
   };
   
   if (isLoadingLeaves || isLoadingEmployees) {
@@ -227,6 +264,7 @@ const LeaveApprovalDashboard: React.FC = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Employee</TableHead>
+                  <TableHead>Department</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Start Date</TableHead>
                   <TableHead>End Date</TableHead>
@@ -239,6 +277,7 @@ const LeaveApprovalDashboard: React.FC = () => {
                 {filteredLeaves.map((leave) => (
                   <TableRow key={leave.id}>
                     <TableCell className="font-medium">{getEmployeeName(leave.employee_id)}</TableCell>
+                    <TableCell>{getEmployeeDepartment(leave.employee_id)}</TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs ${
                         leave.type === "Holiday" ? "bg-blue-100 text-blue-800" :
