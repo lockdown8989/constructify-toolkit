@@ -13,16 +13,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// Updated NAV_ITEMS to match the routes defined in routes.tsx
 const NAV_ITEMS = [
   { name: 'Dashboard', path: '/' },
   { name: 'People', path: '/people' },
+  { name: 'Salary', path: '/payroll' },
   { name: 'Leave', path: '/leave' },
-  { name: 'Hiring', path: '/hiring' },
-  { name: 'Devices', path: '/devices' },
-  { name: 'Apps', path: '/apps' },
-  { name: 'Salary', path: '/salary' },
-  { name: 'Calendar', path: '/calendar' },
-  { name: 'Reviews', path: '/reviews' },
+  { name: 'Profile', path: '/profile' },
 ];
 
 const Navbar: React.FC = () => {
@@ -179,20 +176,6 @@ const Navbar: React.FC = () => {
                   </li>
                 );
               })}
-              
-              <li className="w-full">
-                <Link
-                  to="/profile"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`block px-4 py-3 rounded-xl text-base font-medium transition-all w-full text-center ${
-                    location.pathname === '/profile'
-                      ? 'bg-black text-white' 
-                      : 'text-gray-600 bg-gray-50 hover:bg-gray-100'
-                  }`}
-                >
-                  Profile
-                </Link>
-              </li>
               
               <li className="w-full">
                 <button
