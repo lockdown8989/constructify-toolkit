@@ -1,11 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MeetingSchedule from '@/components/dashboard/MeetingSchedule';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { useEmployees } from '@/hooks/use-employees';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useSchedules } from '@/hooks/use-schedules';
+import ScheduleList from '@/components/schedule/ScheduleList';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 
 // Sample meeting data - in a real app, this would come from an API or database
 const SAMPLE_MEETINGS = [
@@ -43,12 +49,70 @@ const SchedulePage = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { data: employees = [] } = useEmployees();
   const { toast } = useToast();
+  const { isAdmin, isHR } = useAuth();
+  
+  // Fetch schedules for the selected date
+  const { data: schedules = [], isLoading: schedulesLoading, refetch: refetchSchedules } = useSchedules(date);
+  
+  // Create a map of employee IDs to names for easier lookup
+  const employeeNames = employees.reduce<Record<string, string>>((acc, employee) => {
+    acc[employee.id] = employee.name;
+    return acc;
+  }, {});
   
   const handleAddMeeting = () => {
     toast({
       title: "Feature coming soon",
       description: "The ability to add new meetings will be available soon.",
     });
+  };
+  
+  const handleAddSchedule = async () => {
+    if (!isAdmin && !isHR) {
+      toast({
+        title: "Permission denied",
+        description: "Only admins and HR personnel can add schedules.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // For demo purposes, add a sample schedule
+    if (employees.length === 0) {
+      toast({
+        title: "No employees found",
+        description: "Please add employees before creating schedules.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const randomEmployee = employees[Math.floor(Math.random() * employees.length)];
+    
+    try {
+      const { error } = await supabase.from('schedules').insert({
+        employee_id: randomEmployee.id,
+        date: date?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+        task: 'New Task ' + new Date().toLocaleTimeString(),
+        time: new Date().toTimeString().split(' ')[0],
+        status: 'Pending'
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Schedule created",
+        description: "A new schedule has been added.",
+      });
+      
+      refetchSchedules();
+    } catch (error: any) {
+      toast({
+        title: "Failed to create schedule",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
   };
   
   return (
@@ -71,6 +135,43 @@ const SchedulePage = () => {
                 onSelect={setDate}
                 className="w-full"
               />
+              
+              <div className="mt-4">
+                <h3 className="font-medium text-lg mb-2">
+                  {date ? format(date, 'MMMM d, yyyy') : 'Select a date'}
+                </h3>
+                {schedulesLoading ? (
+                  <p>Loading schedules...</p>
+                ) : schedules.length > 0 ? (
+                  <ul className="space-y-2">
+                    {schedules.map(schedule => (
+                      <li key={schedule.id} className="flex items-center">
+                        <span className="w-16 text-sm text-gray-500">
+                          {format(new Date(`${schedule.date}T${schedule.time}`), 'h:mm a')}
+                        </span>
+                        <span className="flex-1">{schedule.task}</span>
+                        <span className="text-sm text-gray-500">
+                          {employeeNames[schedule.employee_id] || 'Unknown'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500">No schedules for this date</p>
+                )}
+                
+                {(isAdmin || isHR) && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-4" 
+                    onClick={handleAddSchedule}
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Add Schedule
+                  </Button>
+                )}
+              </div>
             </div>
             
             <div className="md:col-span-1">
@@ -84,9 +185,10 @@ const SchedulePage = () => {
         
         <TabsContent value="schedule">
           <div className="space-y-6">
-            <MeetingSchedule 
-              meetings={SAMPLE_MEETINGS}
-              onAddMeeting={handleAddMeeting}
+            <ScheduleList 
+              schedules={schedules} 
+              onAddSchedule={handleAddSchedule}
+              employeeNames={employeeNames}
               className="w-full"
             />
             

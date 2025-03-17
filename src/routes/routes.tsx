@@ -70,7 +70,7 @@ const router = createBrowserRouter([
       {
         path: "payroll",
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="admin">
             <Payroll />
           </ProtectedRoute>
         ),
