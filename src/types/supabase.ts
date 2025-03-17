@@ -16,7 +16,7 @@ export interface Database extends SupabaseDatabase {
           start_date: string;
           lifecycle: string;
           status: string;
-          avatar?: string | null;
+          avatar: string | null;
         };
         Insert: {
           id?: string;
