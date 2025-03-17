@@ -4,11 +4,43 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Form } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAddEmployee, useUpdateEmployee } from '@/hooks/use-employees';
-import { EmployeeFormFields } from './form/EmployeeFormFields';
-import { employeeSchema } from './form/employeeSchema';
+
+const employeeSchema = z.object({
+  name: z.string().min(2, {
+    message: 'Name must be at least 2 characters.',
+  }),
+  job_title: z.string().min(2, {
+    message: 'Job title must be at least 2 characters.',
+  }),
+  department: z.string().min(2, {
+    message: 'Department is required.',
+  }),
+  site: z.string().min(2, {
+    message: 'Site/Location is required.',
+  }),
+  salary: z.coerce.number().positive({
+    message: 'Salary must be a positive number.',
+  }),
+  status: z.string().default('Pending'),
+});
 
 type EmployeeFormValues = z.infer<typeof employeeSchema>;
 
@@ -26,14 +58,13 @@ export function EmployeeForm({ defaultValues, employeeId, onSuccess }: EmployeeF
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),
-    defaultValues: {
+    defaultValues: defaultValues || {
       name: '',
       job_title: '',
       department: '',
       site: '',
       salary: 0,
       status: 'Pending',
-      ...defaultValues, // Apply any provided default values on top of the base defaults
     },
   });
 
@@ -49,17 +80,7 @@ export function EmployeeForm({ defaultValues, employeeId, onSuccess }: EmployeeF
           description: 'Employee information has been successfully updated.',
         });
       } else {
-        // Ensure all required fields are present
-        const newEmployee = {
-          name: values.name,
-          job_title: values.job_title,
-          department: values.department,
-          site: values.site,
-          salary: values.salary,
-          status: values.status,
-        };
-        
-        await addEmployee.mutateAsync(newEmployee);
+        await addEmployee.mutateAsync(values);
         toast({
           title: 'Employee added',
           description: 'New employee has been successfully added.',
@@ -82,7 +103,99 @@ export function EmployeeForm({ defaultValues, employeeId, onSuccess }: EmployeeF
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <EmployeeFormFields control={form.control} />
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Full Name</FormLabel>
+              <FormControl>
+                <Input placeholder="John Doe" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="job_title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Job Title</FormLabel>
+              <FormControl>
+                <Input placeholder="Software Engineer" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="department"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Department</FormLabel>
+              <FormControl>
+                <Input placeholder="Engineering" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="site"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Site/Location</FormLabel>
+              <FormControl>
+                <Input placeholder="New York Office" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="salary"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Annual Salary</FormLabel>
+              <FormControl>
+                <Input type="number" placeholder="75000" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Status</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Inactive">Inactive</SelectItem>
+                  <SelectItem value="Invited">Invited</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         <Button 
           type="submit" 

@@ -7,8 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 
 const Auth = () => {
   const { user, signIn, signUp } = useAuth();
@@ -52,24 +50,17 @@ const SignInForm = ({ onSignIn }: { onSignIn: (email: string, password: string) 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
     
     try {
       const { error } = await onSignIn(email, password);
       if (!error) {
         navigate("/dashboard");
-      } else {
-        setError(error.message);
       }
-    } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
-      console.error(err);
     } finally {
       setIsLoading(false);
     }
@@ -84,13 +75,6 @@ const SignInForm = ({ onSignIn }: { onSignIn: (email: string, password: string) 
       
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-        
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -131,21 +115,13 @@ const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
     
     try {
-      const { error } = await onSignUp(email, password, firstName, lastName);
-      if (error) {
-        setError(error.message);
-      }
-    } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
-      console.error(err);
+      await onSignUp(email, password, firstName, lastName);
     } finally {
       setIsLoading(false);
     }
@@ -160,13 +136,6 @@ const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, 
       
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">First Name</Label>
