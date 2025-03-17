@@ -1,12 +1,22 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Bell, Settings, User, Menu, X } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Bell, Settings, User, Menu, X, LogOut } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/hooks/use-auth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const NAV_ITEMS = [
   { name: 'Dashboard', path: '/' },
   { name: 'People', path: '/people' },
+  { name: 'Leave', path: '/leave' },
   { name: 'Hiring', path: '/hiring' },
   { name: 'Devices', path: '/devices' },
   { name: 'Apps', path: '/apps' },
@@ -17,9 +27,11 @@ const NAV_ITEMS = [
 
 const Navbar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { user, signOut, isAdmin, isHR } = useAuth();
   
   // Handle scroll effect
   useEffect(() => {
@@ -33,6 +45,17 @@ const Navbar: React.FC = () => {
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  const getUserRole = () => {
+    if (isAdmin) return 'Admin';
+    if (isHR) return 'HR';
+    return 'Employee';
   };
 
   return (
@@ -101,9 +124,31 @@ const Navbar: React.FC = () => {
                 </button>
               </>
             )}
-            <button className="w-10 h-10 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors">
-              <User className="w-5 h-5" />
-            </button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-10 h-10 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors">
+                  <User className="w-5 h-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col">
+                    <span>{user?.email}</span>
+                    <span className="text-xs text-muted-foreground">{getUserRole()}</span>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
@@ -134,6 +179,29 @@ const Navbar: React.FC = () => {
                   </li>
                 );
               })}
+              
+              <li className="w-full">
+                <Link
+                  to="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block px-4 py-3 rounded-xl text-base font-medium transition-all w-full text-center ${
+                    location.pathname === '/profile'
+                      ? 'bg-black text-white' 
+                      : 'text-gray-600 bg-gray-50 hover:bg-gray-100'
+                  }`}
+                >
+                  Profile
+                </Link>
+              </li>
+              
+              <li className="w-full">
+                <button
+                  onClick={handleSignOut}
+                  className="block px-4 py-3 rounded-xl text-base font-medium transition-all w-full text-center text-red-600 bg-red-50 hover:bg-red-100"
+                >
+                  Sign Out
+                </button>
+              </li>
             </ul>
           </nav>
           
