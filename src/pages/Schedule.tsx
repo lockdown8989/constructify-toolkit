@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import MeetingSchedule from '@/components/dashboard/MeetingSchedule';
 import { Calendar } from '@/components/ui/calendar';
@@ -13,7 +12,6 @@ import { PlusCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 
-// Sample meeting data - in a real app, this would come from an API or database
 const SAMPLE_MEETINGS = [
   {
     id: '1',
@@ -51,10 +49,8 @@ const SchedulePage = () => {
   const { toast } = useToast();
   const { isAdmin, isHR } = useAuth();
   
-  // Fetch schedules for the selected date
   const { data: schedules = [], isLoading: schedulesLoading, refetch: refetchSchedules } = useSchedules(date);
   
-  // Create a map of employee IDs to names for easier lookup
   const employeeNames = employees.reduce<Record<string, string>>((acc, employee) => {
     acc[employee.id] = employee.name;
     return acc;
@@ -77,7 +73,6 @@ const SchedulePage = () => {
       return;
     }
     
-    // For demo purposes, add a sample schedule
     if (employees.length === 0) {
       toast({
         title: "No employees found",

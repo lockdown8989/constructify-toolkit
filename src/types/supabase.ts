@@ -169,6 +169,44 @@ export interface Database extends SupabaseDatabase {
         };
         Relationships: [];
       };
+      schedules: {
+        Row: {
+          id: string;
+          employee_id: string;
+          date: string;
+          task: string;
+          time: string;
+          status: 'Completed' | 'Pending';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          employee_id: string;
+          date: string;
+          task: string;
+          time: string;
+          status?: 'Completed' | 'Pending';
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          employee_id?: string;
+          date?: string;
+          task?: string;
+          time?: string;
+          status?: 'Completed' | 'Pending';
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "schedules_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       user_roles: {
         Row: {
           id: string;
