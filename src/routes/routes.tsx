@@ -1,18 +1,15 @@
+
 import React, { lazy, Suspense } from "react";
 import { RouteObject } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 import Dashboard from "@/pages/Dashboard";
-import Employees from "@/pages/Employees";
-import Payroll from "@/pages/Payroll";
-import Projects from "@/pages/Projects";
-import Reports from "@/pages/Reports";
-import Settings from "@/pages/Settings";
-import Signin from "@/pages/Signin";
-import Signup from "@/pages/Signup";
-import Tasks from "@/pages/Tasks";
 import People from "@/pages/People";
-import EmployeeDetails from "@/pages/EmployeeDetails";
+import Payroll from "@/pages/Payroll";
+import LeaveManagement from "@/pages/LeaveManagement";
+import Auth from "@/pages/Auth";
+import Profile from "@/pages/Profile";
+import NotFound from "@/pages/NotFound";
 
 const EmployeesManagement = lazy(() => import("@/pages/EmployeesManagement"));
 
@@ -34,10 +31,10 @@ const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/employees",
+    path: "/people",
     element: (
       <ProtectedRoute>
-        <Employees />
+        <People />
       </ProtectedRoute>
     ),
   },
@@ -50,60 +47,24 @@ const routes: RouteObject[] = [
     ),
   },
   {
-    path: "/projects",
+    path: "/leave",
     element: (
       <ProtectedRoute>
-        <Projects />
+        <LeaveManagement />
       </ProtectedRoute>
     ),
   },
   {
-    path: "/reports",
+    path: "/profile",
     element: (
       <ProtectedRoute>
-        <Reports />
+        <Profile />
       </ProtectedRoute>
     ),
   },
   {
-    path: "/settings",
-    element: (
-      <ProtectedRoute>
-        <Settings />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/signin",
-    element: <Signin />,
-  },
-  {
-    path: "/signup",
-    element: <Signup />,
-  },
-  {
-    path: "/tasks",
-    element: (
-      <ProtectedRoute>
-        <Tasks />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/people",
-    element: (
-      <ProtectedRoute>
-        <People />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/employee/:id",
-    element: (
-      <ProtectedRoute>
-        <EmployeeDetails />
-      </ProtectedRoute>
-    ),
+    path: "/auth",
+    element: <Auth />,
   },
   {
     path: "/employees-management",
@@ -115,6 +76,10 @@ const routes: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
+  {
+    path: "*",
+    element: <NotFound />,
+  }
 ];
 
 export default routes;
