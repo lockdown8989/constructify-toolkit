@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LeaveRequestForm from "@/components/leave/LeaveRequestForm";
 import LeaveApprovalDashboard from "@/components/leave/LeaveApprovalDashboard";
-import LeaveCalendarView from "@/components/leave/LeaveCalendarView";
+import EnhancedCalendarView from "@/components/leave/EnhancedCalendarView";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -105,7 +105,7 @@ const LeaveManagement = () => {
         </TabsContent>
         
         <TabsContent value="calendar">
-          <LeaveCalendarView />
+          <EnhancedCalendarView />
         </TabsContent>
       </Tabs>
     </div>
