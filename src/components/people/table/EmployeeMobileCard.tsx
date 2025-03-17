@@ -10,6 +10,7 @@ interface EmployeeMobileCardProps {
   isExpanded: boolean;
   onSelect: (id: string) => void;
   onToggleExpand: (id: string) => void;
+  onCardClick?: (employee: Employee) => void;
 }
 
 const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
@@ -18,16 +19,31 @@ const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
   isExpanded,
   onSelect,
   onToggleExpand,
+  onCardClick,
 }) => {
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger card click when clicking the checkbox or expand button
+    if ((e.target as HTMLElement).tagName === 'INPUT' || 
+        (e.target as HTMLElement).closest('input[type="checkbox"]') ||
+        (e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    
+    if (onCardClick) {
+      onCardClick(employee);
+    }
+  };
+
   return (
     <div 
       className={cn(
-        "p-4 transition-colors",
+        "p-4 transition-colors cursor-pointer",
         isSelected ? "bg-crextio-accent/10" : ""
       )}
+      onClick={handleCardClick}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3" onClick={e => e.stopPropagation()}>
           <input
             type="checkbox"
             checked={isSelected}
@@ -48,7 +64,10 @@ const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
         </div>
         
         <button 
-          onClick={() => onToggleExpand(employee.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleExpand(employee.id);
+          }}
           className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100"
         >
           <ChevronRight 

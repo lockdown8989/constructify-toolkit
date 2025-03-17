@@ -7,21 +7,36 @@ interface EmployeeTableRowProps {
   employee: Employee;
   isSelected: boolean;
   onSelect: (id: string) => void;
+  onRowClick?: (employee: Employee) => void;
 }
 
 const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
   employee,
   isSelected,
   onSelect,
+  onRowClick,
 }) => {
+  const handleRowClick = (e: React.MouseEvent) => {
+    // Don't trigger row click when clicking the checkbox
+    if ((e.target as HTMLElement).tagName === 'INPUT' || 
+        (e.target as HTMLElement).closest('input[type="checkbox"]')) {
+      return;
+    }
+    
+    if (onRowClick) {
+      onRowClick(employee);
+    }
+  };
+
   return (
     <tr 
       className={cn(
-        "group transition-colors",
+        "group transition-colors cursor-pointer",
         isSelected ? "bg-crextio-accent/10" : "hover:bg-gray-50"
       )}
+      onClick={handleRowClick}
     >
-      <td className="py-4 px-6">
+      <td className="py-4 px-6" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-center h-5">
           <input
             type="checkbox"

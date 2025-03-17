@@ -6,6 +6,7 @@ import TableControls from './table/TableControls';
 import DesktopTable from './table/DesktopTable';
 import MobileTable from './table/MobileTable';
 import TableSkeleton from './table/TableSkeleton';
+import EmployeeDetailsModal from './modals/EmployeeDetailsModal';
 import { PeopleTableProps } from './types';
 
 const PeopleTable: React.FC<PeopleTableProps> = ({
@@ -17,6 +18,8 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedEmployeeDetails, setSelectedEmployeeDetails] = useState<typeof employees[0] | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const isMobile = useIsMobile();
   
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,6 +44,15 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
   
   const toggleExpandEmployee = (id: string) => {
     setExpandedEmployee(expandedEmployee === id ? null : id);
+  };
+
+  const handleEmployeeClick = (employee: typeof employees[0]) => {
+    setSelectedEmployeeDetails(employee);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
   };
   
   if (isLoading) {
@@ -67,6 +79,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
           selectedEmployees={selectedEmployees}
           onSelectEmployee={handleSelectEmployee}
           onSelectAll={handleSelectAll}
+          onEmployeeClick={handleEmployeeClick}
         />
       )}
       
@@ -78,8 +91,16 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
           expandedEmployee={expandedEmployee}
           onSelectEmployee={handleSelectEmployee}
           onToggleExpand={toggleExpandEmployee}
+          onEmployeeClick={handleEmployeeClick}
         />
       )}
+
+      {/* Employee Details Modal */}
+      <EmployeeDetailsModal 
+        employee={selectedEmployeeDetails}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };
