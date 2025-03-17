@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   format, 
@@ -7,7 +6,8 @@ import {
   getDay,
   startOfMonth,
   endOfMonth,
-  eachDayOfInterval
+  eachDayOfInterval,
+  isWithinInterval
 } from "date-fns";
 import type { LeaveCalendar } from "@/hooks/use-leave-calendar";
 import { getTypeColor, getStatusColor } from "./utils";
@@ -18,16 +18,25 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+interface Meeting {
+  id: string;
+  title: string;
+  time: string;
+  participants: string[];
+}
+
 interface CalendarGridProps {
   currentDate: Date;
   leaves: LeaveCalendar[];
   getEmployeeName: (employeeId: string) => string;
+  meetings?: Meeting[];
 }
 
 const CalendarGrid: React.FC<CalendarGridProps> = ({ 
   currentDate, 
   leaves,
-  getEmployeeName
+  getEmployeeName,
+  meetings = []
 }) => {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -59,7 +68,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   for (let i = 0; i < calendarGrid.length; i += 7) {
     calendarWeeks.push(calendarGrid.slice(i, i + 7));
   }
-
+  
   // Get leaves for a specific day
   const getLeavesForDay = (day: Date): LeaveCalendar[] => {
     if (!day) return [];
@@ -70,6 +79,16 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
       
       // Check if the day falls within the leave period
       return day >= startDate && day <= endDate;
+    });
+  };
+
+  // Get meetings for a specific day
+  const getMeetingsForDay = (day: Date): Meeting[] => {
+    if (!day) return [];
+    
+    return meetings.filter(meeting => {
+      const [meetingDate] = meeting.time.split(" "); // Format: "YYYY-MM-DD HH:MM"
+      return meetingDate === format(day, "yyyy-MM-dd");
     });
   };
 
@@ -98,6 +117,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
             const isCurrentMonth = isSameMonth(day, currentDate);
             const isCurrentDay = isToday(day);
             const dayLeaves = getLeavesForDay(day);
+            const dayMeetings = getMeetingsForDay(day);
+            const hasMeetings = dayMeetings.length > 0;
             
             return (
               <div 
@@ -106,12 +127,14 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                   aspect-square p-1 relative border
                   ${isCurrentMonth ? "bg-white" : "bg-gray-50 text-gray-400"}
                   ${isCurrentDay ? "border-blue-500 border-2" : "border-gray-100"}
+                  ${hasMeetings ? "bg-blue-50" : ""}
                 `}
               >
                 <div className="text-right text-xs p-1">
                   {format(day, "d")}
                 </div>
                 
+                {/* Leave indicators */}
                 {dayLeaves.length > 0 && (
                   <div className="absolute bottom-1 left-1 right-1">
                     <TooltipProvider>
@@ -148,6 +171,37 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                                 <div className={`px-1.5 py-0.5 rounded-sm text-[10px] text-white ${getStatusColor(leave.status)}`}>
                                   {leave.status}
                                 </div>
+                              </div>
+                            ))}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                )}
+                
+                {/* Meeting indicators */}
+                {hasMeetings && (
+                  <div className="absolute top-5 left-1 right-1">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex justify-center">
+                            <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                              <span className="text-white text-[8px]">{dayMeetings.length}</span>
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <div className="max-w-xs">
+                            <div className="font-medium mb-1 text-sm">Meetings</div>
+                            {dayMeetings.map(meeting => (
+                              <div 
+                                key={meeting.id}
+                                className="mb-1 text-xs border-l-2 border-blue-500 pl-2 py-1"
+                              >
+                                <div className="font-medium">{meeting.title}</div>
+                                <div className="text-gray-500">{meeting.time.split(" ")[1]}</div>
                               </div>
                             ))}
                           </div>

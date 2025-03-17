@@ -1,7 +1,16 @@
 
-import React from 'react';
-import { Search } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, Filter, Download, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 interface Employee {
   id: string;
@@ -11,30 +20,92 @@ interface Employee {
   salary: string;
   status: 'Paid' | 'Absent' | 'Pending';
   selected?: boolean;
+  paymentDate?: string;
 }
 
 interface SalaryTableProps {
   employees: Employee[];
   onSelectEmployee?: (id: string) => void;
+  onUpdateStatus?: (id: string, status: 'Paid' | 'Absent' | 'Pending') => void;
   className?: string;
 }
 
 const SalaryTable: React.FC<SalaryTableProps> = ({ 
   employees, 
   onSelectEmployee,
+  onUpdateStatus,
   className 
 }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Paid' | 'Absent' | 'Pending'>('All');
+  
+  const filteredEmployees = employees.filter(employee => {
+    const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          employee.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'All' || employee.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+  
+  const handleStatusChange = (employeeId: string, newStatus: 'Paid' | 'Absent' | 'Pending') => {
+    if (onUpdateStatus) {
+      onUpdateStatus(employeeId, newStatus);
+    }
+  };
+  
+  const statusCount = {
+    All: employees.length,
+    Paid: employees.filter(e => e.status === 'Paid').length,
+    Pending: employees.filter(e => e.status === 'Pending').length,
+    Absent: employees.filter(e => e.status === 'Absent').length
+  };
+
   return (
     <div className={cn("bg-white rounded-3xl p-6 card-shadow", className)}>
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-medium">Salary</h3>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search"
-            className="pl-9 pr-4 py-2 rounded-full bg-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
-          />
+        
+        <div className="flex gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-4 py-2 rounded-full bg-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 w-[200px]"
+            />
+          </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1">
+                <Filter className="h-4 w-4" />
+                <span>Status: {statusFilter}</span>
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>Filter by status</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setStatusFilter('All')}>
+                All ({statusCount.All})
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter('Paid')}>
+                Paid ({statusCount.Paid})
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter('Pending')}>
+                Pending ({statusCount.Pending})
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter('Absent')}>
+                Absent ({statusCount.Absent})
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Button variant="outline" size="icon">
+            <Download className="h-4 w-4" />
+          </Button>
         </div>
       </div>
       
@@ -47,10 +118,12 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
               <th className="pb-4 font-medium">Job Title</th>
               <th className="pb-4 font-medium">Net Salary</th>
               <th className="pb-4 font-medium">Status</th>
+              <th className="pb-4 font-medium">Payment Date</th>
+              <th className="pb-4 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {employees.map(employee => (
+            {filteredEmployees.map(employee => (
               <tr 
                 key={employee.id} 
                 className={cn(
@@ -91,6 +164,30 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
                   )}>
                     {employee.status}
                   </span>
+                </td>
+                <td className="py-4 text-sm text-gray-500">
+                  {employee.paymentDate || '-'}
+                </td>
+                <td className="py-4">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        Update
+                        <ChevronDown className="ml-1 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => handleStatusChange(employee.id, 'Paid')}>
+                        Mark as Paid
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleStatusChange(employee.id, 'Pending')}>
+                        Mark as Pending
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleStatusChange(employee.id, 'Absent')}>
+                        Mark as Absent
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
               </tr>
             ))}
