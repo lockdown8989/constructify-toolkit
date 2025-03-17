@@ -1,9 +1,10 @@
 
 import React, { useState } from "react";
-import { format } from "date-fns";
+import { format, differenceInCalendarDays, addDays } from "date-fns";
 import { useLeaveCalendar } from "@/hooks/use-leave-calendar";
 import { useEmployees } from "@/hooks/use-employees";
 import { useUpdateLeaveCalendar } from "@/hooks/use-leave-calendar";
+import { useUpdateEmployee } from "@/hooks/use-employees";
 import { useToast } from "@/hooks/use-toast";
 import { Check, X, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ const LeaveApprovalDashboard: React.FC = () => {
   const { data: leaves = [], isLoading: isLoadingLeaves } = useLeaveCalendar();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { mutate: updateLeave } = useUpdateLeaveCalendar();
+  const { mutate: updateEmployee } = useUpdateEmployee();
   const { toast } = useToast();
   
   const [selectedEmployee, setSelectedEmployee] = useState<string>("all");
@@ -71,11 +73,45 @@ const LeaveApprovalDashboard: React.FC = () => {
   // Get unique leave types for filter
   const leaveTypes = [...new Set(leaves.map(leave => leave.type))];
   
+  // Calculate the number of leave days
+  const calculateLeaveDays = (startDate: string, endDate: string): number => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return differenceInCalendarDays(end, start) + 1; // Include both start and end dates
+  };
+  
+  // Update employee status to "On Leave" when leave is approved
+  const updateEmployeeStatus = (employeeId: string, startDate: string, endDate: string) => {
+    const today = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    // Only update status if leave period includes current date
+    if (today >= start && today <= end) {
+      updateEmployee(
+        { id: employeeId, status: "Leave" },
+        {
+          onError: (error) => {
+            console.error("Error updating employee status:", error);
+            toast({
+              title: "Error",
+              description: "Failed to update employee status.",
+              variant: "destructive",
+            });
+          },
+        }
+      );
+    }
+  };
+  
   const handleApprove = (leave: LeaveCalendar) => {
     updateLeave(
       { id: leave.id, status: "Approved" },
       {
         onSuccess: () => {
+          // Update employee status if leave includes current date
+          updateEmployeeStatus(leave.employee_id, leave.start_date, leave.end_date);
+          
           toast({
             title: "Leave approved",
             description: "The leave request has been approved successfully.",
@@ -194,6 +230,7 @@ const LeaveApprovalDashboard: React.FC = () => {
                   <TableHead>Type</TableHead>
                   <TableHead>Start Date</TableHead>
                   <TableHead>End Date</TableHead>
+                  <TableHead>Days</TableHead>
                   <TableHead>Notes</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -206,6 +243,8 @@ const LeaveApprovalDashboard: React.FC = () => {
                       <span className={`px-2 py-1 rounded-full text-xs ${
                         leave.type === "Holiday" ? "bg-blue-100 text-blue-800" :
                         leave.type === "Sickness" ? "bg-red-100 text-red-800" :
+                        leave.type === "Personal" ? "bg-purple-100 text-purple-800" :
+                        leave.type === "Parental" ? "bg-green-100 text-green-800" :
                         "bg-gray-100 text-gray-800"
                       }`}>
                         {leave.type}
@@ -213,6 +252,7 @@ const LeaveApprovalDashboard: React.FC = () => {
                     </TableCell>
                     <TableCell>{format(new Date(leave.start_date), "PP")}</TableCell>
                     <TableCell>{format(new Date(leave.end_date), "PP")}</TableCell>
+                    <TableCell>{calculateLeaveDays(leave.start_date, leave.end_date)}</TableCell>
                     <TableCell className="max-w-[200px] truncate">{leave.notes || "-"}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">

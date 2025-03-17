@@ -73,7 +73,7 @@ export interface Database extends SupabaseDatabase {
           start_date: string;
           end_date: string;
           status: string;
-          notes?: string | null;
+          notes: string | null;
         };
         Insert: {
           id?: string;

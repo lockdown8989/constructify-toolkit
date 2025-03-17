@@ -1,14 +1,63 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LeaveRequestForm from "@/components/leave/LeaveRequestForm";
 import LeaveApprovalDashboard from "@/components/leave/LeaveApprovalDashboard";
 import LeaveCalendarView from "@/components/leave/LeaveCalendarView";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 const LeaveManagement = () => {
   // For demonstration purposes, we're using a hardcoded employee ID
   // In a real app, this would come from authentication/user context
   const currentEmployeeId = "550e8400-e29b-41d4-a716-446655440000";
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Set up real-time listener for leave calendar changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('leave_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'leave_calendar'
+        },
+        (payload) => {
+          // Invalidate queries to refresh data
+          queryClient.invalidateQueries({ queryKey: ['leave_calendar'] });
+          
+          // Show toast notification for specific events
+          if (payload.eventType === 'UPDATE') {
+            const newStatus = payload.new.status;
+            if (newStatus === 'Approved') {
+              toast({
+                title: "Leave request approved",
+                description: "A leave request has been approved.",
+              });
+            } else if (newStatus === 'Rejected') {
+              toast({
+                title: "Leave request rejected",
+                description: "A leave request has been rejected.",
+              });
+            }
+          } else if (payload.eventType === 'INSERT') {
+            toast({
+              title: "New leave request",
+              description: "A new leave request has been submitted.",
+            });
+          }
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, toast]);
   
   return (
     <div className="container py-6">
