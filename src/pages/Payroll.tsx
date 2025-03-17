@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import SalaryTable from '@/components/dashboard/SalaryTable';
 import { useEmployees } from '@/hooks/use-employees';
@@ -6,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { format, subMonths } from 'date-fns';
-import { DollarSign, Calendar, ArrowUpRight, Clock, CheckCircle, XCircle, Download } from 'lucide-react';
+import { DollarSign, Calendar, ArrowUpRight, Clock, CheckCircle, XCircle, Download, Loader2 } from 'lucide-react';
 import { exportToCSV } from '@/utils/export-utils';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -59,6 +60,7 @@ const PayrollPage = () => {
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const [employees, setEmployees] = useState<EmployeeSalary[]>([]);
   
@@ -98,8 +100,70 @@ const PayrollPage = () => {
       description: `Payment status has been set to ${status}.`,
     });
   };
+
+  const calculateSalaryWithGPT = async (employeeId: string, baseSalary: number) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('calculate-salary', {
+        body: { employeeId, baseSalary }
+      });
+
+      if (error) {
+        console.error('Error calculating salary:', error);
+        throw new Error('Failed to calculate salary');
+      }
+
+      return data.finalSalary;
+    } catch (err) {
+      console.error('Error in calculateSalaryWithGPT:', err);
+      toast({
+        title: 'Calculation Error',
+        description: 'Failed to calculate salary using AI model.',
+        variant: 'destructive'
+      });
+      return baseSalary * 0.75; // Fallback calculation (25% deduction)
+    }
+  };
+
+  const processEmployeePayroll = async (employeeId: string) => {
+    try {
+      // Find the employee in the data
+      const employee = employeesData.find(emp => emp.id === employeeId);
+      if (!employee) {
+        toast({
+          title: 'Error processing payroll',
+          description: `Employee with ID ${employeeId} not found.`,
+          variant: 'destructive'
+        });
+        return false;
+      }
+
+      // Calculate final salary using GPT Mini API
+      const baseSalary = employee.salary;
+      const finalSalary = await calculateSalaryWithGPT(employeeId, baseSalary);
+
+      // Record payment in payroll table
+      const { error: payrollError } = await supabase
+        .from('payroll')
+        .insert([{
+          employee_id: employeeId,
+          net_salary: finalSalary,
+          payment_status: 'Paid',
+          payment_date: new Date().toISOString().split('T')[0]
+        }]);
+
+      if (payrollError) {
+        console.error('Error inserting payroll record:', payrollError);
+        throw new Error('Failed to record payroll');
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Error processing payroll:', err);
+      return false;
+    }
+  };
   
-  const handleProcessPayroll = () => {
+  const handleProcessPayroll = async () => {
     if (selectedEmployees.size === 0) {
       toast({
         title: "No employees selected",
@@ -109,24 +173,66 @@ const PayrollPage = () => {
       return;
     }
     
-    setEmployees(employees.map(emp => {
-      if (selectedEmployees.has(emp.id)) {
-        return { 
-          ...emp, 
-          status: 'Paid', 
-          paymentDate: format(new Date(), 'MMM d, yyyy'),
-          selected: false
-        };
+    setIsProcessing(true);
+    
+    try {
+      let successCount = 0;
+      let failCount = 0;
+      
+      // Process all selected employees
+      for (const employeeId of selectedEmployees) {
+        const success = await processEmployeePayroll(employeeId);
+        if (success) {
+          successCount++;
+        } else {
+          failCount++;
+        }
       }
-      return emp;
-    }));
-    
-    setSelectedEmployees(new Set());
-    
-    toast({
-      title: "Payroll processed successfully",
-      description: `Processed payments for ${selectedEmployees.size} employees.`,
-    });
+      
+      // Update the UI for successful payments
+      setEmployees(employees.map(emp => {
+        if (selectedEmployees.has(emp.id)) {
+          return { 
+            ...emp, 
+            status: 'Paid', 
+            paymentDate: format(new Date(), 'MMM d, yyyy'),
+            selected: false
+          };
+        }
+        return emp;
+      }));
+      
+      setSelectedEmployees(new Set());
+      
+      // Show toast with results
+      if (successCount > 0 && failCount === 0) {
+        toast({
+          title: "Payroll processed successfully",
+          description: `Processed payments for ${successCount} employees.`,
+        });
+      } else if (successCount > 0 && failCount > 0) {
+        toast({
+          title: "Payroll partially processed",
+          description: `Success: ${successCount} employees. Failed: ${failCount} employees.`,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Payroll processing failed",
+          description: "Failed to process any payments. Check the logs for more details.",
+          variant: "destructive"
+        });
+      }
+    } catch (err) {
+      console.error('Error in batch payroll processing:', err);
+      toast({
+        title: "Payroll processing error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
   
   const handleExportPayroll = async () => {
@@ -281,8 +387,16 @@ const PayrollPage = () => {
             <Button 
               className="w-full bg-white text-black hover:bg-gray-100"
               onClick={handleProcessPayroll}
+              disabled={isProcessing || selectedEmployees.size === 0}
             >
-              Process Selected ({selectedEmployees.size})
+              {isProcessing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                `Process Selected (${selectedEmployees.size})`
+              )}
             </Button>
             <Button 
               variant="outline" 
@@ -290,8 +404,17 @@ const PayrollPage = () => {
               onClick={handleExportPayroll}
               disabled={isExporting}
             >
-              <Download className="h-4 w-4 mr-2" />
-              {isExporting ? 'Exporting...' : 'Export Payroll CSV'}
+              {isExporting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Payroll CSV
+                </>
+              )}
             </Button>
           </CardContent>
         </Card>
