@@ -9,6 +9,38 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      attendance: {
+        Row: {
+          check_in: string | null
+          check_out: string | null
+          employee_id: string | null
+          id: string
+          status: string | null
+        }
+        Insert: {
+          check_in?: string | null
+          check_out?: string | null
+          employee_id?: string | null
+          id?: string
+          status?: string | null
+        }
+        Update: {
+          check_in?: string | null
+          check_out?: string | null
+          employee_id?: string | null
+          id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           annual_leave_days: number | null
@@ -17,6 +49,7 @@ export type Database = {
           id: string
           job_title: string
           lifecycle: string
+          location: string | null
           name: string
           salary: number
           sick_leave_days: number | null
@@ -31,6 +64,7 @@ export type Database = {
           id?: string
           job_title: string
           lifecycle?: string
+          location?: string | null
           name: string
           salary: number
           sick_leave_days?: number | null
@@ -45,6 +79,7 @@ export type Database = {
           id?: string
           job_title?: string
           lifecycle?: string
+          location?: string | null
           name?: string
           salary?: number
           sick_leave_days?: number | null
@@ -109,6 +144,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "leave_calendar_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll: {
+        Row: {
+          employee_id: string | null
+          id: string
+          net_salary: number
+          payment_date: string | null
+          payment_status: string | null
+        }
+        Insert: {
+          employee_id?: string | null
+          id?: string
+          net_salary: number
+          payment_date?: string | null
+          payment_status?: string | null
+        }
+        Update: {
+          employee_id?: string | null
+          id?: string
+          net_salary?: number
+          payment_date?: string | null
+          payment_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"

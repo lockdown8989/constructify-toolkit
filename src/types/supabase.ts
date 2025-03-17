@@ -19,6 +19,7 @@ export interface Database extends SupabaseDatabase {
           avatar: string | null;
           annual_leave_days: number;
           sick_leave_days: number;
+          location: string | null;
         };
         Insert: {
           id?: string;
@@ -33,6 +34,7 @@ export interface Database extends SupabaseDatabase {
           avatar?: string | null;
           annual_leave_days?: number;
           sick_leave_days?: number;
+          location?: string | null;
         };
         Update: {
           id?: string;
@@ -47,6 +49,7 @@ export interface Database extends SupabaseDatabase {
           avatar?: string | null;
           annual_leave_days?: number;
           sick_leave_days?: number;
+          location?: string | null;
         };
         Relationships: [];
       };
@@ -105,6 +108,70 @@ export interface Database extends SupabaseDatabase {
         Relationships: [
           {
             foreignKeyName: "leave_calendar_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      payroll: {
+        Row: {
+          id: string;
+          employee_id: string;
+          net_salary: number;
+          payment_status: string;
+          payment_date: string;
+        };
+        Insert: {
+          id?: string;
+          employee_id: string;
+          net_salary: number;
+          payment_status?: string;
+          payment_date?: string;
+        };
+        Update: {
+          id?: string;
+          employee_id?: string;
+          net_salary?: number;
+          payment_status?: string;
+          payment_date?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payroll_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      attendance: {
+        Row: {
+          id: string;
+          employee_id: string;
+          check_in: string;
+          check_out: string | null;
+          status: string;
+        };
+        Insert: {
+          id?: string;
+          employee_id: string;
+          check_in?: string;
+          check_out?: string | null;
+          status?: string;
+        };
+        Update: {
+          id?: string;
+          employee_id?: string;
+          check_in?: string;
+          check_out?: string | null;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "attendance_employee_id_fkey";
             columns: ["employee_id"];
             isOneToOne: false;
             referencedRelation: "employees";

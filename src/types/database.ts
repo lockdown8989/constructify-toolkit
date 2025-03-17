@@ -10,6 +10,7 @@ export interface EmployeeModel {
   lifecycle: string;
   status: string;
   avatar?: string;
+  location?: string;
 }
 
 export interface InterviewModel {
@@ -17,4 +18,20 @@ export interface InterviewModel {
   candidate_name: string;
   progress: number;
   stage: string;
+}
+
+export interface PayrollModel {
+  id: string;
+  employee_id: string;
+  net_salary: number;
+  payment_status: string;
+  payment_date: string;
+}
+
+export interface AttendanceModel {
+  id: string;
+  employee_id: string;
+  check_in: string;
+  check_out?: string;
+  status: string;
 }
