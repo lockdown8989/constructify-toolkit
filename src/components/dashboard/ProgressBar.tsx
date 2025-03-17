@@ -2,6 +2,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Progress } from '@/components/ui/progress';
 
 interface ProgressBarProps {
   label: string;
@@ -37,18 +38,17 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
         {showValue && <div className="text-xs text-gray-500">{value}%</div>}
       </div>
       
-      <div className={cn(
-        "w-full bg-gray-100 rounded-full overflow-hidden",
-        isMobile ? "h-6" : "h-8"
-      )}>
-        <div 
-          className={cn(
-            "h-full progress-bar transition-all duration-500 ease-out rounded-full",
-            colorClasses[color]
-          )}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
+      <Progress 
+        value={percentage} 
+        className={cn(
+          "w-full bg-gray-100",
+          isMobile ? "h-6" : "h-8"
+        )}
+        indicatorClassName={cn(
+          "transition-all duration-500 ease-out",
+          colorClasses[color]
+        )}
+      />
     </div>
   );
 };

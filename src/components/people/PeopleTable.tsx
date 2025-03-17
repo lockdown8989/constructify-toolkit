@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { Search, Plus, SlidersHorizontal, Download, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Employee {
   id: string;
@@ -24,12 +24,14 @@ interface PeopleTableProps {
   employees: Employee[];
   onSelectEmployee?: (id: string) => void;
   className?: string;
+  isLoading?: boolean;
 }
 
 const PeopleTable: React.FC<PeopleTableProps> = ({
   employees,
   onSelectEmployee,
-  className
+  className,
+  isLoading = false
 }) => {
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
@@ -58,6 +60,66 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
   const toggleExpandEmployee = (id: string) => {
     setExpandedEmployee(expandedEmployee === id ? null : id);
   };
+  
+  if (isLoading) {
+    return (
+      <div className={cn("bg-white rounded-3xl card-shadow", className)}>
+        <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            {!isMobile && (
+              <>
+                <Skeleton className="h-10 w-24" />
+                <Skeleton className="h-10 w-28" />
+                <Skeleton className="h-10 w-20" />
+              </>
+            )}
+          </div>
+          <Skeleton className="h-10 w-[300px]" />
+          <div className="flex items-center space-x-2 ml-auto">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-10 w-10 rounded-full" />
+          </div>
+        </div>
+        
+        {!isMobile ? (
+          <div className="p-6">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="flex items-center space-x-4 mb-6">
+                <Skeleton className="h-5 w-5 rounded" />
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-6 w-28" />
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-6 w-20" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-4">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-3">
+                    <Skeleton className="h-5 w-5 rounded" />
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div>
+                      <Skeleton className="h-5 w-24 mb-1" />
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
   
   return (
     <div className={cn("bg-white rounded-3xl card-shadow", className)}>
@@ -144,7 +206,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
                 <th className="py-4 px-6 font-medium w-6">
                   <input
                     type="checkbox"
-                    checked={selectedEmployees.length === employees.length}
+                    checked={selectedEmployees.length === employees.length && employees.length > 0}
                     onChange={handleSelectAll}
                     className="rounded border-gray-300 text-black focus:ring-black"
                   />
@@ -209,60 +271,68 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {employees.map(employee => (
-                <tr 
-                  key={employee.id} 
-                  className={cn(
-                    "group transition-colors",
-                    selectedEmployees.includes(employee.id) ? "bg-crextio-accent/10" : "hover:bg-gray-50"
-                  )}
-                >
-                  <td className="py-4 px-6">
-                    <div className="flex items-center justify-center h-5">
-                      <input
-                        type="checkbox"
-                        checked={selectedEmployees.includes(employee.id)}
-                        onChange={() => handleSelectEmployee(employee.id)}
-                        className="rounded border-gray-300 text-black focus:ring-black"
-                      />
-                    </div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
-                        <img 
-                          src={employee.avatar} 
-                          alt={employee.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <span className="font-medium">{employee.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6 text-gray-600">{employee.jobTitle}</td>
-                  <td className="py-4 px-6 text-gray-600">{employee.department}</td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center">
-                      {employee.siteIcon && (
-                        <span className="mr-2">{employee.siteIcon}</span>
-                      )}
-                      <span className="text-gray-600">{employee.site}</span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6 font-medium">{employee.salary}</td>
-                  <td className="py-4 px-6 text-gray-600">{employee.startDate}</td>
-                  <td className="py-4 px-6 text-gray-600">{employee.lifecycle}</td>
-                  <td className="py-4 px-6">
-                    <span className={cn(
-                      "inline-block px-3 py-1 rounded-full text-xs font-medium",
-                      employee.statusColor === 'green' && "bg-crextio-success/20 text-green-700",
-                      employee.statusColor === 'gray' && "bg-gray-200 text-gray-700"
-                    )}>
-                      {employee.status}
-                    </span>
+              {employees.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-8 text-center text-gray-500">
+                    No employees found. Try adjusting your filters.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                employees.map(employee => (
+                  <tr 
+                    key={employee.id} 
+                    className={cn(
+                      "group transition-colors",
+                      selectedEmployees.includes(employee.id) ? "bg-crextio-accent/10" : "hover:bg-gray-50"
+                    )}
+                  >
+                    <td className="py-4 px-6">
+                      <div className="flex items-center justify-center h-5">
+                        <input
+                          type="checkbox"
+                          checked={selectedEmployees.includes(employee.id)}
+                          onChange={() => handleSelectEmployee(employee.id)}
+                          className="rounded border-gray-300 text-black focus:ring-black"
+                        />
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
+                          <img 
+                            src={employee.avatar} 
+                            alt={employee.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <span className="font-medium">{employee.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 text-gray-600">{employee.jobTitle}</td>
+                    <td className="py-4 px-6 text-gray-600">{employee.department}</td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center">
+                        {employee.siteIcon && (
+                          <span className="mr-2">{employee.siteIcon}</span>
+                        )}
+                        <span className="text-gray-600">{employee.site}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 font-medium">{employee.salary}</td>
+                    <td className="py-4 px-6 text-gray-600">{employee.startDate}</td>
+                    <td className="py-4 px-6 text-gray-600">{employee.lifecycle}</td>
+                    <td className="py-4 px-6">
+                      <span className={cn(
+                        "inline-block px-3 py-1 rounded-full text-xs font-medium",
+                        employee.statusColor === 'green' && "bg-crextio-success/20 text-green-700",
+                        employee.statusColor === 'gray' && "bg-gray-200 text-gray-700"
+                      )}>
+                        {employee.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -271,81 +341,87 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
       {/* Mobile Card View */}
       {isMobile && (
         <div className="divide-y divide-gray-100">
-          {employees.map(employee => (
-            <div 
-              key={employee.id}
-              className={cn(
-                "p-4 transition-colors",
-                selectedEmployees.includes(employee.id) ? "bg-crextio-accent/10" : ""
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedEmployees.includes(employee.id)}
-                    onChange={() => handleSelectEmployee(employee.id)}
-                    className="rounded border-gray-300 text-black focus:ring-black"
-                  />
-                  <div className="w-10 h-10 rounded-full overflow-hidden">
-                    <img 
-                      src={employee.avatar} 
-                      alt={employee.name}
-                      className="w-full h-full object-cover"
+          {employees.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              No employees found. Try adjusting your filters.
+            </div>
+          ) : (
+            employees.map(employee => (
+              <div 
+                key={employee.id}
+                className={cn(
+                  "p-4 transition-colors",
+                  selectedEmployees.includes(employee.id) ? "bg-crextio-accent/10" : ""
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedEmployees.includes(employee.id)}
+                      onChange={() => handleSelectEmployee(employee.id)}
+                      className="rounded border-gray-300 text-black focus:ring-black"
                     />
-                  </div>
-                  <div>
-                    <div className="font-medium">{employee.name}</div>
-                    <div className="text-sm text-gray-600">{employee.jobTitle}</div>
-                  </div>
-                </div>
-                
-                <button 
-                  onClick={() => toggleExpandEmployee(employee.id)}
-                  className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100"
-                >
-                  <ChevronRight 
-                    className={cn(
-                      "w-4 h-4 text-gray-600 transition-transform",
-                      expandedEmployee === employee.id ? "transform rotate-90" : ""
-                    )} 
-                  />
-                </button>
-              </div>
-              
-              {expandedEmployee === employee.id && (
-                <div className="mt-4 pl-10 space-y-2 animate-fade-in">
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="text-gray-500">Department:</div>
-                    <div>{employee.department}</div>
-                    
-                    <div className="text-gray-500">Site:</div>
-                    <div>{employee.site}</div>
-                    
-                    <div className="text-gray-500">Salary:</div>
-                    <div className="font-medium">{employee.salary}</div>
-                    
-                    <div className="text-gray-500">Start date:</div>
-                    <div>{employee.startDate}</div>
-                    
-                    <div className="text-gray-500">Lifecycle:</div>
-                    <div>{employee.lifecycle}</div>
-                    
-                    <div className="text-gray-500">Status:</div>
+                    <div className="w-10 h-10 rounded-full overflow-hidden">
+                      <img 
+                        src={employee.avatar} 
+                        alt={employee.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                     <div>
-                      <span className={cn(
-                        "inline-block px-2 py-1 rounded-full text-xs font-medium",
-                        employee.statusColor === 'green' && "bg-crextio-success/20 text-green-700",
-                        employee.statusColor === 'gray' && "bg-gray-200 text-gray-700"
-                      )}>
-                        {employee.status}
-                      </span>
+                      <div className="font-medium">{employee.name}</div>
+                      <div className="text-sm text-gray-600">{employee.jobTitle}</div>
                     </div>
                   </div>
+                  
+                  <button 
+                    onClick={() => toggleExpandEmployee(employee.id)}
+                    className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100"
+                  >
+                    <ChevronRight 
+                      className={cn(
+                        "w-4 h-4 text-gray-600 transition-transform",
+                        expandedEmployee === employee.id ? "transform rotate-90" : ""
+                      )} 
+                    />
+                  </button>
                 </div>
-              )}
-            </div>
-          ))}
+                
+                {expandedEmployee === employee.id && (
+                  <div className="mt-4 pl-10 space-y-2 animate-fade-in">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="text-gray-500">Department:</div>
+                      <div>{employee.department}</div>
+                      
+                      <div className="text-gray-500">Site:</div>
+                      <div>{employee.site}</div>
+                      
+                      <div className="text-gray-500">Salary:</div>
+                      <div className="font-medium">{employee.salary}</div>
+                      
+                      <div className="text-gray-500">Start date:</div>
+                      <div>{employee.startDate}</div>
+                      
+                      <div className="text-gray-500">Lifecycle:</div>
+                      <div>{employee.lifecycle}</div>
+                      
+                      <div className="text-gray-500">Status:</div>
+                      <div>
+                        <span className={cn(
+                          "inline-block px-2 py-1 rounded-full text-xs font-medium",
+                          employee.statusColor === 'green' && "bg-crextio-success/20 text-green-700",
+                          employee.statusColor === 'gray' && "bg-gray-200 text-gray-700"
+                        )}>
+                          {employee.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>

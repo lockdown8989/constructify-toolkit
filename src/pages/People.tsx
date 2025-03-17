@@ -1,87 +1,63 @@
 
 import React, { useState } from 'react';
 import PeopleTable from '@/components/people/PeopleTable';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, AlertCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useEmployees, useAddEmployee, useUpdateEmployee } from '@/hooks/use-employees';
+import { useToast } from '@/hooks/use-toast';
 
 const People = () => {
   const isMobile = useIsMobile();
-  
-  // Sample data
-  const sampleEmployees = [
-    {
-      id: '1',
-      avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-      name: 'Yulia Polishchuk',
-      jobTitle: 'Head of Design',
-      department: 'Design',
-      site: 'Remote',
-      siteIcon: '🌐',
-      salary: '$2,500',
-      startDate: 'Jan 10, 2022',
-      lifecycle: 'Active',
-      status: 'Active',
-      statusColor: 'green' as const,
-    },
-    {
-      id: '2',
-      avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-      name: 'Bogdan Nikitin',
-      jobTitle: 'Front End Developer',
-      department: 'Engineering',
-      site: 'Kyiv Office',
-      siteIcon: '🏢',
-      salary: '$3,000',
-      startDate: 'Mar 15, 2022',
-      lifecycle: 'Active',
-      status: 'Active',
-      statusColor: 'green' as const,
-    },
-    {
-      id: '3',
-      avatar: 'https://randomuser.me/api/portraits/women/68.jpg',
-      name: 'Daria Yurchenko',
-      jobTitle: 'UX/UI Designer',
-      department: 'Design',
-      site: 'Remote',
-      siteIcon: '🌐',
-      salary: '$1,500',
-      startDate: 'Feb 22, 2022',
-      lifecycle: 'Active',
-      status: 'Active',
-      statusColor: 'green' as const,
-    },
-    {
-      id: '4',
-      avatar: 'https://randomuser.me/api/portraits/men/75.jpg',
-      name: 'Artem Komarov',
-      jobTitle: 'Product Manager',
-      department: 'Product',
-      site: 'Kyiv Office',
-      siteIcon: '🏢',
-      salary: '$4,000',
-      startDate: 'Apr 5, 2022',
-      lifecycle: 'Active',
-      status: 'Leave',
-      statusColor: 'gray' as const,
-    },
-    {
-      id: '5',
-      avatar: 'https://randomuser.me/api/portraits/women/90.jpg',
-      name: 'Alina Kobets',
-      jobTitle: 'Backend Developer',
-      department: 'Engineering',
-      site: 'Remote',
-      siteIcon: '🌐',
-      salary: '$3,200',
-      startDate: 'Jan 20, 2022',
-      lifecycle: 'Active',
-      status: 'Active',
-      statusColor: 'green' as const,
-    },
-  ];
+  const { toast } = useToast();
+  const { data: employees = [], isLoading, error } = useEmployees();
+  const addEmployee = useAddEmployee();
+  const updateEmployee = useUpdateEmployee();
   
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Transform database data to match the component's expected format
+  const formattedEmployees = employees.map(employee => ({
+    id: employee.id,
+    avatar: employee.avatar || `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'women' : 'men'}/${Math.floor(Math.random() * 99)}.jpg`,
+    name: employee.name,
+    jobTitle: employee.job_title,
+    department: employee.department,
+    site: employee.site,
+    siteIcon: employee.site.includes('Remote') ? '🌐' : '🏢',
+    salary: `$${employee.salary.toLocaleString()}`,
+    startDate: new Date(employee.start_date).toLocaleDateString('en-US', { 
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }),
+    lifecycle: employee.lifecycle,
+    status: employee.status,
+    statusColor: employee.status === 'Active' ? 'green' : 'gray',
+  }));
+  
+  const filteredEmployees = formattedEmployees.filter(employee => 
+    employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    employee.jobTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    employee.department.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  const handleAddPerson = () => {
+    toast({
+      title: "This feature is coming soon",
+      description: "The ability to add new employees will be available in a future update.",
+    });
+  };
+  
+  if (error) {
+    return (
+      <div className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 flex items-center justify-center">
+        <div className="bg-red-50 border border-red-200 p-4 rounded-lg flex items-center text-red-700">
+          <AlertCircle className="w-5 h-5 mr-2" />
+          <span>Error loading employees: {(error as Error).message}</span>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
@@ -93,7 +69,10 @@ const People = () => {
             <p className="text-gray-500">Manage your team members and their account permissions here</p>
           </div>
           
-          <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 bg-black text-white hover:bg-gray-800 transition-colors self-start sm:self-center">
+          <button 
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 bg-black text-white hover:bg-gray-800 transition-colors self-start sm:self-center"
+            onClick={handleAddPerson}
+          >
             <Plus className="w-4 h-4 mr-2" />
             <span>Add person</span>
           </button>
@@ -114,7 +93,10 @@ const People = () => {
         )}
         
         {/* People Table */}
-        <PeopleTable employees={sampleEmployees} />
+        <PeopleTable 
+          employees={filteredEmployees}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );

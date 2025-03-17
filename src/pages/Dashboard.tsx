@@ -9,43 +9,40 @@ import HiringStatistics from '@/components/dashboard/HiringStatistics';
 import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
 import { Users, Briefcase, FolderOpen } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useEmployees } from '@/hooks/use-employees';
+import { useInterviews } from '@/hooks/use-interviews';
 
 const Dashboard = () => {
   const isMobile = useIsMobile();
+  const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
+  const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
   
-  // Sample data
+  // Sample data for meetings (would come from another table in a real app)
   const sampleMeetings = [
     { id: '1', title: 'Daily Sync', time: '09:30', date: new Date(), dotColor: 'yellow' as const },
     { id: '2', title: 'Task Review With Team', time: '11:00', date: new Date(), dotColor: 'black' as const },
     { id: '3', title: 'Daily Meeting', time: '12:00', date: new Date(), dotColor: 'yellow' as const },
   ];
   
-  const sampleEmployees = [
-    {
-      id: '1',
-      name: 'Yulia Polishchuk',
-      avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-      title: 'Head of Design',
-      salary: '$2,500',
-      status: 'Paid' as const,
-    },
-    {
-      id: '2',
-      name: 'Bogdan Nikitin',
-      avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-      title: 'Front End Developer',
-      salary: '$3,000',
-      status: 'Absent' as const,
-    },
-    {
-      id: '3',
-      name: 'Daria Yurchenko',
-      avatar: 'https://randomuser.me/api/portraits/women/68.jpg',
-      title: 'UX/UI Designer',
-      salary: '$1,500',
-      status: 'Pending' as const,
-    },
-  ];
+  // Transform employees data for the SalaryTable
+  const salaryEmployees = employees.slice(0, 3).map(emp => ({
+    id: emp.id,
+    name: emp.name,
+    avatar: emp.avatar || `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'women' : 'men'}/${Math.floor(Math.random() * 99)}.jpg`,
+    title: emp.job_title,
+    salary: `$${emp.salary.toLocaleString()}`,
+    status: emp.status === 'Active' ? 'Paid' : emp.status === 'Leave' ? 'Absent' : 'Pending'
+  }));
+  
+  // Get interview statistics
+  const interviewStats = {
+    interviews: interviews.filter(i => i.stage === 'Interview').reduce((acc, i) => acc + i.progress, 0) / 
+                Math.max(interviews.filter(i => i.stage === 'Interview').length, 1),
+    hired: interviews.filter(i => i.stage === 'Hired').reduce((acc, i) => acc + i.progress, 0) / 
+           Math.max(interviews.filter(i => i.stage === 'Hired').length, 1),
+    projectTime: 15, // Sample data, would come from project table
+    output: 5 // Sample data, would come from project table
+  };
   
   const hiringData = [
     { name: 'Jan', design: 120, others: 130 },
@@ -75,10 +72,10 @@ const Dashboard = () => {
         
         {/* Progress Bars */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <ProgressBar label="Interviews" value={70} color="black" />
-          <ProgressBar label="Hired" value={10} color="yellow" />
-          <ProgressBar label="Project time" value={15} color="gray" />
-          <ProgressBar label="Output" value={5} color="black" />
+          <ProgressBar label="Interviews" value={Math.round(interviewStats.interviews) || 0} color="black" />
+          <ProgressBar label="Hired" value={Math.round(interviewStats.hired) || 0} color="yellow" />
+          <ProgressBar label="Project time" value={interviewStats.projectTime} color="gray" />
+          <ProgressBar label="Output" value={interviewStats.output} color="black" />
         </div>
         
         {/* Stats */}
@@ -86,7 +83,7 @@ const Dashboard = () => {
           <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
             <StatCard 
               title="Employee" 
-              value="91" 
+              value={employees.length.toString()} 
               icon={<Users className="w-5 h-5" />}
               className="h-full"
             />
@@ -94,7 +91,7 @@ const Dashboard = () => {
           <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
             <StatCard 
               title="Hirings" 
-              value="104" 
+              value={interviews.filter(i => i.stage === 'Hired').length.toString()} 
               icon={<Users className="w-5 h-5" />}
               className="h-full"
             />
@@ -119,7 +116,7 @@ const Dashboard = () => {
           {/* Middle Column */}
           <div className="lg:col-span-5">
             <SalaryTable 
-              employees={sampleEmployees.map(emp => ({
+              employees={salaryEmployees.map(emp => ({
                 ...emp,
                 selected: emp.id === selectedEmployee
               }))} 
@@ -129,12 +126,16 @@ const Dashboard = () => {
           
           {/* Right Column */}
           <div className="lg:col-span-4">
-            <AttendanceReport present={63} absent={12} className="mb-6" />
+            <AttendanceReport 
+              present={Math.round((employees.filter(e => e.status === 'Active').length / Math.max(employees.length, 1)) * 100)} 
+              absent={Math.round((employees.filter(e => e.status === 'Leave').length / Math.max(employees.length, 1)) * 100)} 
+              className="mb-6" 
+            />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <HiringStatistics data={hiringData} className="col-span-1" />
               <EmployeeComposition 
-                total={345} 
+                total={employees.length} 
                 femalePercentage={70} 
                 malePercentage={30} 
                 className="col-span-1" 
