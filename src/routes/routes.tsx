@@ -1,120 +1,82 @@
-import React, { lazy, Suspense } from "react";
-import { RouteObject } from "react-router-dom";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
-import Dashboard from "@/pages/Dashboard";
-import Employees from "@/pages/Employees";
-import Payroll from "@/pages/Payroll";
-import Projects from "@/pages/Projects";
-import Reports from "@/pages/Reports";
-import Settings from "@/pages/Settings";
-import Signin from "@/pages/Signin";
-import Signup from "@/pages/Signup";
-import Tasks from "@/pages/Tasks";
-import People from "@/pages/People";
-import EmployeeDetails from "@/pages/EmployeeDetails";
+import React from "react";
+import { createBrowserRouter } from "react-router-dom";
+import Navbar from "../components/layout/Navbar";
+import Auth from "../pages/Auth";
+import Dashboard from "../pages/Dashboard";
+import People from "../pages/People";
+import Profile from "../pages/Profile";
+import Index from "../pages/Index";
+import NotFound from "../pages/NotFound";
+import LeaveManagement from "../pages/LeaveManagement";
+import Schedule from "../pages/Schedule";
+import Payroll from "../pages/Payroll";
+import ProtectedRoute from "../components/auth/ProtectedRoute";
 
-const EmployeesManagement = lazy(() => import("@/pages/EmployeesManagement"));
-
-const routes: RouteObject[] = [
+const router = createBrowserRouter([
   {
     path: "/",
-    element: (
-      <ProtectedRoute>
-        <Dashboard />
-      </ProtectedRoute>
-    ),
+    element: <Navbar />,
+    errorElement: <NotFound />,
+    children: [
+      {
+        index: true,
+        element: <Index />,
+      },
+      {
+        path: "auth",
+        element: <Auth />,
+      },
+      {
+        path: "dashboard",
+        element: (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "people",
+        element: (
+          <ProtectedRoute>
+            <People />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "leave",
+        element: (
+          <ProtectedRoute>
+            <LeaveManagement />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "schedule",
+        element: (
+          <ProtectedRoute>
+            <Schedule />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "payroll",
+        element: (
+          <ProtectedRoute requiredRole="admin">
+            <Payroll />
+          </ProtectedRoute>
+        ),
+      },
+    ],
   },
-  {
-    path: "/dashboard",
-    element: (
-      <ProtectedRoute>
-        <Dashboard />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/employees",
-    element: (
-      <ProtectedRoute>
-        <Employees />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/payroll",
-    element: (
-      <ProtectedRoute>
-        <Payroll />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/projects",
-    element: (
-      <ProtectedRoute>
-        <Projects />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/reports",
-    element: (
-      <ProtectedRoute>
-        <Reports />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/settings",
-    element: (
-      <ProtectedRoute>
-        <Settings />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/signin",
-    element: <Signin />,
-  },
-  {
-    path: "/signup",
-    element: <Signup />,
-  },
-  {
-    path: "/tasks",
-    element: (
-      <ProtectedRoute>
-        <Tasks />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/people",
-    element: (
-      <ProtectedRoute>
-        <People />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/employee/:id",
-    element: (
-      <ProtectedRoute>
-        <EmployeeDetails />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/employees-management",
-    element: (
-      <ProtectedRoute>
-        <Suspense fallback={<div>Loading...</div>}>
-          <EmployeesManagement />
-        </Suspense>
-      </ProtectedRoute>
-    ),
-  },
-];
+]);
 
-export default routes;
+export default router;
