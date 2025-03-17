@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import ProgressBar from '@/components/dashboard/ProgressBar';
 import StatCard from '@/components/dashboard/StatCard';
@@ -134,12 +133,7 @@ const Dashboard = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <HiringStatistics data={hiringData} className="col-span-1" />
-              <EmployeeComposition 
-                total={employees.length} 
-                femalePercentage={70} 
-                malePercentage={30} 
-                className="col-span-1" 
-              />
+              <EmployeeComposition className="col-span-1" />
             </div>
           </div>
         </div>
