@@ -23,7 +23,7 @@ export interface InterviewModel {
 export interface PayrollModel {
   id: string;
   employee_id: string;
-  salary_paid: number;
+  net_salary: number;
   payment_status: string;
   payment_date: string;
 }
@@ -34,7 +34,6 @@ export interface AttendanceModel {
   check_in: string;
   check_out?: string;
   status: string;
-  date: string;
 }
 
 export interface ScheduleModel {
