@@ -17,6 +17,10 @@ export function useLeaveCalendar() {
   return useQuery({
     queryKey: ['leave_calendar'],
     queryFn: async () => {
+      if (!session) {
+        throw new Error("Authentication required");
+      }
+      
       const { data, error } = await supabase
         .from('leave_calendar')
         .select('*');
@@ -44,6 +48,10 @@ export function useEmployeeLeaveCalendar(employeeId: string) {
   return useQuery({
     queryKey: ['leave_calendar', employeeId],
     queryFn: async () => {
+      if (!session) {
+        throw new Error("Authentication required");
+      }
+      
       const { data, error } = await supabase
         .from('leave_calendar')
         .select('*')
@@ -67,18 +75,18 @@ export function useEmployeeLeaveCalendar(employeeId: string) {
 // Add a new leave record
 export function useAddLeaveCalendar() {
   const queryClient = useQueryClient();
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (newLeave: NewLeaveCalendar) => {
-      if (!session) {
+      if (!session || !user) {
         throw new Error("You must be logged in to add a leave request");
       }
       
       // If the employee_id isn't set, set it to the current user's ID
-      if (!newLeave.employee_id && session.user) {
-        newLeave.employee_id = session.user.id;
+      if (!newLeave.employee_id) {
+        newLeave.employee_id = user.id;
       }
       
       const { data, error } = await supabase

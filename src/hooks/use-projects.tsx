@@ -14,6 +14,10 @@ export function useProjects() {
   return useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
+      if (!session) {
+        throw new Error("Authentication required");
+      }
+      
       const { data, error } = await supabase
         .from('projects')
         .select('*')
@@ -41,6 +45,10 @@ export function useProjectsForDepartment(department: string) {
   return useQuery({
     queryKey: ['projects', department],
     queryFn: async () => {
+      if (!session) {
+        throw new Error("Authentication required");
+      }
+      
       const { data, error } = await supabase
         .from('projects')
         .select('*')

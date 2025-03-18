@@ -17,6 +17,10 @@ export function useInterviews() {
   return useQuery({
     queryKey: ['interviews'],
     queryFn: async () => {
+      if (!session) {
+        throw new Error("Authentication required");
+      }
+      
       const { data, error } = await supabase
         .from('interviews')
         .select('*');
