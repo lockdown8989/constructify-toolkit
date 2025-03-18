@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import SalaryTable from '@/components/dashboard/SalaryTable';
 import { useEmployees } from '@/hooks/use-employees';
@@ -143,12 +144,12 @@ const PayrollPage = () => {
       // Record payment in payroll table
       const { error: payrollError } = await supabase
         .from('payroll')
-        .insert([{
+        .insert({
           employee_id: employeeId,
           salary_paid: finalSalary,
           payment_status: 'Paid',
           payment_date: new Date().toISOString().split('T')[0]
-        }]);
+        });
 
       if (payrollError) {
         console.error('Error inserting payroll record:', payrollError);
