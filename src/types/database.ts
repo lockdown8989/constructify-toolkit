@@ -32,9 +32,9 @@ export interface AttendanceModel {
   id: string;
   employee_id: string;
   check_in: string;
-  check_out?: string;
+  check_out?: string | null;
   status: string;
-  date?: string;
+  date?: string | null;
 }
 
 export interface ScheduleModel {
