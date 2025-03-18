@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { useAddLeaveCalendar } from "@/hooks/use-leave-calendar";
+import { useAddLeaveCalendar } from "@/hooks/leave-calendar";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

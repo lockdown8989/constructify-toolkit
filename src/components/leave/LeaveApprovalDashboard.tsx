@@ -1,10 +1,7 @@
-
 import React, { useState } from "react";
 import { format, differenceInCalendarDays, addDays } from "date-fns";
-import { useLeaveCalendar } from "@/hooks/use-leave-calendar";
-import { useEmployees } from "@/hooks/use-employees";
-import { useUpdateLeaveCalendar } from "@/hooks/use-leave-calendar";
-import { useUpdateEmployee } from "@/hooks/use-employees";
+import { useLeaveCalendar, useUpdateLeaveCalendar } from "@/hooks/leave-calendar";
+import { useEmployees, useUpdateEmployee } from "@/hooks/use-employees";
 import { useToast } from "@/hooks/use-toast";
 import { Check, X, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -39,7 +36,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { LeaveCalendar } from "@/hooks/use-leave-calendar";
+import type { LeaveCalendar } from "@/hooks/leave-calendar";
 import type { Employee } from "@/hooks/use-employees";
 
 const LeaveApprovalDashboard: React.FC = () => {

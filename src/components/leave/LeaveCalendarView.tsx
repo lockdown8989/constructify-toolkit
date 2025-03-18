@@ -1,8 +1,7 @@
-
 import React, { useState } from "react";
 import { addMonths, subMonths, format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, getDay } from "date-fns";
 import { ChevronLeft, ChevronRight, Info } from "lucide-react";
-import { useLeaveCalendar } from "@/hooks/use-leave-calendar";
+import { useLeaveCalendar } from "@/hooks/leave-calendar";
 import { useEmployees } from "@/hooks/use-employees";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { LeaveCalendar } from "@/hooks/use-leave-calendar";
+import type { LeaveCalendar } from "@/hooks/leave-calendar";
 
 const LeaveCalendarView: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -29,28 +28,22 @@ const LeaveCalendarView: React.FC = () => {
   const monthEnd = endOfMonth(currentDate);
   const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
   
-  // Find the day of the week the month starts on (0 = Sunday, 1 = Monday, etc.)
   const startDay = getDay(monthStart);
   
-  // Create a 7x6 grid for the calendar (7 days of the week, up to 6 weeks per month)
   const calendarGrid = [];
   
-  // Add empty cells for days before the month starts
   for (let i = 0; i < startDay; i++) {
     calendarGrid.push(null);
   }
   
-  // Add all days of the month
   monthDays.forEach(day => {
     calendarGrid.push(day);
   });
   
-  // Add empty cells to complete the grid
   while (calendarGrid.length % 7 !== 0) {
     calendarGrid.push(null);
   }
   
-  // Group days into weeks
   const calendarWeeks = [];
   for (let i = 0; i < calendarGrid.length; i += 7) {
     calendarWeeks.push(calendarGrid.slice(i, i + 7));
@@ -69,7 +62,6 @@ const LeaveCalendarView: React.FC = () => {
     return employee ? employee.name : "Unknown Employee";
   };
   
-  // Get leaves for a specific day
   const getLeavesForDay = (day: Date): LeaveCalendar[] => {
     if (!day) return [];
     
@@ -79,7 +71,6 @@ const LeaveCalendarView: React.FC = () => {
       const startDate = new Date(leave.start_date);
       const endDate = new Date(leave.end_date);
       
-      // Check if the day falls within the leave period
       return (
         dayString >= format(startDate, "yyyy-MM-dd") && 
         dayString <= format(endDate, "yyyy-MM-dd")
@@ -148,7 +139,6 @@ const LeaveCalendarView: React.FC = () => {
       </CardHeader>
       
       <CardContent>
-        {/* Calendar Legend */}
         <div className="flex flex-wrap gap-2 mb-4">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-blue-500"></div>
@@ -172,16 +162,13 @@ const LeaveCalendarView: React.FC = () => {
           </div>
         </div>
         
-        {/* Calendar Grid */}
         <div className="grid grid-cols-7 gap-1">
-          {/* Day Names */}
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
             <div key={day} className="text-center font-medium py-2 text-sm">
               {day}
             </div>
           ))}
           
-          {/* Calendar Days */}
           {calendarWeeks.map((week, weekIndex) => (
             <React.Fragment key={weekIndex}>
               {week.map((day, dayIndex) => {

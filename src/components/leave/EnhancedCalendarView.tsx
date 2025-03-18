@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { addMonths, subMonths, isSameDay, isWithinInterval } from "date-fns";
-import { useLeaveCalendar } from "@/hooks/use-leave-calendar";
+import { useLeaveCalendar } from "@/hooks/leave-calendar";
 import { useEmployees } from "@/hooks/use-employees";
 import type { DateRange } from "react-day-picker";
 import {
