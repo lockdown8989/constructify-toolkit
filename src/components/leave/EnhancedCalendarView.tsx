@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { addMonths, subMonths, isSameDay, isWithinInterval } from "date-fns";
+import { addMonths, subMonths, isSameDay, isWithinInterval, format } from "date-fns";
 import { useLeaveCalendar } from "@/hooks/leave-calendar";
 import { useEmployees } from "@/hooks/use-employees";
 import type { DateRange } from "react-day-picker";
@@ -26,7 +26,11 @@ const EnhancedCalendarView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeView, setActiveView] = useState<"calendar" | "list">("calendar");
   
-  const { data: leaves = [], isLoading: isLoadingLeaves } = useLeaveCalendar();
+  // Calculate the first and last day of the current month
+  const firstDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1), 'yyyy-MM-dd');
+  const lastDayOfMonth = format(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0), 'yyyy-MM-dd');
+  
+  const { data: leaves = [], isLoading: isLoadingLeaves } = useLeaveCalendar(firstDayOfMonth, lastDayOfMonth);
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   
   const handlePrevMonth = () => {

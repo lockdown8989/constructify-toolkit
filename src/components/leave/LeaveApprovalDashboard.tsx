@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { format, differenceInCalendarDays, addDays } from "date-fns";
 import { useLeaveCalendar, useUpdateLeaveCalendar } from "@/hooks/leave-calendar";
@@ -40,7 +41,18 @@ import type { LeaveCalendar } from "@/hooks/leave-calendar";
 import type { Employee } from "@/hooks/use-employees";
 
 const LeaveApprovalDashboard: React.FC = () => {
-  const { data: leaves = [], isLoading: isLoadingLeaves } = useLeaveCalendar();
+  // Get the first day of three months ago and the last day of next month for a good date range
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+  threeMonthsAgo.setDate(1);
+  const startDate = format(threeMonthsAgo, 'yyyy-MM-dd');
+  
+  const nextMonth = new Date();
+  nextMonth.setMonth(nextMonth.getMonth() + 1);
+  nextMonth.setDate(0); // Last day of next month
+  const endDate = format(nextMonth, 'yyyy-MM-dd');
+  
+  const { data: leaves = [], isLoading: isLoadingLeaves } = useLeaveCalendar(startDate, endDate);
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { mutate: updateLeave } = useUpdateLeaveCalendar();
   const { mutate: updateEmployee } = useUpdateEmployee();

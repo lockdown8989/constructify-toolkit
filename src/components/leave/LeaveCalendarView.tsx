@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { addMonths, subMonths, format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, getDay } from "date-fns";
 import { ChevronLeft, ChevronRight, Info } from "lucide-react";
@@ -21,11 +22,16 @@ import type { LeaveCalendar } from "@/hooks/leave-calendar";
 
 const LeaveCalendarView: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const { data: leaves = [], isLoading: isLoadingLeaves } = useLeaveCalendar();
-  const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   
+  // Calculate the first and last day of the current month
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
+  const firstDayOfMonth = format(monthStart, 'yyyy-MM-dd');
+  const lastDayOfMonth = format(monthEnd, 'yyyy-MM-dd');
+  
+  const { data: leaves = [], isLoading: isLoadingLeaves } = useLeaveCalendar(firstDayOfMonth, lastDayOfMonth);
+  const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
+  
   const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
   
   const startDay = getDay(monthStart);
