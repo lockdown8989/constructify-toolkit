@@ -1,151 +1,166 @@
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import type { LeaveCalendar, NewLeaveCalendar, LeaveCalendarUpdate } from './types';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import type { LeaveCalendar, NewLeaveCalendar, LeaveCalendarUpdate } from "./types";
 
-// Add a new leave record
-export function useAddLeaveCalendar() {
+/**
+ * Hook for creating a new leave request
+ */
+export const useCreateLeaveRequest = () => {
   const queryClient = useQueryClient();
-  const { session, user } = useAuth();
-  const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (newLeave: NewLeaveCalendar) => {
-      if (!session || !user) {
-        throw new Error("You must be logged in to add a leave request");
-      }
-      
-      // If the employee_id isn't set, set it to the current user's ID
-      if (!newLeave.employee_id) {
-        newLeave.employee_id = user.id;
-      }
-      
       const { data, error } = await supabase
         .from('leave_calendar')
         .insert(newLeave)
         .select()
         .single();
-      
-      if (error) {
-        toast({
-          title: "Error adding leave request",
-          description: error.message,
-          variant: "destructive",
-        });
-        throw error;
-      }
-      
+        
+      if (error) throw error;
       return data as LeaveCalendar;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['leave_calendar'] });
-      queryClient.invalidateQueries({ queryKey: ['leave_calendar', data.employee_id] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leave-requests'] });
       toast({
-        title: "Leave request submitted",
+        title: "Leave request created",
         description: "Your leave request has been submitted successfully.",
       });
-    }
+    },
+    onError: (error) => {
+      console.error("Error creating leave request:", error);
+      toast({
+        title: "Failed to create leave request",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    },
   });
-}
+};
 
-// Update a leave record
-export function useUpdateLeaveCalendar() {
+/**
+ * Hook for updating a leave request
+ */
+export const useUpdateLeaveRequest = () => {
   const queryClient = useQueryClient();
-  const { session } = useAuth();
-  const { toast } = useToast();
   
   return useMutation({
-    mutationFn: async ({ id, ...update }: LeaveCalendarUpdate & { id: string }) => {
-      if (!session) {
-        throw new Error("You must be logged in to update a leave request");
-      }
-      
+    mutationFn: async ({ id, ...updates }: LeaveCalendarUpdate & { id: string }) => {
       const { data, error } = await supabase
         .from('leave_calendar')
-        .update(update)
+        .update(updates)
         .eq('id', id)
         .select()
         .single();
-      
-      if (error) {
-        toast({
-          title: "Error updating leave request",
-          description: error.message,
-          variant: "destructive",
-        });
-        throw error;
-      }
-      
+        
+      if (error) throw error;
       return data as LeaveCalendar;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['leave_calendar'] });
-      queryClient.invalidateQueries({ queryKey: ['leave_calendar', data.employee_id] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leave-requests'] });
       toast({
         title: "Leave request updated",
         description: "The leave request has been updated successfully.",
       });
-    }
+    },
+    onError: (error) => {
+      console.error("Error updating leave request:", error);
+      toast({
+        title: "Failed to update leave request",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    },
   });
-}
+};
 
-// Delete a leave record
-export function useDeleteLeaveCalendar() {
+/**
+ * Hook for deleting a leave request
+ */
+export const useDeleteLeaveRequest = () => {
   const queryClient = useQueryClient();
-  const { session } = useAuth();
-  const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (id: string) => {
-      if (!session) {
-        throw new Error("You must be logged in to delete a leave request");
-      }
-      
-      // First get the employee_id before deletion
-      const { data: leaveData, error: fetchError } = await supabase
-        .from('leave_calendar')
-        .select('employee_id')
-        .eq('id', id)
-        .single();
-      
-      if (fetchError) {
-        toast({
-          title: "Error fetching leave request",
-          description: fetchError.message,
-          variant: "destructive",
-        });
-        throw fetchError;
-      }
-      
-      const employeeId = leaveData?.employee_id;
-      
-      const { error: deleteError } = await supabase
+      const { error } = await supabase
         .from('leave_calendar')
         .delete()
         .eq('id', id);
-      
-      if (deleteError) {
-        toast({
-          title: "Error deleting leave request",
-          description: deleteError.message,
-          variant: "destructive",
-        });
-        throw deleteError;
-      }
-      
-      return { id, employeeId };
+        
+      if (error) throw error;
+      return id;
     },
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ['leave_calendar'] });
-      if (result.employeeId) {
-        queryClient.invalidateQueries({ queryKey: ['leave_calendar', result.employeeId] });
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leave-requests'] });
       toast({
         title: "Leave request deleted",
         description: "The leave request has been deleted successfully.",
       });
-    }
+    },
+    onError: (error) => {
+      console.error("Error deleting leave request:", error);
+      toast({
+        title: "Failed to delete leave request",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    },
   });
-}
+};
+
+/**
+ * Hook for approving or rejecting a leave request
+ */
+export const useProcessLeaveRequest = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, status, notes }: { id: string; status: 'Approved' | 'Rejected'; notes?: string }) => {
+      const timestamp = new Date().toISOString();
+      const { data: currentLeave, error: fetchError } = await supabase
+        .from('leave_calendar')
+        .select('audit_log')
+        .eq('id', id)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      const auditLog = currentLeave?.audit_log || [];
+      const newAuditEntry = {
+        timestamp,
+        action: `Status changed to ${status}`,
+        notes: notes || ''
+      };
+      
+      const { data, error } = await supabase
+        .from('leave_calendar')
+        .update({ 
+          status, 
+          audit_log: [...auditLog, newAuditEntry],
+          ...(notes && { notes })
+        })
+        .eq('id', id)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return data as LeaveCalendar;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['leave-requests'] });
+      toast({
+        title: `Leave request ${variables.status.toLowerCase()}`,
+        description: `The leave request has been ${variables.status.toLowerCase()} successfully.`,
+      });
+    },
+    onError: (error) => {
+      console.error("Error processing leave request:", error);
+      toast({
+        title: "Failed to process leave request",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    },
+  });
+};
