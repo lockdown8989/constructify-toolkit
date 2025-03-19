@@ -4,7 +4,6 @@ import { addMonths, subMonths, isSameDay, format } from "date-fns";
 import { useLeaveCalendar } from "@/hooks/leave-calendar";
 import { useEmployees } from "@/hooks/use-employees";
 import type { DateRange } from "react-day-picker";
-import { TabsContent } from "@/components/ui/tabs";
 
 // Import our components
 import CalendarHeader from "../calendar/CalendarHeader";
