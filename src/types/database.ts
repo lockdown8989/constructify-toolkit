@@ -1,4 +1,3 @@
-
 export interface EmployeeModel {
   id: string;
   name: string;
@@ -34,6 +33,7 @@ export interface AttendanceModel {
   check_in: string;
   check_out?: string;
   status: string;
+  date?: string;
 }
 
 export interface ScheduleModel {

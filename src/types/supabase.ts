@@ -1,3 +1,4 @@
+
 import type { Database as SupabaseDatabase } from '@/integrations/supabase/types';
 
 // Extend the Supabase Database type with our custom tables
@@ -153,6 +154,7 @@ export interface Database extends SupabaseDatabase {
           check_in: string;
           check_out: string | null;
           status: string;
+          date: string | null;
         };
         Insert: {
           id?: string;
@@ -160,6 +162,7 @@ export interface Database extends SupabaseDatabase {
           check_in?: string;
           check_out?: string | null;
           status?: string;
+          date?: string | null;
         };
         Update: {
           id?: string;
@@ -167,6 +170,7 @@ export interface Database extends SupabaseDatabase {
           check_in?: string;
           check_out?: string | null;
           status?: string;
+          date?: string | null;
         };
         Relationships: [
           {
