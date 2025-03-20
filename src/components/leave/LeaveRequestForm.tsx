@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { useAddLeaveCalendar } from "@/hooks/leave-calendar/use-leave-mutations";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { useAddLeaveCalendar } from "@/hooks/use-leave-calendar";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { useProjectsForDepartment } from "@/hooks/use-projects";
 import { checkProjectConflicts, calculateBusinessDays } from "@/utils/leave-utils";
 import ProjectConflicts from "./ProjectConflicts";
@@ -16,10 +18,17 @@ import {
   CardContent, 
   CardFooter 
 } from "@/components/ui/card";
-
-import DatePickerField from "./form/DatePickerField";
-import LeaveTypeSelector from "./form/LeaveTypeSelector";
-import NotesField from "./form/NotesField";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface LeaveRequestFormProps {
   employeeId: string;
@@ -128,34 +137,95 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
       
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          <LeaveTypeSelector 
-            value={leaveType}
-            onChange={setLeaveType}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="leaveType">Leave Type</Label>
+            <Select
+              value={leaveType}
+              onValueChange={setLeaveType}
+            >
+              <SelectTrigger id="leaveType">
+                <SelectValue placeholder="Select leave type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Holiday">Holiday</SelectItem>
+                <SelectItem value="Sickness">Sickness</SelectItem>
+                <SelectItem value="Personal">Personal</SelectItem>
+                <SelectItem value="Parental">Parental</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           
           <div className="grid grid-cols-2 gap-4">
-            <DatePickerField
-              id="startDate"
-              label="Start Date"
-              date={startDate}
-              onSelect={setStartDate}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Start Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="startDate"
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, "PPP") : "Select date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <CalendarComponent
+                    mode="single"
+                    selected={startDate}
+                    onSelect={setStartDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
             
-            <DatePickerField
-              id="endDate"
-              label="End Date"
-              date={endDate}
-              onSelect={setEndDate}
+            <div className="space-y-2">
+              <Label htmlFor="endDate">End Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="endDate"
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, "PPP") : "Select date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <CalendarComponent
+                    mode="single"
+                    selected={endDate}
+                    onSelect={setEndDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Textarea
+              id="notes"
+              placeholder="Additional information about your leave request"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={4}
             />
           </div>
           
-          <NotesField
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
-          
           {conflicts.length > 0 && (
             <div className="space-y-2">
+              <Label>Potential Conflicts</Label>
               <ProjectConflicts conflicts={conflicts} />
             </div>
           )}

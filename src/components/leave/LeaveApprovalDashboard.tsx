@@ -1,9 +1,28 @@
 
 import React, { useState } from "react";
-import { format, addDays } from "date-fns";
-import { useLeaveCalendar, useUpdateLeaveCalendar } from "@/hooks/leave-calendar";
-import { useEmployees, useUpdateEmployee } from "@/hooks/use-employees";
+import { format, differenceInCalendarDays, addDays } from "date-fns";
+import { useLeaveCalendar } from "@/hooks/use-leave-calendar";
+import { useEmployees } from "@/hooks/use-employees";
+import { useUpdateLeaveCalendar } from "@/hooks/use-leave-calendar";
+import { useUpdateEmployee } from "@/hooks/use-employees";
 import { useToast } from "@/hooks/use-toast";
+import { Check, X, Filter } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -11,24 +30,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import ApprovalFilters from "./approval/ApprovalFilters";
-import ApprovalTable from "./approval/ApprovalTable";
-import { calculateLeaveDays, createAuditLog, filterLeaves } from "./approval/approval-utils";
-import type { LeaveCalendar } from "@/hooks/leave-calendar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import type { LeaveCalendar } from "@/hooks/use-leave-calendar";
+import type { Employee } from "@/hooks/use-employees";
 
 const LeaveApprovalDashboard: React.FC = () => {
-  // Get the first day of three months ago and the last day of next month for a good date range
-  const threeMonthsAgo = new Date();
-  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-  threeMonthsAgo.setDate(1);
-  const startDate = format(threeMonthsAgo, 'yyyy-MM-dd');
-  
-  const nextMonth = new Date();
-  nextMonth.setMonth(nextMonth.getMonth() + 1);
-  nextMonth.setDate(0); // Last day of next month
-  const endDate = format(nextMonth, 'yyyy-MM-dd');
-  
-  const { data: leaves = [], isLoading: isLoadingLeaves } = useLeaveCalendar(startDate, endDate);
+  const { data: leaves = [], isLoading: isLoadingLeaves } = useLeaveCalendar();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { mutate: updateLeave } = useUpdateLeaveCalendar();
   const { mutate: updateEmployee } = useUpdateEmployee();
@@ -51,21 +66,37 @@ const LeaveApprovalDashboard: React.FC = () => {
   const pendingLeaves = leaves.filter(leave => leave.status === "Pending");
   
   // Apply filters and security permissions
-  const filteredLeaves = filterLeaves(
-    pendingLeaves,
-    employees,
-    currentUser,
-    selectedEmployee,
-    selectedDepartment,
-    selectedType
-  );
+  const filteredLeaves = pendingLeaves.filter(leave => {
+    const employee = employees.find(emp => emp.id === leave.employee_id);
+    
+    // Security check: Only allow managers to see their department's leaves
+    // In a real app, this would be handled by Row Level Security
+    if (currentUser.isManager && !currentUser.department.includes("HR")) {
+      if (employee && employee.department !== currentUser.department) {
+        return false;
+      }
+    }
+    
+    const matchesEmployee = selectedEmployee === "all" || leave.employee_id === selectedEmployee;
+    const matchesDepartment = selectedDepartment === "all" || (employee && employee.department === selectedDepartment);
+    const matchesType = selectedType === "all" || leave.type === selectedType;
+    
+    return matchesEmployee && matchesDepartment && matchesType;
+  });
   
   // Get unique departments for filter
   const departments = [...new Set(employees.map(emp => emp.department))];
   
   // Get unique leave types for filter
   const leaveTypes = [...new Set(leaves.map(leave => leave.type))];
-
+  
+  // Calculate the number of leave days
+  const calculateLeaveDays = (startDate: string, endDate: string): number => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return differenceInCalendarDays(end, start) + 1; // Include both start and end dates
+  };
+  
   // Update employee status to "On Leave" when leave is approved
   const updateEmployeeStatus = (employeeId: string, startDate: string, endDate: string) => {
     const today = new Date();
@@ -90,8 +121,19 @@ const LeaveApprovalDashboard: React.FC = () => {
     }
   };
   
+  // Create audit log entry in notes field
+  const createAuditLog = (leave: LeaveCalendar, action: "Approved" | "Rejected"): string => {
+    const currentDate = format(new Date(), "yyyy-MM-dd HH:mm:ss");
+    const existingNotes = leave.notes || "";
+    const auditEntry = `${action} by ${currentUser.name} on ${currentDate}`;
+    
+    return existingNotes
+      ? `${existingNotes}\n\n${auditEntry}`
+      : auditEntry;
+  };
+  
   const handleApprove = (leave: LeaveCalendar) => {
-    const auditLog = createAuditLog(leave, "Approved", currentUser.name);
+    const auditLog = createAuditLog(leave, "Approved");
     
     updateLeave(
       { id: leave.id, status: "Approved", notes: auditLog },
@@ -118,7 +160,7 @@ const LeaveApprovalDashboard: React.FC = () => {
   };
   
   const handleReject = (leave: LeaveCalendar) => {
-    const auditLog = createAuditLog(leave, "Rejected", currentUser.name);
+    const auditLog = createAuditLog(leave, "Rejected");
     
     updateLeave(
       { id: leave.id, status: "Rejected", notes: auditLog },
@@ -163,28 +205,120 @@ const LeaveApprovalDashboard: React.FC = () => {
           Review and manage employee leave requests
         </CardDescription>
         
-        <ApprovalFilters
-          employees={employees}
-          departments={departments}
-          leaveTypes={leaveTypes}
-          selectedEmployee={selectedEmployee}
-          selectedDepartment={selectedDepartment}
-          selectedType={selectedType}
-          onEmployeeChange={setSelectedEmployee}
-          onDepartmentChange={setSelectedDepartment}
-          onTypeChange={setSelectedType}
-        />
+        <div className="flex flex-wrap gap-2 pt-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Filter className="mr-2 h-4 w-4" />
+                Filters
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>Filter by Employee</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={selectedEmployee} onValueChange={setSelectedEmployee}>
+                <DropdownMenuRadioItem value="all">All Employees</DropdownMenuRadioItem>
+                {employees.map((employee) => (
+                  <DropdownMenuRadioItem key={employee.id} value={employee.id}>
+                    {employee.name}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+              
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Filter by Department</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                <DropdownMenuRadioItem value="all">All Departments</DropdownMenuRadioItem>
+                {departments.map((department) => (
+                  <DropdownMenuRadioItem key={department} value={department}>
+                    {department}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+              
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Filter by Type</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={selectedType} onValueChange={setSelectedType}>
+                <DropdownMenuRadioItem value="all">All Types</DropdownMenuRadioItem>
+                {leaveTypes.map((type) => (
+                  <DropdownMenuRadioItem key={type} value={type}>
+                    {type}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </CardHeader>
       
       <CardContent>
-        <ApprovalTable
-          leaves={filteredLeaves}
-          getEmployeeName={getEmployeeName}
-          getEmployeeDepartment={getEmployeeDepartment}
-          calculateLeaveDays={calculateLeaveDays}
-          onApprove={handleApprove}
-          onReject={handleReject}
-        />
+        {filteredLeaves.length === 0 ? (
+          <div className="text-center p-4 text-muted-foreground">
+            No pending leave requests found
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Employee</TableHead>
+                  <TableHead>Department</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Start Date</TableHead>
+                  <TableHead>End Date</TableHead>
+                  <TableHead>Days</TableHead>
+                  <TableHead>Notes</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredLeaves.map((leave) => (
+                  <TableRow key={leave.id}>
+                    <TableCell className="font-medium">{getEmployeeName(leave.employee_id)}</TableCell>
+                    <TableCell>{getEmployeeDepartment(leave.employee_id)}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        leave.type === "Holiday" ? "bg-blue-100 text-blue-800" :
+                        leave.type === "Sickness" ? "bg-red-100 text-red-800" :
+                        leave.type === "Personal" ? "bg-purple-100 text-purple-800" :
+                        leave.type === "Parental" ? "bg-green-100 text-green-800" :
+                        "bg-gray-100 text-gray-800"
+                      }`}>
+                        {leave.type}
+                      </span>
+                    </TableCell>
+                    <TableCell>{format(new Date(leave.start_date), "PP")}</TableCell>
+                    <TableCell>{format(new Date(leave.end_date), "PP")}</TableCell>
+                    <TableCell>{calculateLeaveDays(leave.start_date, leave.end_date)}</TableCell>
+                    <TableCell className="max-w-[200px] truncate">{leave.notes || "-"}</TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="h-8 w-8 p-0" 
+                          onClick={() => handleApprove(leave)}
+                        >
+                          <Check className="h-4 w-4 text-green-500" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="h-8 w-8 p-0" 
+                          onClick={() => handleReject(leave)}
+                        >
+                          <X className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
