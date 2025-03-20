@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useSchedules, useCreateSchedule } from '@/hooks/use-schedules';
 import ScheduleList from '@/components/schedule/ScheduleList';
+import ScheduleCalendar from '@/components/schedule/ScheduleCalendar';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -153,6 +154,7 @@ const SchedulePage = () => {
         <TabsList className="mb-6">
           <TabsTrigger value="calendar">Calendar View</TabsTrigger>
           <TabsTrigger value="schedule">Daily Schedule</TabsTrigger>
+          <TabsTrigger value="interactive">Interactive Calendar</TabsTrigger>
         </TabsList>
         
         <TabsContent value="calendar" className="space-y-6">
@@ -289,6 +291,10 @@ const SchedulePage = () => {
               </div>
             </div>
           </div>
+        </TabsContent>
+        
+        <TabsContent value="interactive">
+          <ScheduleCalendar />
         </TabsContent>
       </Tabs>
       
