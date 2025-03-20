@@ -1,3 +1,4 @@
+
 export interface EmployeeModel {
   id: string;
   name: string;
@@ -22,7 +23,7 @@ export interface InterviewModel {
 export interface PayrollModel {
   id: string;
   employee_id: string;
-  net_salary: number;
+  salary_paid: number;
   payment_status: string;
   payment_date: string;
 }

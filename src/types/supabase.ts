@@ -119,21 +119,21 @@ export interface Database extends SupabaseDatabase {
         Row: {
           id: string;
           employee_id: string;
-          net_salary: number;
+          salary_paid: number;
           payment_status: string;
           payment_date: string;
         };
         Insert: {
           id?: string;
           employee_id: string;
-          net_salary: number;
+          salary_paid: number;
           payment_status?: string;
           payment_date?: string;
         };
         Update: {
           id?: string;
           employee_id?: string;
-          net_salary?: number;
+          salary_paid?: number;
           payment_status?: string;
           payment_date?: string;
         };
