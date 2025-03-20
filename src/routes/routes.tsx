@@ -1,81 +1,68 @@
 
-import React from "react";
 import { createBrowserRouter } from "react-router-dom";
-import Navbar from "../components/layout/Navbar";
-import Auth from "../pages/Auth";
-import Dashboard from "../pages/Dashboard";
-import People from "../pages/People";
-import Profile from "../pages/Profile";
-import Index from "../pages/Index";
-import NotFound from "../pages/NotFound";
-import LeaveManagement from "../pages/LeaveManagement";
-import Schedule from "../pages/Schedule";
-import Payroll from "../pages/Payroll";
-import ProtectedRoute from "../components/auth/ProtectedRoute";
+import AppLayout from "@/components/layout/AppLayout";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import Dashboard from "@/pages/Dashboard";
+import Auth from "@/pages/Auth";
+import People from "@/pages/People";
+import LeaveManagement from "@/pages/LeaveManagement";
+import Schedule from "@/pages/Schedule";
+import Profile from "@/pages/Profile";
+import NotFound from "@/pages/NotFound";
+import Index from "@/pages/Index";
+import Payroll from "@/pages/Payroll";
+import Salary from "@/pages/Salary";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Navbar />,
-    errorElement: <NotFound />,
+    element: <Index />,
+  },
+  {
+    path: "/auth",
+    element: <Auth />,
+  },
+  {
+    path: "/",
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
-        index: true,
-        element: <Index />,
-      },
-      {
-        path: "auth",
-        element: <Auth />,
-      },
-      {
         path: "dashboard",
-        element: (
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        ),
+        element: <Dashboard />,
       },
       {
         path: "people",
-        element: (
-          <ProtectedRoute>
-            <People />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "profile",
-        element: (
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        ),
+        element: <People />,
       },
       {
         path: "leave",
-        element: (
-          <ProtectedRoute>
-            <LeaveManagement />
-          </ProtectedRoute>
-        ),
+        element: <LeaveManagement />,
       },
       {
         path: "schedule",
-        element: (
-          <ProtectedRoute>
-            <Schedule />
-          </ProtectedRoute>
-        ),
+        element: <Schedule />,
+      },
+      {
+        path: "profile",
+        element: <Profile />,
+      },
+      {
+        path: "salary",
+        element: <Salary />,
       },
       {
         path: "payroll",
-        element: (
-          <ProtectedRoute requiredRole="admin">
-            <Payroll />
-          </ProtectedRoute>
-        ),
+        element: <Payroll />,
       },
     ],
+  },
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);
 

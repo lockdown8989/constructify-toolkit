@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           check_in: string | null
           check_out: string | null
+          date: string | null
           employee_id: string | null
           id: string
           status: string | null
@@ -20,6 +21,7 @@ export type Database = {
         Insert: {
           check_in?: string | null
           check_out?: string | null
+          date?: string | null
           employee_id?: string | null
           id?: string
           status?: string | null
@@ -27,6 +29,7 @@ export type Database = {
         Update: {
           check_in?: string | null
           check_out?: string | null
+          date?: string | null
           employee_id?: string | null
           id?: string
           status?: string | null
@@ -179,23 +182,23 @@ export type Database = {
         Row: {
           employee_id: string | null
           id: string
-          net_salary: number
           payment_date: string | null
           payment_status: string | null
+          salary_paid: number
         }
         Insert: {
           employee_id?: string | null
           id?: string
-          net_salary: number
           payment_date?: string | null
           payment_status?: string | null
+          salary_paid: number
         }
         Update: {
           employee_id?: string | null
           id?: string
-          net_salary?: number
           payment_date?: string | null
           payment_status?: string | null
+          salary_paid?: number
         }
         Relationships: [
           {
