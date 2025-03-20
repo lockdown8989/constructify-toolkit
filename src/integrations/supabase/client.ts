@@ -3,10 +3,38 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 
+// Ensure we have the environment variables we need
+if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+  console.error('Missing Supabase environment variables. Check your .env file.');
+}
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://fphmujxruswmvlwceodl.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwaG11anhydXN3bXZsd2Nlb2RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIyMDc5NjcsImV4cCI6MjA1Nzc4Mzk2N30.NCTLZVRuiaEopQi0uWdEFn_7noYoEnTvF2CqqD7S-y4";
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwaG11anhydXN3bXZsd2Nlb2RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIyMDc5NjcsImV4cCI6MjA1Nzc4Mzk2N30.NCTLZVRuiaEopQi0uWdEFn_7noYoEnTvF2CqqD7S-y4";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Add connection check (useful for debugging)
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN') {
+    console.log('Supabase connection successful:', event, session?.user?.email);
+  }
+});
+
+// Export a function to check Supabase connection status
+export const checkSupabaseConnection = async () => {
+  try {
+    const { error } = await supabase.from('profiles').select('id').limit(1);
+    if (error) {
+      console.error('Supabase connection check failed:', error.message);
+      return false;
+    }
+    console.log('Supabase connection successful');
+    return true;
+  } catch (err) {
+    console.error('Supabase connection check error:', err);
+    return false;
+  }
+};
