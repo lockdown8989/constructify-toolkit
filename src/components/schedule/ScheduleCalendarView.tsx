@@ -1,0 +1,80 @@
+
+import React, { useState } from 'react';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
+import { Schedule } from '@/hooks/use-schedules';
+
+interface ScheduleCalendarViewProps {
+  date: Date | undefined;
+  setDate: (date: Date | undefined) => void;
+  schedules: Schedule[];
+  schedulesLoading: boolean;
+  employeeNames: Record<string, string>;
+  onAddSchedule: () => void;
+  isAdmin: boolean;
+  isHR: boolean;
+}
+
+const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
+  date,
+  setDate,
+  schedules,
+  schedulesLoading,
+  employeeNames,
+  onAddSchedule,
+  isAdmin,
+  isHR
+}) => {
+  return (
+    <div className="bg-white rounded-3xl p-6 card-shadow">
+      <h2 className="text-xl font-medium mb-4">Company Calendar</h2>
+      <Calendar
+        mode="single"
+        selected={date}
+        onSelect={setDate}
+        className="w-full"
+      />
+      
+      <div className="mt-4">
+        <h3 className="font-medium text-lg mb-2">
+          {date ? format(date, 'MMMM d, yyyy') : 'Select a date'}
+        </h3>
+        {schedulesLoading ? (
+          <p>Loading schedules...</p>
+        ) : schedules.length > 0 ? (
+          <ul className="space-y-2">
+            {schedules.map(schedule => (
+              <li key={schedule.id} className="flex items-center">
+                <span className="w-16 text-sm text-gray-500">
+                  {format(new Date(schedule.start_time), 'h:mm a')}
+                </span>
+                <span className="flex-1">{schedule.title}</span>
+                <span className="text-sm text-gray-500">
+                  {employeeNames[schedule.employee_id] || 'Unknown'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-500">No schedules for this date</p>
+        )}
+        
+        {(isAdmin || isHR) && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-4" 
+            onClick={onAddSchedule}
+          >
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Add Schedule
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ScheduleCalendarView;
