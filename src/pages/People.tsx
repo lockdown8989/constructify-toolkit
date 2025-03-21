@@ -7,6 +7,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useEmployees, useEmployeeFilters, useAddEmployee, useUpdateEmployee } from '@/hooks/use-employees';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import AddEmployeeModal from '@/components/people/modals/AddEmployeeModal';
 import {
   Select,
   SelectContent,
@@ -27,6 +28,9 @@ const People = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // State for modal
+  const [isAddPersonModalOpen, setIsAddPersonModalOpen] = useState(false);
   
   // State for filters and sorting
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,7 +56,6 @@ const People = () => {
     isLoading: isLoadingFilters
   } = useEmployeeFilters();
   
-  const addEmployee = useAddEmployee();
   const updateEmployee = useUpdateEmployee();
   
   // Derived state: Sort and filter employees
@@ -123,10 +126,7 @@ const People = () => {
   
   // Handle adding new employee
   const handleAddPerson = () => {
-    toast({
-      title: "This feature is coming soon",
-      description: "The ability to add new employees will be available in a future update.",
-    });
+    setIsAddPersonModalOpen(true);
   };
   
   // Handle updating employee status
@@ -368,6 +368,14 @@ const People = () => {
           employees={processedEmployees}
           isLoading={isLoading}
           onUpdateStatus={handleUpdateStatus}
+        />
+        
+        {/* Add Employee Modal */}
+        <AddEmployeeModal
+          open={isAddPersonModalOpen}
+          onOpenChange={setIsAddPersonModalOpen}
+          departments={filterOptions?.departments || []}
+          sites={filterOptions?.sites || []}
         />
       </div>
     </div>
