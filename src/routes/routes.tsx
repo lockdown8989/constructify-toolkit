@@ -47,6 +47,10 @@ const router = createBrowserRouter([
         element: <Schedule />,
       },
       {
+        path: "calendar",
+        element: <Schedule />,
+      },
+      {
         path: "profile",
         element: <Profile />,
       },
