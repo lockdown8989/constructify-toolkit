@@ -24,6 +24,10 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     onSuccess: () => onOpenChange(false),
   });
 
+  const handleBackButtonClick = () => {
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -32,8 +36,9 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={() => onOpenChange(false)} 
+              onClick={handleBackButtonClick} 
               className="mr-2"
+              aria-label="Go back"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -62,7 +67,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={() => onOpenChange(false)}
+                onClick={handleBackButtonClick}
                 className="mr-2"
               >
                 Cancel
