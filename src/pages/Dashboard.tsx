@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import ProgressBar from '@/components/dashboard/ProgressBar';
 import StatCard from '@/components/dashboard/StatCard';
@@ -11,11 +10,18 @@ import { Users, Briefcase, FolderOpen } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useEmployees } from '@/hooks/use-employees';
 import { useInterviews } from '@/hooks/use-interviews';
+import { useAuth } from '@/hooks/use-auth';
 
 const Dashboard = () => {
   const isMobile = useIsMobile();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
+  const { user } = useAuth();
+  
+  // Get user's first name for greeting
+  const firstName = user?.user_metadata?.first_name || 
+                   user?.email?.split('@')[0] || 
+                   'User';
   
   // Sample data for meetings (would come from another table in a real app)
   const sampleMeetings = [
@@ -68,7 +74,7 @@ const Dashboard = () => {
   return (
     <div className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
       <div className="max-w-[1800px] mx-auto">
-        <h1 className="text-2xl md:text-4xl font-bold mb-2">Hello Valentina</h1>
+        <h1 className="text-2xl md:text-4xl font-bold mb-2">Hello {firstName}</h1>
         
         {/* Progress Bars */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
