@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -58,7 +59,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
         department: values.department,
         site: values.site,
         salary: Number(values.salary),
-        start_date: new Date().toISOString(),
+        start_date: new Date().toISOString().split('T')[0], // Format as YYYY-MM-DD
         lifecycle: values.lifecycle,
         status: values.status,
       });
