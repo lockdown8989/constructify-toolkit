@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -16,7 +15,7 @@ const formSchema = z.object({
   job_title: z.string().min(2, { message: 'Job title is required' }),
   department: z.string().min(1, { message: 'Department is required' }),
   site: z.string().min(1, { message: 'Site is required' }),
-  salary: z.number().min(1, { message: 'Salary must be greater than 0' }),
+  salary: z.coerce.number().min(1, { message: 'Salary must be greater than 0' }),
   lifecycle: z.string().default('Active'),
   status: z.string().default('Active'),
 });
@@ -54,9 +53,14 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   const onSubmit = async (values: FormValues) => {
     try {
       await addEmployee.mutateAsync({
-        ...values,
+        name: values.name,
+        job_title: values.job_title,
+        department: values.department,
+        site: values.site,
         salary: Number(values.salary),
         start_date: new Date().toISOString(),
+        lifecycle: values.lifecycle,
+        status: values.status,
       });
       onOpenChange(false);
       form.reset();
