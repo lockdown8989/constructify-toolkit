@@ -9,6 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft } from 'lucide-react';
 
 // Define form schema with validation
 const formSchema = z.object({
@@ -60,8 +61,8 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
         site: values.site,
         salary: Number(values.salary),
         start_date: new Date().toISOString().split('T')[0], // Format as YYYY-MM-DD
-        lifecycle: values.lifecycle,
-        status: values.status,
+        lifecycle: 'Active', // Explicitly set to 'Active' to match the constraint
+        status: 'Active', // Explicitly set to 'Active' to match the constraint
       });
       onOpenChange(false);
       form.reset();
@@ -74,10 +75,22 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Employee</DialogTitle>
-          <DialogDescription>
-            Enter the details of the new employee. Click save when you're done.
-          </DialogDescription>
+          <div className="flex items-center">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => onOpenChange(false)} 
+              className="mr-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <DialogTitle>Add New Employee</DialogTitle>
+              <DialogDescription>
+                Enter the details of the new employee. Click save when you're done.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
         
         <Form {...form}>
