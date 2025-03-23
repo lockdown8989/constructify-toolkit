@@ -2,14 +2,14 @@
 import * as z from 'zod';
 
 // Define valid options for lifecycle and status
-const validLifecycleValues = ['Active', 'Onboarding', 'Offboarding', 'Alumni'] as const;
-const validStatusValues = ['Active', 'On Leave', 'Terminated', 'Suspended'] as const;
+const validLifecycleValues = ['Employed', 'Onboarding', 'Offboarding', 'Alumni'] as const;
+const validStatusValues = ['Present', 'Absent', 'On Leave', 'Terminated'] as const;
 
 // Map of valid status values for each lifecycle stage to satisfy database constraint
 export const validStatusForLifecycle: Record<(typeof validLifecycleValues)[number], (typeof validStatusValues)[number][]> = {
-  'Active': ['Active', 'On Leave', 'Suspended'],
-  'Onboarding': ['Active'],
-  'Offboarding': ['On Leave', 'Suspended'],
+  'Employed': ['Present', 'Absent', 'On Leave'],
+  'Onboarding': ['Present'],
+  'Offboarding': ['Absent', 'On Leave'],
   'Alumni': ['Terminated']
 };
 
@@ -22,10 +22,10 @@ export const employeeFormSchema = z.object({
   salary: z.coerce.number().min(1, { message: 'Salary must be greater than 0' }),
   lifecycle: z.enum(validLifecycleValues, {
     errorMap: () => ({ message: 'Please select a valid lifecycle stage' }),
-  }).default('Active'),
+  }).default('Employed'),
   status: z.enum(validStatusValues, {
     errorMap: () => ({ message: 'Please select a valid employment status' }),
-  }).default('Active'),
+  }).default('Present'),
 }).refine((data) => {
   // Ensure status is valid for the selected lifecycle
   return validStatusForLifecycle[data.lifecycle].includes(data.status as any);

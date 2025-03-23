@@ -21,8 +21,8 @@ export const useEmployeeForm = ({ onSuccess }: UseEmployeeFormProps) => {
       department: '',
       site: '',
       salary: 0,
-      lifecycle: 'Active',
-      status: 'Active',
+      lifecycle: 'Employed',
+      status: 'Present',
     },
   });
 

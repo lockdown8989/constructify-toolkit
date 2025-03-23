@@ -18,11 +18,11 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
   sites = [],
 }) => {
   // Define valid options for lifecycle and status
-  const lifecycleOptions = ['Active', 'Onboarding', 'Offboarding', 'Alumni'];
+  const lifecycleOptions = ['Employed', 'Onboarding', 'Offboarding', 'Alumni'];
   
   // Watch lifecycle to determine valid status options
   const lifecycle = form.watch('lifecycle');
-  const validStatusOptions = validStatusForLifecycle[lifecycle] || ['Active'];
+  const validStatusOptions = validStatusForLifecycle[lifecycle] || ['Present'];
 
   return (
     <>
@@ -83,6 +83,7 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
                       <SelectItem value="Sales">Sales</SelectItem>
                       <SelectItem value="Finance">Finance</SelectItem>
                       <SelectItem value="HR">HR</SelectItem>
+                      <SelectItem value="Data">Data</SelectItem>
                     </>
                   )}
                 </SelectContent>
@@ -117,6 +118,10 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
                       <SelectItem value="New York Office">New York Office</SelectItem>
                       <SelectItem value="Remote - US">Remote - US</SelectItem>
                       <SelectItem value="Remote - International">Remote - International</SelectItem>
+                      <SelectItem value="London">London</SelectItem>
+                      <SelectItem value="Remote EU">Remote EU</SelectItem>
+                      <SelectItem value="San Francisco">San Francisco</SelectItem>
+                      <SelectItem value="New York">New York</SelectItem>
                     </>
                   )}
                 </SelectContent>
