@@ -1,9 +1,9 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAddEmployee } from '@/hooks/use-employees';
-import { employeeFormSchema, EmployeeFormValues } from './employee-form-schema';
+import { employeeFormSchema, EmployeeFormValues, validStatusForLifecycle } from './employee-form-schema';
 
 interface UseEmployeeFormProps {
   onSuccess: () => void;
@@ -25,6 +25,19 @@ export const useEmployeeForm = ({ onSuccess }: UseEmployeeFormProps) => {
       status: 'Active',
     },
   });
+
+  // Watch for lifecycle changes to update status if needed
+  const lifecycle = form.watch('lifecycle');
+  const status = form.watch('status');
+
+  useEffect(() => {
+    // Check if current status is valid for the selected lifecycle
+    const validStatuses = validStatusForLifecycle[lifecycle];
+    if (!validStatuses.includes(status as any)) {
+      // Set status to first valid option for this lifecycle
+      form.setValue('status', validStatuses[0]);
+    }
+  }, [lifecycle, status, form]);
 
   const onSubmit = async (values: EmployeeFormValues) => {
     try {

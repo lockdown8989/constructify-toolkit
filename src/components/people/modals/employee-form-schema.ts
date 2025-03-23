@@ -5,6 +5,14 @@ import * as z from 'zod';
 const validLifecycleValues = ['Active', 'Onboarding', 'Offboarding', 'Alumni'] as const;
 const validStatusValues = ['Active', 'On Leave', 'Terminated', 'Suspended'] as const;
 
+// Map of valid status values for each lifecycle stage to satisfy database constraint
+export const validStatusForLifecycle: Record<(typeof validLifecycleValues)[number], (typeof validStatusValues)[number][]> = {
+  'Active': ['Active', 'On Leave', 'Suspended'],
+  'Onboarding': ['Active'],
+  'Offboarding': ['On Leave', 'Suspended'],
+  'Alumni': ['Terminated']
+};
+
 // Define form schema with validation
 export const employeeFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
@@ -18,6 +26,12 @@ export const employeeFormSchema = z.object({
   status: z.enum(validStatusValues, {
     errorMap: () => ({ message: 'Please select a valid employment status' }),
   }).default('Active'),
+}).refine((data) => {
+  // Ensure status is valid for the selected lifecycle
+  return validStatusForLifecycle[data.lifecycle].includes(data.status as any);
+}, {
+  message: 'The selected status is not valid for this lifecycle stage',
+  path: ['status']
 });
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;

@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { EmployeeFormValues } from './employee-form-schema';
+import { EmployeeFormValues, validStatusForLifecycle } from './employee-form-schema';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -19,7 +19,10 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
 }) => {
   // Define valid options for lifecycle and status
   const lifecycleOptions = ['Active', 'Onboarding', 'Offboarding', 'Alumni'];
-  const statusOptions = ['Active', 'On Leave', 'Terminated', 'Suspended'];
+  
+  // Watch lifecycle to determine valid status options
+  const lifecycle = form.watch('lifecycle');
+  const validStatusOptions = validStatusForLifecycle[lifecycle] || ['Active'];
 
   return (
     <>
@@ -150,7 +153,7 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Lifecycle Stage</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select lifecycle" />
@@ -175,14 +178,14 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Employment Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {statusOptions.map((option) => (
+                  {validStatusOptions.map((option) => (
                     <SelectItem key={option} value={option}>
                       {option}
                     </SelectItem>
