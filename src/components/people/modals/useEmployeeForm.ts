@@ -35,8 +35,8 @@ export const useEmployeeForm = ({ onSuccess }: UseEmployeeFormProps) => {
         site: values.site,
         salary: Number(values.salary),
         start_date: new Date().toISOString().split('T')[0], // Format as YYYY-MM-DD
-        lifecycle: 'Active', // Explicitly set to 'Active' to match the constraint
-        status: 'Active', // Explicitly set to 'Active' to match the constraint
+        lifecycle: values.lifecycle, // Use the validated lifecycle value
+        status: values.status, // Use the validated status value
       });
       form.reset();
       onSuccess();

@@ -17,6 +17,10 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
   departments = [],
   sites = [],
 }) => {
+  // Define valid options for lifecycle and status
+  const lifecycleOptions = ['Active', 'Onboarding', 'Offboarding', 'Alumni'];
+  const statusOptions = ['Active', 'On Leave', 'Terminated', 'Suspended'];
+
   return (
     <>
       <FormField
@@ -138,6 +142,58 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
           </FormItem>
         )}
       />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="lifecycle"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Lifecycle Stage</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select lifecycle" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {lifecycleOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Employment Status</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
     </>
   );
 };
