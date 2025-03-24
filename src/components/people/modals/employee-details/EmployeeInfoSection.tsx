@@ -2,7 +2,7 @@
 import React from 'react';
 import { Briefcase, MapPin, DollarSign, Calendar, Users, Mail, Phone } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { Employee } from '@/hooks/use-employees';
+import { Employee } from '@/components/people/types';
 
 interface EmployeeInfoSectionProps {
   employee: Employee;

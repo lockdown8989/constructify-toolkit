@@ -7,7 +7,7 @@ import { Edit, Trash2 } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { DialogTitle } from '@/components/ui/dialog';
 import EmployeeStatusDropdown from './EmployeeStatusDropdown';
-import { Employee } from '@/hooks/use-employees';
+import { Employee } from '@/components/people/types';
 
 interface EmployeeHeaderProps {
   employee: Employee;

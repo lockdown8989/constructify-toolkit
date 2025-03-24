@@ -6,9 +6,8 @@ import DesktopTable from './table/DesktopTable';
 import MobileTable from './table/MobileTable';
 import TableSkeleton from './table/TableSkeleton';
 import EmployeeDetailsModal from './modals/EmployeeDetailsModal';
-import { PeopleTableProps } from './types';
+import { PeopleTableProps, Employee as EmployeeType } from './types';
 import AddEmployeeModal from './modals/AddEmployeeModal';
-import { Employee as EmployeeType } from './types';
 import { Employee as DbEmployee } from '@/hooks/use-employees';
 
 const PeopleTable: React.FC<PeopleTableProps> = ({
@@ -141,13 +140,13 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
       />
 
       {/* Edit Employee Modal */}
-      {selectedEmployeeDetails && (
+      {selectedEmployeeDetails && isEditModalOpen && (
         <AddEmployeeModal
           open={isEditModalOpen}
           onOpenChange={setIsEditModalOpen}
           departments={[]}
           sites={[]}
-          employeeToEdit={selectedEmployeeDetails ? mapToDbEmployee(selectedEmployeeDetails) : undefined}
+          employeeToEdit={mapToDbEmployee(selectedEmployeeDetails)}
         />
       )}
     </div>

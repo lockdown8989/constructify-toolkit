@@ -10,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Employee } from '@/hooks/use-employees';
+import { Employee } from '@/components/people/types';
 
 interface DeleteConfirmationDialogProps {
   isOpen: boolean;

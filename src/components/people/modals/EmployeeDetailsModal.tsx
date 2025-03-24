@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { useDeleteEmployee } from '@/hooks/use-employees';
+import { useDeleteEmployee, Employee as DbEmployee } from '@/hooks/use-employees';
 import { useToast } from '@/hooks/use-toast';
-import { Employee } from '../types';
+import { Employee, mapDbEmployeeToUiEmployee } from '../types';
 import EmployeeHeader from './employee-details/EmployeeHeader';
 import EmployeeInfoSection from './employee-details/EmployeeInfoSection';
 import DeleteConfirmationDialog from './employee-details/DeleteConfirmationDialog';
+import AddEmployeeModal from './AddEmployeeModal';
 
 interface EmployeeDetailsModalProps {
   employee: Employee | null;
@@ -24,6 +25,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   onEdit
 }) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const deleteEmployee = useDeleteEmployee();
   const { toast } = useToast();
 
@@ -34,11 +36,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       onEdit(employee);
       onClose();
     } else {
-      toast({
-        title: "Edit functionality",
-        description: "Edit functionality is not yet implemented",
-        variant: "default"
-      });
+      setIsEditModalOpen(true);
     }
   };
 
@@ -62,6 +60,25 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
     }
   };
 
+  // Convert UI Employee to DB Employee format
+  const mapToDbEmployee = (uiEmployee: Employee): DbEmployee => {
+    return {
+      id: uiEmployee.id,
+      name: uiEmployee.name,
+      job_title: uiEmployee.jobTitle,
+      department: uiEmployee.department,
+      site: uiEmployee.site,
+      salary: parseInt(uiEmployee.salary.replace(/[^0-9]/g, '')),
+      start_date: new Date(uiEmployee.startDate).toISOString().split('T')[0],
+      lifecycle: uiEmployee.lifecycle,
+      status: uiEmployee.status,
+      avatar: uiEmployee.avatar,
+      location: uiEmployee.siteIcon === '🌐' ? 'Remote' : 'Office',
+      annual_leave_days: 25, // Default values
+      sick_leave_days: 10    // Default values
+    };
+  };
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -82,6 +99,16 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         employee={employee}
         onDelete={handleDelete}
       />
+
+      {isEditModalOpen && (
+        <AddEmployeeModal
+          open={isEditModalOpen}
+          onOpenChange={setIsEditModalOpen}
+          departments={[]}
+          sites={[]}
+          employeeToEdit={mapToDbEmployee(employee)}
+        />
+      )}
     </>
   );
 };
