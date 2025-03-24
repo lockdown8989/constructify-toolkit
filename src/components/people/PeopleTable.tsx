@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -9,6 +8,8 @@ import TableSkeleton from './table/TableSkeleton';
 import EmployeeDetailsModal from './modals/EmployeeDetailsModal';
 import { PeopleTableProps } from './types';
 import AddEmployeeModal from './modals/AddEmployeeModal';
+import { Employee as EmployeeType } from './types';
+import { Employee as DbEmployee } from '@/hooks/use-employees';
 
 const PeopleTable: React.FC<PeopleTableProps> = ({
   employees,
@@ -20,7 +21,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedEmployeeDetails, setSelectedEmployeeDetails] = useState<typeof employees[0] | null>(null);
+  const [selectedEmployeeDetails, setSelectedEmployeeDetails] = useState<EmployeeType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -49,7 +50,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
     setExpandedEmployee(expandedEmployee === id ? null : id);
   };
 
-  const handleEmployeeClick = (employee: typeof employees[0]) => {
+  const handleEmployeeClick = (employee: EmployeeType) => {
     setSelectedEmployeeDetails(employee);
     setIsModalOpen(true);
   };
@@ -64,9 +65,27 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
     }
   };
 
-  const handleEditEmployee = (employee: typeof employees[0]) => {
+  const handleEditEmployee = (employee: EmployeeType) => {
     setSelectedEmployeeDetails(employee);
     setIsEditModalOpen(true);
+  };
+
+  const mapToDbEmployee = (employee: EmployeeType): DbEmployee => {
+    return {
+      id: employee.id,
+      name: employee.name,
+      job_title: employee.jobTitle,
+      department: employee.department,
+      site: employee.site,
+      salary: parseInt(employee.salary.replace(/[^0-9]/g, '')),
+      start_date: new Date(employee.startDate).toISOString().split('T')[0],
+      lifecycle: employee.lifecycle,
+      status: employee.status,
+      avatar: employee.avatar,
+      location: employee.siteIcon === '🌐' ? 'Remote' : 'Office',
+      annual_leave_days: 25,
+      sick_leave_days: 10
+    };
   };
   
   if (isLoading) {
@@ -128,7 +147,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
           onOpenChange={setIsEditModalOpen}
           departments={[]}
           sites={[]}
-          employeeToEdit={selectedEmployeeDetails}
+          employeeToEdit={selectedEmployeeDetails ? mapToDbEmployee(selectedEmployeeDetails) : undefined}
         />
       )}
     </div>

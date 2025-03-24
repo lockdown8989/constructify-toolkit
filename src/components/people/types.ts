@@ -1,4 +1,6 @@
 
+import { Employee as DbEmployee } from '@/hooks/use-employees';
+
 export interface Employee {
   id: string;
   avatar: string;
@@ -22,3 +24,24 @@ export interface PeopleTableProps {
   className?: string;
   isLoading?: boolean;
 }
+
+export const mapDbEmployeeToUiEmployee = (dbEmployee: DbEmployee): Employee => {
+  return {
+    id: dbEmployee.id,
+    avatar: dbEmployee.avatar || `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'women' : 'men'}/${Math.floor(Math.random() * 99)}.jpg`,
+    name: dbEmployee.name,
+    jobTitle: dbEmployee.job_title,
+    department: dbEmployee.department,
+    site: dbEmployee.site,
+    siteIcon: dbEmployee.site.includes('Remote') ? '🌐' : '🏢',
+    salary: `$${dbEmployee.salary.toLocaleString()}`,
+    startDate: new Date(dbEmployee.start_date).toLocaleDateString('en-US', { 
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }),
+    lifecycle: dbEmployee.lifecycle,
+    status: dbEmployee.status,
+    statusColor: dbEmployee.status === 'Active' ? 'green' : 'gray',
+  };
+};
