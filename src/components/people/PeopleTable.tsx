@@ -8,6 +8,7 @@ import MobileTable from './table/MobileTable';
 import TableSkeleton from './table/TableSkeleton';
 import EmployeeDetailsModal from './modals/EmployeeDetailsModal';
 import { PeopleTableProps } from './types';
+import AddEmployeeModal from './modals/AddEmployeeModal';
 
 const PeopleTable: React.FC<PeopleTableProps> = ({
   employees,
@@ -21,6 +22,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEmployeeDetails, setSelectedEmployeeDetails] = useState<typeof employees[0] | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const isMobile = useIsMobile();
   
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,6 +62,11 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
     if (onUpdateStatus) {
       onUpdateStatus(id, status);
     }
+  };
+
+  const handleEditEmployee = (employee: typeof employees[0]) => {
+    setSelectedEmployeeDetails(employee);
+    setIsEditModalOpen(true);
   };
   
   if (isLoading) {
@@ -111,7 +118,19 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onStatusChange={handleStatusChange}
+        onEdit={handleEditEmployee}
       />
+
+      {/* Edit Employee Modal */}
+      {selectedEmployeeDetails && (
+        <AddEmployeeModal
+          open={isEditModalOpen}
+          onOpenChange={setIsEditModalOpen}
+          departments={[]}
+          sites={[]}
+          employeeToEdit={selectedEmployeeDetails}
+        />
+      )}
     </div>
   );
 };
