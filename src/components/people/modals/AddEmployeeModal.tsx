@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useEmployeeForm } from './useEmployeeForm';
 import EmployeeFormFields from './EmployeeFormFields';
+import { Employee } from '@/hooks/use-employees';
 
 interface AddEmployeeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   departments: string[];
   sites: string[];
+  employeeToEdit?: Employee;
 }
 
 const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
@@ -19,9 +21,17 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   onOpenChange,
   departments = [],
   sites = [],
+  employeeToEdit,
 }) => {
+  // Update the title and button text based on whether we're editing or adding
+  const isEditMode = !!employeeToEdit;
+  const title = isEditMode ? "Edit Employee" : "Add New Employee";
+  const buttonText = isEditMode ? "Save Changes" : "Add Employee";
+  const loadingText = isEditMode ? "Saving..." : "Adding...";
+  
   const { form, onSubmit, isSubmitting, error } = useEmployeeForm({
     onSuccess: () => onOpenChange(false),
+    employeeToEdit,
   });
 
   const handleBackButtonClick = () => {
@@ -43,9 +53,11 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <DialogTitle>Add New Employee</DialogTitle>
+              <DialogTitle>{title}</DialogTitle>
               <DialogDescription>
-                Enter the details of the new employee. Click save when you're done.
+                {isEditMode 
+                  ? "Edit the details of this employee. Click save when you're done."
+                  : "Enter the details of the new employee. Click save when you're done."}
               </DialogDescription>
             </div>
           </div>
@@ -73,7 +85,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Adding..." : "Add Employee"}
+                {isSubmitting ? loadingText : buttonText}
               </Button>
             </DialogFooter>
           </form>
