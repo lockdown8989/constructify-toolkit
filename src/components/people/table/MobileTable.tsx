@@ -24,24 +24,26 @@ const MobileTable: React.FC<MobileTableProps> = ({
   onStatusChange,
 }) => {
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-gray-100 rounded-lg overflow-hidden">
       {employees.length === 0 ? (
-        <div className="p-8 text-center text-gray-500">
-          No employees found. Try adjusting your filters.
+        <div className="p-8 text-center text-gray-500 min-h-[200px] flex items-center justify-center">
+          <p className="text-sm sm:text-base">No employees found. Try adjusting your filters.</p>
         </div>
       ) : (
-        employees.map(employee => (
-          <EmployeeMobileCard
-            key={employee.id}
-            employee={employee}
-            isSelected={selectedEmployees.includes(employee.id)}
-            isExpanded={expandedEmployee === employee.id}
-            onSelect={onSelectEmployee}
-            onToggleExpand={onToggleExpand}
-            onCardClick={onEmployeeClick}
-            onStatusChange={onStatusChange}
-          />
-        ))
+        <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+          {employees.map(employee => (
+            <EmployeeMobileCard
+              key={employee.id}
+              employee={employee}
+              isSelected={selectedEmployees.includes(employee.id)}
+              isExpanded={expandedEmployee === employee.id}
+              onSelect={onSelectEmployee}
+              onToggleExpand={onToggleExpand}
+              onCardClick={onEmployeeClick}
+              onStatusChange={onStatusChange}
+            />
+          ))}
+        </div>
       )}
     </div>
   );

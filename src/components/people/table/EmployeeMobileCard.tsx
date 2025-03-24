@@ -52,20 +52,22 @@ const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
   return (
     <div 
       className={cn(
-        "p-4 transition-colors cursor-pointer",
+        "p-4 transition-colors cursor-pointer touch-target active:bg-gray-50",
         isSelected ? "bg-crextio-accent/10" : ""
       )}
       onClick={handleCardClick}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3" onClick={e => e.stopPropagation()}>
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() => onSelect(employee.id)}
-            className="rounded border-gray-300 text-black focus:ring-black"
-          />
-          <div className="w-10 h-10 rounded-full overflow-hidden">
+        <div className="flex items-center space-x-4" onClick={e => e.stopPropagation()}>
+          <div className="touch-target flex items-center justify-center">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => onSelect(employee.id)}
+              className="rounded border-gray-300 text-black focus:ring-black w-5 h-5"
+            />
+          </div>
+          <div className="w-12 h-12 rounded-full overflow-hidden">
             <img 
               src={employee.avatar} 
               alt={employee.name}
@@ -73,32 +75,36 @@ const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
             />
           </div>
           <div>
-            <div className="font-medium">{employee.name}</div>
+            <div className="font-medium text-base">{employee.name}</div>
             <div className="text-sm text-gray-600">{employee.jobTitle}</div>
           </div>
         </div>
         
         <div className="flex items-center space-x-2">
           {onStatusChange && (
-            <div onClick={e => e.stopPropagation()} data-dropdown>
+            <div 
+              onClick={e => e.stopPropagation()} 
+              data-dropdown 
+              className="touch-target p-1"
+            >
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100">
-                  <MoreVertical className="w-4 h-4 text-gray-500" />
+                <DropdownMenuTrigger className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100">
+                  <MoreVertical className="w-5 h-5 text-gray-500" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleStatusChange('Active')}>
+                <DropdownMenuContent align="end" className="w-48 bg-white">
+                  <DropdownMenuItem onClick={() => handleStatusChange('Active')} className="py-3">
                     <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
                     <span>Set as Active</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStatusChange('Inactive')}>
+                  <DropdownMenuItem onClick={() => handleStatusChange('Inactive')} className="py-3">
                     <XCircle className="mr-2 h-4 w-4 text-gray-500" />
                     <span>Set as Inactive</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStatusChange('Invited')}>
+                  <DropdownMenuItem onClick={() => handleStatusChange('Invited')} className="py-3">
                     <Mail className="mr-2 h-4 w-4 text-blue-500" />
                     <span>Set as Invited</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStatusChange('Absent')}>
+                  <DropdownMenuItem onClick={() => handleStatusChange('Absent')} className="py-3">
                     <Users className="mr-2 h-4 w-4 text-orange-500" />
                     <span>Set as Absent</span>
                   </DropdownMenuItem>
@@ -112,11 +118,11 @@ const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
               e.stopPropagation();
               onToggleExpand(employee.id);
             }}
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 touch-target"
           >
             <ChevronRight 
               className={cn(
-                "w-4 h-4 text-gray-600 transition-transform",
+                "w-5 h-5 text-gray-600 transition-transform",
                 isExpanded ? "transform rotate-90" : ""
               )} 
             />
@@ -125,8 +131,8 @@ const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
       </div>
       
       {isExpanded && (
-        <div className="mt-4 pl-10 space-y-2 animate-fade-in">
-          <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="mt-4 pl-12 space-y-3 animate-fade-in">
+          <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm">
             <div className="text-gray-500">Department:</div>
             <div>{employee.department}</div>
             

@@ -27,19 +27,19 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
 }) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="max-w-[90vw] sm:max-w-lg">
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure you want to delete this employee?</AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogTitle className="text-lg sm:text-xl">Are you sure you want to delete this employee?</AlertDialogTitle>
+          <AlertDialogDescription className="text-sm sm:text-base">
             This action cannot be undone. This will permanently delete {employee.name}'s 
             record and remove all their data from the system.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+          <AlertDialogCancel className="w-full sm:w-auto mt-2 sm:mt-0">Cancel</AlertDialogCancel>
           <AlertDialogAction 
             onClick={onDelete}
-            className="bg-red-500 hover:bg-red-600"
+            className="w-full sm:w-auto bg-red-500 hover:bg-red-600"
           >
             Delete
           </AlertDialogAction>
