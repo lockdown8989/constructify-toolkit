@@ -56,7 +56,13 @@ export const useEmployeeForm = ({ onSuccess }: UseEmployeeFormProps) => {
       setError(null);
     } catch (error) {
       console.error('Error adding employee:', error);
-      setError(error instanceof Error ? error.message : 'An error occurred while adding employee');
+      
+      // Check for duplicate employee error
+      if (error instanceof Error && error.message.includes('unique_employee_name')) {
+        setError(`An employee with the name "${values.name}" already exists. Please use a different name.`);
+      } else {
+        setError(error instanceof Error ? error.message : 'An error occurred while adding employee');
+      }
     }
   };
 
