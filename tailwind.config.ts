@@ -57,7 +57,7 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				crextio: {
+				teampulse: {
 					bg: '#F7F1E0',
 					card: '#FFFFFF',
 					primary: '#000000',

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Settings, User, Menu, X, LogOut } from 'lucide-react';
@@ -33,7 +32,6 @@ const Navbar: React.FC = () => {
   const isMobile = useIsMobile();
   const { user, signOut, isAdmin, isHR } = useAuth();
   
-  // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -66,15 +64,13 @@ const Navbar: React.FC = () => {
         }`}
       >
         <div className="max-w-[1800px] mx-auto flex items-center justify-between">
-          {/* Logo */}
           <Link 
             to="/" 
             className="text-xl font-medium bg-gray-100 px-4 sm:px-6 py-2 rounded-full transition-transform hover:scale-105"
           >
-            Crextio
+            TeamPulse
           </Link>
           
-          {/* Mobile Menu Button */}
           {isMobile && (
             <button 
               onClick={toggleMobileMenu}
@@ -84,7 +80,6 @@ const Navbar: React.FC = () => {
             </button>
           )}
           
-          {/* Desktop Navigation */}
           {!isMobile && (
             <nav className="bg-white px-1 py-1 rounded-full shadow-sm">
               <ul className="flex items-center space-x-1">
@@ -112,7 +107,6 @@ const Navbar: React.FC = () => {
             </nav>
           )}
           
-          {/* User Actions */}
           <div className="flex items-center space-x-2 sm:space-x-4">
             {!isMobile && (
               <>
@@ -153,7 +147,6 @@ const Navbar: React.FC = () => {
         </div>
       </header>
 
-      {/* Mobile Navigation Menu */}
       {isMobile && mobileMenuOpen && (
         <div className="fixed inset-0 z-40 pt-16 pb-6 px-4 bg-white/95 backdrop-blur-md animate-fade-in overflow-auto">
           <nav className="pt-4">
