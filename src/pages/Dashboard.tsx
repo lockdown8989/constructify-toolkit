@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import ProgressBar from '@/components/dashboard/ProgressBar';
 import StatCard from '@/components/dashboard/StatCard';
@@ -49,21 +50,6 @@ const Dashboard = () => {
     projectTime: 15, // Sample data, would come from project table
     output: 5 // Sample data, would come from project table
   };
-  
-  const hiringData = [
-    { name: 'Jan', design: 120, others: 130 },
-    { name: 'Feb', design: 100, others: 110 },
-    { name: 'Mar', design: 140, others: 120 },
-    { name: 'Apr', design: 120, others: 140 },
-    { name: 'May', design: 90, others: 160 },
-    { name: 'Jun', design: 120, others: 140 },
-    { name: 'Jul', design: 90, others: 110 },
-    { name: 'Aug', design: 110, others: 90 },
-    { name: 'Sep', design: 130, others: 70 },
-    { name: 'Oct', design: 110, others: 100 },
-    { name: 'Nov', design: 120, others: 130 },
-    { name: 'Dec', design: 140, others: 110 },
-  ];
   
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   
@@ -139,7 +125,7 @@ const Dashboard = () => {
             />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <HiringStatistics data={hiringData} className="col-span-1" />
+              <HiringStatistics className="col-span-1" />
               <EmployeeComposition className="col-span-1" />
             </div>
           </div>
