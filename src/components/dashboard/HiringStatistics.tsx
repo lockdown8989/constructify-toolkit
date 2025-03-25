@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { cn } from '@/lib/utils';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { useHiringStatistics, HiringStatisticsData } from '@/hooks/use-hiring-statistics';
+import { Card } from '@/components/ui/card';
 
 interface HiringStatisticsProps {
   className?: string;
@@ -32,6 +33,15 @@ const HiringStatistics: React.FC<HiringStatisticsProps> = ({ className }) => {
     }
   };
 
+  const getHighestValue = (): number => {
+    if (!data || data.length === 0) return 200;
+    
+    const maxDesign = Math.max(...data.map(item => item.design));
+    const maxOthers = Math.max(...data.map(item => item.others));
+    
+    return Math.max(maxDesign, maxOthers) * 1.2; // Add 20% padding
+  };
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -39,6 +49,7 @@ const HiringStatistics: React.FC<HiringStatisticsProps> = ({ className }) => {
           <p className="font-medium mb-1">{`${label} ${selectedYear}`}</p>
           <p className="text-yellow-400">{`Design: ${payload[0].value}`}</p>
           <p className="text-gray-300">{`Others: ${payload[1].value}`}</p>
+          <p className="text-white mt-1 font-medium">{`Total: ${payload[0].value + payload[1].value}`}</p>
         </div>
       );
     }
@@ -50,7 +61,7 @@ const HiringStatistics: React.FC<HiringStatisticsProps> = ({ className }) => {
   const canGoForward = availableYears.indexOf(selectedYear) < availableYears.length - 1;
   
   return (
-    <div className={cn("bg-white rounded-3xl p-6 card-shadow", className)}>
+    <Card className={cn("p-6", className)}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-medium">Hiring Statistics</h3>
         <div className="flex items-center space-x-4">
@@ -102,6 +113,7 @@ const HiringStatistics: React.FC<HiringStatisticsProps> = ({ className }) => {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 20, right: 10, left: 10, bottom: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
               <XAxis 
                 dataKey="name" 
                 axisLine={false}
@@ -114,6 +126,7 @@ const HiringStatistics: React.FC<HiringStatisticsProps> = ({ className }) => {
                 tickLine={false}
                 tick={{ fontSize: 12, fill: '#6B6B6B' }}
                 dx={-10}
+                domain={[0, getHighestValue()]}
               />
               <Tooltip content={<CustomTooltip />} />
               <Line
@@ -137,7 +150,7 @@ const HiringStatistics: React.FC<HiringStatisticsProps> = ({ className }) => {
           </ResponsiveContainer>
         )}
       </div>
-    </div>
+    </Card>
   );
 };
 

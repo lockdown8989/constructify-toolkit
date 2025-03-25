@@ -12,6 +12,7 @@ import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
 import Payroll from "@/pages/Payroll";
 import Salary from "@/pages/Salary";
+import Hiring from "@/pages/Hiring";
 
 const router = createBrowserRouter([
   {
@@ -41,6 +42,10 @@ const router = createBrowserRouter([
       {
         path: "leave",
         element: <LeaveManagement />,
+      },
+      {
+        path: "hiring",
+        element: <Hiring />,
       },
       {
         path: "schedule",

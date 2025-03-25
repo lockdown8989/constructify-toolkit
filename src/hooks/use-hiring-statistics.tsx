@@ -78,6 +78,35 @@ export function useHiringStatistics(year: number = new Date().getFullYear()) {
     },
   });
 
+  // Add new hiring statistics
+  const addHiringStatistic = async (newData: Omit<HiringStatistic, 'id'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('hiring_statistics')
+        .upsert([newData], { 
+          onConflict: 'month,year',
+          ignoreDuplicates: false 
+        });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Statistics updated",
+        description: "Hiring statistics have been successfully updated",
+      });
+      
+      return data;
+    } catch (err) {
+      console.error('Error adding hiring statistic:', err);
+      toast({
+        title: "Failed to update statistics",
+        description: err instanceof Error ? err.message : "Unknown error occurred",
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
   // Handle year change
   const changeYear = (year: number) => {
     setSelectedYear(year);
@@ -107,6 +136,7 @@ export function useHiringStatistics(year: number = new Date().getFullYear()) {
     error,
     selectedYear,
     changeYear,
-    availableYears: [2022, 2023, 2024, 2025],
+    addHiringStatistic,
+    availableYears: [2022, 2023, 2024],
   };
 }

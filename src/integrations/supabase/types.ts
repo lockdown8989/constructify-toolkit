@@ -116,6 +116,36 @@ export type Database = {
         }
         Relationships: []
       }
+      hiring_statistics: {
+        Row: {
+          created_at: string | null
+          design_count: number
+          id: string
+          month: string
+          others_count: number
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          design_count?: number
+          id?: string
+          month: string
+          others_count?: number
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          design_count?: number
+          id?: string
+          month?: string
+          others_count?: number
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
       interviews: {
         Row: {
           candidate_name: string
