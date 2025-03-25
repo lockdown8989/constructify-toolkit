@@ -7,15 +7,17 @@ interface EmployeeSalaryCardProps {
   employee: Employee;
   isSelected: boolean;
   onClick: () => void;
+  progressValue?: number;
 }
 
 const EmployeeSalaryCard: React.FC<EmployeeSalaryCardProps> = ({
   employee,
   isSelected,
-  onClick
+  onClick,
+  progressValue,
 }) => {
-  // Calculate a simplified progress value (just for visual representation)
-  const progressValue = Math.floor(Math.random() * 80) + 10; // Random value between 10-90%
+  // Calculate a simplified progress value if not provided
+  const progress = progressValue || Math.floor(Math.random() * 80) + 10; // Random value between 10-90%
   
   return (
     <div 
@@ -49,7 +51,7 @@ const EmployeeSalaryCard: React.FC<EmployeeSalaryCardProps> = ({
       <div className="w-full h-2 bg-gray-200 rounded-full mt-2">
         <div 
           className="h-full bg-amber-400 rounded-full" 
-          style={{ width: `${progressValue}%` }}
+          style={{ width: `${progress}%` }}
         />
         <div 
           className="h-full bg-gray-800 rounded-full ml-auto" 

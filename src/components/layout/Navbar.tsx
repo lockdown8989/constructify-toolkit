@@ -19,7 +19,7 @@ const NAV_ITEMS = [
   { name: 'Leave', path: '/leave' },
   { name: 'Hiring', path: '/hiring' },
   { name: 'Devices', path: '/devices' },
-  { name: 'Apps', path: '/apps' },
+  { name: 'Payroll', path: '/payroll' },
   { name: 'Salary', path: '/salary' },
   { name: 'Calendar', path: '/calendar' },
   { name: 'Reviews', path: '/reviews' },

@@ -9,6 +9,7 @@ interface SalaryStatCardProps {
   bgColor?: string;
   valueClassName?: string;
   titleClassName?: string;
+  icon?: React.ReactNode;
 }
 
 const SalaryStatCard: React.FC<SalaryStatCardProps> = ({
@@ -18,6 +19,7 @@ const SalaryStatCard: React.FC<SalaryStatCardProps> = ({
   bgColor = "bg-white",
   valueClassName,
   titleClassName,
+  icon,
 }) => {
   return (
     <div className={cn(
@@ -25,9 +27,10 @@ const SalaryStatCard: React.FC<SalaryStatCardProps> = ({
       bgColor
     )}>
       <div className={cn(
-        "text-sm font-medium",
+        "text-sm font-medium flex items-center",
         titleClassName
       )}>
+        {icon && <span className="mr-2">{icon}</span>}
         {title}
       </div>
       
