@@ -1,23 +1,57 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate, useLocation, Navigate } from "react-router-dom";
+import { useNavigate, useLocation, Navigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { UpdatePasswordForm } from "@/components/auth/UpdatePasswordForm";
 
 const Auth = () => {
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const from = location.state?.from?.pathname || "/dashboard";
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState("signin");
+  
+  const isResetMode = searchParams.get("reset") === "true";
+  const type = searchParams.get("type");
+  const isRecoveryMode = type === "recovery";
 
-  // If already logged in, redirect to the dashboard
-  if (user) {
+  // If already logged in and not in reset password mode, redirect to the dashboard
+  if (user && !isResetMode && !isRecoveryMode) {
     return <Navigate to={from} replace />;
   }
+
+  // If in recovery mode, show the update password form
+  if (isResetMode || isRecoveryMode) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold mb-2">TeamPulse</h1>
+            <p className="text-gray-600">HR Management Platform</p>
+          </div>
+          <UpdatePasswordForm />
+        </div>
+      </div>
+    );
+  }
+
+  const handleShowResetPassword = () => {
+    setShowResetPassword(true);
+    setActiveTab("reset");
+  };
+
+  const handleBackToSignIn = () => {
+    setShowResetPassword(false);
+    setActiveTab("signin");
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
@@ -27,18 +61,25 @@ const Auth = () => {
           <p className="text-gray-600">HR Management Platform</p>
         </div>
 
-        <Tabs defaultValue="signin" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="signin">Sign In</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
           
           <TabsContent value="signin">
-            <SignInForm onSignIn={signIn} />
+            <SignInForm 
+              onSignIn={signIn} 
+              onForgotPassword={handleShowResetPassword} 
+            />
           </TabsContent>
           
           <TabsContent value="signup">
             <SignUpForm onSignUp={signUp} />
+          </TabsContent>
+
+          <TabsContent value="reset">
+            <ResetPasswordForm onBackToSignIn={handleBackToSignIn} />
           </TabsContent>
         </Tabs>
       </div>
@@ -46,7 +87,13 @@ const Auth = () => {
   );
 };
 
-const SignInForm = ({ onSignIn }: { onSignIn: (email: string, password: string) => Promise<any> }) => {
+const SignInForm = ({ 
+  onSignIn, 
+  onForgotPassword 
+}: { 
+  onSignIn: (email: string, password: string) => Promise<any>,
+  onForgotPassword: () => void
+}) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -97,6 +144,16 @@ const SignInForm = ({ onSignIn }: { onSignIn: (email: string, password: string) 
               required
             />
           </div>
+          
+          <div className="text-right">
+            <button 
+              type="button"
+              onClick={onForgotPassword}
+              className="text-sm text-gray-600 hover:text-gray-900 hover:underline"
+            >
+              Forgot password?
+            </button>
+          </div>
         </CardContent>
         
         <CardFooter>
@@ -105,6 +162,96 @@ const SignInForm = ({ onSignIn }: { onSignIn: (email: string, password: string) 
           </Button>
         </CardFooter>
       </form>
+    </Card>
+  );
+};
+
+const ResetPasswordForm = ({ onBackToSignIn }: { onBackToSignIn: () => void }) => {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const { resetPassword } = useAuth();
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const { error } = await resetPassword(email);
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        setIsSubmitted(true);
+        toast({
+          title: "Reset link sent",
+          description: "Check your email for a password reset link",
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Reset Password</CardTitle>
+        <CardDescription>
+          {isSubmitted 
+            ? "Check your email for a password reset link" 
+            : "Enter your email to receive a password reset link"}
+        </CardDescription>
+      </CardHeader>
+      
+      {!isSubmitted ? (
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">Email</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+          </CardContent>
+          
+          <CardFooter className="flex flex-col space-y-2">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Sending..." : "Send Reset Link"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={onBackToSignIn}
+            >
+              Back to Sign In
+            </Button>
+          </CardFooter>
+        </form>
+      ) : (
+        <CardFooter className="flex flex-col space-y-4 pt-2">
+          <p className="text-center text-sm text-gray-600">
+            If your email exists in our system, you'll receive a password reset link shortly.
+          </p>
+          <Button
+            type="button"
+            className="w-full"
+            onClick={onBackToSignIn}
+          >
+            Back to Sign In
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 };

@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User, AuthError } from "@supabase/supabase-js";
@@ -12,6 +11,8 @@ type AuthContextType = {
   isHR: boolean;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: AuthError | null }>;
+  resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
+  updatePassword: (password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
 };
 
@@ -48,7 +49,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -58,7 +58,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(false);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -66,7 +65,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (session?.user) {
           fetchUserRoles(session.user.id);
         } else {
-          // Reset roles when user signs out
           setIsAdmin(false);
           setIsHR(false);
         }
@@ -138,6 +136,66 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?reset=true`,
+      });
+      
+      if (error) {
+        toast({
+          title: "Password reset failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Password reset email sent",
+          description: "Check your email for the password reset link",
+        });
+      }
+      return { error };
+    } catch (error) {
+      console.error('Password reset error:', error);
+      toast({
+        title: "An unexpected error occurred",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+      return { error: error as AuthError };
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password,
+      });
+      
+      if (error) {
+        toast({
+          title: "Password update failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Password updated",
+          description: "Your password has been successfully updated",
+        });
+      }
+      return { error };
+    } catch (error) {
+      console.error('Password update error:', error);
+      toast({
+        title: "An unexpected error occurred",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+      return { error: error as AuthError };
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     toast({
@@ -154,6 +212,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isHR,
     signIn,
     signUp,
+    resetPassword,
+    updatePassword,
     signOut,
   };
 
