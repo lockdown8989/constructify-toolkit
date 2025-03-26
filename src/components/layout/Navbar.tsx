@@ -13,17 +13,32 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const NAV_ITEMS = [
-  { name: 'Dashboard', path: '/' },
-  { name: 'People', path: '/people' },
-  { name: 'Leave', path: '/leave' },
-  { name: 'Hiring', path: '/hiring' },
-  { name: 'Devices', path: '/devices' },
-  { name: 'Payslip', path: '/payroll' },
-  { name: 'Salary', path: '/salary' },
-  { name: 'Calendar', path: '/calendar' },
-  { name: 'Reviews', path: '/reviews' },
-];
+// Define which nav items are accessible to which roles
+const getNavItemsByRole = (isManager: boolean, isAdmin: boolean, isHR: boolean) => {
+  const allItems = [
+    { name: 'Dashboard', path: '/dashboard', minRole: 'employee' },
+    { name: 'People', path: '/people', minRole: 'manager' },
+    { name: 'Leave', path: '/leave', minRole: 'manager' },
+    { name: 'Hiring', path: '/hiring', minRole: 'manager' },
+    { name: 'Devices', path: '/devices', minRole: 'manager' },
+    { name: 'Payslip', path: '/payroll', minRole: 'manager' },
+    { name: 'Salary', path: '/salary', minRole: 'manager' },
+    { name: 'Calendar', path: '/calendar', minRole: 'employee' },
+    { name: 'Reviews', path: '/reviews', minRole: 'manager' },
+  ];
+
+  // Filter items based on user role
+  if (isAdmin || isHR) {
+    // Admin and HR can see everything
+    return allItems;
+  } else if (isManager) {
+    // Managers can see everything except some admin-only features
+    return allItems;
+  } else {
+    // Employees can only see employee-level items
+    return allItems.filter(item => item.minRole === 'employee');
+  }
+};
 
 const Navbar: React.FC = () => {
   const location = useLocation();
@@ -31,7 +46,7 @@ const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
-  const { user, signOut, isAdmin, isHR } = useAuth();
+  const { user, signOut, isAdmin, isHR, isManager, userRole } = useAuth();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -54,8 +69,12 @@ const Navbar: React.FC = () => {
   const getUserRole = () => {
     if (isAdmin) return 'Admin';
     if (isHR) return 'HR';
+    if (isManager) return 'Manager';
     return 'Employee';
   };
+
+  // Get the navigation items based on user role
+  const NAV_ITEMS = getNavItemsByRole(isManager, isAdmin, isHR);
 
   return (
     <>

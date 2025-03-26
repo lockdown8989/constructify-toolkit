@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useLocation, Navigate, useSearchParams } from "react-router-dom";
@@ -9,6 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { UpdatePasswordForm } from "@/components/auth/UpdatePasswordForm";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+type UserRole = 'employee' | 'manager';
 
 const Auth = () => {
   const { user, signIn, signUp } = useAuth();
@@ -256,11 +258,12 @@ const ResetPasswordForm = ({ onBackToSignIn }: { onBackToSignIn: () => void }) =
   );
 };
 
-const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, firstName: string, lastName: string) => Promise<any> }) => {
+const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, firstName: string, lastName: string, role?: UserRole) => Promise<any> }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [role, setRole] = useState<UserRole>("employee");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -268,7 +271,7 @@ const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, 
     setIsLoading(true);
     
     try {
-      await onSignUp(email, password, firstName, lastName);
+      await onSignUp(email, password, firstName, lastName, role);
     } finally {
       setIsLoading(false);
     }
@@ -328,6 +331,27 @@ const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, 
               minLength={6}
             />
             <p className="text-xs text-gray-500">Password must be at least 6 characters</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="role">Account Type</Label>
+            <Select
+              value={role}
+              onValueChange={(value) => setRole(value as UserRole)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="employee">Employee</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-gray-500">
+              {role === 'manager' 
+                ? 'Managers have full access to all features' 
+                : 'Employees can view personal data and submit requests'}
+            </p>
           </div>
         </CardContent>
         
