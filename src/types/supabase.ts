@@ -1,4 +1,3 @@
-
 import type { Database as SupabaseDatabase } from '@/integrations/supabase/types';
 
 // Extend the Supabase Database type with our custom tables
@@ -316,6 +315,36 @@ export interface Database extends SupabaseDatabase {
           user_id?: string;
           role?: 'admin' | 'hr' | 'employee';
           created_at?: string | null;
+        };
+        Relationships: [];
+      };
+      hiring_statistics: {
+        Row: {
+          id: string;
+          month: string;
+          year: number;
+          design_count: number;
+          others_count: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Insert: {
+          id?: string;
+          month: string;
+          year: number;
+          design_count?: number;
+          others_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          month?: string;
+          year?: number;
+          design_count?: number;
+          others_count?: number;
+          created_at?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };

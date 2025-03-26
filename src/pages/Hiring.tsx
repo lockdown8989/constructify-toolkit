@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import HiringStatistics from '@/components/dashboard/HiringStatistics';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,10 +22,24 @@ const Hiring = () => {
   } = useHiringStatistics();
 
   const calculateYearlyTotals = () => {
-    return availableYears.map(year => {
-      // Must create a new instance to avoid modifying the hook
-      const yearStats = new useHiringStatistics(year);
-      const yearData = yearStats.data;
+    const yearlyData = availableYears.map(year => {
+      // Create sample data for each year
+      const yearData = year === selectedYear 
+        ? data 
+        : [
+            { name: 'Jan', design: 95, others: 120 },
+            { name: 'Feb', design: 85, others: 100 },
+            { name: 'Mar', design: 110, others: 95 },
+            { name: 'Apr', design: 100, others: 110 },
+            { name: 'May', design: 85, others: 130 },
+            { name: 'Jun', design: 95, others: 120 },
+            { name: 'Jul', design: 80, others: 100 },
+            { name: 'Aug', design: 95, others: 80 },
+            { name: 'Sep', design: 110, others: 60 },
+            { name: 'Oct', design: 90, others: 90 },
+            { name: 'Nov', design: 100, others: 115 },
+            { name: 'Dec', design: 120, others: 90 },
+          ];
       
       // Calculate totals
       const designTotal = yearData.reduce((sum, item) => sum + item.design, 0);
@@ -38,9 +52,11 @@ const Hiring = () => {
         total: designTotal + othersTotal
       };
     });
+    
+    return yearlyData;
   };
 
-  const yearlyData = calculateYearlyTotals();
+  const yearlyData = useMemo(() => calculateYearlyTotals(), [availableYears, data, selectedYear]);
 
   return (
     <div className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
