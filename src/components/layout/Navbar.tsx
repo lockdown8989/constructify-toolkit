@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Settings, User, Menu, X, LogOut } from 'lucide-react';
@@ -18,7 +19,7 @@ const NAV_ITEMS = [
   { name: 'Leave', path: '/leave' },
   { name: 'Hiring', path: '/hiring' },
   { name: 'Devices', path: '/devices' },
-  { name: 'Payroll', path: '/payroll' },
+  { name: 'Payslip', path: '/payroll' },
   { name: 'Salary', path: '/salary' },
   { name: 'Calendar', path: '/calendar' },
   { name: 'Reviews', path: '/reviews' },

@@ -10,7 +10,7 @@ import Schedule from "@/pages/Schedule";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
-import Payroll from "@/pages/Payroll";
+import PayslipPage from "@/pages/Payroll";
 import Salary from "@/pages/Salary";
 import Hiring from "@/pages/Hiring";
 
@@ -65,7 +65,7 @@ const router = createBrowserRouter([
       },
       {
         path: "payroll",
-        element: <Payroll />,
+        element: <PayslipPage />,
       },
     ],
   },

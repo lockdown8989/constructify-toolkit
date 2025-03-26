@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import SalaryTable from '@/components/dashboard/SalaryTable';
 import { useEmployees } from '@/hooks/use-employees';
@@ -55,7 +54,7 @@ const calculateSalaries = (employees: any[]): EmployeeSalary[] => {
   });
 };
 
-const PayrollPage = () => {
+const PayslipPage = () => {
   const { data: employeesData = [] } = useEmployees();
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
   const { toast } = useToast();
@@ -126,7 +125,6 @@ const PayrollPage = () => {
 
   const processEmployeePayroll = async (employeeId: string) => {
     try {
-      // Find the employee in the data
       const employee = employeesData.find(emp => emp.id === employeeId);
       if (!employee) {
         toast({
@@ -137,11 +135,9 @@ const PayrollPage = () => {
         return false;
       }
 
-      // Calculate final salary using GPT Mini API
       const baseSalary = employee.salary;
       const finalSalary = await calculateSalaryWithGPT(employeeId, baseSalary);
 
-      // Record payment in payroll table
       const { error: payrollError } = await supabase
         .from('payroll')
         .insert({
@@ -167,7 +163,7 @@ const PayrollPage = () => {
     if (selectedEmployees.size === 0) {
       toast({
         title: "No employees selected",
-        description: "Please select at least one employee to process payroll.",
+        description: "Please select at least one employee to process payslip.",
         variant: "destructive"
       });
       return;
@@ -179,7 +175,6 @@ const PayrollPage = () => {
       let successCount = 0;
       let failCount = 0;
       
-      // Process all selected employees
       for (const employeeId of selectedEmployees) {
         const success = await processEmployeePayroll(employeeId);
         if (success) {
@@ -189,7 +184,6 @@ const PayrollPage = () => {
         }
       }
       
-      // Update the UI for successful payments
       setEmployees(employees.map(emp => {
         if (selectedEmployees.has(emp.id)) {
           return { 
@@ -204,29 +198,28 @@ const PayrollPage = () => {
       
       setSelectedEmployees(new Set());
       
-      // Show toast with results
       if (successCount > 0 && failCount === 0) {
         toast({
-          title: "Payroll processed successfully",
+          title: "Payslips processed successfully",
           description: `Processed payments for ${successCount} employees.`,
         });
       } else if (successCount > 0 && failCount > 0) {
         toast({
-          title: "Payroll partially processed",
+          title: "Payslips partially processed",
           description: `Success: ${successCount} employees. Failed: ${failCount} employees.`,
           variant: "destructive"
         });
       } else {
         toast({
-          title: "Payroll processing failed",
+          title: "Payslip processing failed",
           description: "Failed to process any payments. Check the logs for more details.",
           variant: "destructive"
         });
       }
     } catch (err) {
-      console.error('Error in batch payroll processing:', err);
+      console.error('Error in batch payslip processing:', err);
       toast({
-        title: "Payroll processing error",
+        title: "Payslip processing error",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
@@ -250,10 +243,10 @@ const PayrollPage = () => {
         `);
 
       if (error) {
-        console.error("Error fetching payroll:", error);
+        console.error("Error fetching payslip data:", error);
         toast({
           title: "Export failed",
-          description: "Could not fetch payroll data for export.",
+          description: "Could not fetch payslip data for export.",
           variant: "destructive"
         });
         return;
@@ -262,7 +255,7 @@ const PayrollPage = () => {
       if (!data || data.length === 0) {
         toast({
           title: "No data to export",
-          description: "There is no payroll data available for export.",
+          description: "There is no payslip data available for export.",
           variant: "destructive"
         });
         return;
@@ -278,7 +271,7 @@ const PayrollPage = () => {
         Status: row.payment_status
       }));
 
-      exportToCSV(exportData, `payroll_report_${format(new Date(), 'yyyy-MM-dd')}`, {
+      exportToCSV(exportData, `payslips_report_${format(new Date(), 'yyyy-MM-dd')}`, {
         ID: 'ID',
         Employee: 'Employee Name',
         Position: 'Job Title',
@@ -290,13 +283,13 @@ const PayrollPage = () => {
 
       toast({
         title: "Export successful",
-        description: "Payroll data has been exported to CSV.",
+        description: "Payslip data has been exported to CSV.",
       });
     } catch (err) {
-      console.error("Error exporting payroll:", err);
+      console.error("Error exporting payslips:", err);
       toast({
         title: "Export failed",
-        description: "An unexpected error occurred while exporting payroll data.",
+        description: "An unexpected error occurred while exporting payslip data.",
         variant: "destructive"
       });
     } finally {
@@ -319,12 +312,12 @@ const PayrollPage = () => {
   
   return (
     <div className="container py-6">
-      <h1 className="text-2xl font-bold mb-6">Payroll Management</h1>
+      <h1 className="text-2xl font-bold mb-6">Payslip Management</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Total Payroll</CardDescription>
+            <CardDescription>Total Payslips</CardDescription>
             <CardTitle className="text-2xl flex items-center">
               <DollarSign className="h-5 w-5 mr-1 text-gray-500" />
               ${totalPayroll.toLocaleString()}
@@ -381,7 +374,7 @@ const PayrollPage = () => {
         <Card className="bg-black text-white">
           <CardHeader className="pb-2">
             <CardDescription className="text-gray-300">Quick Actions</CardDescription>
-            <CardTitle className="text-xl">Process Payroll</CardTitle>
+            <CardTitle className="text-xl">Process Payslips</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <Button 
@@ -412,7 +405,7 @@ const PayrollPage = () => {
               ) : (
                 <>
                   <Download className="h-4 w-4 mr-2" />
-                  Export Payroll CSV
+                  Export Payslips CSV
                 </>
               )}
             </Button>
@@ -437,8 +430,8 @@ const PayrollPage = () => {
         
         <TabsContent value="previous">
           <div className="bg-white rounded-3xl p-6 text-center py-12">
-            <h3 className="text-xl font-medium mb-2">Previous Month's Payroll</h3>
-            <p className="text-gray-500">Payroll data for {previousMonth} is archived.</p>
+            <h3 className="text-xl font-medium mb-2">Previous Month's Payslips</h3>
+            <p className="text-gray-500">Payslip data for {previousMonth} is archived.</p>
             <Button className="mt-4" variant="outline">
               View Archive
             </Button>
@@ -448,7 +441,7 @@ const PayrollPage = () => {
         <TabsContent value="history">
           <div className="bg-white rounded-3xl p-6 text-center py-12">
             <h3 className="text-xl font-medium mb-2">Payment History</h3>
-            <p className="text-gray-500">View detailed payment history and generate reports.</p>
+            <p className="text-gray-500">View detailed payslip history and generate reports.</p>
             <Button className="mt-4" variant="outline">
               Generate Report
             </Button>
@@ -459,4 +452,4 @@ const PayrollPage = () => {
   );
 };
 
-export default PayrollPage;
+export default PayslipPage;
