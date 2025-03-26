@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // Set individual role flags
           setIsAdmin(userRoles.includes('admin'));
           setIsHR(userRoles.includes('hr'));
-          setIsManager(userRoles.includes('manager'));
+          setIsManager(userRoles.includes('manager')); // Added manager role check
           
           // By default, all authenticated users are at least employees
           setIsEmployee(true);
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           } else if (userRoles.includes('hr')) {
             setUserRole('hr');
           } else if (userRoles.includes('manager')) {
-            setUserRole('manager');
+            setUserRole('manager'); // Added manager role priority
           } else {
             setUserRole('employee');
           }
