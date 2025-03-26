@@ -118,9 +118,9 @@ const Dashboard = () => {
           
           {/* Right Column */}
           <div className="lg:col-span-4">
+            {/* Updated to use the enhanced AttendanceReport */}
             <AttendanceReport 
-              present={Math.round((employees.filter(e => e.status === 'Active').length / Math.max(employees.length, 1)) * 100)} 
-              absent={Math.round((employees.filter(e => e.status === 'Leave').length / Math.max(employees.length, 1)) * 100)} 
+              employeeId={selectedEmployee ?? undefined}
               className="mb-6" 
             />
             

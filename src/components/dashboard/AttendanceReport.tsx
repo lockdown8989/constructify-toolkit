@@ -1,36 +1,66 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronUp, ChevronDown, Calendar, Users, Clock } from 'lucide-react';
+import { useAttendance } from '@/hooks/use-attendance';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface AttendanceReportProps {
-  present: number;
-  absent: number;
+  present?: number;
+  absent?: number;
   className?: string;
+  employeeId?: string;
 }
 
 const AttendanceReport: React.FC<AttendanceReportProps> = ({ 
-  present, 
-  absent,
-  className 
+  present: initialPresent, 
+  absent: initialAbsent,
+  className,
+  employeeId
 }) => {
+  const [timeRange, setTimeRange] = useState<number>(30); // Default: 30 days
+  const { data, isLoading } = useAttendance(employeeId, timeRange);
+  
+  // Use the fetch data if available, otherwise use the props
+  const present = data?.present ?? initialPresent ?? 0;
+  const absent = data?.absent ?? initialAbsent ?? 0;
+  const late = data?.late ?? 0;
+  const totalAttendance = data?.total ?? (present + absent);
+  
+  // Calculate attendance percentage
+  const attendanceRate = totalAttendance > 0 
+    ? Math.round((present / totalAttendance) * 100) 
+    : 0;
+  
   // Generate grid data (6x8 grid)
   const generateGrid = () => {
     const totalCells = 48; // 6x8 grid
-    const filledCells = Math.min(present + absent, totalCells);
-    const presentCells = Math.min(present, filledCells);
+    const presentPercentage = totalAttendance > 0 ? present / totalAttendance : 0;
+    const absentPercentage = totalAttendance > 0 ? absent / totalAttendance : 0;
+    const latePercentage = totalAttendance > 0 ? late / totalAttendance : 0;
+    
+    const presentCells = Math.round(totalCells * presentPercentage);
+    const absentCells = Math.round(totalCells * absentPercentage);
+    const lateCells = Math.round(totalCells * latePercentage);
     
     return Array.from({ length: totalCells }).map((_, index) => {
       if (index < presentCells) {
         return 'present';
-      } else if (index < filledCells) {
+      } else if (index < presentCells + absentCells) {
         return 'absent';
+      } else if (index < presentCells + absentCells + lateCells) {
+        return 'late';
       }
       return 'empty';
     });
   };
   
   const grid = generateGrid();
+  
+  // Handle time range change
+  const handleTimeRangeChange = (days: number) => {
+    setTimeRange(days);
+  };
   
   return (
     <div className={cn(
@@ -39,45 +69,124 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({
     )}>
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-medium">Attendance Report</h3>
-        <button className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors">
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
-      
-      <div className="flex items-end space-x-6 mb-8">
-        <div>
-          <span className="text-5xl font-semibold flex items-center">
-            {present}
-            <ChevronUp className="w-5 h-5 ml-2 text-crextio-accent" />
-          </span>
-        </div>
-        <div>
-          <span className="text-4xl font-medium text-gray-400 flex items-center">
-            {absent}
-            <ChevronDown className="w-5 h-5 ml-2 text-gray-500" />
-          </span>
-        </div>
-      </div>
-      
-      {/* Attendance Grid */}
-      <div className="grid grid-cols-8 gap-2">
-        {grid.map((type, index) => (
-          <div 
-            key={index}
+        <div className="flex space-x-2">
+          <button 
+            onClick={() => handleTimeRangeChange(7)} 
             className={cn(
-              "w-5 h-5 rounded-full transition-all duration-300 animate-fade-in",
-              type === 'present' && "bg-crextio-accent",
-              type === 'absent' && "bg-white/20",
-              type === 'empty' && "bg-gray-800"
+              "text-xs px-2 py-1 rounded-full transition-colors",
+              timeRange === 7 ? "bg-white text-black" : "bg-gray-800 text-gray-300 hover:bg-gray-700"
             )}
-            style={{ animationDelay: `${index * 10}ms` }}
-          />
-        ))}
+          >
+            7d
+          </button>
+          <button 
+            onClick={() => handleTimeRangeChange(30)} 
+            className={cn(
+              "text-xs px-2 py-1 rounded-full transition-colors",
+              timeRange === 30 ? "bg-white text-black" : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            )}
+          >
+            30d
+          </button>
+          <button 
+            onClick={() => handleTimeRangeChange(90)} 
+            className={cn(
+              "text-xs px-2 py-1 rounded-full transition-colors",
+              timeRange === 90 ? "bg-white text-black" : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            )}
+          >
+            90d
+          </button>
+        </div>
       </div>
+      
+      {isLoading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-12 w-3/4 bg-gray-800" />
+          <div className="grid grid-cols-8 gap-2">
+            {Array.from({ length: 24 }).map((_, i) => (
+              <Skeleton key={i} className="w-5 h-5 rounded-full bg-gray-800" />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-gray-800 rounded-xl p-3 flex items-center">
+              <Users className="w-5 h-5 mr-3 text-green-400" />
+              <div>
+                <p className="text-xs text-gray-400">Present</p>
+                <p className="text-lg font-semibold">{present}</p>
+              </div>
+            </div>
+            <div className="bg-gray-800 rounded-xl p-3 flex items-center">
+              <Calendar className="w-5 h-5 mr-3 text-red-400" />
+              <div>
+                <p className="text-xs text-gray-400">Absent</p>
+                <p className="text-lg font-semibold">{absent}</p>
+              </div>
+            </div>
+            <div className="bg-gray-800 rounded-xl p-3 flex items-center">
+              <Clock className="w-5 h-5 mr-3 text-yellow-400" />
+              <div>
+                <p className="text-xs text-gray-400">Late</p>
+                <p className="text-lg font-semibold">{late}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-end space-x-6 mb-6">
+            <div>
+              <p className="text-xs text-gray-400 mb-1">Attendance Rate</p>
+              <span className="text-5xl font-semibold flex items-center">
+                {attendanceRate}%
+                {attendanceRate > 80 ? (
+                  <ChevronUp className="w-5 h-5 ml-2 text-green-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 ml-2 text-red-400" />
+                )}
+              </span>
+            </div>
+          </div>
+          
+          {/* Attendance Grid */}
+          <p className="text-xs text-gray-400 mb-2">Attendance Distribution</p>
+          <div className="grid grid-cols-8 gap-2">
+            {grid.map((type, index) => (
+              <div 
+                key={index}
+                className={cn(
+                  "w-5 h-5 rounded-full transition-all duration-300 animate-fade-in",
+                  type === 'present' && "bg-green-400",
+                  type === 'absent' && "bg-red-400/60",
+                  type === 'late' && "bg-yellow-400/80",
+                  type === 'empty' && "bg-gray-800"
+                )}
+                style={{ animationDelay: `${index * 10}ms` }}
+              />
+            ))}
+          </div>
+          
+          <div className="mt-4 flex items-center text-xs text-gray-400 space-x-4">
+            <div className="flex items-center">
+              <div className="w-3 h-3 rounded-full bg-green-400 mr-2"></div>
+              <span>Present</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 rounded-full bg-red-400/60 mr-2"></div>
+              <span>Absent</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 rounded-full bg-yellow-400/80 mr-2"></div>
+              <span>Late</span>
+            </div>
+          </div>
+        </>
+      )}
       
       {/* Decorative elements */}
-      <div className="absolute bottom-0 right-0 w-20 h-20 bg-crextio-accent/10 rounded-full blur-2xl pointer-events-none" />
-      <div className="absolute top-10 left-10 w-10 h-10 bg-crextio-accent/10 rounded-full blur-xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-20 h-20 bg-green-400/10 rounded-full blur-2xl pointer-events-none" />
+      <div className="absolute top-10 left-10 w-10 h-10 bg-green-400/10 rounded-full blur-xl pointer-events-none" />
     </div>
   );
 };
