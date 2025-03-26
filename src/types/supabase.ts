@@ -1,3 +1,4 @@
+
 import type { Database as SupabaseDatabase } from '@/integrations/supabase/types';
 
 // Extend the Supabase Database type with our custom tables
@@ -325,8 +326,8 @@ export interface Database extends SupabaseDatabase {
           year: number;
           design_count: number;
           others_count: number;
-          created_at?: string;
-          updated_at?: string;
+          created_at: string | null;
+          updated_at: string | null;
         };
         Insert: {
           id?: string;
@@ -334,8 +335,8 @@ export interface Database extends SupabaseDatabase {
           year: number;
           design_count?: number;
           others_count?: number;
-          created_at?: string;
-          updated_at?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
         };
         Update: {
           id?: string;
@@ -343,8 +344,8 @@ export interface Database extends SupabaseDatabase {
           year?: number;
           design_count?: number;
           others_count?: number;
-          created_at?: string;
-          updated_at?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
         };
         Relationships: [];
       };

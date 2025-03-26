@@ -3,14 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import type { Database } from '@/types/supabase';
 
-export type HiringStatistic = {
-  id: string;
-  month: string;
-  year: number;
-  design_count: number;
-  others_count: number;
-};
+export type HiringStatistic = Database['public']['Tables']['hiring_statistics']['Row'];
 
 export type HiringStatisticsData = {
   name: string;
@@ -79,7 +74,7 @@ export function useHiringStatistics(year: number = new Date().getFullYear()) {
   });
 
   // Add new hiring statistics
-  const addHiringStatistic = async (newData: Omit<HiringStatistic, 'id'>) => {
+  const addHiringStatistic = async (newData: Omit<HiringStatistic, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       const { data, error } = await supabase
         .from('hiring_statistics')
