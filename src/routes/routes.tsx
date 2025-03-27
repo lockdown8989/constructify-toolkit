@@ -36,34 +36,18 @@ const router = createBrowserRouter([
         element: <Dashboard />,
       },
       {
-        // People management requires manager access
         path: "people",
-        element: (
-          <ProtectedRoute requiredRole="manager">
-            <People />
-          </ProtectedRoute>
-        ),
+        element: <People />,
       },
       {
-        // Leave management requires manager access for approval
         path: "leave",
-        element: (
-          <ProtectedRoute requiredRole="manager">
-            <LeaveManagement />
-          </ProtectedRoute>
-        ),
+        element: <LeaveManagement />,
       },
       {
-        // Hiring requires manager or HR access
         path: "hiring",
-        element: (
-          <ProtectedRoute requiredRole="manager">
-            <Hiring />
-          </ProtectedRoute>
-        ),
+        element: <Hiring />,
       },
       {
-        // Schedule can be viewed by everyone but only edited by managers
         path: "schedule",
         element: <Schedule />,
       },
@@ -72,27 +56,16 @@ const router = createBrowserRouter([
         element: <Schedule />,
       },
       {
-        // Profile is accessible to all authenticated users
         path: "profile",
         element: <Profile />,
       },
       {
-        // Salary management requires manager access
         path: "salary",
-        element: (
-          <ProtectedRoute requiredRole="manager">
-            <Salary />
-          </ProtectedRoute>
-        ),
+        element: <Salary />,
       },
       {
-        // Payslip viewing requires manager access
         path: "payroll",
-        element: (
-          <ProtectedRoute requiredRole="manager">
-            <PayslipPage />
-          </ProtectedRoute>
-        ),
+        element: <PayslipPage />,
       },
     ],
   },

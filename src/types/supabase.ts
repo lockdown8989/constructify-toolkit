@@ -1,3 +1,4 @@
+
 import type { Database as SupabaseDatabase } from '@/integrations/supabase/types';
 
 // Extend the Supabase Database type with our custom tables
@@ -19,7 +20,6 @@ export interface Database extends SupabaseDatabase {
           annual_leave_days: number;
           sick_leave_days: number;
           location: string | null;
-          manager_id: string | null;
         };
         Insert: {
           id?: string;
@@ -35,7 +35,6 @@ export interface Database extends SupabaseDatabase {
           annual_leave_days?: number;
           sick_leave_days?: number;
           location?: string | null;
-          manager_id?: string | null;
         };
         Update: {
           id?: string;
@@ -51,17 +50,8 @@ export interface Database extends SupabaseDatabase {
           annual_leave_days?: number;
           sick_leave_days?: number;
           location?: string | null;
-          manager_id?: string | null;
         };
-        Relationships: [
-          {
-            foreignKeyName: "employees_manager_id_fkey";
-            columns: ["manager_id"];
-            isOneToOne: false;
-            referencedRelation: "employees";
-            referencedColumns: ["id"];
-          }
-        ];
+        Relationships: [];
       };
       interviews: {
         Row: {
@@ -312,19 +302,19 @@ export interface Database extends SupabaseDatabase {
         Row: {
           id: string;
           user_id: string;
-          role: 'admin' | 'hr' | 'manager' | 'employee';
+          role: 'admin' | 'hr' | 'employee';
           created_at: string | null;
         };
         Insert: {
           id?: string;
           user_id: string;
-          role?: 'admin' | 'hr' | 'manager' | 'employee';
+          role?: 'admin' | 'hr' | 'employee';
           created_at?: string | null;
         };
         Update: {
           id?: string;
           user_id?: string;
-          role?: 'admin' | 'hr' | 'manager' | 'employee';
+          role?: 'admin' | 'hr' | 'employee';
           created_at?: string | null;
         };
         Relationships: [];
@@ -358,42 +348,6 @@ export interface Database extends SupabaseDatabase {
           updated_at?: string | null;
         };
         Relationships: [];
-      };
-      user_employee_mapping: {
-        Row: {
-          id: string;
-          user_id: string;
-          employee_id: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          employee_id: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          employee_id?: string;
-          created_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "user_employee_mapping_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: true;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "user_employee_mapping_employee_id_fkey";
-            columns: ["employee_id"];
-            isOneToOne: true;
-            referencedRelation: "employees";
-            referencedColumns: ["id"];
-          }
-        ];
       };
     };
     Views: SupabaseDatabase['public']['Views'];

@@ -21,11 +21,7 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
   return (
     <>
       <PersonalInfoFields form={form} />
-      <OrganizationFields 
-        control={form.control} 
-        departments={departments} 
-        sites={sites} 
-      />
+      <OrganizationFields form={form} departments={departments} sites={sites} />
       <CompensationFields form={form} />
       <EmploymentStatusFields form={form} />
     </>

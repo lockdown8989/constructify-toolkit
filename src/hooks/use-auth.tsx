@@ -1,10 +1,7 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User, AuthError } from "@supabase/supabase-js";
 import { useToast } from "./use-toast";
-
-type UserRole = 'employee' | 'manager' | 'admin' | 'hr';
 
 type AuthContextType = {
   user: User | null;
@@ -12,11 +9,8 @@ type AuthContextType = {
   isLoading: boolean;
   isAdmin: boolean;
   isHR: boolean;
-  isManager: boolean;
-  isEmployee: boolean; // New property
-  userRole: UserRole | null; // New property
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signUp: (email: string, password: string, firstName: string, lastName: string, role?: UserRole) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: AuthError | null }>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
   updatePassword: (password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
@@ -30,9 +24,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isHR, setIsHR] = useState(false);
-  const [isManager, setIsManager] = useState(false);
-  const [isEmployee, setIsEmployee] = useState(false);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -48,37 +39,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
-        if (roles && roles.length > 0) {
+        if (roles) {
           const userRoles = roles.map(r => r.role);
-          
-          // Set individual role flags
           setIsAdmin(userRoles.includes('admin'));
           setIsHR(userRoles.includes('hr'));
-          setIsManager(userRoles.includes('manager')); // Added manager role check
-          
-          // By default, all authenticated users are at least employees
-          setIsEmployee(true);
-          
-          // Set primary role (prioritize highest privilege)
-          if (userRoles.includes('admin')) {
-            setUserRole('admin');
-          } else if (userRoles.includes('hr')) {
-            setUserRole('hr');
-          } else if (userRoles.includes('manager')) {
-            setUserRole('manager'); // Added manager role priority
-          } else {
-            setUserRole('employee');
-          }
-        } else {
-          // Default to employee if no explicit roles found
-          setIsEmployee(true);
-          setUserRole('employee');
         }
       } catch (error) {
         console.error('Error in fetchUserRoles:', error);
-        // Default to employee on error
-        setIsEmployee(true);
-        setUserRole('employee');
       }
     };
 
@@ -100,9 +67,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } else {
           setIsAdmin(false);
           setIsHR(false);
-          setIsManager(false);
-          setIsEmployee(false);
-          setUserRole(null);
         }
         setIsLoading(false);
       }
@@ -135,7 +99,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string, role: UserRole = 'employee') => {
+  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -144,7 +108,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           data: {
             first_name: firstName,
             last_name: lastName,
-            role: role, // Store role in user metadata
           },
         },
       });
@@ -247,9 +210,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isLoading,
     isAdmin,
     isHR,
-    isManager,
-    isEmployee,
-    userRole,
     signIn,
     signUp,
     resetPassword,
