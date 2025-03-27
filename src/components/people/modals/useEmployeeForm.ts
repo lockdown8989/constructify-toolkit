@@ -46,8 +46,8 @@ export const useEmployeeForm = ({ onSuccess, employeeToEdit }: UseEmployeeFormPr
 
   useEffect(() => {
     // Check if current status is valid for the selected lifecycle
-    const validStatuses = validStatusForLifecycle[lifecycle];
-    if (!validStatuses.includes(status as any)) {
+    const validStatuses = validStatusForLifecycle[lifecycle as keyof typeof validStatusForLifecycle] || ['Active'];
+    if (!validStatuses.includes(status)) {
       // Set status to first valid option for this lifecycle
       form.setValue('status', validStatuses[0]);
     }

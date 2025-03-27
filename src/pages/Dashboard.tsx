@@ -22,29 +22,25 @@ const Dashboard = () => {
           <StatCard
             title="Total Employees"
             value="156"
-            trend="+12%"
-            trendDirection="up"
+            trend={{ value: 12, isPositive: true }}
             description="from last month"
           />
           <StatCard
             title="Open Positions"
             value="24"
-            trend="-3"
-            trendDirection="down"
+            trend={{ value: 3, isPositive: false }}
             description="since last week"
           />
           <StatCard
             title="Training Hours"
             value="2,345"
-            trend="+32%"
-            trendDirection="up"
+            trend={{ value: 32, isPositive: true }}
             description="year to date"
           />
           <StatCard
             title="Time Off Requests"
             value="15"
-            trend="+5"
-            trendDirection="up"
+            trend={{ value: 5, isPositive: true }}
             description="pending approval"
           />
         </div>
@@ -55,12 +51,12 @@ const Dashboard = () => {
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <Calendar />
+          <Calendar meetings={[]} />
           <MeetingSchedule />
         </div>
         
         <div className="grid grid-cols-1 gap-6 mb-6">
-          <SalaryTable />
+          <SalaryTable employees={[]} />
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

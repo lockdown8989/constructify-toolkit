@@ -1,6 +1,14 @@
 
 import { z } from "zod";
 
+// Define valid status options for each lifecycle stage
+export const validStatusForLifecycle = {
+  'Employed': ['Active', 'On Leave', 'Suspended'],
+  'Onboarding': ['Pending', 'In Progress', 'Completed'],
+  'Offboarding': ['Pending', 'In Progress', 'Completed'],
+  'Alumni': ['Terminated', 'Retired', 'Resigned']
+};
+
 export const employeeFormSchema = z.object({
   name: z.string().min(2, {
     message: "Name must be at least 2 characters.",

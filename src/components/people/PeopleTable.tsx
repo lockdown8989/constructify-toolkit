@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -83,7 +84,8 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
       avatar: employee.avatar,
       location: employee.siteIcon === '🌐' ? 'Remote' : 'Office',
       annual_leave_days: 25,
-      sick_leave_days: 10
+      sick_leave_days: 10,
+      manager_id: null // Add this line to fix the type error
     };
   };
   

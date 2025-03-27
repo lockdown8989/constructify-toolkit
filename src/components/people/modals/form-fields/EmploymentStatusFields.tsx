@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { EmployeeFormValues, validStatusForLifecycle } from '../employee-form-schema';
@@ -15,7 +14,7 @@ const EmploymentStatusFields: React.FC<EmploymentStatusFieldsProps> = ({ form })
   
   // Watch lifecycle to determine valid status options
   const lifecycle = form.watch('lifecycle');
-  const validStatusOptions = validStatusForLifecycle[lifecycle] || ['Present'];
+  const validStatusOptions = validStatusForLifecycle[lifecycle as keyof typeof validStatusForLifecycle] || ['Active'];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
