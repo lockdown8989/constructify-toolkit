@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useLocation, Navigate, useSearchParams } from "react-router-dom";
@@ -25,12 +24,10 @@ const Auth = () => {
   const type = searchParams.get("type");
   const isRecoveryMode = type === "recovery";
 
-  // If already logged in and not in reset password mode, redirect to the dashboard
   if (user && !isResetMode && !isRecoveryMode) {
     return <Navigate to={from} replace />;
   }
 
-  // If in recovery mode, show the update password form
   if (isResetMode || isRecoveryMode) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
@@ -289,6 +286,7 @@ const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, 
               description: "Could not fetch user roles: " + rolesError.message,
               variant: "destructive",
             });
+            setIsLoading(false);
             return;
           }
           
@@ -303,10 +301,16 @@ const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, 
               });
               
             if (insertError) {
+              console.error("Role insertion error:", insertError);
               toast({
                 title: "Error",
                 description: "Could not assign user role: " + insertError.message,
                 variant: "destructive",
+              });
+            } else {
+              toast({
+                title: "Success",
+                description: `Account created with ${userRole} role.`,
               });
             }
           }
@@ -324,9 +328,7 @@ const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, 
     }
   };
 
-  // Handle the value change with proper type checking
   const handleRoleChange = (value: string) => {
-    // Validate that the value is one of our allowed roles
     if (value === "admin" || value === "hr" || value === "employee" || value === "employer") {
       setUserRole(value);
     }
