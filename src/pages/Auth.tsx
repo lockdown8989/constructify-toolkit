@@ -324,6 +324,14 @@ const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, 
     }
   };
 
+  // Handle the value change with proper type checking
+  const handleRoleChange = (value: string) => {
+    // Validate that the value is one of our allowed roles
+    if (value === "admin" || value === "hr" || value === "employee" || value === "employer") {
+      setUserRole(value);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -384,7 +392,7 @@ const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, 
             <Label>Account Type</Label>
             <RadioGroup
               value={userRole}
-              onValueChange={setUserRole}
+              onValueChange={handleRoleChange}
               className="flex space-x-4"
             >
               <div className="flex items-center space-x-2">
