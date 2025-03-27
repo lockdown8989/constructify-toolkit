@@ -302,19 +302,19 @@ export interface Database extends SupabaseDatabase {
         Row: {
           id: string;
           user_id: string;
-          role: 'admin' | 'hr' | 'employee';
+          role: 'admin' | 'hr' | 'employee' | 'employer';
           created_at: string | null;
         };
         Insert: {
           id?: string;
           user_id: string;
-          role?: 'admin' | 'hr' | 'employee';
+          role?: 'admin' | 'hr' | 'employee' | 'employer';
           created_at?: string | null;
         };
         Update: {
           id?: string;
           user_id?: string;
-          role?: 'admin' | 'hr' | 'employee';
+          role?: 'admin' | 'hr' | 'employee' | 'employer';
           created_at?: string | null;
         };
         Relationships: [];
