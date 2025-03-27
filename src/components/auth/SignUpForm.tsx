@@ -47,9 +47,12 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
             return;
           }
           
+          // Check if the user already has this role assigned
           const roleExists = existingRoles?.some(r => r.role === userRole);
           
           if (!roleExists) {
+            console.log(`Attempting to assign role: ${userRole} to user: ${user.id}`);
+            
             const { error: insertError } = await supabase
               .from('user_roles')
               .insert({ 
@@ -88,6 +91,7 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
   const handleRoleChange = (value: string) => {
     if (value === "admin" || value === "hr" || value === "employee" || value === "employer") {
       setUserRole(value);
+      console.log("Role selected:", value);
     }
   };
 
@@ -152,7 +156,7 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
             <RadioGroup
               value={userRole}
               onValueChange={handleRoleChange}
-              className="flex space-x-4"
+              className="flex flex-wrap gap-4"
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="employee" id="employee" />
