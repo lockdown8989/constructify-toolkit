@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useLocation, Navigate, useSearchParams } from "react-router-dom";
@@ -262,7 +263,7 @@ const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, 
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [userRole, setUserRole] = useState("employee");
+  const [userRole, setUserRole] = useState<"admin" | "hr" | "employee" | "employer">("employee");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -296,7 +297,10 @@ const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, 
           if (!roleExists) {
             const { error: insertError } = await supabase
               .from('user_roles')
-              .insert({ user_id: user.id, role: userRole });
+              .insert({ 
+                user_id: user.id, 
+                role: userRole 
+              });
               
             if (insertError) {
               toast({
