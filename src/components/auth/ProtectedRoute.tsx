@@ -4,11 +4,11 @@ import { useAuth } from "@/hooks/use-auth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'admin' | 'hr';
+  requiredRole?: 'admin' | 'hr' | 'employer';
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const { user, isLoading, isAdmin, isHR } = useAuth();
+  const { user, isLoading, isAdmin, isHR, isEmployer } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -27,6 +27,9 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
       return <Navigate to="/dashboard" replace />;
     }
     if (requiredRole === 'hr' && !isHR && !isAdmin) {
+      return <Navigate to="/dashboard" replace />;
+    }
+    if (requiredRole === 'employer' && !isEmployer && !isAdmin) {
       return <Navigate to="/dashboard" replace />;
     }
   }

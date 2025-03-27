@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useLocation, Navigate, useSearchParams } from "react-router-dom";
@@ -9,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { UpdatePasswordForm } from "@/components/auth/UpdatePasswordForm";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const Auth = () => {
   const { user, signIn, signUp } = useAuth();
@@ -261,14 +261,60 @@ const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, 
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [userRole, setUserRole] = useState("employee");
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const supabase = supabase;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      await onSignUp(email, password, firstName, lastName);
+      const { error } = await onSignUp(email, password, firstName, lastName);
+      
+      if (!error) {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data: existingRoles, error: rolesError } = await supabase
+            .from('user_roles')
+            .select('*')
+            .eq('user_id', user.id);
+            
+          if (rolesError) {
+            toast({
+              title: "Error",
+              description: "Could not fetch user roles: " + rolesError.message,
+              variant: "destructive",
+            });
+            return;
+          }
+          
+          const roleExists = existingRoles?.some(r => r.role === userRole);
+          
+          if (!roleExists) {
+            const { error: insertError } = await supabase
+              .from('user_roles')
+              .insert({ user_id: user.id, role: userRole });
+              
+            if (insertError) {
+              toast({
+                title: "Error",
+                description: "Could not assign user role: " + insertError.message,
+                variant: "destructive",
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Sign up error:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred during sign up",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -328,6 +374,24 @@ const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, 
               minLength={6}
             />
             <p className="text-xs text-gray-500">Password must be at least 6 characters</p>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>Account Type</Label>
+            <RadioGroup
+              value={userRole}
+              onValueChange={setUserRole}
+              className="flex space-x-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="employee" id="employee" />
+                <Label htmlFor="employee">Employee</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="employer" id="employer" />
+                <Label htmlFor="employer">Employer</Label>
+              </div>
+            </RadioGroup>
           </div>
         </CardContent>
         

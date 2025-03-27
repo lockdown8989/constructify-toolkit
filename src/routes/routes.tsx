@@ -37,15 +37,27 @@ const router = createBrowserRouter([
       },
       {
         path: "people",
-        element: <People />,
+        element: (
+          <ProtectedRoute requiredRole="employer">
+            <People />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "leave",
-        element: <LeaveManagement />,
+        element: (
+          <ProtectedRoute>
+            <LeaveManagement />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "hiring",
-        element: <Hiring />,
+        element: (
+          <ProtectedRoute requiredRole="employer">
+            <Hiring />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "schedule",
@@ -61,11 +73,19 @@ const router = createBrowserRouter([
       },
       {
         path: "salary",
-        element: <Salary />,
+        element: (
+          <ProtectedRoute requiredRole="employer">
+            <Salary />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "payroll",
-        element: <PayslipPage />,
+        element: (
+          <ProtectedRoute requiredRole="employer">
+            <PayslipPage />
+          </ProtectedRoute>
+        ),
       },
     ],
   },
