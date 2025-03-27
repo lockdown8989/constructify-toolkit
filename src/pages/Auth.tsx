@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { UpdatePasswordForm } from "@/components/auth/UpdatePasswordForm";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const { user, signIn, signUp } = useAuth();
@@ -264,7 +265,6 @@ const SignUpForm = ({ onSignUp }: { onSignUp: (email: string, password: string, 
   const [userRole, setUserRole] = useState("employee");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const supabase = supabase;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
