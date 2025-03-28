@@ -5,8 +5,6 @@ import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 type SignInFormProps = {
   onSignIn: (email: string, password: string) => Promise<any>;
@@ -18,7 +16,6 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,42 +23,10 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
     
     try {
       const { error } = await onSignIn(email, password);
-      
       if (!error) {
-        // Get the user and their role
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          // Fetch the user's role from the user_roles table
-          const { data: roleData, error: roleError } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.id)
-            .single();
-          
-          if (roleError) {
-            console.error("Error fetching user role:", roleError);
-            navigate("/dashboard"); // Default redirect
-          } else {
-            console.log("User role:", roleData.role);
-            
-            // Redirect based on user role
-            if (roleData.role === 'employer' || roleData.role === 'admin' || roleData.role === 'hr') {
-              navigate("/dashboard");
-            } else {
-              // For employee role
-              navigate("/dashboard");
-            }
-            
-            toast({
-              title: "Welcome back",
-              description: `You are signed in as ${roleData.role}`,
-            });
-          }
-        }
+        navigate("/dashboard");
       }
-    } catch (error) {
-      console.error("Sign in error:", error);
+    } finally {
       setIsLoading(false);
     }
   };
