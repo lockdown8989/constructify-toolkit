@@ -4,7 +4,6 @@ import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -151,22 +150,33 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
             <p className="text-xs text-gray-500">Password must be at least 6 characters</p>
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label>Account Type</Label>
-            <RadioGroup
-              value={userRole}
-              onValueChange={handleRoleChange}
-              className="flex flex-wrap gap-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="employee" id="employee" />
-                <Label htmlFor="employee">Employee</Label>
+            <div className="flex flex-wrap gap-4">
+              <div 
+                className={`flex items-center border rounded-md px-4 py-2 cursor-pointer transition-colors ${userRole === "employee" ? "bg-primary text-primary-foreground border-primary" : "border-input bg-background hover:bg-accent hover:text-accent-foreground"}`}
+                onClick={() => handleRoleChange("employee")}
+              >
+                <div className={`h-4 w-4 rounded-full border mr-2 flex items-center justify-center ${userRole === "employee" ? "border-primary-foreground" : "border-primary"}`}>
+                  {userRole === "employee" && (
+                    <div className="h-2 w-2 rounded-full bg-primary-foreground"></div>
+                  )}
+                </div>
+                <Label htmlFor="employee" className="cursor-pointer">Employee</Label>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="employer" id="employer" />
-                <Label htmlFor="employer">Employer</Label>
+              
+              <div 
+                className={`flex items-center border rounded-md px-4 py-2 cursor-pointer transition-colors ${userRole === "employer" ? "bg-primary text-primary-foreground border-primary" : "border-input bg-background hover:bg-accent hover:text-accent-foreground"}`}
+                onClick={() => handleRoleChange("employer")}
+              >
+                <div className={`h-4 w-4 rounded-full border mr-2 flex items-center justify-center ${userRole === "employer" ? "border-primary-foreground" : "border-primary"}`}>
+                  {userRole === "employer" && (
+                    <div className="h-2 w-2 rounded-full bg-primary-foreground"></div>
+                  )}
+                </div>
+                <Label htmlFor="employer" className="cursor-pointer">Employer</Label>
               </div>
-            </RadioGroup>
+            </div>
           </div>
         </CardContent>
         

@@ -5,6 +5,8 @@ import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 type SignInFormProps = {
   onSignIn: (email: string, password: string) => Promise<any>;
@@ -16,6 +18,7 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,8 +27,33 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
     try {
       const { error } = await onSignIn(email, password);
       if (!error) {
+        // Get the user's role
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .single();
+            
+          if (roleData) {
+            toast({
+              title: "Success",
+              description: `Signed in as ${roleData.role}`,
+            });
+          }
+        }
+        
         navigate("/dashboard");
       }
+    } catch (error) {
+      console.error("Sign in error:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred during sign in",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
