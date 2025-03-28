@@ -26,55 +26,54 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
     setIsLoading(true);
     
     try {
+      console.log(`Signing up with role: ${userRole}`);
       const { error } = await onSignUp(email, password, firstName, lastName);
       
       if (!error) {
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
-          const { data: existingRoles, error: rolesError } = await supabase
+          console.log(`User created successfully: ${user.id}`);
+          
+          // We'll insert the role directly without checking if it exists first
+          // since this is a new user signup
+          const { error: insertError, data: roleData } = await supabase
             .from('user_roles')
-            .select('*')
-            .eq('user_id', user.id);
+            .insert({ 
+              user_id: user.id, 
+              role: userRole 
+            })
+            .select();
             
-          if (rolesError) {
+          if (insertError) {
+            console.error("Role insertion error:", insertError);
             toast({
               title: "Error",
-              description: "Could not fetch user roles: " + rolesError.message,
+              description: "Could not assign user role: " + insertError.message,
               variant: "destructive",
             });
-            setIsLoading(false);
-            return;
+          } else {
+            console.log("Role assigned successfully:", roleData);
+            toast({
+              title: "Success",
+              description: `Account created with ${userRole} role.`,
+            });
           }
-          
-          // Check if the user already has this role assigned
-          const roleExists = existingRoles?.some(r => r.role === userRole);
-          
-          if (!roleExists) {
-            console.log(`Attempting to assign role: ${userRole} to user: ${user.id}`);
-            
-            const { error: insertError } = await supabase
-              .from('user_roles')
-              .insert({ 
-                user_id: user.id, 
-                role: userRole 
-              });
-              
-            if (insertError) {
-              console.error("Role insertion error:", insertError);
-              toast({
-                title: "Error",
-                description: "Could not assign user role: " + insertError.message,
-                variant: "destructive",
-              });
-            } else {
-              toast({
-                title: "Success",
-                description: `Account created with ${userRole} role.`,
-              });
-            }
-          }
+        } else {
+          console.error("User not found after signup");
+          toast({
+            title: "Error",
+            description: "User was created but could not be retrieved",
+            variant: "destructive",
+          });
         }
+      } else {
+        console.error("Sign up error:", error);
+        toast({
+          title: "Error",
+          description: error.message || "An error occurred during sign up",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Sign up error:", error);
@@ -153,18 +152,20 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
           
           <div className="space-y-2">
             <Label>Account Type</Label>
-            <RadioGroup
+            <RadioGroup 
+              defaultValue={userRole}
               value={userRole}
               onValueChange={handleRoleChange}
-              className="flex flex-wrap gap-4"
+              className="grid grid-cols-2 gap-4 py-2"
+              name="account-type"
             >
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-gray-50 cursor-pointer">
                 <RadioGroupItem value="employee" id="employee" />
-                <Label htmlFor="employee">Employee</Label>
+                <Label htmlFor="employee" className="cursor-pointer font-medium">Employee</Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-gray-50 cursor-pointer">
                 <RadioGroupItem value="employer" id="employer" />
-                <Label htmlFor="employer">Employer</Label>
+                <Label htmlFor="employer" className="cursor-pointer font-medium">Employer</Label>
               </div>
             </RadioGroup>
           </div>
