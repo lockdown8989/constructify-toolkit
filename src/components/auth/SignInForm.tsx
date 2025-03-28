@@ -38,9 +38,10 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
             .single();
             
           if (roleData) {
+            const userRole = roleData.role.toString().toLowerCase();
             toast({
               title: "Success",
-              description: `Signed in as ${roleData.role}`,
+              description: `Signed in as ${userRole}`,
             });
           }
         }
