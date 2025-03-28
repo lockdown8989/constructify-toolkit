@@ -35,8 +35,8 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
         if (user) {
           console.log(`User created successfully: ${user.id}`);
           
-          // We'll insert the role directly without checking if it exists first
-          // since this is a new user signup
+          // Store user role data
+          // This now works because of the new RLS policy for the service role
           const { error: insertError, data: roleData } = await supabase
             .from('user_roles')
             .insert({ 
