@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { useEmployees } from '@/hooks/use-employees';
@@ -16,7 +15,7 @@ const ShiftSwapList = () => {
   const { data: swaps = [], isLoading: isLoadingSwaps } = useShiftSwaps();
   const { data: schedules = [] } = useSchedules();
   const { data: employees = [] } = useEmployees();
-  const { user, isAdmin, isHR, isEmployer } = useAuth();
+  const { user, isAdmin, isHR, isManager } = useAuth();
   const { mutate: updateSwap } = useUpdateShiftSwap();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'completed'>('pending');
@@ -29,11 +28,9 @@ const ShiftSwapList = () => {
     );
   }
   
-  const isManager = isAdmin || isHR || isEmployer;
+  const isManager = isAdmin || isHR || isManager;
   
-  // Filter shift swaps based on user's role and tab selection
   const filteredSwaps = swaps.filter(swap => {
-    // Based on selected tab
     switch (activeTab) {
       case 'pending':
         return swap.status === 'Pending';
@@ -47,11 +44,9 @@ const ShiftSwapList = () => {
         return true;
     }
   }).filter(swap => {
-    // Based on user role
     if (isManager) {
-      return true; // Managers see all swaps
+      return true;
     } else {
-      // Regular employees see only their swaps
       return swap.requester_id === user.id || swap.recipient_id === user.id;
     }
   });
@@ -111,7 +106,6 @@ const ShiftSwapList = () => {
   };
   
   const renderActions = (swap: ShiftSwap) => {
-    // Only managers or the recipient can approve/reject pending swaps
     if (swap.status === 'Pending' && (isManager || user.id === swap.recipient_id)) {
       return (
         <div className="flex space-x-2">
@@ -127,7 +121,6 @@ const ShiftSwapList = () => {
       );
     }
     
-    // Only managers can mark approved swaps as completed
     if (swap.status === 'Approved' && isManager) {
       return (
         <Button size="sm" variant="outline" onClick={() => handleComplete(swap)}>

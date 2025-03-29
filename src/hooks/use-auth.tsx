@@ -46,7 +46,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const userRoles = roles.map(r => r.role);
           setIsAdmin(userRoles.includes('admin'));
           setIsHR(userRoles.includes('hr'));
-          setIsManager(userRoles.includes('manager'));
+          // Use 'employer' in the database query but set isManager in the state
+          setIsManager(userRoles.includes('employer'));
         }
       } catch (error) {
         console.error('Error in fetchUserRoles:', error);

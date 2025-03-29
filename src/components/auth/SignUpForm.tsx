@@ -16,7 +16,7 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [userRole, setUserRole] = useState<"admin" | "hr" | "employee" | "manager">("employee");
+  const [userRole, setUserRole] = useState<"admin" | "hr" | "employee" | "employer">("employee");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -64,7 +64,7 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
             console.log("Role inserted successfully:", insertData);
             toast({
               title: "Success",
-              description: `Account created with ${userRole} role.`,
+              description: `Account created with ${userRole === 'employer' ? 'manager' : userRole} role.`,
             });
           }
         }
@@ -83,8 +83,9 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
 
   const handleRoleChange = (value: string) => {
     if (value === "admin" || value === "hr" || value === "employee" || value === "manager") {
-      setUserRole(value);
-      console.log("Role selected:", value);
+      // If "manager" is selected, set userRole to "employer" for database compatibility
+      setUserRole(value === "manager" ? "employer" : value as "admin" | "hr" | "employee" | "employer");
+      console.log("Role selected:", value, "DB role:", value === "manager" ? "employer" : value);
     }
   };
 
@@ -160,11 +161,11 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
               </div>
               
               <div 
-                className={`flex items-center border rounded-md px-4 py-2 cursor-pointer transition-colors ${userRole === "manager" ? "bg-primary text-primary-foreground border-primary" : "border-input bg-background hover:bg-accent hover:text-accent-foreground"}`}
+                className={`flex items-center border rounded-md px-4 py-2 cursor-pointer transition-colors ${userRole === "employer" ? "bg-primary text-primary-foreground border-primary" : "border-input bg-background hover:bg-accent hover:text-accent-foreground"}`}
                 onClick={() => handleRoleChange("manager")}
               >
-                <div className={`h-4 w-4 rounded-full border mr-2 flex items-center justify-center ${userRole === "manager" ? "border-primary-foreground" : "border-primary"}`}>
-                  {userRole === "manager" && (
+                <div className={`h-4 w-4 rounded-full border mr-2 flex items-center justify-center ${userRole === "employer" ? "border-primary-foreground" : "border-primary"}`}>
+                  {userRole === "employer" && (
                     <div className="h-2 w-2 rounded-full bg-primary-foreground"></div>
                   )}
                 </div>

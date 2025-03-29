@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { useEmployees } from '@/hooks/use-employees';
@@ -13,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 const AvailabilityRequestList = () => {
   const { data: requests = [], isLoading } = useAvailabilityRequests();
   const { data: employees = [] } = useEmployees();
-  const { user, isAdmin, isHR, isEmployer } = useAuth();
+  const { user, isAdmin, isHR, isManager } = useAuth();
   const { mutate: updateRequest } = useUpdateAvailabilityRequest();
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
   
@@ -25,11 +24,9 @@ const AvailabilityRequestList = () => {
     );
   }
   
-  const isManager = isAdmin || isHR || isEmployer;
+  const isManager = isAdmin || isHR || isManager;
   
-  // Filter availability requests based on user's role and tab selection
   const filteredRequests = requests.filter(request => {
-    // Based on selected tab
     switch (activeTab) {
       case 'pending':
         return request.status === 'Pending';
@@ -41,11 +38,9 @@ const AvailabilityRequestList = () => {
         return true;
     }
   }).filter(request => {
-    // Based on user role
     if (isManager) {
-      return true; // Managers see all requests
+      return true;
     } else {
-      // Regular employees see only their requests
       return request.employee_id === user.id;
     }
   });
@@ -85,7 +80,6 @@ const AvailabilityRequestList = () => {
   };
   
   const renderActions = (request: AvailabilityRequest) => {
-    // Only managers can approve/reject pending requests
     if (request.status === 'Pending' && isManager) {
       return (
         <div className="flex space-x-2">
