@@ -25,8 +25,9 @@ export const useSchedules = (date?: Date) => {
       
       if (date) {
         const dateString = date.toISOString().split('T')[0];
-        // Filter schedules where the start_time contains the date string
-        query = query.ilike('start_time', `${dateString}%`);
+        // Use an equality check on the date portion rather than ilike
+        query = query.filter('start_time', 'gte', `${dateString}T00:00:00`)
+                     .filter('start_time', 'lt', `${dateString}T23:59:59`);
       }
       
       const { data, error } = await query;
