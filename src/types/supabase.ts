@@ -1,4 +1,3 @@
-
 import type { Database as SupabaseDatabase } from '@/integrations/supabase/types';
 
 // Extend the Supabase Database type with our custom tables
@@ -348,6 +347,118 @@ export interface Database extends SupabaseDatabase {
           updated_at?: string | null;
         };
         Relationships: [];
+      };
+      shift_swaps: {
+        Row: {
+          id: string;
+          requester_id: string;
+          recipient_id: string;
+          requester_schedule_id: string;
+          recipient_schedule_id?: string;
+          status: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
+          notes?: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          requester_id: string;
+          recipient_id: string;
+          requester_schedule_id: string;
+          recipient_schedule_id?: string;
+          status?: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
+          notes?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          requester_id?: string;
+          recipient_id?: string;
+          requester_schedule_id?: string;
+          recipient_schedule_id?: string;
+          status?: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
+          notes?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shift_swaps_requester_id_fkey";
+            columns: ["requester_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shift_swaps_recipient_id_fkey";
+            columns: ["recipient_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shift_swaps_requester_schedule_id_fkey";
+            columns: ["requester_schedule_id"];
+            isOneToOne: false;
+            referencedRelation: "schedules";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shift_swaps_recipient_schedule_id_fkey";
+            columns: ["recipient_schedule_id"];
+            isOneToOne: false;
+            referencedRelation: "schedules";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      availability_requests: {
+        Row: {
+          id: string;
+          employee_id: string;
+          date: string;
+          start_time: string;
+          end_time: string;
+          is_available: boolean;
+          notes?: string;
+          status: 'Pending' | 'Approved' | 'Rejected';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          employee_id: string;
+          date: string;
+          start_time: string;
+          end_time: string;
+          is_available: boolean;
+          notes?: string;
+          status?: 'Pending' | 'Approved' | 'Rejected';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          employee_id?: string;
+          date?: string;
+          start_time?: string;
+          end_time?: string;
+          is_available?: boolean;
+          notes?: string;
+          status?: 'Pending' | 'Approved' | 'Rejected';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "availability_requests_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
     };
     Views: SupabaseDatabase['public']['Views'];

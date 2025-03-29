@@ -23,7 +23,7 @@ import {
 
 const AvailabilityRequestForm = () => {
   const { user } = useAuth();
-  const { mutate: createRequest, isLoading } = useCreateAvailabilityRequest();
+  const { mutate: createRequest, isPending } = useCreateAvailabilityRequest();
   const { toast } = useToast();
   
   const [date, setDate] = useState<Date | undefined>(undefined);
@@ -206,8 +206,8 @@ const AvailabilityRequestForm = () => {
         </CardContent>
         
         <CardFooter>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Submitting..." : "Submit Request"}
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? "Submitting..." : "Submit Request"}
           </Button>
         </CardFooter>
       </form>

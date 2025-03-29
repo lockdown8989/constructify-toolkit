@@ -22,7 +22,7 @@ const ShiftSwapForm = () => {
   const { user } = useAuth();
   const { data: schedules = [] } = useSchedules();
   const { data: employees = [] } = useEmployees();
-  const { mutate: createShiftSwap, isLoading } = useCreateShiftSwap();
+  const { mutate: createShiftSwap, isPending } = useCreateShiftSwap();
   const { toast } = useToast();
   
   const [selectedSchedule, setSelectedSchedule] = useState<string>('');
@@ -209,8 +209,8 @@ const ShiftSwapForm = () => {
         </CardContent>
         
         <CardFooter>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Submitting..." : "Request Swap"}
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? "Submitting..." : "Request Swap"}
           </Button>
         </CardFooter>
       </form>
