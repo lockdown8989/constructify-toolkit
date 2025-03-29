@@ -31,17 +31,31 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
-          const { data: roleData } = await supabase
+          console.log("Fetching role for user:", user.id);
+          const { data: roleData, error: roleError } = await supabase
             .from('user_roles')
             .select('role')
             .eq('user_id', user.id)
             .single();
             
-          if (roleData) {
+          if (roleError) {
+            console.error("Error fetching role:", roleError);
+            toast({
+              title: "Success",
+              description: "Signed in successfully",
+            });
+          } else if (roleData) {
+            console.log("Role data:", roleData);
             const userRole = roleData.role.toString().toLowerCase();
             toast({
               title: "Success",
               description: `Signed in as ${userRole}`,
+            });
+          } else {
+            console.log("No role data found");
+            toast({
+              title: "Success",
+              description: "Signed in successfully",
             });
           }
         }

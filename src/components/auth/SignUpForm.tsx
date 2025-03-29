@@ -25,53 +25,47 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
     setIsLoading(true);
     
     try {
+      console.log(`Attempting to sign up with role: ${userRole}`);
       const { error } = await onSignUp(email, password, firstName, lastName);
       
       if (!error) {
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
-          const { data: existingRoles, error: rolesError } = await supabase
+          console.log(`Got user with ID: ${user.id}, assigning role: ${userRole}`);
+          
+          // First delete any existing roles for this user to avoid duplicates
+          const { error: deleteError } = await supabase
             .from('user_roles')
-            .select('*')
+            .delete()
             .eq('user_id', user.id);
             
-          if (rolesError) {
-            toast({
-              title: "Error",
-              description: "Could not fetch user roles: " + rolesError.message,
-              variant: "destructive",
-            });
-            setIsLoading(false);
-            return;
+          if (deleteError) {
+            console.error("Error deleting existing roles:", deleteError);
           }
           
-          // Check if the user already has this role assigned
-          const roleExists = existingRoles?.some(r => r.role === userRole);
-          
-          if (!roleExists) {
-            console.log(`Attempting to assign role: ${userRole} to user: ${user.id}`);
-            
-            const { error: insertError } = await supabase
-              .from('user_roles')
-              .insert({ 
-                user_id: user.id, 
-                role: userRole 
-              });
+          // Now insert the new role
+          const { data: insertData, error: insertError } = await supabase
+            .from('user_roles')
+            .insert({ 
+              user_id: user.id, 
+              role: userRole 
+            })
+            .select();
               
-            if (insertError) {
-              console.error("Role insertion error:", insertError);
-              toast({
-                title: "Error",
-                description: "Could not assign user role: " + insertError.message,
-                variant: "destructive",
-              });
-            } else {
-              toast({
-                title: "Success",
-                description: `Account created with ${userRole} role.`,
-              });
-            }
+          if (insertError) {
+            console.error("Role insertion error:", insertError);
+            toast({
+              title: "Error",
+              description: "Could not assign user role: " + insertError.message,
+              variant: "destructive",
+            });
+          } else {
+            console.log("Role inserted successfully:", insertData);
+            toast({
+              title: "Success",
+              description: `Account created with ${userRole} role.`,
+            });
           }
         }
       }
