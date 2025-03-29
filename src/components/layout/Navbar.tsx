@@ -29,10 +29,10 @@ import { cn } from "@/lib/utils";
 
 const Navbar = () => {
   const location = useLocation();
-  const { user, signOut, isAdmin, isHR, isEmployer } = useAuth();
+  const { user, signOut, isAdmin, isHR, isManager } = useAuth();
   const { toast } = useToast();
 
-  const isManager = isAdmin || isHR || isEmployer;
+  const isManagerRole = isAdmin || isHR || isManager;
 
   const handleLogout = async () => {
     try {

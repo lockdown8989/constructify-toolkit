@@ -10,7 +10,7 @@ type AuthContextType = {
   isLoading: boolean;
   isAdmin: boolean;
   isHR: boolean;
-  isEmployer: boolean;
+  isManager: boolean;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: AuthError | null }>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isHR, setIsHR] = useState(false);
-  const [isEmployer, setIsEmployer] = useState(false);
+  const [isManager, setIsManager] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const userRoles = roles.map(r => r.role);
           setIsAdmin(userRoles.includes('admin'));
           setIsHR(userRoles.includes('hr'));
-          setIsEmployer(userRoles.includes('employer'));
+          setIsManager(userRoles.includes('manager'));
         }
       } catch (error) {
         console.error('Error in fetchUserRoles:', error);
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } else {
           setIsAdmin(false);
           setIsHR(false);
-          setIsEmployer(false);
+          setIsManager(false);
         }
         setIsLoading(false);
       }
@@ -215,7 +215,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isLoading,
     isAdmin,
     isHR,
-    isEmployer,
+    isManager,
     signIn,
     signUp,
     resetPassword,
