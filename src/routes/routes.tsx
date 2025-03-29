@@ -1,18 +1,23 @@
 
-import { createBrowserRouter } from "react-router-dom";
+import React from "react";
+import {
+  createBrowserRouter,
+  Navigate,
+} from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import Dashboard from "@/pages/Dashboard";
 import Auth from "@/pages/Auth";
+import Dashboard from "@/pages/Dashboard";
+import Index from "@/pages/Index";
 import People from "@/pages/People";
-import LeaveManagement from "@/pages/LeaveManagement";
 import Schedule from "@/pages/Schedule";
+import Hiring from "@/pages/Hiring";
+import Payroll from "@/pages/Payroll";
+import Salary from "@/pages/Salary";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/NotFound";
-import Index from "@/pages/Index";
-import PayslipPage from "@/pages/Payroll";
-import Salary from "@/pages/Salary";
-import Hiring from "@/pages/Hiring";
+import LeaveManagement from "@/pages/LeaveManagement";
+import ScheduleRequests from "@/pages/ScheduleRequests";
 
 const router = createBrowserRouter([
   {
@@ -37,55 +42,35 @@ const router = createBrowserRouter([
       },
       {
         path: "people",
-        element: (
-          <ProtectedRoute requiredRole="employer">
-            <People />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "leave",
-        element: (
-          <ProtectedRoute>
-            <LeaveManagement />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "hiring",
-        element: (
-          <ProtectedRoute requiredRole="employer">
-            <Hiring />
-          </ProtectedRoute>
-        ),
+        element: <People />,
       },
       {
         path: "schedule",
         element: <Schedule />,
       },
       {
-        path: "calendar",
-        element: <Schedule />,
+        path: "schedule-requests",
+        element: <ScheduleRequests />,
+      },
+      {
+        path: "hiring",
+        element: <Hiring />,
+      },
+      {
+        path: "payroll",
+        element: <Payroll />,
+      },
+      {
+        path: "salary",
+        element: <Salary />,
+      },
+      {
+        path: "leave",
+        element: <LeaveManagement />,
       },
       {
         path: "profile",
         element: <Profile />,
-      },
-      {
-        path: "salary",
-        element: (
-          <ProtectedRoute requiredRole="employer">
-            <Salary />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "payroll",
-        element: (
-          <ProtectedRoute requiredRole="employer">
-            <PayslipPage />
-          </ProtectedRoute>
-        ),
       },
     ],
   },

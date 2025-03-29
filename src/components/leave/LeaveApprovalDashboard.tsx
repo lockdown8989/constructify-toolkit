@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { format, differenceInCalendarDays, addDays } from "date-fns";
 import { useLeaveCalendar } from "@/hooks/use-leave-calendar";
 import { useEmployees } from "@/hooks/use-employees";
@@ -39,6 +38,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import type { LeaveCalendar } from "@/hooks/use-leave-calendar";
 import type { Employee } from "@/hooks/use-employees";
 
@@ -49,8 +50,6 @@ const LeaveApprovalDashboard: React.FC = () => {
   const { mutate: updateEmployee } = useUpdateEmployee();
   const { toast } = useToast();
   
-  // Mock current user for demo purposes
-  // In a real app, this would come from authentication context
   const currentUser = {
     id: "550e8400-e29b-41d4-a716-446655440000",
     name: "Valentina Cortez",
@@ -62,15 +61,11 @@ const LeaveApprovalDashboard: React.FC = () => {
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
   
-  // Get only pending leave requests for the approval table
   const pendingLeaves = leaves.filter(leave => leave.status === "Pending");
   
-  // Apply filters and security permissions
   const filteredLeaves = pendingLeaves.filter(leave => {
     const employee = employees.find(emp => emp.id === leave.employee_id);
     
-    // Security check: Only allow managers to see their department's leaves
-    // In a real app, this would be handled by Row Level Security
     if (currentUser.isManager && !currentUser.department.includes("HR")) {
       if (employee && employee.department !== currentUser.department) {
         return false;
@@ -84,26 +79,21 @@ const LeaveApprovalDashboard: React.FC = () => {
     return matchesEmployee && matchesDepartment && matchesType;
   });
   
-  // Get unique departments for filter
   const departments = [...new Set(employees.map(emp => emp.department))];
   
-  // Get unique leave types for filter
   const leaveTypes = [...new Set(leaves.map(leave => leave.type))];
   
-  // Calculate the number of leave days
   const calculateLeaveDays = (startDate: string, endDate: string): number => {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    return differenceInCalendarDays(end, start) + 1; // Include both start and end dates
+    return differenceInCalendarDays(end, start) + 1;
   };
   
-  // Update employee status to "On Leave" when leave is approved
   const updateEmployeeStatus = (employeeId: string, startDate: string, endDate: string) => {
     const today = new Date();
     const start = new Date(startDate);
     const end = new Date(endDate);
     
-    // Only update status if leave period includes current date
     if (today >= start && today <= end) {
       updateEmployee(
         { id: employeeId, status: "Leave" },
@@ -121,7 +111,6 @@ const LeaveApprovalDashboard: React.FC = () => {
     }
   };
   
-  // Create audit log entry in notes field
   const createAuditLog = (leave: LeaveCalendar, action: "Approved" | "Rejected"): string => {
     const currentDate = format(new Date(), "yyyy-MM-dd HH:mm:ss");
     const existingNotes = leave.notes || "";
@@ -139,7 +128,6 @@ const LeaveApprovalDashboard: React.FC = () => {
       { id: leave.id, status: "Approved", notes: auditLog },
       {
         onSuccess: () => {
-          // Update employee status if leave includes current date
           updateEmployeeStatus(leave.employee_id, leave.start_date, leave.end_date);
           
           toast({
@@ -192,6 +180,51 @@ const LeaveApprovalDashboard: React.FC = () => {
     const employee = employees.find(emp => emp.id === employeeId);
     return employee ? employee.department : "Unknown";
   };
+  
+  const queryClient = useQueryClient();
+  
+  useEffect(() => {
+    const channel = supabase
+      .channel('leave_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'leave_calendar'
+        },
+        (payload) => {
+          queryClient.invalidateQueries({ queryKey: ['leave_calendar'] });
+          
+          if (payload.eventType === 'UPDATE') {
+            const newStatus = payload.new.status;
+            const oldStatus = payload.old.status;
+            
+            if (oldStatus === 'Pending' && newStatus === 'Approved') {
+              toast({
+                title: "Leave request approved",
+                description: "A leave request has been approved.",
+              });
+            } else if (oldStatus === 'Pending' && newStatus === 'Rejected') {
+              toast({
+                title: "Leave request rejected",
+                description: "A leave request has been rejected.",
+              });
+            }
+          } else if (payload.eventType === 'INSERT') {
+            toast({
+              title: "New leave request",
+              description: "A new leave request has been submitted.",
+            });
+          }
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, toast]);
   
   if (isLoadingLeaves || isLoadingEmployees) {
     return <div className="flex justify-center p-6">Loading...</div>;
