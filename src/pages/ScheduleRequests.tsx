@@ -8,10 +8,13 @@ import AvailabilityRequestForm from '@/components/schedule/AvailabilityRequestFo
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const ScheduleRequests = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
+  const [activeSection, setActiveSection] = useState<'requests' | 'form'>('requests');
   
   // Set up real-time listeners for shift swaps and availability requests
   useEffect(() => {
@@ -99,37 +102,62 @@ const ScheduleRequests = () => {
     };
   }, [queryClient, toast]);
   
+  const renderMobileNavigation = () => {
+    if (!isMobile) return null;
+    
+    return (
+      <div className="flex justify-center mb-4">
+        <Tabs value={activeSection} onValueChange={(value) => setActiveSection(value as 'requests' | 'form')}>
+          <TabsList>
+            <TabsTrigger value="requests">View Requests</TabsTrigger>
+            <TabsTrigger value="form">Create Request</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+    );
+  };
+  
   return (
-    <div className="container py-6">
-      <h1 className="text-2xl font-bold mb-6">Schedule & Availability Management</h1>
+    <div className="container py-4 sm:py-6">
+      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Schedule & Availability Management</h1>
+      
+      {renderMobileNavigation()}
       
       <Tabs defaultValue="shift-swaps">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="shift-swaps">Shift Swaps</TabsTrigger>
-          <TabsTrigger value="availability">Availability Requests</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
+          <TabsTrigger value="shift-swaps" className="text-xs sm:text-sm">Shift Swaps</TabsTrigger>
+          <TabsTrigger value="availability" className="text-xs sm:text-sm">Availability Requests</TabsTrigger>
         </TabsList>
         
         <TabsContent value="shift-swaps" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-1">
-              <ShiftSwapForm />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            {(!isMobile || activeSection === 'form') && (
+              <div className="md:col-span-1">
+                <ShiftSwapForm />
+              </div>
+            )}
             
-            <div className="md:col-span-2">
-              <ShiftSwapList />
-            </div>
+            {(!isMobile || activeSection === 'requests') && (
+              <div className="md:col-span-2">
+                <ShiftSwapList />
+              </div>
+            )}
           </div>
         </TabsContent>
         
         <TabsContent value="availability" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-1">
-              <AvailabilityRequestForm />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            {(!isMobile || activeSection === 'form') && (
+              <div className="md:col-span-1">
+                <AvailabilityRequestForm />
+              </div>
+            )}
             
-            <div className="md:col-span-2">
-              <AvailabilityRequestList />
-            </div>
+            {(!isMobile || activeSection === 'requests') && (
+              <div className="md:col-span-2">
+                <AvailabilityRequestList />
+              </div>
+            )}
           </div>
         </TabsContent>
       </Tabs>

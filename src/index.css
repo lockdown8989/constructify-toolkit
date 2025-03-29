@@ -35,10 +35,29 @@
   body {
     @apply bg-gray-50 text-foreground font-sans;
   }
-  /* For better touch experience on mobile */
+  /* Improved touch targets for mobile */
   @media (max-width: 768px) {
-    button, a, input[type="checkbox"], input[type="radio"] {
-      @apply p-2;
+    button, a, input[type="checkbox"], input[type="radio"], [role="button"], 
+    [role="tab"], [role="menuitem"], select {
+      @apply min-h-[44px] min-w-[44px];
+    }
+    
+    .touch-target {
+      @apply min-h-[44px] min-w-[44px];
+    }
+    
+    /* Adjust spacing for mobile */
+    h1, h2, h3 {
+      @apply mb-2;
+    }
+    
+    .card, .form-group {
+      @apply mb-3;
+    }
+    
+    /* Better form elements for touch */
+    input, select, textarea {
+      @apply text-base;
     }
   }
 }
@@ -53,6 +72,24 @@
     .card-shadow {
       box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.03);
     }
+    
+    /* Smaller padding for mobile cards */
+    .card {
+      @apply p-3 sm:p-5;
+    }
+  }
+  
+  /* Mobile navigation bottom bar */
+  .mobile-nav-bar {
+    @apply fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center p-2 z-50;
+  }
+  
+  .mobile-nav-item {
+    @apply flex flex-col items-center justify-center p-2 text-gray-500 hover:text-black;
+  }
+  
+  .mobile-nav-text {
+    @apply text-xs mt-1;
   }
 }
 
@@ -90,12 +127,30 @@
   
   /* Responsive content container */
   .responsive-container {
-    @apply w-full px-4 sm:px-6 md:px-8 lg:px-10 mx-auto;
+    @apply w-full px-3 sm:px-6 md:px-8 lg:px-10 mx-auto;
   }
   
   /* Touch-friendly interactive elements */
   .touch-target {
     @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Hide scrollbar but allow scrolling */
+  .no-scrollbar {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+  
+  /* Safe area insets for notched devices */
+  .safe-area-inset {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 }
 
