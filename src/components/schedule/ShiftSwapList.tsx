@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { useEmployees } from '@/hooks/use-employees';
@@ -28,7 +29,7 @@ const ShiftSwapList = () => {
     );
   }
   
-  const isManager = isAdmin || isHR || isManager;
+  const canApproveSwaps = isAdmin || isHR || isManager;
   
   const filteredSwaps = swaps.filter(swap => {
     switch (activeTab) {
@@ -44,7 +45,7 @@ const ShiftSwapList = () => {
         return true;
     }
   }).filter(swap => {
-    if (isManager) {
+    if (canApproveSwaps) {
       return true;
     } else {
       return swap.requester_id === user.id || swap.recipient_id === user.id;
@@ -106,7 +107,7 @@ const ShiftSwapList = () => {
   };
   
   const renderActions = (swap: ShiftSwap) => {
-    if (swap.status === 'Pending' && (isManager || user.id === swap.recipient_id)) {
+    if (swap.status === 'Pending' && (canApproveSwaps || user.id === swap.recipient_id)) {
       return (
         <div className="flex space-x-2">
           <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleApprove(swap)}>
@@ -121,7 +122,7 @@ const ShiftSwapList = () => {
       );
     }
     
-    if (swap.status === 'Approved' && isManager) {
+    if (swap.status === 'Approved' && canApproveSwaps) {
       return (
         <Button size="sm" variant="outline" onClick={() => handleComplete(swap)}>
           <Check className="h-4 w-4 mr-1" />

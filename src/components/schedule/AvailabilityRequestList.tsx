@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { useEmployees } from '@/hooks/use-employees';
@@ -24,7 +25,7 @@ const AvailabilityRequestList = () => {
     );
   }
   
-  const isManager = isAdmin || isHR || isManager;
+  const canApproveRequests = isAdmin || isHR || isManager;
   
   const filteredRequests = requests.filter(request => {
     switch (activeTab) {
@@ -38,7 +39,7 @@ const AvailabilityRequestList = () => {
         return true;
     }
   }).filter(request => {
-    if (isManager) {
+    if (canApproveRequests) {
       return true;
     } else {
       return request.employee_id === user.id;
@@ -80,7 +81,7 @@ const AvailabilityRequestList = () => {
   };
   
   const renderActions = (request: AvailabilityRequest) => {
-    if (request.status === 'Pending' && isManager) {
+    if (request.status === 'Pending' && canApproveRequests) {
       return (
         <div className="flex space-x-2">
           <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleApprove(request)}>
