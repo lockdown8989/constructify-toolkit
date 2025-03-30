@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Search, Filter, Download, ChevronDown, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -12,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { generatePayslipCSV } from '@/utils/export-utils';
+import { generatePayslipPDF } from '@/utils/export-utils';
 
 interface Employee {
   id: string;
@@ -57,7 +56,7 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
   };
   
   const handleDownloadPayslip = (employee: Employee) => {
-    generatePayslipCSV(employee.id, {
+    generatePayslipPDF(employee.id, {
       name: employee.name,
       title: employee.title,
       salary: employee.salary,
