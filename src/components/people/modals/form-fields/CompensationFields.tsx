@@ -5,7 +5,7 @@ import { EmployeeFormValues } from '../employee-form-schema';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { InfoCircle } from 'lucide-react';
+import { Info } from 'lucide-react';
 
 interface CompensationFieldsProps {
   form: UseFormReturn<EmployeeFormValues>;
@@ -37,7 +37,7 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
       
       <div className="bg-gray-50 p-3 rounded-md">
         <div className="flex items-center mb-2">
-          <InfoCircle className="h-4 w-4 text-gray-500 mr-2" />
+          <Info className="h-4 w-4 text-gray-500 mr-2" />
           <p className="text-sm font-medium text-gray-700">Compensation Breakdown</p>
         </div>
         
