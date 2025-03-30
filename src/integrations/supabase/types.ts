@@ -44,6 +44,47 @@ export type Database = {
           },
         ]
       }
+      documents: {
+        Row: {
+          created_at: string | null
+          document_type: string
+          employee_id: string | null
+          id: string
+          name: string
+          path: string | null
+          size: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_type: string
+          employee_id?: string | null
+          id?: string
+          name: string
+          path?: string | null
+          size?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          document_type?: string
+          employee_id?: string | null
+          id?: string
+          name?: string
+          path?: string | null
+          size?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_composition: {
         Row: {
           female_percentage: number | null
@@ -210,6 +251,8 @@ export type Database = {
       }
       payroll: {
         Row: {
+          document_name: string | null
+          document_url: string | null
           employee_id: string | null
           id: string
           payment_date: string | null
@@ -217,6 +260,8 @@ export type Database = {
           salary_paid: number
         }
         Insert: {
+          document_name?: string | null
+          document_url?: string | null
           employee_id?: string | null
           id?: string
           payment_date?: string | null
@@ -224,6 +269,8 @@ export type Database = {
           salary_paid: number
         }
         Update: {
+          document_name?: string | null
+          document_url?: string | null
           employee_id?: string | null
           id?: string
           payment_date?: string | null

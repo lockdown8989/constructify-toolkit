@@ -165,7 +165,7 @@ export async function generatePayslipPDF(
       // Convert the PDF to a Blob
       const pdfOutput = doc.output('blob');
       
-      // Upload to Supabase storage - "resume" bucket 
+      // Upload to Supabase storage - "documents" bucket 
       const { data, error } = await supabase.storage
         .from('documents')
         .upload(`payslips/${employeeId}/${filename}.pdf`, pdfOutput, {
@@ -305,22 +305,19 @@ export async function uploadEmployeeDocument(
       .from('documents')
       .getPublicUrl(`employees/${employeeId}/${documentType}/${filename}`);
     
-    // Update employee record with document reference
-    const updateField = documentType === 'resume' 
-      ? { resume_url: data.path } 
-      : documentType === 'contract' 
-        ? { contract_url: data.path }
-        : {};
-    
-    if (Object.keys(updateField).length > 0) {
-      const { error: updateError } = await supabase
-        .from('employees')
-        .update(updateField)
-        .eq('id', employeeId);
-        
-      if (updateError) {
-        console.error(`Error updating employee ${documentType} record:`, updateError);
-      }
+    // Update documents table with document reference
+    const { error: insertError } = await supabase
+      .from('documents')
+      .insert({
+        employee_id: employeeId,
+        document_type: documentType,
+        name: file.name,
+        path: data.path,
+        size: `${Math.round(file.size / 1024)} kb`
+      });
+      
+    if (insertError) {
+      console.error(`Error updating document record:`, insertError);
     }
     
     return { success: true, path: urlData.publicUrl };
@@ -347,9 +344,11 @@ export async function attachPayslipToResume(
 ): Promise<{ success: boolean; message: string }> {
   try {
     // First check if the employee has a resume in the documents bucket
-    const { data: documents, error: documentsError } = await supabase.storage
+    const { data: documents, error: documentsError } = await supabase
       .from('documents')
-      .list(`employees/${employeeId}/resume`);
+      .select('*')
+      .eq('employee_id', employeeId)
+      .eq('document_type', 'resume');
       
     if (documentsError || !documents || documents.length === 0) {
       // No resume found, just create and store the payslip

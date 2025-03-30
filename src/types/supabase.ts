@@ -121,6 +121,8 @@ export interface Database extends SupabaseDatabase {
           salary_paid: number;
           payment_status: string;
           payment_date: string;
+          document_name: string | null;
+          document_url: string | null;
         };
         Insert: {
           id?: string;
@@ -128,6 +130,8 @@ export interface Database extends SupabaseDatabase {
           salary_paid: number;
           payment_status?: string;
           payment_date?: string;
+          document_name?: string | null;
+          document_url?: string | null;
         };
         Update: {
           id?: string;
@@ -135,6 +139,8 @@ export interface Database extends SupabaseDatabase {
           salary_paid?: number;
           payment_status?: string;
           payment_date?: string;
+          document_name?: string | null;
+          document_url?: string | null;
         };
         Relationships: [
           {
@@ -456,6 +462,47 @@ export interface Database extends SupabaseDatabase {
             columns: ["employee_id"];
             isOneToOne: false;
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      documents: {
+        Row: {
+          id: string;
+          employee_id: string;
+          document_type: string;
+          name: string;
+          path: string | null;
+          size: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          employee_id: string;
+          document_type: string;
+          name: string;
+          path?: string | null;
+          size?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          employee_id?: string;
+          document_type?: string;
+          name?: string;
+          path?: string | null;
+          size?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "documents_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
             referencedColumns: ["id"];
           }
         ];

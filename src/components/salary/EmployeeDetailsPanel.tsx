@@ -8,6 +8,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Employee } from '@/hooks/use-employees';
+import type { DocumentModel } from '@/types/database';
 
 interface EmployeeDetailsPanelProps {
   employee: Employee;
@@ -42,25 +43,20 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
     const fetchDocuments = async () => {
       setIsLoading(true);
       try {
-        // Try to fetch documents from the 'documents' bucket
-        const { data: storedDocs, error } = await supabase.storage
+        // Try to fetch documents from the 'documents' table
+        const { data: storedDocs, error: docsError } = await supabase
           .from('documents')
-          .list(`employees/${employee.id}`);
+          .select('*')
+          .eq('employee_id', employee.id);
           
-        if (error) {
-          console.error('Error fetching documents:', error);
-          // Default documents if nothing found
-          setDocuments([
-            { type: 'contract', name: 'Contract', size: '23 mb' },
-            { type: 'resume', name: 'Resume', size: '76 kb' }
-          ]);
-          return;
+        if (docsError) {
+          console.error('Error fetching documents:', docsError);
         }
         
         // Also fetch payslips
         const { data: payslips, error: payslipsError } = await supabase
           .from('payroll')
-          .select('document_name, document_url')
+          .select('id, employee_id, payment_date, document_url, document_name')
           .eq('employee_id', employee.id)
           .not('document_url', 'is', null);
           
@@ -71,35 +67,40 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
         const formattedDocs: EmployeeDocument[] = [];
         
         // Add default document types if they're not in the stored docs
-        if (!storedDocs?.some(doc => doc.name.toLowerCase().includes('contract'))) {
+        const hasContract = storedDocs?.some(doc => doc.document_type?.toLowerCase() === 'contract');
+        const hasResume = storedDocs?.some(doc => doc.document_type?.toLowerCase() === 'resume');
+        
+        if (!hasContract) {
           formattedDocs.push({ type: 'contract', name: 'Contract', size: '23 mb' });
         }
         
-        if (!storedDocs?.some(doc => doc.name.toLowerCase().includes('resume'))) {
+        if (!hasResume) {
           formattedDocs.push({ type: 'resume', name: 'Resume', size: '76 kb' });
         }
         
         // Add stored docs
         if (storedDocs && storedDocs.length > 0) {
           for (const doc of storedDocs) {
-            // Get file URL
-            const { data: urlData } = supabase.storage
-              .from('documents')
-              .getPublicUrl(`employees/${employee.id}/${doc.name}`);
-              
-            const type = doc.name.toLowerCase().includes('contract') 
-              ? 'contract' 
-              : doc.name.toLowerCase().includes('resume')
-                ? 'resume'
-                : 'payslip';
+            if (doc.path) {
+              // Get file URL
+              const { data: urlData } = supabase.storage
+                .from('documents')
+                .getPublicUrl(doc.path);
                 
-            formattedDocs.push({
-              name: doc.name,
-              type,
-              size: `${Math.round(doc.metadata.size / 1024)} kb`,
-              path: doc.name,
-              url: urlData.publicUrl
-            });
+              const type = doc.document_type?.toLowerCase().includes('contract') 
+                ? 'contract' 
+                : doc.document_type?.toLowerCase().includes('resume')
+                  ? 'resume'
+                  : 'payslip';
+                  
+              formattedDocs.push({
+                name: doc.name,
+                type: type as 'contract' | 'resume' | 'payslip',
+                size: doc.size || `Unknown`,
+                path: doc.path,
+                url: urlData.publicUrl
+              });
+            }
           }
         }
         

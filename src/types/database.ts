@@ -26,6 +26,8 @@ export interface PayrollModel {
   salary_paid: number;
   payment_status: string;
   payment_date: string;
+  document_name?: string;
+  document_url?: string;
 }
 
 export interface AttendanceModel {
@@ -52,4 +54,16 @@ export interface EmployeeCompositionModel {
   male_percentage: number;
   female_percentage: number;
   updated_at: string;
+}
+
+export interface DocumentModel {
+  id: string;
+  employee_id: string;
+  document_type: string;
+  name: string;
+  path?: string;
+  size?: string;
+  created_at?: string;
+  updated_at?: string;
+  url?: string;
 }
