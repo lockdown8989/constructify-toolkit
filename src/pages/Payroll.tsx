@@ -19,6 +19,7 @@ interface EmployeeSalary {
   status: 'Paid' | 'Absent' | 'Pending';
   selected?: boolean;
   paymentDate?: string;
+  department?: string;
 }
 
 const calculateSalaries = (employees: any[]): EmployeeSalary[] => {
@@ -46,6 +47,7 @@ const calculateSalaries = (employees: any[]): EmployeeSalary[] => {
       name: employee.name,
       avatar: employee.avatar || '/placeholder.svg',
       title: employee.job_title,
+      department: employee.department,
       salary: `$${employee.salary.toLocaleString()}`,
       status,
       selected: false,
@@ -65,7 +67,39 @@ const PayslipPage = () => {
   
   React.useEffect(() => {
     if (employeesData.length > 0) {
-      setEmployees(calculateSalaries(employeesData));
+      const calculatedEmployees = employeesData.map(employee => {
+        const statusRand = Math.random();
+        let status: 'Paid' | 'Absent' | 'Pending';
+        let paymentDate: string | undefined;
+        
+        if (statusRand < 0.7) {
+          status = 'Paid';
+          const randomDay = Math.floor(Math.random() * 7);
+          const date = new Date();
+          date.setDate(date.getDate() - randomDay);
+          paymentDate = format(date, 'MMM d, yyyy');
+        } else if (statusRand < 0.9) {
+          status = 'Pending';
+          paymentDate = undefined;
+        } else {
+          status = 'Absent';
+          paymentDate = undefined;
+        }
+        
+        return {
+          id: employee.id,
+          name: employee.name,
+          avatar: employee.avatar || '/placeholder.svg',
+          title: employee.job_title,
+          department: employee.department,
+          salary: `$${employee.salary.toLocaleString()}`,
+          status,
+          selected: false,
+          paymentDate
+        };
+      });
+      
+      setEmployees(calculatedEmployees);
     }
   }, [employeesData]);
   

@@ -54,3 +54,68 @@ export function exportToCSV<T extends Record<string, any>>(
   link.click();
   document.body.removeChild(link);
 }
+
+/**
+ * Generates a formatted payslip PDF for an employee
+ * @param employeeData Employee data to include in the payslip
+ * @param paymentDate Date of payment
+ */
+export async function generatePayslipCSV(
+  employeeId: string,
+  employeeData: {
+    name: string;
+    title: string;
+    salary: string;
+    department?: string;
+    paymentDate?: string;
+  }
+) {
+  const { name, title, salary, department, paymentDate } = employeeData;
+  
+  // Clean the salary string (removing $ and commas)
+  const salaryNumeric = parseFloat(salary.replace(/\$|,/g, ''));
+  
+  // Calculate deductions
+  const taxDeduction = salaryNumeric * 0.2;
+  const insuranceDeduction = salaryNumeric * 0.05;
+  const netSalary = salaryNumeric - taxDeduction - insuranceDeduction;
+  
+  // Format date
+  const formattedDate = paymentDate || new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  
+  // Create payslip data
+  const payslipData = [
+    {
+      'Employee': name,
+      'Employee ID': employeeId,
+      'Position': title,
+      'Department': department || 'N/A',
+      'Payment Date': formattedDate,
+      'Gross Salary': `$${salaryNumeric.toLocaleString()}`,
+      'Tax Deduction (20%)': `$${taxDeduction.toLocaleString()}`,
+      'Insurance (5%)': `$${insuranceDeduction.toLocaleString()}`,
+      'Net Salary': `$${netSalary.toLocaleString()}`,
+    }
+  ];
+  
+  // Generate filename
+  const sanitizedName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  const filename = `payslip_${sanitizedName}_${new Date().toISOString().split('T')[0]}`;
+  
+  // Export to CSV
+  exportToCSV(payslipData, filename, {
+    'Employee': 'Employee Name',
+    'Employee ID': 'Employee ID',
+    'Position': 'Job Title',
+    'Department': 'Department',
+    'Payment Date': 'Payment Date',
+    'Gross Salary': 'Gross Salary',
+    'Tax Deduction (20%)': 'Tax Deduction (20%)',
+    'Insurance (5%)': 'Insurance (5%)',
+    'Net Salary': 'Net Salary'
+  });
+}

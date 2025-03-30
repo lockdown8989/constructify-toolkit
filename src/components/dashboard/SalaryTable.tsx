@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, Download, ChevronDown } from 'lucide-react';
+import { Search, Filter, Download, ChevronDown, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -11,6 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { generatePayslipCSV } from '@/utils/export-utils';
 
 interface Employee {
   id: string;
@@ -21,6 +23,7 @@ interface Employee {
   status: 'Paid' | 'Absent' | 'Pending';
   selected?: boolean;
   paymentDate?: string;
+  department?: string;
 }
 
 interface SalaryTableProps {
@@ -51,6 +54,16 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
     if (onUpdateStatus) {
       onUpdateStatus(employeeId, newStatus);
     }
+  };
+  
+  const handleDownloadPayslip = (employee: Employee) => {
+    generatePayslipCSV(employee.id, {
+      name: employee.name,
+      title: employee.title,
+      salary: employee.salary,
+      department: employee.department,
+      paymentDate: employee.paymentDate
+    });
   };
   
   const statusCount = {
@@ -109,7 +122,7 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
         </div>
       </div>
       
-      <div className="overflow-hidden">
+      <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="text-left text-sm text-gray-500">
@@ -169,25 +182,48 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
                   {employee.paymentDate || '-'}
                 </td>
                 <td className="py-4">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        Update
-                        <ChevronDown className="ml-1 h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => handleStatusChange(employee.id, 'Paid')}>
-                        Mark as Paid
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleStatusChange(employee.id, 'Pending')}>
-                        Mark as Pending
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleStatusChange(employee.id, 'Absent')}>
-                        Mark as Absent
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <div className="flex items-center gap-2">
+                    {employee.status === 'Paid' && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="flex items-center gap-1 text-gray-600 hover:text-gray-900"
+                              onClick={() => handleDownloadPayslip(employee)}
+                            >
+                              <FileText className="h-4 w-4" />
+                              <span className="hidden sm:inline">Payslip</span>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Download Payslip</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <span className="hidden sm:inline">Update</span>
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => handleStatusChange(employee.id, 'Paid')}>
+                          Mark as Paid
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleStatusChange(employee.id, 'Pending')}>
+                          Mark as Pending
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleStatusChange(employee.id, 'Absent')}>
+                          Mark as Absent
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </td>
               </tr>
             ))}
