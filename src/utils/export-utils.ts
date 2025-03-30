@@ -112,7 +112,8 @@ export async function generatePayslipPDF(
     ["Department:", department || "N/A"],
   ];
   
-  autoTable(doc, {
+  // First table - Employee Info
+  const employeeInfoTable = autoTable(doc, {
     startY: 45,
     head: [],
     body: employeeInfo,
@@ -121,8 +122,9 @@ export async function generatePayslipPDF(
     columnStyles: { 0: { cellWidth: 40 } }
   });
   
-  // Add salary details
-  doc.text("Salary Details", 20, doc.lastAutoTable?.finalY! + 10);
+  // Add salary details - Using the finalY from the previous table
+  const salaryStartY = employeeInfoTable.lastAutoTable.finalY + 10;
+  doc.text("Salary Details", 20, salaryStartY);
   
   const salaryDetails = [
     ["Gross Salary:", `$${salaryNumeric.toLocaleString()}`],
@@ -132,7 +134,7 @@ export async function generatePayslipPDF(
   ];
   
   autoTable(doc, {
-    startY: doc.lastAutoTable?.finalY! + 15,
+    startY: salaryStartY + 5,
     head: [],
     body: salaryDetails,
     theme: 'striped',
