@@ -113,7 +113,7 @@ export async function generatePayslipPDF(
   ];
   
   // First table - Employee Info
-  const employeeInfoTable = autoTable(doc, {
+  autoTable(doc, {
     startY: 45,
     head: [],
     body: employeeInfo,
@@ -122,8 +122,11 @@ export async function generatePayslipPDF(
     columnStyles: { 0: { cellWidth: 40 } }
   });
   
+  // Get the final Y position from jsPDF's internal state
+  const finalY = (doc as any).lastAutoTable.finalY;
+  
   // Add salary details - Using the finalY from the previous table
-  const salaryStartY = employeeInfoTable.lastAutoTable.finalY + 10;
+  const salaryStartY = finalY + 10;
   doc.text("Salary Details", 20, salaryStartY);
   
   const salaryDetails = [
