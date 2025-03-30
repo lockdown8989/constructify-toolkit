@@ -1,9 +1,10 @@
-
 /**
  * Utility functions for exporting data
  */
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 /**
  * Converts data to CSV format and triggers a download
@@ -61,6 +62,7 @@ export function exportToCSV<T extends Record<string, any>>(
  * Generates a formatted payslip PDF for an employee
  * @param employeeId Employee ID
  * @param employeeData Employee data to include in the payslip
+ * @param uploadToStorage Whether to upload the payslip to storage
  */
 export async function generatePayslipPDF(
   employeeId: string,
@@ -70,7 +72,8 @@ export async function generatePayslipPDF(
     salary: string;
     department?: string;
     paymentDate?: string;
-  }
+  },
+  uploadToStorage: boolean = false
 ) {
   const { name, title, salary, department, paymentDate } = employeeData;
   
@@ -153,10 +156,52 @@ export async function generatePayslipPDF(
   
   // Generate filename
   const sanitizedName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-  const filename = `payslip_${sanitizedName}_${new Date().toISOString().split('T')[0]}`;
+  const period = paymentDate ? paymentDate.replace(/[^a-z0-9]/gi, '_').toLowerCase() : new Date().toISOString().split('T')[0];
+  const filename = `payslip_${sanitizedName}_${period}`;
   
-  // Save PDF
+  // If requested, upload to Supabase storage
+  if (uploadToStorage) {
+    try {
+      // Convert the PDF to a Blob
+      const pdfOutput = doc.output('blob');
+      
+      // Upload to Supabase storage - "resume" bucket 
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .upload(`payslips/${employeeId}/${filename}.pdf`, pdfOutput, {
+          contentType: 'application/pdf',
+          upsert: true
+        });
+        
+      if (error) {
+        console.error('Error uploading payslip:', error);
+        return { success: false, error: error.message, localFile: filename };
+      }
+      
+      // Update payroll record in Supabase database
+      const { error: updateError } = await supabase
+        .from('payroll')
+        .update({ 
+          document_url: data?.path,
+          document_name: `${filename}.pdf`
+        })
+        .eq('employee_id', employeeId)
+        .eq('payment_date', new Date(formattedDate).toISOString().split('T')[0]);
+        
+      if (updateError) {
+        console.error('Error updating payroll record:', updateError);
+      }
+      
+      return { success: true, path: data?.path, filename: `${filename}.pdf` };
+    } catch (error) {
+      console.error('Exception during payslip upload:', error);
+      return { success: false, error: String(error), localFile: filename };
+    }
+  }
+  
+  // Save PDF locally
   doc.save(`${filename}.pdf`);
+  return { success: true, localFile: filename };
 }
 
 /**
@@ -208,7 +253,8 @@ export async function generatePayslipCSV(
   
   // Generate filename
   const sanitizedName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-  const filename = `payslip_${sanitizedName}_${new Date().toISOString().split('T')[0]}`;
+  const period = paymentDate ? paymentDate.replace(/[^a-z0-9]/gi, '_').toLowerCase() : new Date().toISOString().split('T')[0];
+  const filename = `payslip_${sanitizedName}_${period}`;
   
   // Export to CSV
   exportToCSV(payslipData, filename, {
@@ -222,4 +268,130 @@ export async function generatePayslipCSV(
     'Insurance (5%)': 'Insurance (5%)',
     'Net Salary': 'Net Salary'
   });
+}
+
+/**
+ * Uploads a document to an employee's record
+ * @param employeeId Employee ID
+ * @param file File to upload
+ * @param documentType Type of document (e.g., 'resume', 'contract')
+ */
+export async function uploadEmployeeDocument(
+  employeeId: string,
+  file: File,
+  documentType: 'resume' | 'contract' | 'payslip'
+): Promise<{ success: boolean; path?: string; error?: string }> {
+  try {
+    // Generate a unique filename
+    const timestamp = new Date().getTime();
+    const fileExtension = file.name.split('.').pop();
+    const filename = `${documentType}_${timestamp}.${fileExtension}`;
+    
+    // Upload file to Supabase storage
+    const { data, error } = await supabase.storage
+      .from('documents')
+      .upload(`employees/${employeeId}/${documentType}/${filename}`, file, {
+        contentType: file.type,
+        upsert: true
+      });
+      
+    if (error) {
+      console.error(`Error uploading ${documentType}:`, error);
+      return { success: false, error: error.message };
+    }
+    
+    // Get the public URL
+    const { data: urlData } = supabase.storage
+      .from('documents')
+      .getPublicUrl(`employees/${employeeId}/${documentType}/${filename}`);
+    
+    // Update employee record with document reference
+    const updateField = documentType === 'resume' 
+      ? { resume_url: data.path } 
+      : documentType === 'contract' 
+        ? { contract_url: data.path }
+        : {};
+    
+    if (Object.keys(updateField).length > 0) {
+      const { error: updateError } = await supabase
+        .from('employees')
+        .update(updateField)
+        .eq('id', employeeId);
+        
+      if (updateError) {
+        console.error(`Error updating employee ${documentType} record:`, updateError);
+      }
+    }
+    
+    return { success: true, path: urlData.publicUrl };
+  } catch (error) {
+    console.error(`Exception during ${documentType} upload:`, error);
+    return { success: false, error: String(error) };
+  }
+}
+
+/**
+ * Attaches a payslip to an employee's resume
+ * @param employeeId Employee ID
+ * @param payslipData Payslip data to include
+ */
+export async function attachPayslipToResume(
+  employeeId: string,
+  payslipData: {
+    name: string;
+    title: string;
+    salary: string; 
+    department?: string;
+    paymentDate?: string;
+  }
+): Promise<{ success: boolean; message: string }> {
+  try {
+    // First check if the employee has a resume in the documents bucket
+    const { data: documents, error: documentsError } = await supabase.storage
+      .from('documents')
+      .list(`employees/${employeeId}/resume`);
+      
+    if (documentsError || !documents || documents.length === 0) {
+      // No resume found, just create and store the payslip
+      const result = await generatePayslipPDF(employeeId, payslipData, true);
+      return {
+        success: result.success,
+        message: result.success 
+          ? 'Created new payslip document' 
+          : `Failed to create payslip: ${result.error}`
+      };
+    }
+    
+    // Employee has a resume, generate the payslip
+    const payslipResult = await generatePayslipPDF(employeeId, payslipData, true);
+    
+    if (!payslipResult.success) {
+      return {
+        success: false,
+        message: `Failed to generate payslip: ${payslipResult.error}`
+      };
+    }
+    
+    // Update employee document record with the payslip reference
+    await supabase
+      .from('documents')
+      .insert({
+        employee_id: employeeId,
+        document_type: 'payslip',
+        name: payslipResult.filename || `Payslip_${new Date().toISOString().split('T')[0]}`,
+        path: payslipResult.path,
+        size: 'auto-generated'
+      });
+    
+    return {
+      success: true,
+      message: 'Payslip generated and attached to employee records'
+    };
+  } catch (error) {
+    console.error('Error attaching payslip to resume:', error);
+    return {
+      success: false,
+      message: String(error)
+    };
+  }
 }

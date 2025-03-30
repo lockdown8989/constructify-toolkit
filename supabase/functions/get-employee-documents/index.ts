@@ -1,0 +1,126 @@
+
+// This edge function will retrieve employee documents from storage
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+interface RequestParams {
+  employeeId: string;
+  documentType?: 'resume' | 'contract' | 'payslip' | 'all';
+}
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // Create Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    // Parse request
+    const { employeeId, documentType = 'all' } = await req.json() as RequestParams;
+
+    if (!employeeId) {
+      return new Response(
+        JSON.stringify({ error: "Employee ID is required" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Get employee documents from storage
+    let documents = [];
+    
+    // First, check for documents in the documents table
+    const { data: documentRecords, error: documentError } = await supabaseClient
+      .from('documents')
+      .select('*')
+      .eq('employee_id', employeeId)
+      .eq(documentType !== 'all' ? 'document_type' : '', documentType !== 'all' ? documentType : '');
+
+    if (documentError) {
+      console.error('Error fetching document records:', documentError);
+    } else if (documentRecords && documentRecords.length > 0) {
+      // Get public URLs for each document
+      for (const doc of documentRecords) {
+        if (doc.path) {
+          const { data: urlData } = supabaseClient.storage
+            .from('documents')
+            .getPublicUrl(doc.path);
+          
+          documents.push({
+            ...doc,
+            url: urlData.publicUrl
+          });
+        }
+      }
+    }
+
+    // Also check for documents in payroll table
+    if (documentType === 'all' || documentType === 'payslip') {
+      const { data: payslips, error: payslipError } = await supabaseClient
+        .from('payroll')
+        .select('id, employee_id, payment_date, document_url, document_name')
+        .eq('employee_id', employeeId)
+        .not('document_url', 'is', null);
+        
+      if (payslipError) {
+        console.error('Error fetching payslips:', payslipError);
+      } else if (payslips && payslips.length > 0) {
+        // Get public URLs for each payslip
+        for (const payslip of payslips) {
+          if (payslip.document_url) {
+            const { data: urlData } = supabaseClient.storage
+              .from('documents')
+              .getPublicUrl(payslip.document_url);
+              
+            documents.push({
+              id: payslip.id,
+              employee_id: payslip.employee_id,
+              document_type: 'payslip',
+              name: payslip.document_name || `Payslip - ${payslip.payment_date}`,
+              path: payslip.document_url,
+              url: urlData.publicUrl,
+              created_at: payslip.payment_date
+            });
+          }
+        }
+      }
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        data: documents 
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      }
+    );
+  } catch (error) {
+    console.error("Error in get-employee-documents function:", error);
+    
+    return new Response(
+      JSON.stringify({ 
+        success: false,
+        error: error.message 
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
+  }
+});

@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Search, Filter, Download, ChevronDown, FileText } from 'lucide-react';
+import { Search, Filter, Download, ChevronDown, FileText, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -11,7 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { generatePayslipPDF } from '@/utils/export-utils';
+import { generatePayslipPDF, attachPayslipToResume } from '@/utils/export-utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface Employee {
   id: string;
@@ -40,6 +42,8 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Paid' | 'Absent' | 'Pending'>('All');
+  const [isProcessing, setIsProcessing] = useState<{ [key: string]: boolean }>({});
+  const { toast } = useToast();
   
   const filteredEmployees = employees.filter(employee => {
     const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -55,14 +59,68 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
     }
   };
   
-  const handleDownloadPayslip = (employee: Employee) => {
-    generatePayslipPDF(employee.id, {
-      name: employee.name,
-      title: employee.title,
-      salary: employee.salary,
-      department: employee.department,
-      paymentDate: employee.paymentDate
-    });
+  const handleDownloadPayslip = async (employee: Employee) => {
+    setIsProcessing(prev => ({ ...prev, [employee.id]: true }));
+    
+    try {
+      const result = await generatePayslipPDF(employee.id, {
+        name: employee.name,
+        title: employee.title,
+        salary: employee.salary,
+        department: employee.department,
+        paymentDate: employee.paymentDate
+      });
+      
+      toast({
+        title: "Payslip generated",
+        description: "Payslip has been downloaded to your device",
+      });
+    } catch (error) {
+      console.error('Error generating payslip:', error);
+      toast({
+        title: "Error generating payslip",
+        description: String(error),
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(prev => ({ ...prev, [employee.id]: false }));
+    }
+  };
+  
+  const handleAttachToResume = async (employee: Employee) => {
+    setIsProcessing(prev => ({ ...prev, [employee.id]: true }));
+    
+    try {
+      const result = await attachPayslipToResume(employee.id, {
+        name: employee.name,
+        title: employee.title,
+        salary: employee.salary,
+        department: employee.department,
+        paymentDate: employee.paymentDate
+      });
+      
+      if (result.success) {
+        toast({
+          title: "Payslip attached",
+          description: result.message,
+        });
+      } else {
+        toast({
+          title: "Error attaching payslip",
+          description: result.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error attaching payslip to resume:', error);
+      toast({
+        title: "Error attaching payslip",
+        description: String(error),
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(prev => ({ ...prev, [employee.id]: false }));
+    }
   };
   
   const statusCount = {
@@ -183,24 +241,32 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
                 <td className="py-4">
                   <div className="flex items-center gap-2">
                     {employee.status === 'Paid' && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="flex items-center gap-1 text-gray-600 hover:text-gray-900"
-                              onClick={() => handleDownloadPayslip(employee)}
-                            >
-                              <FileText className="h-4 w-4" />
-                              <span className="hidden sm:inline">Payslip</span>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Download Payslip</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="flex items-center gap-1 text-gray-600 hover:text-gray-900"
+                            disabled={isProcessing[employee.id]}
+                          >
+                            <FileText className="h-4 w-4" />
+                            <span className="hidden sm:inline">Payslip</span>
+                            <ChevronDown className="h-3 w-3 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuLabel>Payslip Options</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleDownloadPayslip(employee)}>
+                            <Download className="h-4 w-4 mr-2" />
+                            Download PDF
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleAttachToResume(employee)}>
+                            <Check className="h-4 w-4 mr-2" />
+                            Attach to Resume
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
                   
                     <DropdownMenu>

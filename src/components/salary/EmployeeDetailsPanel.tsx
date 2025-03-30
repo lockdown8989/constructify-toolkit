@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Download, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import type { Employee } from '@/hooks/use-employees';
 
 interface EmployeeDetailsPanelProps {
@@ -12,11 +14,22 @@ interface EmployeeDetailsPanelProps {
   onBack: () => void;
 }
 
+interface EmployeeDocument {
+  name: string;
+  type: 'contract' | 'resume' | 'payslip';
+  size: string;
+  path?: string;
+  url?: string;
+}
+
 const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
   employee,
   onBack
 }) => {
   const isMobile = useIsMobile();
+  const { toast } = useToast();
+  const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Mock data for statistics
   const statisticsData = {
@@ -24,11 +37,120 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
     sickness: 24
   };
   
-  // Mock data for documents
-  const documentsData = [
-    { type: 'Contract', size: '23 mb' },
-    { type: 'Resume', size: '76 kb' }
-  ];
+  // Fetch employee documents
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      setIsLoading(true);
+      try {
+        // Try to fetch documents from the 'documents' bucket
+        const { data: storedDocs, error } = await supabase.storage
+          .from('documents')
+          .list(`employees/${employee.id}`);
+          
+        if (error) {
+          console.error('Error fetching documents:', error);
+          // Default documents if nothing found
+          setDocuments([
+            { type: 'contract', name: 'Contract', size: '23 mb' },
+            { type: 'resume', name: 'Resume', size: '76 kb' }
+          ]);
+          return;
+        }
+        
+        // Also fetch payslips
+        const { data: payslips, error: payslipsError } = await supabase
+          .from('payroll')
+          .select('document_name, document_url')
+          .eq('employee_id', employee.id)
+          .not('document_url', 'is', null);
+          
+        if (payslipsError) {
+          console.error('Error fetching payslips:', payslipsError);
+        }
+        
+        const formattedDocs: EmployeeDocument[] = [];
+        
+        // Add default document types if they're not in the stored docs
+        if (!storedDocs?.some(doc => doc.name.toLowerCase().includes('contract'))) {
+          formattedDocs.push({ type: 'contract', name: 'Contract', size: '23 mb' });
+        }
+        
+        if (!storedDocs?.some(doc => doc.name.toLowerCase().includes('resume'))) {
+          formattedDocs.push({ type: 'resume', name: 'Resume', size: '76 kb' });
+        }
+        
+        // Add stored docs
+        if (storedDocs && storedDocs.length > 0) {
+          for (const doc of storedDocs) {
+            // Get file URL
+            const { data: urlData } = supabase.storage
+              .from('documents')
+              .getPublicUrl(`employees/${employee.id}/${doc.name}`);
+              
+            const type = doc.name.toLowerCase().includes('contract') 
+              ? 'contract' 
+              : doc.name.toLowerCase().includes('resume')
+                ? 'resume'
+                : 'payslip';
+                
+            formattedDocs.push({
+              name: doc.name,
+              type,
+              size: `${Math.round(doc.metadata.size / 1024)} kb`,
+              path: doc.name,
+              url: urlData.publicUrl
+            });
+          }
+        }
+        
+        // Add payslips
+        if (payslips && payslips.length > 0) {
+          for (const payslip of payslips) {
+            if (payslip.document_name && payslip.document_url) {
+              const { data: urlData } = supabase.storage
+                .from('documents')
+                .getPublicUrl(payslip.document_url);
+                
+              formattedDocs.push({
+                name: payslip.document_name,
+                type: 'payslip',
+                size: 'Generated PDF',
+                path: payslip.document_url,
+                url: urlData.publicUrl
+              });
+            }
+          }
+        }
+        
+        setDocuments(formattedDocs);
+      } catch (err) {
+        console.error('Error in document fetching:', err);
+        // Default documents if error
+        setDocuments([
+          { type: 'contract', name: 'Contract', size: '23 mb' },
+          { type: 'resume', name: 'Resume', size: '76 kb' }
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (employee && employee.id) {
+      fetchDocuments();
+    }
+  }, [employee]);
+  
+  const handleDocumentClick = async (doc: EmployeeDocument) => {
+    if (doc.url) {
+      window.open(doc.url, '_blank');
+    } else {
+      toast({
+        title: "Document not available",
+        description: "This document has not been uploaded yet.",
+        variant: "destructive"
+      });
+    }
+  };
   
   return (
     <Card className="rounded-3xl overflow-hidden">
@@ -118,20 +240,37 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
           <div>
             <h3 className="text-lg font-medium mb-3">Documents</h3>
             <div className="grid grid-cols-2 gap-3">
-              {documentsData.map((doc, index) => (
-                <div key={index} className="flex items-center p-3 bg-gray-100 rounded-xl">
-                  <div className={cn(
-                    "w-10 h-10 rounded-lg flex items-center justify-center mr-3",
-                    doc.type === 'Contract' ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"
-                  )}>
-                    {doc.type === 'Contract' ? 'W' : 'R'}
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">{doc.type}</div>
-                    <div className="text-xs text-gray-500">{doc.size}</div>
-                  </div>
+              {isLoading ? (
+                <div className="col-span-2 py-4 text-center">
+                  <div className="animate-pulse">Loading documents...</div>
                 </div>
-              ))}
+              ) : (
+                documents.map((doc, index) => (
+                  <div 
+                    key={index} 
+                    className="flex items-center p-3 bg-gray-100 rounded-xl cursor-pointer hover:bg-gray-200 transition-colors"
+                    onClick={() => handleDocumentClick(doc)}
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-lg flex items-center justify-center mr-3",
+                      doc.type === 'contract' ? "bg-blue-100 text-blue-700" : 
+                      doc.type === 'resume' ? "bg-red-100 text-red-700" :
+                      "bg-green-100 text-green-700"
+                    )}>
+                      {doc.type === 'contract' ? 'C' : doc.type === 'resume' ? 'R' : 'P'}
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">{doc.name.split('_')[0]}</div>
+                      <div className="text-xs text-gray-500 flex items-center">
+                        {doc.size}
+                        {doc.url && (
+                          <Download className="h-3 w-3 ml-1 text-gray-400" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
           
