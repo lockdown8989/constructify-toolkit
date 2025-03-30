@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,18 +31,17 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Mock data for statistics
   const statisticsData = {
     businessTrips: 58,
     sickness: 24
   };
   
-  // Fetch employee documents
   useEffect(() => {
     const fetchDocuments = async () => {
       setIsLoading(true);
       try {
-        // Try to fetch documents from the 'documents' table
+        console.log("Fetching documents for employee:", employee.id);
+        
         const { data: storedDocs, error: docsError } = await supabase
           .from('documents')
           .select('*')
@@ -51,9 +49,10 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
           
         if (docsError) {
           console.error('Error fetching documents:', docsError);
+        } else {
+          console.log("Documents from documents table:", storedDocs);
         }
         
-        // Also fetch payslips
         const { data: payslips, error: payslipsError } = await supabase
           .from('payroll')
           .select('id, employee_id, payment_date, document_url, document_name')
@@ -62,11 +61,12 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
           
         if (payslipsError) {
           console.error('Error fetching payslips:', payslipsError);
+        } else {
+          console.log("Payslips from payroll table:", payslips);
         }
         
         const formattedDocs: EmployeeDocument[] = [];
         
-        // Add default document types if they're not in the stored docs
         const hasContract = storedDocs?.some(doc => doc.document_type?.toLowerCase() === 'contract');
         const hasResume = storedDocs?.some(doc => doc.document_type?.toLowerCase() === 'resume');
         
@@ -78,11 +78,9 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
           formattedDocs.push({ type: 'resume', name: 'Resume', size: '76 kb' });
         }
         
-        // Add stored docs
         if (storedDocs && storedDocs.length > 0) {
           for (const doc of storedDocs) {
             if (doc.path) {
-              // Get file URL
               const { data: urlData } = supabase.storage
                 .from('documents')
                 .getPublicUrl(doc.path);
@@ -104,7 +102,6 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
           }
         }
         
-        // Add payslips
         if (payslips && payslips.length > 0) {
           for (const payslip of payslips) {
             if (payslip.document_name && payslip.document_url) {
@@ -123,10 +120,10 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
           }
         }
         
+        console.log("Final formatted documents:", formattedDocs);
         setDocuments(formattedDocs);
       } catch (err) {
         console.error('Error in document fetching:', err);
-        // Default documents if error
         setDocuments([
           { type: 'contract', name: 'Contract', size: '23 mb' },
           { type: 'resume', name: 'Resume', size: '76 kb' }
@@ -155,7 +152,6 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
   
   return (
     <Card className="rounded-3xl overflow-hidden">
-      {/* Header with background image */}
       <div className="relative h-44 bg-gradient-to-r from-amber-200 to-amber-500 overflow-hidden">
         {isMobile && (
           <Button 
@@ -169,7 +165,6 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
           </Button>
         )}
         
-        {/* Employee avatar and info */}
         <div className="absolute -bottom-12 w-full flex flex-col items-center">
           <div className="w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-white">
             {employee.avatar ? (
@@ -187,7 +182,6 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
         </div>
       </div>
       
-      {/* Employee details */}
       <div className="pt-16 px-6 pb-6">
         <div className="text-center mb-6">
           <h2 className="text-xl font-bold">{employee.name}</h2>
@@ -195,7 +189,6 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
         </div>
         
         <div className="space-y-6">
-          {/* Basic Information */}
           <div>
             <h3 className="text-lg font-medium mb-3">Basic Information</h3>
             <div className="space-y-3">
@@ -237,7 +230,6 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
             </div>
           </div>
           
-          {/* Documents */}
           <div>
             <h3 className="text-lg font-medium mb-3">Documents</h3>
             <div className="grid grid-cols-2 gap-3">
@@ -275,7 +267,6 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
             </div>
           </div>
           
-          {/* Statistics */}
           <div>
             <h3 className="text-lg font-medium mb-3">Statistics</h3>
             <div className="space-y-4">

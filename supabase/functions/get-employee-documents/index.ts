@@ -20,6 +20,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Received request to get-employee-documents");
+    
     // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -39,6 +41,8 @@ serve(async (req) => {
       );
     }
 
+    console.log(`Fetching documents for employee ${employeeId}, type: ${documentType}`);
+    
     // Get employee documents from storage
     let documents = [];
     
@@ -46,14 +50,20 @@ serve(async (req) => {
     const { data: documentRecords, error: documentError } = await supabaseClient
       .from('documents')
       .select('*')
-      .eq('employee_id', employeeId)
-      .eq(documentType !== 'all' ? 'document_type' : '', documentType !== 'all' ? documentType : '');
+      .eq('employee_id', employeeId);
 
     if (documentError) {
       console.error('Error fetching document records:', documentError);
     } else if (documentRecords && documentRecords.length > 0) {
+      console.log(`Found ${documentRecords.length} documents in the documents table`);
+      
+      // Filter by document type if specified
+      const filteredDocs = documentType !== 'all' 
+        ? documentRecords.filter(doc => doc.document_type.toLowerCase() === documentType) 
+        : documentRecords;
+      
       // Get public URLs for each document
-      for (const doc of documentRecords) {
+      for (const doc of filteredDocs) {
         if (doc.path) {
           const { data: urlData } = supabaseClient.storage
             .from('documents')
@@ -78,6 +88,8 @@ serve(async (req) => {
       if (payslipError) {
         console.error('Error fetching payslips:', payslipError);
       } else if (payslips && payslips.length > 0) {
+        console.log(`Found ${payslips.length} payslips in the payroll table`);
+        
         // Get public URLs for each payslip
         for (const payslip of payslips) {
           if (payslip.document_url) {
@@ -99,6 +111,8 @@ serve(async (req) => {
       }
     }
 
+    console.log(`Returning ${documents.length} documents total`);
+    
     return new Response(
       JSON.stringify({ 
         success: true, 

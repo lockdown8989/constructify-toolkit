@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for exporting data
  */
@@ -343,6 +344,8 @@ export async function attachPayslipToResume(
   }
 ): Promise<{ success: boolean; message: string }> {
   try {
+    console.log("Starting attachPayslipToResume with employee ID:", employeeId);
+    
     // First check if the employee has a resume in the documents bucket
     const { data: documents, error: documentsError } = await supabase
       .from('documents')
@@ -350,18 +353,17 @@ export async function attachPayslipToResume(
       .eq('employee_id', employeeId)
       .eq('document_type', 'resume');
       
-    if (documentsError || !documents || documents.length === 0) {
-      // No resume found, just create and store the payslip
-      const result = await generatePayslipPDF(employeeId, payslipData, true);
+    if (documentsError) {
+      console.error('Error fetching resume document:', documentsError);
       return {
-        success: result.success,
-        message: result.success 
-          ? 'Created new payslip document' 
-          : `Failed to create payslip: ${result.error}`
+        success: false,
+        message: `Failed to check for resume: ${documentsError.message}`
       };
     }
     
-    // Employee has a resume, generate the payslip
+    console.log("Resume documents found:", documents?.length || 0);
+    
+    // Generate the payslip regardless of whether we found a resume
     const payslipResult = await generatePayslipPDF(employeeId, payslipData, true);
     
     if (!payslipResult.success) {
@@ -371,8 +373,10 @@ export async function attachPayslipToResume(
       };
     }
     
-    // Update employee document record with the payslip reference
-    await supabase
+    console.log("Payslip generated successfully, path:", payslipResult.path);
+    
+    // Add the payslip as a document in the documents table
+    const { error: insertError } = await supabase
       .from('documents')
       .insert({
         employee_id: employeeId,
@@ -381,16 +385,29 @@ export async function attachPayslipToResume(
         path: payslipResult.path,
         size: 'auto-generated'
       });
+      
+    if (insertError) {
+      console.error('Error inserting payslip document record:', insertError);
+      return {
+        success: false,
+        message: `Payslip generated but failed to attach to records: ${insertError.message}`
+      };
+    }
+    
+    // Determine message based on whether there was a resume
+    const successMessage = documents && documents.length > 0
+      ? 'Payslip generated and attached to employee resume'
+      : 'Payslip generated and added to employee documents';
     
     return {
       success: true,
-      message: 'Payslip generated and attached to employee records'
+      message: successMessage
     };
   } catch (error) {
     console.error('Error attaching payslip to resume:', error);
     return {
       success: false,
-      message: String(error)
+      message: `Unexpected error: ${String(error)}`
     };
   }
 }

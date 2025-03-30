@@ -91,6 +91,8 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
     setIsProcessing(prev => ({ ...prev, [employee.id]: true }));
     
     try {
+      console.log("Attaching payslip to resume for employee:", employee.name);
+      
       const result = await attachPayslipToResume(employee.id, {
         name: employee.name,
         title: employee.title,
@@ -98,6 +100,8 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
         department: employee.department,
         paymentDate: employee.paymentDate
       });
+      
+      console.log("Attach to resume result:", result);
       
       if (result.success) {
         toast({
