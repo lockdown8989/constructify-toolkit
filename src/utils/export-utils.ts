@@ -1,3 +1,4 @@
+
 /**
  * Utility functions for exporting data
  */
@@ -161,6 +162,32 @@ export async function generatePayslipPDF(
   // If requested, upload to Supabase storage
   if (uploadToStorage) {
     try {
+      // Check if documents bucket exists
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      
+      if (bucketsError) {
+        console.error('Error checking buckets:', bucketsError);
+        return { success: false, error: `Bucket error: ${bucketsError.message}`, localFile: filename };
+      }
+      
+      const documentsBucket = buckets.find(b => b.name === 'documents');
+      
+      if (!documentsBucket) {
+        console.error('Documents bucket not found. Creating it now...');
+        // Create the documents bucket if it doesn't exist
+        const { data: newBucket, error: createError } = await supabase.storage.createBucket('documents', {
+          public: true,
+          fileSizeLimit: 5242880 // 5MB
+        });
+        
+        if (createError) {
+          console.error('Error creating documents bucket:', createError);
+          return { success: false, error: `Failed to create storage bucket: ${createError.message}`, localFile: filename };
+        }
+        
+        console.log('Created documents bucket successfully:', newBucket);
+      }
+      
       // Convert the PDF to a Blob
       const pdfOutput = doc.output('blob');
       
@@ -347,6 +374,36 @@ export async function attachPayslipToResume(
 ): Promise<{ success: boolean; message: string }> {
   try {
     console.log("Starting attachPayslipToResume with employee ID:", employeeId);
+    
+    // Check if documents bucket exists
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    
+    if (bucketsError) {
+      console.error('Error checking buckets:', bucketsError);
+      return {
+        success: false,
+        message: `Failed to check storage buckets: ${bucketsError.message}`
+      };
+    }
+    
+    const documentsBucket = buckets.find(b => b.name === 'documents');
+    
+    if (!documentsBucket) {
+      console.log('Documents bucket not found. Creating it now...');
+      // Create the documents bucket if it doesn't exist
+      const { error: createError } = await supabase.storage.createBucket('documents', {
+        public: true,
+        fileSizeLimit: 5242880 // 5MB
+      });
+      
+      if (createError) {
+        console.error('Error creating documents bucket:', createError);
+        return {
+          success: false,
+          message: `Failed to create storage bucket: ${createError.message}`
+        };
+      }
+    }
     
     // First check if the employee has a resume in the documents bucket
     const { data: documents, error: documentsError } = await supabase

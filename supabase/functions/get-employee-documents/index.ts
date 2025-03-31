@@ -43,6 +43,27 @@ serve(async (req) => {
 
     console.log(`Fetching documents for employee ${employeeId}, type: ${documentType}`);
     
+    // First check if the documents bucket exists
+    const { data: buckets, error: bucketError } = await supabaseClient
+      .storage
+      .listBuckets();
+      
+    if (bucketError) {
+      console.error('Error checking storage buckets:', bucketError);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: `Storage error: ${bucketError.message}` 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
+    }
+    
+    console.log('Available buckets:', buckets.map(b => b.name).join(', '));
+    
     // Get employee documents from storage
     let documents = [];
     
@@ -93,19 +114,23 @@ serve(async (req) => {
         // Get public URLs for each payslip
         for (const payslip of payslips) {
           if (payslip.document_url) {
-            const { data: urlData } = supabaseClient.storage
-              .from('documents')
-              .getPublicUrl(payslip.document_url);
-              
-            documents.push({
-              id: payslip.id,
-              employee_id: payslip.employee_id,
-              document_type: 'payslip',
-              name: payslip.document_name || `Payslip - ${payslip.payment_date}`,
-              path: payslip.document_url,
-              url: urlData.publicUrl,
-              created_at: payslip.payment_date
-            });
+            try {
+              const { data: urlData } = supabaseClient.storage
+                .from('documents')
+                .getPublicUrl(payslip.document_url);
+                
+              documents.push({
+                id: payslip.id,
+                employee_id: payslip.employee_id,
+                document_type: 'payslip',
+                name: payslip.document_name || `Payslip - ${payslip.payment_date}`,
+                path: payslip.document_url,
+                url: urlData.publicUrl,
+                created_at: payslip.payment_date
+              });
+            } catch (error) {
+              console.error(`Error getting URL for payslip ${payslip.id}:`, error);
+            }
           }
         }
       }
