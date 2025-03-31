@@ -26,6 +26,30 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
     
     try {
       console.log(`Attempting to sign up with role: ${userRole}`);
+      
+      // First check if an employee with this name already exists
+      const fullName = `${firstName} ${lastName}`;
+      const { data: existingEmployees, error: checkError } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('name', fullName);
+        
+      if (checkError) {
+        console.error("Error checking existing employees:", checkError);
+        throw checkError;
+      }
+      
+      if (existingEmployees && existingEmployees.length > 0) {
+        toast({
+          title: "Error",
+          description: `An employee with the name "${fullName}" already exists.`,
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      // If no duplicate, proceed with sign up
       const { error } = await onSignUp(email, password, firstName, lastName);
       
       if (!error) {
@@ -62,6 +86,40 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
             });
           } else {
             console.log("Role inserted successfully:", insertData);
+            
+            // Create employee record if it doesn't exist
+            if (userRole === 'employee' || userRole === 'employer') {
+              const { error: employeeError } = await supabase
+                .from('employees')
+                .insert({
+                  name: fullName,
+                  job_title: userRole === 'employer' ? 'Manager' : 'Employee',
+                  department: 'General',
+                  site: 'Main Office',
+                  salary: 0, // Default salary, to be updated later
+                  start_date: new Date().toISOString().split('T')[0],
+                  status: 'Active',
+                  lifecycle: 'Employed'
+                });
+                
+              if (employeeError) {
+                console.error("Error creating employee record:", employeeError);
+                if (employeeError.message.includes('unique constraint')) {
+                  toast({
+                    title: "Warning",
+                    description: `An employee with name "${fullName}" already exists. Account created but employee record was not added.`,
+                    variant: "destructive",
+                  });
+                } else {
+                  toast({
+                    title: "Warning",
+                    description: "Account created but failed to create employee record: " + employeeError.message,
+                    variant: "destructive",
+                  });
+                }
+              }
+            }
+            
             toast({
               title: "Success",
               description: `Account created with ${userRole === 'employer' ? 'manager' : userRole} role.`,
@@ -73,7 +131,7 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
       console.error("Sign up error:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred during sign up",
+        description: error instanceof Error ? error.message : "An unexpected error occurred during sign up",
         variant: "destructive",
       });
     } finally {

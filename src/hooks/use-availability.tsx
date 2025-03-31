@@ -15,7 +15,6 @@ export function useAvailabilityRequests() {
   return useQuery({
     queryKey: ['availability_requests'],
     queryFn: async () => {
-      // Cast supabase to any to bypass TypeScript's type checking since we've extended the types
       const { data, error } = await (supabase as any)
         .from('availability_requests')
         .select('*')
