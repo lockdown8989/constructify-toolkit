@@ -296,14 +296,21 @@ const PayslipPage = () => {
       }
 
       const exportData = data.map(row => {
-        const employeeData = row.employees;
-        const employeeName = Array.isArray(employeeData) 
-          ? (employeeData[0]?.name || 'Unknown') 
-          : (employeeData?.name || 'Unknown');
+        const employeeData = row.employees as any;
         
-        const jobTitle = Array.isArray(employeeData)
-          ? (employeeData[0]?.job_title || 'Unknown')
-          : (employeeData?.job_title || 'Unknown');
+        let employeeName: string;
+        let jobTitle: string;
+        
+        if (Array.isArray(employeeData)) {
+          employeeName = employeeData[0]?.name || 'Unknown';
+          jobTitle = employeeData[0]?.job_title || 'Unknown';
+        } else if (employeeData && typeof employeeData === 'object') {
+          employeeName = employeeData.name || 'Unknown';
+          jobTitle = employeeData.job_title || 'Unknown';
+        } else {
+          employeeName = 'Unknown';
+          jobTitle = 'Unknown';
+        }
 
         return {
           ID: row.id,

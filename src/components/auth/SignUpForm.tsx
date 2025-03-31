@@ -87,36 +87,48 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
           } else {
             console.log("Role inserted successfully:", insertData);
             
-            // Create employee record if it doesn't exist
+            // Create employee record if it doesn't exist and if the role is employee or employer
             if (userRole === 'employee' || userRole === 'employer') {
-              const { error: employeeError } = await supabase
+              // Check again if an employee record with this name already exists
+              // This is a double-check to prevent race conditions
+              const { data: checkAgain, error: checkAgainError } = await supabase
                 .from('employees')
-                .insert({
-                  name: fullName,
-                  job_title: userRole === 'employer' ? 'Manager' : 'Employee',
-                  department: 'General',
-                  site: 'Main Office',
-                  salary: 0, // Default salary, to be updated later
-                  start_date: new Date().toISOString().split('T')[0],
-                  status: 'Active',
-                  lifecycle: 'Employed'
-                });
+                .select('id')
+                .eq('name', fullName);
                 
-              if (employeeError) {
-                console.error("Error creating employee record:", employeeError);
-                if (employeeError.message.includes('unique constraint')) {
-                  toast({
-                    title: "Warning",
-                    description: `An employee with name "${fullName}" already exists. Account created but employee record was not added.`,
-                    variant: "destructive",
+              if (checkAgainError) {
+                console.error("Error double-checking employee existence:", checkAgainError);
+              }
+              
+              // Only create employee if doesn't exist
+              if (!checkAgain || checkAgain.length === 0) {
+                const { error: employeeError } = await supabase
+                  .from('employees')
+                  .insert({
+                    name: fullName,
+                    job_title: userRole === 'employer' ? 'Manager' : 'Employee',
+                    department: 'General',
+                    site: 'Main Office',
+                    salary: 0, // Default salary, to be updated later
+                    start_date: new Date().toISOString().split('T')[0],
+                    status: 'Active',
+                    lifecycle: 'Employed'
                   });
-                } else {
+                  
+                if (employeeError) {
+                  console.error("Error creating employee record:", employeeError);
                   toast({
                     title: "Warning",
                     description: "Account created but failed to create employee record: " + employeeError.message,
                     variant: "destructive",
                   });
                 }
+              } else {
+                toast({
+                  title: "Warning",
+                  description: `Employee record for "${fullName}" already exists. No new record created.`,
+                  variant: "warning",
+                });
               }
             }
             
