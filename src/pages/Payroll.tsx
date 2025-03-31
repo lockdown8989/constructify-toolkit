@@ -297,8 +297,8 @@ const PayslipPage = () => {
 
       const exportData = data.map(row => ({
         ID: row.id,
-        Employee: row.employees?.name || 'Unknown',
-        Position: row.employees?.job_title || 'Unknown',
+        Employee: row.employees ? row.employees.name : 'Unknown',
+        Position: row.employees ? row.employees.job_title : 'Unknown',
         'Employee ID': row.employee_id,
         'Net Salary': row.salary_paid,
         'Payment Date': row.payment_date,
