@@ -1,11 +1,9 @@
-
 /**
  * Utility functions for exporting data
  */
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
 /**
  * Converts data to CSV format and triggers a download
@@ -166,10 +164,14 @@ export async function generatePayslipPDF(
       // Convert the PDF to a Blob
       const pdfOutput = doc.output('blob');
       
+      // Create the folder path if it doesn't exist
+      const folderPath = `payslips/${employeeId}`;
+      const filePath = `${folderPath}/${filename}.pdf`;
+      
       // Upload to Supabase storage - "documents" bucket 
       const { data, error } = await supabase.storage
         .from('documents')
-        .upload(`payslips/${employeeId}/${filename}.pdf`, pdfOutput, {
+        .upload(filePath, pdfOutput, {
           contentType: 'application/pdf',
           upsert: true
         });
@@ -183,7 +185,7 @@ export async function generatePayslipPDF(
       const { error: updateError } = await supabase
         .from('payroll')
         .update({ 
-          document_url: data?.path,
+          document_url: filePath,
           document_name: `${filename}.pdf`
         })
         .eq('employee_id', employeeId)
@@ -193,7 +195,7 @@ export async function generatePayslipPDF(
         console.error('Error updating payroll record:', updateError);
       }
       
-      return { success: true, path: data?.path, filename: `${filename}.pdf` };
+      return { success: true, path: filePath, filename: `${filename}.pdf` };
     } catch (error) {
       console.error('Exception during payslip upload:', error);
       return { success: false, error: String(error), localFile: filename };
@@ -363,7 +365,7 @@ export async function attachPayslipToResume(
     
     console.log("Resume documents found:", documents?.length || 0);
     
-    // Generate the payslip regardless of whether we found a resume
+    // Generate the payslip
     const payslipResult = await generatePayslipPDF(employeeId, payslipData, true);
     
     if (!payslipResult.success) {
@@ -374,6 +376,13 @@ export async function attachPayslipToResume(
     }
     
     console.log("Payslip generated successfully, path:", payslipResult.path);
+    
+    if (!payslipResult.path) {
+      return {
+        success: false,
+        message: "Payslip generated but path is missing"
+      };
+    }
     
     // Add the payslip as a document in the documents table
     const { error: insertError } = await supabase

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -40,8 +39,8 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
   employeeDepartment 
 }) => {
   const [leaveType, setLeaveType] = useState<string>("");
-  const [startDate, setStartDate] = useState<Date | undefined>();
-  const [endDate, setEndDate] = useState<Date | undefined>();
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [notes, setNotes] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [conflicts, setConflicts] = useState<ProjectConflict[]>([]);
@@ -51,6 +50,8 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
     if (startDate && endDate && departmentProjects.length > 0) {
       const projectConflicts = checkProjectConflicts(startDate, endDate, departmentProjects);
       setConflicts(projectConflicts);
+    } else {
+      setConflicts([]);
     }
   }, [startDate, endDate, departmentProjects]);
 
@@ -112,6 +113,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
           setEndDate(undefined);
           setNotes("");
           setIsSubmitting(false);
+          setConflicts([]);
         },
         onError: (error) => {
           console.error("Error submitting leave request:", error);
