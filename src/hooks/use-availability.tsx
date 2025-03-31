@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AvailabilityRequest } from '@/types/supabase';
 
+export { AvailabilityRequest };
+
 export type NewAvailabilityRequest = Omit<AvailabilityRequest, 'id' | 'created_at' | 'updated_at' | 'status'> & {
   status?: string;
 };
@@ -13,7 +15,8 @@ export function useAvailabilityRequests() {
   return useQuery({
     queryKey: ['availability_requests'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Cast supabase to any to bypass TypeScript's type checking since we've extended the types
+      const { data, error } = await (supabase as any)
         .from('availability_requests')
         .select('*')
         .order('created_at', { ascending: false });
@@ -32,7 +35,7 @@ export function useEmployeeAvailabilityRequests(employeeId: string) {
   return useQuery({
     queryKey: ['availability_requests', employeeId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('availability_requests')
         .select('*')
         .eq('employee_id', employeeId)
@@ -54,7 +57,7 @@ export function useCreateAvailabilityRequest() {
   
   return useMutation({
     mutationFn: async (newRequest: NewAvailabilityRequest) => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('availability_requests')
         .insert({
           ...newRequest,
@@ -88,7 +91,7 @@ export function useUpdateAvailabilityRequest() {
       
       if (!id) throw new Error('ID is required for update');
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('availability_requests')
         .update({
           ...updateData,
@@ -118,7 +121,7 @@ export function useDeleteAvailabilityRequest() {
   return useMutation({
     mutationFn: async (id: string) => {
       // Get the employee_id before deletion
-      const { data: requestData } = await supabase
+      const { data: requestData } = await (supabase as any)
         .from('availability_requests')
         .select('employee_id')
         .eq('id', id)
@@ -126,7 +129,7 @@ export function useDeleteAvailabilityRequest() {
       
       const employeeId = requestData?.employee_id;
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('availability_requests')
         .delete()
         .eq('id', id);

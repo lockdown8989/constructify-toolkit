@@ -44,6 +44,81 @@ export interface ShiftSwap {
   updated_at: string;
 }
 
-export type Database = DatabaseType;
+// Extend the Database type to include our new tables
+export interface ExtendedDatabase extends DatabaseType {
+  public: {
+    Tables: {
+      // Include all existing tables from DatabaseType
+      attendance: DatabaseType['public']['Tables']['attendance'];
+      documents: DatabaseType['public']['Tables']['documents'];
+      employee_composition: DatabaseType['public']['Tables']['employee_composition'];
+      employees: DatabaseType['public']['Tables']['employees'];
+      hiring_statistics: DatabaseType['public']['Tables']['hiring_statistics'];
+      interviews: DatabaseType['public']['Tables']['interviews'];
+      leave_calendar: DatabaseType['public']['Tables']['leave_calendar'];
+      payroll: DatabaseType['public']['Tables']['payroll'];
+      profiles: DatabaseType['public']['Tables']['profiles'];
+      projects: DatabaseType['public']['Tables']['projects'];
+      schedules: DatabaseType['public']['Tables']['schedules'];
+      user_roles: DatabaseType['public']['Tables']['user_roles'];
+      
+      // Add our new tables
+      availability_requests: {
+        Row: AvailabilityRequest;
+        Insert: Omit<AvailabilityRequest, 'id' | 'created_at' | 'updated_at'> & { id?: string; created_at?: string; updated_at?: string };
+        Update: Partial<AvailabilityRequest>;
+        Relationships: [
+          {
+            foreignKeyName: "availability_requests_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      
+      shift_swaps: {
+        Row: ShiftSwap;
+        Insert: Omit<ShiftSwap, 'id' | 'created_at' | 'updated_at'> & { id?: string; created_at?: string; updated_at?: string };
+        Update: Partial<ShiftSwap>;
+        Relationships: [
+          {
+            foreignKeyName: "shift_swaps_requester_id_fkey";
+            columns: ["requester_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shift_swaps_recipient_id_fkey";
+            columns: ["recipient_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shift_swaps_requester_schedule_id_fkey";
+            columns: ["requester_schedule_id"];
+            isOneToOne: false;
+            referencedRelation: "schedules";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shift_swaps_recipient_schedule_id_fkey";
+            columns: ["recipient_schedule_id"];
+            isOneToOne: false;
+            referencedRelation: "schedules";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+    };
+    Views: DatabaseType['public']['Views'];
+    Functions: DatabaseType['public']['Functions'];
+    Enums: DatabaseType['public']['Enums'];
+    CompositeTypes: DatabaseType['public']['CompositeTypes'];
+  };
+}
 
-// Additional types can be added here
+export type Database = ExtendedDatabase;
