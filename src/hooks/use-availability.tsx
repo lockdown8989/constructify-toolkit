@@ -1,58 +1,55 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/types/supabase';
 
-export interface AvailabilityRequest {
-  id: string;
-  employee_id: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  is_available: boolean;
-  notes?: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
-  created_at: string;
-  updated_at: string;
-}
+export type AvailabilityRequest = Database['public']['Tables']['availability_requests']['Row'];
+export type NewAvailabilityRequest = Database['public']['Tables']['availability_requests']['Insert'];
+export type AvailabilityRequestUpdate = Database['public']['Tables']['availability_requests']['Update'];
 
-export type NewAvailabilityRequest = Omit<AvailabilityRequest, 'id' | 'created_at' | 'updated_at' | 'status'> & {
-  status?: 'Pending' | 'Approved' | 'Rejected';
-};
-
-export const useAvailabilityRequests = () => {
+// Get all availability requests
+export function useAvailabilityRequests() {
   return useQuery({
     queryKey: ['availability_requests'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('availability_requests')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data as AvailabilityRequest[];
+      if (error) {
+        console.error('Error fetching availability requests:', error);
+        throw error;
+      }
+      return data || [];
     }
   });
-};
+}
 
-export const useUserAvailabilityRequests = (userId: string) => {
+// Get availability requests for a specific employee
+export function useEmployeeAvailabilityRequests(employeeId: string) {
   return useQuery({
-    queryKey: ['availability_requests', userId],
+    queryKey: ['availability_requests', employeeId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('availability_requests')
         .select('*')
-        .eq('employee_id', userId);
+        .eq('employee_id', employeeId)
+        .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data as AvailabilityRequest[];
+      if (error) {
+        console.error('Error fetching employee availability requests:', error);
+        throw error;
+      }
+      return data || [];
     },
-    enabled: !!userId
+    enabled: !!employeeId
   });
-};
+}
 
-export const useCreateAvailabilityRequest = () => {
+// Create a new availability request
+export function useCreateAvailabilityRequest() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (newRequest: NewAvailabilityRequest) => {
@@ -62,55 +59,80 @@ export const useCreateAvailabilityRequest = () => {
         .select()
         .single();
       
-      if (error) throw error;
-      return data as AvailabilityRequest;
+      if (error) {
+        console.error('Error creating availability request:', error);
+        throw error;
+      }
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
-      toast({
-        title: "Success",
-        description: "Availability request created successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create availability request",
-        variant: "destructive",
-      });
+      queryClient.invalidateQueries({ queryKey: ['availability_requests', data.employee_id] });
     }
   });
-};
+}
 
-export const useUpdateAvailabilityRequest = () => {
+// Update an availability request
+export function useUpdateAvailabilityRequest() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   
   return useMutation({
-    mutationFn: async ({ id, ...update }: Partial<AvailabilityRequest> & { id: string }) => {
+    mutationFn: async (update: AvailabilityRequestUpdate) => {
+      const { id, ...updateData } = update;
+      
+      if (!id) throw new Error('ID is required for update');
+      
       const { data, error } = await supabase
         .from('availability_requests')
-        .update(update)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
       
-      if (error) throw error;
-      return data as AvailabilityRequest;
+      if (error) {
+        console.error('Error updating availability request:', error);
+        throw error;
+      }
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
-      toast({
-        title: "Success",
-        description: "Availability request updated successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update availability request",
-        variant: "destructive",
-      });
+      queryClient.invalidateQueries({ queryKey: ['availability_requests', data.employee_id] });
     }
   });
-};
+}
+
+// Delete an availability request
+export function useDeleteAvailabilityRequest() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Get the employee_id before deletion
+      const { data: requestData } = await supabase
+        .from('availability_requests')
+        .select('employee_id')
+        .eq('id', id)
+        .single();
+      
+      const employeeId = requestData?.employee_id;
+      
+      const { error } = await supabase
+        .from('availability_requests')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error deleting availability request:', error);
+        throw error;
+      }
+      return { id, employeeId };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
+      if (result.employeeId) {
+        queryClient.invalidateQueries({ queryKey: ['availability_requests', result.employeeId] });
+      }
+    }
+  });
+}

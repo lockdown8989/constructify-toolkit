@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User, AuthError } from "@supabase/supabase-js";
@@ -46,7 +45,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const userRoles = roles.map(r => r.role);
           setIsAdmin(userRoles.includes('admin'));
           setIsHR(userRoles.includes('hr'));
-          // Use 'employer' in the database query but set isManager in the state
           setIsManager(userRoles.includes('employer'));
         }
       } catch (error) {
@@ -233,4 +231,9 @@ export const useAuth = () => {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
+};
+
+export const isAuthenticated = () => {
+  const session = supabase.auth.getSession();
+  return !!session;
 };

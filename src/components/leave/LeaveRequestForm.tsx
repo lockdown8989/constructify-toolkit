@@ -59,7 +59,16 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
   const { mutate: addLeave } = useAddLeaveCalendar();
   const { toast } = useToast();
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const resetForm = () => {
+    setLeaveType("");
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setNotes("");
+    setIsSubmitting(false);
+    setConflicts([]);
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!leaveType || !startDate || !endDate) {
@@ -93,40 +102,45 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
       details: `Request created for ${leaveDays} business days`
     }];
     
-    addLeave(
-      {
-        employee_id: employeeId,
-        type: leaveType,
-        start_date: formattedStartDate,
-        end_date: formattedEndDate,
-        notes: notes || null,
-        audit_log: initialAuditLog
-      },
-      {
-        onSuccess: () => {
-          toast({
-            title: "Leave request submitted",
-            description: "Your leave request has been submitted successfully.",
-          });
-          
-          setLeaveType("");
-          setStartDate(undefined);
-          setEndDate(undefined);
-          setNotes("");
-          setIsSubmitting(false);
-          setConflicts([]);
+    try {
+      await addLeave(
+        {
+          employee_id: employeeId,
+          type: leaveType,
+          start_date: formattedStartDate,
+          end_date: formattedEndDate,
+          notes: notes || null,
+          audit_log: initialAuditLog,
+          status: 'Pending'
         },
-        onError: (error) => {
-          console.error("Error submitting leave request:", error);
-          toast({
-            title: "Error",
-            description: "Failed to submit leave request. Please try again.",
-            variant: "destructive",
-          });
-          setIsSubmitting(false);
-        },
-      }
-    );
+        {
+          onSuccess: () => {
+            toast({
+              title: "Leave request submitted",
+              description: "Your leave request has been submitted successfully.",
+            });
+            resetForm();
+          },
+          onError: (error: any) => {
+            console.error("Error submitting leave request:", error);
+            toast({
+              title: "Error",
+              description: `Failed to submit leave request: ${error.message || 'Please try again'}`,
+              variant: "destructive",
+            });
+            setIsSubmitting(false);
+          },
+        }
+      );
+    } catch (error: any) {
+      console.error("Exception in submission:", error);
+      toast({
+        title: "Error",
+        description: `Failed to submit leave request: ${error.message || 'Please try again'}`,
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+    }
   };
   
   return (
