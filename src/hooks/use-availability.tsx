@@ -1,11 +1,12 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/types/supabase';
+import { AvailabilityRequest } from '@/types/supabase';
 
-export type AvailabilityRequest = Database['public']['Tables']['availability_requests']['Row'];
-export type NewAvailabilityRequest = Database['public']['Tables']['availability_requests']['Insert'];
-export type AvailabilityRequestUpdate = Database['public']['Tables']['availability_requests']['Update'];
+export type NewAvailabilityRequest = Omit<AvailabilityRequest, 'id' | 'created_at' | 'updated_at' | 'status'> & {
+  status?: string;
+};
+export type AvailabilityRequestUpdate = Partial<AvailabilityRequest> & { id: string };
 
 // Get all availability requests
 export function useAvailabilityRequests() {
@@ -21,7 +22,7 @@ export function useAvailabilityRequests() {
         console.error('Error fetching availability requests:', error);
         throw error;
       }
-      return data || [];
+      return data as AvailabilityRequest[];
     }
   });
 }
@@ -41,7 +42,7 @@ export function useEmployeeAvailabilityRequests(employeeId: string) {
         console.error('Error fetching employee availability requests:', error);
         throw error;
       }
-      return data || [];
+      return data as AvailabilityRequest[];
     },
     enabled: !!employeeId
   });
@@ -55,7 +56,12 @@ export function useCreateAvailabilityRequest() {
     mutationFn: async (newRequest: NewAvailabilityRequest) => {
       const { data, error } = await supabase
         .from('availability_requests')
-        .insert(newRequest)
+        .insert({
+          ...newRequest,
+          status: newRequest.status || 'Pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
         .select()
         .single();
       
@@ -63,7 +69,7 @@ export function useCreateAvailabilityRequest() {
         console.error('Error creating availability request:', error);
         throw error;
       }
-      return data;
+      return data as AvailabilityRequest;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
@@ -84,7 +90,10 @@ export function useUpdateAvailabilityRequest() {
       
       const { data, error } = await supabase
         .from('availability_requests')
-        .update(updateData)
+        .update({
+          ...updateData,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
         .select()
         .single();
@@ -93,7 +102,7 @@ export function useUpdateAvailabilityRequest() {
         console.error('Error updating availability request:', error);
         throw error;
       }
-      return data;
+      return data as AvailabilityRequest;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['availability_requests'] });

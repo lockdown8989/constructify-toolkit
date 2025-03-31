@@ -1,11 +1,12 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/types/supabase';
+import { ShiftSwap } from '@/types/supabase';
 
-export type ShiftSwap = Database['public']['Tables']['shift_swaps']['Row'];
-export type NewShiftSwap = Database['public']['Tables']['shift_swaps']['Insert'];
-export type ShiftSwapUpdate = Database['public']['Tables']['shift_swaps']['Update'];
+export type NewShiftSwap = Omit<ShiftSwap, 'id' | 'created_at' | 'updated_at' | 'status'> & {
+  status?: string;
+};
+export type ShiftSwapUpdate = Partial<ShiftSwap> & { id: string };
 
 // Get all shift swaps
 export function useShiftSwaps() {
@@ -21,7 +22,7 @@ export function useShiftSwaps() {
         console.error('Error fetching shift swaps:', error);
         throw error;
       }
-      return data || [];
+      return data as ShiftSwap[];
     }
   });
 }
@@ -41,7 +42,7 @@ export function useEmployeeShiftSwaps(employeeId: string) {
         console.error('Error fetching employee shift swaps:', error);
         throw error;
       }
-      return data || [];
+      return data as ShiftSwap[];
     },
     enabled: !!employeeId
   });
@@ -55,7 +56,12 @@ export function useCreateShiftSwap() {
     mutationFn: async (newSwap: NewShiftSwap) => {
       const { data, error } = await supabase
         .from('shift_swaps')
-        .insert(newSwap)
+        .insert({
+          ...newSwap,
+          status: newSwap.status || 'Pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
         .select()
         .single();
       
@@ -63,7 +69,7 @@ export function useCreateShiftSwap() {
         console.error('Error creating shift swap:', error);
         throw error;
       }
-      return data;
+      return data as ShiftSwap;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['shift_swaps'] });
@@ -85,7 +91,10 @@ export function useUpdateShiftSwap() {
       
       const { data, error } = await supabase
         .from('shift_swaps')
-        .update(updateData)
+        .update({
+          ...updateData,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
         .select()
         .single();
@@ -94,7 +103,7 @@ export function useUpdateShiftSwap() {
         console.error('Error updating shift swap:', error);
         throw error;
       }
-      return data;
+      return data as ShiftSwap;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['shift_swaps'] });
