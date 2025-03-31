@@ -295,15 +295,26 @@ const PayslipPage = () => {
         return;
       }
 
-      const exportData = data.map(row => ({
-        ID: row.id,
-        Employee: row.employees ? row.employees.name : 'Unknown',
-        Position: row.employees ? row.employees.job_title : 'Unknown',
-        'Employee ID': row.employee_id,
-        'Net Salary': row.salary_paid,
-        'Payment Date': row.payment_date,
-        Status: row.payment_status
-      }));
+      const exportData = data.map(row => {
+        const employeeData = row.employees;
+        const employeeName = Array.isArray(employeeData) 
+          ? (employeeData[0]?.name || 'Unknown') 
+          : (employeeData?.name || 'Unknown');
+        
+        const jobTitle = Array.isArray(employeeData)
+          ? (employeeData[0]?.job_title || 'Unknown')
+          : (employeeData?.job_title || 'Unknown');
+
+        return {
+          ID: row.id,
+          Employee: employeeName,
+          Position: jobTitle,
+          'Employee ID': row.employee_id,
+          'Net Salary': row.salary_paid,
+          'Payment Date': row.payment_date,
+          Status: row.payment_status
+        };
+      });
 
       exportToCSV(exportData, `payslips_report_${format(new Date(), 'yyyy-MM-dd')}`, {
         ID: 'ID',
