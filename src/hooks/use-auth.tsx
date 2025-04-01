@@ -45,9 +45,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (roles && roles.length > 0) {
         const userRoles = roles.map(r => r.role);
         console.log("User roles found:", userRoles);
+        
+        // Check each role
         setIsAdmin(userRoles.includes('admin'));
         setIsHR(userRoles.includes('hr'));
-        setIsManager(userRoles.includes('employer'));
+        
+        // Explicitly check for 'employer' role which corresponds to manager
+        const hasEmployerRole = userRoles.includes('employer');
+        console.log("Has employer/manager role:", hasEmployerRole);
+        setIsManager(hasEmployerRole);
       } else {
         console.log("No roles found for user");
         setIsAdmin(false);

@@ -49,6 +49,12 @@ const Navbar = () => {
           console.error("Error checking roles:", error);
         } else {
           console.log("Roles from database:", data);
+          
+          // Check specifically for employer role
+          if (data) {
+            const hasEmployerRole = data.some(r => r.role === 'employer');
+            console.log("Has employer role directly from DB:", hasEmployerRole);
+          }
         }
       };
       
@@ -157,7 +163,7 @@ const Navbar = () => {
               <Button variant="outline" size="sm" className="ml-auto h-8 gap-1">
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline-block">
-                  My Account {isManagerRole ? '(Manager)' : '(Employee)'}
+                  My Account {isManager ? '(Manager)' : '(Employee)'}
                 </span>
               </Button>
             </DropdownMenuTrigger>

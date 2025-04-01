@@ -45,11 +45,21 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
             });
           } else if (roleData && roleData.length > 0) {
             console.log("Role data:", roleData);
-            const userRole = roleData[0].role.toString().toLowerCase();
-            toast({
-              title: "Success",
-              description: `Signed in as ${userRole === 'employer' ? 'manager' : userRole}`,
-            });
+            
+            // Check if user has manager/employer role
+            const isManager = roleData.some(r => r.role === 'employer');
+            
+            if (isManager) {
+              toast({
+                title: "Success",
+                description: "Signed in as manager",
+              });
+            } else {
+              toast({
+                title: "Success",
+                description: "Signed in as employee",
+              });
+            }
           } else {
             console.log("No role data found");
             toast({
