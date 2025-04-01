@@ -125,9 +125,9 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
                 }
               } else {
                 toast({
-                  title: "Warning",
+                  title: "Note",
                   description: `Employee record for "${fullName}" already exists. No new record created.`,
-                  variant: "warning",
+                  variant: "default",
                 });
               }
             }
