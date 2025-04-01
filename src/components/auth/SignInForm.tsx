@@ -48,7 +48,7 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
             const userRole = roleData[0].role.toString().toLowerCase();
             toast({
               title: "Success",
-              description: `Signed in as ${userRole}`,
+              description: `Signed in as ${userRole === 'employer' ? 'manager' : userRole}`,
             });
           } else {
             console.log("No role data found");
