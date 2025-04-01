@@ -50,10 +50,30 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
             const isManager = roleData.some(r => r.role === 'employer');
             
             if (isManager) {
-              toast({
-                title: "Success",
-                description: "Signed in as manager",
-              });
+              // Fetch manager ID 
+              const { data: employeeData, error: employeeError } = await supabase
+                .from('employees')
+                .select('manager_id')
+                .eq('user_id', user.id)
+                .single();
+                
+              if (employeeError) {
+                console.error("Error fetching manager ID:", employeeError);
+                toast({
+                  title: "Success",
+                  description: "Signed in as manager",
+                });
+              } else if (employeeData && employeeData.manager_id) {
+                toast({
+                  title: "Success",
+                  description: `Signed in as manager. Your Manager ID is ${employeeData.manager_id}`,
+                });
+              } else {
+                toast({
+                  title: "Success",
+                  description: "Signed in as manager",
+                });
+              }
             } else {
               toast({
                 title: "Success",

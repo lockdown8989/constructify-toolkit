@@ -17,8 +17,22 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [userRole, setUserRole] = useState<"admin" | "hr" | "employee" | "employer">("employee");
+  const [managerId, setManagerId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  // Generate a unique manager ID when the form mounts
+  React.useEffect(() => {
+    if (userRole === "employer") {
+      generateManagerId();
+    }
+  }, [userRole]);
+
+  // Generate a unique manager ID (format: MGR-XXXXX)
+  const generateManagerId = () => {
+    const randomPart = Math.floor(10000 + Math.random() * 90000); // 5-digit number
+    setManagerId(`MGR-${randomPart}`);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,6 +113,9 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
             } else {
               console.log("Role inserted successfully:", insertData);
               
+              // Create employee record with manager ID if role is employer
+              const managerIdToSave = userRole === 'employer' ? managerId : null;
+              
               // Create employee record if it doesn't exist and if the role is employee or employer
               if (userRole === 'employee' || userRole === 'employer') {
                 // Check again if an employee record with this name already exists
@@ -124,7 +141,9 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
                       salary: 0, // Default salary, to be updated later
                       start_date: new Date().toISOString().split('T')[0],
                       status: 'Active',
-                      lifecycle: 'Employed'
+                      lifecycle: 'Employed',
+                      manager_id: managerIdToSave,
+                      user_id: user.id // Link the employee record to the user account
                     });
                     
                   if (employeeError) {
@@ -144,10 +163,17 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
                 }
               }
               
-              toast({
-                title: "Success",
-                description: `Account created with ${userRole === 'employer' ? 'manager' : userRole} role.`,
-              });
+              if (userRole === 'employer') {
+                toast({
+                  title: "Success",
+                  description: `Account created with manager role. Your Manager ID is ${managerId}. Share this with your employees.`,
+                });
+              } else {
+                toast({
+                  title: "Success", 
+                  description: `Account created with ${userRole} role.`,
+                });
+              }
             }
           } else {
             console.log("User already has this role, no need to insert:", existingRoles);
@@ -175,6 +201,13 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
       // If "manager" is selected, set userRole to "employer" for database compatibility
       setUserRole(value === "manager" ? "employer" : value as "admin" | "hr" | "employee" | "employer");
       console.log("Role selected:", value, "DB role:", value === "manager" ? "employer" : value);
+      
+      // Generate a manager ID if the role is manager
+      if (value === "manager") {
+        generateManagerId();
+      } else {
+        setManagerId("");
+      }
     }
   };
 
@@ -262,6 +295,42 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
               </div>
             </div>
           </div>
+          
+          {userRole === "employer" && (
+            <div className="space-y-2">
+              <Label htmlFor="managerId">Your Manager ID</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="managerId"
+                  value={managerId}
+                  readOnly
+                  className="bg-muted font-mono"
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={generateManagerId}
+                  className="whitespace-nowrap"
+                >
+                  Generate New
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500">Share this ID with your employees so they can connect to your account</p>
+            </div>
+          )}
+          
+          {userRole === "employee" && (
+            <div className="space-y-2">
+              <Label htmlFor="linkManagerId">Manager ID (Optional)</Label>
+              <Input
+                id="linkManagerId"
+                placeholder="Enter your manager's ID (e.g., MGR-12345)"
+                value={managerId}
+                onChange={(e) => setManagerId(e.target.value)}
+              />
+              <p className="text-xs text-gray-500">If you have a Manager ID, enter it to link your account</p>
+            </div>
+          )}
         </CardContent>
         
         <CardFooter>
