@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -9,9 +9,7 @@ import {
   DollarSign, 
   User, 
   LogOut,
-  Ban,
   Plane,
-  Clock,
   SwitchCamera
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +24,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const location = useLocation();
@@ -33,6 +32,29 @@ const Navbar = () => {
   const { toast } = useToast();
 
   const isManagerRole = isAdmin || isHR || isManager;
+  
+  useEffect(() => {
+    // Log current role status for debugging
+    if (user) {
+      console.log("Current role status:", { isAdmin, isHR, isManager, isManagerRole });
+      
+      // Double-check roles directly from Supabase
+      const checkRoles = async () => {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+          
+        if (error) {
+          console.error("Error checking roles:", error);
+        } else {
+          console.log("Roles from database:", data);
+        }
+      };
+      
+      checkRoles();
+    }
+  }, [user, isAdmin, isHR, isManager, isManagerRole]);
 
   const handleLogout = async () => {
     try {
@@ -112,7 +134,7 @@ const Navbar = () => {
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           <nav className="flex items-center space-x-2">
             {navItems
-              .filter((item) => !item.requiresManager || isManager)
+              .filter((item) => !item.requiresManager || isManagerRole)
               .map((item) => (
                 <Link
                   key={item.path}
@@ -134,7 +156,9 @@ const Navbar = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="ml-auto h-8 gap-1">
                 <User className="h-4 w-4" />
-                <span className="hidden sm:inline-block">My Account</span>
+                <span className="hidden sm:inline-block">
+                  My Account {isManagerRole ? '(Manager)' : '(Employee)'}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

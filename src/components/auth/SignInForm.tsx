@@ -35,8 +35,7 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
           const { data: roleData, error: roleError } = await supabase
             .from('user_roles')
             .select('role')
-            .eq('user_id', user.id)
-            .single();
+            .eq('user_id', user.id);
             
           if (roleError) {
             console.error("Error fetching role:", roleError);
@@ -44,9 +43,9 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
               title: "Success",
               description: "Signed in successfully",
             });
-          } else if (roleData) {
+          } else if (roleData && roleData.length > 0) {
             console.log("Role data:", roleData);
-            const userRole = roleData.role.toString().toLowerCase();
+            const userRole = roleData[0].role.toString().toLowerCase();
             toast({
               title: "Success",
               description: `Signed in as ${userRole}`,
