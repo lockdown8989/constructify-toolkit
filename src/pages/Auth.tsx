@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useLocation, Navigate, useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,11 +15,21 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const from = location.state?.from?.pathname || "/dashboard";
   const [showResetPassword, setShowResetPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState("signin");
+  
+  // Get the tab parameter from URL
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(tabParam === "signup" ? "signup" : "signin");
   
   const isResetMode = searchParams.get("reset") === "true";
   const type = searchParams.get("type");
   const isRecoveryMode = type === "recovery";
+
+  // Update active tab when URL parameter changes
+  useEffect(() => {
+    if (tabParam === "signup") {
+      setActiveTab("signup");
+    }
+  }, [tabParam]);
 
   if (user && !isResetMode && !isRecoveryMode) {
     return <Navigate to={from} replace />;
