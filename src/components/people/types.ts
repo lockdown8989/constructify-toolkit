@@ -15,6 +15,8 @@ export interface Employee {
   status: string;
   statusColor: 'green' | 'gray';
   selected?: boolean;
+  managerId?: string;
+  userId?: string;
 }
 
 export interface PeopleTableProps {
@@ -43,5 +45,7 @@ export const mapDbEmployeeToUiEmployee = (dbEmployee: DbEmployee): Employee => {
     lifecycle: dbEmployee.lifecycle,
     status: dbEmployee.status,
     statusColor: dbEmployee.status === 'Active' ? 'green' : 'gray',
+    managerId: dbEmployee.manager_id || undefined,
+    userId: dbEmployee.user_id || undefined,
   };
 };

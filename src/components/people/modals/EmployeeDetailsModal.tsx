@@ -75,7 +75,9 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       avatar: uiEmployee.avatar,
       location: uiEmployee.siteIcon === '🌐' ? 'Remote' : 'Office',
       annual_leave_days: 25, // Default values
-      sick_leave_days: 10    // Default values
+      sick_leave_days: 10,    // Default values
+      manager_id: uiEmployee.managerId || null,
+      user_id: uiEmployee.userId || null
     };
   };
 

@@ -83,7 +83,9 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
       avatar: employee.avatar,
       location: employee.siteIcon === '🌐' ? 'Remote' : 'Office',
       annual_leave_days: 25,
-      sick_leave_days: 10
+      sick_leave_days: 10,
+      manager_id: employee.managerId || null,
+      user_id: employee.userId || null
     };
   };
   
