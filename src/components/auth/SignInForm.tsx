@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 type SignInFormProps = {
   onSignIn: (email: string, password: string) => Promise<any>;
@@ -17,87 +19,90 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage(null);
     
     try {
       const { error } = await onSignIn(email, password);
-      if (!error) {
-        // Get the user's role
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          console.log("Fetching role for user:", user.id);
-          const { data: roleData, error: roleError } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.id);
-            
-          if (roleError) {
-            console.error("Error fetching role:", roleError);
-            toast({
-              title: "Success",
-              description: "Signed in successfully",
-            });
-          } else if (roleData && roleData.length > 0) {
-            console.log("Role data:", roleData);
-            
-            // Check if user has manager/employer role
-            const isManager = roleData.some(r => r.role === 'employer');
-            
-            if (isManager) {
-              // Fetch manager ID 
-              const { data: employeeData, error: employeeError } = await supabase
-                .from('employees')
-                .select('manager_id')
-                .eq('user_id', user.id)
-                .single();
-                
-              if (employeeError) {
-                console.error("Error fetching manager ID:", employeeError);
-                toast({
-                  title: "Success",
-                  description: "Signed in as manager",
-                });
-              } else if (employeeData && employeeData.manager_id) {
-                toast({
-                  title: "Success",
-                  description: `Signed in as manager. Your Manager ID is ${employeeData.manager_id}`,
-                });
-              } else {
-                toast({
-                  title: "Success",
-                  description: "Signed in as manager",
-                });
-              }
+      
+      if (error) {
+        console.error("Sign in error:", error);
+        setErrorMessage(error.message || "Invalid login credentials");
+        return;
+      }
+      
+      // If no error, get the user's role
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        console.log("Fetching role for user:", user.id);
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+          
+        if (roleError) {
+          console.error("Error fetching role:", roleError);
+          toast({
+            title: "Success",
+            description: "Signed in successfully",
+          });
+        } else if (roleData && roleData.length > 0) {
+          console.log("Role data:", roleData);
+          
+          // Check if user has manager/employer role
+          const isManager = roleData.some(r => r.role === 'employer');
+          
+          if (isManager) {
+            // Fetch manager ID 
+            const { data: employeeData, error: employeeError } = await supabase
+              .from('employees')
+              .select('manager_id')
+              .eq('user_id', user.id)
+              .single();
+              
+            if (employeeError) {
+              console.error("Error fetching manager ID:", employeeError);
+              toast({
+                title: "Success",
+                description: "Signed in as manager",
+              });
+            } else if (employeeData && employeeData.manager_id) {
+              toast({
+                title: "Success",
+                description: `Signed in as manager. Your Manager ID is ${employeeData.manager_id}`,
+              });
             } else {
               toast({
                 title: "Success",
-                description: "Signed in as employee",
+                description: "Signed in as manager",
               });
             }
           } else {
-            console.log("No role data found");
             toast({
               title: "Success",
-              description: "Signed in successfully",
+              description: "Signed in as employee",
             });
           }
+        } else {
+          console.log("No role data found");
+          toast({
+            title: "Success",
+            description: "Signed in successfully",
+          });
         }
         
         navigate("/dashboard");
       }
     } catch (error) {
       console.error("Sign in error:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred during sign in",
-        variant: "destructive",
-      });
+      setErrorMessage("An unexpected error occurred during sign in");
     } finally {
       setIsLoading(false);
     }
@@ -112,6 +117,13 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
       
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          {errorMessage && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
