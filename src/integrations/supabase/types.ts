@@ -118,12 +118,14 @@ export type Database = {
           job_title: string
           lifecycle: string
           location: string | null
+          manager_id: string | null
           name: string
           salary: number
           sick_leave_days: number | null
           site: string
           start_date: string
           status: string
+          user_id: string | null
         }
         Insert: {
           annual_leave_days?: number | null
@@ -133,12 +135,14 @@ export type Database = {
           job_title: string
           lifecycle?: string
           location?: string | null
+          manager_id?: string | null
           name: string
           salary: number
           sick_leave_days?: number | null
           site: string
           start_date?: string
           status?: string
+          user_id?: string | null
         }
         Update: {
           annual_leave_days?: number | null
@@ -148,12 +152,14 @@ export type Database = {
           job_title?: string
           lifecycle?: string
           location?: string | null
+          manager_id?: string | null
           name?: string
           salary?: number
           sick_leave_days?: number | null
           site?: string
           start_date?: string
           status?: string
+          user_id?: string | null
         }
         Relationships: []
       }
