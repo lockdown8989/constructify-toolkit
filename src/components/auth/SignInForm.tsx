@@ -58,6 +58,7 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
           
           // Check if user has manager/employer role
           const isManager = roleData.some(r => r.role === 'employer');
+          const roles = roleData.map(r => r.role).join(', ');
           
           if (isManager) {
             // Fetch manager ID 
@@ -67,27 +68,27 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
               .eq('user_id', user.id)
               .single();
               
-            if (employeeError) {
+            if (employeeError && employeeError.code !== 'PGRST116') {
               console.error("Error fetching manager ID:", employeeError);
               toast({
                 title: "Success",
-                description: "Signed in as manager",
+                description: `Signed in with roles: ${roles}`,
               });
             } else if (employeeData && employeeData.manager_id) {
               toast({
                 title: "Success",
-                description: `Signed in as manager. Your Manager ID is ${employeeData.manager_id}`,
+                description: `Signed in with roles: ${roles}. Your Manager ID is ${employeeData.manager_id}`,
               });
             } else {
               toast({
                 title: "Success",
-                description: "Signed in as manager",
+                description: `Signed in with roles: ${roles}`,
               });
             }
           } else {
             toast({
               title: "Success",
-              description: "Signed in as employee",
+              description: `Signed in with roles: ${roles}`,
             });
           }
         } else {

@@ -54,25 +54,6 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
       
       // First check if an employee with this name already exists
       const fullName = `${firstName} ${lastName}`;
-      const { data: existingEmployees, error: checkError } = await supabase
-        .from('employees')
-        .select('id')
-        .eq('name', fullName);
-        
-      if (checkError) {
-        console.error("Error checking existing employees:", checkError);
-        throw checkError;
-      }
-      
-      if (existingEmployees && existingEmployees.length > 0) {
-        toast({
-          title: "Error",
-          description: `An employee with the name "${fullName}" already exists.`,
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
       
       // If no duplicate, proceed with sign up
       const { error } = await onSignUp(email, password, firstName, lastName);
@@ -83,36 +64,34 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
         if (user) {
           console.log(`Got user with ID: ${user.id}, assigning role: ${userRole}`);
           
-          // First check if a role already exists for this user
+          // First check if user already has any roles
           const { data: existingRoles, error: roleCheckError } = await supabase
             .from('user_roles')
-            .select('*')
-            .eq('user_id', user.id)
-            .eq('role', userRole);
+            .select('role')
+            .eq('user_id', user.id);
             
           if (roleCheckError) {
             console.error("Error checking existing roles:", roleCheckError);
+            toast({
+              title: "Error",
+              description: "Could not check user roles: " + roleCheckError.message,
+              variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
           }
           
-          if (!existingRoles || existingRoles.length === 0) {
-            // Delete any existing roles for this user to avoid duplicates
-            const { error: deleteError } = await supabase
-              .from('user_roles')
-              .delete()
-              .eq('user_id', user.id);
-              
-            if (deleteError) {
-              console.error("Error deleting existing roles:", deleteError);
-            }
-            
-            // Now insert the new role
-            const { data: insertData, error: insertError } = await supabase
+          // Check specifically for the role we're trying to add
+          const hasRequestedRole = existingRoles?.some(r => r.role === userRole);
+          
+          if (!hasRequestedRole) {
+            // Add the new role (without removing existing roles)
+            const { error: insertError } = await supabase
               .from('user_roles')
               .insert({ 
                 user_id: user.id, 
                 role: userRole 
-              })
-              .select();
+              });
                 
             if (insertError) {
               console.error("Role insertion error:", insertError);
@@ -121,76 +100,96 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
                 description: "Could not assign user role: " + insertError.message,
                 variant: "destructive",
               });
-            } else {
-              console.log("Role inserted successfully:", insertData);
-              
-              // Create employee record with manager ID if role is employer
-              const managerIdToSave = userRole === 'employer' ? managerId : null;
-              
-              // Create employee record if it doesn't exist and if the role is employee or employer
-              if (userRole === 'employee' || userRole === 'employer') {
-                // Check again if an employee record with this name already exists
-                // This is a double-check to prevent race conditions
-                const { data: checkAgain, error: checkAgainError } = await supabase
-                  .from('employees')
-                  .select('id')
-                  .eq('name', fullName);
-                  
-                if (checkAgainError) {
-                  console.error("Error double-checking employee existence:", checkAgainError);
-                }
-                
-                // Only create employee if doesn't exist
-                if (!checkAgain || checkAgain.length === 0) {
-                  const { error: employeeError } = await supabase
-                    .from('employees')
-                    .insert({
-                      name: fullName,
-                      job_title: userRole === 'employer' ? 'Manager' : 'Employee',
-                      department: 'General',
-                      site: 'Main Office',
-                      salary: 0, // Default salary, to be updated later
-                      start_date: new Date().toISOString().split('T')[0],
-                      status: 'Active',
-                      lifecycle: 'Employed',
-                      manager_id: managerIdToSave,
-                      user_id: user.id // Link the employee record to the user account
-                    });
-                    
-                  if (employeeError) {
-                    console.error("Error creating employee record:", employeeError);
-                    toast({
-                      title: "Warning",
-                      description: "Account created but failed to create employee record: " + employeeError.message,
-                      variant: "default",
-                    });
-                  }
-                } else {
-                  toast({
-                    title: "Note",
-                    description: `Employee record for "${fullName}" already exists. No new record created.`,
-                    variant: "default",
-                  });
-                }
-              }
-              
-              if (userRole === 'employer') {
-                toast({
-                  title: "Success",
-                  description: `Account created with manager role. Your Manager ID is ${managerId}. Share this with your employees.`,
+              setIsLoading(false);
+              return;
+            } 
+            
+            console.log(`Role ${userRole} inserted successfully`);
+          } else {
+            console.log(`User already has role: ${userRole}, not adding again`);
+          }
+          
+          // Now check if the user already has an employee record
+          const { data: existingEmployee, error: employeeCheckError } = await supabase
+            .from('employees')
+            .select('id')
+            .eq('user_id', user.id);
+            
+          if (employeeCheckError) {
+            console.error("Error checking existing employee:", employeeCheckError);
+            toast({
+              title: "Error",
+              description: "Could not check existing employee record: " + employeeCheckError.message,
+              variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
+          }
+          
+          // Create or update employee record based on whether it exists
+          if (!existingEmployee || existingEmployee.length === 0) {
+            // No existing record, create a new one
+            const managerIdToSave = userRole === 'employer' ? managerId : null;
+            
+            // Only create employee record if the role is employee or employer
+            if (userRole === 'employee' || userRole === 'employer') {
+              const { error: employeeError } = await supabase
+                .from('employees')
+                .insert({
+                  name: fullName,
+                  job_title: userRole === 'employer' ? 'Manager' : 'Employee',
+                  department: 'General',
+                  site: 'Main Office',
+                  salary: 0, // Default salary, to be updated later
+                  start_date: new Date().toISOString().split('T')[0],
+                  status: 'Active',
+                  lifecycle: 'Employed',
+                  manager_id: managerIdToSave,
+                  user_id: user.id // Link the employee record to the user account
                 });
-              } else {
+                
+              if (employeeError) {
+                console.error("Error creating employee record:", employeeError);
                 toast({
-                  title: "Success", 
-                  description: `Account created with ${userRole} role.`,
+                  title: "Warning",
+                  description: "Account created but failed to create employee record: " + employeeError.message,
+                  variant: "default",
                 });
               }
             }
           } else {
-            console.log("User already has this role, no need to insert:", existingRoles);
+            // Employee record already exists, update it if necessary
+            if (userRole === 'employer' && managerId) {
+              // Update existing employee to set manager_id
+              const { error: updateError } = await supabase
+                .from('employees')
+                .update({ 
+                  manager_id: managerId,
+                  job_title: 'Manager'
+                })
+                .eq('user_id', user.id);
+                
+              if (updateError) {
+                console.error("Error updating employee record:", updateError);
+                toast({
+                  title: "Warning",
+                  description: "Account role updated but failed to update employee record: " + updateError.message,
+                  variant: "default",
+                });
+              }
+            }
+          }
+          
+          // Show appropriate success message
+          if (userRole === 'employer') {
+            toast({
+              title: "Success",
+              description: `Account created/updated with manager role. Your Manager ID is ${managerId}. Share this with your employees.`,
+            });
+          } else {
             toast({
               title: "Success", 
-              description: `Account created with ${userRole === 'employer' ? 'manager' : userRole} role.`,
+              description: `Account created/updated with ${userRole} role.`,
             });
           }
         }
