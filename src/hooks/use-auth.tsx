@@ -10,7 +10,7 @@ type AuthContextType = {
   isAdmin: boolean;
   isHR: boolean;
   isManager: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null, data: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null, data?: any }>;
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: AuthError | null }>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
   updatePassword: (password: string) => Promise<{ error: AuthError | null }>;
@@ -113,7 +113,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: "Please try again later",
         variant: "destructive",
       });
-      return { error: error as AuthError };
+      return { error: error as AuthError, data: undefined };
     }
   };
 
