@@ -51,7 +51,7 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
             user.id,
             formState.getFullName(),
             roleManager.userRole,
-            roleManager.userRole === 'employer' ? roleManager.managerId : null
+            roleManager.userRole === 'employee' ? roleManager.managerId : roleManager.managerId
           );
           
           // Show appropriate success message
@@ -59,6 +59,11 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
             toast({
               title: "Success",
               description: `Account created/updated with manager role. Your Manager ID is ${roleManager.managerId}. Share this with your employees.`,
+            });
+          } else if (roleManager.userRole === 'employee' && roleManager.managerId) {
+            toast({
+              title: "Success", 
+              description: `Account created/updated and linked to your manager with ID ${roleManager.managerId}.`,
             });
           } else {
             toast({
