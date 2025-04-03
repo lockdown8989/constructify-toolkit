@@ -1,28 +1,53 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { ShiftSwap } from '@/types/supabase';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 
-export type { ShiftSwap };
-
-export type NewShiftSwap = Omit<ShiftSwap, 'id' | 'created_at' | 'updated_at' | 'status'> & {
-  status?: string;
+export type ShiftSwap = {
+  id: string;
+  requester_id: string;
+  recipient_id: string;
+  requester_schedule_id: string;
+  recipient_schedule_id: string | null;
+  status: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 };
-export type ShiftSwapUpdate = Partial<ShiftSwap> & { id: string };
+
+export type NewShiftSwap = Omit<ShiftSwap, 'id' | 'created_at' | 'updated_at' | 'status'>;
+export type UpdateShiftSwap = Partial<ShiftSwap> & { id: string };
 
 // Get all shift swaps
 export function useShiftSwaps() {
+  const { user, isManager } = useAuth();
+  
   return useQuery({
-    queryKey: ['shift_swaps'],
+    queryKey: ['shift-swaps', isManager, user?.id],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('shift_swaps')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let query = supabase.from('shift_swaps').select('*');
       
-      if (error) {
-        console.error('Error fetching shift swaps:', error);
-        throw error;
+      // If not a manager, only fetch the user's own shift swaps
+      if (!isManager && user) {
+        // First get the employee ID for the current user
+        const { data: employeeData } = await supabase
+          .from('employees')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (employeeData) {
+          // Filter to show only shift swaps where this employee is either the requester or recipient
+          query = query.or(`requester_id.eq.${employeeData.id},recipient_id.eq.${employeeData.id}`);
+        } else {
+          // If no employee record found, return empty array
+          return [];
+        }
       }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+      if (error) throw error;
       return data as ShiftSwap[];
     }
   });

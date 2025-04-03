@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/types/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 
 export type Employee = Database['public']['Tables']['employees']['Row'];
 export type NewEmployee = Database['public']['Tables']['employees']['Insert'];
@@ -14,13 +15,35 @@ export function useEmployees(filters?: Partial<{
   site: string;
   lifecycle: string;
 }>) {
+  const { user, isManager } = useAuth();
+  
   return useQuery({
-    queryKey: ['employees', filters],
+    queryKey: ['employees', filters, isManager, user?.id],
     queryFn: async () => {
+      // Start building the query
       let query = supabase
         .from('employees')
         .select('*');
       
+      // If user is not a manager, only show their own data
+      if (!isManager && user) {
+        // Find the employee record associated with the current user
+        const { data: currentEmployeeData } = await supabase
+          .from('employees')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (currentEmployeeData) {
+          // For non-managers, only return their own record
+          query = query.eq('id', currentEmployeeData.id);
+        } else {
+          // If employee record not found, return empty array
+          return [];
+        }
+      }
+      
+      // Apply any filters passed to the hook
       if (filters) {
         if (filters.status) query = query.eq('status', filters.status);
         if (filters.department) query = query.eq('department', filters.department);

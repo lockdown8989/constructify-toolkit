@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ProgressBar from '@/components/dashboard/ProgressBar';
 import StatCard from '@/components/dashboard/StatCard';
 import Calendar from '@/components/dashboard/Calendar';
@@ -17,7 +17,7 @@ const Dashboard = () => {
   const isMobile = useIsMobile();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
-  const { user } = useAuth();
+  const { user, isManager } = useAuth();
   
   // Get user's first name for greeting
   const firstName = user?.user_metadata?.first_name || 
@@ -41,14 +41,19 @@ const Dashboard = () => {
     status: emp.status === 'Active' ? 'Paid' as const : emp.status === 'Leave' ? 'Absent' as const : 'Pending' as const
   }));
   
-  // Get interview statistics
-  const interviewStats = {
+  // Get interview statistics - only show for managers
+  const interviewStats = isManager ? {
     interviews: interviews.filter(i => i.stage === 'Interview').reduce((acc, i) => acc + i.progress, 0) / 
                 Math.max(interviews.filter(i => i.stage === 'Interview').length, 1),
     hired: interviews.filter(i => i.stage === 'Hired').reduce((acc, i) => acc + i.progress, 0) / 
            Math.max(interviews.filter(i => i.stage === 'Hired').length, 1),
     projectTime: 15, // Sample data, would come from project table
     output: 5 // Sample data, would come from project table
+  } : {
+    interviews: 0,
+    hired: 0,
+    projectTime: 0,
+    output: 0
   };
   
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
@@ -62,40 +67,46 @@ const Dashboard = () => {
       <div className="max-w-[1800px] mx-auto">
         <h1 className="text-2xl md:text-4xl font-bold mb-2">Hello {firstName}</h1>
         
-        {/* Progress Bars */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <ProgressBar label="Interviews" value={Math.round(interviewStats.interviews) || 0} color="black" />
-          <ProgressBar label="Hired" value={Math.round(interviewStats.hired) || 0} color="yellow" />
-          <ProgressBar label="Project time" value={interviewStats.projectTime} color="gray" />
-          <ProgressBar label="Output" value={interviewStats.output} color="black" />
-        </div>
+        {/* Progress Bars - Only show for managers */}
+        {isManager && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <ProgressBar label="Interviews" value={Math.round(interviewStats.interviews) || 0} color="black" />
+            <ProgressBar label="Hired" value={Math.round(interviewStats.hired) || 0} color="yellow" />
+            <ProgressBar label="Project time" value={interviewStats.projectTime} color="gray" />
+            <ProgressBar label="Output" value={interviewStats.output} color="black" />
+          </div>
+        )}
         
         {/* Stats */}
         <div className="flex flex-wrap -mx-2 mb-6">
           <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
             <StatCard 
               title="Employee" 
-              value={employees.length.toString()} 
+              value={isManager ? employees.length.toString() : "1"} 
               icon={<Users className="w-5 h-5" />}
               className="h-full"
             />
           </div>
-          <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
-            <StatCard 
-              title="Hirings" 
-              value={interviews.filter(i => i.stage === 'Hired').length.toString()} 
-              icon={<Users className="w-5 h-5" />}
-              className="h-full"
-            />
-          </div>
-          <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
-            <StatCard 
-              title="Projects" 
-              value="185" 
-              icon={<FolderOpen className="w-5 h-5" />}
-              className="h-full"
-            />
-          </div>
+          {isManager && (
+            <>
+              <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
+                <StatCard 
+                  title="Hirings" 
+                  value={interviews.filter(i => i.stage === 'Hired').length.toString()} 
+                  icon={<Users className="w-5 h-5" />}
+                  className="h-full"
+                />
+              </div>
+              <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
+                <StatCard 
+                  title="Projects" 
+                  value="185" 
+                  icon={<FolderOpen className="w-5 h-5" />}
+                  className="h-full"
+                />
+              </div>
+            </>
+          )}
         </div>
         
         {/* Main Content */}
@@ -124,10 +135,13 @@ const Dashboard = () => {
               className="mb-6" 
             />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <HiringStatistics className="col-span-1" />
-              <EmployeeComposition className="col-span-1" />
-            </div>
+            {/* Only show stats for managers */}
+            {isManager && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <HiringStatistics className="col-span-1" />
+                <EmployeeComposition className="col-span-1" />
+              </div>
+            )}
           </div>
         </div>
       </div>

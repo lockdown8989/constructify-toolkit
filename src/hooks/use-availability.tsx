@@ -1,28 +1,53 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AvailabilityRequest } from '@/types/supabase';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 
-export type { AvailabilityRequest };
-
-export type NewAvailabilityRequest = Omit<AvailabilityRequest, 'id' | 'created_at' | 'updated_at' | 'status'> & {
-  status?: string;
+export type AvailabilityRequest = {
+  id: string;
+  employee_id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
+  notes: string | null;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  created_at: string;
+  updated_at: string;
 };
-export type AvailabilityRequestUpdate = Partial<AvailabilityRequest> & { id: string };
+
+export type NewAvailabilityRequest = Omit<AvailabilityRequest, 'id' | 'created_at' | 'updated_at' | 'status'>;
+export type UpdateAvailabilityRequest = Partial<AvailabilityRequest> & { id: string };
 
 // Get all availability requests
 export function useAvailabilityRequests() {
+  const { user, isManager } = useAuth();
+  
   return useQuery({
-    queryKey: ['availability_requests'],
+    queryKey: ['availability-requests', isManager, user?.id],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('availability_requests')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let query = supabase.from('availability_requests').select('*');
       
-      if (error) {
-        console.error('Error fetching availability requests:', error);
-        throw error;
+      // If not a manager, only fetch the user's own requests
+      if (!isManager && user) {
+        // First get the employee ID for the current user
+        const { data: employeeData } = await supabase
+          .from('employees')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (employeeData) {
+          // Filter to show only this employee's requests
+          query = query.eq('employee_id', employeeData.id);
+        } else {
+          // If no employee record found, return empty array
+          return [];
+        }
       }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+      if (error) throw error;
       return data as AvailabilityRequest[];
     }
   });
@@ -84,7 +109,7 @@ export function useUpdateAvailabilityRequest() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (update: AvailabilityRequestUpdate) => {
+    mutationFn: async (update: UpdateAvailabilityRequest) => {
       const { id, ...updateData } = update;
       
       if (!id) throw new Error('ID is required for update');
