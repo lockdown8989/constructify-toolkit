@@ -34,6 +34,12 @@ export const useEmployeeRecord = () => {
         // No existing record, create a new one
         const managerIdToSave = userRole === 'employer' ? managerId : null;
         
+        // For employees trying to connect to a manager
+        let employeeManagerId = null;
+        if (userRole === 'employee' && managerId) {
+          employeeManagerId = managerId;  // Use the provided manager ID for employees
+        }
+        
         // Only create employee record if the role is employee or employer
         if (userRole === 'employee' || userRole === 'employer') {
           const { error: employeeError } = await supabase
@@ -47,7 +53,7 @@ export const useEmployeeRecord = () => {
               start_date: new Date().toISOString().split('T')[0],
               status: 'Active',
               lifecycle: 'Employed',
-              manager_id: managerIdToSave,
+              manager_id: userRole === 'employee' ? employeeManagerId : managerIdToSave,
               user_id: userId // Link the employee record to the user account
             });
             
@@ -78,6 +84,24 @@ export const useEmployeeRecord = () => {
             toast({
               title: "Warning",
               description: "Account role updated but failed to update employee record: " + updateError.message,
+              variant: "default",
+            });
+            return false;
+          }
+        } else if (userRole === 'employee' && managerId) {
+          // Update existing employee record with manager ID
+          const { error: updateError } = await supabase
+            .from('employees')
+            .update({ 
+              manager_id: managerId 
+            })
+            .eq('user_id', userId);
+            
+          if (updateError) {
+            console.error("Error updating employee with manager ID:", updateError);
+            toast({
+              title: "Warning",
+              description: "Account created but failed to link to manager: " + updateError.message,
               variant: "default",
             });
             return false;
