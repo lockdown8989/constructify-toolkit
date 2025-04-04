@@ -23,7 +23,7 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
   } = useSignInForm({ onSignIn });
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Sign In</CardTitle>
         <CardDescription>Enter your credentials to access your account</CardDescription>

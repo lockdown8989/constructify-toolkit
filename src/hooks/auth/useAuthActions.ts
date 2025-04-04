@@ -26,11 +26,11 @@ export const useAuthActions = () => {
       
       if (error) {
         console.error('Sign in error:', error);
+        return { error, data: undefined };
       } else {
         console.log("Sign in successful:", data.user?.email);
+        return { error: null, data };
       }
-      
-      return { error, data };
     } catch (error) {
       console.error('Sign in error:', error);
       return { 

@@ -34,6 +34,13 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
     
     try {
       console.log("Attempting to sign in with:", email);
+      
+      if (!email || !password) {
+        setErrorMessage("Email and password are required");
+        setIsLoading(false);
+        return;
+      }
+      
       const { data, error } = await onSignIn(email, password);
       
       if (error) {
@@ -50,7 +57,10 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
           description: "Signed in successfully",
         });
         
-        navigate("/dashboard");
+        // Add a slight delay before redirecting to ensure toast is shown
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 500);
       } else {
         setErrorMessage("Something went wrong during sign in");
       }

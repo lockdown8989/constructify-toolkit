@@ -16,43 +16,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { signIn, signUp, resetPassword, updatePassword, signOut } = useAuthActions();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        console.log("Auth state changed:", _event, session?.user?.email);
-        setSession(session);
-        setUser(session?.user ?? null);
+    const setupAuth = async () => {
+      try {
+        // First check current session
+        const { data: sessionData } = await supabase.auth.getSession();
+        console.log("Initial session check:", sessionData?.session?.user?.email);
         
-        // Don't call other Supabase functions directly in the callback
-        // Use setTimeout to defer additional actions
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserRoles(session.user.id);
-          }, 0);
-        } else {
-          resetRoles();
+        if (sessionData?.session) {
+          setSession(sessionData.session);
+          setUser(sessionData.session.user);
+          
+          if (sessionData.session.user) {
+            await fetchUserRoles(sessionData.session.user.id);
+          }
         }
         
         setIsLoading(false);
-      }
-    );
+        
+        // Then set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log("Auth state changed:", event, session?.user?.email);
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            if (session?.user) {
+              await fetchUserRoles(session.user.id);
+            } else {
+              resetRoles();
+            }
+            
+            setIsLoading(false);
+          }
+        );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session check:", session?.user?.email);
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserRoles(session.user.id);
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error("Auth setup error:", error);
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
     };
+
+    setupAuth();
   }, []);
 
   const value = {
