@@ -86,7 +86,8 @@ const ShiftSwapForm = () => {
       recipient_id: selectedEmployee,
       requester_schedule_id: selectedSchedule,
       recipient_schedule_id: selectedRecipientSchedule || undefined,
-      notes: notes || undefined
+      notes: notes || undefined,
+      status: 'Pending'
     });
     
     // Reset form after submission

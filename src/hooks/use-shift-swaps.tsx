@@ -16,7 +16,12 @@ export type ShiftSwap = {
   updated_at: string;
 };
 
-export type NewShiftSwap = Omit<ShiftSwap, 'id' | 'created_at' | 'updated_at'> & {
+export type NewShiftSwap = {
+  requester_id: string;
+  recipient_id: string;
+  requester_schedule_id: string;
+  recipient_schedule_id?: string | null;
+  notes?: string | null;
   status?: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
 };
 

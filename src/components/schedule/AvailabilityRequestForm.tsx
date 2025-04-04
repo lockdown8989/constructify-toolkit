@@ -80,7 +80,8 @@ const AvailabilityRequestForm = () => {
       start_time: startTime,
       end_time: endTime,
       is_available: isAvailable,
-      notes: notes || undefined
+      notes: notes || undefined,
+      status: 'Pending'
     });
     
     // Reset form after submission

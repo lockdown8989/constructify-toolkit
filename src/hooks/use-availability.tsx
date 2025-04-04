@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -16,7 +17,13 @@ export type AvailabilityRequest = {
   updated_at: string;
 };
 
-export type NewAvailabilityRequest = Omit<AvailabilityRequest, 'id' | 'created_at' | 'updated_at'> & {
+export type NewAvailabilityRequest = {
+  employee_id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
+  notes?: string | null;
   status?: 'Pending' | 'Approved' | 'Rejected';
 };
 
