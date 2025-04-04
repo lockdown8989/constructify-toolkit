@@ -19,6 +19,7 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
   const roleAssigner = useRoleAssignment();
   const [isValidatingManagerId, setIsValidatingManagerId] = useState(false);
   const [isManagerIdValid, setIsManagerIdValid] = useState<boolean | undefined>(undefined);
+  const [signUpError, setSignUpError] = useState<string | null>(null);
   
   // Validate the manager ID when it changes
   useEffect(() => {
@@ -62,9 +63,23 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     formState.setIsLoading(true);
+    setSignUpError(null);
     
     try {
       console.log(`Attempting to sign up with role: ${roleManager.userRole}`);
+      
+      // Validate required fields
+      if (!formState.email || !formState.password || !formState.firstName || !formState.lastName) {
+        setSignUpError("All fields are required");
+        formState.setIsLoading(false);
+        return;
+      }
+      
+      if (formState.password.length < 6) {
+        setSignUpError("Password must be at least 6 characters");
+        formState.setIsLoading(false);
+        return;
+      }
       
       // Call the sign up function provided via props
       const { error } = await onSignUp(
@@ -74,54 +89,83 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
         formState.lastName
       );
       
-      if (!error) {
-        const { data: { user } } = await supabase.auth.getUser();
+      if (error) {
+        console.error("Sign up error:", error);
+        if (error.message.includes("duplicate key")) {
+          setSignUpError("This email is already registered. Please try signing in instead.");
+        } else if (error.message.includes("permission denied")) {
+          setSignUpError("Database permission error. Please contact support.");
+        } else {
+          setSignUpError(error.message || "Failed to create account. Please try again.");
+        }
+        formState.setIsLoading(false);
+        return;
+      }
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        console.log(`Got user with ID: ${user.id}, assigning role: ${roleManager.userRole}`);
         
-        if (user) {
-          console.log(`Got user with ID: ${user.id}, assigning role: ${roleManager.userRole}`);
-          
+        try {
           // Assign user role
           const roleSuccess = await roleAssigner.assignUserRole(user.id, roleManager.userRole);
           
           if (!roleSuccess) {
-            formState.setIsLoading(false);
-            return;
+            console.error("Failed to assign user role");
+            // Continue anyway - the user was created successfully
           }
           
-          // Create or update employee record
-          const employeeSuccess = await employeeManager.createOrUpdateEmployeeRecord(
-            user.id,
-            formState.getFullName(),
-            roleManager.userRole,
-            roleManager.userRole === 'employee' ? roleManager.managerId : roleManager.managerId
-          );
-          
-          // Show appropriate success message
-          if (roleManager.userRole === 'employer') {
-            toast({
-              title: "Success",
-              description: `Account created/updated with manager role. Your Manager ID is ${roleManager.managerId}. Share this with your employees to connect them to your account.`,
-            });
-          } else if (roleManager.userRole === 'employee' && roleManager.managerId) {
-            toast({
-              title: "Success", 
-              description: `Account created/updated and linked to your manager with ID ${roleManager.managerId}.`,
-            });
-          } else {
-            toast({
-              title: "Success", 
-              description: `Account created/updated with ${roleManager.userRole} role.`,
-            });
+          try {
+            // Create or update employee record
+            const employeeSuccess = await employeeManager.createOrUpdateEmployeeRecord(
+              user.id,
+              formState.getFullName(),
+              roleManager.userRole,
+              roleManager.userRole === 'employee' ? roleManager.managerId : roleManager.managerId
+            );
+            
+            if (!employeeSuccess) {
+              console.error("Failed to create/update employee record");
+              // Continue anyway - the user and role were created successfully
+            }
+          } catch (empError) {
+            console.error("Error creating employee record:", empError);
+            // Continue anyway - the user and role were created successfully
           }
+        } catch (roleError) {
+          console.error("Error assigning role:", roleError);
+          // Continue anyway - the user was created successfully
         }
+        
+        // Show appropriate success message
+        if (roleManager.userRole === 'employer') {
+          toast({
+            title: "Success",
+            description: `Account created with manager role. Your Manager ID is ${roleManager.managerId}. Share this with your employees to connect them to your account.`,
+          });
+        } else if (roleManager.userRole === 'employee' && roleManager.managerId) {
+          toast({
+            title: "Success", 
+            description: `Account created and linked to your manager with ID ${roleManager.managerId}.`,
+          });
+        } else {
+          toast({
+            title: "Success", 
+            description: `Account created with ${roleManager.userRole} role.`,
+          });
+        }
+        
+        // Redirect to sign in after a slight delay to ensure toasts are visible
+        setTimeout(() => {
+          window.location.href = '/auth';
+        }, 1500);
+      } else {
+        setSignUpError("User created but session not established. Please try signing in.");
       }
     } catch (error) {
       console.error("Sign up error:", error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred during sign up",
-        variant: "destructive",
-      });
+      setSignUpError(error instanceof Error ? error.message : "An unexpected error occurred during sign up");
     } finally {
       formState.setIsLoading(false);
     }
@@ -132,6 +176,7 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
     ...roleManager,
     isValidatingManagerId,
     isManagerIdValid,
+    signUpError,
     handleSubmit
   };
 };

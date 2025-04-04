@@ -6,6 +6,7 @@ import { UserInfoFields } from "./components/UserInfoFields";
 import { AccountTypeSelector } from "./components/AccountTypeSelector";
 import { ManagerIdInput } from "./components/ManagerIdInput";
 import { useSignUp } from "./hooks/useSignUp";
+import { AlertCircle } from "lucide-react";
 
 type SignUpFormProps = {
   onSignUp: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;
@@ -29,7 +30,8 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
     handleRoleChange,
     generateManagerId,
     isValidatingManagerId,
-    isManagerIdValid
+    isManagerIdValid,
+    signUpError
   } = useSignUp({ onSignUp });
 
   return (
@@ -41,6 +43,13 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
       
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          {signUpError && (
+            <div className="p-3 bg-destructive/10 rounded-md flex gap-2 items-start">
+              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="text-sm text-destructive">{signUpError}</div>
+            </div>
+          )}
+          
           <UserInfoFields 
             firstName={firstName}
             lastName={lastName}
