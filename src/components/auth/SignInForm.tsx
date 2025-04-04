@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useSignInForm } from "./hooks/useSignInForm";
 import { FormErrorMessage } from "./components/FormErrorMessage";
 import { SignInFields } from "./components/SignInFields";
+import { AlertCircle } from "lucide-react";
 
 type SignInFormProps = {
   onSignIn: (email: string, password: string) => Promise<any>;
@@ -31,7 +32,12 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
       
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          <FormErrorMessage message={errorMessage} />
+          {errorMessage && (
+            <div className="p-3 bg-destructive/10 rounded-md flex gap-2 items-start">
+              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="text-sm text-destructive">{errorMessage}</div>
+            </div>
+          )}
           
           <SignInFields
             email={email}

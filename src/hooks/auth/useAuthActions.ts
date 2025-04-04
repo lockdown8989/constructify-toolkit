@@ -8,7 +8,9 @@ export const useAuthActions = () => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log("Attempting to sign in:", email);
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
       if (error) {
         console.error('Sign in error:', error);
         toast({
@@ -16,7 +18,10 @@ export const useAuthActions = () => {
           description: error.message,
           variant: "destructive",
         });
+      } else {
+        console.log("Sign in successful:", data.user?.email);
       }
+      
       return { error, data };
     } catch (error) {
       console.error('Sign in error:', error);
