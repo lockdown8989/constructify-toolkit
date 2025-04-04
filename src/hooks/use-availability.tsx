@@ -16,7 +16,10 @@ export type AvailabilityRequest = {
   updated_at: string;
 };
 
-export type NewAvailabilityRequest = Omit<AvailabilityRequest, 'id' | 'created_at' | 'updated_at' | 'status'>;
+export type NewAvailabilityRequest = Omit<AvailabilityRequest, 'id' | 'created_at' | 'updated_at'> & {
+  status?: 'Pending' | 'Approved' | 'Rejected';
+};
+
 export type UpdateAvailabilityRequest = Partial<AvailabilityRequest> & { id: string };
 
 // Get all availability requests

@@ -16,8 +16,11 @@ export type ShiftSwap = {
   updated_at: string;
 };
 
-export type NewShiftSwap = Omit<ShiftSwap, 'id' | 'created_at' | 'updated_at' | 'status'>;
-export type UpdateShiftSwap = Partial<ShiftSwap> & { id: string };
+export type NewShiftSwap = Omit<ShiftSwap, 'id' | 'created_at' | 'updated_at'> & {
+  status?: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
+};
+
+export type ShiftSwapUpdate = Partial<ShiftSwap> & { id: string };
 
 // Get all shift swaps
 export function useShiftSwaps() {

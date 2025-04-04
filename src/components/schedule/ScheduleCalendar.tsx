@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { format, startOfWeek, addDays, getHours, getMinutes, isSameDay, isToday } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
@@ -14,7 +13,7 @@ type ViewType = 'day' | 'week';
 const ScheduleCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewType>('day');
-  const { data: schedules = [] } = useSchedules(currentDate);
+  const { data: schedules = [] } = useSchedules();
   const [currentTimeTop, setCurrentTimeTop] = useState<number>(0);
 
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;

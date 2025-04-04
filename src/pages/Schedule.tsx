@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { useEmployees } from '@/hooks/use-employees';
@@ -27,7 +26,7 @@ const SchedulePage = () => {
     endTime: ''
   });
   
-  const { data: schedules = [], isLoading: schedulesLoading, refetch: refetchSchedules } = useSchedules(date);
+  const { data: schedules = [], isLoading: schedulesLoading, refetch: refetchSchedules } = useSchedules();
   const { createSchedule } = useCreateSchedule();
   
   const employeeNames = employees.reduce<Record<string, string>>((acc, employee) => {

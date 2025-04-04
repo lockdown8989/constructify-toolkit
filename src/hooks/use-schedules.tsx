@@ -47,6 +47,40 @@ export function useSchedules() {
   });
 }
 
+export function useCreateSchedule() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return {
+    createSchedule: async (newSchedule: NewSchedule) => {
+      try {
+        const { data, error } = await supabase
+          .from('schedules')
+          .insert(newSchedule)
+          .select()
+          .single();
+
+        if (error) throw error;
+        
+        queryClient.invalidateQueries({ queryKey: ['schedules'] });
+        toast({
+          title: "Schedule created",
+          description: "New schedule has been successfully created."
+        });
+        
+        return data as Schedule;
+      } catch (error: any) {
+        toast({
+          title: "Failed to create schedule",
+          description: error.message,
+          variant: "destructive"
+        });
+        throw error;
+      }
+    }
+  };
+}
+
 export function useAddSchedule() {
   const queryClient = useQueryClient();
   const { toast } = useToast();

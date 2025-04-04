@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { useAddLeaveCalendar } from "@/hooks/use-leave-calendar";
+import { useAddLeaveRequest } from "@/hooks/use-leave-calendar";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -56,7 +55,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
     }
   }, [startDate, endDate, departmentProjects]);
 
-  const { mutate: addLeave } = useAddLeaveCalendar();
+  const { mutate: addLeave } = useAddLeaveRequest();
   const { toast } = useToast();
   
   const resetForm = () => {
