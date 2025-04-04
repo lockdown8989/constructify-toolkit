@@ -41,6 +41,18 @@ export function useEmployees(filters?: Partial<{
           // If employee record not found, return empty array
           return [];
         }
+      } else if (isManager && user) {
+        // For managers, get their manager_id first
+        const { data: managerData } = await supabase
+          .from('employees')
+          .select('manager_id')
+          .eq('user_id', user.id)
+          .single();
+        
+        // Include only employees who are linked to this manager's ID or the manager themselves
+        if (managerData && managerData.manager_id) {
+          query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
+        }
       }
       
       // Apply any filters passed to the hook

@@ -23,6 +23,11 @@ const Dashboard = () => {
   const firstName = user?.user_metadata?.first_name || 
                    user?.email?.split('@')[0] || 
                    'User';
+                   
+  // Count employees excluding the manager themselves
+  const employeeCount = isManager 
+    ? employees.filter(emp => emp.user_id !== user?.id).length 
+    : 1;
   
   // Sample data for meetings (would come from another table in a real app)
   const sampleMeetings = [
@@ -35,7 +40,7 @@ const Dashboard = () => {
   const salaryEmployees = employees.slice(0, 3).map(emp => ({
     id: emp.id,
     name: emp.name,
-    avatar: emp.avatar || `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'women' : 'men'}/${Math.floor(Math.random() * 99)}.jpg`,
+    avatar: emp.avatar || `https://randomuser.me/api/portraits//${Math.random() > 0.5 ? 'women' : 'men'}/${Math.floor(Math.random() * 99)}.jpg`,
     title: emp.job_title,
     salary: `$${emp.salary.toLocaleString()}`,
     status: emp.status === 'Active' ? 'Paid' as const : emp.status === 'Leave' ? 'Absent' as const : 'Pending' as const
@@ -81,8 +86,8 @@ const Dashboard = () => {
         <div className="flex flex-wrap -mx-2 mb-6">
           <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
             <StatCard 
-              title="Employee" 
-              value={isManager ? employees.length.toString() : "1"} 
+              title={isManager ? "Team Members" : "Employee"} 
+              value={employeeCount.toString()} 
               icon={<Users className="w-5 h-5" />}
               className="h-full"
             />

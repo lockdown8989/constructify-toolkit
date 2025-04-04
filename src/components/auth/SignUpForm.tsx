@@ -27,7 +27,9 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
     isLoading,
     handleSubmit,
     handleRoleChange,
-    generateManagerId
+    generateManagerId,
+    isValidatingManagerId,
+    isManagerIdValid
   } = useSignUp({ onSignUp });
 
   return (
@@ -69,6 +71,8 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
               isReadOnly={false}
               onChange={(e) => setManagerId(e.target.value)}
               isEmployeeView={true}
+              isValid={isManagerIdValid}
+              isChecking={isValidatingManagerId}
             />
           )}
         </CardContent>

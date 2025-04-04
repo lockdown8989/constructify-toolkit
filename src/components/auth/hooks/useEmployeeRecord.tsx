@@ -18,7 +18,7 @@ export const useEmployeeRecord = () => {
       // First check if user already has an employee record
       const { data: existingEmployee, error: employeeCheckError } = await supabase
         .from('employees')
-        .select('id')
+        .select('id, manager_id')
         .eq('user_id', userId);
         
       if (employeeCheckError) {
@@ -38,10 +38,31 @@ export const useEmployeeRecord = () => {
         
         let managerIdToUse = null;
         
-        // If this is an employee with a manager ID, use that manager ID
+        // If this is an employee with a manager ID, use that manager ID and validate it
         if (userRole === 'employee' && managerId) {
           console.log(`Employee registering with manager ID: ${managerId}`);
-          managerIdToUse = managerId;
+          
+          // Verify the manager ID exists
+          const { data: managerExists } = await supabase
+            .from('employees')
+            .select('id, user_id')
+            .eq('manager_id', managerId)
+            .eq('job_title', 'Manager')
+            .single();
+            
+          if (managerExists) {
+            console.log(`Found valid manager with ID: ${managerId}`);
+            managerIdToUse = managerId;
+          } else {
+            // Invalid manager ID, but still create the employee record
+            console.log(`Warning: Manager ID ${managerId} not found, but creating employee record anyway`);
+            managerIdToUse = managerId; // Still store it for later validation
+            toast({
+              title: "Warning",
+              description: "The manager ID you entered could not be verified. You can update it later in your profile.",
+              variant: "default",
+            });
+          }
         }
         
         // If this is an employer/manager, use their own manager ID as reference
@@ -84,44 +105,76 @@ export const useEmployeeRecord = () => {
         // Employee record already exists, update it if necessary
         console.log(`Updating existing employee record for role: ${userRole}`);
         
-        if (userRole === 'employer' && managerId) {
-          // Update existing employee to set manager_id
-          console.log(`Updating employer record with manager ID: ${managerId}`);
-          const { error: updateError } = await supabase
-            .from('employees')
-            .update({ 
-              manager_id: managerId,
-              job_title: 'Manager'
-            })
-            .eq('user_id', userId);
-            
-          if (updateError) {
-            console.error("Error updating employee record:", updateError);
-            toast({
-              title: "Warning",
-              description: "Account role updated but failed to update employee record: " + updateError.message,
-              variant: "default",
-            });
-            return false;
-          }
-        } else if (userRole === 'employee' && managerId) {
-          // Update existing employee record with manager ID
-          console.log(`Updating employee record with manager ID: ${managerId}`);
-          const { error: updateError } = await supabase
-            .from('employees')
-            .update({ 
-              manager_id: managerId 
-            })
-            .eq('user_id', userId);
-            
-          if (updateError) {
-            console.error("Error updating employee with manager ID:", updateError);
-            toast({
-              title: "Warning",
-              description: "Account created but failed to link to manager: " + updateError.message,
-              variant: "default",
-            });
-            return false;
+        // Only update manager ID if it's provided and different from current
+        if (managerId && existingEmployee[0].manager_id !== managerId) {
+          if (userRole === 'employer') {
+            // Update existing employer record with manager ID
+            console.log(`Updating employer record with manager ID: ${managerId}`);
+            const { error: updateError } = await supabase
+              .from('employees')
+              .update({ 
+                manager_id: managerId,
+                job_title: 'Manager'
+              })
+              .eq('user_id', userId);
+              
+            if (updateError) {
+              console.error("Error updating employee record:", updateError);
+              toast({
+                title: "Warning",
+                description: "Account role updated but failed to update employee record: " + updateError.message,
+                variant: "default",
+              });
+              return false;
+            }
+          } else if (userRole === 'employee' && managerId) {
+            // Verify the manager ID exists before updating
+            const { data: managerExists } = await supabase
+              .from('employees')
+              .select('id')
+              .eq('manager_id', managerId)
+              .eq('job_title', 'Manager')
+              .single();
+              
+            if (managerExists) {
+              // Update existing employee record with manager ID
+              console.log(`Updating employee record with valid manager ID: ${managerId}`);
+              const { error: updateError } = await supabase
+                .from('employees')
+                .update({ 
+                  manager_id: managerId 
+                })
+                .eq('user_id', userId);
+                
+              if (updateError) {
+                console.error("Error updating employee with manager ID:", updateError);
+                toast({
+                  title: "Warning",
+                  description: "Account created but failed to link to manager: " + updateError.message,
+                  variant: "default",
+                });
+                return false;
+              }
+            } else {
+              console.log(`Warning: Manager ID ${managerId} not found during update`);
+              toast({
+                title: "Warning",
+                description: "The manager ID you entered could not be verified. You can update it later.",
+                variant: "default",
+              });
+              
+              // Still update the manager ID for potential future validation
+              const { error: updateError } = await supabase
+                .from('employees')
+                .update({ 
+                  manager_id: managerId 
+                })
+                .eq('user_id', userId);
+              
+              if (updateError) {
+                console.error("Error updating employee with unverified manager ID:", updateError);
+              }
+            }
           }
         }
       }
