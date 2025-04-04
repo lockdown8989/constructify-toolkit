@@ -16,25 +16,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { signIn, signUp, resetPassword, updatePassword, signOut } = useAuthActions();
 
   useEffect(() => {
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        console.log("Auth state changed:", _event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Don't call other Supabase functions directly in the callback
+        // Use setTimeout to defer additional actions
         if (session?.user) {
-          fetchUserRoles(session.user.id);
+          setTimeout(() => {
+            fetchUserRoles(session.user.id);
+          }, 0);
         } else {
           resetRoles();
         }
+        
         setIsLoading(false);
       }
     );
 
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check:", session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
+      
       if (session?.user) {
         fetchUserRoles(session.user.id);
       }
+      
       setIsLoading(false);
     });
 

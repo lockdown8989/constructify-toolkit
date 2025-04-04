@@ -17,10 +17,14 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
+    // Clear error when user starts typing again
+    if (errorMessage) setErrorMessage(null);
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
+    // Clear error when user starts typing again
+    if (errorMessage) setErrorMessage(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,26 +33,30 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
     setErrorMessage(null);
     
     try {
-      // Use a simpler approach to handle auth
-      const { error } = await onSignIn(email, password);
+      console.log("Attempting to sign in with:", email);
+      const { data, error } = await onSignIn(email, password);
       
       if (error) {
-        console.log("Authentication error:", error.message);
+        console.error("Authentication error:", error.message);
         setErrorMessage(error.message || "Invalid login credentials");
         setIsLoading(false);
         return;
       }
       
-      // If no error, navigate to dashboard (this assumes user state is handled in the parent component)
-      toast({
-        title: "Success",
-        description: "Signed in successfully",
-      });
-      
-      navigate("/dashboard");
+      if (data?.user) {
+        console.log("Sign in successful, user:", data.user.email);
+        toast({
+          title: "Success",
+          description: "Signed in successfully",
+        });
+        
+        navigate("/dashboard");
+      } else {
+        setErrorMessage("Something went wrong during sign in");
+      }
     } catch (error) {
       console.error("Sign in error:", error);
-      setErrorMessage("An unexpected error occurred during sign in");
+      setErrorMessage(error instanceof Error ? error.message : "An unexpected error occurred during sign in");
     } finally {
       setIsLoading(false);
     }

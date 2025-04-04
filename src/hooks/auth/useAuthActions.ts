@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AuthError } from "@supabase/supabase-js";
@@ -9,15 +8,24 @@ export const useAuthActions = () => {
   const signIn = async (email: string, password: string) => {
     try {
       console.log("Attempting to sign in:", email);
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      // Make sure email and password are strings and not empty
+      if (!email || !password) {
+        return {
+          error: {
+            message: "Email and password are required"
+          } as AuthError,
+          data: undefined
+        };
+      }
+      
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email: email.trim(), 
+        password 
+      });
       
       if (error) {
         console.error('Sign in error:', error);
-        toast({
-          title: "Sign in failed",
-          description: error.message,
-          variant: "destructive",
-        });
       } else {
         console.log("Sign in successful:", data.user?.email);
       }
@@ -25,12 +33,12 @@ export const useAuthActions = () => {
       return { error, data };
     } catch (error) {
       console.error('Sign in error:', error);
-      toast({
-        title: "An unexpected error occurred",
-        description: "Please try again later",
-        variant: "destructive",
-      });
-      return { error: error as AuthError, data: undefined };
+      return { 
+        error: {
+          message: error instanceof Error ? error.message : "An unexpected error occurred"
+        } as AuthError, 
+        data: undefined 
+      };
     }
   };
 
