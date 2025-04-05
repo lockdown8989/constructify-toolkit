@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface ProfileData {
   first_name: string;
@@ -24,32 +25,46 @@ const Profile = () => {
     position: "",
     department: "",
   });
+  const [managerId, setManagerId] = useState<string | null>(null);
+  const [isManager, setIsManager] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileAndEmployeeData = async () => {
       if (!user) return;
       
       try {
-        const { data, error } = await supabase
+        // Fetch user profile
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", user.id)
           .single();
         
-        if (error) {
-          console.error("Error fetching profile:", error);
-          return;
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+        } else if (profileData) {
+          setProfile({
+            first_name: profileData.first_name || "",
+            last_name: profileData.last_name || "",
+            position: profileData.position || "",
+            department: profileData.department || "",
+          });
         }
         
-        if (data) {
-          setProfile({
-            first_name: data.first_name || "",
-            last_name: data.last_name || "",
-            position: data.position || "",
-            department: data.department || "",
-          });
+        // Fetch employee data including manager ID and role information
+        const { data: employeeData, error: employeeError } = await supabase
+          .from("employees")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+        
+        if (employeeError) {
+          console.error("Error fetching employee data:", employeeError);
+        } else if (employeeData) {
+          setManagerId(employeeData.manager_id);
+          setIsManager(employeeData.job_title === 'Manager');
         }
       } catch (error) {
         console.error("Error:", error);
@@ -58,7 +73,7 @@ const Profile = () => {
       }
     };
     
-    fetchProfile();
+    fetchProfileAndEmployeeData();
   }, [user]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,7 +88,8 @@ const Profile = () => {
     setIsSaving(true);
     
     try {
-      const { error } = await supabase
+      // Update profile information
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({
           first_name: profile.first_name,
@@ -84,10 +100,10 @@ const Profile = () => {
         })
         .eq("id", user.id);
       
-      if (error) {
+      if (profileError) {
         toast({
           title: "Error updating profile",
-          description: error.message,
+          description: profileError.message,
           variant: "destructive",
         });
         return;
@@ -118,7 +134,7 @@ const Profile = () => {
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Your Profile</h1>
         
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
             <CardDescription>Update your personal details</CardDescription>
@@ -188,6 +204,64 @@ const Profile = () => {
               </Button>
             </CardFooter>
           </form>
+        </Card>
+        
+        {/* Manager ID Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Manager ID Information</CardTitle>
+            <CardDescription>Your connection to the organization</CardDescription>
+          </CardHeader>
+          
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="manager_id">
+                {isManager ? "Your Manager ID" : "Your Manager's ID"}
+              </Label>
+              <div className="flex gap-2 items-center">
+                <Input
+                  id="manager_id"
+                  value={managerId || ""}
+                  readOnly
+                  className="bg-gray-100 font-mono"
+                />
+                {isManager && (
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      if (managerId) {
+                        navigator.clipboard.writeText(managerId);
+                        toast({
+                          title: "Copied!",
+                          description: "Manager ID copied to clipboard",
+                        });
+                      }
+                    }}
+                    disabled={!managerId}
+                  >
+                    Copy
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-gray-500">
+                {isManager 
+                  ? "Share this ID with your employees so they can connect to your account" 
+                  : "This ID connects you to your manager's dashboard"}
+              </p>
+            </div>
+            
+            {isManager && (
+              <div className="mt-4 p-4 bg-blue-50 rounded-md">
+                <h4 className="font-medium text-blue-700">Manager ID Instructions</h4>
+                <p className="text-sm text-blue-600 mt-1">
+                  Your Manager ID is automatically generated when you sign up as a manager. 
+                  Share this ID with your employees so they can connect to your dashboard
+                  during their registration process.
+                </p>
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
     </div>
