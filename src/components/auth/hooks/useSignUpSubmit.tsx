@@ -60,6 +60,13 @@ export const useSignUpSubmit = ({
         return;
       }
       
+      // Require manager ID for employees
+      if (userRole === 'employee' && !managerId) {
+        setSignUpError("Manager ID is required for employee accounts");
+        setIsLoading(false);
+        return;
+      }
+      
       // Call the sign up function provided via props
       const { error, data, requiresConfirmation } = await onSignUp(
         email, 

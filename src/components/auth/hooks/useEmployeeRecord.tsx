@@ -37,6 +37,7 @@ export const useEmployeeRecord = () => {
         console.log(`Creating new employee record with role: ${userRole}`);
         
         let managerIdToUse = null;
+        let managerName = null;
         
         // If this is an employee with a manager ID, use that manager ID and validate it
         if (userRole === 'employee' && managerId) {
@@ -45,14 +46,30 @@ export const useEmployeeRecord = () => {
           // Verify the manager ID exists
           const { data: managerExists } = await supabase
             .from('employees')
-            .select('id, user_id')
+            .select('id, user_id, name')
             .eq('manager_id', managerId)
             .eq('job_title', 'Manager')
             .single();
             
           if (managerExists) {
-            console.log(`Found valid manager with ID: ${managerId}`);
+            console.log(`Found valid manager with ID: ${managerId}, name: ${managerExists.name}`);
             managerIdToUse = managerId;
+            managerName = managerExists.name;
+            
+            // Notify manager about new employee registration
+            if (managerExists.user_id) {
+              try {
+                // Create notification in the future when notification system is implemented
+                console.log(`Should notify manager ${managerExists.user_id} about new employee registration`);
+                
+                toast({
+                  title: "Connected to manager",
+                  description: `You've been connected to manager: ${managerExists.name}`,
+                });
+              } catch (notifyError) {
+                console.error("Failed to notify manager:", notifyError);
+              }
+            }
           } else {
             // Invalid manager ID, but still create the employee record
             console.log(`Warning: Manager ID ${managerId} not found, but creating employee record anyway`);
@@ -100,6 +117,14 @@ export const useEmployeeRecord = () => {
             });
             return false;
           }
+          
+          // Show success message with manager connection if applicable
+          if (userRole === 'employee' && managerName) {
+            toast({
+              title: "Account created",
+              description: `Your account has been connected to manager: ${managerName}`,
+            });
+          }
         }
       } else {
         // Employee record already exists, update it if necessary
@@ -131,14 +156,14 @@ export const useEmployeeRecord = () => {
             // Verify the manager ID exists before updating
             const { data: managerExists } = await supabase
               .from('employees')
-              .select('id')
+              .select('id, user_id, name')
               .eq('manager_id', managerId)
               .eq('job_title', 'Manager')
               .single();
               
             if (managerExists) {
               // Update existing employee record with manager ID
-              console.log(`Updating employee record with valid manager ID: ${managerId}`);
+              console.log(`Updating employee record with valid manager ID: ${managerId}, manager: ${managerExists.name}`);
               const { error: updateError } = await supabase
                 .from('employees')
                 .update({ 
@@ -154,6 +179,21 @@ export const useEmployeeRecord = () => {
                   variant: "default",
                 });
                 return false;
+              }
+              
+              // Notify the manager about new connection
+              if (managerExists.user_id) {
+                try {
+                  // Create notification in the future when notification system is implemented
+                  console.log(`Should notify manager ${managerExists.user_id} about employee connection`);
+                  
+                  toast({
+                    title: "Connected to manager",
+                    description: `You've been connected to manager: ${managerExists.name}`,
+                  });
+                } catch (notifyError) {
+                  console.error("Failed to notify manager:", notifyError);
+                }
               }
             } else {
               console.log(`Warning: Manager ID ${managerId} not found during update`);

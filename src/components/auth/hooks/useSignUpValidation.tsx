@@ -5,11 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 export const useSignUpValidation = (userRole: string, managerId: string | null) => {
   const [isValidatingManagerId, setIsValidatingManagerId] = useState(false);
   const [isManagerIdValid, setIsManagerIdValid] = useState<boolean | undefined>(undefined);
+  const [managerName, setManagerName] = useState<string | null>(null);
 
   // Validate the manager ID when it changes
   useEffect(() => {
     // Reset validation status when manager ID changes
     setIsManagerIdValid(undefined);
+    setManagerName(null);
     
     // Only validate if this is an employee role with a manager ID
     if (userRole === 'employee' && managerId) {
@@ -19,7 +21,7 @@ export const useSignUpValidation = (userRole: string, managerId: string | null) 
         try {
           const { data, error } = await supabase
             .from('employees')
-            .select('id')
+            .select('id, name')
             .eq('manager_id', managerId)
             .eq('job_title', 'Manager')
             .single();
@@ -28,8 +30,9 @@ export const useSignUpValidation = (userRole: string, managerId: string | null) 
             console.log(`Manager ID ${managerId} is invalid`);
             setIsManagerIdValid(false);
           } else {
-            console.log(`Manager ID ${managerId} is valid`);
+            console.log(`Manager ID ${managerId} is valid, manager: ${data.name}`);
             setIsManagerIdValid(true);
+            setManagerName(data.name);
           }
         } catch (error) {
           console.error("Error validating manager ID:", error);
@@ -47,6 +50,7 @@ export const useSignUpValidation = (userRole: string, managerId: string | null) 
 
   return {
     isValidatingManagerId,
-    isManagerIdValid
+    isManagerIdValid,
+    managerName
   };
 };

@@ -32,6 +32,7 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
     generateManagerId,
     isValidatingManagerId,
     isManagerIdValid,
+    managerName,
     signUpError
   } = useSignUp({ onSignUp });
 
@@ -83,6 +84,7 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
               isEmployeeView={true}
               isValid={isManagerIdValid}
               isChecking={isValidatingManagerId}
+              managerName={managerName}
             />
           )}
         </CardContent>
