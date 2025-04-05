@@ -69,27 +69,31 @@ export const useAuthActions = () => {
       
       if (error) {
         console.error('Sign up error:', error);
-        toast({
-          title: "Sign up failed",
-          description: error.message,
-          variant: "destructive",
-        });
+        
+        // Don't show toast here as we'll handle display in the component
         return { error };
       } 
       
       console.log("Sign up success, user:", data?.user?.id);
-      // Don't show toast here - we'll show it after role assignment
+      
+      // If user was created but confirmation is required, show different message
+      if (data?.user && !data?.session) {
+        console.log("User created but requires email confirmation");
+        
+        toast({
+          title: "Sign up successful",
+          description: "Please check your email to confirm your account before signing in.",
+        });
+        
+        return { error: null, data, requiresConfirmation: true };
+      }
       
       return { error: null, data };
     } catch (error) {
       console.error('Sign up error:', error);
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       
-      toast({
-        title: "An unexpected error occurred",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      // Don't show toast here as we'll handle display in the component
       
       return { 
         error: {

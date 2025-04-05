@@ -82,7 +82,7 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
       }
       
       // Call the sign up function provided via props
-      const { error } = await onSignUp(
+      const { error, data, requiresConfirmation } = await onSignUp(
         formState.email, 
         formState.password, 
         formState.firstName, 
@@ -93,12 +93,23 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
         console.error("Sign up error:", error);
         if (error.message.includes("duplicate key")) {
           setSignUpError("This email is already registered. Please try signing in instead.");
-        } else if (error.message.includes("permission denied")) {
-          setSignUpError("Database permission error. Please contact support.");
+        } else if (error.message.includes("permission denied") || error.message.includes("Database error")) {
+          setSignUpError("There was an error creating your account. The site administrator has been notified.");
+          // Log detailed error for debugging
+          console.error("Database permission error during signup:", error);
         } else {
           setSignUpError(error.message || "Failed to create account. Please try again.");
         }
         formState.setIsLoading(false);
+        return;
+      }
+      
+      if (requiresConfirmation) {
+        // Handle email confirmation case
+        formState.setIsLoading(false);
+        setTimeout(() => {
+          window.location.href = '/auth';
+        }, 1500);
         return;
       }
       
@@ -107,9 +118,12 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
       if (user) {
         console.log(`Got user with ID: ${user.id}, assigning role: ${roleManager.userRole}`);
         
+        let roleSuccess = false;
+        let employeeSuccess = false;
+        
         try {
           // Assign user role
-          const roleSuccess = await roleAssigner.assignUserRole(user.id, roleManager.userRole);
+          roleSuccess = await roleAssigner.assignUserRole(user.id, roleManager.userRole);
           
           if (!roleSuccess) {
             console.error("Failed to assign user role");
@@ -118,7 +132,7 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
           
           try {
             // Create or update employee record
-            const employeeSuccess = await employeeManager.createOrUpdateEmployeeRecord(
+            employeeSuccess = await employeeManager.createOrUpdateEmployeeRecord(
               user.id,
               formState.getFullName(),
               roleManager.userRole,
@@ -127,15 +141,12 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
             
             if (!employeeSuccess) {
               console.error("Failed to create/update employee record");
-              // Continue anyway - the user and role were created successfully
             }
           } catch (empError) {
             console.error("Error creating employee record:", empError);
-            // Continue anyway - the user and role were created successfully
           }
         } catch (roleError) {
           console.error("Error assigning role:", roleError);
-          // Continue anyway - the user was created successfully
         }
         
         // Show appropriate success message
@@ -153,6 +164,15 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
           toast({
             title: "Success", 
             description: `Account created with ${roleManager.userRole} role.`,
+          });
+        }
+        
+        // Show warning if role assignment or employee record creation failed
+        if (!roleSuccess || !employeeSuccess) {
+          toast({
+            title: "Warning",
+            description: "Your account was created, but some settings couldn't be saved. You can update them later in your profile.",
+            variant: "default",
           });
         }
         
