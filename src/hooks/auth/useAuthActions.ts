@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AuthError } from "@supabase/supabase-js";
@@ -64,13 +63,13 @@ export const useAuthActions = () => {
             first_name: firstName.trim(),
             last_name: lastName.trim(),
           },
+          // Ensure email confirmation is respected based on Supabase settings
+          emailRedirectTo: `${window.location.origin}/auth`,
         },
       });
       
       if (error) {
         console.error('Sign up error:', error);
-        
-        // Don't show toast here as we'll handle display in the component
         return { error };
       } 
       
@@ -92,8 +91,6 @@ export const useAuthActions = () => {
     } catch (error) {
       console.error('Sign up error:', error);
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
-      
-      // Don't show toast here as we'll handle display in the component
       
       return { 
         error: {

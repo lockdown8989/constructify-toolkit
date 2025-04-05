@@ -91,63 +91,65 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
       
       if (error) {
         console.error("Sign up error:", error);
-        if (error.message.includes("duplicate key")) {
+        
+        // Provide more specific error messages
+        if (error.message.includes("duplicate key") || error.message.includes("already registered")) {
           setSignUpError("This email is already registered. Please try signing in instead.");
         } else if (error.message.includes("permission denied") || error.message.includes("Database error")) {
-          setSignUpError("There was an error creating your account. The site administrator has been notified.");
-          // Log detailed error for debugging
+          setSignUpError("Account created but profile setup encountered an issue. You may need to update your profile details later.");
           console.error("Database permission error during signup:", error);
+          
+          // Show toast with more information
+          toast({
+            title: "Account created with limited setup",
+            description: "Your account was created, but some profile information couldn't be saved. You can update it later.",
+            variant: "default",
+          });
+          
+          // Redirect to sign in after a delay
+          setTimeout(() => {
+            window.location.href = '/auth';
+          }, 3000);
+          
+          return;
         } else {
           setSignUpError(error.message || "Failed to create account. Please try again.");
         }
+        
         formState.setIsLoading(false);
         return;
       }
       
       if (requiresConfirmation) {
         // Handle email confirmation case
+        toast({
+          title: "Email verification required",
+          description: "Please check your email to verify your account before signing in.",
+        });
+        
         formState.setIsLoading(false);
         setTimeout(() => {
           window.location.href = '/auth';
-        }, 1500);
+        }, 3000);
         return;
       }
       
+      // Attempt to get the user
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
         console.log(`Got user with ID: ${user.id}, assigning role: ${roleManager.userRole}`);
         
-        let roleSuccess = false;
-        let employeeSuccess = false;
-        
-        try {
-          // Assign user role
-          roleSuccess = await roleAssigner.assignUserRole(user.id, roleManager.userRole);
-          
-          if (!roleSuccess) {
-            console.error("Failed to assign user role");
-            // Continue anyway - the user was created successfully
-          }
-          
-          try {
-            // Create or update employee record
-            employeeSuccess = await employeeManager.createOrUpdateEmployeeRecord(
-              user.id,
-              formState.getFullName(),
-              roleManager.userRole,
-              roleManager.userRole === 'employee' ? roleManager.managerId : roleManager.managerId
-            );
-            
-            if (!employeeSuccess) {
-              console.error("Failed to create/update employee record");
-            }
-          } catch (empError) {
-            console.error("Error creating employee record:", empError);
-          }
-        } catch (roleError) {
-          console.error("Error assigning role:", roleError);
-        }
+        // Try role assignment and employee record creation in parallel
+        const [roleSuccess, employeeSuccess] = await Promise.allSettled([
+          roleAssigner.assignUserRole(user.id, roleManager.userRole),
+          employeeManager.createOrUpdateEmployeeRecord(
+            user.id,
+            formState.getFullName(),
+            roleManager.userRole,
+            roleManager.userRole === 'employer' ? roleManager.managerId : roleManager.managerId
+          )
+        ]);
         
         // Show appropriate success message
         if (roleManager.userRole === 'employer') {
@@ -168,7 +170,9 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
         }
         
         // Show warning if role assignment or employee record creation failed
-        if (!roleSuccess || !employeeSuccess) {
+        if (roleSuccess.status === 'rejected' || employeeSuccess.status === 'rejected' || 
+           (roleSuccess.status === 'fulfilled' && !roleSuccess.value) || 
+           (employeeSuccess.status === 'fulfilled' && !employeeSuccess.value)) {
           toast({
             title: "Warning",
             description: "Your account was created, but some settings couldn't be saved. You can update them later in your profile.",
@@ -179,14 +183,14 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
         // Redirect to sign in after a slight delay to ensure toasts are visible
         setTimeout(() => {
           window.location.href = '/auth';
-        }, 1500);
+        }, 3000);
       } else {
         setSignUpError("User created but session not established. Please try signing in.");
+        formState.setIsLoading(false);
       }
     } catch (error) {
       console.error("Sign up error:", error);
       setSignUpError(error instanceof Error ? error.message : "An unexpected error occurred during sign up");
-    } finally {
       formState.setIsLoading(false);
     }
   };
