@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Copy } from "lucide-react";
 
 interface ProfileData {
   first_name: string;
@@ -16,7 +17,7 @@ interface ProfileData {
 }
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, isManager } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<ProfileData>({
     first_name: "",
@@ -24,6 +25,7 @@ const Profile = () => {
     position: "",
     department: "",
   });
+  const [managerId, setManagerId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -51,6 +53,33 @@ const Profile = () => {
             department: data.department || "",
           });
         }
+        
+        // Fetch manager ID if the user is a manager
+        if (isManager) {
+          const { data: employeeData, error: employeeError } = await supabase
+            .from("employees")
+            .select("manager_id")
+            .eq("user_id", user.id)
+            .eq("job_title", "Manager")
+            .single();
+            
+          if (employeeError) {
+            console.error("Error fetching manager ID:", employeeError);
+          } else if (employeeData) {
+            setManagerId(employeeData.manager_id);
+          }
+        } else {
+          // Fetch manager ID for employee to display their manager's ID
+          const { data: employeeData, error: employeeError } = await supabase
+            .from("employees")
+            .select("manager_id")
+            .eq("user_id", user.id)
+            .single();
+            
+          if (!employeeError && employeeData) {
+            setManagerId(employeeData.manager_id);
+          }
+        }
       } catch (error) {
         console.error("Error:", error);
       } finally {
@@ -59,7 +88,7 @@ const Profile = () => {
     };
     
     fetchProfile();
-  }, [user]);
+  }, [user, isManager]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -106,6 +135,16 @@ const Profile = () => {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+  
+  const copyManagerId = () => {
+    if (managerId) {
+      navigator.clipboard.writeText(managerId);
+      toast({
+        title: "Manager ID copied",
+        description: "Manager ID has been copied to clipboard",
+      });
     }
   };
   
@@ -180,6 +219,38 @@ const Profile = () => {
                 />
                 <p className="text-xs text-gray-500">Email cannot be changed</p>
               </div>
+              
+              {managerId && (
+                <div className="space-y-2">
+                  <Label htmlFor="manager_id">
+                    {isManager ? "Your Manager ID" : "Your Manager's ID"}
+                  </Label>
+                  <div className="flex">
+                    <Input
+                      id="manager_id"
+                      value={managerId}
+                      disabled
+                      className="bg-gray-100"
+                    />
+                    {isManager && (
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="ml-2" 
+                        onClick={copyManagerId}
+                        title="Copy Manager ID"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  {isManager ? (
+                    <p className="text-xs text-gray-500">Share this ID with your employees to connect them to your account</p>
+                  ) : (
+                    <p className="text-xs text-gray-500">This is the ID of your manager's account</p>
+                  )}
+                </div>
+              )}
             </CardContent>
             
             <CardFooter>
