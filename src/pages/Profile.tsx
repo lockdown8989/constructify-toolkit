@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,17 +55,69 @@ const Profile = () => {
         
         // Fetch manager ID if the user is a manager
         if (isManager) {
+          // First try the simplified query without the job_title filter
           const { data: employeeData, error: employeeError } = await supabase
             .from("employees")
             .select("manager_id")
             .eq("user_id", user.id)
-            .eq("job_title", "Manager")
-            .single();
+            .maybeSingle(); // Use maybeSingle instead of single to avoid errors
             
           if (employeeError) {
             console.error("Error fetching manager ID:", employeeError);
-          } else if (employeeData) {
+          } else if (employeeData && employeeData.manager_id) {
             setManagerId(employeeData.manager_id);
+          } else {
+            // If no result, try looking in the user_roles to see if they're definitely a manager
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', user.id)
+              .eq('role', 'employer');
+              
+            console.log("Roles from database:", roleData);
+            console.log("Has employer role directly from DB:", roleData && roleData.length > 0);
+            
+            if (roleData && roleData.length > 0) {
+              // If they're definitely a manager in the roles table but no employee record,
+              // we need to ensure they have a manager ID in the employee table
+              
+              // First check if they have ANY employee record
+              const { data: anyEmployeeRecord } = await supabase
+                .from("employees")
+                .select("id")
+                .eq("user_id", user.id)
+                .maybeSingle();
+                
+              if (!anyEmployeeRecord) {
+                // Generate a new manager ID
+                const newManagerId = `MGR-${Math.floor(10000 + Math.random() * 90000)}`;
+                
+                // Create an employee record for the manager
+                const { error: insertError } = await supabase
+                  .from("employees")
+                  .insert({
+                    name: `${profile.first_name} ${profile.last_name}`.trim() || user.email?.split('@')[0] || 'Manager',
+                    job_title: 'Manager',
+                    department: profile.department || 'Management',
+                    site: 'Main Office',
+                    manager_id: newManagerId,
+                    status: 'Active',
+                    lifecycle: 'Employed',
+                    salary: 0,
+                    user_id: user.id
+                  });
+                  
+                if (insertError) {
+                  console.error("Error creating manager employee record:", insertError);
+                } else {
+                  setManagerId(newManagerId);
+                  toast({
+                    title: "Manager ID created",
+                    description: "A Manager ID has been created for your account."
+                  });
+                }
+              }
+            }
           }
         } else {
           // Fetch manager ID for employee to display their manager's ID
@@ -74,9 +125,9 @@ const Profile = () => {
             .from("employees")
             .select("manager_id")
             .eq("user_id", user.id)
-            .single();
+            .maybeSingle();
             
-          if (!employeeError && employeeData) {
+          if (!employeeError && employeeData && employeeData.manager_id) {
             setManagerId(employeeData.manager_id);
           }
         }
@@ -88,7 +139,7 @@ const Profile = () => {
     };
     
     fetchProfile();
-  }, [user, isManager]);
+  }, [user, isManager, profile.first_name, profile.last_name, profile.department]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -220,37 +271,44 @@ const Profile = () => {
                 <p className="text-xs text-gray-500">Email cannot be changed</p>
               </div>
               
-              {managerId && (
-                <div className="space-y-2">
-                  <Label htmlFor="manager_id">
-                    {isManager ? "Your Manager ID" : "Your Manager's ID"}
-                  </Label>
-                  <div className="flex">
-                    <Input
-                      id="manager_id"
-                      value={managerId}
-                      disabled
-                      className="bg-gray-100"
-                    />
-                    {isManager && (
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        className="ml-2" 
-                        onClick={copyManagerId}
-                        title="Copy Manager ID"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                  {isManager ? (
-                    <p className="text-xs text-gray-500">Share this ID with your employees to connect them to your account</p>
-                  ) : (
-                    <p className="text-xs text-gray-500">This is the ID of your manager's account</p>
+              <div className="space-y-2">
+                <Label htmlFor="manager_id">
+                  {isManager ? "Your Manager ID" : "Your Manager's ID"}
+                </Label>
+                <div className="flex">
+                  <Input
+                    id="manager_id"
+                    value={managerId || ""}
+                    disabled
+                    className="bg-gray-100"
+                    placeholder={isManager && !managerId ? "Loading or generating ID..." : "Not available"}
+                  />
+                  {isManager && managerId && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="ml-2" 
+                      onClick={copyManagerId}
+                      title="Copy Manager ID"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
                   )}
                 </div>
-              )}
+                {isManager ? (
+                  <p className="text-xs text-gray-500">
+                    {managerId 
+                      ? "Share this ID with your employees to connect them to your account" 
+                      : "Save your profile first to generate a Manager ID"}
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-500">
+                    {managerId 
+                      ? "This is the ID of your manager's account" 
+                      : "No manager connected to your account"}
+                  </p>
+                )}
+              </div>
             </CardContent>
             
             <CardFooter>
