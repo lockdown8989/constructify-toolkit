@@ -1,0 +1,2 @@
+
+export { useEmployeeRecord } from './useEmployeeRecord';

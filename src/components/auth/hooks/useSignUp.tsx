@@ -2,7 +2,7 @@
 import { useToast } from "@/hooks/use-toast";
 import { useSignUpForm } from "./useSignUpForm";
 import { useUserRole } from "./useUserRole";
-import { useEmployeeRecord } from "./useEmployeeRecord";
+import { useEmployeeRecord } from "./employee-record";
 import { useRoleAssignment } from "./useRoleAssignment";
 import { useSignUpValidation } from "./useSignUpValidation";
 import { useSignUpSubmit } from "./useSignUpSubmit";
