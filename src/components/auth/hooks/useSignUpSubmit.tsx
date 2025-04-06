@@ -45,7 +45,7 @@ export const useSignUpSubmit = ({
     setSignUpError(null);
     
     try {
-      console.log(`Attempting to sign up with role: ${userRole}`);
+      console.log(`Attempting to sign up with role: ${userRole}, Manager ID: ${managerId}`);
       
       // Validate required fields
       if (!email || !password || !firstName || !lastName) {
@@ -124,7 +124,7 @@ export const useSignUpSubmit = ({
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        console.log(`Got user with ID: ${user.id}, assigning role: ${userRole}`);
+        console.log(`Got user with ID: ${user.id}, assigning role: ${userRole}, manager ID: ${managerId || 'none'}`);
         
         // Try role assignment and employee record creation in parallel
         const [roleSuccess, employeeSuccess] = await Promise.allSettled([
@@ -133,15 +133,19 @@ export const useSignUpSubmit = ({
             user.id,
             getFullName(),
             userRole,
-            userRole === 'employer' ? managerId : managerId
+            managerId
           )
         ]);
+
+        console.log("Role assignment result:", roleSuccess);
+        console.log("Employee record creation result:", employeeSuccess);
         
         // Show appropriate success message
         if (userRole === 'employer') {
           toast({
             title: "Success",
             description: `Account created with manager role. Your Manager ID is ${managerId}. Share this with your employees to connect them to your account.`,
+            duration: 6000,
           });
         } else if (userRole === 'employee' && managerId) {
           toast({

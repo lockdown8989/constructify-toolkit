@@ -17,14 +17,17 @@ export const useUserRole = () => {
   // Generate a unique manager ID (format: MGR-XXXXX)
   const generateManagerId = () => {
     const randomPart = Math.floor(10000 + Math.random() * 90000); // 5-digit number
-    setManagerId(`MGR-${randomPart}`);
+    const newManagerId = `MGR-${randomPart}`;
+    console.log(`Generated manager ID: ${newManagerId}`);
+    setManagerId(newManagerId);
   };
 
   const handleRoleChange = (value: string) => {
     if (value === "admin" || value === "hr" || value === "employee" || value === "manager") {
       // If "manager" is selected, set userRole to "employer" for database compatibility
-      setUserRole(value === "manager" ? "employer" : value as UserRole);
-      console.log("Role selected:", value, "DB role:", value === "manager" ? "employer" : value);
+      const newRole = value === "manager" ? "employer" : value as UserRole;
+      setUserRole(newRole);
+      console.log("Role selected:", value, "DB role:", newRole);
       
       // Generate a manager ID if the role is manager
       if (value === "manager") {

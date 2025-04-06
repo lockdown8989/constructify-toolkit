@@ -37,7 +37,7 @@ const Profile = () => {
           .from("profiles")
           .select("*")
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
         
         if (error) {
           console.error("Error fetching profile:", error);
@@ -55,18 +55,22 @@ const Profile = () => {
         
         // Fetch manager ID if the user is a manager
         if (isManager) {
-          // First try the simplified query without the job_title filter
+          console.log("User is a manager, fetching manager ID");
           const { data: employeeData, error: employeeError } = await supabase
             .from("employees")
             .select("manager_id")
             .eq("user_id", user.id)
-            .maybeSingle(); // Use maybeSingle instead of single to avoid errors
+            .eq("job_title", "Manager")
+            .maybeSingle();
             
           if (employeeError) {
             console.error("Error fetching manager ID:", employeeError);
           } else if (employeeData && employeeData.manager_id) {
+            console.log("Found manager ID:", employeeData.manager_id);
             setManagerId(employeeData.manager_id);
           } else {
+            console.log("No manager ID found, checking if user has employer role");
+            
             // If no result, try looking in the user_roles to see if they're definitely a manager
             const { data: roleData } = await supabase
               .from('user_roles')
@@ -91,6 +95,7 @@ const Profile = () => {
               if (!anyEmployeeRecord) {
                 // Generate a new manager ID
                 const newManagerId = `MGR-${Math.floor(10000 + Math.random() * 90000)}`;
+                console.log("Creating new manager ID:", newManagerId);
                 
                 // Create an employee record for the manager
                 const { error: insertError } = await supabase
@@ -113,7 +118,32 @@ const Profile = () => {
                   setManagerId(newManagerId);
                   toast({
                     title: "Manager ID created",
-                    description: "A Manager ID has been created for your account."
+                    description: "A Manager ID has been created for your account.",
+                    duration: 5000
+                  });
+                }
+              } else {
+                console.log("User has employee record but no manager ID, updating record");
+                
+                // They have an employee record but no manager ID, update their record
+                const newManagerId = `MGR-${Math.floor(10000 + Math.random() * 90000)}`;
+                
+                const { error: updateError } = await supabase
+                  .from("employees")
+                  .update({ 
+                    manager_id: newManagerId,
+                    job_title: 'Manager' 
+                  })
+                  .eq("user_id", user.id);
+                  
+                if (updateError) {
+                  console.error("Error updating employee with manager ID:", updateError);
+                } else {
+                  setManagerId(newManagerId);
+                  toast({
+                    title: "Manager ID created",
+                    description: "A Manager ID has been created for your account.",
+                    duration: 5000
                   });
                 }
               }
@@ -121,6 +151,7 @@ const Profile = () => {
           }
         } else {
           // Fetch manager ID for employee to display their manager's ID
+          console.log("User is an employee, fetching their manager's ID");
           const { data: employeeData, error: employeeError } = await supabase
             .from("employees")
             .select("manager_id")
@@ -128,6 +159,7 @@ const Profile = () => {
             .maybeSingle();
             
           if (!employeeError && employeeData && employeeData.manager_id) {
+            console.log("Found employee's manager ID:", employeeData.manager_id);
             setManagerId(employeeData.manager_id);
           }
         }
@@ -139,7 +171,7 @@ const Profile = () => {
     };
     
     fetchProfile();
-  }, [user, isManager, profile.first_name, profile.last_name, profile.department]);
+  }, [user, isManager, profile.first_name, profile.last_name, profile.department, toast]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

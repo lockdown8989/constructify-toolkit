@@ -34,7 +34,7 @@ export const useEmployeeRecord = () => {
       // Create or update employee record based on whether it exists
       if (!existingEmployee || existingEmployee.length === 0) {
         // No existing record, create a new one
-        console.log(`Creating new employee record with role: ${userRole}`);
+        console.log(`Creating new employee record with role: ${userRole}, manager ID: ${managerId || 'none'}`);
         
         let managerIdToUse = null;
         let managerName = null;
@@ -49,7 +49,7 @@ export const useEmployeeRecord = () => {
             .select('id, user_id, name')
             .eq('manager_id', managerId)
             .eq('job_title', 'Manager')
-            .single();
+            .maybeSingle();
             
           if (managerExists) {
             console.log(`Found valid manager with ID: ${managerId}, name: ${managerExists.name}`);
@@ -159,7 +159,7 @@ export const useEmployeeRecord = () => {
               .select('id, user_id, name')
               .eq('manager_id', managerId)
               .eq('job_title', 'Manager')
-              .single();
+              .maybeSingle();
               
             if (managerExists) {
               // Update existing employee record with manager ID
