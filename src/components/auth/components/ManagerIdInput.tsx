@@ -38,7 +38,7 @@ export const ManagerIdInput = ({
   return (
     <div className="space-y-2">
       <Label htmlFor="managerId">
-        {isEmployeeView ? "Manager ID (Required for employees)" : "Your Manager ID"}
+        {isEmployeeView ? "Manager ID (Required)" : "Your Manager ID"}
       </Label>
       <div className="flex gap-2">
         <div className="relative flex-1">

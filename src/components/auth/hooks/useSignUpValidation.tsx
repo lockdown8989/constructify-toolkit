@@ -19,6 +19,14 @@ export const useSignUpValidation = (userRole: string, managerId: string | null) 
       
       const validateManagerId = async () => {
         try {
+          // First check basic format
+          if (!managerId.startsWith('MGR-')) {
+            console.log(`Manager ID ${managerId} has invalid format`);
+            setIsManagerIdValid(false);
+            setIsValidatingManagerId(false);
+            return;
+          }
+          
           const { data, error } = await supabase
             .from('employees')
             .select('id, name')

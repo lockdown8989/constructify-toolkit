@@ -60,9 +60,16 @@ export const useSignUpSubmit = ({
         return;
       }
       
-      // Require manager ID for employees
+      // Require manager ID for employees - this validation is now stricter
       if (userRole === 'employee' && !managerId) {
         setSignUpError("Manager ID is required for employee accounts");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Validate manager ID format for employees
+      if (userRole === 'employee' && managerId && !managerId.startsWith('MGR-')) {
+        setSignUpError("Invalid Manager ID format. Manager IDs must start with 'MGR-'");
         setIsLoading(false);
         return;
       }

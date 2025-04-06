@@ -7,7 +7,7 @@ export const useUserRole = () => {
   const [userRole, setUserRole] = useState<UserRole>("employee");
   const [managerId, setManagerId] = useState("");
   
-  // Generate a unique manager ID when the form mounts
+  // Generate a unique manager ID when the form mounts or role changes to employer
   useEffect(() => {
     if (userRole === "employer") {
       generateManagerId();
