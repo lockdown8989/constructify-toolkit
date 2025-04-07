@@ -9,6 +9,7 @@ import EmployeeDetailsModal from './modals/EmployeeDetailsModal';
 import { PeopleTableProps, Employee as EmployeeType } from './types';
 import AddEmployeeModal from './modals/AddEmployeeModal';
 import { Employee as DbEmployee } from '@/hooks/use-employees';
+import { useAuth } from '@/hooks/use-auth';
 
 const PeopleTable: React.FC<PeopleTableProps> = ({
   employees,
@@ -17,6 +18,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
   className,
   isLoading = false
 }) => {
+  const { isManager } = useAuth();
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -97,6 +99,8 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
     );
   }
   
+  const hasManagerConnections = employees.some(emp => emp.managerId);
+  
   return (
     <div className={cn("bg-white rounded-3xl card-shadow", className)}>
       {/* Table controls */}
@@ -106,6 +110,15 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
         onSearchChange={setSearchQuery}
         selectedCount={selectedEmployees.length}
       />
+      
+      {isManager && employees.length === 0 && (
+        <div className="p-6 text-center">
+          <p className="text-gray-500 mb-2">No employees connected yet</p>
+          <p className="text-sm text-gray-400">
+            Share your Manager ID with employees so they can connect to your account
+          </p>
+        </div>
+      )}
       
       {/* Desktop Table */}
       {!isMobile && (
