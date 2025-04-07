@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -248,6 +249,29 @@ const Profile = () => {
           
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
+              {/* Display Manager ID prominently for managers */}
+              {isManager && managerId && (
+                <div className="p-4 mb-4 bg-blue-50 border border-blue-200 rounded-md">
+                  <h3 className="text-lg font-medium text-blue-800 mb-1">Your Manager ID</h3>
+                  <div className="flex items-center">
+                    <span className="font-mono text-lg text-blue-700 mr-2">{managerId}</span>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={copyManagerId}
+                      title="Copy Manager ID"
+                      className="h-8"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-sm text-blue-600 mt-1">
+                    Share this ID with your employees to connect them to your account
+                  </p>
+                </div>
+              )}
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="first_name">First Name</Label>
@@ -303,44 +327,47 @@ const Profile = () => {
                 <p className="text-xs text-gray-500">Email cannot be changed</p>
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="manager_id">
-                  {isManager ? "Your Manager ID" : "Your Manager's ID"}
-                </Label>
-                <div className="flex">
-                  <Input
-                    id="manager_id"
-                    value={managerId || ""}
-                    disabled
-                    className="bg-gray-100"
-                    placeholder={isManager && !managerId ? "Loading or generating ID..." : "Not available"}
-                  />
-                  {isManager && managerId && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="ml-2" 
-                      onClick={copyManagerId}
-                      title="Copy Manager ID"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
+              {/* Manager ID section (kept but less prominent) */}
+              {(!isManager || !managerId) && (
+                <div className="space-y-2">
+                  <Label htmlFor="manager_id">
+                    {isManager ? "Your Manager ID" : "Your Manager's ID"}
+                  </Label>
+                  <div className="flex">
+                    <Input
+                      id="manager_id"
+                      value={managerId || ""}
+                      disabled
+                      className="bg-gray-100"
+                      placeholder={isManager && !managerId ? "Loading or generating ID..." : "Not available"}
+                    />
+                    {isManager && managerId && (
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="ml-2" 
+                        onClick={copyManagerId}
+                        title="Copy Manager ID"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  {isManager ? (
+                    <p className="text-xs text-gray-500">
+                      {managerId 
+                        ? "Share this ID with your employees to connect them to your account" 
+                        : "Save your profile first to generate a Manager ID"}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-gray-500">
+                      {managerId 
+                        ? "This is the ID of your manager's account" 
+                        : "No manager connected to your account"}
+                    </p>
                   )}
                 </div>
-                {isManager ? (
-                  <p className="text-xs text-gray-500">
-                    {managerId 
-                      ? "Share this ID with your employees to connect them to your account" 
-                      : "Save your profile first to generate a Manager ID"}
-                  </p>
-                ) : (
-                  <p className="text-xs text-gray-500">
-                    {managerId 
-                      ? "This is the ID of your manager's account" 
-                      : "No manager connected to your account"}
-                  </p>
-                )}
-              </div>
+              )}
             </CardContent>
             
             <CardFooter>
