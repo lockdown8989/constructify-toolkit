@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AuthError } from "@supabase/supabase-js";
@@ -19,8 +20,14 @@ export const useAuthActions = () => {
         };
       }
       
+      // Ensure email has no whitespace
+      const trimmedEmail = email.trim();
+      
+      // Log the exact credentials being sent (without the password)
+      console.log(`Signing in with email: "${trimmedEmail}"`);
+      
       const { data, error } = await supabase.auth.signInWithPassword({ 
-        email: email.trim(), 
+        email: trimmedEmail, 
         password 
       });
       

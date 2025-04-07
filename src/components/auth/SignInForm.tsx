@@ -45,6 +45,11 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
             onPasswordChange={handlePasswordChange}
             onForgotPassword={onForgotPassword}
           />
+          
+          <div className="text-xs text-gray-500">
+            <p>Don't have an account yet? Click the "Sign Up" tab above to create one.</p>
+            <p className="mt-1">For testing: Make sure your account exists in the Supabase Auth service.</p>
+          </div>
         </CardContent>
         
         <CardFooter>

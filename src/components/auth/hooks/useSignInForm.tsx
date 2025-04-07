@@ -41,17 +41,28 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
         return;
       }
       
-      const { data, error } = await onSignIn(email, password);
+      // For debugging - remove email/password whitespace
+      const trimmedEmail = email.trim();
+      const result = await onSignIn(trimmedEmail, password);
       
-      if (error) {
-        console.error("Authentication error:", error.message);
-        setErrorMessage(error.message || "Invalid login credentials");
+      console.log("Sign in result:", result);
+      
+      if (result.error) {
+        console.error("Authentication error:", result.error.message);
+        
+        // Provide more specific error messages based on error code
+        if (result.error.message === "Invalid login credentials") {
+          setErrorMessage("Invalid email or password. Please check your credentials and try again.");
+        } else {
+          setErrorMessage(result.error.message || "Invalid login credentials");
+        }
+        
         setIsLoading(false);
         return;
       }
       
-      if (data?.user) {
-        console.log("Sign in successful, user:", data.user.email);
+      if (result.data?.user) {
+        console.log("Sign in successful, user:", result.data.user.email);
         toast({
           title: "Success",
           description: "Signed in successfully",
