@@ -76,10 +76,11 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
             console.log("Has employer role directly from DB:", roleData && roleData.length > 0);
             
             if (roleData && roleData.length > 0) {
-              // If they're definitely a manager in the roles table but no employee record,
-              // we need to ensure they have a manager ID in the employee table
+              // Generate a new manager ID immediately
+              const newManagerId = `MGR-${Math.floor(10000 + Math.random() * 90000)}`;
+              console.log("Creating new manager ID:", newManagerId);
               
-              // First check if they have ANY employee record
+              // Check if they have ANY employee record
               const { data: anyEmployeeRecord } = await supabase
                 .from("employees")
                 .select("id")
@@ -87,10 +88,6 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
                 .maybeSingle();
                 
               if (!anyEmployeeRecord) {
-                // Generate a new manager ID
-                const newManagerId = `MGR-${Math.floor(10000 + Math.random() * 90000)}`;
-                console.log("Creating new manager ID:", newManagerId);
-                
                 // Create an employee record for the manager
                 const { error: insertError } = await supabase
                   .from("employees")
@@ -120,8 +117,6 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
                 console.log("User has employee record but no manager ID, updating record");
                 
                 // They have an employee record but no manager ID, update their record
-                const newManagerId = `MGR-${Math.floor(10000 + Math.random() * 90000)}`;
-                
                 const { error: updateError } = await supabase
                   .from("employees")
                   .update({ 
@@ -165,7 +160,7 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
     };
     
     fetchProfile();
-  }, [user, isManager, profile.first_name, profile.last_name, profile.department, toast]);
+  }, [user, isManager, toast]);
   
   return { profile, setProfile, managerId, isLoading };
 };

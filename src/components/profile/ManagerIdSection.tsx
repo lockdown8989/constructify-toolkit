@@ -21,27 +21,33 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
     }
   };
   
-  if (!isManager || !managerId) return null;
+  if (!isManager) return null;
   
   return (
     <div className="p-4 mb-4 bg-blue-50 border border-blue-200 rounded-md">
       <h3 className="text-lg font-medium text-blue-800 mb-1">Your Manager ID</h3>
-      <div className="flex items-center">
-        <span className="font-mono text-lg text-blue-700 mr-2">{managerId}</span>
-        <Button 
-          type="button" 
-          variant="outline" 
-          size="sm"
-          onClick={copyManagerId}
-          title="Copy Manager ID"
-          className="h-8"
-        >
-          <Copy className="h-4 w-4" />
-        </Button>
-      </div>
-      <p className="text-sm text-blue-600 mt-1">
-        Share this ID with your employees to connect them to your account
-      </p>
+      {managerId ? (
+        <>
+          <div className="flex items-center">
+            <span className="font-mono text-lg text-blue-700 mr-2">{managerId}</span>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={copyManagerId}
+              title="Copy Manager ID"
+              className="h-8"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-sm text-blue-600 mt-1">
+            Share this ID with your employees to connect them to your account
+          </p>
+        </>
+      ) : (
+        <p className="text-blue-600">Generating your manager ID...</p>
+      )}
     </div>
   );
 };

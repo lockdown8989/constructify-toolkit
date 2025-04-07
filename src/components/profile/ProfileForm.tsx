@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +32,38 @@ export const ProfileForm = ({ user, isManager, managerId }: ProfileFormProps) =>
     department: "",
   });
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .maybeSingle();
+        
+        if (error) {
+          console.error("Error fetching profile:", error);
+          return;
+        }
+        
+        if (data) {
+          setProfile({
+            first_name: data.first_name || "",
+            last_name: data.last_name || "",
+            position: data.position || "",
+            department: data.department || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    };
+    
+    fetchProfileData();
+  }, [user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -142,7 +174,7 @@ export const ProfileForm = ({ user, isManager, managerId }: ProfileFormProps) =>
           <p className="text-xs text-gray-500">Email cannot be changed</p>
         </div>
         
-        {/* Manager ID field (shown for employees or managers without an ID) */}
+        {/* Manager ID field (shown for employees or as backup for managers) */}
         <ManagerIdField managerId={managerId} isManager={isManager} />
       </CardContent>
       
