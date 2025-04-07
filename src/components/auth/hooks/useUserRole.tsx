@@ -16,6 +16,7 @@ export const useUserRole = () => {
 
   // Generate a unique manager ID (format: MGR-XXXXX)
   const generateManagerId = () => {
+    // Ensure 5-digit format with leading zeros if needed
     const randomPart = Math.floor(10000 + Math.random() * 90000); // 5-digit number
     const newManagerId = `MGR-${randomPart}`;
     console.log(`Generated manager ID: ${newManagerId}`);

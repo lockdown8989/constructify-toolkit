@@ -76,8 +76,9 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
             console.log("Has employer role directly from DB:", roleData && roleData.length > 0);
             
             if (roleData && roleData.length > 0) {
-              // Generate a new manager ID immediately
-              const newManagerId = `MGR-${Math.floor(10000 + Math.random() * 90000)}`;
+              // Generate a new manager ID with format MGR-XXXXX
+              const randomPart = Math.floor(10000 + Math.random() * 90000); // 5-digit number
+              const newManagerId = `MGR-${randomPart}`;
               console.log("Creating new manager ID:", newManagerId);
               
               // Check if they have ANY employee record
@@ -109,7 +110,7 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
                   setManagerId(newManagerId);
                   toast({
                     title: "Manager ID created",
-                    description: "A Manager ID has been created for your account.",
+                    description: `A Manager ID (${newManagerId}) has been created for your account.`,
                     duration: 5000
                   });
                 }
@@ -131,7 +132,7 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
                   setManagerId(newManagerId);
                   toast({
                     title: "Manager ID created",
-                    description: "A Manager ID has been created for your account.",
+                    description: `A Manager ID (${newManagerId}) has been created for your account.`,
                     duration: 5000
                   });
                 }
