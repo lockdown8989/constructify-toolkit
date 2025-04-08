@@ -80,32 +80,37 @@ export const useEmployeeCreator = () => {
     
     console.log(`Creating record with job title: ${jobTitle} and manager ID: ${managerId || 'none'}`);
     
-    const { error } = await supabase
-      .from('employees')
-      .insert({
-        name: fullName,
-        job_title: jobTitle,
-        department: 'General',
-        site: 'Main Office',
-        salary: 0, // Default salary, to be updated later
-        start_date: new Date().toISOString().split('T')[0],
-        status: 'Active',
-        lifecycle: 'Employed',
-        manager_id: managerId,
-        user_id: userId // Link the employee record to the user account
-      });
+    try {
+      const { error } = await supabase
+        .from('employees')
+        .insert({
+          name: fullName,
+          job_title: jobTitle,
+          department: 'General',
+          site: 'Main Office',
+          salary: 0, // Default salary, to be updated later
+          start_date: new Date().toISOString().split('T')[0],
+          status: 'Active', // Ensure this matches exactly what the database constraint expects
+          lifecycle: 'Employed', // Ensure this matches exactly what the database constraint expects
+          manager_id: managerId,
+          user_id: userId // Link the employee record to the user account
+        });
+        
+      if (error) {
+        console.error("Error creating employee record:", error);
+        toast({
+          title: "Warning",
+          description: "Account created but failed to create employee record: " + error.message,
+          variant: "default",
+        });
+        return false;
+      }
       
-    if (error) {
-      console.error("Error creating employee record:", error);
-      toast({
-        title: "Warning",
-        description: "Account created but failed to create employee record: " + error.message,
-        variant: "default",
-      });
+      return true;
+    } catch (error) {
+      console.error("Error in insertEmployeeRecord:", error);
       return false;
     }
-    
-    return true;
   };
 
   return { createEmployeeRecord };

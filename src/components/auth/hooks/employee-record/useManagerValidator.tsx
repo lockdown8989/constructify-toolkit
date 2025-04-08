@@ -24,7 +24,25 @@ export const useManagerValidator = () => {
         return managerExists;
       }
       
-      console.log(`Manager ID ${managerId} not found`);
+      // If no direct match found, check if ANY employee has this manager ID
+      // This is needed because some managers might not have 'Manager' as job_title yet
+      const { data: anyEmployeeWithManagerId, error: secondError } = await supabase
+        .from('employees')
+        .select('id, user_id, name')
+        .eq('manager_id', managerId)
+        .maybeSingle();
+        
+      if (secondError) {
+        console.error("Error in secondary manager ID check:", secondError);
+        return null;
+      }
+      
+      if (anyEmployeeWithManagerId) {
+        console.log(`Found employee with manager ID: ${managerId}, name: ${anyEmployeeWithManagerId.name}`);
+        return anyEmployeeWithManagerId;
+      }
+      
+      console.log(`Manager ID ${managerId} not found in database`);
       return null;
     } catch (error) {
       console.error("Manager validation error:", error);

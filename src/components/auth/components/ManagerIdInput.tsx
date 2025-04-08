@@ -35,6 +35,13 @@ export const ManagerIdInput = ({
     return "";
   };
 
+  // For debugging
+  React.useEffect(() => {
+    if (isEmployeeView && managerId) {
+      console.log(`ManagerIdInput - ID: ${managerId}, valid: ${isValid}, checking: ${isChecking}`);
+    }
+  }, [isEmployeeView, managerId, isValid, isChecking]);
+
   return (
     <div className="space-y-2">
       <Label htmlFor="managerId">

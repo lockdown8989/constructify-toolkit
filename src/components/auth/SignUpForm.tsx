@@ -36,6 +36,11 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
     signUpError
   } = useSignUp({ onSignUp });
 
+  // Add extra logging for debugging
+  React.useEffect(() => {
+    console.log(`Manager ID in form: ${managerId}, validation status: ${isManagerIdValid}`);
+  }, [managerId, isManagerIdValid]);
+
   return (
     <Card>
       <CardHeader>
