@@ -33,7 +33,6 @@ export const useEmployeeCreator = () => {
         await notifyManager(managerInfo, toast);
       } else {
         // Still store unverified manager ID for later validation
-        console.log(`Warning: Manager ID ${managerId} could not be verified, storing it anyway for later validation`);
         managerIdToUse = managerId;
         toast({
           title: "Warning",
@@ -80,8 +79,7 @@ export const useEmployeeCreator = () => {
     const jobTitle = userRole === 'employer' ? 'Manager' : 'Employee';
     
     console.log(`Creating record with job title: ${jobTitle} and manager ID: ${managerId || 'none'}`);
-
-    // We know the database has specific allowed values for status and lifecycle
+    
     const { error } = await supabase
       .from('employees')
       .insert({
@@ -91,8 +89,8 @@ export const useEmployeeCreator = () => {
         site: 'Main Office',
         salary: 0, // Default salary, to be updated later
         start_date: new Date().toISOString().split('T')[0],
-        status: 'Active', // Using known allowed value
-        lifecycle: 'Employed', // Using known allowed value
+        status: 'Active',
+        lifecycle: 'Employed',
         manager_id: managerId,
         user_id: userId // Link the employee record to the user account
       });
