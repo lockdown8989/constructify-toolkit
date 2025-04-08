@@ -29,13 +29,16 @@ export const useSignUpValidation = (userRole: string, managerId: string | null) 
           
           const { data, error } = await supabase
             .from('employees')
-            .select('id, name')
-            .eq('manager_id', managerId)
+            .select('id, name, manager_id')
+            .eq('manager_id', managerId.trim())
             .eq('job_title', 'Manager')
-            .single();
+            .maybeSingle();
             
-          if (error || !data) {
-            console.log(`Manager ID ${managerId} is invalid`);
+          if (error) {
+            console.error("Error validating manager ID during signup:", error);
+            setIsManagerIdValid(false);
+          } else if (!data) {
+            console.log(`Manager ID ${managerId} not found in database`);
             setIsManagerIdValid(false);
           } else {
             console.log(`Manager ID ${managerId} is valid, manager: ${data.name}`);

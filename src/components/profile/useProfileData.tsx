@@ -27,6 +27,9 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
       if (!user) return;
       
       try {
+        // Start loading
+        setIsLoading(true);
+        
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
@@ -35,6 +38,11 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
         
         if (error) {
           console.error("Error fetching profile:", error);
+          toast({
+            title: "Error",
+            description: "Failed to load profile data. Please try refreshing the page.",
+            variant: "destructive",
+          });
           return;
         }
         
@@ -59,6 +67,11 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
             
           if (employeeError) {
             console.error("Error fetching manager ID:", employeeError);
+            toast({
+              title: "Warning",
+              description: "Could not retrieve your Manager ID. Please try refreshing.",
+              variant: "default",
+            });
           } else if (employeeData && employeeData.manager_id) {
             console.log("Found manager ID:", employeeData.manager_id);
             setManagerId(employeeData.manager_id);
@@ -84,7 +97,7 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
               // Check if they have ANY employee record
               const { data: anyEmployeeRecord } = await supabase
                 .from("employees")
-                .select("id")
+                .select("id, status, lifecycle")
                 .eq("user_id", user.id)
                 .maybeSingle();
                 
@@ -98,16 +111,19 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
                     department: profile.department || 'Management',
                     site: 'Main Office',
                     manager_id: newManagerId,
-                    status: 'Active',
-                    lifecycle: 'Employed',
+                    status: 'Active', // Use an allowed value from the database
+                    lifecycle: 'Employed', // Use an allowed value from the database
                     salary: 0,
                     user_id: user.id
                   });
                   
                 if (insertError) {
                   console.error("Error creating manager employee record:", insertError);
-                  // If there's an error, we should still set the manager ID for UI display
-                  setManagerId(newManagerId);
+                  toast({
+                    title: "Error",
+                    description: "Failed to generate your Manager ID. Please contact support.",
+                    variant: "destructive",
+                  });
                 } else {
                   setManagerId(newManagerId);
                   toast({
@@ -117,7 +133,7 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
                   });
                 }
               } else {
-                console.log("User has employee record but no manager ID, updating record");
+                console.log("User has employee record but no manager ID, updating record:", anyEmployeeRecord);
                 
                 // They have an employee record but no manager ID, update their record
                 const { error: updateError } = await supabase
@@ -130,8 +146,11 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
                   
                 if (updateError) {
                   console.error("Error updating employee with manager ID:", updateError);
-                  // Even if there's an error updating, we should still set the manager ID for UI display
-                  setManagerId(newManagerId);
+                  toast({
+                    title: "Error",
+                    description: "Failed to update your Manager ID. Please try again later.",
+                    variant: "destructive",
+                  });
                 } else {
                   setManagerId(newManagerId);
                   toast({
@@ -159,6 +178,11 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
         }
       } catch (error) {
         console.error("Error:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load profile data. Please try refreshing the page.",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
