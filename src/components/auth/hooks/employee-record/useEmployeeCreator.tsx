@@ -81,10 +81,7 @@ export const useEmployeeCreator = () => {
     
     console.log(`Creating record with job title: ${jobTitle} and manager ID: ${managerId || 'none'}`);
 
-    // Check the status values allowed by the database
-    const allowedStatus = ['Active', 'Inactive', 'On Leave', 'Terminated'];
-    const allowedLifecycle = ['Employed', 'Probation', 'Terminated', 'Onboarding'];
-    
+    // We know the database has specific allowed values for status and lifecycle
     const { error } = await supabase
       .from('employees')
       .insert({
@@ -94,8 +91,8 @@ export const useEmployeeCreator = () => {
         site: 'Main Office',
         salary: 0, // Default salary, to be updated later
         start_date: new Date().toISOString().split('T')[0],
-        status: 'Active', // Use an allowed value
-        lifecycle: 'Employed', // Use an allowed value
+        status: 'Active', // Using known allowed value
+        lifecycle: 'Employed', // Using known allowed value
         manager_id: managerId,
         user_id: userId // Link the employee record to the user account
       });

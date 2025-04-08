@@ -102,7 +102,7 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
                 .maybeSingle();
                 
               if (!anyEmployeeRecord) {
-                // Create an employee record for the manager
+                // Create an employee record for the manager with valid status values
                 const { error: insertError } = await supabase
                   .from("employees")
                   .insert({
@@ -111,8 +111,8 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
                     department: profile.department || 'Management',
                     site: 'Main Office',
                     manager_id: newManagerId,
-                    status: 'Active', // Use an allowed value from the database
-                    lifecycle: 'Employed', // Use an allowed value from the database
+                    status: 'Active', // This must match exactly what's allowed in the database
+                    lifecycle: 'Employed', // This must match exactly what's allowed in the database
                     salary: 0,
                     user_id: user.id
                   });
