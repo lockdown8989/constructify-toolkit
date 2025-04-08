@@ -3,13 +3,19 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { useProfileData } from "@/components/profile/useProfileData";
+import { Loader2 } from "lucide-react";
 
 const Profile = () => {
   const { user, isManager } = useAuth();
   const { profile, managerId, isLoading } = useProfileData(user, isManager);
   
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-lg">Loading your profile...</span>
+      </div>
+    );
   }
   
   return (

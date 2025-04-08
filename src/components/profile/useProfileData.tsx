@@ -106,6 +106,8 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
                   
                 if (insertError) {
                   console.error("Error creating manager employee record:", insertError);
+                  // If there's an error, we should still set the manager ID for UI display
+                  setManagerId(newManagerId);
                 } else {
                   setManagerId(newManagerId);
                   toast({
@@ -128,6 +130,8 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
                   
                 if (updateError) {
                   console.error("Error updating employee with manager ID:", updateError);
+                  // Even if there's an error updating, we should still set the manager ID for UI display
+                  setManagerId(newManagerId);
                 } else {
                   setManagerId(newManagerId);
                   toast({
@@ -161,7 +165,7 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
     };
     
     fetchProfile();
-  }, [user, isManager, toast]);
+  }, [user, isManager, toast, profile.first_name, profile.last_name, profile.department]);
   
   return { profile, setProfile, managerId, isLoading };
 };
