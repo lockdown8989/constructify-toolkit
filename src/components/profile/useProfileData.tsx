@@ -47,14 +47,13 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
           });
         }
         
-        // Fetch manager ID if the user is a manager
+        // Fetch manager ID if the user is a manager - only retrieve, don't generate here
         if (isManager) {
           console.log("User is a manager, fetching manager ID");
           const { data: employeeData, error: employeeError } = await supabase
             .from("employees")
             .select("manager_id")
             .eq("user_id", user.id)
-            .eq("job_title", "Manager")
             .maybeSingle();
             
           if (employeeError) {
@@ -63,9 +62,11 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
             console.log("Found manager ID:", employeeData.manager_id);
             setManagerId(employeeData.manager_id);
           } else {
+            // Only if we don't find a manager ID, check if they have the employer role
+            // but DON'T generate a new ID here, just suggest the user to do so
             console.log("No manager ID found, checking if user has employer role");
             
-            // If no result, try looking in the user_roles to see if they're definitely a manager
+            // Check if they're definitely a manager
             const { data: roleData } = await supabase
               .from('user_roles')
               .select('role')
@@ -73,74 +74,11 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
               .eq('role', 'employer');
               
             console.log("Roles from database:", roleData);
-            console.log("Has employer role directly from DB:", roleData && roleData.length > 0);
             
             if (roleData && roleData.length > 0) {
-              // Generate a new manager ID with format MGR-XXXXX
-              const randomPart = Math.floor(10000 + Math.random() * 90000); // 5-digit number
-              const newManagerId = `MGR-${randomPart}`;
-              console.log("Creating new manager ID:", newManagerId);
-              
-              // Check if they have ANY employee record
-              const { data: anyEmployeeRecord } = await supabase
-                .from("employees")
-                .select("id")
-                .eq("user_id", user.id)
-                .maybeSingle();
-                
-              if (!anyEmployeeRecord) {
-                // Create an employee record for the manager
-                const { error: insertError } = await supabase
-                  .from("employees")
-                  .insert({
-                    name: `${profile.first_name} ${profile.last_name}`.trim() || user.email?.split('@')[0] || 'Manager',
-                    job_title: 'Manager',
-                    department: profile.department || 'Management',
-                    site: 'Main Office',
-                    manager_id: newManagerId,
-                    status: 'Active',
-                    lifecycle: 'Employed',
-                    salary: 0,
-                    user_id: user.id
-                  });
-                  
-                if (insertError) {
-                  console.error("Error creating manager employee record:", insertError);
-                  // If there's an error, we should still set the manager ID for UI display
-                  setManagerId(newManagerId);
-                } else {
-                  setManagerId(newManagerId);
-                  toast({
-                    title: "Manager ID created",
-                    description: `A Manager ID (${newManagerId}) has been created for your account.`,
-                    duration: 5000
-                  });
-                }
-              } else {
-                console.log("User has employee record but no manager ID, updating record");
-                
-                // They have an employee record but no manager ID, update their record
-                const { error: updateError } = await supabase
-                  .from("employees")
-                  .update({ 
-                    manager_id: newManagerId,
-                    job_title: 'Manager' 
-                  })
-                  .eq("user_id", user.id);
-                  
-                if (updateError) {
-                  console.error("Error updating employee with manager ID:", updateError);
-                  // Even if there's an error updating, we should still set the manager ID for UI display
-                  setManagerId(newManagerId);
-                } else {
-                  setManagerId(newManagerId);
-                  toast({
-                    title: "Manager ID created",
-                    description: `A Manager ID (${newManagerId}) has been created for your account.`,
-                    duration: 5000
-                  });
-                }
-              }
+              console.log("User has employer role but no manager ID set yet");
+              // Set managerId to null, don't generate a new one
+              setManagerId(null);
             }
           }
         } else {
@@ -165,7 +103,7 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
     };
     
     fetchProfile();
-  }, [user, isManager, toast, profile.first_name, profile.last_name, profile.department]);
+  }, [user, isManager]);
   
   return { profile, setProfile, managerId, isLoading };
 };

@@ -5,41 +5,27 @@ export const useManagerValidator = () => {
   const validateManagerId = async (managerId: string) => {
     console.log(`Verifying manager ID: ${managerId}`);
     
+    if (!managerId || !managerId.startsWith('MGR-')) {
+      console.log(`Invalid manager ID format: ${managerId}`);
+      return null;
+    }
+    
     try {
-      // Verify the manager ID exists
-      const { data: managerExists, error } = await supabase
+      // Verify the manager ID exists in employees table
+      const { data: managerData, error: managerError } = await supabase
         .from('employees')
-        .select('id, user_id, name')
-        .eq('manager_id', managerId)
-        .eq('job_title', 'Manager')
-        .maybeSingle();
-        
-      if (error) {
-        console.error("Error validating manager ID:", error);
-        return null;
-      }
-        
-      if (managerExists) {
-        console.log(`Found valid manager with ID: ${managerId}, name: ${managerExists.name}`);
-        return managerExists;
-      }
-      
-      // If no direct match found, check if ANY employee has this manager ID
-      // This is needed because some managers might not have 'Manager' as job_title yet
-      const { data: anyEmployeeWithManagerId, error: secondError } = await supabase
-        .from('employees')
-        .select('id, user_id, name')
+        .select('id, user_id, name, manager_id')
         .eq('manager_id', managerId)
         .maybeSingle();
         
-      if (secondError) {
-        console.error("Error in secondary manager ID check:", secondError);
+      if (managerError) {
+        console.error("Error validating manager ID:", managerError);
         return null;
       }
-      
-      if (anyEmployeeWithManagerId) {
-        console.log(`Found employee with manager ID: ${managerId}, name: ${anyEmployeeWithManagerId.name}`);
-        return anyEmployeeWithManagerId;
+        
+      if (managerData) {
+        console.log(`Found valid manager with ID: ${managerId}, name: ${managerData.name}`);
+        return managerData;
       }
       
       console.log(`Manager ID ${managerId} not found in database`);

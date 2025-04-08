@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Copy, RefreshCw } from "lucide-react";
+import { Copy, RefreshCw, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +24,7 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
     }
   };
 
-  const regenerateManagerId = async () => {
+  const generateManagerId = async () => {
     setIsRegenerating(true);
     try {
       // Generate a new manager ID with format MGR-XXXXX
@@ -33,32 +33,104 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
 
       const { data: userData } = await supabase.auth.getUser();
       if (userData.user) {
-        // Update the employee record with the new manager ID
-        const { error } = await supabase
+        // Check if the user already has an employee record
+        const { data: existingEmployee, error: checkError } = await supabase
           .from("employees")
-          .update({ manager_id: newManagerId })
-          .eq("user_id", userData.user.id);
-
-        if (error) {
-          console.error("Error updating manager ID:", error);
+          .select("id")
+          .eq("user_id", userData.user.id)
+          .maybeSingle();
+          
+        if (checkError) {
+          console.error("Error checking existing employee:", checkError);
           toast({
             title: "Error",
-            description: "Failed to regenerate Manager ID. Please try again.",
+            description: "Failed to check existing records. Please try again.",
             variant: "destructive",
           });
+          setIsRegenerating(false);
+          return;
+        }
+        
+        if (existingEmployee) {
+          // Update existing record
+          const { error } = await supabase
+            .from("employees")
+            .update({ 
+              manager_id: newManagerId,
+              job_title: 'Manager',
+              status: 'Active',
+              lifecycle: 'Employed' 
+            })
+            .eq("user_id", userData.user.id);
+
+          if (error) {
+            console.error("Error updating manager ID:", error);
+            toast({
+              title: "Error",
+              description: "Failed to generate Manager ID. Please try again.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Success",
+              description: `New Manager ID generated: ${newManagerId}`,
+            });
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+          }
         } else {
-          // Reload the page to fetch the new manager ID
-          toast({
-            title: "Success",
-            description: `New Manager ID generated: ${newManagerId}`,
-          });
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
+          // Create new employee record
+          // Get profile data for the name
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("first_name, last_name")
+            .eq("id", userData.user.id)
+            .maybeSingle();
+            
+          const fullName = profileData ? 
+            `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() : 
+            userData.user.email?.split('@')[0] || 'Manager';
+            
+          const { error } = await supabase
+            .from("employees")
+            .insert({
+              name: fullName,
+              job_title: 'Manager',
+              department: 'Management',
+              site: 'Main Office',
+              manager_id: newManagerId,
+              status: 'Active',
+              lifecycle: 'Employed',
+              salary: 0,
+              user_id: userData.user.id
+            });
+
+          if (error) {
+            console.error("Error creating manager record:", error);
+            toast({
+              title: "Error",
+              description: "Failed to generate Manager ID. Please try again.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Success",
+              description: `New Manager ID generated: ${newManagerId}`,
+            });
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+          }
         }
       }
     } catch (error) {
       console.error("Error:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsRegenerating(false);
     }
@@ -87,7 +159,7 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
               type="button"
               variant="outline"
               size="sm"
-              onClick={regenerateManagerId}
+              onClick={generateManagerId}
               disabled={isRegenerating}
               title="Generate New ID"
               className="h-8"
@@ -106,7 +178,7 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
             type="button"
             variant="default"
             size="sm"
-            onClick={regenerateManagerId}
+            onClick={generateManagerId}
             disabled={isRegenerating}
             className="w-fit"
           >
@@ -116,7 +188,10 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
                 Generating...
               </>
             ) : (
-              "Generate Manager ID"
+              <>
+                <Plus className="h-4 w-4 mr-2" />
+                Generate Manager ID
+              </>
             )}
           </Button>
         </div>
