@@ -58,7 +58,6 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
             .update({ 
               manager_id: newManagerId,
               job_title: 'Manager'
-              // Removed status and lifecycle fields here since they're likely defaulted in DB
             })
             .eq("user_id", userData.user.id);
 
@@ -97,8 +96,8 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
             department: 'Management',
             site: 'Main Office',
             manager_id: newManagerId,
-            status: 'Active', // Make sure this exactly matches the allowed values in DB
-            lifecycle: 'Employed', // Make sure this exactly matches the allowed values in DB
+            status: 'Present', // Changed from 'Active' to 'Present' to match allowed values
+            lifecycle: 'Employed',
             salary: 0,
             user_id: userData.user.id
           });

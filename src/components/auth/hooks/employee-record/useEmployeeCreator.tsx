@@ -121,7 +121,7 @@ export const useEmployeeCreator = () => {
           site: 'Main Office',
           salary: 0, // Default salary, to be updated later
           start_date: new Date().toISOString().split('T')[0],
-          status: 'Active', // Ensure this matches exactly what the database constraint expects
+          status: 'Present', // Changed from 'Active' to 'Present' to match allowed values
           lifecycle: 'Employed', // Ensure this matches exactly what the database constraint expects
           manager_id: managerId,
           user_id: userId // Link the employee record to the user account
