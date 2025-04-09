@@ -11,14 +11,20 @@ export const useManagerValidator = () => {
     }
     
     try {
-      // Verify the manager ID exists in employees table
+      // Query employees table for the manager ID
       const { data: managerData, error: managerError } = await supabase
         .from('employees')
         .select('id, user_id, name, manager_id')
         .eq('manager_id', managerId)
-        .maybeSingle();
+        .single();
         
       if (managerError) {
+        if (managerError.code === 'PGRST116') {
+          // This is not an error, it just means no results were found
+          console.log(`Manager ID ${managerId} not found in database`);
+          return null;
+        }
+        
         console.error("Error validating manager ID:", managerError);
         return null;
       }
@@ -28,7 +34,6 @@ export const useManagerValidator = () => {
         return managerData;
       }
       
-      console.log(`Manager ID ${managerId} not found in database`);
       return null;
     } catch (error) {
       console.error("Manager validation error:", error);

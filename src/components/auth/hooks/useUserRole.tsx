@@ -7,9 +7,9 @@ export const useUserRole = () => {
   const [userRole, setUserRole] = useState<UserRole>("employee");
   const [managerId, setManagerId] = useState("");
   
-  // Generate a unique manager ID when the form mounts or role changes to employer
+  // Generate a unique manager ID only when role first changes to employer
   useEffect(() => {
-    if (userRole === "employer") {
+    if (userRole === "employer" && !managerId) {
       generateManagerId();
     }
   }, [userRole]);
@@ -30,10 +30,11 @@ export const useUserRole = () => {
       setUserRole(newRole);
       console.log("Role selected:", value, "DB role:", newRole);
       
-      // Generate a manager ID if the role is manager
-      if (value === "manager") {
+      // Generate a manager ID if the role is manager and no ID exists yet
+      if (value === "manager" && !managerId) {
         generateManagerId();
-      } else {
+      } else if (value !== "manager") {
+        // Clear manager ID when switching to other roles
         setManagerId("");
       }
     }

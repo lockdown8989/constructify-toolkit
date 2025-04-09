@@ -30,29 +30,29 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
       // Generate a new manager ID with format MGR-XXXXX
       const randomPart = Math.floor(10000 + Math.random() * 90000); // 5-digit number
       const newManagerId = `MGR-${randomPart}`;
+      console.log(`Generated new manager ID: ${newManagerId}`);
 
       const { data: userData } = await supabase.auth.getUser();
-      if (userData.user) {
-        // Check if the user already has an employee record
-        const { data: existingEmployee, error: checkError } = await supabase
-          .from("employees")
-          .select("id")
-          .eq("user_id", userData.user.id)
-          .maybeSingle();
-          
-        if (checkError) {
-          console.error("Error checking existing employee:", checkError);
-          toast({
-            title: "Error",
-            description: "Failed to check existing records. Please try again.",
-            variant: "destructive",
-          });
-          setIsRegenerating(false);
-          return;
-        }
+      if (!userData.user) {
+        throw new Error("User not authenticated");
+      }
+
+      // Check if the user already has an employee record
+      const { data: existingEmployee, error: checkError } = await supabase
+        .from("employees")
+        .select("id, manager_id")
+        .eq("user_id", userData.user.id)
+        .maybeSingle();
         
-        if (existingEmployee) {
-          // Update existing record
+      if (checkError) {
+        console.error("Error checking existing employee:", checkError);
+        throw new Error("Failed to check existing records");
+      }
+      
+      if (existingEmployee) {
+        console.log("Existing employee record found, updating manager ID");
+        // Only update if the manager_id is null or user explicitly wants to regenerate
+        if (!existingEmployee.manager_id || managerId) {
           const { error } = await supabase
             .from("employees")
             .update({ 
@@ -65,70 +65,66 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
 
           if (error) {
             console.error("Error updating manager ID:", error);
-            toast({
-              title: "Error",
-              description: "Failed to generate Manager ID. Please try again.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Success",
-              description: `New Manager ID generated: ${newManagerId}`,
-            });
-            setTimeout(() => {
-              window.location.reload();
-            }, 1500);
+            throw new Error("Failed to update manager ID");
           }
         } else {
-          // Create new employee record
-          // Get profile data for the name
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("first_name, last_name")
-            .eq("id", userData.user.id)
-            .maybeSingle();
-            
-          const fullName = profileData ? 
-            `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() : 
-            userData.user.email?.split('@')[0] || 'Manager';
-            
-          const { error } = await supabase
-            .from("employees")
-            .insert({
-              name: fullName,
-              job_title: 'Manager',
-              department: 'Management',
-              site: 'Main Office',
-              manager_id: newManagerId,
-              status: 'Active',
-              lifecycle: 'Employed',
-              salary: 0,
-              user_id: userData.user.id
-            });
+          console.log("Manager ID already exists, not updating");
+          toast({
+            title: "Manager ID already exists",
+            description: existingEmployee.manager_id,
+          });
+          setIsRegenerating(false);
+          return;
+        }
+      } else {
+        // Create new employee record
+        // Get profile data for the name
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("first_name, last_name")
+          .eq("id", userData.user.id)
+          .maybeSingle();
+          
+        const fullName = profileData ? 
+          `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() : 
+          userData.user.email?.split('@')[0] || 'Manager';
+          
+        console.log("Creating new employee record with manager ID:", newManagerId);
+        const { error } = await supabase
+          .from("employees")
+          .insert({
+            name: fullName,
+            job_title: 'Manager',
+            department: 'Management',
+            site: 'Main Office',
+            manager_id: newManagerId,
+            status: 'Active',
+            lifecycle: 'Employed',
+            salary: 0,
+            user_id: userData.user.id
+          });
 
-          if (error) {
-            console.error("Error creating manager record:", error);
-            toast({
-              title: "Error",
-              description: "Failed to generate Manager ID. Please try again.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Success",
-              description: `New Manager ID generated: ${newManagerId}`,
-            });
-            setTimeout(() => {
-              window.location.reload();
-            }, 1500);
-          }
+        if (error) {
+          console.error("Error creating manager record:", error);
+          throw new Error("Failed to create manager record");
         }
       }
+      
+      toast({
+        title: "Success",
+        description: `Manager ID generated: ${newManagerId}`,
+      });
+      
+      // Reload the page after a short delay to reflect the changes
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+      
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error generating manager ID:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to generate Manager ID. Please try again.",
         variant: "destructive",
       });
     } finally {

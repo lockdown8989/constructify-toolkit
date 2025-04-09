@@ -62,24 +62,8 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
             console.log("Found manager ID:", employeeData.manager_id);
             setManagerId(employeeData.manager_id);
           } else {
-            // Only if we don't find a manager ID, check if they have the employer role
-            // but DON'T generate a new ID here, just suggest the user to do so
-            console.log("No manager ID found, checking if user has employer role");
-            
-            // Check if they're definitely a manager
-            const { data: roleData } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', user.id)
-              .eq('role', 'employer');
-              
-            console.log("Roles from database:", roleData);
-            
-            if (roleData && roleData.length > 0) {
-              console.log("User has employer role but no manager ID set yet");
-              // Set managerId to null, don't generate a new one
-              setManagerId(null);
-            }
+            console.log("No manager ID found for this manager account");
+            setManagerId(null);
           }
         } else {
           // Fetch manager ID for employee to display their manager's ID

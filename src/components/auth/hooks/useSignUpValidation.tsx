@@ -16,6 +16,7 @@ export const useSignUpValidation = (userRole: string, managerId: string | null) 
     
     // Only validate if this is an employee role with a manager ID
     if (userRole === 'employee' && managerId) {
+      console.log(`Validating manager ID for employee: ${managerId}`);
       setIsValidatingManagerId(true);
       
       const validateManager = async () => {
@@ -28,7 +29,7 @@ export const useSignUpValidation = (userRole: string, managerId: string | null) 
             return;
           }
           
-          // Use the validator hook
+          // Use the validator hook to check the database
           const managerData = await validateManagerId(managerId);
           
           if (managerData) {
@@ -51,7 +52,7 @@ export const useSignUpValidation = (userRole: string, managerId: string | null) 
       const timeoutId = setTimeout(validateManager, 500);
       return () => clearTimeout(timeoutId);
     }
-  }, [managerId, userRole]);
+  }, [managerId, userRole, validateManagerId]);
 
   return {
     isValidatingManagerId,
