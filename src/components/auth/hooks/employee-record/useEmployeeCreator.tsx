@@ -81,6 +81,37 @@ export const useEmployeeCreator = () => {
     console.log(`Creating record with job title: ${jobTitle} and manager ID: ${managerId || 'none'}`);
     
     try {
+      // First check if there's already an employee record for this user
+      const { data: existing } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+        
+      if (existing) {
+        console.log("Employee record already exists, updating instead of creating");
+        const { error: updateError } = await supabase
+          .from('employees')
+          .update({
+            name: fullName,
+            job_title: jobTitle,
+            manager_id: managerId
+          })
+          .eq('user_id', userId);
+          
+        if (updateError) {
+          console.error("Error updating employee record:", updateError);
+          toast({
+            title: "Warning",
+            description: "Account created but failed to update employee record: " + updateError.message,
+            variant: "default",
+          });
+          return false;
+        }
+        return true;
+      }
+      
+      // Create new employee record
       const { error } = await supabase
         .from('employees')
         .insert({

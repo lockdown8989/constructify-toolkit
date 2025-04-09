@@ -57,9 +57,8 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
             .from("employees")
             .update({ 
               manager_id: newManagerId,
-              job_title: 'Manager',
-              status: 'Active',
-              lifecycle: 'Employed' 
+              job_title: 'Manager'
+              // Removed status and lifecycle fields here since they're likely defaulted in DB
             })
             .eq("user_id", userData.user.id);
 
@@ -98,15 +97,15 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
             department: 'Management',
             site: 'Main Office',
             manager_id: newManagerId,
-            status: 'Active',
-            lifecycle: 'Employed',
+            status: 'Active', // Make sure this exactly matches the allowed values in DB
+            lifecycle: 'Employed', // Make sure this exactly matches the allowed values in DB
             salary: 0,
             user_id: userData.user.id
           });
 
         if (error) {
           console.error("Error creating manager record:", error);
-          throw new Error("Failed to create manager record");
+          throw new Error("Failed to create manager record: " + error.message);
         }
       }
       
