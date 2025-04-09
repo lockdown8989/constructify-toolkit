@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import EmployeeMobileCard from './EmployeeMobileCard';
 import { Employee } from '../types';
@@ -26,23 +26,53 @@ const MobileTable: React.FC<MobileTableProps> = ({
   onStatusChange,
 }) => {
   // Reference to the scroll container
-  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // Function to scroll to the top smoothly
   const scrollToTop = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTo({
         top: 0,
         behavior: 'smooth'
       });
     }
   };
 
+  // Add touch feedback for better mobile experience
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      const card = target.closest('.employee-card');
+      if (card) {
+        card.classList.add('touch-active');
+      }
+    };
+    
+    const handleTouchEnd = () => {
+      const activeCards = container.querySelectorAll('.touch-active');
+      activeCards.forEach(card => card.classList.remove('touch-active'));
+    };
+    
+    container.addEventListener('touchstart', handleTouchStart);
+    container.addEventListener('touchend', handleTouchEnd);
+    container.addEventListener('touchcancel', handleTouchEnd);
+    
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchend', handleTouchEnd);
+      container.removeEventListener('touchcancel', handleTouchEnd);
+    };
+  }, []);
+
   // Function to determine if we should show scroll indicator (when there are many employees)
   const shouldShowScrollIndicator = employees.length > 5;
 
   return (
-    <div className="rounded-lg overflow-hidden flex flex-col">
+    <div className="rounded-lg overflow-hidden flex flex-col" ref={containerRef}>
       {employees.length === 0 ? (
         <div className="p-8 text-center text-gray-500 min-h-[200px] flex items-center justify-center">
           <p className="text-sm sm:text-base">No employees found. Try adjusting your filters.</p>
@@ -50,8 +80,8 @@ const MobileTable: React.FC<MobileTableProps> = ({
       ) : (
         <>
           <ScrollArea 
-            className="max-h-[calc(100vh-250px)] overflow-y-auto rounded-lg divide-y divide-gray-100"
-            ref={scrollRef}
+            className="max-h-[calc(100vh-250px)] min-h-[300px] overflow-y-auto rounded-lg divide-y divide-gray-100 momentum-scroll"
+            ref={scrollAreaRef}
           >
             <div className="divide-y divide-gray-100">
               {employees.map(employee => (
@@ -72,7 +102,7 @@ const MobileTable: React.FC<MobileTableProps> = ({
           {shouldShowScrollIndicator && (
             <button 
               onClick={scrollToTop}
-              className="mt-2 flex items-center justify-center p-2 text-sm text-gray-500 hover:text-black transition-colors"
+              className="mt-2 flex items-center justify-center p-2 text-sm text-gray-500 hover:text-black transition-colors touch-target"
               aria-label="Scroll to top"
             >
               <ChevronDown className="h-5 w-5 transform rotate-180 mr-1" />

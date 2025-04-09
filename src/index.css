@@ -72,20 +72,14 @@
       @apply text-base;
     }
     
-    /* Prevent elastic scrolling for iOS */
-    body {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
+    /* Make text easier to read on small screens */
+    p, li, a {
+      @apply text-base leading-relaxed;
     }
-    
-    /* Fix for position:fixed elements and iOS virtual keyboard */
-    input:focus, 
-    textarea:focus, 
-    select:focus {
-      @apply z-20;
-      position: relative !important;
+
+    /* Improved dropdown positioning for mobile */
+    .dropdown-content {
+      @apply z-50 max-h-[50vh] overflow-y-auto;
     }
   }
 }
@@ -105,11 +99,16 @@
     .card {
       @apply p-3 sm:p-5;
     }
+    
+    /* Improved touch feedback for cards */
+    .touch-active {
+      @apply bg-gray-50 transition-colors duration-200;
+    }
   }
   
   /* Mobile navigation bottom bar */
   .mobile-nav-bar {
-    @apply fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center p-2 z-50;
+    @apply fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center p-2 z-50 safe-area-inset;
   }
   
   .mobile-nav-item {
@@ -216,6 +215,16 @@
   .momentum-scroll {
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
+  }
+  
+  /* Prevent selection on mobile */
+  .prevent-select {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version */
   }
 }
 
