@@ -35,7 +35,9 @@ export const useEmployeeUpdater = () => {
       .from('employees')
       .update({ 
         manager_id: managerId,
-        job_title: 'Manager'
+        job_title: 'Manager',
+        status: 'Present',  // Ensure we use the correct status value
+        lifecycle: 'Employed'  // Ensure we use the correct lifecycle value
       })
       .eq('user_id', userId);
       
@@ -61,7 +63,11 @@ export const useEmployeeUpdater = () => {
       console.log(`Updating employee record with valid manager ID: ${managerId}, manager: ${managerInfo.name}`);
       const { error } = await supabase
         .from('employees')
-        .update({ manager_id: managerId })
+        .update({ 
+          manager_id: managerId,
+          status: 'Present',  // Ensure we use the correct status value
+          lifecycle: 'Employed'  // Ensure we use the correct lifecycle value
+        })
         .eq('user_id', userId);
         
       if (error) {
@@ -89,7 +95,11 @@ export const useEmployeeUpdater = () => {
       // Still update with unverified manager ID
       const { error } = await supabase
         .from('employees')
-        .update({ manager_id: managerId })
+        .update({ 
+          manager_id: managerId,
+          status: 'Present',  // Ensure we use the correct status value
+          lifecycle: 'Employed'  // Ensure we use the correct lifecycle value
+        })
         .eq('user_id', userId);
       
       if (error) {
