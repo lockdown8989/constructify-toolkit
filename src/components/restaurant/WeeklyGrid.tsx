@@ -1,15 +1,17 @@
 
 import React from 'react';
-import { WeekStats, OpenShift } from '@/types/restaurant-schedule';
+import { WeekStats, OpenShift, Employee } from '@/types/restaurant-schedule';
 import WeekSummaryColumn from './WeekSummaryColumn';
 import DayColumn from './DayColumn';
+import EmployeeList from './EmployeeList';
 
 interface WeeklyGridProps {
   weekStats: WeekStats;
   openShifts: OpenShift[];
+  employees: Employee[];
   daysDisplayNames: string[];
   formatCurrency: (amount: number) => string;
-  handleAssignOpenShift: (openShiftId: string) => void;
+  handleAssignOpenShift: (openShiftId: string, employeeId: string) => void;
   previousWeek: () => void;
   nextWeek: () => void;
 }
@@ -17,6 +19,7 @@ interface WeeklyGridProps {
 const WeeklyGrid = ({
   weekStats,
   openShifts,
+  employees,
   daysDisplayNames,
   formatCurrency,
   handleAssignOpenShift,
@@ -24,7 +27,10 @@ const WeeklyGrid = ({
   nextWeek
 }: WeeklyGridProps) => {
   return (
-    <div className="grid grid-cols-9 gap-0 border rounded-t-xl bg-white shadow-sm overflow-hidden">
+    <div className="grid grid-cols-10 gap-0 border rounded-t-xl bg-white shadow-sm overflow-hidden">
+      {/* Employee list column */}
+      <EmployeeList employees={employees} />
+      
       <WeekSummaryColumn 
         weekStats={weekStats} 
         openShifts={openShifts}

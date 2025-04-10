@@ -11,7 +11,7 @@ interface DayColumnProps {
   dayDisplayName: string;
   formatCurrency: (amount: number) => string;
   openShifts: OpenShift[];
-  onAssign: (openShiftId: string) => void;
+  onAssign: (openShiftId: string, employeeId?: string) => void;
   previousWeek?: () => void;
   nextWeek?: () => void;
 }

@@ -5,7 +5,12 @@ import { useToast } from '@/hooks/use-toast';
 
 export const useShiftManagement = (employees: Employee[]) => {
   const [shifts, setShifts] = useState<Shift[]>([]);
-  const [openShifts, setOpenShifts] = useState<OpenShift[]>([]);
+  const [openShifts, setOpenShifts] = useState<OpenShift[]>([
+    { id: '1', day: 'monday', startTime: '09:00', endTime: '17:00', role: 'Kitchen Staff' },
+    { id: '2', day: 'tuesday', startTime: '12:00', endTime: '20:00', role: 'Waiting Staff' },
+    { id: '3', day: 'wednesday', startTime: '08:00', endTime: '16:00', role: 'Chef' },
+    { id: '4', day: 'thursday', startTime: '15:00', endTime: '23:00', role: 'Bartender' },
+  ]);
   
   const { toast } = useToast();
 

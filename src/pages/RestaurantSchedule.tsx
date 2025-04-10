@@ -148,13 +148,19 @@ const RestaurantSchedule = () => {
   };
   
   // Handle showing assignment dialog for an open shift
-  const handleAssignOpenShift = (openShiftId: string) => {
-    setSelectedOpenShiftId(openShiftId);
-    
-    toast({
-      title: "Feature coming soon",
-      description: "The ability to assign open shifts will be available soon.",
-    });
+  const handleAssignOpenShift = (openShiftId: string, employeeId?: string) => {
+    if (employeeId) {
+      // Direct assignment from drag and drop
+      assignOpenShift(openShiftId, employeeId);
+    } else {
+      // Show assignment dialog (legacy method)
+      setSelectedOpenShiftId(openShiftId);
+      
+      toast({
+        title: "Feature coming soon",
+        description: "The ability to assign open shifts will be available soon.",
+      });
+    }
   };
   
   // Format currency for display
@@ -173,6 +179,7 @@ const RestaurantSchedule = () => {
       <WeeklyGrid 
         weekStats={weekStats}
         openShifts={openShifts}
+        employees={employees}
         daysDisplayNames={daysDisplayNames}
         formatCurrency={formatCurrency}
         handleAssignOpenShift={handleAssignOpenShift}
