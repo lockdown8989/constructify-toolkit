@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { useAvailabilityRequests } from '@/hooks/use-availability';
+// Updated import path
+import { useAvailabilityRequests } from '@/hooks/availability';
 import { useEmployees } from '@/hooks/use-employees';
 import { useAuth } from '@/hooks/use-auth';
 import { Clock, Loader2 } from 'lucide-react';

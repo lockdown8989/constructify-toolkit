@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Clock } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import AvailabilityRequestForm from './AvailabilityRequestForm';
 import AvailabilityRequestList from './AvailabilityRequestList';
-import { useAvailabilityRequests } from '@/hooks/use-availability';
+import { useAvailabilityRequests } from '@/hooks/availability';
 
 const AvailabilityManagement = () => {
   const { user } = useAuth();

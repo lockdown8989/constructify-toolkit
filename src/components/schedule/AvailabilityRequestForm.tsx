@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useEmployees } from '@/hooks/use-employees';
-import { useCreateAvailabilityRequest } from '@/hooks/use-availability';
+// Updated import path
+import { useCreateAvailabilityRequest } from '@/hooks/availability';
 import { cn } from '@/lib/utils';
 
 interface AvailabilityRequestFormProps {
