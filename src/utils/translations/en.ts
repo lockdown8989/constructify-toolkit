@@ -57,9 +57,10 @@ export const englishTranslations: Translations = {
   back: 'Back',
   
   // Theme settings
-  darkMode: 'Dark Mode',
+  darkMode: 'Theme',
   useDarkTheme: 'Use dark theme for the application',
   light: 'Light',
   dark: 'Dark',
-  system: 'System'
+  system: 'System',
+  lightModeOnly: 'This application uses light theme only'
 };

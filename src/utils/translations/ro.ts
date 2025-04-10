@@ -57,9 +57,10 @@ export const romanianTranslations: Translations = {
   back: 'Înapoi',
   
   // Theme settings
-  darkMode: 'Mod întunecat',
+  darkMode: 'Temă',
   useDarkTheme: 'Utilizați tema întunecată pentru aplicație',
   light: 'Luminos',
   dark: 'Întunecat',
-  system: 'Sistem'
+  system: 'Sistem',
+  lightModeOnly: 'Această aplicație utilizează doar tema luminoasă'
 };

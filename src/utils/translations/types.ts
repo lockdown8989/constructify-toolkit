@@ -60,7 +60,8 @@ export type ThemeTranslationKeys =
   | 'useDarkTheme'
   | 'light'
   | 'dark'
-  | 'system';
+  | 'system'
+  | 'lightModeOnly';
 
 // Combined type with all translation keys
 export type TranslationKey = 

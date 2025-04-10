@@ -57,9 +57,10 @@ export const spanishTranslations: Translations = {
   back: 'Atrás',
   
   // Theme settings
-  darkMode: 'Modo Oscuro',
+  darkMode: 'Tema',
   useDarkTheme: 'Usar tema oscuro para la aplicación',
   light: 'Claro',
   dark: 'Oscuro',
-  system: 'Sistema'
+  system: 'Sistema',
+  lightModeOnly: 'Esta aplicación solo utiliza el tema claro'
 };
