@@ -13,21 +13,26 @@ export const sendNotification = async (data: NotificationData) => {
     return false;
   }
   
-  const { error } = await supabase.from('notifications').insert([
-    {
-      ...data,
-      read: false,
-      created_at: new Date().toISOString()
+  try {
+    const { error } = await supabase.from('notifications').insert([
+      {
+        ...data,
+        read: false,
+        created_at: new Date().toISOString()
+      }
+    ]);
+    
+    if (error) {
+      console.error('Error sending notification:', error);
+      throw error;
     }
-  ]);
-  
-  if (error) {
-    console.error('Error sending notification:', error);
-    throw error;
+    
+    console.log('NotificationService: Notification sent successfully to user', data.user_id);
+    return true;
+  } catch (error) {
+    console.error('Exception in sendNotification:', error);
+    return false;
   }
-  
-  console.log('NotificationService: Notification sent successfully to user', data.user_id);
-  return true;
 };
 
 /**

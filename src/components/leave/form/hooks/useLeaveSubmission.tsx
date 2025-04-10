@@ -56,7 +56,9 @@ export const useLeaveSubmission = (
     const initialAuditLog = [{
       action: 'REQUEST_CREATED',
       timestamp: new Date().toISOString(),
-      details: `Request created for ${leaveDays} business days`
+      details: `Request created for ${leaveDays} business days`,
+      user_id: userId,
+      employee_name: employeeName
     }];
     
     try {

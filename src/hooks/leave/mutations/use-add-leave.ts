@@ -62,6 +62,10 @@ export function useAddLeaveRequest() {
         console.log('Attempting to notify managers about new leave request');
         const notificationResult = await notifyManagersOfNewLeaveRequest(data);
         console.log('Manager notification completed with result:', notificationResult);
+        
+        if (!notificationResult) {
+          console.warn('Failed to notify managers, check manager role assignments in the database');
+        }
       } catch (notifyError) {
         console.error('Error notifying managers:', notifyError);
         // Continue execution even if notification fails

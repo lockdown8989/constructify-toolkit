@@ -19,12 +19,24 @@ export const getManagerUserIds = async (): Promise<string[]> => {
     }
     
     if (!data || data.length === 0) {
-      console.log('No manager roles found in the database');
+      console.warn('No manager roles found in the database. Please check if user_roles table has entries for admin, employer, or hr roles.');
       return [];
     }
     
     const managerIds = data.map(item => item.user_id);
     console.log(`Found ${managerIds.length} manager IDs:`, managerIds);
+    
+    // Verify these users actually exist
+    const { data: users, error: usersError } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name')
+      .in('id', managerIds);
+      
+    if (usersError) {
+      console.error('Error verifying manager users:', usersError);
+    } else {
+      console.log(`Verified ${users?.length || 0} manager users out of ${managerIds.length}`);
+    }
     
     return managerIds;
   } catch (error) {

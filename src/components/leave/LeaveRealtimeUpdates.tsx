@@ -130,12 +130,12 @@ const LeaveRealtimeUpdates: React.FC = () => {
               });
             }
             
-            // Force refresh leave data for manager views
+            // If current user is manager, notify them about the new request
             if (hasManagerAccess) {
               console.log('LeaveRealtimeUpdates: Manager user detected, force refreshing leave data');
               queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
               
-              // Additional notification logic here if needed
+              // Get all managers to notify them about the new leave request
               try {
                 console.log('LeaveRealtimeUpdates: Notifying managers about new leave request');
                 const managerIds = await getManagerUserIds();
@@ -144,11 +144,12 @@ const LeaveRealtimeUpdates: React.FC = () => {
                 // Get employee name for notification
                 const { data: employeeData } = await supabase
                   .from('employees')
-                  .select('name')
+                  .select('name, department')
                   .eq('id', payload.new.employee_id)
                   .single();
                 
                 const employeeName = employeeData?.name || 'An employee';
+                const department = employeeData?.department || 'Unknown department';
                 
                 for (const managerId of managerIds) {
                   if (managerId === user.id) continue; // Skip current user
@@ -156,7 +157,7 @@ const LeaveRealtimeUpdates: React.FC = () => {
                   await sendNotification({
                     user_id: managerId,
                     title: "New leave request",
-                    message: `${employeeName} has submitted a new leave request that requires your review.`,
+                    message: `${employeeName} (${department}) has submitted a new leave request that requires your review.`,
                     type: "info",
                     related_entity: "leave_calendar",
                     related_id: payload.new.id
@@ -179,7 +180,7 @@ const LeaveRealtimeUpdates: React.FC = () => {
       console.log('LeaveRealtimeUpdates: Cleaning up channel subscription');
       supabase.removeChannel(channel);
     };
-  }, [queryClient, toast, user, hasManagerAccess]);
+  }, [queryClient, toast, user, hasManagerAccess, sendWebhookNotification]);
   
   // This component doesn't render anything, it just sets up the listener
   return null;
