@@ -17,6 +17,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { DollarSign, Euro, PoundSterling } from "lucide-react";
+import { detectUserLocation } from "@/services/geolocation";
 
 interface ProfileFormProps {
   user: User | null;
@@ -50,6 +51,7 @@ export const ProfileForm = ({ user, isManager, managerId }: ProfileFormProps) =>
     country: "",
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -76,6 +78,14 @@ export const ProfileForm = ({ user, isManager, managerId }: ProfileFormProps) =>
             preferred_currency: data.preferred_currency || "USD",
             country: data.country || "",
           });
+          
+          // If the country is empty, try to detect user's location
+          if (!data.country || !data.preferred_currency) {
+            autoDetectLocation();
+          }
+        } else {
+          // New user, auto-detect location
+          autoDetectLocation();
         }
       } catch (error) {
         console.error("Error:", error);
@@ -84,6 +94,29 @@ export const ProfileForm = ({ user, isManager, managerId }: ProfileFormProps) =>
     
     fetchProfileData();
   }, [user]);
+
+  const autoDetectLocation = async () => {
+    setIsLocating(true);
+    try {
+      const { country, currencyCode } = await detectUserLocation();
+      setProfile(prev => ({
+        ...prev, 
+        country: country || prev.country,
+        preferred_currency: currencyCode
+      }));
+      
+      if (country) {
+        toast({
+          title: "Location detected",
+          description: `Detected country: ${country} (${currencyCode})`,
+        });
+      }
+    } catch (error) {
+      console.error("Error auto-detecting location:", error);
+    } finally {
+      setIsLocating(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -192,13 +225,25 @@ export const ProfileForm = ({ user, isManager, managerId }: ProfileFormProps) =>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="country">Country</Label>
-            <Input
-              id="country"
-              name="country"
-              value={profile.country}
-              onChange={handleChange}
-              placeholder="e.g. United States"
-            />
+            <div className="flex">
+              <Input
+                id="country"
+                name="country"
+                value={profile.country}
+                onChange={handleChange}
+                placeholder={isLocating ? "Detecting location..." : "e.g. United States"}
+                className="flex-1"
+              />
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="ml-2" 
+                onClick={autoDetectLocation}
+                disabled={isLocating}
+              >
+                Detect
+              </Button>
+            </div>
           </div>
           
           <div className="space-y-2">
