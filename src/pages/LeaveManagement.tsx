@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,6 +15,7 @@ import CalendarTab from "@/components/leave/tabs/CalendarTab";
 import NotificationsTab from "@/components/leave/tabs/NotificationsTab";
 import ScheduleRequestsTab from "@/components/leave/tabs/ScheduleRequestsTab"; 
 import { useAccessControl } from "@/hooks/leave/useAccessControl";
+import { useLocation } from "react-router-dom";
 
 // Define the view types
 type ViewType = "employee" | "manager" | "calendar" | "notifications" | "schedule-requests";
@@ -22,6 +23,20 @@ type ViewType = "employee" | "manager" | "calendar" | "notifications" | "schedul
 const LeaveManagement = () => {
   const { hasManagerAccess } = useAccessControl();
   const [currentView, setCurrentView] = useState<ViewType>("employee");
+  const location = useLocation();
+  
+  // Set initial view based on URL state (if provided)
+  useEffect(() => {
+    if (location.state && location.state.initialView) {
+      const initialView = location.state.initialView as ViewType;
+      if (
+        (initialView !== "manager" && initialView !== "notifications") || 
+        (hasManagerAccess && (initialView === "manager" || initialView === "notifications"))
+      ) {
+        setCurrentView(initialView);
+      }
+    }
+  }, [location.state, hasManagerAccess]);
   
   // Define view labels and icons
   const viewOptions: Record<ViewType, { label: string, icon: React.ReactNode }> = {

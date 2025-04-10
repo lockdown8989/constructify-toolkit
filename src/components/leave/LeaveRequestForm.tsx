@@ -9,13 +9,14 @@ import {
   CardFooter 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import LeaveTypeSelector from "./form/LeaveTypeSelector";
 import DateSelector from "./form/DateSelector";
 import NotesField from "./form/NotesField";
 import ProjectConflicts from "./ProjectConflicts";
 import { useLeaveRequestForm } from "./form/useLeaveRequestForm";
 import { useQueryClient } from "@tanstack/react-query";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface LeaveRequestFormProps {
   // Optional props still allowed, but we'll handle auth inside the component
@@ -90,11 +91,44 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = () => {
             <p className="text-muted-foreground">
               Your leave request has been submitted successfully and is pending approval.
             </p>
+            <Alert variant="info" className="mt-4">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              <AlertTitle>Waiting for confirmation</AlertTitle>
+              <AlertDescription>
+                Your request has been sent to your manager for review. 
+                You'll receive a notification when it's approved or rejected.
+              </AlertDescription>
+            </Alert>
             <Button 
               onClick={() => window.location.reload()} 
               className="mt-4"
             >
               Submit Another Request
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // If there's an error with the form, show error state
+  if (formStatus === 'error') {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center p-6 space-y-4">
+            <div className="flex justify-center">
+              <AlertCircle className="h-16 w-16 text-red-500" />
+            </div>
+            <h3 className="text-xl font-medium">Request Failed</h3>
+            <p className="text-muted-foreground">
+              There was a problem submitting your leave request.
+            </p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-4"
+            >
+              Try Again
             </Button>
           </div>
         </CardContent>
@@ -143,6 +177,17 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = () => {
             <div className="space-y-2">
               <ProjectConflicts conflicts={conflicts} />
             </div>
+          )}
+
+          {formStatus === 'submitting' && (
+            <Alert variant="info" className="mt-4 animate-pulse">
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <AlertTitle>Processing your request</AlertTitle>
+              <AlertDescription>
+                Please wait while we submit your leave request.
+                Do not close this page.
+              </AlertDescription>
+            </Alert>
           )}
         </CardContent>
         

@@ -1,30 +1,39 @@
 
 import { useState } from "react";
-import type { ProjectConflict } from "@/utils/leave-utils";
 
-// Define form status type
+// Define the form status types
 export type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
 
-/**
- * Hook to manage form state for leave requests
- */
+export type Conflict = {
+  projectName: string;
+  projectDeadline: string;
+  conflictSeverity: 'Low' | 'Medium' | 'High';
+  department: string;
+};
+
 export const useFormState = () => {
+  // Form field state
   const [leaveType, setLeaveType] = useState<string>("");
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [notes, setNotes] = useState<string>("");
+  
+  // Form status state
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [conflicts, setConflicts] = useState<ProjectConflict[]>([]);
   const [formStatus, setFormStatus] = useState<FormStatus>('idle');
   
+  // Project conflicts state
+  const [conflicts, setConflicts] = useState<Conflict[]>([]);
+  
+  // Reset form fields
   const resetForm = () => {
     setLeaveType("");
     setStartDate(undefined);
     setEndDate(undefined);
     setNotes("");
     setIsSubmitting(false);
-    setConflicts([]);
     setFormStatus('idle');
+    setConflicts([]);
   };
 
   return {
@@ -38,15 +47,17 @@ export const useFormState = () => {
     notes,
     setNotes,
     
-    // Form state
+    // Form status
     isSubmitting,
     setIsSubmitting,
-    conflicts,
-    setConflicts,
     formStatus,
     setFormStatus,
     
-    // Form actions
+    // Conflicts
+    conflicts,
+    setConflicts,
+    
+    // Actions
     resetForm,
   };
 };
