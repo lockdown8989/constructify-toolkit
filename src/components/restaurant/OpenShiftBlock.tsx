@@ -1,6 +1,6 @@
 
 import { cn } from '@/lib/utils';
-import { Coffee, FileText, Plus, UserPlus } from 'lucide-react';
+import { Coffee, FileText, UserPlus } from 'lucide-react';
 import { OpenShift } from '@/types/restaurant-schedule';
 import {
   Tooltip,
@@ -28,10 +28,25 @@ const OpenShiftBlock = ({
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    
+    // Add visual feedback
+    const target = e.currentTarget as HTMLElement;
+    target.classList.add('border-2', 'border-dashed', 'border-blue-300', 'bg-blue-50/50');
+  };
+  
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Remove visual feedback
+    const target = e.currentTarget as HTMLElement;
+    target.classList.remove('border-2', 'border-dashed', 'border-blue-300', 'bg-blue-50/50');
   };
   
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    
+    // Remove visual feedback
+    const target = e.currentTarget as HTMLElement;
+    target.classList.remove('border-2', 'border-dashed', 'border-blue-300', 'bg-blue-50/50');
+    
     const employeeId = e.dataTransfer.getData('employeeId');
     if (employeeId && onAssign) {
       onAssign(openShift.id, employeeId);
@@ -42,10 +57,10 @@ const OpenShiftBlock = ({
     <div 
       className={cn(
         "p-3 my-1 rounded-xl shadow-sm hover:shadow transition-all relative",
-        colorClasses[color],
-        "droppable-area"
+        colorClasses[color]
       )}
       onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       <div className="flex flex-col">
@@ -77,9 +92,6 @@ const OpenShiftBlock = ({
         </div>
         <span className="text-gray-700 text-sm">{openShift.role}</span>
       </div>
-      
-      {/* Visual feedback for drag target */}
-      <div className="absolute inset-0 border-2 border-dashed border-blue-300 rounded-xl opacity-0 hover:opacity-50 transition-opacity pointer-events-none droppable-highlight"></div>
     </div>
   );
 };

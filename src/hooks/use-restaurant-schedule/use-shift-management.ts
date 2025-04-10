@@ -61,33 +61,57 @@ export const useShiftManagement = (employees: Employee[]) => {
 
   // Function to assign an open shift to an employee
   const assignOpenShift = (openShiftId: string, employeeId?: string) => {
-    if (!employeeId) return;
+    if (!employeeId) {
+      toast({
+        title: "Assignment failed",
+        description: "No employee selected for assignment",
+        variant: "destructive"
+      });
+      return;
+    }
     
     const openShift = openShifts.find(shift => shift.id === openShiftId);
+    const employee = employees.find(e => e.id === employeeId);
     
-    if (openShift) {
-      // Create a new shift for the employee
-      const newShift: Omit<Shift, 'id'> = {
-        employeeId,
-        day: openShift.day,
-        startTime: openShift.startTime,
-        endTime: openShift.endTime,
-        role: openShift.role,
-        notes: openShift.notes
-      };
-      
-      addShift(newShift);
-      
-      // Remove the open shift
-      setOpenShifts(prevOpenShifts => 
-        prevOpenShifts.filter(shift => shift.id !== openShiftId)
-      );
-      
+    if (!openShift) {
       toast({
-        title: "Shift assigned",
-        description: `Open shift assigned to ${employees.find(e => e.id === employeeId)?.name || 'employee'}`,
+        title: "Assignment failed",
+        description: "Open shift not found",
+        variant: "destructive"
       });
+      return;
     }
+    
+    if (!employee) {
+      toast({
+        title: "Assignment failed",
+        description: "Employee not found",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Create a new shift for the employee
+    const newShift: Omit<Shift, 'id'> = {
+      employeeId,
+      day: openShift.day,
+      startTime: openShift.startTime,
+      endTime: openShift.endTime,
+      role: openShift.role,
+      notes: openShift.notes
+    };
+    
+    addShift(newShift);
+    
+    // Remove the open shift
+    setOpenShifts(prevOpenShifts => 
+      prevOpenShifts.filter(shift => shift.id !== openShiftId)
+    );
+    
+    toast({
+      title: "Shift assigned",
+      description: `Open shift assigned to ${employee.name}`,
+    });
   };
 
   return {

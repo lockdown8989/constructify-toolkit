@@ -12,8 +12,28 @@ const EmployeeList = ({ employees }: EmployeeListProps) => {
   const handleDragStart = (e: React.DragEvent, employeeId: string) => {
     e.dataTransfer.setData('employeeId', employeeId);
     e.dataTransfer.effectAllowed = 'move';
+    
+    // Add ghost image styling
+    const dragImage = document.createElement('div');
+    dragImage.className = 'bg-white p-2 rounded shadow-lg border border-gray-200';
+    dragImage.textContent = 'Assigning employee';
+    document.body.appendChild(dragImage);
+    
+    // Position it off-screen
+    dragImage.style.position = 'absolute';
+    dragImage.style.top = '-1000px';
+    
+    // Set custom drag image if supported
+    if (e.dataTransfer.setDragImage) {
+      e.dataTransfer.setDragImage(dragImage, 0, 0);
+    }
+    
+    // Clean up after drag starts
+    setTimeout(() => {
+      document.body.removeChild(dragImage);
+    }, 0);
   };
-
+  
   return (
     <div className="col-span-1 border-r border-gray-200 bg-gray-50">
       <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-100">
@@ -37,7 +57,7 @@ const EmployeeList = ({ employees }: EmployeeListProps) => {
                 key={employee.id}
                 draggable
                 onDragStart={(e) => handleDragStart(e, employee.id)}
-                className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-move transition-colors"
+                className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-move transition-colors active:bg-gray-200"
               >
                 <Avatar className="h-9 w-9 mr-2 border border-gray-200">
                   <AvatarImage src={employee.avatarUrl || '/placeholder.svg'} alt={employee.name} />

@@ -26,8 +26,19 @@ const DayColumn = ({
   previousWeek,
   nextWeek
 }: DayColumnProps) => {
+  // Handler for when there's no open shifts to drop on
+  const handleColumnDragOver = (e: React.DragEvent) => {
+    if (openShifts.filter(s => s.day === day.day).length === 0) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'none'; // Indicate that dropping is not allowed
+    }
+  };
+  
   return (
-    <div className="col-span-1 border-r border-gray-200">
+    <div 
+      className="col-span-1 border-r border-gray-200"
+      onDragOver={handleColumnDragOver}
+    >
       <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
         <div className="flex items-center">
           <span className="font-bold text-lg mr-2">{index + 1}</span>
@@ -66,6 +77,11 @@ const DayColumn = ({
             />
           ))
         }
+        {openShifts.filter(s => s.day === day.day).length === 0 && (
+          <div className="py-8 text-center text-gray-400 text-sm italic">
+            No open shifts
+          </div>
+        )}
       </div>
     </div>
   );
