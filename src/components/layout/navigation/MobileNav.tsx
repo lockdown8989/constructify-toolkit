@@ -1,171 +1,162 @@
-
-import { Button } from "@/components/ui/button"
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import { useAuth } from '@/hooks/auth';
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/sheet"
-import { Menu, Home, User, Users, Calendar, Clock, FileText, Workflow, DollarSign, Receipt, Settings } from "lucide-react"
-import { Link, useNavigate, useLocation } from "react-router-dom"
-import { useAuth } from "@/hooks/auth"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useState } from "react"
-import { useLanguage } from "@/hooks/use-language"
+} from "@/components/ui/sheet"
+import { Menu } from "lucide-react"
+import { Button } from '@/components/ui/button';
 
-interface MobileNavProps {
-  isAuthenticated: boolean;
-}
+const MobileNav = () => {
+  const { user, signOut } = useAuth();
 
-const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
-  const { isManager, user } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
-  const { t } = useLanguage();
-  
-  // Determine if user is an employee (not a manager)
-  const isEmployee = isAuthenticated && !isManager;
-  
-  // Function to navigate back
-  const handleBack = () => {
-    if (location.pathname !== '/') {
-      navigate(-1);
+  const activeClassName = "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2";
+  const inactiveClassName = "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-background text-foreground hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2";
+
+  const closeMenu = () => {
+    const sheet = document.querySelector('.radix-ui-portal[data-state="open"]');
+    if (sheet) {
+      (sheet as any).dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     }
-    setIsOpen(false);
   };
-  
+
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="lg:hidden touch-target">
-          <Menu className="h-6 w-6" />
-          <span className="sr-only">{t('toggleMenu')}</span>
+        <Button variant="ghost" size="sm">
+          <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent 
-        side="left" 
-        className="w-[85%] max-w-[300px] pb-safe-area-inset-bottom p-0 rounded-r-3xl bg-[#f8f8f8]/95 backdrop-blur-md border-0"
-        showBackButton={location.pathname !== '/'}
-        onBack={handleBack}
-        backButtonLabel={t('back')}
-      >
-        <div className="flex items-center px-6 pt-8 pb-4">
-          <div className="flex-1 text-center">
-            <SheetTitle className="font-semibold text-lg">TeamPulse</SheetTitle>
-          </div>
-        </div>
-        <ScrollArea className="h-[calc(100vh-80px)]">
-          <nav className="grid gap-1 px-2 py-2">
-            <Link
+      <SheetContent side="left" className="w-full sm:w-64">
+        <SheetHeader>
+          <SheetTitle>Menu</SheetTitle>
+          <SheetDescription>
+            Navigate the application
+          </SheetDescription>
+        </SheetHeader>
+        {user ? (
+          <nav className="grid gap-y-6 py-6">
+            <NavLink
               to="/"
-              className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
+              className={({ isActive }) =>
+                isActive ? activeClassName : inactiveClassName
+              }
+              onClick={closeMenu}
             >
-              <Home className="mr-3 h-5 w-5 text-neutral-600" />
-              <span>{t('home')}</span>
-            </Link>
-            
-            <Link
-              to="/about"
-              className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
+              Dashboard
+            </NavLink>
+            <NavLink
+              to="/employees"
+              className={({ isActive }) =>
+                isActive ? activeClassName : inactiveClassName
+              }
+              onClick={closeMenu}
             >
-              <FileText className="mr-3 h-5 w-5 text-neutral-600" />
-              <span>{t('about')}</span>
-            </Link>
-            <Link
-              to="/contact"
-              className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
+              Employees
+            </NavLink>
+            <NavLink
+              to="/projects"
+              className={({ isActive }) =>
+                isActive ? activeClassName : inactiveClassName
+              }
+              onClick={closeMenu}
             >
-              <User className="mr-3 h-5 w-5 text-neutral-600" />
-              <span>{t('contact')}</span>
-            </Link>
-            {isAuthenticated && (
-              <>
-                <div className="h-[1px] bg-neutral-200 my-3 mx-6" />
-                <Link
-                  to="/profile"
-                  className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                >
-                  <User className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>{t('profile')}</span>
-                </Link>
-                <Link
-                  to="/settings"
-                  className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                >
-                  <Settings className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>{t('settings')}</span>
-                </Link>
-                
-                {/* Show these links only for managers */}
-                {!isEmployee && (
-                  <>
-                    <Link
-                      to="/people"
-                      className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                    >
-                      <Users className="mr-3 h-5 w-5 text-neutral-600" />
-                      <span>{t('employees')}</span>
-                    </Link>
-                    <Link
-                      to="/employee-workflow"
-                      className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                    >
-                      <Workflow className="mr-3 h-5 w-5 text-neutral-600" />
-                      <span>{t('employeeWorkflow')}</span>
-                    </Link>
-                    <Link
-                      to="/leave-management"
-                      className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                    >
-                      <Calendar className="mr-3 h-5 w-5 text-neutral-600" />
-                      <span>{t('leaveManagement')}</span>
-                    </Link>
-                  </>
-                )}
-                
-                {/* Always show shift calendar for all authenticated users */}
-                <Link
-                  to="/shift-calendar"
-                  className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                >
-                  <Calendar className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>{t('shiftCalendar')}</span>
-                </Link>
-                
-                {/* Always show salary for all authenticated users */}
-                <Link
-                  to="/salary"
-                  className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                >
-                  <DollarSign className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>{t('salary')}</span>
-                </Link>
-                
-                {/* Show payslip only for managers */}
-                {!isEmployee && (
-                  <Link
-                    to="/payroll"
-                    className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                  >
-                    <Receipt className="mr-3 h-5 w-5 text-neutral-600" />
-                    <span>{t('payslip')}</span>
-                  </Link>
-                )}
-                
-                {/* Always show schedule requests for all authenticated users */}
-                <Link
-                  to="/schedule-requests"
-                  className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                >
-                  <Clock className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>{t('scheduleRequests')}</span>
-                </Link>
-              </>
-            )}
+              Projects
+            </NavLink>
+            <NavLink
+              to="/payroll"
+              className={({ isActive }) =>
+                isActive ? activeClassName : inactiveClassName
+              }
+              onClick={closeMenu}
+            >
+              Payroll
+            </NavLink>
+            <NavLink
+              to="/attendance"
+              className={({ isActive }) =>
+                isActive ? activeClassName : inactiveClassName
+              }
+              onClick={closeMenu}
+            >
+              Attendance
+            </NavLink>
+            <NavLink
+              to="/documents"
+              className={({ isActive }) =>
+                isActive ? activeClassName : inactiveClassName
+              }
+              onClick={closeMenu}
+            >
+              Documents
+            </NavLink>
+            <NavLink
+              to="/leave"
+              className={({ isActive }) =>
+                isActive ? activeClassName : inactiveClassName
+              }
+              onClick={closeMenu}
+            >
+              Leave
+            </NavLink>
+            <NavLink
+              to="/schedule"
+              className={({ isActive }) =>
+                isActive ? activeClassName : inactiveClassName
+              }
+              onClick={closeMenu}
+            >
+              Schedule
+            </NavLink>
+            <NavLink
+              to="/ScheduleRequests"
+              className={({ isActive }) =>
+                isActive ? activeClassName : inactiveClassName
+              }
+              onClick={closeMenu}
+            >
+              Schedule Requests
+            </NavLink>
+            <NavLink
+              to="/workflow"
+              className={({ isActive }) =>
+                isActive ? activeClassName : inactiveClassName
+              }
+              onClick={closeMenu}
+            >
+              Workflow
+            </NavLink>
+            <Button variant="outline" onClick={signOut} className="w-full">
+              Sign Out
+            </Button>
           </nav>
-        </ScrollArea>
+        ) : (
+          <nav className="grid gap-y-6 py-6">
+            <NavLink
+              to="/login"
+              className={({ isActive }) =>
+                isActive ? activeClassName : inactiveClassName
+              }
+              onClick={closeMenu}
+            >
+              Login
+            </NavLink>
+            <NavLink
+              to="/register"
+              className={({ isActive }) =>
+                isActive ? activeClassName : inactiveClassName
+              }
+              onClick={closeMenu}
+            >
+              Register
+            </NavLink>
+          </nav>
+        )}
       </SheetContent>
     </Sheet>
   );

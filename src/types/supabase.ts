@@ -95,3 +95,26 @@ export type LeaveRequest = Omit<LeaveEvent, 'id'>;
 
 // Use the existing Database type directly
 export type Database = DatabaseType;
+
+// Define workflow notification type
+export interface WorkflowNotification {
+  id: string;
+  sender_id: string | null;
+  receiver_id: string;
+  type: string;
+  message: string;
+  status: string;
+  created_at: string;
+  read: boolean;
+}
+
+// Define workflow request type
+export interface WorkflowRequest {
+  id: string;
+  user_id: string;
+  request_type: string;
+  details: any; // Using 'any' for the JSONB field
+  status: string;
+  submitted_at: string;
+  reviewed_by?: string | null;
+}

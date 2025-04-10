@@ -593,6 +593,69 @@ export type Database = {
         }
         Relationships: []
       }
+      workflow_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          receiver_id: string
+          sender_id: string | null
+          status: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          receiver_id: string
+          sender_id?: string | null
+          status?: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          receiver_id?: string
+          sender_id?: string | null
+          status?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      workflow_requests: {
+        Row: {
+          details: Json
+          id: string
+          request_type: string
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          details: Json
+          id?: string
+          request_type: string
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          details?: Json
+          id?: string
+          request_type?: string
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
