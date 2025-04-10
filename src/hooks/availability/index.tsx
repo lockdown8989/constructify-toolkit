@@ -7,6 +7,7 @@ export * from './use-delete-availability';
 
 // Initialize real-time updates for availability_requests
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 // This self-executing function sets up real-time for availability_requests
 (async function setupRealTimeForAvailabilityRequests() {
@@ -22,6 +23,9 @@ import { supabase } from '@/integrations/supabase/client';
         },
         (payload) => {
           console.log('Real-time update received for availability_requests:', payload);
+          
+          // We'll handle the invalidation in components that use this data
+          // This just logs the payload for debugging
         }
       )
       .subscribe(status => {

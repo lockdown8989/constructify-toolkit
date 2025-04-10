@@ -16,22 +16,6 @@ const AvailabilityRequestList = () => {
   // Get current employee
   const currentEmployee = user ? employees.find(emp => emp.user_id === user.id) : null;
   
-  // Filter availability requests to show only the current employee's requests
-  const employeeAvailabilityRequests = currentEmployee 
-    ? requests.filter(req => req.employee_id === currentEmployee.id)
-    : [];
-  
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Approved':
-        return <Badge className="bg-green-100 text-green-800 border-green-300">Approved</Badge>;
-      case 'Rejected':
-        return <Badge className="bg-red-100 text-red-800 border-red-300">Rejected</Badge>;
-      default:
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Pending</Badge>;
-    }
-  };
-  
   // Determine if we're still loading data
   const isLoading = isLoadingRequests || isLoadingEmployees;
   
@@ -56,7 +40,7 @@ const AvailabilityRequestList = () => {
     );
   }
   
-  if (employeeAvailabilityRequests.length === 0) {
+  if (requests.length === 0) {
     return (
       <div className="text-center py-6 text-gray-500">
         <p>No availability preferences set.</p>
@@ -67,9 +51,20 @@ const AvailabilityRequestList = () => {
     );
   }
   
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Approved':
+        return <Badge className="bg-green-100 text-green-800 border-green-300">Approved</Badge>;
+      case 'Rejected':
+        return <Badge className="bg-red-100 text-red-800 border-red-300">Rejected</Badge>;
+      default:
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Pending</Badge>;
+    }
+  };
+  
   return (
     <div className="space-y-3 mt-2">
-      {employeeAvailabilityRequests.map((request) => (
+      {requests.map((request) => (
         <div key={request.id} className="p-3 border rounded-lg hover:bg-gray-50 transition-colors">
           <div className="flex justify-between items-start">
             <div>

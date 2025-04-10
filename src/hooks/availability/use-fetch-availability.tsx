@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AvailabilityRequest } from '@/types/availability';
@@ -31,9 +30,7 @@ export function useAvailabilityRequests(employeeId?: string) {
         
         if (employeeError) {
           console.error('Error fetching employee record:', employeeError);
-          // Instead of throwing, return empty array with a warning
-          console.warn('No employee record found for current user, returning empty availability list');
-          return [];
+          return []; // Return empty array if we can't find employee
         }
         
         if (employeeData) {
@@ -55,7 +52,7 @@ export function useAvailabilityRequests(employeeId?: string) {
         throw error;
       }
       
-      console.log('Fetched availability requests:', data?.length || 0);
+      console.log('Fetched availability requests:', data?.length || 0, data);
       return data as AvailabilityRequest[] || [];
     },
     enabled: true // Always enabled, but will return empty array when needed
