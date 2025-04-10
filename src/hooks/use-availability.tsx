@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -190,7 +189,7 @@ export function useUpdateAvailabilityRequest() {
       }
       return data as AvailabilityRequest;
     },
-    onSuccess: async (data) => {
+    onSuccess: async (data, update) => {
       queryClient.invalidateQueries({ queryKey: ['availability-requests'] });
       queryClient.invalidateQueries({ queryKey: ['availability_requests', data.employee_id] });
       

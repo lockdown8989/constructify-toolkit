@@ -17,7 +17,7 @@ export interface Employee {
   sick_leave_days?: number;
 }
 
-// Define availability request type
+// Define availability request type - updated to match the database schema
 export interface AvailabilityRequest {
   id: string;
   employee_id: string;
@@ -25,7 +25,7 @@ export interface AvailabilityRequest {
   start_time: string;
   end_time: string;
   is_available: boolean;
-  notes?: string;
+  notes: string | null; // Changed to explicitly allow null to match the database schema
   status: string;
   created_at: string;
   updated_at: string;
@@ -105,7 +105,18 @@ export interface ExtendedDatabase extends DatabaseType {
       };
       
       availability_requests: {
-        Row: AvailabilityRequest;
+        Row: {
+          created_at: string;
+          date: string;
+          employee_id: string;
+          end_time: string;
+          id: string;
+          is_available: boolean;
+          notes: string | null; // Updated to match the AvailabilityRequest interface
+          start_time: string;
+          status: string;
+          updated_at: string;
+        };
         Insert: Omit<AvailabilityRequest, 'id' | 'created_at' | 'updated_at'> & { id?: string; created_at?: string; updated_at?: string };
         Update: Partial<AvailabilityRequest>;
         Relationships: [] // Changed to empty array to match the base Database interface
