@@ -39,7 +39,7 @@
   }
   
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-gray-50 text-foreground font-sans;
     height: 100%;
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;

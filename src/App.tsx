@@ -17,7 +17,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <ThemeProvider defaultTheme="system" storageKey="ui-theme">
+        <ThemeProvider defaultTheme="light" storageKey="ui-theme">
           <AuthProvider>
             <CurrencyProvider>
               <LanguageProvider>

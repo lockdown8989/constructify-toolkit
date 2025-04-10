@@ -54,13 +54,5 @@ export const englishTranslations: Translations = {
   schedule: 'Schedule',
   leave: 'Leave',
   toggleMenu: 'Toggle menu',
-  back: 'Back',
-  
-  // Theme settings
-  darkMode: 'Theme',
-  useDarkTheme: 'Use dark theme for the application',
-  light: 'Light',
-  dark: 'Dark',
-  system: 'System',
-  lightModeOnly: 'This application uses light theme only'
+  back: 'Back'
 };

@@ -54,13 +54,5 @@ export const romanianTranslations: Translations = {
   schedule: 'Program',
   leave: 'Concediu',
   toggleMenu: 'Comutare meniu',
-  back: 'Înapoi',
-  
-  // Theme settings
-  darkMode: 'Temă',
-  useDarkTheme: 'Utilizați tema întunecată pentru aplicație',
-  light: 'Luminos',
-  dark: 'Întunecat',
-  system: 'Sistem',
-  lightModeOnly: 'Această aplicație utilizează doar tema luminoasă'
+  back: 'Înapoi'
 };
