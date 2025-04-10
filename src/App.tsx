@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth";
-import router from "./routes/routes";
+import { Router } from "./routes/routes";
 
 const queryClient = new QueryClient();
 
@@ -15,7 +15,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <RouterProvider router={router} />
+        <RouterProvider router={<Router />} />
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

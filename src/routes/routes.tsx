@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Auth from "@/pages/Auth";
@@ -13,7 +14,7 @@ import Hiring from "@/pages/Hiring";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/NotFound";
 import AppLayout from "@/components/layout/AppLayout";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export function Router() {
   return (

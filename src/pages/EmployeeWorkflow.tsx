@@ -5,13 +5,14 @@ import ShiftAcknowledgment from '@/components/schedule/ShiftAcknowledgment';
 import TimeClockWidget from '@/components/schedule/TimeClockWidget';
 import ShiftSwapForm from '@/components/schedule/ShiftSwapForm';
 import ShiftSwapList from '@/components/schedule/ShiftSwapList';
+import AvailabilityManagement from '@/components/schedule/AvailabilityManagement';
 import { useSchedules } from '@/hooks/use-schedules';
 import { useEmployees } from '@/hooks/use-employees';
 import { useLeaveCalendar, useAddLeaveRequest } from '@/hooks/use-leave-calendar';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Calendar, Clock, CalendarDays, ArrowLeftRight } from 'lucide-react';
+import { Calendar, Clock, CalendarDays, ArrowLeftRight, Calendar as CalendarIcon } from 'lucide-react';
 import { format, addDays, differenceInBusinessDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -86,9 +87,10 @@ const EmployeeWorkflow = () => {
   const renderMobileView = () => {
     return (
       <Tabs defaultValue="shifts">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="shifts">Shifts</TabsTrigger>
           <TabsTrigger value="timeclock">Time Clock</TabsTrigger>
+          <TabsTrigger value="availability">Availability</TabsTrigger>
           <TabsTrigger value="leave">Leave</TabsTrigger>
         </TabsList>
         
@@ -100,6 +102,10 @@ const EmployeeWorkflow = () => {
         
         <TabsContent value="timeclock" className="space-y-4 mt-4">
           <TimeClockWidget />
+        </TabsContent>
+        
+        <TabsContent value="availability" className="space-y-4 mt-4">
+          <AvailabilityManagement />
         </TabsContent>
         
         <TabsContent value="leave" className="space-y-4 mt-4">
@@ -133,6 +139,7 @@ const EmployeeWorkflow = () => {
         <div className="lg:col-span-1 space-y-6">
           <TimeClockWidget />
           <LeaveBalanceCard leaveBalance={leaveBalance} />
+          <AvailabilityManagement />
         </div>
         
         <div className="lg:col-span-2 space-y-6">

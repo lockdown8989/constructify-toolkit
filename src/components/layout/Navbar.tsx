@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
@@ -30,27 +31,30 @@ const Navbar = () => {
           TeamPulse
         </Link>
 
-        <div className="flex items-center gap-6">
-          <Link to="/dashboard" className={`text-gray-600 hover:text-gray-800 ${pathname === '/dashboard' ? 'font-medium' : ''}`}>
+        <div className="flex items-center gap-3 sm:gap-6 overflow-x-auto hide-scrollbar pb-1">
+          <Link to="/dashboard" className={`text-gray-600 hover:text-gray-800 ${pathname === '/dashboard' ? 'font-medium' : ''} whitespace-nowrap`}>
             Dashboard
           </Link>
-          <Link to="/people" className={`text-gray-600 hover:text-gray-800 ${pathname.startsWith('/people') ? 'font-medium' : ''}`}>
+          <Link to="/people" className={`text-gray-600 hover:text-gray-800 ${pathname.startsWith('/people') ? 'font-medium' : ''} whitespace-nowrap`}>
             People
           </Link>
-          <Link to="/schedule" className={`text-gray-600 hover:text-gray-800 ${pathname === '/schedule' ? 'font-medium' : ''}`}>
+          <Link to="/schedule" className={`text-gray-600 hover:text-gray-800 ${pathname === '/schedule' ? 'font-medium' : ''} whitespace-nowrap`}>
             Schedule
           </Link>
-          <Link to="/employee-workflow" className={`text-gray-600 hover:text-gray-800 ${pathname === '/employee-workflow' ? 'font-medium' : ''}`}>
+          <Link to="/schedule-requests" className={`text-gray-600 hover:text-gray-800 ${pathname === '/schedule-requests' ? 'font-medium' : ''} whitespace-nowrap`}>
+            Requests
+          </Link>
+          <Link to="/employee-workflow" className={`text-gray-600 hover:text-gray-800 ${pathname === '/employee-workflow' ? 'font-medium' : ''} whitespace-nowrap`}>
             My Workflow
           </Link>
-          <Link to="/leave-management" className={`text-gray-600 hover:text-gray-800 ${pathname === '/leave-management' ? 'font-medium' : ''}`}>
+          <Link to="/leave-management" className={`text-gray-600 hover:text-gray-800 ${pathname === '/leave-management' ? 'font-medium' : ''} whitespace-nowrap`}>
             Leave
           </Link>
-          <Link to="/salary" className={`text-gray-600 hover:text-gray-800 ${pathname === '/salary' ? 'font-medium' : ''}`}>
+          <Link to="/salary" className={`text-gray-600 hover:text-gray-800 ${pathname === '/salary' ? 'font-medium' : ''} whitespace-nowrap`}>
             Salary
           </Link>
           {isManager && (
-            <Link to="/hiring" className={`text-gray-600 hover:text-gray-800 ${pathname === '/hiring' ? 'font-medium' : ''}`}>
+            <Link to="/hiring" className={`text-gray-600 hover:text-gray-800 ${pathname === '/hiring' ? 'font-medium' : ''} whitespace-nowrap`}>
               Hiring
             </Link>
           )}
