@@ -23,6 +23,32 @@
     }
   }
   
+  /* Employee info cards */
+  .employee-info-card {
+    @apply rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors p-3;
+  }
+  
+  .employee-info-icon {
+    @apply p-2 bg-white rounded-md shadow-sm flex items-center justify-center;
+  }
+  
+  /* Mobile table styles */
+  .employee-table-mobile {
+    @apply w-full divide-y divide-gray-200;
+  }
+  
+  .employee-table-row-mobile {
+    @apply flex flex-wrap border-b border-gray-200 py-3;
+  }
+  
+  .employee-table-cell-mobile {
+    @apply w-1/2 px-2 py-1.5;
+  }
+  
+  .employee-table-label-mobile {
+    @apply text-xs text-gray-500 block;
+  }
+  
   /* Mobile navigation bottom bar */
   .mobile-nav-bar {
     @apply fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center p-2 z-50 safe-area-inset;
