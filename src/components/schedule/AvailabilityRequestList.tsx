@@ -4,12 +4,12 @@ import { format } from 'date-fns';
 import { useAvailabilityRequests } from '@/hooks/use-availability';
 import { useEmployees } from '@/hooks/use-employees';
 import { useAuth } from '@/hooks/use-auth';
-import { Clock } from 'lucide-react';
+import { Clock, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const AvailabilityRequestList = () => {
-  const { data: requests = [], isLoading } = useAvailabilityRequests();
-  const { data: employees = [] } = useEmployees();
+  const { data: requests = [], isLoading: isLoadingRequests } = useAvailabilityRequests();
+  const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { user } = useAuth();
   
   // Get current employee
@@ -31,9 +31,13 @@ const AvailabilityRequestList = () => {
     }
   };
   
+  // Determine if we're still loading data
+  const isLoading = isLoadingRequests || isLoadingEmployees;
+  
   if (isLoading) {
     return (
-      <div className="flex justify-center py-6">
+      <div className="flex justify-center items-center py-6">
+        <Loader2 className="w-5 h-5 mr-2 animate-spin text-primary" />
         <p>Loading availability data...</p>
       </div>
     );

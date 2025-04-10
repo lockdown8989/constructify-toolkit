@@ -8,10 +8,12 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import AvailabilityRequestForm from './AvailabilityRequestForm';
 import AvailabilityRequestList from './AvailabilityRequestList';
+import { useAvailabilityRequests } from '@/hooks/use-availability';
 
 const AvailabilityManagement = () => {
   const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
+  const { isLoading } = useAvailabilityRequests();
   
   if (!user) {
     return (
@@ -31,7 +33,11 @@ const AvailabilityManagement = () => {
             <Clock className="h-5 w-5" />
             Availability Management
           </CardTitle>
-          <Button size="sm" onClick={() => setShowForm(true)}>
+          <Button 
+            size="sm" 
+            onClick={() => setShowForm(true)}
+            disabled={isLoading}
+          >
             <Plus className="h-4 w-4 mr-1" />
             Set Availability
           </Button>
