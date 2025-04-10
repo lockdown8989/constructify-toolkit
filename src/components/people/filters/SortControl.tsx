@@ -47,7 +47,7 @@ const SortControl: React.FC<SortControlProps> = ({
         variant="ghost" 
         size="icon" 
         className="h-9 w-9"
-        onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
+        onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
       >
         {sortDirection === 'asc' ? '↑' : '↓'}
       </Button>
