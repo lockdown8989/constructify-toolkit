@@ -31,7 +31,35 @@
 
   /* Improved dropdown positioning for mobile */
   .dropdown-content {
-    @apply z-50 max-h-[50vh] overflow-y-auto;
+    @apply z-50 max-h-[60vh] overflow-y-auto;
+  }
+  
+  /* Mobile-native feedback */
+  .touch-feedback:active {
+    @apply opacity-70 scale-95 transition-all duration-200;
+  }
+  
+  /* Native-like button press effect */
+  .btn-press:active {
+    @apply translate-y-0.5 shadow-none transition-all duration-75;
+  }
+  
+  /* iOS-style list items */
+  .ios-list-item {
+    @apply border-b border-gray-100 py-3 px-4 bg-white active:bg-gray-50 transition-colors duration-150;
+  }
+  
+  /* Android Material ripple simulation */
+  .android-ripple {
+    @apply relative overflow-hidden;
+  }
+  
+  .android-ripple::after {
+    @apply content-[''] absolute inset-0 bg-current opacity-0 transition-opacity duration-300;
+  }
+  
+  .android-ripple:active::after {
+    @apply opacity-10;
   }
 }
 
@@ -58,6 +86,11 @@
   padding-right: env(safe-area-inset-right);
 }
 
+/* Add specific safe area padding for bottom of scrollable content */
+.pb-safe {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
 /* Pull to refresh animation for mobile */
 .pull-to-refresh {
   position: relative;
@@ -74,7 +107,7 @@
   height: 30px;
   border-radius: 50%;
   border: 3px solid #f3f3f3;
-  border-top: 3px solid #FFCB45;
+  border-top: 3px solid #3b82f6;
   animation: spin 1s linear infinite;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -103,4 +136,38 @@
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* Internet Explorer/Edge */
   user-select: none; /* Non-prefixed version */
+}
+
+/* Native-looking bottom sheet for mobile */
+.bottom-sheet {
+  @apply fixed bottom-0 left-0 right-0 bg-background rounded-t-2xl shadow-lg transform transition-transform duration-300 z-50;
+  transform: translateY(100%);
+}
+
+.bottom-sheet.open {
+  transform: translateY(0);
+}
+
+.bottom-sheet-handle {
+  @apply w-12 h-1 bg-gray-300 rounded-full mx-auto mt-2 mb-4;
+}
+
+/* Haptic feedback simulation */
+.haptic-feedback:active {
+  animation: haptic 0.15s ease-in-out;
+}
+
+@keyframes haptic {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.98); }
+}
+
+/* Mobile nav bar with active indicators */
+.mobile-nav-active {
+  @apply relative text-primary;
+}
+
+.mobile-nav-active::after {
+  content: '';
+  @apply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary;
 }

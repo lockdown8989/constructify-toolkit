@@ -2,6 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +22,8 @@ import {
   HelpCircle, 
   FileText, 
   Moon, 
-  Circle 
+  Circle,
+  ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
@@ -37,6 +39,7 @@ const UserMenu = () => {
   const { user, signOut } = useAuth();
   const [autoOffline, setAutoOffline] = useState(false);
   const [availability, setAvailability] = useState<"online" | "away" | "offline">("online");
+  const isMobile = useIsMobile();
 
   if (!user) return null;
 
@@ -56,17 +59,30 @@ const UserMenu = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0 relative">
+        <Button 
+          variant="ghost" 
+          className={cn(
+            "relative",
+            isMobile ? "h-10 w-10 p-0 rounded-full" : "h-8 w-8 p-0"
+          )}
+        >
           <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background z-10">
             <span className={cn("absolute inset-0 rounded-full", availabilityOptions[availability].color)} />
           </span>
-          <Avatar className="h-8 w-8">
+          <Avatar className={cn(isMobile ? "h-10 w-10" : "h-8 w-8")}>
             <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.full_name} />
             <AvatarFallback>{user?.user_metadata?.full_name?.charAt(0)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-72" align="end" forceMount>
+      <DropdownMenuContent 
+        className={cn(
+          "w-72 bg-popover/95 backdrop-blur-sm", 
+          isMobile ? "touch-target" : ""
+        )} 
+        align="end" 
+        forceMount
+      >
         <div className="flex items-center justify-between p-2">
           <div className="flex items-center gap-2">
             <Avatar className="h-10 w-10">
@@ -85,7 +101,14 @@ const UserMenu = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={cn(
+                    "h-8 w-8",
+                    isMobile ? "touch-target" : ""
+                  )}
+                >
                   <Settings className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -103,7 +126,10 @@ const UserMenu = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              className="w-full justify-between"
+              className={cn(
+                "w-full justify-between",
+                isMobile ? "h-10" : ""
+              )}
               onClick={handleAvailabilityChange}
             >
               <div className="flex items-center">
@@ -119,7 +145,10 @@ const UserMenu = () => {
             <Switch 
               checked={autoOffline} 
               onCheckedChange={setAutoOffline} 
-              className="data-[state=checked]:bg-blue-500" 
+              className={cn(
+                "data-[state=checked]:bg-blue-500",
+                isMobile ? "scale-110" : ""
+              )} 
             />
           </div>
         </div>
@@ -127,27 +156,32 @@ const UserMenu = () => {
         <DropdownMenuSeparator />
         
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem className={isMobile ? "py-2.5" : ""}>
             <HelpCircle className="mr-2 h-4 w-4" />
             <span>Contact support</span>
+            {isMobile && <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground/50" />}
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem className={isMobile ? "py-2.5" : ""}>
             <Keyboard className="mr-2 h-4 w-4" />
             <span>Keyboard shortcuts</span>
+            {isMobile && <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground/50" />}
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to="/profile">
+          <DropdownMenuItem asChild className={isMobile ? "py-2.5" : ""}>
+            <Link to="/profile" className="flex items-center">
               <User className="mr-2 h-4 w-4" />
               <span>Profile settings</span>
+              {isMobile && <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground/50" />}
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem className={isMobile ? "py-2.5" : ""}>
             <Moon className="mr-2 h-4 w-4" />
             <span>Change appearance</span>
+            {isMobile && <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground/50" />}
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem className={isMobile ? "py-2.5" : ""}>
             <FileText className="mr-2 h-4 w-4" />
             <span>Read documentation</span>
+            {isMobile && <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground/50" />}
           </DropdownMenuItem>
         </DropdownMenuGroup>
         
@@ -155,7 +189,10 @@ const UserMenu = () => {
         
         <DropdownMenuItem
           onClick={() => signOut()}
-          className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-50 dark:focus:bg-red-950/20"
+          className={cn(
+            "cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-50 dark:focus:bg-red-950/20",
+            isMobile ? "py-2.5" : ""
+          )}
         >
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
