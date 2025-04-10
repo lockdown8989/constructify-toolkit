@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { WorkflowRequest } from '@/types/supabase';
+import { WorkflowRequest, WorkflowNotification, castDatabaseResult } from '@/types/workflow';
 
 export const useWorkflowRequests = () => {
   const { user, isManager, isAdmin, isHR } = useAuth();
@@ -28,7 +28,7 @@ export const useWorkflowRequests = () => {
         throw error;
       }
 
-      return data as WorkflowRequest[];
+      return castDatabaseResult<WorkflowRequest[]>(data);
     },
     enabled: !!user
   });
@@ -50,7 +50,7 @@ export const useWorkflowRequests = () => {
         throw error;
       }
 
-      return data as WorkflowRequest[];
+      return castDatabaseResult<WorkflowRequest[]>(data);
     },
     enabled: !!user && hasManagerAccess
   });
@@ -72,7 +72,7 @@ export const useWorkflowRequests = () => {
         throw error;
       }
 
-      return data as WorkflowRequest;
+      return castDatabaseResult<WorkflowRequest>(data);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['workflow-requests-user'] });
@@ -112,7 +112,7 @@ export const useWorkflowRequests = () => {
         throw error;
       }
 
-      return data as WorkflowRequest;
+      return castDatabaseResult<WorkflowRequest>(data);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['workflow-requests-user'] });
@@ -161,7 +161,10 @@ export const useWorkflowRequests = () => {
         status: 'pending'
       }));
 
-      await supabase.from('workflow_notifications').insert(notifications);
+      // Insert the notifications
+      await supabase
+        .from('workflow_notifications')
+        .insert(notifications);
     } catch (error) {
       console.error('Error notifying managers:', error);
     }
@@ -172,13 +175,16 @@ export const useWorkflowRequests = () => {
     try {
       if (!user) return;
 
-      await supabase.from('workflow_notifications').insert({
-        sender_id: user.id,
-        receiver_id: request.user_id,
-        type: request.request_type,
-        message: `Your ${request.request_type} request has been ${request.status}.`,
-        status: request.status
-      });
+      // Insert a notification for the requester
+      await supabase
+        .from('workflow_notifications')
+        .insert({
+          sender_id: user.id,
+          receiver_id: request.user_id,
+          type: request.request_type,
+          message: `Your ${request.request_type} request has been ${request.status}.`,
+          status: request.status
+        });
     } catch (error) {
       console.error('Error notifying requester:', error);
     }

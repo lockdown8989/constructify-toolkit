@@ -1,28 +1,16 @@
-import React, { useState, useEffect } from 'react';
+
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useAuth } from './hooks/auth';
-import { Account } from './components/Account';
-import Home from './pages/Home';
-import Employees from './pages/Employees';
-import Payroll from './pages/Payroll';
-import Attendance from './pages/Attendance';
-import Documents from './pages/Documents';
-import Schedule from './pages/Schedule';
-import ScheduleRequests from './pages/ScheduleRequests';
-import EmployeeComposition from './pages/EmployeeComposition';
-import Interview from './pages/Interview';
-import LeaveManagement from './pages/LeaveManagement';
 import WorkflowPage from './pages/WorkflowPage';
 
 const App = () => {
   const { session } = useAuth();
-  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [isAuthReady, setIsAuthReady] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
+    // Simulate checking authentication status
     const checkAuth = async () => {
-      // Simulate checking authentication status
       await new Promise((resolve) => setTimeout(resolve, 500));
       setIsAuthReady(true);
     };
@@ -50,12 +38,7 @@ const App = () => {
             path="/login"
             element={
               !session ? (
-                <Auth
-                  supabaseClient={useAuth().supabase}
-                  appearance={{ theme: ThemeSupa }}
-                  providers={['google', 'github']}
-                  redirectTo="http://localhost:5173/"
-                />
+                <div>Login Page Placeholder</div>
               ) : (
                 <Navigate to="/" />
               )
@@ -65,95 +48,16 @@ const App = () => {
             path="/"
             element={
               <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/account"
-            element={
-              <ProtectedRoute>
-                <Account session={session} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/employees"
-            element={
-              <ProtectedRoute>
-                <Employees />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payroll"
-            element={
-              <ProtectedRoute>
-                <Payroll />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/attendance"
-            element={
-              <ProtectedRoute>
-                <Attendance />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/documents"
-            element={
-              <ProtectedRoute>
-                <Documents />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/schedule"
-            element={
-              <ProtectedRoute>
-                <Schedule />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/schedule-requests"
-            element={
-              <ProtectedRoute>
-                <ScheduleRequests />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/employee-composition"
-            element={
-              <ProtectedRoute>
-                <EmployeeComposition />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/interview"
-            element={
-              <ProtectedRoute>
-                <Interview />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/leave-management"
-            element={
-              <ProtectedRoute>
-                <LeaveManagement />
+                <div>Home Page Placeholder</div>
               </ProtectedRoute>
             }
           />
           <Route path="/workflow" element={
-              <ProtectedRoute>
-                <WorkflowPage />
-              </ProtectedRoute>
-            } />
+            <ProtectedRoute>
+              <WorkflowPage />
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<div>Not Found</div>} />
         </Routes>
       </div>
     </BrowserRouter>

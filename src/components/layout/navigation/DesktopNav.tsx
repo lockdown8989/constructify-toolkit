@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
@@ -50,7 +51,7 @@ const DesktopNav = () => {
       >
         Attendance
       </NavLink>
-      {isAuthenticated() && (
+      {isAuthenticated && (
         <NavLink
           to="/leave"
           className={({ isActive }) =>
@@ -60,7 +61,7 @@ const DesktopNav = () => {
           Leave
         </NavLink>
       )}
-      {isAuthenticated() && (
+      {isAuthenticated && (
         <NavLink
           to="/schedule"
           className={({ isActive }) =>

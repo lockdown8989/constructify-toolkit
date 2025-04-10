@@ -3,7 +3,6 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RequestForm from '@/components/workflow/RequestForm';
 import RequestList from '@/components/workflow/RequestList';
-import { useAuth } from '@/hooks/use-auth';
 import { WorkflowProvider } from '@/providers/WorkflowProvider';
 
 const WorkflowPage: React.FC = () => {

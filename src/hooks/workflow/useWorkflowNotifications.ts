@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { WorkflowNotification } from '@/types/supabase';
+import { WorkflowNotification, castDatabaseResult } from '@/types/workflow';
 
 export const useWorkflowNotifications = () => {
   const { user } = useAuth();
@@ -27,7 +27,7 @@ export const useWorkflowNotifications = () => {
         throw error;
       }
 
-      return data as WorkflowNotification[];
+      return castDatabaseResult<WorkflowNotification[]>(data);
     },
     enabled: !!user
   });
@@ -71,7 +71,7 @@ export const useWorkflowNotifications = () => {
         throw error;
       }
 
-      return data as WorkflowNotification;
+      return castDatabaseResult<WorkflowNotification>(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workflow-notifications'] });
@@ -101,7 +101,7 @@ export const useWorkflowNotifications = () => {
         throw error;
       }
 
-      return data as WorkflowNotification;
+      return castDatabaseResult<WorkflowNotification>(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workflow-notifications'] });
