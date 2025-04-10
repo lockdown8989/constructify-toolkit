@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { LeaveEvent, LeaveRequest } from './leave-types';
+import { notifyManagersOfNewLeaveRequest } from '@/services/notifications/leave-notifications';
 
 /**
  * Hook for adding a new leave request
@@ -50,8 +51,17 @@ export function useAddLeaveRequest() {
         throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
+      
+      // Notify managers about the new leave request
+      try {
+        await notifyManagersOfNewLeaveRequest(data);
+      } catch (notifyError) {
+        console.error('Error notifying managers:', notifyError);
+        // Continue execution even if notification fails
+      }
+      
       toast({
         title: 'Leave request submitted',
         description: 'Your leave request has been successfully submitted.',
