@@ -12,7 +12,17 @@ export const formatCurrency = (
   currency: string = 'USD', 
   locale: string = 'en-US'
 ) => {
-  return new Intl.NumberFormat(locale, {
+  // Map of currency codes to appropriate locales
+  const localeMap: Record<string, string> = {
+    'USD': 'en-US',
+    'GBP': 'en-GB',
+    'EUR': 'de-DE',
+  };
+
+  // Use the appropriate locale for the currency if available
+  const bestLocale = currency in localeMap ? localeMap[currency] : locale;
+  
+  return new Intl.NumberFormat(bestLocale, {
     style: 'currency',
     currency: currency,
     minimumFractionDigits: 2
@@ -42,4 +52,3 @@ export const calculateHours = (startTime: string, endTime: string): number => {
 export const isDragEvent = (event: Event): event is DragEvent => {
   return event.type.startsWith('drag') || event.type === 'drop';
 };
-

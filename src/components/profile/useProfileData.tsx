@@ -9,6 +9,8 @@ interface ProfileData {
   last_name: string;
   position: string;
   department: string;
+  preferred_currency: string;
+  country: string;
 }
 
 export const useProfileData = (user: User | null, isManager: boolean) => {
@@ -18,6 +20,8 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
     last_name: "",
     position: "",
     department: "",
+    preferred_currency: "USD",
+    country: "",
   });
   const [managerId, setManagerId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +48,8 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
             last_name: data.last_name || "",
             position: data.position || "",
             department: data.department || "",
+            preferred_currency: data.preferred_currency || "USD",
+            country: data.country || "",
           });
         }
         

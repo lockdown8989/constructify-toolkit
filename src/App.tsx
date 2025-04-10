@@ -1,27 +1,25 @@
 
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "./hooks/auth";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
-import { AuthProvider } from "@/hooks/auth";
-import { Router } from "./routes/routes";
+import { ThemeProvider } from "@/components/theme-provider";
+import { CurrencyProvider } from "@/hooks/use-currency-preference";
+import AppRoutes from "./routes/routes";
+import "./App.css";
 
-const queryClient = new QueryClient();
-
-// Create a browser router from our routes
-const router = createBrowserRouter(Router());
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <RouterProvider router={router} />
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <BrowserRouter>
+      <ThemeProvider defaultTheme="light" storageKey="ui-theme">
+        <AuthProvider>
+          <CurrencyProvider>
+            <AppRoutes />
+            <Toaster />
+          </CurrencyProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  );
+}
 
 export default App;

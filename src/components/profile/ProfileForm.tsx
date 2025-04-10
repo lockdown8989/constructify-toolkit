@@ -9,6 +9,14 @@ import { Label } from "@/components/ui/label";
 import { ManagerIdSection } from "./ManagerIdSection";
 import { ManagerIdField } from "./ManagerIdField";
 import { CardContent, CardFooter } from "@/components/ui/card";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { DollarSign, Euro, PoundSterling } from "lucide-react";
 
 interface ProfileFormProps {
   user: User | null;
@@ -21,7 +29,15 @@ interface ProfileData {
   last_name: string;
   position: string;
   department: string;
+  preferred_currency: string;
+  country: string;
 }
+
+const currencyOptions = [
+  { value: "USD", label: "US Dollar ($)", icon: DollarSign },
+  { value: "GBP", label: "British Pound (£)", icon: PoundSterling },
+  { value: "EUR", label: "Euro (€)", icon: Euro },
+];
 
 export const ProfileForm = ({ user, isManager, managerId }: ProfileFormProps) => {
   const { toast } = useToast();
@@ -30,6 +46,8 @@ export const ProfileForm = ({ user, isManager, managerId }: ProfileFormProps) =>
     last_name: "",
     position: "",
     department: "",
+    preferred_currency: "USD",
+    country: "",
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -55,6 +73,8 @@ export const ProfileForm = ({ user, isManager, managerId }: ProfileFormProps) =>
             last_name: data.last_name || "",
             position: data.position || "",
             department: data.department || "",
+            preferred_currency: data.preferred_currency || "USD",
+            country: data.country || "",
           });
         }
       } catch (error) {
@@ -68,6 +88,10 @@ export const ProfileForm = ({ user, isManager, managerId }: ProfileFormProps) =>
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCurrencyChange = (value: string) => {
+    setProfile((prev) => ({ ...prev, preferred_currency: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,6 +108,8 @@ export const ProfileForm = ({ user, isManager, managerId }: ProfileFormProps) =>
           last_name: profile.last_name,
           position: profile.position,
           department: profile.department,
+          preferred_currency: profile.preferred_currency,
+          country: profile.country,
           updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
@@ -161,6 +187,44 @@ export const ProfileForm = ({ user, isManager, managerId }: ProfileFormProps) =>
             onChange={handleChange}
             placeholder="e.g. Engineering"
           />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="country">Country</Label>
+            <Input
+              id="country"
+              name="country"
+              value={profile.country}
+              onChange={handleChange}
+              placeholder="e.g. United States"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="currency">Preferred Currency</Label>
+            <Select 
+              value={profile.preferred_currency} 
+              onValueChange={handleCurrencyChange}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select currency" />
+              </SelectTrigger>
+              <SelectContent>
+                {currencyOptions.map((option) => {
+                  const Icon = option.icon;
+                  return (
+                    <SelectItem key={option.value} value={option.value}>
+                      <div className="flex items-center">
+                        <Icon className="w-4 h-4 mr-2" />
+                        <span>{option.label}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         
         <div className="space-y-2">

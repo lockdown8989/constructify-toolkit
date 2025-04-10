@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/ca
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { useProfileData } from "@/components/profile/useProfileData";
 import { Loader2 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 const Profile = () => {
   const { user, isManager } = useAuth();
@@ -21,12 +22,20 @@ const Profile = () => {
   return (
     <div className="container mx-auto py-20 pt-24 px-4">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Your Profile</h1>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Your Profile</h1>
+          <p className="text-muted-foreground">
+            Manage your personal information and preferences
+          </p>
+          <Separator className="mt-4" />
+        </div>
         
         <Card>
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
-            <CardDescription>Update your personal details</CardDescription>
+            <CardDescription>
+              Update your personal details and preferences
+            </CardDescription>
           </CardHeader>
           
           <ProfileForm 
