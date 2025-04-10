@@ -1,188 +1,85 @@
-
-import React, { useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Users, 
-  Calendar, 
-  Briefcase, 
-  DollarSign, 
-  User, 
-  LogOut,
-  Plane,
-  SwitchCamera
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
-import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import React from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/use-auth';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button } from '@/components/ui/button';
+import { LogOut } from 'lucide-react';
 
 const Navbar = () => {
-  const location = useLocation();
-  const { user, signOut, isAdmin, isHR, isManager } = useAuth();
-  const { toast } = useToast();
+  const { user, signOut, isManager } = useAuth();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
 
-  const isManagerRole = isAdmin || isHR || isManager;
-  
-  useEffect(() => {
-    // Log current role status for debugging
-    if (user) {
-      console.log("Current role status:", { isAdmin, isHR, isManager, isManagerRole });
-      
-      // Double-check roles directly from Supabase
-      const checkRoles = async () => {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id);
-          
-        if (error) {
-          console.error("Error checking roles:", error);
-        } else {
-          console.log("Roles from database:", data);
-          
-          // Check specifically for employer role
-          if (data) {
-            const hasEmployerRole = data.some(r => r.role === 'employer');
-            console.log("Has employer role directly from DB:", hasEmployerRole);
-          }
-        }
-      };
-      
-      checkRoles();
-    }
-  }, [user, isAdmin, isHR, isManager, isManagerRole]);
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "An error occurred during logout",
-        variant: "destructive",
-      });
-    }
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
   };
 
-  const navItems = [
-    {
-      label: "Dashboard",
-      path: "/dashboard",
-      icon: <LayoutDashboard className="h-5 w-5" />,
-    },
-    {
-      label: "People",
-      path: "/people",
-      icon: <Users className="h-5 w-5" />,
-      requiresManager: true,
-    },
-    {
-      label: "Schedule",
-      path: "/schedule",
-      icon: <Calendar className="h-5 w-5" />,
-    },
-    {
-      label: "Leave",
-      path: "/leave",
-      icon: <Plane className="h-5 w-5" />,
-    },
-    {
-      label: "Schedule Requests",
-      path: "/schedule-requests",
-      icon: <SwitchCamera className="h-5 w-5" />,
-    },
-    {
-      label: "Hiring",
-      path: "/hiring",
-      icon: <Briefcase className="h-5 w-5" />,
-      requiresManager: true,
-    },
-    {
-      label: "Payroll",
-      path: "/payroll",
-      icon: <DollarSign className="h-5 w-5" />,
-      requiresManager: true,
-    },
-    {
-      label: "Salary",
-      path: "/salary",
-      icon: <DollarSign className="h-5 w-5" />,
-      requiresManager: true,
-    },
-  ];
-
   return (
-    <div className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        <div className="flex items-center gap-1">
-          <Link
-            to="/dashboard"
-            className="flex items-center space-x-2 font-bold"
-          >
-            <span className="hidden sm:inline-block">HR System</span>
+    <div className="bg-white border-b border-gray-200 fixed top-0 left-0 w-full z-40">
+      <div className="container flex items-center justify-between h-16">
+        <Link to="/" className="text-2xl font-bold">
+          TeamPulse
+        </Link>
+
+        <div className="flex items-center gap-6">
+          <Link to="/dashboard" className={`text-gray-600 hover:text-gray-800 ${pathname === '/dashboard' ? 'font-medium' : ''}`}>
+            Dashboard
           </Link>
+          <Link to="/people" className={`text-gray-600 hover:text-gray-800 ${pathname.startsWith('/people') ? 'font-medium' : ''}`}>
+            People
+          </Link>
+          <Link to="/schedule" className={`text-gray-600 hover:text-gray-800 ${pathname === '/schedule' ? 'font-medium' : ''}`}>
+            Schedule
+          </Link>
+          <Link to="/employee-workflow" className={`text-gray-600 hover:text-gray-800 ${pathname === '/employee-workflow' ? 'font-medium' : ''}`}>
+            My Workflow
+          </Link>
+          <Link to="/leave-management" className={`text-gray-600 hover:text-gray-800 ${pathname === '/leave-management' ? 'font-medium' : ''}`}>
+            Leave
+          </Link>
+          <Link to="/salary" className={`text-gray-600 hover:text-gray-800 ${pathname === '/salary' ? 'font-medium' : ''}`}>
+            Salary
+          </Link>
+          {isManager && (
+            <Link to="/hiring" className={`text-gray-600 hover:text-gray-800 ${pathname === '/hiring' ? 'font-medium' : ''}`}>
+              Hiring
+            </Link>
+          )}
         </div>
 
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <nav className="flex items-center space-x-2">
-            {navItems
-              .filter((item) => !item.requiresManager || isManagerRole)
-              .map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={cn(
-                    "h-9 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-                    location.pathname === item.path
-                      ? "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
-                      : "bg-transparent hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
-                  {item.icon && <span className="mr-2">{item.icon}</span>}
-                  <span className="hidden md:inline">{item.label}</span>
-                </Link>
-              ))}
-          </nav>
-
+        {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="ml-auto h-8 gap-1">
-                <User className="h-4 w-4" />
-                <span className="hidden sm:inline-block">
-                  My Account {isManager ? '(Manager)' : '(Employee)'}
-                </span>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user?.user_metadata?.avatar_url || `https://avatar.vercel.sh/${user?.email?.split('@')[0]}.png`} alt={user?.user_metadata?.full_name} />
+                  <AvatarFallback>{user?.user_metadata?.full_name?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuContent className="w-56 mr-2">
+              <DropdownMenuLabel>{user?.user_metadata?.full_name}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/profile" className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-                <LogOut className="mr-2 h-4 w-4" />
-                Log out
+              <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
+        ) : (
+          <Link to="/auth" className="text-gray-600 hover:text-gray-800">
+            Sign In
+          </Link>
+        )}
       </div>
     </div>
   );
