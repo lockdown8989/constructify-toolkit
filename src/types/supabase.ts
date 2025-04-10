@@ -44,25 +44,26 @@ export interface ShiftSwap {
   updated_at: string;
 }
 
-// Define notification type - fixing to allow string type values
+// Define notification type
 export interface Notification {
   id: string;
   user_id: string;
   title: string;
   message: string;
-  type: string; // Changed from union type to string to match database
+  type: string;
   read: boolean;
   related_entity: string;
   related_id: string;
   created_at: string;
 }
 
-// Define webhook settings type - adding for compatibility
+// Define webhook settings type for client-side use
+// This won't be directly stored in the database
 export interface WebhookSetting {
   id: string;
   user_id: string;
   webhook_url: string;
-  webhook_type: string; // Changed from union type to string
+  webhook_type: string;
   notify_shift_swaps: boolean;
   notify_availability: boolean;
   notify_leave: boolean;
@@ -70,6 +71,28 @@ export interface WebhookSetting {
   created_at: string;
   updated_at: string;
 }
+
+// Define the LeaveEvent type with correct audit_log handling
+export type LeaveEvent = {
+  id: string;
+  employee_id: string;
+  type: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  notes?: string;
+  audit_log?: any; // Using 'any' to accommodate both Json and array types
+  employees?: { // Add optional employees property for joined data
+    name: string;
+    job_title: string;
+    department: string;
+  };
+};
+
+// Export this as LeaveCalendar for backward compatibility
+export type LeaveCalendar = LeaveEvent;
+
+export type LeaveRequest = Omit<LeaveEvent, 'id'>;
 
 // Use the existing Database type directly
 export type Database = DatabaseType;

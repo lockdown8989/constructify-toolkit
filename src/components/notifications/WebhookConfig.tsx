@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/hooks/auth';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
   Form,
@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { WebhookSetting } from '@/types/supabase';
+import { useWebhookNotification } from '@/hooks/leave/useWebhookNotification';
 
 const formSchema = z.object({
   webhook_url: z.string().url({ message: "Please enter a valid URL" }),
@@ -41,6 +42,7 @@ const WebhookConfig = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const { saveWebhookSettings, getWebhookSettings } = useWebhookNotification();
   
   const form = useForm<WebhookFormValues>({
     resolver: zodResolver(formSchema),
@@ -61,30 +63,16 @@ const WebhookConfig = () => {
       setIsLoading(true);
       
       try {
-        const { data, error } = await supabase
-          .from('webhook_settings')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
+        const settings = await getWebhookSettings(user.id);
         
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error loading webhook settings:', error);
-          toast({
-            title: "Error",
-            description: "Failed to load webhook settings",
-            variant: "destructive",
-          });
-        }
-        
-        if (data) {
-          const typedData = data as WebhookSetting;
+        if (settings) {
           form.reset({
-            webhook_url: typedData.webhook_url || '',
-            webhook_type: typedData.webhook_type as 'slack' | 'email' || 'slack',
-            notify_shift_swaps: typedData.notify_shift_swaps,
-            notify_availability: typedData.notify_availability,
-            notify_leave: typedData.notify_leave,
-            notify_attendance: typedData.notify_attendance,
+            webhook_url: settings.webhook_url || '',
+            webhook_type: settings.webhook_type as 'slack' | 'email' || 'slack',
+            notify_shift_swaps: settings.notify_shift_swaps,
+            notify_availability: settings.notify_availability,
+            notify_leave: settings.notify_leave,
+            notify_attendance: settings.notify_attendance,
           });
         }
       } catch (error) {
@@ -95,7 +83,7 @@ const WebhookConfig = () => {
     };
     
     loadWebhookSettings();
-  }, [user, form, toast]);
+  }, [user, form, getWebhookSettings]);
   
   const onSubmit = async (values: WebhookFormValues) => {
     if (!user) return;
@@ -103,52 +91,16 @@ const WebhookConfig = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.rpc('upsert_webhook_settings', {
-        p_user_id: user.id,
-        p_webhook_url: values.webhook_url,
-        p_webhook_type: values.webhook_type,
-        p_notify_shift_swaps: values.notify_shift_swaps,
-        p_notify_availability: values.notify_availability,
-        p_notify_leave: values.notify_leave,
-        p_notify_attendance: values.notify_attendance,
-        p_updated_at: new Date().toISOString()
-      });
+      const result = await saveWebhookSettings(user.id, values);
       
-      if (error) {
-        const { data: existingData } = await supabase
-          .from('webhook_settings')
-          .select('id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-          
-        if (existingData) {
-          const { error: updateError } = await supabase
-            .from('webhook_settings')
-            .update({
-              ...values,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('user_id', user.id);
-            
-          if (updateError) throw updateError;
-        } else {
-          const { error: insertError } = await supabase
-            .from('webhook_settings')
-            .insert({
-              user_id: user.id,
-              ...values,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            });
-            
-          if (insertError) throw insertError;
-        }
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Webhook settings saved successfully",
+        });
+      } else {
+        throw new Error("Failed to save webhook settings");
       }
-      
-      toast({
-        title: "Success",
-        description: "Webhook settings saved successfully",
-      });
     } catch (error: any) {
       console.error('Error saving webhook settings:', error);
       toast({
