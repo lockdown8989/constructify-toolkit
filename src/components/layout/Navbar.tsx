@@ -203,15 +203,7 @@ const Navbar = () => {
                 <DropdownMenuItem asChild>
                   <Link to="/profile">Profile</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/employee-workflow">Employee Workflow</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                   <Link to="/leave-management">Leave Management</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/schedule-requests">Schedule Requests</Link>
-                </DropdownMenuItem>
+                {/* Removed these three links from the dropdown menu */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => signOut()}
