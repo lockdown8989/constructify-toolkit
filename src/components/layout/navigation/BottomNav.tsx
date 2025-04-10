@@ -1,9 +1,8 @@
 
-import { Home, Users, Calendar, DollarSign } from "lucide-react"
+import { Home, Users, Calendar, DollarSign, Utensils } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
-import { useLanguage } from "@/hooks/use-language"
 
 interface BottomNavProps {
   isAuthenticated: boolean;
@@ -11,7 +10,6 @@ interface BottomNavProps {
 
 const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
   const location = useLocation();
-  const { t } = useLanguage();
   
   if (!isAuthenticated) return null;
   
@@ -29,7 +27,7 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
             "text-xs", 
             location.pathname === "/" ? "text-primary font-medium" : "text-muted-foreground"
           )}>
-            {t('home')}
+            Home
           </span>
         </Link>
         
@@ -44,12 +42,12 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
             "text-xs", 
             location.pathname === "/people" ? "text-primary font-medium" : "text-muted-foreground"
           )}>
-            {t('team')}
+            Team
           </span>
         </Link>
         
         <Link to="/shift-calendar" className="flex flex-col items-center justify-center p-2">
-          <Calendar 
+          <Utensils 
             className={cn(
               "h-6 w-6 mb-1", 
               location.pathname === "/shift-calendar" || location.pathname === "/restaurant-schedule" ? "text-primary" : "text-muted-foreground"
@@ -59,7 +57,7 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
             "text-xs", 
             location.pathname === "/shift-calendar" || location.pathname === "/restaurant-schedule" ? "text-primary font-medium" : "text-muted-foreground"
           )}>
-            {t('schedule')}
+            Schedule
           </span>
         </Link>
         
@@ -74,7 +72,7 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
             "text-xs", 
             location.pathname === "/leave-management" ? "text-primary font-medium" : "text-muted-foreground"
           )}>
-            {t('leave')}
+            Leave
           </span>
         </Link>
         
@@ -89,7 +87,7 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
             "text-xs", 
             location.pathname === "/salary" ? "text-primary font-medium" : "text-muted-foreground"
           )}>
-            {t('salary')}
+            Salary
           </span>
         </Link>
       </div>

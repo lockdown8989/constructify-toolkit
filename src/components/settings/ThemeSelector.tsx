@@ -4,12 +4,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useLanguage } from "@/hooks/use-language";
 
 export const ThemeSelector = () => {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
-  const { t } = useLanguage();
   
   // Prevent hydration mismatch
   useEffect(() => {
@@ -23,33 +21,19 @@ export const ThemeSelector = () => {
   const isDarkTheme = theme === "dark";
   
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-0.5">
-          <Label htmlFor="dark-mode" className="text-base font-medium">
-            Dark Mode
-          </Label>
-          <p className="text-sm text-muted-foreground">
-            Use dark theme throughout the application
-          </p>
-        </div>
+    <div className="space-y-2">
+      <Label htmlFor="dark-mode">Dark Theme</Label>
+      <div className="flex items-center space-x-4">
+        <Sun className="h-5 w-5 text-muted-foreground" />
         <Switch 
           id="dark-mode"
           checked={isDarkTheme}
           onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-          className="data-[state=checked]:bg-blue-500"
         />
-      </div>
-      
-      <div className="flex p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50">
-        <div className={`flex-1 flex flex-col items-center justify-center p-4 rounded-lg cursor-pointer transition-colors ${!isDarkTheme ? "bg-white dark:bg-slate-800 shadow-sm" : ""}`} onClick={() => setTheme("light")}>
-          <Sun className={`h-8 w-8 mb-2 ${!isDarkTheme ? "text-amber-500" : "text-muted-foreground"}`} />
-          <span className={`text-sm font-medium ${!isDarkTheme ? "text-foreground" : "text-muted-foreground"}`}>Light</span>
-        </div>
-        <div className={`flex-1 flex flex-col items-center justify-center p-4 rounded-lg cursor-pointer transition-colors ${isDarkTheme ? "bg-slate-800 shadow-sm" : ""}`} onClick={() => setTheme("dark")}>
-          <Moon className={`h-8 w-8 mb-2 ${isDarkTheme ? "text-indigo-400" : "text-muted-foreground"}`} />
-          <span className={`text-sm font-medium ${isDarkTheme ? "text-foreground" : "text-muted-foreground"}`}>Dark</span>
-        </div>
+        <Moon className="h-5 w-5 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground ml-2">
+          {isDarkTheme ? "Dark mode enabled" : "Light mode enabled"}
+        </span>
       </div>
     </div>
   );

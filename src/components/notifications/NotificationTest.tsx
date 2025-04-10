@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -100,36 +99,38 @@ const NotificationTest: React.FC = () => {
               Send Test Notification
             </Button>
             <Button 
+              onClick={handleVerifyTable} 
               variant="outline" 
-              onClick={handleVerifyTable}
               disabled={isLoading}
             >
-              Verify Table Setup
+              Verify DB Table
             </Button>
           </div>
         </div>
         
         {verifyResult && (
-          <div className="mt-4 p-4 rounded border bg-muted/20">
-            <h4 className="font-medium mb-2">Verification Result</h4>
-            <p className={verifyResult.success ? "text-green-600" : "text-red-600"}>
-              {verifyResult.message}
-            </p>
-            {verifyResult.data && (
-              <pre className="mt-2 text-xs overflow-auto p-2 bg-muted rounded">
-                {JSON.stringify(verifyResult.data, null, 2)}
-              </pre>
-            )}
+          <div className="pt-4 border-t">
+            <h3 className="text-sm font-medium mb-2">Verification Result</h3>
+            <div className={`p-3 rounded-md text-sm ${
+              verifyResult.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+            }`}>
+              <p className="font-medium">{verifyResult.success ? 'Success' : 'Error'}</p>
+              <p>{verifyResult.message}</p>
+              {verifyResult.data && (
+                <pre className="mt-2 text-xs overflow-auto">
+                  {JSON.stringify(verifyResult.data, null, 2)}
+                </pre>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {!user && (
+          <div className="p-3 rounded-md bg-yellow-50 text-yellow-800 text-sm">
+            You must be logged in to test notifications.
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex justify-end">
-        <p className="text-xs text-muted-foreground">
-          {user 
-            ? `Testing notifications for user: ${user.id}` 
-            : "You need to be logged in to test notifications"}
-        </p>
-      </CardFooter>
     </Card>
   );
 };

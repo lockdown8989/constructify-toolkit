@@ -2,67 +2,40 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Gets all user IDs with manager role
+ * Gets all manager user IDs from the database
  */
 export const getManagerUserIds = async (): Promise<string[]> => {
+  console.log('NotificationService: Getting manager user IDs');
+  
   try {
     const { data, error } = await supabase
       .from('user_roles')
       .select('user_id')
       .eq('role', 'employer');
-    
+      
     if (error) {
-      console.error('Error fetching manager user IDs:', error);
+      console.error('Error getting manager user IDs:', error);
       throw error;
     }
     
-    return data.map(item => item.user_id);
-  } catch (error) {
-    console.error('Exception in getManagerUserIds:', error);
-    return [];
-  }
-};
-
-/**
- * Gets all user IDs with admin role
- */
-export const getAdminUserIds = async (): Promise<string[]> => {
-  try {
-    const { data, error } = await supabase
+    // Also get admin and HR user IDs
+    const { data: adminData, error: adminError } = await supabase
       .from('user_roles')
       .select('user_id')
-      .eq('role', 'admin');
-    
-    if (error) {
-      console.error('Error fetching admin user IDs:', error);
-      throw error;
+      .in('role', ['admin', 'hr']);
+      
+    if (adminError) {
+      console.error('Error getting admin/HR user IDs:', adminError);
+      throw adminError;
     }
     
-    return data.map(item => item.user_id);
-  } catch (error) {
-    console.error('Exception in getAdminUserIds:', error);
-    return [];
-  }
-};
-
-/**
- * Gets all user IDs with HR role
- */
-export const getHRUserIds = async (): Promise<string[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('user_id')
-      .eq('role', 'hr');
+    // Combine all manager user IDs
+    const managerIds = [...(data || []), ...(adminData || [])].map(item => item.user_id);
+    console.log('NotificationService: Found manager user IDs:', managerIds);
     
-    if (error) {
-      console.error('Error fetching HR user IDs:', error);
-      throw error;
-    }
-    
-    return data.map(item => item.user_id);
+    return managerIds;
   } catch (error) {
-    console.error('Exception in getHRUserIds:', error);
+    console.error('Exception getting manager user IDs:', error);
     return [];
   }
 };

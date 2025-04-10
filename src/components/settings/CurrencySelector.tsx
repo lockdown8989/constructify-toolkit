@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { useLanguage } from "@/hooks/use-language";
 
 const currencyOptions = [
   { value: "USD", label: "US Dollar ($)", icon: DollarSign },
@@ -22,31 +21,23 @@ interface CurrencySelectorProps {
 }
 
 export const CurrencySelector = ({ currency, onChange }: CurrencySelectorProps) => {
-  const { t } = useLanguage();
-  
   return (
-    <div className="space-y-3">
-      <Label htmlFor="currency" className="text-sm font-medium">{t('preferredCurrency')}</Label>
+    <div className="space-y-2">
+      <Label htmlFor="currency">Preferred Currency</Label>
       <Select 
         value={currency} 
         onValueChange={onChange}
       >
-        <SelectTrigger className="w-full rounded-xl border-gray-200 dark:border-slate-700 h-12 px-4 focus:ring-blue-200 dark:focus:ring-blue-900">
-          <SelectValue placeholder={t('selectCurrency')} />
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Select currency" />
         </SelectTrigger>
-        <SelectContent className="bg-white dark:bg-slate-800 border-none shadow-lg rounded-xl p-1 animate-in fade-in-80 zoom-in-95">
+        <SelectContent>
           {currencyOptions.map((option) => {
             const Icon = option.icon;
             return (
-              <SelectItem 
-                key={option.value} 
-                value={option.value}
-                className="rounded-lg focus:bg-gray-100 dark:focus:bg-slate-700 py-2.5 pl-10 pr-3 text-sm cursor-pointer"
-              >
+              <SelectItem key={option.value} value={option.value}>
                 <div className="flex items-center">
-                  <div className="mr-2 h-6 w-6 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500 dark:text-blue-400">
-                    <Icon className="w-3.5 h-3.5" />
-                  </div>
+                  <Icon className="w-4 h-4 mr-2" />
                   <span>{option.label}</span>
                 </div>
               </SelectItem>

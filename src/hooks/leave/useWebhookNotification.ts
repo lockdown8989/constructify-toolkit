@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { getManagerUserIds } from "@/services/notifications/role-utils";
 
 export const useWebhookNotification = () => {
   // Function to send webhook notifications
@@ -47,6 +46,22 @@ export const useWebhookNotification = () => {
       });
     } catch (error) {
       console.error('Error sending webhook notification:', error);
+    }
+  };
+
+  // Function to get manager user IDs
+  const getManagerUserIds = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'manager');
+      
+      if (error) throw error;
+      return data.map(item => item.user_id);
+    } catch (error) {
+      console.error("Error fetching manager IDs:", error);
+      return [];
     }
   };
 

@@ -20,6 +20,14 @@ const LanguageContext = createContext<LanguageContextType>({
   t: (key: TranslationKey) => key,
 });
 
+export const languageOptions = [
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español (Spanish)' },
+  { value: 'bg', label: 'Български (Bulgarian)' },
+  { value: 'pl', label: 'Polski (Polish)' },
+  { value: 'ro', label: 'Română (Romanian)' }
+];
+
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   const [language, setLanguageState] = useState<LanguageCode>('en');
@@ -55,10 +63,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   }, [user]);
 
   const setLanguage = async (newLanguage: LanguageCode) => {
-    if (!user) {
-      setLanguageState(newLanguage);
-      return;
-    }
+    if (!user) return;
 
     try {
       const { error } = await supabase
@@ -76,6 +81,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     }
   };
 
+  // Translation function
   const t = (key: TranslationKey): string => {
     const currentTranslations = translations[language] || translations.en;
     return currentTranslations[key] || translations.en[key] || key;

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,13 +21,6 @@ type ViewType = "employee" | "manager" | "calendar" | "notifications";
 const LeaveManagement = () => {
   const { hasManagerAccess } = useAccessControl();
   const [currentView, setCurrentView] = useState<ViewType>("employee");
-  
-  // Force employee view for non-managers
-  useEffect(() => {
-    if (!hasManagerAccess && currentView !== "employee") {
-      setCurrentView("employee");
-    }
-  }, [hasManagerAccess, currentView]);
   
   // Define view labels
   const viewLabels: Record<ViewType, string> = {
@@ -52,48 +45,48 @@ const LeaveManagement = () => {
       {/* Set up real-time updates listener */}
       <LeaveRealtimeUpdates />
       
-      {/* Dropdown Menu for Views - Only visible to managers */}
-      {hasManagerAccess && (
-        <div className="mb-6">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-full md:w-auto flex justify-between items-center">
-                {viewLabels[currentView]}
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-full min-w-[200px]">
-              <DropdownMenuItem 
-                onClick={() => handleViewChange("employee")}
-                className="cursor-pointer"
-              >
-                Employee View
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem 
-                onClick={() => handleViewChange("manager")}
-                className="cursor-pointer"
-              >
-                Manager View
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem 
-                onClick={() => handleViewChange("calendar")}
-                className="cursor-pointer"
-              >
-                Calendar View
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem 
-                onClick={() => handleViewChange("notifications")}
-                className="cursor-pointer"
-              >
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )}
+      {/* Dropdown Menu for Views */}
+      <div className="mb-6">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-full md:w-auto flex justify-between items-center">
+              {viewLabels[currentView]}
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-full min-w-[200px]">
+            <DropdownMenuItem 
+              onClick={() => handleViewChange("employee")}
+              className="cursor-pointer"
+            >
+              Employee View
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem 
+              onClick={() => handleViewChange("manager")}
+              disabled={!hasManagerAccess}
+              className={`cursor-pointer ${!hasManagerAccess ? 'opacity-50' : ''}`}
+            >
+              Manager View
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem 
+              onClick={() => handleViewChange("calendar")}
+              className="cursor-pointer"
+            >
+              Calendar View
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem 
+              onClick={() => handleViewChange("notifications")}
+              disabled={!hasManagerAccess}
+              className={`cursor-pointer ${!hasManagerAccess ? 'opacity-50' : ''}`}
+            >
+              Notifications
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       
       {/* Content based on selected view */}
       <div className="space-y-4">

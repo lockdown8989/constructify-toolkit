@@ -2,35 +2,30 @@
 import { Link } from "react-router-dom"
 import { Calendar, DollarSign, Receipt, Settings } from "lucide-react"
 import { useAuth } from "@/hooks/auth"
-import { useLanguage } from "@/hooks/use-language"
 
 interface DesktopNavProps {
   isAuthenticated: boolean;
 }
 
 const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
-  const { isManager, user } = useAuth();
-  const { t } = useLanguage();
-  
-  // Determine if user is an employee (not a manager)
-  const isEmployee = isAuthenticated && !isManager;
+  const { isManager } = useAuth();
   
   return (
     <div className="mx-auto flex items-center space-x-6">
       <Link to="/" className="hover:underline underline-offset-4">
-        {t('home')}
+        Home
       </Link>
       <Link
         to="/about"
         className="hover:underline underline-offset-4"
       >
-        {t('about')}
+        About
       </Link>
       <Link
         to="/contact"
         className="hover:underline underline-offset-4"
       >
-        {t('contact')}
+        Contact
       </Link>
       {isAuthenticated && (
         <>
@@ -38,75 +33,58 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
             to="/profile"
             className="hover:underline underline-offset-4"
           >
-            {t('profile')}
+            Profile
           </Link>
           <Link
             to="/settings"
             className="hover:underline underline-offset-4 flex items-center"
           >
             <Settings className="h-4 w-4 mr-1" />
-            {t('settings')}
+            Settings
           </Link>
-          
-          {/* Show these links only for managers */}
-          {!isEmployee && (
-            <>
-              <Link
-                to="/people"
-                className="hover:underline underline-offset-4"
-              >
-                {t('employees')}
-              </Link>
-              <Link
-                to="/employee-workflow"
-                className="hover:underline underline-offset-4"
-              >
-                {t('employeeWorkflow')}
-              </Link>
-              <Link
-                to="/leave-management"
-                className="hover:underline underline-offset-4"
-              >
-                {t('leaveManagement')}
-              </Link>
-            </>
-          )}
-          
-          {/* Always show shift calendar for all authenticated users */}
+          <Link
+            to="/people"
+            className="hover:underline underline-offset-4"
+          >
+            Employees
+          </Link>
+          <Link
+            to="/employee-workflow"
+            className="hover:underline underline-offset-4"
+          >
+            Employee Workflow
+          </Link>
+          <Link
+            to="/leave-management"
+            className="hover:underline underline-offset-4"
+          >
+            Leave Management
+          </Link>
           <Link
             to="/shift-calendar"
-            className="hover:underline underline-offset-4 flex items-center"
+            className="hover:underline underline-offset-4"
           >
-            <Calendar className="h-4 w-4 mr-1" />
-            {t('shiftCalendar')}
+            Shift Calendar
           </Link>
-          
-          {/* Always show salary for all authenticated users */}
           <Link
             to="/salary"
             className="hover:underline underline-offset-4 flex items-center"
           >
             <DollarSign className="h-4 w-4 mr-1" />
-            {t('salary')}
+            Salary
           </Link>
-          
-          {/* Show payslip only for managers */}
-          {!isEmployee && (
-            <Link
-              to="/payroll"
-              className="hover:underline underline-offset-4 flex items-center"
-            >
-              <Receipt className="h-4 w-4 mr-1" />
-              {t('payslip')}
-            </Link>
-          )}
-          
-          {/* Always show schedule requests for all authenticated users */}
+          <Link
+            to="/payroll"
+            className="hover:underline underline-offset-4 flex items-center"
+          >
+            <Receipt className="h-4 w-4 mr-1" />
+            Payslip
+          </Link>
           <Link
             to="/schedule-requests"
             className="hover:underline underline-offset-4"
           >
-            {t('scheduleRequests')}
+            Schedule Requests
           </Link>
         </>
       )}

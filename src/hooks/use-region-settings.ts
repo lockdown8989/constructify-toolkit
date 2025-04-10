@@ -17,7 +17,7 @@ interface RegionData {
 export const useRegionSettings = (user: User | null) => {
   const { toast } = useToast();
   const { setCurrency } = useCurrencyPreference();
-  const { setLanguage, t } = useLanguage();
+  const { setLanguage } = useLanguage();
   
   const [regionData, setRegionData] = useState<RegionData>({
     country: "",
@@ -82,8 +82,8 @@ export const useRegionSettings = (user: User | null) => {
       
       if (country) {
         toast({
-          title: t('locationDetected'),
-          description: `${t('detectedCountry')}: ${countryName} (${currencyCode})`,
+          title: "Location detected",
+          description: `Detected country: ${countryName} (${currencyCode})`,
         });
       }
     } catch (error) {
@@ -125,7 +125,7 @@ export const useRegionSettings = (user: User | null) => {
       
       if (error) {
         toast({
-          title: t('errorUpdatingSettings'),
+          title: "Error updating settings",
           description: error.message,
           variant: "destructive",
         });
@@ -139,14 +139,14 @@ export const useRegionSettings = (user: User | null) => {
       await setLanguage(regionData.preferred_language as any);
       
       toast({
-        title: t('settingsUpdated'),
-        description: t('regionSettingsUpdated'),
+        title: "Settings updated",
+        description: "Your region and language settings have been successfully updated.",
       });
     } catch (error) {
       console.error("Error:", error);
       toast({
-        title: t('unexpectedError'),
-        description: t('tryAgainLater'),
+        title: "An unexpected error occurred",
+        description: "Please try again later",
         variant: "destructive",
       });
     } finally {
