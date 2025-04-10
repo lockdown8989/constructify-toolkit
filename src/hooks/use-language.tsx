@@ -1,8 +1,7 @@
-
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
-import { translations, TranslationKey } from '@/utils/translations';
+import { translations, TranslationKey, languageOptions } from '@/utils/translations';
 
 type LanguageCode = 'en' | 'es' | 'bg' | 'pl' | 'ro';
 
@@ -19,14 +18,6 @@ const LanguageContext = createContext<LanguageContextType>({
   isLoading: true,
   t: (key: TranslationKey) => key,
 });
-
-export const languageOptions = [
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Español (Spanish)' },
-  { value: 'bg', label: 'Български (Bulgarian)' },
-  { value: 'pl', label: 'Polski (Polish)' },
-  { value: 'ro', label: 'Română (Romanian)' }
-];
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
@@ -64,7 +55,6 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
 
   const setLanguage = async (newLanguage: LanguageCode) => {
     if (!user) {
-      // For non-authenticated users, just update the state locally
       setLanguageState(newLanguage);
       return;
     }
@@ -85,7 +75,6 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     }
   };
 
-  // Translation function
   const t = (key: TranslationKey): string => {
     const currentTranslations = translations[language] || translations.en;
     return currentTranslations[key] || translations.en[key] || key;

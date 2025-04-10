@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Loader2, MapPin, Languages, Moon, BellRing } from "lucide-react";
@@ -8,6 +7,7 @@ import { ThemeSelector } from "@/components/settings/ThemeSelector";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/hooks/use-language";
+import { languageOptions } from "@/utils/translations";
 
 const Settings = () => {
   const { user, isLoading } = useAuth();
@@ -126,14 +126,5 @@ const Settings = () => {
     </div>
   );
 };
-
-// Language options from use-language.tsx
-const languageOptions = [
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Español' },
-  { value: 'bg', label: 'Български' },
-  { value: 'pl', label: 'Polski' },
-  { value: 'ro', label: 'Română' }
-];
 
 export default Settings;
