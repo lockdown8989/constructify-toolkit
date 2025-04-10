@@ -1,6 +1,7 @@
+
 import { useState, useMemo, useEffect } from 'react';
 import { useRestaurantSchedule } from '@/hooks/use-restaurant-schedule';
-import { Shift, ViewMode } from '@/types/restaurant-schedule';
+import { Shift, ViewMode, OpenShift } from '@/types/restaurant-schedule';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ScheduleHeader from '@/components/restaurant/ScheduleHeader';

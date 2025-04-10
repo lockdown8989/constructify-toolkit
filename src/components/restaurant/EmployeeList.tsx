@@ -45,7 +45,7 @@ const EmployeeList = ({ employees }: EmployeeListProps) => {
                 </Avatar>
                 <div className="flex flex-col">
                   <span className="font-medium text-sm text-gray-900">{employee.name}</span>
-                  <span className="text-xs text-gray-500">{employee.role || employee.job_title}</span>
+                  <span className="text-xs text-gray-500">{employee.role}</span>
                 </div>
               </div>
             );
