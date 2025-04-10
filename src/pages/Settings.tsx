@@ -1,9 +1,11 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, MapPin, DollarSign } from "lucide-react";
+import { Loader2, MapPin, Languages, Moon, BellRing } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { RegionSettings } from "@/components/settings/RegionSettings";
+import { ThemeSelector } from "@/components/settings/ThemeSelector";
+import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Settings = () => {
@@ -30,13 +32,25 @@ const Settings = () => {
         </div>
 
         <Tabs defaultValue="region" className="w-full">
-          <TabsList className="mb-4">
+          <TabsList className="mb-4 w-full justify-start overflow-x-auto">
             <TabsTrigger value="region" className="flex items-center">
               <MapPin className="mr-2 h-4 w-4" />
               <span>Region & Currency</span>
             </TabsTrigger>
-            {/* Additional tabs can be added here in the future */}
+            <TabsTrigger value="appearance" className="flex items-center">
+              <Moon className="mr-2 h-4 w-4" />
+              <span>Appearance</span>
+            </TabsTrigger>
+            <TabsTrigger value="language" className="flex items-center">
+              <Languages className="mr-2 h-4 w-4" />
+              <span>Language</span>
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center">
+              <BellRing className="mr-2 h-4 w-4" />
+              <span>Notifications</span>
+            </TabsTrigger>
           </TabsList>
+          
           <TabsContent value="region">
             <Card>
               <CardHeader>
@@ -47,6 +61,47 @@ const Settings = () => {
               </CardHeader>
               
               <RegionSettings user={user} />
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="appearance">
+            <Card>
+              <CardHeader>
+                <CardTitle>Appearance Settings</CardTitle>
+                <CardDescription>
+                  Customize the appearance of the application
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent>
+                <ThemeSelector />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="language">
+            <Card>
+              <CardHeader>
+                <CardTitle>Language Settings</CardTitle>
+                <CardDescription>
+                  Choose your preferred language
+                </CardDescription>
+              </CardHeader>
+              
+              <RegionSettings user={user} />
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="notifications">
+            <Card>
+              <CardHeader>
+                <CardTitle>Notification Settings</CardTitle>
+                <CardDescription>
+                  Manage how you receive notifications
+                </CardDescription>
+              </CardHeader>
+              
+              <NotificationSettings />
             </Card>
           </TabsContent>
         </Tabs>

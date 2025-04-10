@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { CountryInput } from "./CountryInput";
 import { CurrencySelector } from "./CurrencySelector";
+import { LanguageSelector } from "./LanguageSelector";
 import { useRegionSettings } from "@/hooks/use-region-settings";
 
 interface RegionSettingsProps {
@@ -17,6 +18,7 @@ export const RegionSettings = ({ user }: RegionSettingsProps) => {
     isSaving,
     handleChange,
     handleCurrencyChange,
+    handleLanguageChange,
     handleSubmit,
     autoDetectLocation
   } = useRegionSettings(user);
@@ -34,6 +36,11 @@ export const RegionSettings = ({ user }: RegionSettingsProps) => {
         <CurrencySelector
           currency={regionData.preferred_currency}
           onChange={handleCurrencyChange}
+        />
+        
+        <LanguageSelector
+          language={regionData.preferred_language}
+          onChange={handleLanguageChange}
         />
       </CardContent>
       

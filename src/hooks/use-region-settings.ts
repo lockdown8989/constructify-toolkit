@@ -6,19 +6,23 @@ import { useToast } from "@/hooks/use-toast";
 import { detectUserLocation } from "@/services/geolocation";
 import useCurrencyPreference from "@/hooks/use-currency-preference";
 import { getCountryName } from "@/utils/country-utils";
+import { useLanguage } from "@/hooks/use-language";
 
 interface RegionData {
   country: string;
   preferred_currency: string;
+  preferred_language: string;
 }
 
 export const useRegionSettings = (user: User | null) => {
   const { toast } = useToast();
   const { setCurrency } = useCurrencyPreference();
+  const { setLanguage } = useLanguage();
   
   const [regionData, setRegionData] = useState<RegionData>({
     country: "",
     preferred_currency: "USD",
+    preferred_language: "en",
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
@@ -30,7 +34,7 @@ export const useRegionSettings = (user: User | null) => {
       try {
         const { data, error } = await supabase
           .from("profiles")
-          .select("country, preferred_currency")
+          .select("country, preferred_currency, preferred_language")
           .eq("id", user.id)
           .maybeSingle();
         
@@ -43,6 +47,7 @@ export const useRegionSettings = (user: User | null) => {
           setRegionData({
             country: data.country ? getCountryName(data.country) : "",
             preferred_currency: data.preferred_currency || "USD",
+            preferred_language: data.preferred_language || "en",
           });
           
           // If the country is empty, try to detect user's location
@@ -96,6 +101,10 @@ export const useRegionSettings = (user: User | null) => {
   const handleCurrencyChange = (value: string) => {
     setRegionData((prev) => ({ ...prev, preferred_currency: value }));
   };
+  
+  const handleLanguageChange = (value: string) => {
+    setRegionData((prev) => ({ ...prev, preferred_language: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,6 +118,7 @@ export const useRegionSettings = (user: User | null) => {
         .update({
           country: regionData.country,
           preferred_currency: regionData.preferred_currency,
+          preferred_language: regionData.preferred_language,
           updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
@@ -125,9 +135,12 @@ export const useRegionSettings = (user: User | null) => {
       // Update the currency context
       await setCurrency(regionData.preferred_currency as 'USD' | 'GBP' | 'EUR');
       
+      // Update the language context
+      await setLanguage(regionData.preferred_language as any);
+      
       toast({
         title: "Settings updated",
-        description: "Your region settings have been successfully updated.",
+        description: "Your region and language settings have been successfully updated.",
       });
     } catch (error) {
       console.error("Error:", error);
@@ -147,6 +160,7 @@ export const useRegionSettings = (user: User | null) => {
     isSaving,
     handleChange,
     handleCurrencyChange,
+    handleLanguageChange,
     handleSubmit,
     autoDetectLocation
   };
