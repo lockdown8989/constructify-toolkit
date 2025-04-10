@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
   ChevronLeft, 
@@ -19,6 +19,7 @@ import OpenShiftBlock from '@/components/restaurant/OpenShiftBlock';
 import RoleSection from '@/components/restaurant/RoleSection';
 import ShiftEditDialog from '@/components/restaurant/ShiftEditDialog';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const RestaurantSchedule = () => {
   const { 
@@ -39,6 +40,7 @@ const RestaurantSchedule = () => {
   } = useRestaurantSchedule();
   
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [isShiftDialogOpen, setIsShiftDialogOpen] = useState(false);
   const [currentShift, setCurrentShift] = useState<Shift | undefined>(undefined);
   const [newShiftEmployeeId, setNewShiftEmployeeId] = useState<string | null>(null);
@@ -178,36 +180,50 @@ const RestaurantSchedule = () => {
   
   return (
     <div className="container py-6 max-w-full">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Shift Calendar Schedule</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Shift Calendar Schedule</h1>
         
-        <div className="flex items-center space-x-4">
-          <Tabs defaultValue="week" onValueChange={(value) => setViewMode(value as ViewMode)}>
-            <TabsList>
-              <TabsTrigger value="week">Week</TabsTrigger>
-              <TabsTrigger value="month">Month</TabsTrigger>
+        <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+          <Tabs 
+            defaultValue="week" 
+            onValueChange={(value) => setViewMode(value as ViewMode)}
+            className="bg-gray-100 rounded-full p-1"
+          >
+            <TabsList className="bg-transparent">
+              <TabsTrigger 
+                value="week" 
+                className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              >
+                Week
+              </TabsTrigger>
+              <TabsTrigger 
+                value="month" 
+                className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              >
+                Month
+              </TabsTrigger>
             </TabsList>
           </Tabs>
           
-          <div className="relative w-64">
+          <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input 
               placeholder="Search employees or roles..." 
-              className="pl-9"
+              className="pl-9 rounded-full border-gray-200"
             />
           </div>
         </div>
       </div>
       
-      <div className="grid grid-cols-9 gap-0 border rounded-t-md bg-white">
+      <div className="grid grid-cols-9 gap-0 border rounded-t-xl bg-white shadow-sm overflow-hidden">
         {/* Week summary column */}
         <div className="col-span-1 border-r border-gray-200">
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-gray-200 bg-gray-50">
             <div className="text-sm font-medium text-gray-700">Week {weekStats.weekNumber} summary</div>
           </div>
           
           <div className="p-4 border-b border-gray-200">
-            <div className="flex flex-col space-y-1">
+            <div className="flex flex-col space-y-2">
               <div className="flex items-center">
                 <span className="text-gray-600 font-medium mr-2">H</span>
                 <span className="text-gray-900 font-semibold">{weekStats.totalHours.toFixed(0)}h</span>
@@ -231,19 +247,19 @@ const RestaurantSchedule = () => {
         {/* Days columns */}
         {weekStats.days.map((day, index) => (
           <div key={day.day} className="col-span-1 border-r border-gray-200">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
               <div className="flex items-center">
                 <span className="font-bold text-lg mr-2">{index + 1}</span>
                 <span className="text-gray-700">{daysDisplayNames[index]}</span>
               </div>
               <div className="flex space-x-2">
                 {index === 0 && (
-                  <Button variant="outline" size="icon" onClick={previousWeek}>
+                  <Button variant="outline" size="icon" onClick={previousWeek} className="rounded-full h-7 w-7">
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                 )}
                 {index === 1 && (
-                  <Button variant="outline" size="icon" onClick={nextWeek}>
+                  <Button variant="outline" size="icon" onClick={nextWeek} className="rounded-full h-7 w-7">
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 )}

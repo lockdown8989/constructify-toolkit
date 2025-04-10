@@ -27,7 +27,7 @@ const OpenShiftBlock = ({
   
   return (
     <div className={cn(
-      "p-3 my-1 rounded-md shadow-sm hover:shadow-md transition-shadow relative",
+      "p-3 my-1 rounded-xl shadow-sm hover:shadow transition-all relative",
       colorClasses[color]
     )}>
       <div className="flex flex-col">
@@ -49,7 +49,7 @@ const OpenShiftBlock = ({
             {onAssign && (
               <button 
                 onClick={() => onAssign(openShift.id)} 
-                className="text-blue-500 hover:text-blue-700"
+                className="text-blue-500 hover:text-blue-700 transition-colors"
                 aria-label="Assign shift"
               >
                 <Plus className="h-4 w-4" />
@@ -57,7 +57,7 @@ const OpenShiftBlock = ({
             )}
           </div>
         </div>
-        <span className="text-gray-700">{openShift.role}</span>
+        <span className="text-gray-700 text-sm">{openShift.role}</span>
       </div>
     </div>
   );

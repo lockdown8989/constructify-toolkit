@@ -51,14 +51,17 @@ const RoleSection = ({
   };
   
   return (
-    <div className="border rounded-md mb-6 bg-white">
+    <div className="border rounded-xl mb-6 bg-white shadow-sm overflow-hidden">
       <div 
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center space-x-2">
-          {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-          <h3 className="font-medium">{role.name}</h3>
+          {isExpanded ? 
+            <ChevronDown className="h-5 w-5 text-gray-500" /> : 
+            <ChevronRight className="h-5 w-5 text-gray-500" />
+          }
+          <h3 className="font-medium text-gray-900">{role.name}</h3>
         </div>
         <div className="flex items-center space-x-4 text-sm text-gray-500">
           <span>{role.totalHours.toFixed(1)}h</span>
