@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LeaveRequestForm from "@/components/leave/LeaveRequestForm";
@@ -13,9 +12,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { sendNotification } from "@/services/NotificationService";
 
 const LeaveManagement = () => {
-  // For demonstration purposes, we're using a hardcoded employee ID
-  // In a real app, this would come from authentication/user context
-  const currentEmployeeId = "550e8400-e29b-41d4-a716-446655440000";
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user, isManager, isAdmin, isHR } = useAuth();
@@ -23,16 +19,8 @@ const LeaveManagement = () => {
   // Get employees data to determine user role
   const { data: employees = [] } = useEmployees();
   
-  // For demonstration, determine if the current user is a manager
-  // In a real app, this would come from user roles/permissions
-  const currentEmployee = employees.find(emp => emp.id === currentEmployeeId);
-  const hasManagerAccess = isManager || isAdmin || isHR || (currentEmployee && 
-    (currentEmployee.job_title.toLowerCase().includes("manager") || 
-     currentEmployee.job_title.toLowerCase().includes("director") ||
-     currentEmployee.department === "HR"));
-  
-  // Get the current employee's department
-  const currentEmployeeDepartment = currentEmployee?.department || "Engineering";
+  // Determine if the current user is a manager
+  const hasManagerAccess = isManager || isAdmin || isHR;
   
   // Set up real-time listener for leave calendar changes
   useEffect(() => {
@@ -228,10 +216,7 @@ const LeaveManagement = () => {
         
         <TabsContent value="employee" className="space-y-4">
           <div className="max-w-md mx-auto">
-            <LeaveRequestForm 
-              employeeId={currentEmployeeId}
-              employeeDepartment={currentEmployeeDepartment}
-            />
+            <LeaveRequestForm />
           </div>
         </TabsContent>
         

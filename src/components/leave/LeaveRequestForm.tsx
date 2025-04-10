@@ -1,8 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { useAddLeaveRequest } from "@/hooks/use-leave-calendar";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { useEmployees } from "@/hooks/use-employees";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useProjectsForDepartment } from "@/hooks/use-projects";
@@ -29,21 +32,34 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// The interface no longer needs employeeId and employeeDepartment as props
 interface LeaveRequestFormProps {
-  employeeId: string;
-  employeeDepartment: string;
+  // Optional props still allowed, but we'll handle auth inside the component
 }
 
-const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({ 
-  employeeId,
-  employeeDepartment 
-}) => {
+const LeaveRequestForm: React.FC<LeaveRequestFormProps> = () => {
   const [leaveType, setLeaveType] = useState<string>("");
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [notes, setNotes] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [conflicts, setConflicts] = useState<ProjectConflict[]>([]);
+  
+  // Get the current authenticated user
+  const { user } = useAuth();
+  
+  // Get employees data to find the current employee record
+  const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
+  
+  // Get current employee ID and department from employees list based on user ID
+  const currentEmployee = user 
+    ? employees.find(emp => emp.user_id === user.id) 
+    : undefined;
+  
+  const employeeId = currentEmployee?.id || "";
+  const employeeDepartment = currentEmployee?.department || "";
+  
+  // Get projects for the employee's department
   const { data: departmentProjects = [] } = useProjectsForDepartment(employeeDepartment);
   
   useEffect(() => {
@@ -69,6 +85,24 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "You must be logged in to submit leave requests.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!currentEmployee) {
+      toast({
+        title: "Employee record not found",
+        description: "Your user account is not linked to an employee record.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!leaveType || !startDate || !endDate) {
       toast({
@@ -141,6 +175,33 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
       setIsSubmitting(false);
     }
   };
+  
+  // Display loading state while employee data is being fetched
+  if (isLoadingEmployees) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex justify-center">
+            <p>Loading employee data...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Show message if no employee record found
+  if (user && !currentEmployee) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center p-4">
+            <p className="text-destructive font-medium mb-2">Employee Record Not Found</p>
+            <p className="text-muted-foreground">Your user account is not linked to an employee record.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card>
