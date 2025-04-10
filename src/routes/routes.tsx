@@ -14,83 +14,31 @@ import Profile from "@/pages/Profile";
 import RestaurantSchedule from "@/pages/RestaurantSchedule";
 import NotFound from "@/pages/NotFound";
 import AppLayout from "@/components/layout/AppLayout";
-import { Navigate } from "react-router-dom";
+import { Navigate, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
-export function Router() {
-  return [
-    {
-      path: "/auth",
-      element: <Auth />
-    },
-    {
-      element: <AppLayout />,
-      children: [
-        {
-          path: "/",
-          element: <Navigate to="/dashboard" replace />
-        },
-        {
-          path: "/index",
-          element: <Navigate to="/dashboard" replace />
-        },
-        {
-          path: "/dashboard",
-          element: <ProtectedRoute><Dashboard /></ProtectedRoute>
-        },
-        {
-          path: "/people",
-          element: <ProtectedRoute><People /></ProtectedRoute>
-        },
-        {
-          path: "/my-employees",
-          element: <ProtectedRoute><People /></ProtectedRoute>
-        },
-        {
-          path: "/schedule",
-          element: <ProtectedRoute><Schedule /></ProtectedRoute>
-        },
-        {
-          path: "/schedule-requests",
-          element: <ProtectedRoute><ScheduleRequests /></ProtectedRoute>
-        },
-        {
-          path: "/restaurant-schedule",
-          element: <ProtectedRoute><RestaurantSchedule /></ProtectedRoute>
-        },
-        {
-          path: "/shift-calendar",
-          element: <ProtectedRoute><RestaurantSchedule /></ProtectedRoute>
-        },
-        {
-          path: "/employee-workflow",
-          element: <ProtectedRoute><EmployeeWorkflow /></ProtectedRoute>
-        },
-        {
-          path: "/salary",
-          element: <ProtectedRoute><Salary /></ProtectedRoute>
-        },
-        {
-          path: "/payroll",
-          element: <ProtectedRoute requiredRole="manager"><Payroll /></ProtectedRoute>
-        },
-        {
-          path: "/leave-management",
-          element: <ProtectedRoute><LeaveManagement /></ProtectedRoute>
-        },
-        {
-          path: "/hiring",
-          element: <ProtectedRoute><Hiring /></ProtectedRoute>
-        },
-        {
-          path: "/profile",
-          element: <ProtectedRoute><Profile /></ProtectedRoute>
-        },
-        {
-          path: "*",
-          element: <NotFound />
-        }
-      ]
-    }
-  ];
+export default function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/auth" element={<Auth />} />
+      <Route element={<AppLayout />}>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/index" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/people" element={<ProtectedRoute><People /></ProtectedRoute>} />
+        <Route path="/my-employees" element={<ProtectedRoute><People /></ProtectedRoute>} />
+        <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
+        <Route path="/schedule-requests" element={<ProtectedRoute><ScheduleRequests /></ProtectedRoute>} />
+        <Route path="/restaurant-schedule" element={<ProtectedRoute><RestaurantSchedule /></ProtectedRoute>} />
+        <Route path="/shift-calendar" element={<ProtectedRoute><RestaurantSchedule /></ProtectedRoute>} />
+        <Route path="/employee-workflow" element={<ProtectedRoute><EmployeeWorkflow /></ProtectedRoute>} />
+        <Route path="/salary" element={<ProtectedRoute><Salary /></ProtectedRoute>} />
+        <Route path="/payroll" element={<ProtectedRoute requiredRole="manager"><Payroll /></ProtectedRoute>} />
+        <Route path="/leave-management" element={<ProtectedRoute><LeaveManagement /></ProtectedRoute>} />
+        <Route path="/hiring" element={<ProtectedRoute><Hiring /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
+  );
 }
