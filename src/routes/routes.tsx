@@ -59,7 +59,7 @@ export function Router() {
         },
         {
           path: "/payroll",
-          element: <ProtectedRoute><Payroll /></ProtectedRoute>
+          element: <ProtectedRoute requiredRole="manager"><Payroll /></ProtectedRoute>
         },
         {
           path: "/leave-management",

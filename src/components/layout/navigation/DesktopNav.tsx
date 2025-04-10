@@ -1,12 +1,15 @@
 
 import { Link } from "react-router-dom"
 import { DollarSign, Receipt } from "lucide-react"
+import { useAuth } from "@/hooks/use-auth"
 
 interface DesktopNavProps {
   isAuthenticated: boolean;
 }
 
 const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
+  const { isManager } = useAuth();
+  
   return (
     <div className="mx-auto flex items-center space-x-6">
       <Link to="/" className="hover:underline underline-offset-4">
@@ -63,13 +66,15 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
             <DollarSign className="h-4 w-4 mr-1" />
             Salary
           </Link>
-          <Link
-            to="/payroll"
-            className="hover:underline underline-offset-4 flex items-center"
-          >
-            <Receipt className="h-4 w-4 mr-1" />
-            Payslip
-          </Link>
+          {isManager && (
+            <Link
+              to="/payroll"
+              className="hover:underline underline-offset-4 flex items-center"
+            >
+              <Receipt className="h-4 w-4 mr-1" />
+              Payslip
+            </Link>
+          )}
         </>
       )}
     </div>

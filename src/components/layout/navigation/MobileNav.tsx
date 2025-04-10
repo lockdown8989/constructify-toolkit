@@ -9,12 +9,15 @@ import {
 } from "@/components/ui/sheet"
 import { Menu, Home, User, Users, Calendar, Clock, FileText, Workflow, PanelLeft, DollarSign, Receipt } from "lucide-react"
 import { Link } from "react-router-dom"
+import { useAuth } from "@/hooks/use-auth"
 
 interface MobileNavProps {
   isAuthenticated: boolean;
 }
 
 const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
+  const { isManager } = useAuth();
+  
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -94,13 +97,15 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                 <DollarSign className="mr-2 h-5 w-5" />
                 <span>Salary</span>
               </Link>
-              <Link
-                to="/payroll"
-                className="flex items-center py-2 text-lg font-semibold"
-              >
-                <Receipt className="mr-2 h-5 w-5" />
-                <span>Payslip</span>
-              </Link>
+              {isManager && (
+                <Link
+                  to="/payroll"
+                  className="flex items-center py-2 text-lg font-semibold"
+                >
+                  <Receipt className="mr-2 h-5 w-5" />
+                  <span>Payslip</span>
+                </Link>
+              )}
             </>
           )}
         </nav>
