@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -39,7 +38,7 @@ const LeaveRealtimeUpdates: React.FC = () => {
           console.log('LeaveRealtimeUpdates: Leave calendar update received:', payload);
           
           // Invalidate queries to refresh data
-          queryClient.invalidateQueries({ queryKey: ['leave_calendar'] });
+          queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
           
           // Show toast notification for specific events
           if (payload.eventType === 'UPDATE') {
