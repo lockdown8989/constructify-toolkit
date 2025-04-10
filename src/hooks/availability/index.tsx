@@ -4,4 +4,4 @@ export * from './use-fetch-availability';
 export * from './use-create-availability';
 export * from './use-update-availability';
 export * from './use-delete-availability';
-export { AvailabilityRequest, NewAvailabilityRequest, UpdateAvailabilityRequest } from '@/types/availability';
+export type { AvailabilityRequest, NewAvailabilityRequest, UpdateAvailabilityRequest } from '@/types/availability';
