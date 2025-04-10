@@ -24,7 +24,7 @@ export const CountryInput = ({ country, isLocating, onChange, onDetect }: Countr
           name="country"
           value={country}
           onChange={onChange}
-          placeholder="Enter your country"
+          placeholder={t('enterYourCountry')}
           className="flex-1"
         />
         <Button 

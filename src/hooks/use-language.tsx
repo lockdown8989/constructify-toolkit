@@ -63,7 +63,11 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   }, [user]);
 
   const setLanguage = async (newLanguage: LanguageCode) => {
-    if (!user) return;
+    if (!user) {
+      // For non-authenticated users, just update the state locally
+      setLanguageState(newLanguage);
+      return;
+    }
 
     try {
       const { error } = await supabase

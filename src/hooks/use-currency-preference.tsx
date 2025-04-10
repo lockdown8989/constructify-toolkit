@@ -52,7 +52,11 @@ export const CurrencyProvider = ({ children }: { children: React.ReactNode }) =>
   }, [user]);
 
   const setCurrency = async (newCurrency: CurrencyCode) => {
-    if (!user) return;
+    if (!user) {
+      // For non-authenticated users, just update the state locally
+      setCurrencyState(newCurrency);
+      return;
+    }
 
     try {
       const { error } = await supabase

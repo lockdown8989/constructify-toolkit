@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { useLanguage } from "@/hooks/use-language";
 
 const currencyOptions = [
   { value: "USD", label: "US Dollar ($)", icon: DollarSign },
@@ -21,15 +22,17 @@ interface CurrencySelectorProps {
 }
 
 export const CurrencySelector = ({ currency, onChange }: CurrencySelectorProps) => {
+  const { t } = useLanguage();
+  
   return (
     <div className="space-y-2">
-      <Label htmlFor="currency">Preferred Currency</Label>
+      <Label htmlFor="currency">{t('preferredCurrency')}</Label>
       <Select 
         value={currency} 
         onValueChange={onChange}
       >
         <SelectTrigger className="w-full">
-          <SelectValue placeholder="Select currency" />
+          <SelectValue placeholder={t('selectCurrency')} />
         </SelectTrigger>
         <SelectContent>
           {currencyOptions.map((option) => {
