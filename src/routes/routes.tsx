@@ -11,6 +11,7 @@ import Payroll from "@/pages/Payroll";
 import LeaveManagement from "@/pages/LeaveManagement";
 import Hiring from "@/pages/Hiring";
 import Profile from "@/pages/Profile";
+import Settings from "@/pages/Settings";
 import RestaurantSchedule from "@/pages/RestaurantSchedule";
 import NotFound from "@/pages/NotFound";
 import AppLayout from "@/components/layout/AppLayout";
@@ -37,6 +38,7 @@ export default function AppRoutes() {
         <Route path="/leave-management" element={<ProtectedRoute><LeaveManagement /></ProtectedRoute>} />
         <Route path="/hiring" element={<ProtectedRoute><Hiring /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

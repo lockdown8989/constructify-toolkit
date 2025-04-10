@@ -13,6 +13,7 @@ import { Link } from "react-router-dom"
 import { User } from "@supabase/supabase-js"
 import { useAuth } from "@/hooks/auth"
 import { Badge } from "@/components/ui/badge"
+import { Settings } from "lucide-react"
 
 interface UserMenuProps {
   user: User;
@@ -33,9 +34,9 @@ const UserMenu = ({ user, signOut }: UserMenuProps) => {
   // Get role badge color - using only valid badge variants
   const getRoleBadgeVariant = () => {
     if (isAdmin) return "destructive";
-    if (isHR) return "secondary";     // Changed from "purple" to "secondary"
+    if (isHR) return "secondary";     
     if (isManager) return "default";
-    return "outline";                 // Changed from "secondary" to "outline"
+    return "outline";                 
   };
 
   return (
@@ -67,6 +68,12 @@ const UserMenu = ({ user, signOut }: UserMenuProps) => {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link to="/profile">Profile</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/settings" className="flex items-center">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

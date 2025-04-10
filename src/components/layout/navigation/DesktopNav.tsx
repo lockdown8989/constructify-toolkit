@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom"
-import { Calendar, DollarSign, Receipt } from "lucide-react"
+import { Calendar, DollarSign, Receipt, Settings } from "lucide-react"
 import { useAuth } from "@/hooks/auth"
 
 interface DesktopNavProps {
@@ -34,6 +34,13 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
             className="hover:underline underline-offset-4"
           >
             Profile
+          </Link>
+          <Link
+            to="/settings"
+            className="hover:underline underline-offset-4 flex items-center"
+          >
+            <Settings className="h-4 w-4 mr-1" />
+            Settings
           </Link>
           <Link
             to="/people"
