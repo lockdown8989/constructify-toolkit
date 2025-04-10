@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import type { NotificationResult } from '@/models/notification';
+import type { NotificationData, NotificationResult } from '@/models/notification';
 import { sendNotification } from './notification-sender';
 
 /**
@@ -46,7 +46,7 @@ export const createTestNotification = async (
   userId: string,
   title: string = 'Test Notification',
   message: string = 'This is a test notification to verify the notification system.',
-  type: string = 'info',
+  type: 'info' | 'success' | 'warning' | 'error' = 'info',
   related_entity: string = 'system',
   related_id: string = 'test'
 ): Promise<NotificationResult> => {
