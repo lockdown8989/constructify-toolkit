@@ -5,7 +5,7 @@ export * from './use-create-availability';
 export * from './use-update-availability';
 export * from './use-delete-availability';
 
-// Initialize real-time updates
+// Initialize real-time updates for availability_requests
 import { supabase } from '@/integrations/supabase/client';
 
 // This self-executing function sets up real-time for availability_requests

@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-// Updated import path
 import { useAvailabilityRequests } from '@/hooks/availability';
 import { useEmployees } from '@/hooks/use-employees';
 import { useAuth } from '@/hooks/use-auth';
@@ -17,7 +16,7 @@ const AvailabilityRequestList = () => {
   // Get current employee
   const currentEmployee = user ? employees.find(emp => emp.user_id === user.id) : null;
   
-  // Filter availability requests to show only the current employee's
+  // Filter availability requests to show only the current employee's requests
   const employeeAvailabilityRequests = currentEmployee 
     ? requests.filter(req => req.employee_id === currentEmployee.id)
     : [];
