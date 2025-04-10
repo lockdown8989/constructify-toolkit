@@ -12,76 +12,175 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { 
+  LogOut, 
+  User, 
+  Calendar, 
+  Building2, 
+  Clock,
+  FileText,
+  Wallet,
+  Users,
+  UserPlus
+} from 'lucide-react';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Navbar = () => {
   const { user, signOut, isManager } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const isMobile = useIsMobile();
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
   };
 
+  const navItems = [
+    { name: 'Dashboard', path: '/dashboard', icon: <Building2 className="h-4 w-4 mr-2" /> },
+    { name: 'People', path: '/people', icon: <Users className="h-4 w-4 mr-2" /> },
+    { name: 'Schedule', path: '/schedule', icon: <Calendar className="h-4 w-4 mr-2" /> },
+    { name: 'Requests', path: '/schedule-requests', icon: <Clock className="h-4 w-4 mr-2" /> },
+    { name: 'My Workflow', path: '/employee-workflow', icon: <FileText className="h-4 w-4 mr-2" /> },
+    { name: 'Leave', path: '/leave-management', icon: <Calendar className="h-4 w-4 mr-2" /> },
+    { name: 'Salary', path: '/salary', icon: <Wallet className="h-4 w-4 mr-2" /> },
+  ];
+
+  if (isManager) {
+    navItems.push({ name: 'Hiring', path: '/hiring', icon: <UserPlus className="h-4 w-4 mr-2" /> });
+  }
+
   return (
-    <div className="bg-white border-b border-gray-200 fixed top-0 left-0 w-full z-40">
+    <div className="bg-white border-b border-gray-200 fixed top-0 left-0 w-full z-40 shadow-sm">
       <div className="container flex items-center justify-between h-16">
-        <Link to="/" className="text-2xl font-bold">
-          TeamPulse
+        <Link to="/" className="text-2xl font-bold flex items-center">
+          <span className="text-primary">Team</span>
+          <span className="text-teampulse-accent">Pulse</span>
         </Link>
 
-        <div className="flex items-center gap-3 sm:gap-6 overflow-x-auto hide-scrollbar pb-1">
-          <Link to="/dashboard" className={`text-gray-600 hover:text-gray-800 ${pathname === '/dashboard' ? 'font-medium' : ''} whitespace-nowrap`}>
-            Dashboard
-          </Link>
-          <Link to="/people" className={`text-gray-600 hover:text-gray-800 ${pathname.startsWith('/people') ? 'font-medium' : ''} whitespace-nowrap`}>
-            People
-          </Link>
-          <Link to="/schedule" className={`text-gray-600 hover:text-gray-800 ${pathname === '/schedule' ? 'font-medium' : ''} whitespace-nowrap`}>
-            Schedule
-          </Link>
-          <Link to="/schedule-requests" className={`text-gray-600 hover:text-gray-800 ${pathname === '/schedule-requests' ? 'font-medium' : ''} whitespace-nowrap`}>
-            Requests
-          </Link>
-          <Link to="/employee-workflow" className={`text-gray-600 hover:text-gray-800 ${pathname === '/employee-workflow' ? 'font-medium' : ''} whitespace-nowrap`}>
-            My Workflow
-          </Link>
-          <Link to="/leave-management" className={`text-gray-600 hover:text-gray-800 ${pathname === '/leave-management' ? 'font-medium' : ''} whitespace-nowrap`}>
-            Leave
-          </Link>
-          <Link to="/salary" className={`text-gray-600 hover:text-gray-800 ${pathname === '/salary' ? 'font-medium' : ''} whitespace-nowrap`}>
-            Salary
-          </Link>
-          {isManager && (
-            <Link to="/hiring" className={`text-gray-600 hover:text-gray-800 ${pathname === '/hiring' ? 'font-medium' : ''} whitespace-nowrap`}>
-              Hiring
-            </Link>
-          )}
-        </div>
+        {isMobile ? (
+          <div className="flex-1 overflow-x-auto hide-scrollbar">
+            <div className="flex space-x-4 px-2">
+              {navItems.map((item) => (
+                <Link 
+                  key={item.path}
+                  to={item.path} 
+                  className={cn(
+                    "flex items-center whitespace-nowrap text-sm py-1.5 px-1.5",
+                    pathname === item.path ? 
+                      "text-primary font-medium border-b-2 border-primary" : 
+                      "text-gray-500 hover:text-gray-800"
+                  )}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <NavigationMenu className="hidden md:flex mx-6 flex-1 justify-center">
+            <NavigationMenuList>
+              {navItems.slice(0, 3).map((item) => (
+                <NavigationMenuItem key={item.path}>
+                  <Link to={item.path}>
+                    <NavigationMenuLink 
+                      className={cn(
+                        navigationMenuTriggerStyle(),
+                        pathname === item.path ? "bg-accent text-accent-foreground" : ""
+                      )}
+                    >
+                      {item.icon}
+                      {item.name}
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+              ))}
+              
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className={cn(
+                  pathname === '/schedule-requests' || 
+                  pathname === '/employee-workflow' || 
+                  pathname === '/leave-management' || 
+                  pathname === '/salary'
+                    ? "bg-accent text-accent-foreground" : ""
+                )}>
+                  More
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid w-[250px] gap-3 p-4">
+                    {navItems.slice(3).map((item) => (
+                      <li key={item.path} className="row-span-1">
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to={item.path}
+                            className={cn(
+                              "flex select-none flex-col rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                              pathname === item.path ? "bg-accent text-accent-foreground" : ""
+                            )}
+                          >
+                            <div className="flex items-center">
+                              {item.icon}
+                              <span className="text-sm font-medium">{item.name}</span>
+                            </div>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                    ))}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+        )}
 
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
+              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                <Avatar className="h-9 w-9 ring-2 ring-primary/10">
                   <AvatarImage src={user?.user_metadata?.avatar_url || `https://avatar.vercel.sh/${user?.email?.split('@')[0]}.png`} alt={user?.user_metadata?.full_name} />
-                  <AvatarFallback>{user?.user_metadata?.full_name?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className="bg-primary/5 text-primary">
+                    {user?.user_metadata?.full_name?.slice(0, 2).toUpperCase() || 'U'}
+                  </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 mr-2">
-              <DropdownMenuLabel>{user?.user_metadata?.full_name}</DropdownMenuLabel>
+            <DropdownMenuContent className="w-56 mr-2" align="end">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{user?.user_metadata?.full_name}</p>
+                  <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                </div>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+              <DropdownMenuItem asChild>
+                <Link to="/profile" className="flex cursor-pointer items-center">
+                  <User className="h-4 w-4 mr-2" />
+                  Profile
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Link to="/auth" className="text-gray-600 hover:text-gray-800">
-            Sign In
+          <Link to="/auth">
+            <Button variant="default" size="sm">
+              Sign In
+            </Button>
           </Link>
         )}
       </div>
