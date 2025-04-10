@@ -68,7 +68,7 @@ export function useEmployeeAvailabilityRequests(employeeId: string) {
   return useQuery({
     queryKey: ['availability_requests', employeeId],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('availability_requests')
         .select('*')
         .eq('employee_id', employeeId)
@@ -87,10 +87,11 @@ export function useEmployeeAvailabilityRequests(employeeId: string) {
 // Create a new availability request
 export function useCreateAvailabilityRequest() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (newRequest: NewAvailabilityRequest) => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('availability_requests')
         .insert({
           ...newRequest,
@@ -108,8 +109,19 @@ export function useCreateAvailabilityRequest() {
       return data as AvailabilityRequest;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
+      queryClient.invalidateQueries({ queryKey: ['availability-requests'] });
       queryClient.invalidateQueries({ queryKey: ['availability_requests', data.employee_id] });
+      toast({
+        title: "Success",
+        description: "Availability request submitted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to submit availability request: ${error.message}`,
+        variant: "destructive",
+      });
     }
   });
 }
@@ -117,6 +129,7 @@ export function useCreateAvailabilityRequest() {
 // Update an availability request
 export function useUpdateAvailabilityRequest() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (update: UpdateAvailabilityRequest) => {
@@ -124,7 +137,7 @@ export function useUpdateAvailabilityRequest() {
       
       if (!id) throw new Error('ID is required for update');
       
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('availability_requests')
         .update({
           ...updateData,
@@ -141,8 +154,19 @@ export function useUpdateAvailabilityRequest() {
       return data as AvailabilityRequest;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
+      queryClient.invalidateQueries({ queryKey: ['availability-requests'] });
       queryClient.invalidateQueries({ queryKey: ['availability_requests', data.employee_id] });
+      toast({
+        title: "Success",
+        description: "Availability request updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update availability request: ${error.message}`,
+        variant: "destructive",
+      });
     }
   });
 }
@@ -150,11 +174,12 @@ export function useUpdateAvailabilityRequest() {
 // Delete an availability request
 export function useDeleteAvailabilityRequest() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (id: string) => {
       // Get the employee_id before deletion
-      const { data: requestData } = await (supabase as any)
+      const { data: requestData } = await supabase
         .from('availability_requests')
         .select('employee_id')
         .eq('id', id)
@@ -162,7 +187,7 @@ export function useDeleteAvailabilityRequest() {
       
       const employeeId = requestData?.employee_id;
       
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('availability_requests')
         .delete()
         .eq('id', id);
@@ -174,10 +199,21 @@ export function useDeleteAvailabilityRequest() {
       return { id, employeeId };
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
+      queryClient.invalidateQueries({ queryKey: ['availability-requests'] });
       if (result.employeeId) {
         queryClient.invalidateQueries({ queryKey: ['availability_requests', result.employeeId] });
       }
+      toast({
+        title: "Success",
+        description: "Availability request deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete availability request: ${error.message}`,
+        variant: "destructive",
+      });
     }
   });
 }

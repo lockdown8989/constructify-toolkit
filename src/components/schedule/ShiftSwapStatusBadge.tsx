@@ -1,23 +1,62 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface ShiftSwapStatusBadgeProps {
   status: string;
+  className?: string;
 }
 
-const ShiftSwapStatusBadge = ({ status }: ShiftSwapStatusBadgeProps) => {
+const ShiftSwapStatusBadge: React.FC<ShiftSwapStatusBadgeProps> = ({ 
+  status, 
+  className 
+}) => {
   switch (status) {
-    case 'Pending':
-      return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending</Badge>;
     case 'Approved':
-      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Approved</Badge>;
+      return (
+        <Badge 
+          className={cn(
+            "bg-green-100 text-green-800 border-green-300",
+            className
+          )}
+        >
+          Approved
+        </Badge>
+      );
     case 'Rejected':
-      return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Rejected</Badge>;
+      return (
+        <Badge 
+          className={cn(
+            "bg-red-100 text-red-800 border-red-300",
+            className
+          )}
+        >
+          Rejected
+        </Badge>
+      );
     case 'Completed':
-      return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Completed</Badge>;
+      return (
+        <Badge 
+          className={cn(
+            "bg-blue-100 text-blue-800 border-blue-300",
+            className
+          )}
+        >
+          Completed
+        </Badge>
+      );
     default:
-      return <Badge variant="outline">{status}</Badge>;
+      return (
+        <Badge 
+          className={cn(
+            "bg-yellow-100 text-yellow-800 border-yellow-300",
+            className
+          )}
+        >
+          Pending
+        </Badge>
+      );
   }
 };
 
