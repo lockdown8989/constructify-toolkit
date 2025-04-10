@@ -27,30 +27,23 @@ const DayCell: React.FC<DayCellProps> = ({
   getEmployeeName
 }) => {
   if (!day) {
-    return <div className="aspect-square p-1 bg-muted/20"></div>;
+    return <div className="aspect-square p-1 bg-gray-50"></div>;
   }
   
   const isCurrentMonth = isSameMonth(day, currentDate);
   const isCurrentDay = isToday(day);
   const hasMeetings = meetings.length > 0;
-  const isWeekend = day.getDay() === 0 || day.getDay() === 6;
   
   return (
     <div 
       className={`
-        aspect-square p-1 relative border transition-colors
-        ${isCurrentMonth ? "bg-white" : "bg-muted/10 text-muted-foreground"}
-        ${isCurrentDay ? "border-primary border-2" : "border-gray-100"}
+        aspect-square p-1 relative border
+        ${isCurrentMonth ? "bg-white" : "bg-gray-50 text-gray-400"}
+        ${isCurrentDay ? "border-blue-500 border-2" : "border-gray-100"}
         ${hasMeetings ? "bg-blue-50" : ""}
-        ${isWeekend && isCurrentMonth ? "bg-muted/5" : ""}
-        hover:bg-muted/10
       `}
     >
-      <div className={`
-        text-right text-xs p-1 font-medium
-        ${isCurrentDay ? "text-primary" : ""}
-        ${isWeekend && isCurrentMonth ? "text-muted-foreground" : ""}
-      `}>
+      <div className="text-right text-xs p-1">
         {format(day, "d")}
       </div>
       
@@ -61,12 +54,12 @@ const DayCell: React.FC<DayCellProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex justify-center">
-                  <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                  <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-[8px]">{meetings.length}</span>
                   </div>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="top" className="bg-white border shadow-md">
+              <TooltipContent side="top">
                 <div className="max-w-xs">
                   <div className="font-medium mb-1 text-sm">Meetings</div>
                   {meetings.map(meeting => (
@@ -75,7 +68,7 @@ const DayCell: React.FC<DayCellProps> = ({
                       className="mb-1 text-xs border-l-2 border-blue-500 pl-2 py-1"
                     >
                       <div className="font-medium">{meeting.title}</div>
-                      <div className="text-muted-foreground">{meeting.time.split(" ")[1]}</div>
+                      <div className="text-gray-500">{meeting.time.split(" ")[1]}</div>
                     </div>
                   ))}
                 </div>
@@ -98,20 +91,19 @@ const DayCell: React.FC<DayCellProps> = ({
                       className={`
                         w-2 h-2 rounded-full 
                         ${getTypeColor(leave.type)}
-                        border shadow-sm
+                        border-2 border-white
                       `}
                     ></div>
                   ))}
                   {leaves.length > 3 && (
-                    <div className="w-2 h-2 rounded-full bg-gray-300 flex items-center justify-center text-[8px] shadow-sm">
+                    <div className="w-2 h-2 rounded-full bg-gray-300 flex items-center justify-center text-[8px]">
                       <span>+{leaves.length - 3}</span>
                     </div>
                   )}
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="top" className="bg-white border shadow-md">
+              <TooltipContent side="top">
                 <div className="max-w-xs">
-                  <div className="font-medium mb-1 text-sm">Leave Requests</div>
                   {leaves.map(leave => (
                     <div 
                       key={leave.id}
@@ -119,7 +111,7 @@ const DayCell: React.FC<DayCellProps> = ({
                     >
                       <div className={`w-2 h-2 rounded-full ${getTypeColor(leave.type)}`}></div>
                       <span className="font-medium">{getEmployeeName(leave.employee_id)}</span>
-                      <span className="capitalize">({leave.type})</span>
+                      <span>({leave.type})</span>
                       <div className={`px-1.5 py-0.5 rounded-sm text-[10px] text-white ${getStatusColor(leave.status)}`}>
                         {leave.status}
                       </div>
