@@ -44,6 +44,33 @@ export interface ShiftSwap {
   updated_at: string;
 }
 
+// Define notification type
+export interface Notification {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read: boolean;
+  related_entity?: string;
+  related_id?: string;
+  created_at: string;
+}
+
+// Define webhook settings type
+export interface WebhookSetting {
+  id: string;
+  user_id: string;
+  webhook_url: string;
+  webhook_type: 'slack' | 'email';
+  notify_shift_swaps: boolean;
+  notify_availability: boolean;
+  notify_leave: boolean;
+  notify_attendance: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // Extend the Database type to include our new tables
 export interface ExtendedDatabase extends DatabaseType {
   public: {
@@ -63,6 +90,36 @@ export interface ExtendedDatabase extends DatabaseType {
       user_roles: DatabaseType['public']['Tables']['user_roles'];
       
       // Add our new tables
+      notifications: {
+        Row: Notification;
+        Insert: Omit<Notification, 'id' | 'created_at'> & { id?: string; created_at?: string };
+        Update: Partial<Notification>;
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      
+      webhook_settings: {
+        Row: WebhookSetting;
+        Insert: Omit<WebhookSetting, 'id' | 'created_at' | 'updated_at'> & { id?: string; created_at?: string; updated_at?: string };
+        Update: Partial<WebhookSetting>;
+        Relationships: [
+          {
+            foreignKeyName: "webhook_settings_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      
       availability_requests: {
         Row: AvailabilityRequest;
         Insert: Omit<AvailabilityRequest, 'id' | 'created_at' | 'updated_at'> & { id?: string; created_at?: string; updated_at?: string };

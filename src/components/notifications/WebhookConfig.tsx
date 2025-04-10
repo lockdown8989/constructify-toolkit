@@ -1,335 +1,305 @@
 
-import React, { useState } from 'react';
-import { z } from 'zod';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Switch } from '@/components/ui/switch';
+import { useAuth } from '@/hooks/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-const webhookFormSchema = z.object({
-  webhookType: z.enum(['slack', 'email']),
-  webhookUrl: z.string().url({ message: 'Please enter a valid URL' }),
-  enableShiftSwaps: z.boolean(),
-  enableAvailability: z.boolean(),
-  enableLeave: z.boolean(),
-  enableAttendance: z.boolean(),
+// Define the form schema
+const formSchema = z.object({
+  webhook_url: z.string().url({ message: "Please enter a valid URL" }),
+  webhook_type: z.enum(['slack', 'email']),
+  notify_shift_swaps: z.boolean().default(true),
+  notify_availability: z.boolean().default(true),
+  notify_leave: z.boolean().default(true),
+  notify_attendance: z.boolean().default(false),
 });
 
-type WebhookFormValues = z.infer<typeof webhookFormSchema>;
+type WebhookFormValues = z.infer<typeof formSchema>;
 
 const WebhookConfig = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const { user, isAdmin, isManager, isHR } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const form = useForm<WebhookFormValues>({
-    resolver: zodResolver(webhookFormSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      webhookType: 'slack',
-      webhookUrl: '',
-      enableShiftSwaps: true,
-      enableAvailability: true,
-      enableLeave: true,
-      enableAttendance: true,
+      webhook_url: '',
+      webhook_type: 'slack',
+      notify_shift_swaps: true,
+      notify_availability: true,
+      notify_leave: true,
+      notify_attendance: false,
     },
   });
   
-  // Load existing webhook settings
-  React.useEffect(() => {
+  // Load existing webhook configuration
+  useEffect(() => {
     if (!user) return;
     
     const loadWebhookSettings = async () => {
+      setIsLoading(true);
+      
+      // Check if the webhook_settings table exists
+      const { error: tableCheckError } = await supabase
+        .from('webhook_settings')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+      
+      // If table doesn't exist yet, create it
+      if (tableCheckError && tableCheckError.code === '42P01') {
+        // Table doesn't exist - we'll create it when saving
+        setIsLoading(false);
+        return;
+      }
+      
+      // Fetch user's webhook settings
       const { data, error } = await supabase
         .from('webhook_settings')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
       
-      if (error) {
+      if (error && error.code !== 'PGRST116') {
         console.error('Error loading webhook settings:', error);
-        return;
+        toast({
+          title: "Error",
+          description: "Failed to load webhook settings",
+          variant: "destructive",
+        });
       }
       
       if (data) {
         form.reset({
-          webhookType: data.webhook_type,
-          webhookUrl: data.webhook_url,
-          enableShiftSwaps: data.notify_shift_swaps,
-          enableAvailability: data.notify_availability,
-          enableLeave: data.notify_leave,
-          enableAttendance: data.notify_attendance,
+          webhook_url: data.webhook_url || '',
+          webhook_type: data.webhook_type || 'slack',
+          notify_shift_swaps: data.notify_shift_swaps,
+          notify_availability: data.notify_availability,
+          notify_leave: data.notify_leave,
+          notify_attendance: data.notify_attendance,
         });
       }
+      
+      setIsLoading(false);
     };
     
     loadWebhookSettings();
-  }, [user, form]);
+  }, [user, form, toast]);
   
   const onSubmit = async (values: WebhookFormValues) => {
     if (!user) return;
     
-    setIsSubmitting(true);
+    setIsLoading(true);
     
     try {
-      // Test the webhook first
-      const { error: testError } = await supabase.functions.invoke('send-webhook', {
-        body: {
-          webhookType: values.webhookType,
-          webhookUrl: values.webhookUrl,
-          title: 'Test Notification',
-          message: 'This is a test notification to verify your webhook configuration.',
-          data: {
-            time: new Date().toISOString(),
-            sender: user.email
-          }
-        }
+      const { error } = await supabase.from('webhook_settings').upsert({
+        user_id: user.id,
+        ...values,
+        updated_at: new Date().toISOString(),
       });
       
-      if (testError) {
-        console.error('Error testing webhook:', testError);
-        toast({
-          title: 'Webhook Test Failed',
-          description: 'Could not send test notification to the specified webhook URL.',
-          variant: 'destructive',
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Save webhook settings
-      const { error } = await supabase
-        .from('webhook_settings')
-        .upsert({
-          user_id: user.id,
-          webhook_type: values.webhookType,
-          webhook_url: values.webhookUrl,
-          notify_shift_swaps: values.enableShiftSwaps,
-          notify_availability: values.enableAvailability,
-          notify_leave: values.enableLeave,
-          notify_attendance: values.enableAttendance,
-        }, { onConflict: 'user_id' });
-      
-      if (error) {
-        console.error('Error saving webhook settings:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to save webhook settings. Please try again.',
-          variant: 'destructive',
-        });
-        setIsSubmitting(false);
-        return;
-      }
+      if (error) throw error;
       
       toast({
-        title: 'Webhook Configured',
-        description: 'Your webhook settings have been saved successfully.',
+        title: "Success",
+        description: "Webhook settings saved successfully",
       });
-    } catch (error) {
-      console.error('Webhook configuration error:', error);
+    } catch (error: any) {
+      console.error('Error saving webhook settings:', error);
       toast({
-        title: 'Error',
-        description: 'An unexpected error occurred. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to save webhook settings",
+        variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
   
-  if (!isAdmin && !isManager && !isHR) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>External Notifications</CardTitle>
-          <CardDescription>Configure external notification webhooks</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center py-8 text-muted-foreground">
-            You don't have permission to configure webhooks. Please contact your administrator.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-  
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>External Notifications</CardTitle>
         <CardDescription>
-          Configure webhooks to receive notifications on external platforms like Slack or email
+          Configure webhooks to receive notifications in Slack or via email.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="webhookType"
+              name="webhook_type"
               render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Notification Type</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-col space-y-1"
-                    >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="slack" />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          Slack
-                        </FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="email" />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          Email (via webhook)
-                        </FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
+                <FormItem>
+                  <FormLabel>Webhook Type</FormLabel>
+                  <Select
+                    disabled={isLoading}
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select webhook type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="slack">Slack</SelectItem>
+                      <SelectItem value="email">Email (Zapier/Integromat)</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormDescription>
                     {field.value === 'slack' 
-                      ? 'You will need to create an incoming webhook in your Slack workspace.' 
-                      : 'Use an email service webhook (like Zapier or Make.com)'}
+                      ? "Use a Slack incoming webhook URL" 
+                      : "Use a webhook URL from Zapier, Make.com, or similar"}
                   </FormDescription>
-                  <FormMessage />
                 </FormItem>
               )}
             />
             
             <FormField
               control={form.control}
-              name="webhookUrl"
+              name="webhook_url"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Webhook URL</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://..." {...field} />
+                    <Input
+                      placeholder="https://hooks.slack.com/services/xxx/yyy/zzz"
+                      {...field}
+                      disabled={isLoading}
+                    />
                   </FormControl>
                   <FormDescription>
-                    {form.watch('webhookType') === 'slack' 
-                      ? 'Enter your Slack incoming webhook URL' 
-                      : 'Enter the webhook URL for your email service'}
+                    {form.getValues('webhook_type') === 'slack' 
+                      ? "Create this in Slack: Workspace settings > Integrations > Incoming Webhooks" 
+                      : "Get this from your automation platform (Zapier, Make.com, etc)"}
                   </FormDescription>
-                  <FormMessage />
                 </FormItem>
               )}
             />
             
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium">Notification Settings</h3>
+            <div className="space-y-4 pt-4">
+              <h3 className="text-sm font-medium">Notification types</h3>
               
               <FormField
                 control={form.control}
-                name="enableShiftSwaps"
+                name="notify_shift_swaps"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Shift Swaps</FormLabel>
-                      <FormDescription>
-                        Receive notifications about shift swap requests
-                      </FormDescription>
-                    </div>
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                     <FormControl>
-                      <Switch
+                      <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
+                        disabled={isLoading}
                       />
                     </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Shift Swap Updates</FormLabel>
+                      <FormDescription>
+                        Notify me about shift swap requests and approvals
+                      </FormDescription>
+                    </div>
                   </FormItem>
                 )}
               />
               
               <FormField
                 control={form.control}
-                name="enableAvailability"
+                name="notify_availability"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Availability</FormLabel>
-                      <FormDescription>
-                        Receive notifications about availability updates
-                      </FormDescription>
-                    </div>
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                     <FormControl>
-                      <Switch
+                      <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
+                        disabled={isLoading}
                       />
                     </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Availability Changes</FormLabel>
+                      <FormDescription>
+                        Notify me about availability request updates
+                      </FormDescription>
+                    </div>
                   </FormItem>
                 )}
               />
               
               <FormField
                 control={form.control}
-                name="enableLeave"
+                name="notify_leave"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Leave Requests</FormLabel>
-                      <FormDescription>
-                        Receive notifications about leave requests
-                      </FormDescription>
-                    </div>
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                     <FormControl>
-                      <Switch
+                      <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
+                        disabled={isLoading}
                       />
                     </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Leave Requests</FormLabel>
+                      <FormDescription>
+                        Notify me about leave request updates and approvals
+                      </FormDescription>
+                    </div>
                   </FormItem>
                 )}
               />
               
               <FormField
                 control={form.control}
-                name="enableAttendance"
+                name="notify_attendance"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Attendance</FormLabel>
-                      <FormDescription>
-                        Receive notifications about attendance issues
-                      </FormDescription>
-                    </div>
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                     <FormControl>
-                      <Switch
+                      <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
+                        disabled={isLoading}
                       />
                     </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Attendance Updates</FormLabel>
+                      <FormDescription>
+                        Notify me about attendance tracking events
+                      </FormDescription>
+                    </div>
                   </FormItem>
                 )}
               />
             </div>
             
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Save Webhook Settings'}
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save Settings"}
             </Button>
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="text-xs text-muted-foreground">
-        <p>
-          {form.watch('webhookType') === 'slack' 
-            ? 'You can create a Slack incoming webhook in your Slack workspace settings.' 
-            : 'You can use services like Zapier, Make.com, or n8n to create email webhooks.'}
-        </p>
-      </CardFooter>
     </Card>
   );
 };
