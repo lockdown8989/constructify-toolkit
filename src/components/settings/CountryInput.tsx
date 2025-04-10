@@ -1,7 +1,9 @@
 
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { MapPin } from "lucide-react";
+import { useLanguage } from "@/hooks/use-language";
 
 interface CountryInputProps {
   country: string;
@@ -10,32 +12,30 @@ interface CountryInputProps {
   onDetect: () => void;
 }
 
-export const CountryInput = ({ 
-  country, 
-  isLocating, 
-  onChange, 
-  onDetect 
-}: CountryInputProps) => {
+export const CountryInput = ({ country, isLocating, onChange, onDetect }: CountryInputProps) => {
+  const { t } = useLanguage();
+  
   return (
     <div className="space-y-2">
-      <Label htmlFor="country">Country</Label>
-      <div className="flex">
-        <Input
+      <Label htmlFor="country">{t('location')}</Label>
+      <div className="flex gap-2">
+        <Input 
           id="country"
           name="country"
           value={country}
           onChange={onChange}
-          placeholder={isLocating ? "Detecting location..." : "e.g. United Kingdom"}
+          placeholder="Enter your country"
           className="flex-1"
         />
         <Button 
           type="button" 
           variant="outline" 
-          className="ml-2" 
           onClick={onDetect}
           disabled={isLocating}
+          className="whitespace-nowrap"
         >
-          Detect
+          <MapPin className="w-4 h-4 mr-2" />
+          {isLocating ? t('detecting') : t('autoDetect')}
         </Button>
       </div>
     </div>

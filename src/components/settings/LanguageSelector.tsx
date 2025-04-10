@@ -16,15 +16,17 @@ interface LanguageSelectorProps {
 }
 
 export const LanguageSelector = ({ language, onChange }: LanguageSelectorProps) => {
+  const { t } = useLanguage();
+  
   return (
     <div className="space-y-2">
-      <Label htmlFor="language">Preferred Language</Label>
+      <Label htmlFor="language">{t('preferredLanguage')}</Label>
       <Select 
         value={language} 
         onValueChange={onChange}
       >
         <SelectTrigger className="w-full">
-          <SelectValue placeholder="Select language" />
+          <SelectValue placeholder={t('chooseLanguage')} />
         </SelectTrigger>
         <SelectContent>
           {languageOptions.map((option) => (

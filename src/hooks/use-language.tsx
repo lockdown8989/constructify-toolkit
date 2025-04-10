@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
+import { translations, TranslationKey } from '@/utils/translations';
 
 type LanguageCode = 'en' | 'es' | 'bg' | 'pl' | 'ro';
 
@@ -9,12 +10,14 @@ interface LanguageContextType {
   language: LanguageCode;
   setLanguage: (language: LanguageCode) => Promise<void>;
   isLoading: boolean;
+  t: (key: TranslationKey) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType>({
   language: 'en',
   setLanguage: async () => {},
   isLoading: true,
+  t: (key: TranslationKey) => key,
 });
 
 export const languageOptions = [
@@ -78,8 +81,14 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     }
   };
 
+  // Translation function
+  const t = (key: TranslationKey): string => {
+    const currentTranslations = translations[language] || translations.en;
+    return currentTranslations[key] || translations.en[key] || key;
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, isLoading }}>
+    <LanguageContext.Provider value={{ language, setLanguage, isLoading, t }}>
       {children}
     </LanguageContext.Provider>
   );

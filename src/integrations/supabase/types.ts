@@ -378,30 +378,39 @@ export type Database = {
       }
       profiles: {
         Row: {
+          country: string | null
           created_at: string | null
           department: string | null
           first_name: string | null
           id: string
           last_name: string | null
           position: string | null
+          preferred_currency: string | null
+          preferred_language: string | null
           updated_at: string | null
         }
         Insert: {
+          country?: string | null
           created_at?: string | null
           department?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
           position?: string | null
+          preferred_currency?: string | null
+          preferred_language?: string | null
           updated_at?: string | null
         }
         Update: {
+          country?: string | null
           created_at?: string | null
           department?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
           position?: string | null
+          preferred_currency?: string | null
+          preferred_language?: string | null
           updated_at?: string | null
         }
         Relationships: []

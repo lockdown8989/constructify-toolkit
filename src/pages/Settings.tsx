@@ -12,13 +12,13 @@ import { useLanguage } from "@/hooks/use-language";
 
 const Settings = () => {
   const { user, isLoading } = useAuth();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-lg">Loading settings...</span>
+        <span className="ml-2 text-lg">{t('loading')}</span>
       </div>
     );
   }
@@ -27,9 +27,9 @@ const Settings = () => {
     <div className="container mx-auto py-20 pt-24 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Settings</h1>
+          <h1 className="text-3xl font-bold mb-2">{t('settings')}</h1>
           <p className="text-muted-foreground">
-            Manage your account settings and preferences
+            {t('manageSettings')}
           </p>
           <Separator className="mt-4" />
         </div>
@@ -38,28 +38,28 @@ const Settings = () => {
           <TabsList className="mb-4 w-full justify-start overflow-x-auto">
             <TabsTrigger value="region" className="flex items-center">
               <MapPin className="mr-2 h-4 w-4" />
-              <span>Region & Currency</span>
+              <span>{t('regionCurrency').split('&')[0]} & {t('regionCurrency').split('&')[1]}</span>
             </TabsTrigger>
             <TabsTrigger value="appearance" className="flex items-center">
               <Moon className="mr-2 h-4 w-4" />
-              <span>Appearance</span>
+              <span>{t('appearance').split(' ')[0]}</span>
             </TabsTrigger>
             <TabsTrigger value="language" className="flex items-center">
               <Languages className="mr-2 h-4 w-4" />
-              <span>Language</span>
+              <span>{t('language').split(' ')[0]}</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center">
               <BellRing className="mr-2 h-4 w-4" />
-              <span>Notifications</span>
+              <span>{t('notifications').split(' ')[0]}</span>
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="region">
             <Card>
               <CardHeader>
-                <CardTitle>Region & Currency Settings</CardTitle>
+                <CardTitle>{t('regionCurrency')}</CardTitle>
                 <CardDescription>
-                  Configure your location and preferred currency
+                  {t('configureLocation')}
                 </CardDescription>
               </CardHeader>
               
@@ -70,9 +70,9 @@ const Settings = () => {
           <TabsContent value="appearance">
             <Card>
               <CardHeader>
-                <CardTitle>Appearance Settings</CardTitle>
+                <CardTitle>{t('appearance')}</CardTitle>
                 <CardDescription>
-                  Customize the appearance of the application
+                  {t('customizeAppearance')}
                 </CardDescription>
               </CardHeader>
               
@@ -85,9 +85,9 @@ const Settings = () => {
           <TabsContent value="language">
             <Card>
               <CardHeader>
-                <CardTitle>Language Settings</CardTitle>
+                <CardTitle>{t('language')}</CardTitle>
                 <CardDescription>
-                  Choose your preferred language
+                  {t('chooseLanguage')}
                 </CardDescription>
               </CardHeader>
               
@@ -103,9 +103,9 @@ const Settings = () => {
           <TabsContent value="notifications">
             <Card>
               <CardHeader>
-                <CardTitle>Notification Settings</CardTitle>
+                <CardTitle>{t('notifications')}</CardTitle>
                 <CardDescription>
-                  Manage how you receive notifications
+                  {t('manageNotifications')}
                 </CardDescription>
               </CardHeader>
               

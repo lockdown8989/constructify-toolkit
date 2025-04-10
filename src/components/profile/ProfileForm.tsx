@@ -7,6 +7,7 @@ import { ManagerIdField } from "./ManagerIdField";
 import { BasicInfoFields } from "./BasicInfoFields";
 import { EmailField } from "./EmailField";
 import { useProfileForm } from "./useProfileForm";
+import { useLanguage } from "@/hooks/use-language";
 
 interface ProfileFormProps {
   user: User | null;
@@ -16,6 +17,7 @@ interface ProfileFormProps {
 
 export const ProfileForm = ({ user, isManager, managerId }: ProfileFormProps) => {
   const { profile, isSaving, handleChange, handleSubmit } = useProfileForm(user);
+  const { t } = useLanguage();
 
   return (
     <form onSubmit={handleSubmit}>
@@ -39,7 +41,7 @@ export const ProfileForm = ({ user, isManager, managerId }: ProfileFormProps) =>
       
       <CardFooter>
         <Button type="submit" disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save Changes"}
+          {isSaving ? t('saving') : t('saveChanges')}
         </Button>
       </CardFooter>
     </form>
