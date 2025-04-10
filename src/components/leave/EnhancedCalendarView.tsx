@@ -6,7 +6,6 @@ import {
   CardDescription,
   CardHeader,
 } from "@/components/ui/card";
-import { TabsContent } from "@/components/ui/tabs";
 
 // Import refactored components
 import CalendarHeader from "./calendar/CalendarHeader";
