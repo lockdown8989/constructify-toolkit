@@ -15,6 +15,7 @@ const ScheduleRequests = () => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState<'requests' | 'form'>('requests');
+  const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
   
   // Set up real-time listeners for shift swaps and availability requests
   useEffect(() => {
@@ -149,7 +150,18 @@ const ScheduleRequests = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             {(!isMobile || activeSection === 'form') && (
               <div className="md:col-span-1">
-                <AvailabilityRequestForm />
+                {showAvailabilityForm ? (
+                  <AvailabilityRequestForm onClose={() => setShowAvailabilityForm(false)} />
+                ) : (
+                  <div className="h-10 flex justify-center">
+                    <button 
+                      onClick={() => setShowAvailabilityForm(true)}
+                      className="bg-primary text-primary-foreground shadow hover:bg-primary/90 px-4 py-2 rounded-md"
+                    >
+                      Set Availability
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             

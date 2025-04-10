@@ -5,12 +5,11 @@ import { useEmployees } from '@/hooks/use-employees';
 import { useSchedules } from '@/hooks/use-schedules';
 import { useShiftSwaps, useUpdateShiftSwap, ShiftSwap } from '@/hooks/use-shift-swaps';
 import { useAuth } from '@/hooks/use-auth';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Check, X, AlertCircle, Clock, ArrowLeftRight } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
+import { ArrowLeftRight } from 'lucide-react';
+import ShiftSwapStatusBadge from './ShiftSwapStatusBadge';
+import ShiftSwapTabContent from './ShiftSwapTabContent';
 
 const ShiftSwapList = () => {
   const { data: swaps = [], isLoading: isLoadingSwaps } = useShiftSwaps();
@@ -18,7 +17,6 @@ const ShiftSwapList = () => {
   const { data: employees = [] } = useEmployees();
   const { user, isAdmin, isHR, isManager } = useAuth();
   const { mutate: updateSwap } = useUpdateShiftSwap();
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'completed'>('pending');
   
   if (!user) {
@@ -91,49 +89,6 @@ const ShiftSwapList = () => {
     });
   };
   
-  const renderStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Pending':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending</Badge>;
-      case 'Approved':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Approved</Badge>;
-      case 'Rejected':
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Rejected</Badge>;
-      case 'Completed':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Completed</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-  
-  const renderActions = (swap: ShiftSwap) => {
-    if (swap.status === 'Pending' && (canApproveSwaps || user.id === swap.recipient_id)) {
-      return (
-        <div className="flex space-x-2">
-          <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleApprove(swap)}>
-            <Check className="h-4 w-4 mr-1" />
-            Approve
-          </Button>
-          <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleReject(swap)}>
-            <X className="h-4 w-4 mr-1" />
-            Reject
-          </Button>
-        </div>
-      );
-    }
-    
-    if (swap.status === 'Approved' && canApproveSwaps) {
-      return (
-        <Button size="sm" variant="outline" onClick={() => handleComplete(swap)}>
-          <Check className="h-4 w-4 mr-1" />
-          Mark Completed
-        </Button>
-      );
-    }
-    
-    return null;
-  };
-  
   if (isLoadingSwaps) {
     return <div className="text-center p-6">Loading shift swaps...</div>;
   }
@@ -160,55 +115,18 @@ const ShiftSwapList = () => {
         </div>
         
         <CardContent className="pt-6">
-          {filteredSwaps.length === 0 ? (
-            <div className="text-center p-6 text-gray-500">
-              No {activeTab} shift swap requests found
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredSwaps.map(swap => (
-                <div key={swap.id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <div className="font-medium">
-                        {getEmployeeName(swap.requester_id)} → {getEmployeeName(swap.recipient_id)}
-                      </div>
-                      <div className="text-sm text-gray-500 mt-1">
-                        <Clock className="h-3.5 w-3.5 inline mr-1" />
-                        Requested on {format(new Date(swap.created_at), 'PPP')}
-                      </div>
-                    </div>
-                    <div>{renderStatusBadge(swap.status)}</div>
-                  </div>
-                  
-                  <div className="space-y-2 mt-3">
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <div className="text-sm font-medium">Requested Shift:</div>
-                      <div className="text-sm">{getScheduleDetails(swap.requester_schedule_id)}</div>
-                    </div>
-                    
-                    {swap.recipient_schedule_id && (
-                      <div className="bg-gray-50 p-3 rounded-md">
-                        <div className="text-sm font-medium">Swap With:</div>
-                        <div className="text-sm">{getScheduleDetails(swap.recipient_schedule_id)}</div>
-                      </div>
-                    )}
-                    
-                    {swap.notes && (
-                      <div className="text-sm mt-2">
-                        <span className="font-medium">Notes: </span> 
-                        {swap.notes}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="mt-3 flex justify-end">
-                    {renderActions(swap)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <ShiftSwapTabContent
+            swaps={filteredSwaps}
+            activeTab={activeTab}
+            getEmployeeName={getEmployeeName}
+            getScheduleDetails={getScheduleDetails}
+            renderStatusBadge={(status) => <ShiftSwapStatusBadge status={status} />}
+            onApprove={handleApprove}
+            onReject={handleReject}
+            onComplete={handleComplete}
+            canApproveSwaps={canApproveSwaps}
+            userId={user.id}
+          />
         </CardContent>
       </Tabs>
     </Card>
