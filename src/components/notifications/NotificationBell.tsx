@@ -21,10 +21,16 @@ const NotificationBell = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      console.log('NotificationBell: No user logged in, skipping notification setup');
+      return;
+    }
+
+    console.log('NotificationBell: Setting up notifications for user', user.id);
 
     // Load initial notifications
     const fetchNotifications = async () => {
+      console.log('NotificationBell: Fetching notifications for user', user.id);
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -38,14 +44,18 @@ const NotificationBell = () => {
       }
       
       if (data) {
+        console.log('NotificationBell: Fetched notifications:', data.length);
         setNotifications(data);
-        setUnreadCount(data.filter(notification => !notification.read).length);
+        const unreadNotifications = data.filter(notification => !notification.read);
+        setUnreadCount(unreadNotifications.length);
+        console.log('NotificationBell: Unread count:', unreadNotifications.length);
       }
     };
     
     fetchNotifications();
     
     // Set up real-time listener for new notifications
+    console.log('NotificationBell: Setting up real-time listener for notifications');
     const channel = supabase
       .channel('notification_updates')
       .on(
@@ -57,19 +67,23 @@ const NotificationBell = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('New notification:', payload);
+          console.log('NotificationBell: New notification received:', payload);
           setNotifications(prevNotifications => [payload.new as Notification, ...prevNotifications]);
           setUnreadCount(prevCount => prevCount + 1);
         }
       )
       .subscribe();
     
+    console.log('NotificationBell: Subscribed to notification channel');
+    
     return () => {
+      console.log('NotificationBell: Cleaning up notification listener');
       supabase.removeChannel(channel);
     };
   }, [user]);
   
   const markAsRead = async (id: string) => {
+    console.log('NotificationBell: Marking notification as read:', id);
     const { error } = await supabase
       .from('notifications')
       .update({ read: true })
@@ -90,8 +104,12 @@ const NotificationBell = () => {
   };
   
   const markAllAsRead = async () => {
-    if (!user || notifications.length === 0) return;
+    if (!user || notifications.length === 0) {
+      console.log('NotificationBell: No notifications to mark as read');
+      return;
+    }
     
+    console.log('NotificationBell: Marking all notifications as read');
     const { error } = await supabase
       .from('notifications')
       .update({ read: true })
@@ -109,6 +127,12 @@ const NotificationBell = () => {
     
     setUnreadCount(0);
   };
+  
+  // For testing, let's log notifications on each render
+  console.log('NotificationBell render:', { 
+    notificationCount: notifications.length, 
+    unreadCount 
+  });
   
   return (
     <Popover>

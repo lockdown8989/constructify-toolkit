@@ -18,7 +18,13 @@ const LeaveRealtimeUpdates: React.FC = () => {
   
   // Set up real-time listener for leave calendar changes
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      console.log('LeaveRealtimeUpdates: No user logged in, skipping setup');
+      return;
+    }
+    
+    console.log('LeaveRealtimeUpdates: Setting up realtime updates for user', user.id);
+    console.log('LeaveRealtimeUpdates: User has manager access:', hasManagerAccess);
     
     const channel = supabase
       .channel('leave_updates')
@@ -30,6 +36,8 @@ const LeaveRealtimeUpdates: React.FC = () => {
           table: 'leave_calendar'
         },
         async (payload) => {
+          console.log('LeaveRealtimeUpdates: Leave calendar update received:', payload);
+          
           // Invalidate queries to refresh data
           queryClient.invalidateQueries({ queryKey: ['leave_calendar'] });
           
@@ -38,6 +46,7 @@ const LeaveRealtimeUpdates: React.FC = () => {
             const newStatus = payload.new.status;
             
             if (newStatus === 'Approved') {
+              console.log('LeaveRealtimeUpdates: Leave request approved');
               toast({
                 title: "Leave request approved",
                 description: "A leave request has been approved.",
@@ -46,6 +55,7 @@ const LeaveRealtimeUpdates: React.FC = () => {
               // Send in-app notification to the employee
               if (user.id !== payload.new.employee_id) {
                 try {
+                  console.log('LeaveRealtimeUpdates: Sending notification to employee:', payload.new.employee_id);
                   await sendNotification({
                     user_id: payload.new.employee_id,
                     title: "Leave request approved",
@@ -67,6 +77,7 @@ const LeaveRealtimeUpdates: React.FC = () => {
                 }
               }
             } else if (newStatus === 'Rejected') {
+              console.log('LeaveRealtimeUpdates: Leave request rejected');
               toast({
                 title: "Leave request rejected",
                 description: "A leave request has been rejected.",
@@ -75,6 +86,7 @@ const LeaveRealtimeUpdates: React.FC = () => {
               // Send in-app notification to the employee
               if (user.id !== payload.new.employee_id) {
                 try {
+                  console.log('LeaveRealtimeUpdates: Sending notification to employee:', payload.new.employee_id);
                   await sendNotification({
                     user_id: payload.new.employee_id,
                     title: "Leave request rejected",
@@ -97,6 +109,7 @@ const LeaveRealtimeUpdates: React.FC = () => {
               }
             }
           } else if (payload.eventType === 'INSERT') {
+            console.log('LeaveRealtimeUpdates: New leave request submitted');
             toast({
               title: "New leave request",
               description: "A new leave request has been submitted.",
@@ -105,7 +118,10 @@ const LeaveRealtimeUpdates: React.FC = () => {
             // Notify managers or admins about the new request
             if (hasManagerAccess && user.id !== payload.new.employee_id) {
               try {
+                console.log('LeaveRealtimeUpdates: Notifying managers about new leave request');
                 const managerIds = await getManagerUserIds();
+                console.log('LeaveRealtimeUpdates: Found manager IDs:', managerIds);
+                
                 for (const managerId of managerIds) {
                   await sendNotification({
                     user_id: managerId,
@@ -133,7 +149,10 @@ const LeaveRealtimeUpdates: React.FC = () => {
       )
       .subscribe();
     
+    console.log('LeaveRealtimeUpdates: Subscribed to leave_updates channel');
+    
     return () => {
+      console.log('LeaveRealtimeUpdates: Cleaning up channel subscription');
       supabase.removeChannel(channel);
     };
   }, [queryClient, toast, user, hasManagerAccess]);
