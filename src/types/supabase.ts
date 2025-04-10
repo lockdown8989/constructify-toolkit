@@ -144,7 +144,36 @@ export interface ExtendedDatabase extends DatabaseType {
         };
         Insert: Omit<ShiftSwap, 'id' | 'created_at' | 'updated_at'> & { id?: string; created_at?: string; updated_at?: string };
         Update: Partial<ShiftSwap>;
-        Relationships: [] // Changed to empty array to match the base Database interface
+        Relationships: [
+          {
+            foreignKeyName: "shift_swaps_recipient_id_fkey";
+            columns: ["recipient_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shift_swaps_recipient_schedule_id_fkey";
+            columns: ["recipient_schedule_id"];
+            isOneToOne: false;
+            referencedRelation: "schedules";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shift_swaps_requester_id_fkey";
+            columns: ["requester_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shift_swaps_requester_schedule_id_fkey";
+            columns: ["requester_schedule_id"];
+            isOneToOne: false;
+            referencedRelation: "schedules";
+            referencedColumns: ["id"];
+          }
+        ]
       };
     };
     Views: DatabaseType['public']['Views'];
