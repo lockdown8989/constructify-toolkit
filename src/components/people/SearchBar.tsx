@@ -1,0 +1,25 @@
+
+import React from 'react';
+import { Search } from 'lucide-react';
+
+interface SearchBarProps {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+}
+
+const SearchBar: React.FC<SearchBarProps> = ({ searchQuery, setSearchQuery }) => {
+  return (
+    <div className="relative w-full md:w-auto md:min-w-[280px]">
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <input
+        type="text"
+        placeholder="Search employees..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="pl-9 pr-4 py-2 rounded-md bg-gray-100 text-sm w-full focus:outline-none focus:ring-2 focus:ring-gray-200"
+      />
+    </div>
+  );
+};
+
+export default SearchBar;
