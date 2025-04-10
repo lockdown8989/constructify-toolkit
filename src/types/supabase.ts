@@ -119,7 +119,15 @@ export interface ExtendedDatabase extends DatabaseType {
         };
         Insert: Omit<AvailabilityRequest, 'id' | 'created_at' | 'updated_at'> & { id?: string; created_at?: string; updated_at?: string };
         Update: Partial<AvailabilityRequest>;
-        Relationships: [] // Changed to empty array to match the base Database interface
+        Relationships: [
+          {
+            foreignKeyName: "availability_requests_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id"];
+          }
+        ] // Fixed to match the expected relationship format
       };
       
       shift_swaps: {
