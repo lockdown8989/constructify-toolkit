@@ -1,9 +1,8 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { LeaveEvent, LeaveRequest } from './leave-types';
+import { LeaveEvent } from './leave-types';
 
 /**
  * Hook to fetch all leave calendar events
@@ -63,5 +62,4 @@ export function useLeaveCalendar() {
   });
 }
 
-// Add this alias for backward compatibility
-export const useLeaveCalendar = useLeaveCalendar;
+// No duplicate alias export here

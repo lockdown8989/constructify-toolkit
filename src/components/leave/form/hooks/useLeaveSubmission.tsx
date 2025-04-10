@@ -5,8 +5,8 @@ import { useAddLeaveRequest } from "@/hooks/use-leave-calendar";
 import { useQueryClient } from "@tanstack/react-query";
 import { calculateBusinessDays } from "@/utils/leave-utils";
 import { 
-  createLeaveRequestNotification,
-  notifyManagersAboutLeaveRequest 
+  createTestNotification,
+  notifyManagersOfNewLeaveRequest 
 } from "@/services/notifications";
 import type { FormStatus } from "./useFormState";
 
@@ -83,22 +83,17 @@ export const useLeaveSubmission = (
             if (data && data.id) {
               try {
                 // Notify the employee who submitted the request
-                await createLeaveRequestNotification(
+                await createTestNotification(
                   userId,
-                  data.id,
-                  format(startDate, "MMM d, yyyy"),
-                  format(endDate, "MMM d, yyyy"),
-                  leaveType
+                  `Leave Request Submitted: ${leaveType}`,
+                  `Your leave request from ${format(startDate, "MMM d, yyyy")} to ${format(endDate, "MMM d, yyyy")} has been submitted and is pending approval.`,
+                  'info',
+                  'leave_calendar',
+                  data.id
                 );
                 
                 // Notify managers about the new request
-                await notifyManagersAboutLeaveRequest(
-                  data.id,
-                  employeeName,
-                  format(startDate, "MMM d, yyyy"),
-                  format(endDate, "MMM d, yyyy"),
-                  leaveType
-                );
+                await notifyManagersOfNewLeaveRequest(data);
               } catch (error) {
                 console.error("Error sending notifications:", error);
                 // Continue with success even if notification fails
