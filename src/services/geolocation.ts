@@ -21,6 +21,15 @@ export const detectUserLocation = async (): Promise<{
     // Map country codes to supported currencies
     let currencyCode: 'USD' | 'GBP' | 'EUR' = 'USD'; // Default
     
+    // Special case for United Kingdom
+    if (data.country_code === 'GB') {
+      currencyCode = 'GBP';
+      return {
+        country: 'GB', // We'll transform this to "United Kingdom" in the component
+        currencyCode
+      };
+    }
+    
     if (data.currency.code === 'GBP') {
       currencyCode = 'GBP';
     } else if (data.currency.code === 'EUR' || 
@@ -30,7 +39,7 @@ export const detectUserLocation = async (): Promise<{
     }
     
     return {
-      country: data.country || '',
+      country: data.country_code || '',
       currencyCode
     };
   } catch (error) {

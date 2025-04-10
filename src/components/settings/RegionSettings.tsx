@@ -33,6 +33,18 @@ const currencyOptions = [
   { value: "EUR", label: "Euro (€)", icon: Euro },
 ];
 
+// Function to convert country codes to full names
+const getCountryName = (countryCode: string): string => {
+  const countryMappings: Record<string, string> = {
+    "GB": "United Kingdom",
+    "US": "United States",
+    "CA": "Canada",
+    // Add more mappings as needed
+  };
+  
+  return countryMappings[countryCode] || countryCode;
+};
+
 export const RegionSettings = ({ user }: RegionSettingsProps) => {
   const { toast } = useToast();
   const { setCurrency } = useCurrencyPreference();
@@ -62,7 +74,7 @@ export const RegionSettings = ({ user }: RegionSettingsProps) => {
         
         if (data) {
           setRegionData({
-            country: data.country || "",
+            country: data.country ? getCountryName(data.country) : "",
             preferred_currency: data.preferred_currency || "USD",
           });
           
@@ -86,16 +98,20 @@ export const RegionSettings = ({ user }: RegionSettingsProps) => {
     setIsLocating(true);
     try {
       const { country, currencyCode } = await detectUserLocation();
+      
+      // Convert country code to full name if needed
+      const countryName = country === "GB" ? "United Kingdom" : getCountryName(country);
+      
       setRegionData(prev => ({
         ...prev, 
-        country: country || prev.country,
+        country: countryName || prev.country,
         preferred_currency: currencyCode
       }));
       
       if (country) {
         toast({
           title: "Location detected",
-          description: `Detected country: ${country} (${currencyCode})`,
+          description: `Detected country: ${countryName} (${currencyCode})`,
         });
       }
     } catch (error) {
@@ -169,7 +185,7 @@ export const RegionSettings = ({ user }: RegionSettingsProps) => {
               name="country"
               value={regionData.country}
               onChange={handleChange}
-              placeholder={isLocating ? "Detecting location..." : "e.g. United States"}
+              placeholder={isLocating ? "Detecting location..." : "e.g. United Kingdom"}
               className="flex-1"
             />
             <Button 
