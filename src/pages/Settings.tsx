@@ -1,15 +1,18 @@
 
 import { useAuth } from "@/hooks/use-auth";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Loader2, MapPin, Languages, Moon, BellRing } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { RegionSettings } from "@/components/settings/RegionSettings";
 import { ThemeSelector } from "@/components/settings/ThemeSelector";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LanguageSelector } from "@/components/settings/LanguageSelector";
+import { useLanguage } from "@/hooks/use-language";
 
 const Settings = () => {
   const { user, isLoading } = useAuth();
+  const { language, setLanguage } = useLanguage();
   
   if (isLoading) {
     return (
@@ -88,7 +91,12 @@ const Settings = () => {
                 </CardDescription>
               </CardHeader>
               
-              <RegionSettings user={user} />
+              <CardContent>
+                <LanguageSelector 
+                  language={language}
+                  onChange={(value) => setLanguage(value as any)}
+                />
+              </CardContent>
             </Card>
           </TabsContent>
           
