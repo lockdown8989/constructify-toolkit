@@ -1,6 +1,5 @@
 
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import People from "@/pages/People";
@@ -14,97 +13,71 @@ import Hiring from "@/pages/Hiring";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/NotFound";
 import AppLayout from "@/components/layout/AppLayout";
+import { Navigate } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export function Router() {
-  return (
-    <Routes>
-      <Route path="/auth" element={<Auth />} />
-      <Route element={<AppLayout />}>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/index" element={<Navigate to="/dashboard" replace />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/people"
-          element={
-            <ProtectedRoute>
-              <People />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/schedule"
-          element={
-            <ProtectedRoute>
-              <Schedule />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/schedule-requests"
-          element={
-            <ProtectedRoute>
-              <ScheduleRequests />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/employee-workflow"
-          element={
-            <ProtectedRoute>
-              <EmployeeWorkflow />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/salary"
-          element={
-            <ProtectedRoute>
-              <Salary />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/payroll"
-          element={
-            <ProtectedRoute>
-              <Payroll />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/leave-management"
-          element={
-            <ProtectedRoute>
-              <LeaveManagement />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/hiring"
-          element={
-            <ProtectedRoute>
-              <Hiring />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<NotFound />} />
-      </Route>
-    </Routes>
-  );
+  return [
+    {
+      path: "/auth",
+      element: <Auth />
+    },
+    {
+      element: <AppLayout />,
+      children: [
+        {
+          path: "/",
+          element: <Navigate to="/dashboard" replace />
+        },
+        {
+          path: "/index",
+          element: <Navigate to="/dashboard" replace />
+        },
+        {
+          path: "/dashboard",
+          element: <ProtectedRoute><Dashboard /></ProtectedRoute>
+        },
+        {
+          path: "/people",
+          element: <ProtectedRoute><People /></ProtectedRoute>
+        },
+        {
+          path: "/schedule",
+          element: <ProtectedRoute><Schedule /></ProtectedRoute>
+        },
+        {
+          path: "/schedule-requests",
+          element: <ProtectedRoute><ScheduleRequests /></ProtectedRoute>
+        },
+        {
+          path: "/employee-workflow",
+          element: <ProtectedRoute><EmployeeWorkflow /></ProtectedRoute>
+        },
+        {
+          path: "/salary",
+          element: <ProtectedRoute><Salary /></ProtectedRoute>
+        },
+        {
+          path: "/payroll",
+          element: <ProtectedRoute><Payroll /></ProtectedRoute>
+        },
+        {
+          path: "/leave-management",
+          element: <ProtectedRoute><LeaveManagement /></ProtectedRoute>
+        },
+        {
+          path: "/hiring",
+          element: <ProtectedRoute><Hiring /></ProtectedRoute>
+        },
+        {
+          path: "/profile",
+          element: <ProtectedRoute><Profile /></ProtectedRoute>
+        },
+        {
+          path: "*",
+          element: <NotFound />
+        }
+      ]
+    }
+  ];
 }
