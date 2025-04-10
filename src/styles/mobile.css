@@ -58,6 +58,10 @@
   padding-right: env(safe-area-inset-right);
 }
 
+.pb-safe-area-inset-bottom {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
 /* Pull to refresh animation for mobile */
 .pull-to-refresh {
   position: relative;
@@ -103,4 +107,31 @@
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* Internet Explorer/Edge */
   user-select: none; /* Non-prefixed version */
+}
+
+/* Back button swipe gesture area */
+.swipe-back-area {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  z-index: 10;
+}
+
+/* Active touch state for elements */
+.active-touch-state {
+  transition: transform 0.1s, opacity 0.1s;
+}
+
+.active-touch-state:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* Better input focus outlines for touch */
+@media (max-width: 768px) {
+  input:focus, button:focus, a:focus, [role="button"]:focus {
+    @apply ring-2 ring-primary/70 outline-none;
+  }
 }

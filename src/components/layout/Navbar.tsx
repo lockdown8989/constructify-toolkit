@@ -17,7 +17,7 @@ const Navbar = () => {
   const isAuthenticated = !!user
 
   return (
-    <div className="border-b">
+    <div className="border-b sticky top-0 bg-background z-40 safe-area-inset">
       <div className="flex h-16 items-center px-4">
         {isMobile ? (
           <MobileNav isAuthenticated={isAuthenticated} />
