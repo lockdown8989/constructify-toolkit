@@ -27,10 +27,10 @@ export const ThemeSelector = () => {
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
           <Label htmlFor="dark-mode" className="text-base font-medium">
-            Dark Mode
+            {t('darkMode')}
           </Label>
           <p className="text-sm text-muted-foreground">
-            Use dark theme throughout the application
+            {t('useDarkTheme')}
           </p>
         </div>
         <Switch 
@@ -41,14 +41,24 @@ export const ThemeSelector = () => {
         />
       </div>
       
-      <div className="flex p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50">
-        <div className={`flex-1 flex flex-col items-center justify-center p-4 rounded-lg cursor-pointer transition-colors ${!isDarkTheme ? "bg-white dark:bg-slate-800 shadow-sm" : ""}`} onClick={() => setTheme("light")}>
+      <div className="flex p-4 rounded-xl bg-gray-50 dark:bg-slate-800/50">
+        <div 
+          className={`flex-1 flex flex-col items-center justify-center p-4 rounded-lg cursor-pointer transition-colors ${
+            !isDarkTheme ? "bg-white dark:bg-slate-700 shadow-sm" : ""
+          }`} 
+          onClick={() => setTheme("light")}
+        >
           <Sun className={`h-8 w-8 mb-2 ${!isDarkTheme ? "text-amber-500" : "text-muted-foreground"}`} />
-          <span className={`text-sm font-medium ${!isDarkTheme ? "text-foreground" : "text-muted-foreground"}`}>Light</span>
+          <span className={`text-sm font-medium ${!isDarkTheme ? "text-foreground" : "text-muted-foreground"}`}>{t('light')}</span>
         </div>
-        <div className={`flex-1 flex flex-col items-center justify-center p-4 rounded-lg cursor-pointer transition-colors ${isDarkTheme ? "bg-slate-800 shadow-sm" : ""}`} onClick={() => setTheme("dark")}>
+        <div 
+          className={`flex-1 flex flex-col items-center justify-center p-4 rounded-lg cursor-pointer transition-colors ${
+            isDarkTheme ? "bg-slate-900 shadow-sm" : ""
+          }`} 
+          onClick={() => setTheme("dark")}
+        >
           <Moon className={`h-8 w-8 mb-2 ${isDarkTheme ? "text-indigo-400" : "text-muted-foreground"}`} />
-          <span className={`text-sm font-medium ${isDarkTheme ? "text-foreground" : "text-muted-foreground"}`}>Dark</span>
+          <span className={`text-sm font-medium ${isDarkTheme ? "text-foreground" : "text-muted-foreground"}`}>{t('dark')}</span>
         </div>
       </div>
     </div>
