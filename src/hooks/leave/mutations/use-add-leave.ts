@@ -60,8 +60,8 @@ export function useAddLeaveRequest() {
       // Notify managers about the new leave request
       try {
         console.log('Attempting to notify managers about new leave request');
-        await notifyManagersOfNewLeaveRequest(data);
-        console.log('Manager notification completed');
+        const notificationResult = await notifyManagersOfNewLeaveRequest(data);
+        console.log('Manager notification completed with result:', notificationResult);
       } catch (notifyError) {
         console.error('Error notifying managers:', notifyError);
         // Continue execution even if notification fails
@@ -69,13 +69,14 @@ export function useAddLeaveRequest() {
       
       toast({
         title: 'Leave request submitted',
-        description: 'Your leave request has been successfully submitted.',
+        description: 'Your leave request has been successfully submitted and managers have been notified.',
       });
     },
     onError: (error: any) => {
+      console.error('Error in useAddLeaveRequest:', error);
       toast({
         title: 'Failed to submit leave request',
-        description: error.message,
+        description: error.message || 'An error occurred while submitting your leave request.',
         variant: 'destructive',
       });
     }

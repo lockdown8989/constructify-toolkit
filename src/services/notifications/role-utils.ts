@@ -10,12 +10,17 @@ export const getManagerUserIds = async (): Promise<string[]> => {
     
     const { data, error } = await supabase
       .from('user_roles')
-      .select('user_id')
+      .select('user_id, role')
       .in('role', ['admin', 'employer', 'hr']);
     
     if (error) {
       console.error('Error fetching manager IDs:', error);
       throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      console.log('No manager roles found in the database');
+      return [];
     }
     
     const managerIds = data.map(item => item.user_id);
@@ -33,6 +38,8 @@ export const getManagerUserIds = async (): Promise<string[]> => {
  */
 export const hasManagerRole = async (userId: string): Promise<boolean> => {
   try {
+    console.log(`Checking if user ${userId} has manager role`);
+    
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
@@ -44,7 +51,10 @@ export const hasManagerRole = async (userId: string): Promise<boolean> => {
       throw error;
     }
     
-    return data && data.length > 0;
+    const hasRole = data && data.length > 0;
+    console.log(`User ${userId} has manager role: ${hasRole}`);
+    
+    return hasRole;
   } catch (error) {
     console.error('Error in hasManagerRole:', error);
     return false;

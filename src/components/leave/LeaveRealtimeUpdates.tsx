@@ -121,44 +121,57 @@ const LeaveRealtimeUpdates: React.FC = () => {
             }
           } else if (payload.eventType === 'INSERT') {
             console.log('LeaveRealtimeUpdates: New leave request submitted');
-            toast({
-              title: "New leave request",
-              description: "A new leave request has been submitted.",
-            });
             
-            // Notify managers or admins about the new request
-            if (hasManagerAccess && user.id !== payload.new.employee_id) {
+            // Only show toast for other users' requests if user is a manager
+            if (hasManagerAccess || user.id === payload.new.employee_id) {
+              toast({
+                title: "New leave request",
+                description: "A new leave request has been submitted.",
+              });
+            }
+            
+            // Force refresh leave data for manager views
+            if (hasManagerAccess) {
+              console.log('LeaveRealtimeUpdates: Manager user detected, force refreshing leave data');
+              queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
+              
+              // Additional notification logic here if needed
               try {
                 console.log('LeaveRealtimeUpdates: Notifying managers about new leave request');
                 const managerIds = await getManagerUserIds();
                 console.log('LeaveRealtimeUpdates: Found manager IDs:', managerIds);
                 
+                // Get employee name for notification
+                const { data: employeeData } = await supabase
+                  .from('employees')
+                  .select('name')
+                  .eq('id', payload.new.employee_id)
+                  .single();
+                
+                const employeeName = employeeData?.name || 'An employee';
+                
                 for (const managerId of managerIds) {
+                  if (managerId === user.id) continue; // Skip current user
+                  
                   await sendNotification({
                     user_id: managerId,
                     title: "New leave request",
-                    message: "A new leave request requires your review.",
+                    message: `${employeeName} has submitted a new leave request that requires your review.`,
                     type: "info",
                     related_entity: "leave_calendar",
                     related_id: payload.new.id
                   });
-                  
-                  // Send webhook notification if configured
-                  await sendWebhookNotification(
-                    managerId,
-                    'New Leave Request',
-                    `A new leave request has been submitted for ${payload.new.type} from ${payload.new.start_date} to ${payload.new.end_date}.`,
-                    'leave'
-                  );
                 }
               } catch (error) {
-                console.error("Error sending notifications to managers:", error);
+                console.error("Error sending additional notifications to managers:", error);
               }
             }
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('LeaveRealtimeUpdates: Subscription status:', status);
+      });
     
     console.log('LeaveRealtimeUpdates: Subscribed to leave_updates channel');
     

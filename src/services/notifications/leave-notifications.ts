@@ -49,8 +49,8 @@ export const notifyManagersOfNewLeaveRequest = async (leaveRequest: LeaveEvent):
     console.log('NotificationService: Preparing to send notifications with data:', notificationData);
     
     // Send notifications to all managers
-    await sendNotificationToMany(managerIds, notificationData);
-    console.log('NotificationService: Managers notified successfully');
+    const result = await sendNotificationToMany(managerIds, notificationData);
+    console.log('NotificationService: Managers notification result:', result);
     
     return true;
   } catch (error) {

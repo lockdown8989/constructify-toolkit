@@ -8,6 +8,11 @@ import type { NotificationData } from '@/models/notification';
 export const sendNotification = async (data: NotificationData) => {
   console.log('NotificationService: Sending notification:', data);
   
+  if (!data.user_id) {
+    console.error('Error: Cannot send notification without a user_id');
+    return false;
+  }
+  
   const { error } = await supabase.from('notifications').insert([
     {
       ...data,
@@ -21,7 +26,7 @@ export const sendNotification = async (data: NotificationData) => {
     throw error;
   }
   
-  console.log('NotificationService: Notification sent successfully');
+  console.log('NotificationService: Notification sent successfully to user', data.user_id);
   return true;
 };
 
@@ -35,25 +40,38 @@ export const sendNotificationToMany = async (userIds: string[], notificationData
     notificationData 
   });
   
-  if (userIds.length === 0) {
-    console.warn('NotificationService: No user IDs provided, skipping notification');
+  if (!userIds || userIds.length === 0) {
+    console.warn('NotificationService: No valid user IDs provided, skipping notification');
     return false;
   }
   
-  const notifications = userIds.map(userId => ({
+  // Filter out any undefined or null values
+  const validUserIds = userIds.filter(id => !!id);
+  
+  if (validUserIds.length === 0) {
+    console.warn('NotificationService: All provided user IDs were invalid, skipping notification');
+    return false;
+  }
+  
+  const notifications = validUserIds.map(userId => ({
     ...notificationData,
     user_id: userId,
     read: false,
     created_at: new Date().toISOString()
   }));
   
-  const { error } = await supabase.from('notifications').insert(notifications);
-  
-  if (error) {
-    console.error('Error sending multiple notifications:', error);
-    throw error;
+  try {
+    const { error } = await supabase.from('notifications').insert(notifications);
+    
+    if (error) {
+      console.error('Error sending multiple notifications:', error);
+      throw error;
+    }
+    
+    console.log(`NotificationService: Successfully sent notifications to ${validUserIds.length} users`);
+    return true;
+  } catch (error) {
+    console.error('Exception in sendNotificationToMany:', error);
+    return false;
   }
-  
-  console.log('NotificationService: Multiple notifications sent successfully');
-  return true;
 };
