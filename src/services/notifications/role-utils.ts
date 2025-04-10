@@ -9,7 +9,7 @@ export const getManagerUserIds = async (): Promise<string[]> => {
     const { data, error } = await supabase
       .from('user_roles')
       .select('user_id')
-      .eq('role', 'manager');
+      .eq('role', 'employer');
     
     if (error) {
       console.error('Error fetching manager user IDs:', error);
@@ -41,6 +41,28 @@ export const getAdminUserIds = async (): Promise<string[]> => {
     return data.map(item => item.user_id);
   } catch (error) {
     console.error('Exception in getAdminUserIds:', error);
+    return [];
+  }
+};
+
+/**
+ * Gets all user IDs with HR role
+ */
+export const getHRUserIds = async (): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'hr');
+    
+    if (error) {
+      console.error('Error fetching HR user IDs:', error);
+      throw error;
+    }
+    
+    return data.map(item => item.user_id);
+  } catch (error) {
+    console.error('Exception in getHRUserIds:', error);
     return [];
   }
 };
