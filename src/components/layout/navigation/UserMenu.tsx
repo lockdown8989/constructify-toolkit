@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Link } from "react-router-dom"
 import { User } from "@supabase/supabase-js"
-import { useAuth } from "@/hooks/use-auth"
+import { useAuth } from "@/hooks/auth"
 import { Badge } from "@/components/ui/badge"
 
 interface UserMenuProps {

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sheet"
 import { Menu, Home, User, Users, Calendar, Clock, FileText, Workflow, PanelLeft, DollarSign, Receipt } from "lucide-react"
 import { Link } from "react-router-dom"
-import { useAuth } from "@/hooks/use-auth"
+import { useAuth } from "@/hooks/auth"
 
 interface MobileNavProps {
   isAuthenticated: boolean;

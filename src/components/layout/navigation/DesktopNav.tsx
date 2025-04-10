@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom"
 import { DollarSign, Receipt } from "lucide-react"
-import { useAuth } from "@/hooks/use-auth"
+import { useAuth } from "@/hooks/auth"
 
 interface DesktopNavProps {
   isAuthenticated: boolean;
