@@ -4,11 +4,15 @@ import { useState } from "react";
 // Define the form status types
 export type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
 
+// Updated to match ProjectConflict type
 export type Conflict = {
   projectName: string;
-  projectDeadline: string;
+  deadline: string;
+  daysUntilDeadline: number;
+  priority: string;
   conflictSeverity: 'Low' | 'Medium' | 'High';
-  department: string;
+  department?: string; // Made optional for backward compatibility
+  projectDeadline?: string; // Made optional for backward compatibility
 };
 
 export const useFormState = () => {

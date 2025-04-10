@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   Card, 
@@ -91,7 +90,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = () => {
             <p className="text-muted-foreground">
               Your leave request has been submitted successfully and is pending approval.
             </p>
-            <Alert variant="info" className="mt-4">
+            <Alert className="mt-4">
               <AlertCircle className="h-4 w-4 mr-2" />
               <AlertTitle>Waiting for confirmation</AlertTitle>
               <AlertDescription>
@@ -180,7 +179,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = () => {
           )}
 
           {formStatus === 'submitting' && (
-            <Alert variant="info" className="mt-4 animate-pulse">
+            <Alert className="mt-4 animate-pulse">
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               <AlertTitle>Processing your request</AlertTitle>
               <AlertDescription>
