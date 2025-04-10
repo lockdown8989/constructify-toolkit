@@ -44,7 +44,7 @@ export interface ShiftSwap {
   updated_at: string;
 }
 
-// Define notification type
+// Define notification type - fixing the related_entity and related_id properties to match the DB schema
 export interface Notification {
   id: string;
   user_id: string;
@@ -52,8 +52,8 @@ export interface Notification {
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
   read: boolean;
-  related_entity?: string;
-  related_id?: string;
+  related_entity: string; // Changed from optional to required to match database schema
+  related_id: string; // Changed from optional to required to match database schema
   created_at: string;
 }
 

@@ -6,8 +6,8 @@ export interface NotificationData {
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
-  related_entity?: string;
-  related_id?: string;
+  related_entity: string; // Changed from optional to required
+  related_id: string; // Changed from optional to required
 }
 
 export const sendNotification = async (data: NotificationData) => {
