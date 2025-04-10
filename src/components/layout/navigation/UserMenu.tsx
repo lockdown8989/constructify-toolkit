@@ -30,12 +30,12 @@ const UserMenu = ({ user, signOut }: UserMenuProps) => {
     return "Employee";
   };
   
-  // Get role badge color
+  // Get role badge color - using only valid badge variants
   const getRoleBadgeVariant = () => {
     if (isAdmin) return "destructive";
-    if (isHR) return "purple";
+    if (isHR) return "secondary";     // Changed from "purple" to "secondary"
     if (isManager) return "default";
-    return "secondary";
+    return "outline";                 // Changed from "secondary" to "outline"
   };
 
   return (
