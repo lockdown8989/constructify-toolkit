@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useAddLeaveRequest } from "@/hooks/use-leave-calendar";
@@ -8,6 +8,7 @@ import { useEmployees } from "@/hooks/use-employees";
 import { useProjectsForDepartment } from "@/hooks/use-projects";
 import { calculateBusinessDays, checkProjectConflicts } from "@/utils/leave-utils";
 import type { ProjectConflict } from "@/utils/leave-utils";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useLeaveRequestForm = () => {
   const [leaveType, setLeaveType] = useState<string>("");
@@ -19,6 +20,7 @@ export const useLeaveRequestForm = () => {
   
   // Get the current authenticated user
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
   // Get employees data to find the current employee record
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
@@ -35,14 +37,14 @@ export const useLeaveRequestForm = () => {
   const { data: departmentProjects = [] } = useProjectsForDepartment(employeeDepartment);
   
   // Update conflicts when dates or projects change
-  useState(() => {
+  useEffect(() => {
     if (startDate && endDate && departmentProjects.length > 0) {
       const projectConflicts = checkProjectConflicts(startDate, endDate, departmentProjects);
       setConflicts(projectConflicts);
     } else {
       setConflicts([]);
     }
-  });
+  }, [startDate, endDate, departmentProjects]);
 
   const { mutate: addLeave } = useAddLeaveRequest();
   const { toast } = useToast();
@@ -129,6 +131,10 @@ export const useLeaveRequestForm = () => {
               title: "Leave request submitted",
               description: "Your leave request has been submitted successfully.",
             });
+            
+            // Invalidate queries to refresh the calendar data
+            queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
+            
             resetForm();
           },
           onError: (error: any) => {

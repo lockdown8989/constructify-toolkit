@@ -1,9 +1,10 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { addMonths, subMonths, isSameDay } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import { useLeaveCalendar } from "@/hooks/use-leave-calendar";
 import { useEmployees } from "@/hooks/use-employees";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function useCalendarState() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -11,8 +12,18 @@ export function useCalendarState() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeView, setActiveView] = useState<"calendar" | "list">("calendar");
   
-  const { data: leaves = [], isLoading: isLoadingLeaves } = useLeaveCalendar();
+  const { data: leaves = [], isLoading: isLoadingLeaves, refetch } = useLeaveCalendar();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
+  const queryClient = useQueryClient();
+  
+  // Set up auto-refresh for leave calendar data
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 30000); // Refresh every 30 seconds
+    
+    return () => clearInterval(interval);
+  }, [refetch]);
   
   const handlePrevMonth = () => {
     setCurrentDate(subMonths(currentDate, 1));
@@ -45,6 +56,11 @@ export function useCalendarState() {
     return matchesSearch && matchesDateRange;
   });
   
+  // Manual refresh function
+  const refreshData = () => {
+    queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
+  };
+  
   return {
     currentDate,
     activeView,
@@ -59,6 +75,7 @@ export function useCalendarState() {
     setDateRange,
     setSearchTerm,
     setActiveView,
-    getEmployeeName
+    getEmployeeName,
+    refreshData
   };
 }

@@ -14,12 +14,15 @@ import DateSelector from "./form/DateSelector";
 import NotesField from "./form/NotesField";
 import ProjectConflicts from "./ProjectConflicts";
 import { useLeaveRequestForm } from "./form/useLeaveRequestForm";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface LeaveRequestFormProps {
   // Optional props still allowed, but we'll handle auth inside the component
 }
 
 const LeaveRequestForm: React.FC<LeaveRequestFormProps> = () => {
+  const queryClient = useQueryClient();
+  
   const {
     leaveType,
     setLeaveType,
@@ -63,6 +66,15 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = () => {
     );
   }
   
+  // Handle form submission with query invalidation
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleSubmit(e);
+    
+    // Invalidate queries to refresh the calendar
+    queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -72,7 +84,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = () => {
         </CardDescription>
       </CardHeader>
       
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleFormSubmit}>
         <CardContent className="space-y-4">
           <LeaveTypeSelector 
             value={leaveType} 
