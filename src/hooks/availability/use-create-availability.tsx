@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { NewAvailabilityRequest, AvailabilityRequest } from '@/types/availability';
 import { sendNotification } from '@/services/notifications';
+import { getManagerUserIds } from '@/services/notifications/role-utils';
 
 // Create a new availability request
 export function useCreateAvailabilityRequest() {
@@ -52,21 +53,18 @@ export function useCreateAvailabilityRequest() {
       // Notify managers about the new request
       try {
         // Get all manager user ids
-        const { data: managerRoles } = await supabase
-          .from('user_roles')
-          .select('user_id')
-          .in('role', ['admin', 'employer', 'hr']);
+        const managerIds = await getManagerUserIds();
         
-        console.log('Manager roles found:', managerRoles);
+        console.log('Manager IDs found for notifications:', managerIds);
         
-        if (managerRoles && managerRoles.length > 0) {
-          console.log(`Sending notifications to ${managerRoles.length} managers`);
+        if (managerIds && managerIds.length > 0) {
+          console.log(`Sending notifications to ${managerIds.length} managers`);
           
           // Send notification to each manager
-          for (const manager of managerRoles) {
-            console.log('Sending notification to manager:', manager.user_id);
+          for (const managerId of managerIds) {
+            console.log('Sending notification to manager:', managerId);
             await sendNotification({
-              user_id: manager.user_id,
+              user_id: managerId,
               title: "New Availability Request",
               message: `${employeeName} has submitted a new availability request for ${data.date}`,
               type: "info",
