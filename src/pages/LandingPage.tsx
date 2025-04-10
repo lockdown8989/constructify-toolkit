@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -69,8 +68,8 @@ const LandingPage = () => {
           </div>
           <div className="md:w-1/2">
             <img 
-              src="/placeholder.svg" 
-              alt="TeamPulse Dashboard" 
+              src="/lovable-uploads/badb826b-824c-441f-ad5e-4ea75f2abb8f.png" 
+              alt="Woman smiling while working on laptop" 
               className="w-full h-auto rounded-lg shadow-xl"
             />
           </div>
