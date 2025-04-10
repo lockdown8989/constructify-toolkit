@@ -89,7 +89,7 @@ export interface ExtendedDatabase extends DatabaseType {
       schedules: DatabaseType['public']['Tables']['schedules'];
       user_roles: DatabaseType['public']['Tables']['user_roles'];
       
-      // Updated the notifications table definition to make related_entity and related_id nullable
+      // Updated the notifications table definition with the correct format for Relationships
       notifications: {
         Row: {
           created_at: string;
@@ -104,15 +104,7 @@ export interface ExtendedDatabase extends DatabaseType {
         };
         Insert: Omit<Notification, 'id' | 'created_at'> & { id?: string; created_at?: string };
         Update: Partial<Notification>;
-        Relationships: [
-          {
-            foreignKeyName: "notifications_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          }
-        ];
+        Relationships: []; // Setting to empty array to match the Database type
       };
       
       webhook_settings: {
