@@ -1,4 +1,3 @@
-
 export type TranslationKey = 
   | 'settings'
   | 'manageSettings'
@@ -37,7 +36,17 @@ export type TranslationKey =
   | 'schedule'
   | 'leave'
   | 'toggleMenu'
-  | 'back';
+  | 'back'
+  // Added missing translations
+  | 'enterYourCountry'
+  | 'selectCurrency'
+  | 'locationDetected'
+  | 'detectedCountry'
+  | 'errorUpdatingSettings'
+  | 'settingsUpdated'
+  | 'regionSettingsUpdated'
+  | 'unexpectedError'
+  | 'tryAgainLater';
 
 export type Translations = Record<TranslationKey, string>;
 
@@ -80,7 +89,17 @@ export const translations: Record<string, Translations> = {
     schedule: 'Schedule',
     leave: 'Leave',
     toggleMenu: 'Toggle menu',
-    back: 'Back'
+    back: 'Back',
+    // Added missing translations
+    enterYourCountry: 'Enter your country',
+    selectCurrency: 'Select currency',
+    locationDetected: 'Location detected',
+    detectedCountry: 'Detected country',
+    errorUpdatingSettings: 'Error updating settings',
+    settingsUpdated: 'Settings updated',
+    regionSettingsUpdated: 'Your region and language settings have been successfully updated.',
+    unexpectedError: 'An unexpected error occurred',
+    tryAgainLater: 'Please try again later'
   },
   es: {
     settings: 'Configuración',
@@ -120,7 +139,17 @@ export const translations: Record<string, Translations> = {
     schedule: 'Horario',
     leave: 'Ausencia',
     toggleMenu: 'Alternar menú',
-    back: 'Atrás'
+    back: 'Atrás',
+    // Added missing translations
+    enterYourCountry: 'Ingrese su país',
+    selectCurrency: 'Seleccionar moneda',
+    locationDetected: 'Ubicación detectada',
+    detectedCountry: 'País detectado',
+    errorUpdatingSettings: 'Error al actualizar la configuración',
+    settingsUpdated: 'Configuración actualizada',
+    regionSettingsUpdated: 'Su configuración de región e idioma se ha actualizado correctamente.',
+    unexpectedError: 'Se produjo un error inesperado',
+    tryAgainLater: 'Por favor, inténtelo de nuevo más tarde'
   },
   bg: {
     settings: 'Настройки',
@@ -160,7 +189,17 @@ export const translations: Record<string, Translations> = {
     schedule: 'График',
     leave: 'Отпуск',
     toggleMenu: 'Превключване на менюто',
-    back: 'Назад'
+    back: 'Назад',
+    // Added missing translations
+    enterYourCountry: 'Въведете вашата държава',
+    selectCurrency: 'Изберете валута',
+    locationDetected: 'Местоположението е открито',
+    detectedCountry: 'Открита държава',
+    errorUpdatingSettings: 'Грешка при актуализиране на настройките',
+    settingsUpdated: 'Настройките са актуализирани',
+    regionSettingsUpdated: 'Вашите настройки за регион и език са актуализирани успешно.',
+    unexpectedError: 'Възникна неочаквана грешка',
+    tryAgainLater: 'Моля, опитайте отново по-късно'
   },
   pl: {
     settings: 'Ustawienia',
@@ -200,7 +239,17 @@ export const translations: Record<string, Translations> = {
     schedule: 'Harmonogram',
     leave: 'Urlop',
     toggleMenu: 'Przełącz menu',
-    back: 'Wstecz'
+    back: 'Wstecz',
+    // Added missing translations
+    enterYourCountry: 'Wprowadź swój kraj',
+    selectCurrency: 'Wybierz walutę',
+    locationDetected: 'Lokalizacja wykryta',
+    detectedCountry: 'Wykryty kraj',
+    errorUpdatingSettings: 'Błąd podczas aktualizacji ustawień',
+    settingsUpdated: 'Ustawienia zaktualizowane',
+    regionSettingsUpdated: 'Twoje ustawienia regionu i języka zostały pomyślnie zaktualizowane.',
+    unexpectedError: 'Wystąpił nieoczekiwany błąd',
+    tryAgainLater: 'Spróbuj ponownie później'
   },
   ro: {
     settings: 'Setări',
@@ -240,6 +289,16 @@ export const translations: Record<string, Translations> = {
     schedule: 'Program',
     leave: 'Concediu',
     toggleMenu: 'Comutare meniu',
-    back: 'Înapoi'
+    back: 'Înapoi',
+    // Added missing translations
+    enterYourCountry: 'Introduceți țara dvs.',
+    selectCurrency: 'Selectați moneda',
+    locationDetected: 'Locație detectată',
+    detectedCountry: 'Țară detectată',
+    errorUpdatingSettings: 'Eroare la actualizarea setărilor',
+    settingsUpdated: 'Setări actualizate',
+    regionSettingsUpdated: 'Setările regionale și de limbă au fost actualizate cu succes.',
+    unexpectedError: 'A apărut o eroare neașteptată',
+    tryAgainLater: 'Vă rugăm să încercați din nou mai târziu'
   }
 };
