@@ -21,7 +21,23 @@ export type TranslationKey =
   | 'manageProfile'
   | 'personalInfo'
   | 'updatePersonalInfo'
-  | 'loading';
+  | 'loading'
+  // Navigation menu translations
+  | 'home'
+  | 'about'
+  | 'contact'
+  | 'employees'
+  | 'employeeWorkflow'
+  | 'leaveManagement'
+  | 'shiftCalendar'
+  | 'salary'
+  | 'payslip'
+  | 'scheduleRequests'
+  | 'team'
+  | 'schedule'
+  | 'leave'
+  | 'toggleMenu'
+  | 'back';
 
 export type Translations = Record<TranslationKey, string>;
 
@@ -48,7 +64,23 @@ export const translations: Record<string, Translations> = {
     manageProfile: 'Manage your personal information and preferences',
     personalInfo: 'Personal Information',
     updatePersonalInfo: 'Update your personal details and preferences',
-    loading: 'Loading...'
+    loading: 'Loading...',
+    // Navigation menu translations
+    home: 'Home',
+    about: 'About',
+    contact: 'Contact',
+    employees: 'Employees',
+    employeeWorkflow: 'Employee Workflow',
+    leaveManagement: 'Leave Management',
+    shiftCalendar: 'Shift Calendar',
+    salary: 'Salary',
+    payslip: 'Payslip',
+    scheduleRequests: 'Schedule Requests',
+    team: 'Team',
+    schedule: 'Schedule',
+    leave: 'Leave',
+    toggleMenu: 'Toggle menu',
+    back: 'Back'
   },
   es: {
     settings: 'Configuración',
@@ -72,7 +104,23 @@ export const translations: Record<string, Translations> = {
     manageProfile: 'Administre su información personal y preferencias',
     personalInfo: 'Información personal',
     updatePersonalInfo: 'Actualice sus datos personales y preferencias',
-    loading: 'Cargando...'
+    loading: 'Cargando...',
+    // Navigation menu translations
+    home: 'Inicio',
+    about: 'Acerca de',
+    contact: 'Contacto',
+    employees: 'Empleados',
+    employeeWorkflow: 'Flujo de trabajo',
+    leaveManagement: 'Gestión de ausencias',
+    shiftCalendar: 'Calendario de turnos',
+    salary: 'Salario',
+    payslip: 'Nómina',
+    scheduleRequests: 'Solicitudes de horario',
+    team: 'Equipo',
+    schedule: 'Horario',
+    leave: 'Ausencia',
+    toggleMenu: 'Alternar menú',
+    back: 'Atrás'
   },
   bg: {
     settings: 'Настройки',
@@ -96,7 +144,23 @@ export const translations: Record<string, Translations> = {
     manageProfile: 'Управлявайте личната си информация и предпочитания',
     personalInfo: 'Лична информация',
     updatePersonalInfo: 'Актуализирайте личните си данни и предпочитания',
-    loading: 'Зареждане...'
+    loading: 'Зареждане...',
+    // Navigation menu translations
+    home: 'Начало',
+    about: 'За нас',
+    contact: 'Контакт',
+    employees: 'Служители',
+    employeeWorkflow: 'Работен процес',
+    leaveManagement: 'Управление на отпуските',
+    shiftCalendar: 'Календар на смените',
+    salary: 'Заплата',
+    payslip: 'Фиш за заплата',
+    scheduleRequests: 'Заявки за график',
+    team: 'Екип',
+    schedule: 'График',
+    leave: 'Отпуск',
+    toggleMenu: 'Превключване на менюто',
+    back: 'Назад'
   },
   pl: {
     settings: 'Ustawienia',
@@ -120,7 +184,23 @@ export const translations: Record<string, Translations> = {
     manageProfile: 'Zarządzaj swoimi danymi osobowymi i preferencjami',
     personalInfo: 'Informacje osobiste',
     updatePersonalInfo: 'Zaktualizuj swoje dane osobowe i preferencje',
-    loading: 'Ładowanie...'
+    loading: 'Ładowanie...',
+    // Navigation menu translations
+    home: 'Strona główna',
+    about: 'O nas',
+    contact: 'Kontakt',
+    employees: 'Pracownicy',
+    employeeWorkflow: 'Przepływ pracy',
+    leaveManagement: 'Zarządzanie urlopami',
+    shiftCalendar: 'Kalendarz zmian',
+    salary: 'Wynagrodzenie',
+    payslip: 'Odcinek wypłaty',
+    scheduleRequests: 'Prośby o harmonogram',
+    team: 'Zespół',
+    schedule: 'Harmonogram',
+    leave: 'Urlop',
+    toggleMenu: 'Przełącz menu',
+    back: 'Wstecz'
   },
   ro: {
     settings: 'Setări',
@@ -144,6 +224,22 @@ export const translations: Record<string, Translations> = {
     manageProfile: 'Gestionați informațiile personale și preferințele',
     personalInfo: 'Informații personale',
     updatePersonalInfo: 'Actualizați-vă datele personale și preferințele',
-    loading: 'Se încarcă...'
+    loading: 'Se încarcă...',
+    // Navigation menu translations
+    home: 'Acasă',
+    about: 'Despre noi',
+    contact: 'Contact',
+    employees: 'Angajați',
+    employeeWorkflow: 'Flux de lucru',
+    leaveManagement: 'Gestionarea concediilor',
+    shiftCalendar: 'Calendar de schimburi',
+    salary: 'Salariu',
+    payslip: 'Fluturaș de salariu',
+    scheduleRequests: 'Cereri de program',
+    team: 'Echipă',
+    schedule: 'Program',
+    leave: 'Concediu',
+    toggleMenu: 'Comutare meniu',
+    back: 'Înapoi'
   }
 };

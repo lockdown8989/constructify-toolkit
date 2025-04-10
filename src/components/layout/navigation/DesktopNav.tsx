@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom"
 import { Calendar, DollarSign, Receipt, Settings } from "lucide-react"
 import { useAuth } from "@/hooks/auth"
+import { useLanguage } from "@/hooks/use-language"
 
 interface DesktopNavProps {
   isAuthenticated: boolean;
@@ -9,23 +10,24 @@ interface DesktopNavProps {
 
 const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
   const { isManager } = useAuth();
+  const { t } = useLanguage();
   
   return (
     <div className="mx-auto flex items-center space-x-6">
       <Link to="/" className="hover:underline underline-offset-4">
-        Home
+        {t('home')}
       </Link>
       <Link
         to="/about"
         className="hover:underline underline-offset-4"
       >
-        About
+        {t('about')}
       </Link>
       <Link
         to="/contact"
         className="hover:underline underline-offset-4"
       >
-        Contact
+        {t('contact')}
       </Link>
       {isAuthenticated && (
         <>
@@ -33,58 +35,58 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
             to="/profile"
             className="hover:underline underline-offset-4"
           >
-            Profile
+            {t('profile')}
           </Link>
           <Link
             to="/settings"
             className="hover:underline underline-offset-4 flex items-center"
           >
             <Settings className="h-4 w-4 mr-1" />
-            Settings
+            {t('settings')}
           </Link>
           <Link
             to="/people"
             className="hover:underline underline-offset-4"
           >
-            Employees
+            {t('employees')}
           </Link>
           <Link
             to="/employee-workflow"
             className="hover:underline underline-offset-4"
           >
-            Employee Workflow
+            {t('employeeWorkflow')}
           </Link>
           <Link
             to="/leave-management"
             className="hover:underline underline-offset-4"
           >
-            Leave Management
+            {t('leaveManagement')}
           </Link>
           <Link
             to="/shift-calendar"
             className="hover:underline underline-offset-4"
           >
-            Shift Calendar
+            {t('shiftCalendar')}
           </Link>
           <Link
             to="/salary"
             className="hover:underline underline-offset-4 flex items-center"
           >
             <DollarSign className="h-4 w-4 mr-1" />
-            Salary
+            {t('salary')}
           </Link>
           <Link
             to="/payroll"
             className="hover:underline underline-offset-4 flex items-center"
           >
             <Receipt className="h-4 w-4 mr-1" />
-            Payslip
+            {t('payslip')}
           </Link>
           <Link
             to="/schedule-requests"
             className="hover:underline underline-offset-4"
           >
-            Schedule Requests
+            {t('scheduleRequests')}
           </Link>
         </>
       )}

@@ -3,6 +3,7 @@ import { Home, Users, Calendar, DollarSign, Utensils } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
+import { useLanguage } from "@/hooks/use-language"
 
 interface BottomNavProps {
   isAuthenticated: boolean;
@@ -10,6 +11,7 @@ interface BottomNavProps {
 
 const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
   const location = useLocation();
+  const { t } = useLanguage();
   
   if (!isAuthenticated) return null;
   
@@ -27,7 +29,7 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
             "text-xs", 
             location.pathname === "/" ? "text-primary font-medium" : "text-muted-foreground"
           )}>
-            Home
+            {t('home')}
           </span>
         </Link>
         
@@ -42,7 +44,7 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
             "text-xs", 
             location.pathname === "/people" ? "text-primary font-medium" : "text-muted-foreground"
           )}>
-            Team
+            {t('team')}
           </span>
         </Link>
         
@@ -57,7 +59,7 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
             "text-xs", 
             location.pathname === "/shift-calendar" || location.pathname === "/restaurant-schedule" ? "text-primary font-medium" : "text-muted-foreground"
           )}>
-            Schedule
+            {t('schedule')}
           </span>
         </Link>
         
@@ -72,7 +74,7 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
             "text-xs", 
             location.pathname === "/leave-management" ? "text-primary font-medium" : "text-muted-foreground"
           )}>
-            Leave
+            {t('leave')}
           </span>
         </Link>
         
@@ -87,7 +89,7 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
             "text-xs", 
             location.pathname === "/salary" ? "text-primary font-medium" : "text-muted-foreground"
           )}>
-            Salary
+            {t('salary')}
           </span>
         </Link>
       </div>

@@ -12,6 +12,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "@/hooks/auth"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useState } from "react"
+import { useLanguage } from "@/hooks/use-language"
 
 interface MobileNavProps {
   isAuthenticated: boolean;
@@ -22,6 +23,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useLanguage();
   
   // Function to navigate back
   const handleBack = () => {
@@ -36,7 +38,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="lg:hidden touch-target">
           <Menu className="h-6 w-6" />
-          <span className="sr-only">Toggle menu</span>
+          <span className="sr-only">{t('toggleMenu')}</span>
         </Button>
       </SheetTrigger>
       <SheetContent 
@@ -44,7 +46,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
         className="w-[85%] max-w-[300px] pb-safe-area-inset-bottom p-0 rounded-r-3xl bg-[#f8f8f8]/95 backdrop-blur-md border-0"
         showBackButton={location.pathname !== '/'}
         onBack={handleBack}
-        backButtonLabel="Back"
+        backButtonLabel={t('back')}
       >
         <div className="flex items-center px-6 pt-8 pb-4">
           <div className="flex-1 text-center">
@@ -58,7 +60,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
               className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
             >
               <Home className="mr-3 h-5 w-5 text-neutral-600" />
-              <span>Home</span>
+              <span>{t('home')}</span>
             </Link>
             
             <Link
@@ -66,14 +68,14 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
               className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
             >
               <FileText className="mr-3 h-5 w-5 text-neutral-600" />
-              <span>About</span>
+              <span>{t('about')}</span>
             </Link>
             <Link
               to="/contact"
               className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
             >
               <User className="mr-3 h-5 w-5 text-neutral-600" />
-              <span>Contact</span>
+              <span>{t('contact')}</span>
             </Link>
             {isAuthenticated && (
               <>
@@ -83,63 +85,63 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <User className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>Profile</span>
+                  <span>{t('profile')}</span>
                 </Link>
                 <Link
                   to="/settings"
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <Settings className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>Settings</span>
+                  <span>{t('settings')}</span>
                 </Link>
                 <Link
                   to="/people"
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <Users className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>Employees</span>
+                  <span>{t('employees')}</span>
                 </Link>
                 <Link
                   to="/employee-workflow"
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <Workflow className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>Employee Workflow</span>
+                  <span>{t('employeeWorkflow')}</span>
                 </Link>
                 <Link
                   to="/leave-management"
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <Calendar className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>Leave Management</span>
+                  <span>{t('leaveManagement')}</span>
                 </Link>
                 <Link
                   to="/shift-calendar"
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <Utensils className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>Shift Calendar</span>
+                  <span>{t('shiftCalendar')}</span>
                 </Link>
                 <Link
                   to="/salary"
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <DollarSign className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>Salary</span>
+                  <span>{t('salary')}</span>
                 </Link>
                 <Link
                   to="/payroll"
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <Receipt className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>Payslip</span>
+                  <span>{t('payslip')}</span>
                 </Link>
                 <Link
                   to="/schedule-requests"
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <Clock className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>Schedule Requests</span>
+                  <span>{t('scheduleRequests')}</span>
                 </Link>
               </>
             )}
