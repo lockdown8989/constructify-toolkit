@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +9,17 @@ import { sendNotification } from "@/services/notifications";
 
 const LeaveRealtimeUpdates: React.FC = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  
+  // Only access queryClient if we're inside a QueryClientProvider context
+  let queryClient;
+  try {
+    queryClient = useQueryClient();
+  } catch (error) {
+    console.warn("QueryClient not found in LeaveRealtimeUpdates component. This is expected during first render or outside of QueryClientProvider.");
+    // Return null early if no queryClient is available
+    return null;
+  }
+  
   const { user, isManager, isAdmin, isHR } = useAuth();
   const { sendWebhookNotification, getManagerUserIds } = useWebhookNotification();
   
@@ -17,8 +28,8 @@ const LeaveRealtimeUpdates: React.FC = () => {
   
   // Set up real-time listener for leave calendar changes
   useEffect(() => {
-    if (!user) {
-      console.log('LeaveRealtimeUpdates: No user logged in, skipping setup');
+    if (!user || !queryClient) {
+      console.log('LeaveRealtimeUpdates: No user logged in or no queryClient, skipping setup');
       return;
     }
     

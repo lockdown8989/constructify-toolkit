@@ -35,11 +35,23 @@ const EnhancedCalendarView: React.FC = () => {
     getEmployeeName
   } = useCalendarState();
   
-  const queryClient = useQueryClient();
+  // Safely access queryClient
+  let queryClient;
+  try {
+    queryClient = useQueryClient();
+  } catch (error) {
+    console.warn("QueryClient not found in EnhancedCalendarView component. This is expected during first render or outside of QueryClientProvider.");
+  }
+  
   const { toast } = useToast();
   
   // Set up real-time listener for leave calendar changes
   useEffect(() => {
+    if (!queryClient) {
+      console.log('EnhancedCalendarView: No queryClient, skipping subscription setup');
+      return;
+    }
+    
     const channel = supabase
       .channel('leave_calendar_updates')
       .on(
