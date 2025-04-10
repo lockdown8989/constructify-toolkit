@@ -75,8 +75,9 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
           {/* Always show shift calendar for all authenticated users */}
           <Link
             to="/shift-calendar"
-            className="hover:underline underline-offset-4"
+            className="hover:underline underline-offset-4 flex items-center"
           >
+            <Calendar className="h-4 w-4 mr-1" />
             {t('shiftCalendar')}
           </Link>
           

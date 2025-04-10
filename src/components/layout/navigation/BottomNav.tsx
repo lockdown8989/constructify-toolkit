@@ -1,5 +1,5 @@
 
-import { Home, Users, Calendar, DollarSign, Utensils } from "lucide-react"
+import { Home, Users, Calendar, DollarSign } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
@@ -49,7 +49,7 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
         </Link>
         
         <Link to="/shift-calendar" className="flex flex-col items-center justify-center p-2">
-          <Utensils 
+          <Calendar 
             className={cn(
               "h-6 w-6 mb-1", 
               location.pathname === "/shift-calendar" || location.pathname === "/restaurant-schedule" ? "text-primary" : "text-muted-foreground"
