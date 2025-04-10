@@ -44,7 +44,7 @@ export interface ShiftSwap {
   updated_at: string;
 }
 
-// Define notification type - updated to match database schema
+// Define notification type
 export interface Notification {
   id: string;
   user_id: string;
@@ -52,8 +52,8 @@ export interface Notification {
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
   read: boolean;
-  related_entity: string | null;
-  related_id: string | null;
+  related_entity?: string;
+  related_id?: string;
   created_at: string;
 }
 
@@ -89,22 +89,20 @@ export interface ExtendedDatabase extends DatabaseType {
       schedules: DatabaseType['public']['Tables']['schedules'];
       user_roles: DatabaseType['public']['Tables']['user_roles'];
       
-      // Updated the notifications table definition with the correct format for Relationships
+      // Add our new tables
       notifications: {
-        Row: {
-          created_at: string;
-          id: string;
-          message: string;
-          read: boolean;
-          related_entity: string | null;
-          related_id: string | null;
-          title: string;
-          type: string;
-          user_id: string;
-        };
+        Row: Notification;
         Insert: Omit<Notification, 'id' | 'created_at'> & { id?: string; created_at?: string };
         Update: Partial<Notification>;
-        Relationships: []; // Setting to empty array to match the Database type
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       
       webhook_settings: {

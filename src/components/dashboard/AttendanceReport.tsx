@@ -1,10 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ChevronUp, ChevronDown, Calendar, Users, Clock } from 'lucide-react';
-import { useAttendance, AttendanceRecord } from '@/hooks/use-attendance';
+import { ChevronRight, ChevronUp, ChevronDown, Calendar, Users, Clock } from 'lucide-react';
+import { useAttendance } from '@/hooks/use-attendance';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
 
 interface AttendanceReportProps {
   present?: number;
@@ -20,13 +19,13 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({
   employeeId
 }) => {
   const [timeRange, setTimeRange] = useState<number>(30); // Default: 30 days
-  const { data, isLoading, error } = useAttendance(employeeId, timeRange);
+  const { data, isLoading } = useAttendance(employeeId, timeRange);
   
-  // Use the fetched data if available, otherwise use the props
+  // Use the fetch data if available, otherwise use the props
   const present = data?.present ?? initialPresent ?? 0;
   const absent = data?.absent ?? initialAbsent ?? 0;
   const late = data?.late ?? 0;
-  const totalAttendance = data?.total ?? (present + absent + late);
+  const totalAttendance = data?.total ?? (present + absent);
   
   // Calculate attendance percentage
   const attendanceRate = totalAttendance > 0 
@@ -110,10 +109,6 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({
             ))}
           </div>
         </div>
-      ) : error ? (
-        <div className="p-4 bg-red-900/20 rounded-lg text-center">
-          <p>Failed to load attendance data. Please try again later.</p>
-        </div>
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -186,37 +181,6 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({
               <span>Late</span>
             </div>
           </div>
-          
-          {/* Show recent attendance records if available */}
-          {data?.recentRecords && data.recentRecords.length > 0 && (
-            <div className="mt-6">
-              <p className="text-xs text-gray-400 mb-2">Recent Attendance</p>
-              <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                {data.recentRecords.map((record) => (
-                  <div 
-                    key={record.id} 
-                    className="bg-gray-800/60 p-2 rounded-lg flex justify-between items-center"
-                  >
-                    <div>
-                      <span className="text-sm">
-                        {record.date ? format(new Date(record.date), 'MMM dd, yyyy') : 'N/A'}
-                      </span>
-                    </div>
-                    <div 
-                      className={cn(
-                        "px-2 py-1 rounded-full text-xs",
-                        record.status === 'Present' && "bg-green-500/20 text-green-400",
-                        record.status === 'Absent' && "bg-red-500/20 text-red-400",
-                        record.status === 'Late' && "bg-yellow-500/20 text-yellow-400"
-                      )}
-                    >
-                      {record.status}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </>
       )}
       

@@ -6,8 +6,8 @@ export interface NotificationData {
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
-  related_entity?: string | null;
-  related_id?: string | null;
+  related_entity?: string;
+  related_id?: string;
 }
 
 export const sendNotification = async (data: NotificationData) => {
