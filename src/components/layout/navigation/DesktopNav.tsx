@@ -9,8 +9,11 @@ interface DesktopNavProps {
 }
 
 const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
-  const { isManager } = useAuth();
+  const { isManager, user } = useAuth();
   const { t } = useLanguage();
+  
+  // Determine if user is an employee (not a manager)
+  const isEmployee = isAuthenticated && !isManager;
   
   return (
     <div className="mx-auto flex items-center space-x-6">
@@ -44,30 +47,40 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
             <Settings className="h-4 w-4 mr-1" />
             {t('settings')}
           </Link>
-          <Link
-            to="/people"
-            className="hover:underline underline-offset-4"
-          >
-            {t('employees')}
-          </Link>
-          <Link
-            to="/employee-workflow"
-            className="hover:underline underline-offset-4"
-          >
-            {t('employeeWorkflow')}
-          </Link>
-          <Link
-            to="/leave-management"
-            className="hover:underline underline-offset-4"
-          >
-            {t('leaveManagement')}
-          </Link>
+          
+          {/* Show these links only for managers */}
+          {!isEmployee && (
+            <>
+              <Link
+                to="/people"
+                className="hover:underline underline-offset-4"
+              >
+                {t('employees')}
+              </Link>
+              <Link
+                to="/employee-workflow"
+                className="hover:underline underline-offset-4"
+              >
+                {t('employeeWorkflow')}
+              </Link>
+              <Link
+                to="/leave-management"
+                className="hover:underline underline-offset-4"
+              >
+                {t('leaveManagement')}
+              </Link>
+            </>
+          )}
+          
+          {/* Always show shift calendar for all authenticated users */}
           <Link
             to="/shift-calendar"
             className="hover:underline underline-offset-4"
           >
             {t('shiftCalendar')}
           </Link>
+          
+          {/* Always show salary for all authenticated users */}
           <Link
             to="/salary"
             className="hover:underline underline-offset-4 flex items-center"
@@ -75,13 +88,19 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
             <DollarSign className="h-4 w-4 mr-1" />
             {t('salary')}
           </Link>
-          <Link
-            to="/payroll"
-            className="hover:underline underline-offset-4 flex items-center"
-          >
-            <Receipt className="h-4 w-4 mr-1" />
-            {t('payslip')}
-          </Link>
+          
+          {/* Show payslip only for managers */}
+          {!isEmployee && (
+            <Link
+              to="/payroll"
+              className="hover:underline underline-offset-4 flex items-center"
+            >
+              <Receipt className="h-4 w-4 mr-1" />
+              {t('payslip')}
+            </Link>
+          )}
+          
+          {/* Always show schedule requests for all authenticated users */}
           <Link
             to="/schedule-requests"
             className="hover:underline underline-offset-4"

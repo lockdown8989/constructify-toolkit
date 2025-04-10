@@ -19,11 +19,14 @@ interface MobileNavProps {
 }
 
 const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
-  const { isManager } = useAuth();
+  const { isManager, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useLanguage();
+  
+  // Determine if user is an employee (not a manager)
+  const isEmployee = isAuthenticated && !isManager;
   
   // Function to navigate back
   const handleBack = () => {
@@ -94,27 +97,35 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                   <Settings className="mr-3 h-5 w-5 text-neutral-600" />
                   <span>{t('settings')}</span>
                 </Link>
-                <Link
-                  to="/people"
-                  className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                >
-                  <Users className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>{t('employees')}</span>
-                </Link>
-                <Link
-                  to="/employee-workflow"
-                  className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                >
-                  <Workflow className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>{t('employeeWorkflow')}</span>
-                </Link>
-                <Link
-                  to="/leave-management"
-                  className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                >
-                  <Calendar className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>{t('leaveManagement')}</span>
-                </Link>
+                
+                {/* Show these links only for managers */}
+                {!isEmployee && (
+                  <>
+                    <Link
+                      to="/people"
+                      className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
+                    >
+                      <Users className="mr-3 h-5 w-5 text-neutral-600" />
+                      <span>{t('employees')}</span>
+                    </Link>
+                    <Link
+                      to="/employee-workflow"
+                      className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
+                    >
+                      <Workflow className="mr-3 h-5 w-5 text-neutral-600" />
+                      <span>{t('employeeWorkflow')}</span>
+                    </Link>
+                    <Link
+                      to="/leave-management"
+                      className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
+                    >
+                      <Calendar className="mr-3 h-5 w-5 text-neutral-600" />
+                      <span>{t('leaveManagement')}</span>
+                    </Link>
+                  </>
+                )}
+                
+                {/* Always show shift calendar for all authenticated users */}
                 <Link
                   to="/shift-calendar"
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
@@ -122,6 +133,8 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                   <Utensils className="mr-3 h-5 w-5 text-neutral-600" />
                   <span>{t('shiftCalendar')}</span>
                 </Link>
+                
+                {/* Always show salary for all authenticated users */}
                 <Link
                   to="/salary"
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
@@ -129,13 +142,19 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                   <DollarSign className="mr-3 h-5 w-5 text-neutral-600" />
                   <span>{t('salary')}</span>
                 </Link>
-                <Link
-                  to="/payroll"
-                  className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                >
-                  <Receipt className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>{t('payslip')}</span>
-                </Link>
+                
+                {/* Show payslip only for managers */}
+                {!isEmployee && (
+                  <Link
+                    to="/payroll"
+                    className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
+                  >
+                    <Receipt className="mr-3 h-5 w-5 text-neutral-600" />
+                    <span>{t('payslip')}</span>
+                  </Link>
+                )}
+                
+                {/* Always show schedule requests for all authenticated users */}
                 <Link
                   to="/schedule-requests"
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
