@@ -1,43 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import type { NotificationData, NotificationResult } from '@/models/notification';
+import { NotificationResult } from '@/models/notification';
 import { sendNotification } from './notification-sender';
-
-/**
- * Verifies if the notifications table is configured correctly
- */
-export const verifyNotificationsTable = async (): Promise<NotificationResult> => {
-  console.log('NotificationService: Verifying notifications table');
-  
-  try {
-    // Try to fetch a single notification to verify the table structure
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .limit(1);
-    
-    if (error) {
-      console.error('Error verifying notifications table:', error);
-      return {
-        success: false,
-        message: `Error: ${error.message}`
-      };
-    }
-    
-    console.log('NotificationService: Notifications table verified successfully');
-    return {
-      success: true,
-      message: 'Notifications table verified successfully',
-      data
-    };
-  } catch (error) {
-    console.error('Exception verifying notifications table:', error);
-    return {
-      success: false,
-      message: `Exception: ${error}`
-    };
-  }
-};
 
 /**
  * Creates a test notification for a user
@@ -45,14 +9,14 @@ export const verifyNotificationsTable = async (): Promise<NotificationResult> =>
 export const createTestNotification = async (
   userId: string,
   title: string = 'Test Notification',
-  message: string = 'This is a test notification to verify the notification system.',
+  message: string = 'This is a test notification from the system.',
   type: 'info' | 'success' | 'warning' | 'error' = 'info',
-  related_entity: string = 'system',
-  related_id: string = 'test'
+  related_entity: string = 'test',
+  related_id: string = 'test-123'
 ): Promise<NotificationResult> => {
-  console.log('NotificationService: Creating test notification for user:', userId);
-  
   try {
+    console.log('Creating test notification for user:', userId);
+    
     await sendNotification({
       user_id: userId,
       title,
@@ -62,16 +26,68 @@ export const createTestNotification = async (
       related_id
     });
     
-    console.log('NotificationService: Test notification created successfully');
     return {
       success: true,
       message: 'Test notification created successfully'
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating test notification:', error);
     return {
       success: false,
-      message: `Error: ${error}`
+      message: error.message || 'Failed to create test notification'
+    };
+  }
+};
+
+/**
+ * Verifies that the notifications table is configured correctly
+ */
+export const verifyNotificationsTable = async (): Promise<NotificationResult> => {
+  try {
+    // Check if we can query the notifications table
+    const { data, error, count } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact' })
+      .limit(1);
+    
+    if (error) {
+      throw error;
+    }
+    
+    // Check if required columns exist
+    const checkColumns = async () => {
+      // Using system tables to check columns (needs appropriate permissions)
+      const { data: columns, error: columnsError } = await supabase
+        .from('information_schema.columns')
+        .select('column_name')
+        .eq('table_name', 'notifications')
+        .eq('table_schema', 'public');
+      
+      if (columnsError) {
+        return false;
+      }
+      
+      const columnNames = columns.map(c => c.column_name);
+      const requiredColumns = ['id', 'user_id', 'title', 'message', 'type', 'read', 'created_at', 'related_entity', 'related_id'];
+      
+      return requiredColumns.every(col => columnNames.includes(col));
+    };
+    
+    const columnsExist = await checkColumns();
+    
+    return {
+      success: true,
+      message: `Notifications table verified successfully. Found ${count} existing notifications.`,
+      data: {
+        count,
+        columnsVerified: columnsExist
+      }
+    };
+  } catch (error: any) {
+    console.error('Error verifying notifications table:', error);
+    return {
+      success: false,
+      message: error.message || 'Failed to verify notifications table'
     };
   }
 };

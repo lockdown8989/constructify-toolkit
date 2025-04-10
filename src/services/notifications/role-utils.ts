@@ -2,40 +2,45 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Gets all manager user IDs from the database
+ * Gets all user IDs with manager role
  */
 export const getManagerUserIds = async (): Promise<string[]> => {
-  console.log('NotificationService: Getting manager user IDs');
-  
   try {
     const { data, error } = await supabase
       .from('user_roles')
       .select('user_id')
-      .eq('role', 'employer');
-      
+      .eq('role', 'manager');
+    
     if (error) {
-      console.error('Error getting manager user IDs:', error);
+      console.error('Error fetching manager user IDs:', error);
       throw error;
     }
     
-    // Also get admin and HR user IDs
-    const { data: adminData, error: adminError } = await supabase
+    return data.map(item => item.user_id);
+  } catch (error) {
+    console.error('Exception in getManagerUserIds:', error);
+    return [];
+  }
+};
+
+/**
+ * Gets all user IDs with admin role
+ */
+export const getAdminUserIds = async (): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
       .from('user_roles')
       .select('user_id')
-      .in('role', ['admin', 'hr']);
-      
-    if (adminError) {
-      console.error('Error getting admin/HR user IDs:', adminError);
-      throw adminError;
+      .eq('role', 'admin');
+    
+    if (error) {
+      console.error('Error fetching admin user IDs:', error);
+      throw error;
     }
     
-    // Combine all manager user IDs
-    const managerIds = [...(data || []), ...(adminData || [])].map(item => item.user_id);
-    console.log('NotificationService: Found manager user IDs:', managerIds);
-    
-    return managerIds;
+    return data.map(item => item.user_id);
   } catch (error) {
-    console.error('Exception getting manager user IDs:', error);
+    console.error('Exception in getAdminUserIds:', error);
     return [];
   }
 };
