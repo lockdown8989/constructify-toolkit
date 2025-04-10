@@ -7,9 +7,10 @@ import { useEmployees } from '@/hooks/use-employees';
 import { useAuth } from '@/hooks/use-auth';
 import { Clock, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const AvailabilityRequestList = () => {
-  const { data: requests = [], isLoading: isLoadingRequests } = useAvailabilityRequests();
+  const { data: requests = [], isLoading: isLoadingRequests, isError, error } = useAvailabilityRequests();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { user } = useAuth();
   
@@ -37,9 +38,21 @@ const AvailabilityRequestList = () => {
   
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-6">
-        <Loader2 className="w-5 h-5 mr-2 animate-spin text-primary" />
-        <p>Loading availability data...</p>
+      <div className="space-y-3 mt-2">
+        <Skeleton className="h-16 w-full rounded-lg" />
+        <Skeleton className="h-16 w-full rounded-lg" />
+        <Skeleton className="h-16 w-full rounded-lg" />
+      </div>
+    );
+  }
+  
+  if (isError) {
+    return (
+      <div className="text-center py-6 text-red-500">
+        <p>Error loading availability data.</p>
+        <p className="text-sm mt-2">
+          {error instanceof Error ? error.message : 'Please try again later.'}
+        </p>
       </div>
     );
   }

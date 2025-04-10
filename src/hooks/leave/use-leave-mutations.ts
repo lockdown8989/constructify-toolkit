@@ -38,3 +38,35 @@ import { supabase } from '@/integrations/supabase/client';
     console.error('Failed to initialize real-time for leave_calendar:', error);
   }
 })();
+
+// Enable the Supabase real-time functionality for the availability_requests table
+// This is done by running this code once when the app initializes
+(async function setupRealTimeForAvailabilityRequests() {
+  try {
+    // Log that we're setting up the real-time channel
+    console.log('Setting up real-time subscription for availability_requests table');
+    
+    // Create a channel for availability_requests changes
+    const channel = supabase
+      .channel('availability-requests-changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'availability_requests'
+        },
+        (payload) => {
+          console.log('Real-time update received for availability_requests:', payload);
+        }
+      )
+      .subscribe(status => {
+        console.log('Availability requests subscription status:', status);
+      });
+      
+    console.log('Real-time subscription for availability_requests table set up successfully');
+    
+    // We don't need to clean up the channel as it should last for the application lifetime
+  } catch (error) {
+    console.error('Failed to initialize real-time for availability_requests:', error);
+  }
+})();

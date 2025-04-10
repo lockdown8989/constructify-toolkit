@@ -11,7 +11,7 @@ export function useAvailabilityRequests(employeeId?: string) {
   return useQuery({
     queryKey: ['availability_requests', employeeId],
     queryFn: async () => {
-      console.log('Fetching availability requests for employee:', employeeId);
+      console.log('Fetching availability requests for employee:', employeeId || 'current user');
       
       let query = supabase
         .from('availability_requests')
@@ -23,15 +23,29 @@ export function useAvailabilityRequests(employeeId?: string) {
         query = query.eq('employee_id', employeeId);
       } else if (user) {
         // First get the employee ID for the current user
-        const { data: employeeData } = await supabase
+        const { data: employeeData, error: employeeError } = await supabase
           .from('employees')
           .select('id')
           .eq('user_id', user.id)
           .single();
         
-        if (employeeData) {
-          query = query.eq('employee_id', employeeData.id);
+        if (employeeError) {
+          console.error('Error fetching employee record:', employeeError);
+          // Instead of throwing, return empty array with a warning
+          console.warn('No employee record found for current user, returning empty availability list');
+          return [];
         }
+        
+        if (employeeData) {
+          console.log('Found employee ID for current user:', employeeData.id);
+          query = query.eq('employee_id', employeeData.id);
+        } else {
+          console.warn('No employee record found for current user, returning empty availability list');
+          return [];
+        }
+      } else {
+        console.warn('No user logged in and no employeeId provided, returning empty list');
+        return [];
       }
       
       const { data, error } = await query;
@@ -41,10 +55,10 @@ export function useAvailabilityRequests(employeeId?: string) {
         throw error;
       }
       
-      console.log('Fetched availability requests:', data);
-      return data as AvailabilityRequest[];
+      console.log('Fetched availability requests:', data?.length || 0);
+      return data as AvailabilityRequest[] || [];
     },
-    enabled: !!user
+    enabled: true // Always enabled, but will return empty array when needed
   });
 }
 
