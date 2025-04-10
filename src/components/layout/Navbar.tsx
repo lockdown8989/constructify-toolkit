@@ -1,3 +1,4 @@
+
 import {
   Sheet,
   SheetContent,
@@ -20,13 +21,12 @@ import { useAuth } from "@/hooks/auth"
 import { Link } from "react-router-dom"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useEffect, useState } from "react"
-import { MoonIcon, SunIcon } from "@radix-ui/react-icons"
+import { Moon, Sun, Menu } from "lucide-react"
 import { useTheme } from "next-themes"
-import { Icons } from "@/components/ui/icons"
 import NotificationBell from '@/components/notifications/NotificationBell';
 
 const Navbar = () => {
-  const { isAuthenticated, signOut, user } = useAuth()
+  const { user, signOut } = useAuth()
   const isMobile = useIsMobile()
   const [mounted, setMounted] = useState(false)
   const { setTheme } = useTheme()
@@ -35,6 +35,9 @@ const Navbar = () => {
     setMounted(true)
   }, [])
 
+  // Check if user exists to determine authentication status
+  const isAuthenticated = !!user
+
   return (
     <div className="border-b">
       <div className="flex h-16 items-center px-4">
@@ -42,7 +45,7 @@ const Navbar = () => {
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="sm">
-                <Icons.menu className="h-5 w-5" />
+                <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-full sm:w-64">
@@ -102,7 +105,6 @@ const Navbar = () => {
           </Sheet>
         ) : (
           <Link to="/" className="mr-6 flex items-center space-x-2">
-            <Icons.logo className="h-6 w-6" />
             <span className="font-bold">Acme</span>
           </Link>
         )}
@@ -164,10 +166,10 @@ const Navbar = () => {
             }
           >
             {mounted ? (
-              <SunIcon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             ) : null}
             {mounted ? (
-              <MoonIcon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             ) : null}
             <span className="sr-only">Toggle theme</span>
           </Button>

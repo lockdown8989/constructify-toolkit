@@ -7,7 +7,7 @@ export type { AuthContextType } from './types';
 // Helper function to check if user is authenticated (for direct imports)
 import { supabase } from "@/integrations/supabase/client";
 
-export const isAuthenticated = () => {
-  const session = supabase.auth.getSession();
-  return !!session;
+export const isAuthenticated = async () => {
+  const { data } = await supabase.auth.getSession();
+  return !!data.session;
 };
