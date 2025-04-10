@@ -1,5 +1,5 @@
 
-import { createContext, useContext } from 'react';
+import React, { createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export type AuthContextType = {
