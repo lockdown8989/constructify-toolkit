@@ -43,6 +43,8 @@ export function useAttendance(employeeId?: string, daysToFetch: number = 30) {
       
       // Process the data
       const records = data as AttendanceRecord[];
+      
+      // Count by status
       const present = records.filter(r => r.status === 'Present').length;
       const absent = records.filter(r => r.status === 'Absent').length;
       const late = records.filter(r => r.status === 'Late').length;
@@ -52,7 +54,10 @@ export function useAttendance(employeeId?: string, daysToFetch: number = 30) {
         absent,
         late,
         total: records.length,
-        recentRecords: records.slice(0, 10) // Get the 10 most recent records
+        recentRecords: records.sort((a, b) => {
+          // Sort by date in descending order (newest first)
+          return new Date(b.date || '').getTime() - new Date(a.date || '').getTime();
+        }).slice(0, 10) // Get the 10 most recent records
       };
     } catch (err) {
       console.error('Error fetching attendance data:', err);
