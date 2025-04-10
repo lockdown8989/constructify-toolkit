@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { format, differenceInCalendarDays, addDays } from "date-fns";
 import { useLeaveCalendar } from "@/hooks/use-leave-calendar";
@@ -86,7 +87,7 @@ const LeaveApprovalDashboard: React.FC = () => {
   const calculateLeaveDays = (startDate: string, endDate: string): number => {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    return differenceInCalendarDays(end, start) + 1;
+    return differenceInCalendarDays(end,  start) + 1;
   };
   
   const updateEmployeeStatus = (employeeId: string, startDate: string, endDate: string) => {
