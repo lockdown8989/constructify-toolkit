@@ -84,13 +84,6 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                 <span>Leave Management</span>
               </Link>
               <Link
-                to="/schedule-requests"
-                className="flex items-center py-2 text-lg font-semibold"
-              >
-                <Clock className="mr-2 h-5 w-5" />
-                <span>Schedule Requests</span>
-              </Link>
-              <Link
                 to="/salary"
                 className="flex items-center py-2 text-lg font-semibold"
               >
@@ -106,6 +99,13 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                   <span>Payslip</span>
                 </Link>
               )}
+              <Link
+                to="/schedule-requests"
+                className="flex items-center py-2 text-lg font-semibold"
+              >
+                <Clock className="mr-2 h-5 w-5" />
+                <span>Schedule Requests</span>
+              </Link>
             </>
           )}
         </nav>

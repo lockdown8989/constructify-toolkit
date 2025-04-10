@@ -47,17 +47,11 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
           >
             Employee Workflow
           </Link>
-           <Link
+          <Link
             to="/leave-management"
             className="hover:underline underline-offset-4"
           >
             Leave Management
-          </Link>
-          <Link
-            to="/schedule-requests"
-            className="hover:underline underline-offset-4"
-          >
-            Schedule Requests
           </Link>
           <Link
             to="/salary"
@@ -75,6 +69,12 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
               Payslip
             </Link>
           )}
+          <Link
+            to="/schedule-requests"
+            className="hover:underline underline-offset-4"
+          >
+            Schedule Requests
+          </Link>
         </>
       )}
     </div>
