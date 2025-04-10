@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useWebhookNotification } from "@/hooks/leave/useWebhookNotification";
 import { sendNotification } from "@/services/notifications";
+import { getManagerUserIds } from "@/services/notifications/role-utils";
 
 const LeaveRealtimeUpdates: React.FC = () => {
   const { toast } = useToast();
@@ -21,7 +22,7 @@ const LeaveRealtimeUpdates: React.FC = () => {
   }
   
   const { user, isManager, isAdmin, isHR } = useAuth();
-  const { sendWebhookNotification, getManagerUserIds } = useWebhookNotification();
+  const { sendWebhookNotification } = useWebhookNotification();
   
   // Determine if the current user is a manager
   const hasManagerAccess = isManager || isAdmin || isHR;

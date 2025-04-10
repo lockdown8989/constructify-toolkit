@@ -2,40 +2,51 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Gets all manager user IDs from the database
+ * Gets all user IDs with manager roles (admin, employer, hr)
  */
 export const getManagerUserIds = async (): Promise<string[]> => {
-  console.log('NotificationService: Getting manager user IDs');
-  
   try {
+    console.log('Getting manager user IDs');
+    
     const { data, error } = await supabase
       .from('user_roles')
       .select('user_id')
-      .eq('role', 'employer');
-      
+      .in('role', ['admin', 'employer', 'hr']);
+    
     if (error) {
-      console.error('Error getting manager user IDs:', error);
+      console.error('Error fetching manager IDs:', error);
       throw error;
     }
     
-    // Also get admin and HR user IDs
-    const { data: adminData, error: adminError } = await supabase
-      .from('user_roles')
-      .select('user_id')
-      .in('role', ['admin', 'hr']);
-      
-    if (adminError) {
-      console.error('Error getting admin/HR user IDs:', adminError);
-      throw adminError;
-    }
-    
-    // Combine all manager user IDs
-    const managerIds = [...(data || []), ...(adminData || [])].map(item => item.user_id);
-    console.log('NotificationService: Found manager user IDs:', managerIds);
+    const managerIds = data.map(item => item.user_id);
+    console.log(`Found ${managerIds.length} manager IDs:`, managerIds);
     
     return managerIds;
   } catch (error) {
-    console.error('Exception getting manager user IDs:', error);
+    console.error('Error in getManagerUserIds:', error);
     return [];
+  }
+};
+
+/**
+ * Checks if a user has a manager role
+ */
+export const hasManagerRole = async (userId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .in('role', ['admin', 'employer', 'hr']);
+    
+    if (error) {
+      console.error('Error checking manager role:', error);
+      throw error;
+    }
+    
+    return data && data.length > 0;
+  } catch (error) {
+    console.error('Error in hasManagerRole:', error);
+    return false;
   }
 };

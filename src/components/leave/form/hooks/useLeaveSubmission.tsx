@@ -4,11 +4,55 @@ import { useToast } from "@/hooks/use-toast";
 import { useAddLeaveRequest } from "@/hooks/use-leave-calendar";
 import { useQueryClient } from "@tanstack/react-query";
 import { calculateBusinessDays } from "@/utils/leave-utils";
+import { supabase } from '@/integrations/supabase/client';
 import { 
   createTestNotification,
-  notifyManagersOfNewLeaveRequest 
+  sendNotification 
 } from "@/services/notifications";
+import { getManagerUserIds } from "@/services/notifications/role-utils";
 import type { FormStatus } from "./useFormState";
+
+/**
+ * Notifies managers about a new leave request
+ */
+export const notifyManagersOfNewLeaveRequest = async (leaveRequest: any) => {
+  try {
+    // Get employee details
+    const { data: employeeData } = await supabase
+      .from('employees')
+      .select('name')
+      .eq('id', leaveRequest.employee_id)
+      .single();
+    
+    const employeeName = employeeData?.name || 'An employee';
+    
+    // Get all manager user IDs
+    const managerIds = await getManagerUserIds();
+    console.log(`Notifying ${managerIds.length} managers about new leave request`);
+    
+    if (managerIds.length === 0) {
+      console.warn('No managers found to notify about leave request');
+      return;
+    }
+    
+    // Send notification to each manager
+    for (const managerId of managerIds) {
+      await sendNotification({
+        user_id: managerId,
+        title: "New Leave Request",
+        message: `${employeeName} has submitted a new leave request from ${format(new Date(leaveRequest.start_date), "MMM d, yyyy")} to ${format(new Date(leaveRequest.end_date), "MMM d, yyyy")}`,
+        type: "info",
+        related_entity: "leave_calendar",
+        related_id: leaveRequest.id
+      });
+    }
+    
+    console.log('Successfully notified all managers about new leave request');
+  } catch (error) {
+    console.error('Error notifying managers about leave request:', error);
+    // Continue execution even if notification fails
+  }
+};
 
 /**
  * Hook to handle leave request submission
@@ -79,6 +123,8 @@ export const useLeaveSubmission = (
         },
         {
           onSuccess: async (data) => {
+            console.log('Leave request submitted successfully:', data);
+            
             // Create notification for the employee
             if (data && data.id) {
               try {

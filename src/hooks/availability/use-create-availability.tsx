@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { NewAvailabilityRequest, AvailabilityRequest } from '@/types/availability';
-import { sendNotification } from '@/services/NotificationService';
+import { sendNotification } from '@/services/notifications';
 
 // Create a new availability request
 export function useCreateAvailabilityRequest() {
@@ -57,9 +57,14 @@ export function useCreateAvailabilityRequest() {
           .select('user_id')
           .in('role', ['admin', 'employer', 'hr']);
         
+        console.log('Manager roles found:', managerRoles);
+        
         if (managerRoles && managerRoles.length > 0) {
+          console.log(`Sending notifications to ${managerRoles.length} managers`);
+          
           // Send notification to each manager
           for (const manager of managerRoles) {
+            console.log('Sending notification to manager:', manager.user_id);
             await sendNotification({
               user_id: manager.user_id,
               title: "New Availability Request",
@@ -69,6 +74,8 @@ export function useCreateAvailabilityRequest() {
               related_id: data.id
             });
           }
+        } else {
+          console.log('No managers found to notify');
         }
       } catch (notifyError) {
         console.error('Error notifying managers:', notifyError);

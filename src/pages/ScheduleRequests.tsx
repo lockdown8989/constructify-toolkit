@@ -10,7 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/use-auth';
-import { sendNotification } from '@/services/NotificationService';
+import { sendNotification } from '@/services/notifications';
+import { getManagerUserIds } from '@/services/notifications/role-utils';
 
 const ScheduleRequests = () => {
   const { toast } = useToast();
@@ -114,8 +115,10 @@ const ScheduleRequests = () => {
             
             // Notify managers or admins about the new request
             try {
-              // This function would need to be implemented to get manager user_ids
+              // Get all manager user ids
               const managerIds = await getManagerUserIds();
+              console.log('Found manager IDs for shift swap notification:', managerIds);
+              
               for (const managerId of managerIds) {
                 await sendNotification({
                   user_id: managerId,
@@ -199,8 +202,10 @@ const ScheduleRequests = () => {
             
             // Notify managers or admins about the new request
             try {
-              // This function would need to be implemented to get manager user_ids
+              // Get all manager user ids
               const managerIds = await getManagerUserIds();
+              console.log('Found manager IDs for availability notification:', managerIds);
+              
               for (const managerId of managerIds) {
                 await sendNotification({
                   user_id: managerId,
