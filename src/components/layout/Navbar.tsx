@@ -81,6 +81,12 @@ const Navbar = () => {
                       Profile
                     </Link>
                     <Link
+                      to="/people"
+                      className="hover:underline underline-offset-4"
+                    >
+                      Employees
+                    </Link>
+                    <Link
                       to="/employee-workflow"
                       className="hover:underline underline-offset-4"
                     >
@@ -133,6 +139,12 @@ const Navbar = () => {
                     className="hover:underline underline-offset-4"
                   >
                     Profile
+                  </Link>
+                  <Link
+                    to="/people"
+                    className="hover:underline underline-offset-4"
+                  >
+                    Employees
                   </Link>
                   <Link
                     to="/employee-workflow"
