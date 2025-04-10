@@ -28,7 +28,7 @@ export const RegionSettings = ({ user }: RegionSettingsProps) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         <CountryInput
           country={regionData.country}
           isLocating={isLocating}
@@ -48,7 +48,7 @@ export const RegionSettings = ({ user }: RegionSettingsProps) => {
       </CardContent>
       
       <CardFooter>
-        <Button type="submit" disabled={isSaving}>
+        <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
           {isSaving ? t('saving') : t('saveChanges')}
         </Button>
       </CardFooter>

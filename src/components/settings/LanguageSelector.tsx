@@ -1,6 +1,7 @@
 
 import { useLanguage, languageOptions } from "@/hooks/use-language";
 import { Label } from "@/components/ui/label";
+import { Languages } from "lucide-react";
 import { 
   Select,
   SelectContent,
@@ -8,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { Languages } from "lucide-react";
 
 interface LanguageSelectorProps {
   language: string;
@@ -28,7 +28,7 @@ export const LanguageSelector = ({ language, onChange }: LanguageSelectorProps) 
         <SelectTrigger className="w-full">
           <SelectValue placeholder={t('chooseLanguage')} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-popover"> 
           {languageOptions.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               <div className="flex items-center">

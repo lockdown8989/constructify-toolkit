@@ -7,7 +7,6 @@ import { RegionSettings } from "@/components/settings/RegionSettings";
 import { ThemeSelector } from "@/components/settings/ThemeSelector";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LanguageSelector } from "@/components/settings/LanguageSelector";
 import { useLanguage } from "@/hooks/use-language";
 
 const Settings = () => {
@@ -35,22 +34,22 @@ const Settings = () => {
         </div>
 
         <Tabs defaultValue="region" className="w-full">
-          <TabsList className="mb-4 w-full justify-start overflow-x-auto">
-            <TabsTrigger value="region" className="flex items-center">
+          <TabsList className="mb-4 w-full grid grid-cols-4 gap-2">
+            <TabsTrigger value="region" className="flex items-center justify-center">
               <MapPin className="mr-2 h-4 w-4" />
-              <span>{t('regionCurrency').split('&')[0]} & {t('regionCurrency').split('&')[1]}</span>
+              <span>{t('regionCurrency')}</span>
             </TabsTrigger>
-            <TabsTrigger value="appearance" className="flex items-center">
+            <TabsTrigger value="appearance" className="flex items-center justify-center">
               <Moon className="mr-2 h-4 w-4" />
-              <span>{t('appearance').split(' ')[0]}</span>
+              <span>{t('appearance')}</span>
             </TabsTrigger>
-            <TabsTrigger value="language" className="flex items-center">
+            <TabsTrigger value="language" className="flex items-center justify-center">
               <Languages className="mr-2 h-4 w-4" />
-              <span>{t('language').split(' ')[0]}</span>
+              <span>{t('language')}</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center">
+            <TabsTrigger value="notifications" className="flex items-center justify-center">
               <BellRing className="mr-2 h-4 w-4" />
-              <span>{t('notifications').split(' ')[0]}</span>
+              <span>{t('notifications')}</span>
             </TabsTrigger>
           </TabsList>
           
@@ -92,10 +91,20 @@ const Settings = () => {
               </CardHeader>
               
               <CardContent>
-                <LanguageSelector 
-                  language={language}
-                  onChange={(value) => setLanguage(value as any)}
-                />
+                <div className="space-y-2">
+                  <TabsList className="mt-2">
+                    {languageOptions.map((option) => (
+                      <TabsTrigger 
+                        key={option.value}
+                        value={option.value} 
+                        onClick={() => setLanguage(option.value as any)}
+                        className={language === option.value ? "bg-primary text-primary-foreground" : ""}
+                      >
+                        {option.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -117,5 +126,14 @@ const Settings = () => {
     </div>
   );
 };
+
+// Language options from use-language.tsx
+const languageOptions = [
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español' },
+  { value: 'bg', label: 'Български' },
+  { value: 'pl', label: 'Polski' },
+  { value: 'ro', label: 'Română' }
+];
 
 export default Settings;
