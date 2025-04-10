@@ -4,6 +4,7 @@ import { useUpdateEmployee } from "@/hooks/use-employees";
 import { useToast } from "@/hooks/use-toast";
 import { createAuditLog } from "../utils/leave-utils";
 import type { LeaveCalendar } from "@/hooks/leave/leave-types";
+import { sendNotification } from "@/services/notifications/notification-sender";
 
 // Hook to handle leave approval actions
 export const useLeaveApprovalActions = (currentUser: any) => {
@@ -35,14 +36,28 @@ export const useLeaveApprovalActions = (currentUser: any) => {
   };
 
   // Handle leave approval
-  const handleApprove = (leave: LeaveCalendar) => {
+  const handleApprove = async (leave: LeaveCalendar) => {
     const auditLog = createAuditLog(leave, "Approved", currentUser.name);
     
     updateLeave(
       { id: leave.id, status: "Approved", notes: auditLog },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           updateEmployeeStatus(leave.employee_id, leave.start_date, leave.end_date);
+          
+          // Send notification to employee
+          try {
+            await sendNotification({
+              user_id: leave.employee_id,
+              title: "Leave request approved",
+              message: `Your ${leave.type} leave request from ${leave.start_date} to ${leave.end_date} has been approved.`,
+              type: "success",
+              related_entity: "leave_calendar",
+              related_id: leave.id
+            });
+          } catch (error) {
+            console.error("Error sending notification:", error);
+          }
           
           toast({
             title: "Leave approved",
@@ -62,13 +77,27 @@ export const useLeaveApprovalActions = (currentUser: any) => {
   };
 
   // Handle leave rejection
-  const handleReject = (leave: LeaveCalendar) => {
+  const handleReject = async (leave: LeaveCalendar) => {
     const auditLog = createAuditLog(leave, "Rejected", currentUser.name);
     
     updateLeave(
       { id: leave.id, status: "Rejected", notes: auditLog },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
+          // Send notification to employee
+          try {
+            await sendNotification({
+              user_id: leave.employee_id,
+              title: "Leave request rejected",
+              message: `Your ${leave.type} leave request from ${leave.start_date} to ${leave.end_date} has been rejected.`,
+              type: "warning",
+              related_entity: "leave_calendar",
+              related_id: leave.id
+            });
+          } catch (error) {
+            console.error("Error sending notification:", error);
+          }
+          
           toast({
             title: "Leave rejected",
             description: "The leave request has been rejected.",

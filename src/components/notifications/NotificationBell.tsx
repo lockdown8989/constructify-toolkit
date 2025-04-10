@@ -13,6 +13,8 @@ interface Notification {
   type: 'info' | 'success' | 'warning' | 'error';
   read: boolean;
   created_at: string;
+  related_entity?: string;
+  related_id?: string;
 }
 
 const NotificationBell = () => {
@@ -127,12 +129,6 @@ const NotificationBell = () => {
     
     setUnreadCount(0);
   };
-  
-  // For testing, let's log notifications on each render
-  console.log('NotificationBell render:', { 
-    notificationCount: notifications.length, 
-    unreadCount 
-  });
   
   return (
     <Popover>

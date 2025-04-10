@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LeaveEvent } from '../leave-types';
 import { notifyEmployeeOfLeaveStatusChange } from '@/services/notifications/leave-notifications';
+import { sendNotification } from '@/services/notifications';
 
 /**
  * Hook for updating an existing leave request
@@ -36,6 +37,18 @@ export function useUpdateLeaveRequest() {
       if (data.status === 'Approved' || data.status === 'Rejected') {
         try {
           console.log(`Attempting to notify employee about ${data.status.toLowerCase()} leave request`);
+          
+          // Send in-app notification to the employee
+          await sendNotification({
+            user_id: data.employee_id,
+            title: `Leave request ${data.status.toLowerCase()}`,
+            message: `Your ${data.type} leave request from ${data.start_date} to ${data.end_date} has been ${data.status.toLowerCase()}.`,
+            type: data.status === 'Approved' ? 'success' : 'warning',
+            related_entity: 'leave_calendar',
+            related_id: data.id
+          });
+          
+          // Also send email notification if configured
           const notificationResult = await notifyEmployeeOfLeaveStatusChange(data, data.status as 'Approved' | 'Rejected');
           console.log('Employee notification completed with result:', notificationResult);
         } catch (notifyError) {
