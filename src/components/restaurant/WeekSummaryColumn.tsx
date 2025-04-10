@@ -5,7 +5,7 @@ import { WeekStats, OpenShift } from '@/types/restaurant-schedule';
 interface WeekSummaryColumnProps {
   weekStats: WeekStats;
   openShifts: OpenShift[];
-  formatCurrency: (amount: number) => string;
+  formatCurrency: (amount: number, currency?: string, locale?: string) => string;
   handleAssignOpenShift: (openShiftId: string, employeeId?: string) => void;
 }
 

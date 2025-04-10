@@ -9,7 +9,7 @@ interface DayColumnProps {
   day: DayStats;
   index: number;
   dayDisplayName: string;
-  formatCurrency: (amount: number) => string;
+  formatCurrency: (amount: number, currency?: string, locale?: string) => string;
   openShifts: OpenShift[];
   onAssign: (openShiftId: string, employeeId?: string) => void;
   previousWeek?: () => void;

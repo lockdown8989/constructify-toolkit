@@ -6,12 +6,16 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Info } from 'lucide-react';
+import { formatCurrency } from '@/components/restaurant/utils/schedule-utils';
 
 interface CompensationFieldsProps {
   form: UseFormReturn<EmployeeFormValues>;
 }
 
 const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
+  const salary = form.watch('salary') || 0;
+  const netSalary = salary * 0.75;
+  
   return (
     <div className="space-y-4">
       <FormField
@@ -52,7 +56,7 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
           </div>
           <div>
             <p className="text-gray-500">Net Salary:</p>
-            <p className="font-medium">{form.watch('salary') ? `$${(form.watch('salary') * 0.75).toLocaleString()}` : '-'}</p>
+            <p className="font-medium">{salary ? formatCurrency(netSalary) : '-'}</p>
           </div>
           <div>
             <p className="text-gray-500">Pay Period:</p>
