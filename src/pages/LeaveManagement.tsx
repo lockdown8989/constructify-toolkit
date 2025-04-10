@@ -13,10 +13,11 @@ import EmployeeTab from "@/components/leave/tabs/EmployeeTab";
 import ManagerTab from "@/components/leave/tabs/ManagerTab";
 import CalendarTab from "@/components/leave/tabs/CalendarTab";
 import NotificationsTab from "@/components/leave/tabs/NotificationsTab";
+import ScheduleRequestsTab from "@/components/leave/tabs/ScheduleRequestsTab"; 
 import { useAccessControl } from "@/hooks/leave/useAccessControl";
 
 // Define the view types
-type ViewType = "employee" | "manager" | "calendar" | "notifications";
+type ViewType = "employee" | "manager" | "calendar" | "notifications" | "schedule-requests";
 
 const LeaveManagement = () => {
   const { hasManagerAccess } = useAccessControl();
@@ -27,13 +28,14 @@ const LeaveManagement = () => {
     employee: "Employee View",
     manager: "Manager View",
     calendar: "Calendar View",
-    notifications: "Notifications"
+    notifications: "Notifications",
+    "schedule-requests": "Schedule Requests"
   };
   
   // Handle view change
   const handleViewChange = (view: ViewType) => {
-    if (view === "manager" || view === "notifications") {
-      if (!hasManagerAccess) return;
+    if ((view === "manager" || view === "notifications") && !hasManagerAccess) {
+      return;
     }
     setCurrentView(view);
   };
@@ -84,6 +86,13 @@ const LeaveManagement = () => {
             >
               Notifications
             </DropdownMenuItem>
+            
+            <DropdownMenuItem 
+              onClick={() => handleViewChange("schedule-requests")}
+              className="cursor-pointer"
+            >
+              Schedule Requests
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -94,6 +103,7 @@ const LeaveManagement = () => {
         {currentView === "manager" && <ManagerTab />}
         {currentView === "calendar" && <CalendarTab />}
         {currentView === "notifications" && <NotificationsTab />}
+        {currentView === "schedule-requests" && <ScheduleRequestsTab />}
       </div>
     </div>
   );

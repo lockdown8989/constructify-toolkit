@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom"
-import { Calendar, DollarSign, Receipt, Settings } from "lucide-react"
+import { Calendar, DollarSign, Receipt, Settings, Clock } from "lucide-react"
 import { useAuth } from "@/hooks/auth"
 
 interface DesktopNavProps {
@@ -56,9 +56,10 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
           </Link>
           <Link
             to="/leave-management"
-            className="hover:underline underline-offset-4"
+            className="hover:underline underline-offset-4 flex items-center"
           >
-            Leave Management
+            <Calendar className="h-4 w-4 mr-1" />
+            Leave & Schedule
           </Link>
           <Link
             to="/shift-calendar"
@@ -79,12 +80,6 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
           >
             <Receipt className="h-4 w-4 mr-1" />
             Payslip
-          </Link>
-          <Link
-            to="/schedule-requests"
-            className="hover:underline underline-offset-4"
-          >
-            Schedule Requests
           </Link>
         </>
       )}
