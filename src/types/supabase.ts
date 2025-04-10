@@ -44,7 +44,7 @@ export interface ShiftSwap {
   updated_at: string;
 }
 
-// Define notification type
+// Define notification type - updated to match database schema
 export interface Notification {
   id: string;
   user_id: string;
@@ -52,8 +52,8 @@ export interface Notification {
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
   read: boolean;
-  related_entity?: string;
-  related_id?: string;
+  related_entity: string | null;
+  related_id: string | null;
   created_at: string;
 }
 
@@ -89,9 +89,19 @@ export interface ExtendedDatabase extends DatabaseType {
       schedules: DatabaseType['public']['Tables']['schedules'];
       user_roles: DatabaseType['public']['Tables']['user_roles'];
       
-      // Add our new tables
+      // Updated the notifications table definition to make related_entity and related_id nullable
       notifications: {
-        Row: Notification;
+        Row: {
+          created_at: string;
+          id: string;
+          message: string;
+          read: boolean;
+          related_entity: string | null;
+          related_id: string | null;
+          title: string;
+          type: string;
+          user_id: string;
+        };
         Insert: Omit<Notification, 'id' | 'created_at'> & { id?: string; created_at?: string };
         Update: Partial<Notification>;
         Relationships: [

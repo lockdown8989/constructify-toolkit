@@ -1,19 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/auth';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  read: boolean;
-  created_at: string;
-}
+import { Notification } from '@/types/supabase';
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
