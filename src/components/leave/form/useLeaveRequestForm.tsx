@@ -9,7 +9,10 @@ import { useProjectsForDepartment } from "@/hooks/use-projects";
 import { calculateBusinessDays, checkProjectConflicts } from "@/utils/leave-utils";
 import type { ProjectConflict } from "@/utils/leave-utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { createLeaveRequestNotification } from "@/services/NotificationService";
+import { 
+  createLeaveRequestNotification,
+  notifyManagersAboutLeaveRequest 
+} from "@/services/NotificationService";
 
 // Define form status type
 type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
@@ -138,9 +141,10 @@ export const useLeaveRequestForm = () => {
         },
         {
           onSuccess: async (data) => {
-            // Create notification for the leave request
+            // Create notification for the employee
             if (data && data.id) {
               try {
+                // Notify the employee who submitted the request
                 await createLeaveRequestNotification(
                   user.id,
                   data.id,
@@ -148,8 +152,17 @@ export const useLeaveRequestForm = () => {
                   format(endDate, "MMM d, yyyy"),
                   leaveType
                 );
+                
+                // Notify managers about the new request
+                await notifyManagersAboutLeaveRequest(
+                  data.id,
+                  currentEmployee.name,
+                  format(startDate, "MMM d, yyyy"),
+                  format(endDate, "MMM d, yyyy"),
+                  leaveType
+                );
               } catch (error) {
-                console.error("Error creating leave request notification:", error);
+                console.error("Error sending notifications:", error);
                 // Continue with success even if notification fails
               }
             }

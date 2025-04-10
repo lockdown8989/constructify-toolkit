@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface NotificationData {
@@ -145,5 +144,75 @@ export const createLeaveRequestNotification = async (userId: string, leaveId: st
       success: false,
       message: `Error: ${error}`
     };
+  }
+};
+
+// Get all manager user IDs from user_roles table
+export const getManagerUserIds = async (): Promise<string[]> => {
+  console.log('NotificationService: Getting manager user IDs');
+  
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'employer');
+      
+    if (error) {
+      console.error('Error getting manager user IDs:', error);
+      throw error;
+    }
+    
+    // Also get admin and HR user IDs
+    const { data: adminData, error: adminError } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .in('role', ['admin', 'hr']);
+      
+    if (adminError) {
+      console.error('Error getting admin/HR user IDs:', adminError);
+      throw adminError;
+    }
+    
+    // Combine all manager user IDs
+    const managerIds = [...(data || []), ...(adminData || [])].map(item => item.user_id);
+    console.log('NotificationService: Found manager user IDs:', managerIds);
+    
+    return managerIds;
+  } catch (error) {
+    console.error('Exception getting manager user IDs:', error);
+    return [];
+  }
+};
+
+// Function to notify managers about a new leave request
+export const notifyManagersAboutLeaveRequest = async (leaveId: string, employeeName: string, start: string, end: string, type: string) => {
+  console.log('NotificationService: Notifying managers about new leave request');
+  
+  try {
+    // Get all manager user IDs
+    const managerIds = await getManagerUserIds();
+    
+    if (managerIds.length === 0) {
+      console.log('NotificationService: No managers found to notify');
+      return false;
+    }
+    
+    // Create notification data for managers
+    const notificationData: Omit<NotificationData, 'user_id'> = {
+      title: 'New Leave Request',
+      message: `${employeeName} has requested ${type} leave from ${start} to ${end}.`,
+      type: 'info',
+      related_entity: 'leave_request',
+      related_id: leaveId
+    };
+    
+    // Send notifications to all managers
+    await sendNotificationToMany(managerIds, notificationData);
+    
+    console.log('NotificationService: Managers notified successfully');
+    return true;
+  } catch (error) {
+    console.error('Error notifying managers:', error);
+    return false;
   }
 };
