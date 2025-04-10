@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Calendar, Users, Bell, RefreshCw, Clock } from "lucide-react";
 import LeaveRealtimeUpdates from "@/components/leave/LeaveRealtimeUpdates";
 import EmployeeTab from "@/components/leave/tabs/EmployeeTab";
 import ManagerTab from "@/components/leave/tabs/ManagerTab";
@@ -23,13 +23,13 @@ const LeaveManagement = () => {
   const { hasManagerAccess } = useAccessControl();
   const [currentView, setCurrentView] = useState<ViewType>("employee");
   
-  // Define view labels
-  const viewLabels: Record<ViewType, string> = {
-    employee: "Employee View",
-    manager: "Manager View",
-    calendar: "Calendar View",
-    notifications: "Notifications",
-    "schedule-requests": "Schedule Requests"
+  // Define view labels and icons
+  const viewOptions: Record<ViewType, { label: string, icon: React.ReactNode }> = {
+    employee: { label: "Employee View", icon: <Users className="h-4 w-4 mr-2" /> },
+    manager: { label: "Manager View", icon: <Users className="h-4 w-4 mr-2" /> },
+    calendar: { label: "Calendar View", icon: <Calendar className="h-4 w-4 mr-2" /> },
+    notifications: { label: "Notifications", icon: <Bell className="h-4 w-4 mr-2" /> },
+    "schedule-requests": { label: "Schedule Requests", icon: <Clock className="h-4 w-4 mr-2" /> }
   };
   
   // Handle view change
@@ -52,45 +52,51 @@ const LeaveManagement = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="w-full md:w-auto flex justify-between items-center">
-              {viewLabels[currentView]}
+              {viewOptions[currentView].icon}
+              {viewOptions[currentView].label}
               <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-full min-w-[200px]">
             <DropdownMenuItem 
               onClick={() => handleViewChange("employee")}
-              className="cursor-pointer"
+              className="cursor-pointer flex items-center"
             >
+              <Users className="h-4 w-4 mr-2" />
               Employee View
             </DropdownMenuItem>
             
             <DropdownMenuItem 
               onClick={() => handleViewChange("manager")}
               disabled={!hasManagerAccess}
-              className={`cursor-pointer ${!hasManagerAccess ? 'opacity-50' : ''}`}
+              className={`cursor-pointer flex items-center ${!hasManagerAccess ? 'opacity-50' : ''}`}
             >
+              <Users className="h-4 w-4 mr-2" />
               Manager View
             </DropdownMenuItem>
             
             <DropdownMenuItem 
               onClick={() => handleViewChange("calendar")}
-              className="cursor-pointer"
+              className="cursor-pointer flex items-center"
             >
+              <Calendar className="h-4 w-4 mr-2" />
               Calendar View
             </DropdownMenuItem>
             
             <DropdownMenuItem 
               onClick={() => handleViewChange("notifications")}
               disabled={!hasManagerAccess}
-              className={`cursor-pointer ${!hasManagerAccess ? 'opacity-50' : ''}`}
+              className={`cursor-pointer flex items-center ${!hasManagerAccess ? 'opacity-50' : ''}`}
             >
+              <Bell className="h-4 w-4 mr-2" />
               Notifications
             </DropdownMenuItem>
             
             <DropdownMenuItem 
               onClick={() => handleViewChange("schedule-requests")}
-              className="cursor-pointer"
+              className="cursor-pointer flex items-center"
             >
+              <Clock className="h-4 w-4 mr-2" />
               Schedule Requests
             </DropdownMenuItem>
           </DropdownMenuContent>

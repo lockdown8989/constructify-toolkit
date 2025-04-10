@@ -4,7 +4,6 @@ import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
 import People from "@/pages/People";
 import Schedule from "@/pages/Schedule";
-import ScheduleRequests from "@/pages/ScheduleRequests";
 import EmployeeWorkflow from "@/pages/EmployeeWorkflow";
 import Salary from "@/pages/Salary";
 import Payroll from "@/pages/Payroll";
@@ -29,7 +28,7 @@ export default function AppRoutes() {
         <Route path="/people" element={<ProtectedRoute><People /></ProtectedRoute>} />
         <Route path="/my-employees" element={<ProtectedRoute><People /></ProtectedRoute>} />
         <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
-        <Route path="/schedule-requests" element={<ProtectedRoute><ScheduleRequests /></ProtectedRoute>} />
+        <Route path="/schedule-requests" element={<ProtectedRoute><Navigate to="/leave-management" state={{ initialView: "schedule-requests" }} replace /></ProtectedRoute>} />
         <Route path="/restaurant-schedule" element={<ProtectedRoute><RestaurantSchedule /></ProtectedRoute>} />
         <Route path="/shift-calendar" element={<ProtectedRoute><RestaurantSchedule /></ProtectedRoute>} />
         <Route path="/employee-workflow" element={<ProtectedRoute><EmployeeWorkflow /></ProtectedRoute>} />

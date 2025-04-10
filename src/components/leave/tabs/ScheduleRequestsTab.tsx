@@ -1,13 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Calendar, Clock, RefreshCw, Plus, Filter } from 'lucide-react';
 import ShiftSwapList from '@/components/schedule/ShiftSwapList';
 import ShiftSwapForm from '@/components/schedule/ShiftSwapForm';
 import AvailabilityRequestList from '@/components/schedule/AvailabilityRequestList';
 import AvailabilityRequestForm from '@/components/schedule/AvailabilityRequestForm';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +23,7 @@ const ScheduleRequestsTab: React.FC = () => {
   const { user } = useAuth();
   const [activeSection, setActiveSection] = useState<'requests' | 'form'>('requests');
   const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState(new Date());
   
   // Set up real-time listeners for shift swaps and availability requests
   useEffect(() => {
@@ -228,6 +231,17 @@ const ScheduleRequestsTab: React.FC = () => {
     };
   }, [queryClient, toast, user]);
   
+  // Handle manual data refresh
+  const handleRefreshData = () => {
+    queryClient.invalidateQueries({ queryKey: ['shift_swaps'] });
+    queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
+    setLastRefreshed(new Date());
+    toast({
+      title: "Data refreshed",
+      description: "Schedule request data has been refreshed."
+    });
+  };
+  
   const renderMobileNavigation = () => {
     if (!isMobile) return null;
     
@@ -244,59 +258,133 @@ const ScheduleRequestsTab: React.FC = () => {
   };
   
   return (
-    <div className="space-y-6">
-      {renderMobileNavigation()}
+    <Card className="border shadow-sm">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-xl font-semibold">Schedule Requests</CardTitle>
+            <CardDescription className="text-sm text-muted-foreground mt-1">
+              Manage shift swaps and availability requests
+            </CardDescription>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefreshData}
+            className="flex items-center"
+          >
+            <RefreshCw className="h-4 w-4 mr-1" />
+            Refresh
+          </Button>
+        </div>
+        <div className="text-xs text-muted-foreground mt-2">
+          Last updated: {lastRefreshed.toLocaleTimeString()}
+        </div>
+      </CardHeader>
       
-      <Tabs defaultValue="shift-swaps">
-        <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
-          <TabsTrigger value="shift-swaps" className="text-xs sm:text-sm">Shift Swaps</TabsTrigger>
-          <TabsTrigger value="availability" className="text-xs sm:text-sm">Availability Requests</TabsTrigger>
-        </TabsList>
+      <CardContent>
+        {renderMobileNavigation()}
         
-        <TabsContent value="shift-swaps" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            {(!isMobile || activeSection === 'form') && (
-              <div className="md:col-span-1">
-                <ShiftSwapForm />
-              </div>
-            )}
-            
-            {(!isMobile || activeSection === 'requests') && (
-              <div className="md:col-span-2">
-                <ShiftSwapList />
-              </div>
-            )}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="availability" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            {(!isMobile || activeSection === 'form') && (
-              <div className="md:col-span-1">
-                {showAvailabilityForm ? (
-                  <AvailabilityRequestForm onClose={() => setShowAvailabilityForm(false)} />
-                ) : (
-                  <div className="h-10 flex justify-center">
-                    <button 
-                      onClick={() => setShowAvailabilityForm(true)}
-                      className="bg-primary text-primary-foreground shadow hover:bg-primary/90 px-4 py-2 rounded-md"
-                    >
-                      Set Availability
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {(!isMobile || activeSection === 'requests') && (
-              <div className="md:col-span-2">
-                <AvailabilityRequestList />
-              </div>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+        <Tabs defaultValue="shift-swaps" className="mt-2">
+          <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
+            <TabsTrigger value="shift-swaps" className="text-xs sm:text-sm flex items-center">
+              <RefreshCw className="h-3 w-3 mr-1.5" />
+              Shift Swaps
+            </TabsTrigger>
+            <TabsTrigger value="availability" className="text-xs sm:text-sm flex items-center">
+              <Clock className="h-3 w-3 mr-1.5" />
+              Availability
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="shift-swaps" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+              {(!isMobile || activeSection === 'form') && (
+                <div className="md:col-span-1">
+                  <Card className="border shadow-sm">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium flex items-center">
+                        <Plus className="h-4 w-4 mr-1" />
+                        Create Shift Swap
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ShiftSwapForm />
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+              
+              {(!isMobile || activeSection === 'requests') && (
+                <div className="md:col-span-2">
+                  <Card className="border shadow-sm">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium flex items-center">
+                          <Filter className="h-4 w-4 mr-1" />
+                          Shift Swap Requests
+                        </CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <ShiftSwapList />
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="availability" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+              {(!isMobile || activeSection === 'form') && (
+                <div className="md:col-span-1">
+                  {showAvailabilityForm ? (
+                    <Card className="border shadow-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium flex items-center">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          Set Availability
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <AvailabilityRequestForm onClose={() => setShowAvailabilityForm(false)} />
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="h-10 flex justify-center">
+                      <Button 
+                        onClick={() => setShowAvailabilityForm(true)}
+                        className="bg-primary text-primary-foreground shadow flex items-center"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Set Availability
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {(!isMobile || activeSection === 'requests') && (
+                <div className="md:col-span-2">
+                  <Card className="border shadow-sm">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium flex items-center">
+                        <Filter className="h-4 w-4 mr-1" />
+                        Availability Requests
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <AvailabilityRequestList />
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
   );
 };
 
