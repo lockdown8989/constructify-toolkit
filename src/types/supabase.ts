@@ -71,6 +71,40 @@ export interface WebhookSetting {
   updated_at: string;
 }
 
+// Define notification settings type
+export interface NotificationSetting {
+  id: string;
+  user_id: string;
+  email_notifications: boolean;
+  push_notifications: boolean;
+  meeting_reminders: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Define workflow notification type
+export interface WorkflowNotification {
+  id: string;
+  receiver_id: string;
+  sender_id: string | null;
+  message: string;
+  read: boolean;
+  status: string;
+  type: string;
+  created_at: string;
+}
+
+// Define workflow request type
+export interface WorkflowRequest {
+  id: string;
+  user_id: string;
+  request_type: string;
+  details: any;
+  status: string;
+  reviewed_by: string | null;
+  submitted_at: string;
+}
+
 // Extend the Database type to include our new tables
 export interface ExtendedDatabase extends DatabaseType {
   public: {
@@ -89,7 +123,12 @@ export interface ExtendedDatabase extends DatabaseType {
       schedules: DatabaseType['public']['Tables']['schedules'];
       user_roles: DatabaseType['public']['Tables']['user_roles'];
       
-      // Add our new tables with compatible relationship definitions
+      // Add missing tables from the base Database interface
+      notification_settings: DatabaseType['public']['Tables']['notification_settings'];
+      workflow_notifications: DatabaseType['public']['Tables']['workflow_notifications'];
+      workflow_requests: DatabaseType['public']['Tables']['workflow_requests'];
+      
+      // Add our custom tables with compatible relationship definitions
       notifications: {
         Row: Notification;
         Insert: Omit<Notification, 'id' | 'created_at'> & { id?: string; created_at?: string };
