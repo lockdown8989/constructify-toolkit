@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { format, differenceInCalendarDays, addDays } from "date-fns";
 import { useLeaveCalendar } from "@/hooks/use-leave-calendar";
@@ -43,6 +42,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import type { LeaveCalendar } from "@/hooks/use-leave-calendar";
 import type { Employee } from "@/hooks/use-employees";
+import { notifyEmployeeOfLeaveStatusChange } from "@/services/notifications";
 
 const LeaveApprovalDashboard: React.FC = () => {
   const { data: leaves = [], isLoading: isLoadingLeaves } = useLeaveCalendar();
@@ -122,14 +122,21 @@ const LeaveApprovalDashboard: React.FC = () => {
       : auditEntry;
   };
   
-  const handleApprove = (leave: LeaveCalendar) => {
+  const handleApprove = async (leave: LeaveCalendar) => {
     const auditLog = createAuditLog(leave, "Approved");
     
     updateLeave(
       { id: leave.id, status: "Approved", notes: auditLog },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           updateEmployeeStatus(leave.employee_id, leave.start_date, leave.end_date);
+          
+          try {
+            await notifyEmployeeOfLeaveStatusChange(leave, "Approved");
+            console.log("Employee notification sent for approval");
+          } catch (error) {
+            console.error("Failed to send employee notification:", error);
+          }
           
           toast({
             title: "Leave approved",
@@ -148,13 +155,20 @@ const LeaveApprovalDashboard: React.FC = () => {
     );
   };
   
-  const handleReject = (leave: LeaveCalendar) => {
+  const handleReject = async (leave: LeaveCalendar) => {
     const auditLog = createAuditLog(leave, "Rejected");
     
     updateLeave(
       { id: leave.id, status: "Rejected", notes: auditLog },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
+          try {
+            await notifyEmployeeOfLeaveStatusChange(leave, "Rejected");
+            console.log("Employee notification sent for rejection");
+          } catch (error) {
+            console.error("Failed to send employee notification:", error);
+          }
+          
           toast({
             title: "Leave rejected",
             description: "The leave request has been rejected.",
