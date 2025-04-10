@@ -61,5 +61,7 @@ export const bulgarianTranslations: Translations = {
   useDarkTheme: 'Използвайте тъмна тема за приложението',
   light: 'Светла',
   dark: 'Тъмна',
-  system: 'Система'
+  system: 'Система',
+  lightModeOnly: 'Това приложение използва само светла тема'
 };
+
