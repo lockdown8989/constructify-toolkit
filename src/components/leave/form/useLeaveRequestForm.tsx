@@ -109,6 +109,10 @@ export const useLeaveRequestForm = () => {
     }];
     
     try {
+      console.log('Submitting leave request with employee ID:', employeeId);
+      console.log('Current user ID:', user.id);
+      console.log('Current employee record:', currentEmployee);
+      
       await addLeave(
         {
           employee_id: employeeId,

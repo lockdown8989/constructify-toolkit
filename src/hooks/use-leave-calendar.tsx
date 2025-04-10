@@ -26,59 +26,96 @@ export function useLeaveCalendar() {
   return useQuery({
     queryKey: ['leave-calendar', isManager, user?.id],
     queryFn: async () => {
-      let query = supabase
-        .from('leave_calendar')
-        .select(`
-          *,
-          employees:employee_id (
-            name,
-            job_title,
-            department
-          )
-        `);
-      
-      // If not a manager, only fetch the user's own leave requests
-      if (!isManager && user) {
-        // First get the employee ID for the current user
-        const { data: employeeData } = await supabase
-          .from('employees')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
-          
-        if (employeeData) {
-          // Filter to show only this employee's leave requests
-          query = query.eq('employee_id', employeeData.id);
-        } else {
-          // If no employee record found, return empty array
-          return [];
-        }
-      }
+      try {
+        console.log('Fetching leave calendar, user:', user?.id, 'isManager:', isManager);
+        let query = supabase
+          .from('leave_calendar')
+          .select(`
+            *,
+            employees:employee_id (
+              name,
+              job_title,
+              department
+            )
+          `);
+        
+        // If not a manager, only fetch the user's own leave requests
+        if (!isManager && user) {
+          // First get the employee ID for the current user
+          const { data: employeeData } = await supabase
+            .from('employees')
+            .select('id')
+            .eq('user_id', user.id)
+            .single();
             
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
+          if (employeeData) {
+            console.log('Found employee ID:', employeeData.id);
+            // Filter to show only this employee's requests
+            query = query.eq('employee_id', employeeData.id);
+          } else {
+            console.log('No employee record found for user:', user.id);
+            // If no employee record found, return empty array
+            return [];
+          }
+        }
+              
+        const { data, error } = await query;
+        if (error) {
+          console.error('Error fetching leave calendar:', error);
+          throw error;
+        }
+        console.log('Leave calendar fetched:', data?.length || 0, 'records');
+        return data || [];
+      } catch (error) {
+        console.error('Exception in useLeaveCalendar:', error);
+        throw error;
+      }
     },
+    enabled: !!user
   });
 }
 
 export function useAddLeaveRequest() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (newLeaveRequest: LeaveRequest) => {
-      const { data, error } = await supabase
-        .from('leave_calendar')
-        .insert([newLeaveRequest])
-        .select()
-        .single();
+      try {
+        console.log('Adding leave request:', newLeaveRequest);
+        
+        // Verify the employee record belongs to the current user
+        if (user) {
+          const { data: employeeData } = await supabase
+            .from('employees')
+            .select('id')
+            .eq('id', newLeaveRequest.employee_id)
+            .eq('user_id', user.id)
+            .single();
+          
+          if (!employeeData) {
+            console.error('Employee record does not belong to current user');
+            throw new Error('You can only create leave requests for yourself');
+          }
+        }
+        
+        const { data, error } = await supabase
+          .from('leave_calendar')
+          .insert([newLeaveRequest])
+          .select()
+          .single();
 
-      if (error) {
-        throw new Error(error.message);
+        if (error) {
+          console.error('Error adding leave request:', error);
+          throw new Error(error.message);
+        }
+
+        return data as LeaveEvent;
+      } catch (error: any) {
+        console.error('Exception in useAddLeaveRequest:', error);
+        throw error;
       }
-
-      return data as LeaveEvent;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
