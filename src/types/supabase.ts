@@ -57,8 +57,7 @@ export interface Notification {
   created_at: string;
 }
 
-// Define webhook settings type for client-side use
-// This won't be directly stored in the database
+// Define webhook settings type for client-side use (used with localStorage)
 export interface WebhookSetting {
   id: string;
   user_id: string;

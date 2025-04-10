@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -91,7 +90,14 @@ const WebhookConfig = () => {
     setIsLoading(true);
     
     try {
-      const result = await saveWebhookSettings(user.id, values);
+      const result = await saveWebhookSettings(user.id, {
+        webhook_url: values.webhook_url,
+        webhook_type: values.webhook_type,
+        notify_shift_swaps: values.notify_shift_swaps,
+        notify_availability: values.notify_availability,
+        notify_leave: values.notify_leave,
+        notify_attendance: values.notify_attendance,
+      });
       
       if (result.success) {
         toast({

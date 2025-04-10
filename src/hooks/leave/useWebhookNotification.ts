@@ -52,7 +52,15 @@ export const useWebhookNotification = () => {
   };
 
   // Function to save webhook settings
-  const saveWebhookSettings = async (userId: string, settings: Omit<WebhookSetting, 'id' | 'created_at' | 'updated_at'>) => {
+  // Updated to not require user_id in the settings parameter
+  const saveWebhookSettings = async (userId: string, settings: {
+    webhook_url: string;
+    webhook_type: string;
+    notify_shift_swaps: boolean;
+    notify_availability: boolean;
+    notify_leave: boolean;
+    notify_attendance: boolean;
+  }) => {
     try {
       const webhookSettings: WebhookSetting = {
         id: crypto.randomUUID(),
