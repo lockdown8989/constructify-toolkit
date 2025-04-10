@@ -3,8 +3,15 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/hooks/auth';
 
-const DesktopNav = () => {
-  const { isAuthenticated } = useAuth();
+interface DesktopNavProps {
+  isAuthenticated?: boolean;
+}
+
+const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated: propIsAuthenticated }) => {
+  const { isAuthenticated: contextIsAuthenticated } = useAuth();
+  
+  // Use the prop if provided, otherwise use the context value
+  const isAuthenticated = propIsAuthenticated !== undefined ? propIsAuthenticated : contextIsAuthenticated;
 
   const activeClassName = "text-primary";
   const inactiveClassName = "hover:text-gray-500 transition-colors duration-200";
