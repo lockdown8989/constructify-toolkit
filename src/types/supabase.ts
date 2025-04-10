@@ -89,86 +89,33 @@ export interface ExtendedDatabase extends DatabaseType {
       schedules: DatabaseType['public']['Tables']['schedules'];
       user_roles: DatabaseType['public']['Tables']['user_roles'];
       
-      // Add our new tables
+      // Add our new tables with compatible relationship definitions
       notifications: {
         Row: Notification;
         Insert: Omit<Notification, 'id' | 'created_at'> & { id?: string; created_at?: string };
         Update: Partial<Notification>;
-        Relationships: [
-          {
-            foreignKeyName: "notifications_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          }
-        ];
+        Relationships: [] // Changed to empty array to match the base Database interface
       };
       
       webhook_settings: {
         Row: WebhookSetting;
         Insert: Omit<WebhookSetting, 'id' | 'created_at' | 'updated_at'> & { id?: string; created_at?: string; updated_at?: string };
         Update: Partial<WebhookSetting>;
-        Relationships: [
-          {
-            foreignKeyName: "webhook_settings_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: true;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          }
-        ];
+        Relationships: [] // Changed to empty array to match the base Database interface
       };
       
       availability_requests: {
         Row: AvailabilityRequest;
         Insert: Omit<AvailabilityRequest, 'id' | 'created_at' | 'updated_at'> & { id?: string; created_at?: string; updated_at?: string };
         Update: Partial<AvailabilityRequest>;
-        Relationships: [
-          {
-            foreignKeyName: "availability_requests_employee_id_fkey";
-            columns: ["employee_id"];
-            isOneToOne: false;
-            referencedRelation: "employees";
-            referencedColumns: ["id"];
-          }
-        ];
+        Relationships: [] // Changed to empty array to match the base Database interface
       };
       
       shift_swaps: {
         Row: ShiftSwap;
         Insert: Omit<ShiftSwap, 'id' | 'created_at' | 'updated_at'> & { id?: string; created_at?: string; updated_at?: string };
         Update: Partial<ShiftSwap>;
-        Relationships: [
-          {
-            foreignKeyName: "shift_swaps_requester_id_fkey";
-            columns: ["requester_id"];
-            isOneToOne: false;
-            referencedRelation: "employees";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "shift_swaps_recipient_id_fkey";
-            columns: ["recipient_id"];
-            isOneToOne: false;
-            referencedRelation: "employees";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "shift_swaps_requester_schedule_id_fkey";
-            columns: ["requester_schedule_id"];
-            isOneToOne: false;
-            referencedRelation: "schedules";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "shift_swaps_recipient_schedule_id_fkey";
-            columns: ["recipient_schedule_id"];
-            isOneToOne: false;
-            referencedRelation: "schedules";
-            referencedColumns: ["id"];
-          }
-        ];
+        Relationships: [] // Changed to empty array to match the base Database interface
       };
     };
     Views: DatabaseType['public']['Views'];
