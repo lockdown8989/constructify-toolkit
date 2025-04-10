@@ -60,15 +60,13 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
             <DollarSign className="h-4 w-4 mr-1" />
             Salary
           </Link>
-          {isManager && (
-            <Link
-              to="/payroll"
-              className="hover:underline underline-offset-4 flex items-center"
-            >
-              <Receipt className="h-4 w-4 mr-1" />
-              Payslip
-            </Link>
-          )}
+          <Link
+            to="/payroll"
+            className="hover:underline underline-offset-4 flex items-center"
+          >
+            <Receipt className="h-4 w-4 mr-1" />
+            Payslip
+          </Link>
           <Link
             to="/schedule-requests"
             className="hover:underline underline-offset-4"

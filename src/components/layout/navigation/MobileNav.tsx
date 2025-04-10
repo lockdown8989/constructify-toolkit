@@ -90,15 +90,13 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                 <DollarSign className="mr-2 h-5 w-5" />
                 <span>Salary</span>
               </Link>
-              {isManager && (
-                <Link
-                  to="/payroll"
-                  className="flex items-center py-2 text-lg font-semibold"
-                >
-                  <Receipt className="mr-2 h-5 w-5" />
-                  <span>Payslip</span>
-                </Link>
-              )}
+              <Link
+                to="/payroll"
+                className="flex items-center py-2 text-lg font-semibold"
+              >
+                <Receipt className="mr-2 h-5 w-5" />
+                <span>Payslip</span>
+              </Link>
               <Link
                 to="/schedule-requests"
                 className="flex items-center py-2 text-lg font-semibold"
