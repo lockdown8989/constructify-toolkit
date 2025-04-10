@@ -1,3 +1,4 @@
+
 import React from "react";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
@@ -10,6 +11,7 @@ import Payroll from "@/pages/Payroll";
 import LeaveManagement from "@/pages/LeaveManagement";
 import Hiring from "@/pages/Hiring";
 import Profile from "@/pages/Profile";
+import RestaurantSchedule from "@/pages/RestaurantSchedule";
 import NotFound from "@/pages/NotFound";
 import AppLayout from "@/components/layout/AppLayout";
 import { Navigate } from "react-router-dom";
@@ -51,6 +53,10 @@ export function Router() {
         {
           path: "/schedule-requests",
           element: <ProtectedRoute><ScheduleRequests /></ProtectedRoute>
+        },
+        {
+          path: "/restaurant-schedule",
+          element: <ProtectedRoute><RestaurantSchedule /></ProtectedRoute>
         },
         {
           path: "/employee-workflow",

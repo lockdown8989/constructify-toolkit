@@ -1,5 +1,5 @@
 
-import { Home, Users, Calendar, DollarSign, Menu } from "lucide-react"
+import { Home, Users, Calendar, DollarSign, Utensils } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
@@ -46,6 +46,21 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
           </span>
         </Link>
         
+        <Link to="/restaurant-schedule" className="flex flex-col items-center justify-center p-2">
+          <Utensils 
+            className={cn(
+              "h-6 w-6 mb-1", 
+              location.pathname === "/restaurant-schedule" ? "text-primary" : "text-muted-foreground"
+            )} 
+          />
+          <span className={cn(
+            "text-xs", 
+            location.pathname === "/restaurant-schedule" ? "text-primary font-medium" : "text-muted-foreground"
+          )}>
+            Schedule
+          </span>
+        </Link>
+        
         <Link to="/leave-management" className="flex flex-col items-center justify-center p-2">
           <Calendar 
             className={cn(
@@ -75,11 +90,6 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
             Salary
           </span>
         </Link>
-        
-        <div className="flex flex-col items-center justify-center p-2">
-          <Menu className="h-6 w-6 mb-1 text-muted-foreground" />
-          <span className="text-xs text-muted-foreground">More</span>
-        </div>
       </div>
     </div>
   );
