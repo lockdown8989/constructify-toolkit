@@ -105,13 +105,43 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       setSettings(updatedSettings);
 
       console.log('Updating notification settings:', updatedSettings);
-      const { error } = await supabase
+      
+      // Check if settings exist for this user before updating
+      const { data: existingSettings, error: checkError } = await supabase
         .from('notification_settings')
-        .upsert({
-          user_id: user.id,
-          ...updatedSettings,
-          updated_at: new Date().toISOString(),
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+        
+      if (checkError) {
+        throw checkError;
+      }
+
+      let error;
+      
+      if (existingSettings) {
+        // Update existing settings
+        const { error: updateError } = await supabase
+          .from('notification_settings')
+          .update({
+            ...updatedSettings,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id);
+          
+        error = updateError;
+      } else {
+        // Insert new settings
+        const { error: insertError } = await supabase
+          .from('notification_settings')
+          .insert({
+            user_id: user.id,
+            ...updatedSettings,
+            updated_at: new Date().toISOString(),
+          });
+          
+        error = insertError;
+      }
 
       if (error) {
         toast({
