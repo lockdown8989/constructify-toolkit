@@ -1,25 +1,13 @@
 
 import { useState, useMemo, useEffect } from 'react';
-import { 
-  Search, 
-  ChevronLeft, 
-  ChevronRight, 
-  Coffee, 
-  FileText,
-  Plus,
-  Check
-} from 'lucide-react';
-import { format } from 'date-fns';
 import { useRestaurantSchedule } from '@/hooks/use-restaurant-schedule';
-import { OpenShift, Shift, ViewMode } from '@/types/restaurant-schedule';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import OpenShiftBlock from '@/components/restaurant/OpenShiftBlock';
-import RoleSection from '@/components/restaurant/RoleSection';
-import ShiftEditDialog from '@/components/restaurant/ShiftEditDialog';
+import { Shift, ViewMode } from '@/types/restaurant-schedule';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import ScheduleHeader from '@/components/restaurant/ScheduleHeader';
+import WeeklyGrid from '@/components/restaurant/WeeklyGrid';
+import RoleSection from '@/components/restaurant/RoleSection';
+import ShiftEditDialog from '@/components/restaurant/ShiftEditDialog';
 
 const RestaurantSchedule = () => {
   const { 
@@ -180,115 +168,17 @@ const RestaurantSchedule = () => {
   
   return (
     <div className="container py-6 max-w-full">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Shift Calendar Schedule</h1>
-        
-        <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
-          <Tabs 
-            defaultValue="week" 
-            onValueChange={(value) => setViewMode(value as ViewMode)}
-            className="bg-gray-100 rounded-full p-1"
-          >
-            <TabsList className="bg-transparent">
-              <TabsTrigger 
-                value="week" 
-                className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm"
-              >
-                Week
-              </TabsTrigger>
-              <TabsTrigger 
-                value="month" 
-                className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm"
-              >
-                Month
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-          
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input 
-              placeholder="Search employees or roles..." 
-              className="pl-9 rounded-full border-gray-200"
-            />
-          </div>
-        </div>
-      </div>
+      <ScheduleHeader setViewMode={setViewMode} />
       
-      <div className="grid grid-cols-9 gap-0 border rounded-t-xl bg-white shadow-sm overflow-hidden">
-        {/* Week summary column */}
-        <div className="col-span-1 border-r border-gray-200">
-          <div className="p-4 border-b border-gray-200 bg-gray-50">
-            <div className="text-sm font-medium text-gray-700">Week {weekStats.weekNumber} summary</div>
-          </div>
-          
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex flex-col space-y-2">
-              <div className="flex items-center">
-                <span className="text-gray-600 font-medium mr-2">H</span>
-                <span className="text-gray-900 font-semibold">{weekStats.totalHours.toFixed(0)}h</span>
-              </div>
-              <div className="flex items-center">
-                <span className="text-gray-600 font-medium mr-2">C</span>
-                <span className="text-gray-900 font-semibold">{formatCurrency(weekStats.totalCost)}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-4">
-            <div className="font-semibold mb-2">Open Shifts</div>
-            <div className="text-sm text-gray-600">
-              <div>{weekStats.openShiftsTotalHours.toFixed(0)}h 30m</div>
-              <div>{weekStats.openShiftsTotalCount} shifts</div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Days columns */}
-        {weekStats.days.map((day, index) => (
-          <div key={day.day} className="col-span-1 border-r border-gray-200">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-              <div className="flex items-center">
-                <span className="font-bold text-lg mr-2">{index + 1}</span>
-                <span className="text-gray-700">{daysDisplayNames[index]}</span>
-              </div>
-              <div className="flex space-x-2">
-                {index === 0 && (
-                  <Button variant="outline" size="icon" onClick={previousWeek} className="rounded-full h-7 w-7">
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                )}
-                {index === 1 && (
-                  <Button variant="outline" size="icon" onClick={nextWeek} className="rounded-full h-7 w-7">
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-            
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex flex-col space-y-1">
-                <div className="text-gray-900 font-semibold">{day.totalHours.toFixed(0)}h</div>
-                <div className="text-gray-900 font-semibold">{formatCurrency(day.totalCost)}</div>
-              </div>
-            </div>
-            
-            <div className="p-2">
-              {openShifts
-                .filter(s => s.day === day.day)
-                .map(openShift => (
-                  <OpenShiftBlock
-                    key={openShift.id}
-                    openShift={openShift}
-                    color={openShift.role.includes('Waiting') ? 'yellow' : 'blue'}
-                    onAssign={handleAssignOpenShift}
-                  />
-                ))
-              }
-            </div>
-          </div>
-        ))}
-      </div>
+      <WeeklyGrid 
+        weekStats={weekStats}
+        openShifts={openShifts}
+        daysDisplayNames={daysDisplayNames}
+        formatCurrency={formatCurrency}
+        handleAssignOpenShift={handleAssignOpenShift}
+        previousWeek={previousWeek}
+        nextWeek={nextWeek}
+      />
       
       {/* Role sections */}
       {weekStats.roles.map(role => (
