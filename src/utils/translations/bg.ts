@@ -54,5 +54,12 @@ export const bulgarianTranslations: Translations = {
   schedule: 'График',
   leave: 'Отпуск',
   toggleMenu: 'Превключване на менюто',
-  back: 'Назад'
+  back: 'Назад',
+  
+  // Theme settings
+  darkMode: 'Тъмен режим',
+  useDarkTheme: 'Използвайте тъмна тема за приложението',
+  light: 'Светла',
+  dark: 'Тъмна',
+  system: 'Система'
 };

@@ -54,5 +54,12 @@ export const englishTranslations: Translations = {
   schedule: 'Schedule',
   leave: 'Leave',
   toggleMenu: 'Toggle menu',
-  back: 'Back'
+  back: 'Back',
+  
+  // Theme settings
+  darkMode: 'Dark Mode',
+  useDarkTheme: 'Use dark theme for the application',
+  light: 'Light',
+  dark: 'Dark',
+  system: 'System'
 };

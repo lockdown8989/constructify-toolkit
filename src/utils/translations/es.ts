@@ -54,5 +54,12 @@ export const spanishTranslations: Translations = {
   schedule: 'Horario',
   leave: 'Ausencia',
   toggleMenu: 'Alternar menú',
-  back: 'Atrás'
+  back: 'Atrás',
+  
+  // Theme settings
+  darkMode: 'Modo Oscuro',
+  useDarkTheme: 'Usar tema oscuro para la aplicación',
+  light: 'Claro',
+  dark: 'Oscuro',
+  system: 'Sistema'
 };

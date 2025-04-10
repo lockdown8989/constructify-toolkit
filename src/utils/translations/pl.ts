@@ -54,5 +54,12 @@ export const polishTranslations: Translations = {
   schedule: 'Harmonogram',
   leave: 'Urlop',
   toggleMenu: 'Przełącz menu',
-  back: 'Wstecz'
+  back: 'Wstecz',
+  
+  // Theme settings
+  darkMode: 'Tryb ciemny',
+  useDarkTheme: 'Użyj ciemnego motywu dla aplikacji',
+  light: 'Jasny',
+  dark: 'Ciemny',
+  system: 'System'
 };

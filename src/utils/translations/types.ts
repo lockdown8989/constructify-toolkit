@@ -54,12 +54,21 @@ export type NavigationTranslationKeys =
   | 'toggleMenu'
   | 'back';
 
+// Add theme-related translation keys
+export type ThemeTranslationKeys =
+  | 'darkMode'
+  | 'useDarkTheme'
+  | 'light'
+  | 'dark'
+  | 'system';
+
 // Combined type with all translation keys
 export type TranslationKey = 
   | CoreTranslationKeys
   | RegionTranslationKeys
   | ProfileTranslationKeys
-  | NavigationTranslationKeys;
+  | NavigationTranslationKeys
+  | ThemeTranslationKeys;
 
 // Translations record type
 export type Translations = Record<TranslationKey, string>;
