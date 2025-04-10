@@ -23,7 +23,16 @@ import {
   FileText, 
   Moon, 
   Circle,
-  ChevronRight
+  ChevronRight,
+  Phone,
+  MessageCircle,
+  AtSign,
+  Inbox,
+  Folder,
+  Users,
+  Contact,
+  BarChart2,
+  Home
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
@@ -34,12 +43,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useLocation } from "react-router-dom";
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
   const [autoOffline, setAutoOffline] = useState(false);
   const [availability, setAvailability] = useState<"online" | "away" | "offline">("online");
   const isMobile = useIsMobile();
+  const location = useLocation();
 
   if (!user) return null;
 
@@ -55,6 +66,21 @@ const UserMenu = () => {
     else if (availability === "away") setAvailability("offline");
     else setAvailability("online");
   };
+
+  const mainNavigationItems = [
+    { name: "Home", icon: <Home className="h-4 w-4" />, path: "/" },
+    { name: "Conversations", icon: <MessageCircle className="h-4 w-4" />, path: "/conversations" },
+    { name: "Mentions", icon: <AtSign className="h-4 w-4" />, path: "/mentions" },
+    { name: "Unattended", icon: <Inbox className="h-4 w-4" />, path: "/unattended" },
+    { name: "Contact", icon: <Phone className="h-4 w-4" />, path: "/contact" }
+  ];
+
+  const organizationItems = [
+    { name: "Folders", icon: <Folder className="h-4 w-4" />, path: "/folders" },
+    { name: "Teams", icon: <Users className="h-4 w-4" />, path: "/teams" },
+    { name: "Contacts", icon: <Contact className="h-4 w-4" />, path: "/contacts" },
+    { name: "Reports", icon: <BarChart2 className="h-4 w-4" />, path: "/reports" }
+  ];
 
   return (
     <DropdownMenu>
@@ -152,6 +178,58 @@ const UserMenu = () => {
             />
           </div>
         </div>
+        
+        <DropdownMenuSeparator />
+        
+        {/* Main Navigation */}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-3 py-1.5">
+            Main Navigation
+          </DropdownMenuLabel>
+          {mainNavigationItems.map((item) => (
+            <DropdownMenuItem asChild key={item.name} className={cn(
+              isMobile ? "py-2.5" : "",
+              location.pathname === item.path ? "bg-primary/10 text-primary font-medium" : ""
+            )}>
+              <Link to={item.path} className="flex items-center w-full">
+                <span className={cn(
+                  "mr-2",
+                  location.pathname === item.path ? "text-primary" : ""
+                )}>
+                  {item.icon}
+                </span>
+                <span>{item.name}</span>
+                {isMobile && <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground/50" />}
+              </Link>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
+        
+        <DropdownMenuSeparator />
+        
+        {/* Organization */}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="text-xs font-medium text-muted-foreground px-3 py-1.5">
+            Organization
+          </DropdownMenuLabel>
+          {organizationItems.map((item) => (
+            <DropdownMenuItem asChild key={item.name} className={cn(
+              isMobile ? "py-2.5" : "",
+              location.pathname === item.path ? "bg-primary/10 text-primary font-medium" : ""
+            )}>
+              <Link to={item.path} className="flex items-center w-full">
+                <span className={cn(
+                  "mr-2",
+                  location.pathname === item.path ? "text-primary" : ""
+                )}>
+                  {item.icon}
+                </span>
+                <span>{item.name}</span>
+                {isMobile && <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground/50" />}
+              </Link>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
         
         <DropdownMenuSeparator />
         
