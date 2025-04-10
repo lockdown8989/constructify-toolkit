@@ -12,6 +12,8 @@ export function useCreateAvailabilityRequest() {
   
   return useMutation({
     mutationFn: async (newRequest: NewAvailabilityRequest) => {
+      console.log('Creating availability request:', newRequest);
+      
       const { data, error } = await supabase
         .from('availability_requests')
         .insert({
@@ -27,9 +29,14 @@ export function useCreateAvailabilityRequest() {
         console.error('Error creating availability request:', error);
         throw error;
       }
+      
+      console.log('Created availability request:', data);
       return data as AvailabilityRequest;
     },
     onSuccess: async (data) => {
+      console.log('Availability request created successfully:', data);
+      
+      // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['availability-requests'] });
       queryClient.invalidateQueries({ queryKey: ['availability_requests', data.employee_id] });
       
@@ -74,6 +81,8 @@ export function useCreateAvailabilityRequest() {
       });
     },
     onError: (error: Error) => {
+      console.error('Error in availability request mutation:', error);
+      
       toast({
         title: "Error",
         description: `Failed to submit availability request: ${error.message}`,

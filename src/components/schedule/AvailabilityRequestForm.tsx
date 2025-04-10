@@ -8,11 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useEmployees } from '@/hooks/use-employees';
-// Updated import path
+// Use the refactored hooks
 import { useCreateAvailabilityRequest } from '@/hooks/availability';
 import { cn } from '@/lib/utils';
 
@@ -23,7 +23,7 @@ interface AvailabilityRequestFormProps {
 const AvailabilityRequestForm = ({ onClose }: AvailabilityRequestFormProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { data: employees = [] } = useEmployees();
+  const { data: employees = [], isLoading: employeesLoading } = useEmployees();
   const { mutateAsync: createAvailabilityRequest, isPending } = useCreateAvailabilityRequest();
   
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -39,9 +39,10 @@ const AvailabilityRequestForm = ({ onClose }: AvailabilityRequestFormProps) => {
     e.preventDefault();
     
     if (!currentEmployee) {
+      console.error('No employee record found for current user');
       toast({
         title: "Error",
-        description: "Employee record not found.",
+        description: "Employee record not found. Please contact your administrator.",
         variant: "destructive",
       });
       return;
@@ -57,6 +58,15 @@ const AvailabilityRequestForm = ({ onClose }: AvailabilityRequestFormProps) => {
     }
     
     try {
+      console.log('Submitting availability request', {
+        employee_id: currentEmployee.id,
+        date: format(date, 'yyyy-MM-dd'),
+        start_time: startTime,
+        end_time: endTime,
+        is_available: isAvailable,
+        notes: notes || null
+      });
+      
       await createAvailabilityRequest({
         employee_id: currentEmployee.id,
         date: format(date, 'yyyy-MM-dd'),
@@ -73,21 +83,54 @@ const AvailabilityRequestForm = ({ onClose }: AvailabilityRequestFormProps) => {
       
       onClose();
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting availability:", error);
       toast({
         title: "Error",
-        description: "Failed to submit availability. Please try again.",
+        description: `Failed to submit availability: ${error.message || "Please try again."}`,
         variant: "destructive",
       });
     }
   };
+  
+  if (employeesLoading) {
+    return (
+      <Dialog open={true} onOpenChange={onClose}>
+        <DialogContent>
+          <div className="flex justify-center items-center py-8">
+            <p>Loading employee data...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+  
+  if (!currentEmployee) {
+    return (
+      <Dialog open={true} onOpenChange={onClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Error</DialogTitle>
+            <DialogDescription>
+              No employee record found for your account. Please contact your administrator.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={onClose}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
   
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Set Availability</DialogTitle>
+          <DialogDescription>
+            Submit your availability for scheduling purposes.
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
@@ -182,8 +225,20 @@ const AvailabilityRequestForm = ({ onClose }: AvailabilityRequestFormProps) => {
               Cancel
             </Button>
             <Button type="submit" disabled={isPending}>
-              <Save className="h-4 w-4 mr-1" />
-              Submit
+              {isPending ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-1" />
+                  Submit
+                </>
+              )}
             </Button>
           </DialogFooter>
         </form>
