@@ -1,5 +1,6 @@
 
-import { useLanguage, languageOptions } from "@/hooks/use-language";
+import { useLanguage } from "@/hooks/use-language";
+import { languageOptions } from "@/utils/translations";
 import { Label } from "@/components/ui/label";
 import { Languages } from "lucide-react";
 import { 

@@ -1,7 +1,8 @@
+
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
-import { translations, TranslationKey, languageOptions } from '@/utils/translations';
+import { translations, TranslationKey } from '@/utils/translations';
 
 type LanguageCode = 'en' | 'es' | 'bg' | 'pl' | 'ro';
 
