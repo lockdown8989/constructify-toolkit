@@ -1,4 +1,3 @@
-
 import React from "react";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
@@ -39,6 +38,10 @@ export function Router() {
         },
         {
           path: "/people",
+          element: <ProtectedRoute><People /></ProtectedRoute>
+        },
+        {
+          path: "/my-employees",
           element: <ProtectedRoute><People /></ProtectedRoute>
         },
         {

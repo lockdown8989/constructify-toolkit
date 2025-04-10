@@ -176,7 +176,7 @@ const People = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
           <div>
-            <h1 className="text-2xl md:text-4xl font-bold mb-1">People</h1>
+            <h1 className="text-2xl md:text-4xl font-bold mb-1">My Employees</h1>
             <p className="text-gray-500">Manage your team members and their account permissions here</p>
           </div>
           
