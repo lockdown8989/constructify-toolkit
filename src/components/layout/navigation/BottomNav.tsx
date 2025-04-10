@@ -46,16 +46,16 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
           </span>
         </Link>
         
-        <Link to="/restaurant-schedule" className="flex flex-col items-center justify-center p-2">
+        <Link to="/shift-calendar" className="flex flex-col items-center justify-center p-2">
           <Utensils 
             className={cn(
               "h-6 w-6 mb-1", 
-              location.pathname === "/restaurant-schedule" ? "text-primary" : "text-muted-foreground"
+              location.pathname === "/shift-calendar" || location.pathname === "/restaurant-schedule" ? "text-primary" : "text-muted-foreground"
             )} 
           />
           <span className={cn(
             "text-xs", 
-            location.pathname === "/restaurant-schedule" ? "text-primary font-medium" : "text-muted-foreground"
+            location.pathname === "/shift-calendar" || location.pathname === "/restaurant-schedule" ? "text-primary font-medium" : "text-muted-foreground"
           )}>
             Schedule
           </span>

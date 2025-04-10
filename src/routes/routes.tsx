@@ -59,6 +59,10 @@ export function Router() {
           element: <ProtectedRoute><RestaurantSchedule /></ProtectedRoute>
         },
         {
+          path: "/shift-calendar",
+          element: <ProtectedRoute><RestaurantSchedule /></ProtectedRoute>
+        },
+        {
           path: "/employee-workflow",
           element: <ProtectedRoute><EmployeeWorkflow /></ProtectedRoute>
         },

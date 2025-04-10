@@ -54,10 +54,10 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
             Leave Management
           </Link>
           <Link
-            to="/restaurant-schedule"
+            to="/shift-calendar"
             className="hover:underline underline-offset-4"
           >
-            Restaurant Schedule
+            Shift Calendar
           </Link>
           <Link
             to="/salary"

@@ -179,7 +179,7 @@ const RestaurantSchedule = () => {
   return (
     <div className="container py-6 max-w-full">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">The Silver Anchor</h1>
+        <h1 className="text-2xl font-bold">Shift Calendar Schedule</h1>
         
         <div className="flex items-center space-x-4">
           <Tabs defaultValue="week" onValueChange={(value) => setViewMode(value as ViewMode)}>
