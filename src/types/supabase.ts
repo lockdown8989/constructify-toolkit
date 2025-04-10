@@ -31,15 +31,15 @@ export interface AvailabilityRequest {
   updated_at: string;
 }
 
-// Define shift swap type
+// Define shift swap type - updating to match the database schema
 export interface ShiftSwap {
   id: string;
   requester_id: string;
-  recipient_id: string;
+  recipient_id: string | null; // Updated to match database schema (can be null)
   requester_schedule_id: string;
-  recipient_schedule_id?: string;
+  recipient_schedule_id?: string | null; // Can be null in the database
   status: string;
-  notes?: string;
+  notes: string | null; // Updated to explicitly allow null to match the database schema
   created_at: string;
   updated_at: string;
 }
@@ -131,7 +131,17 @@ export interface ExtendedDatabase extends DatabaseType {
       };
       
       shift_swaps: {
-        Row: ShiftSwap;
+        Row: {
+          created_at: string;
+          id: string;
+          notes: string | null; // Updated to match the ShiftSwap interface (can be null)
+          recipient_id: string | null; // Updated to explicitly allow null
+          recipient_schedule_id: string | null; // Updated to explicitly allow null
+          requester_id: string;
+          requester_schedule_id: string;
+          status: string;
+          updated_at: string;
+        };
         Insert: Omit<ShiftSwap, 'id' | 'created_at' | 'updated_at'> & { id?: string; created_at?: string; updated_at?: string };
         Update: Partial<ShiftSwap>;
         Relationships: [] // Changed to empty array to match the base Database interface
