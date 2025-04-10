@@ -1,5 +1,6 @@
 
 import { Link } from "react-router-dom"
+import { DollarSign, Receipt } from "lucide-react"
 
 interface DesktopNavProps {
   isAuthenticated: boolean;
@@ -54,6 +55,20 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
             className="hover:underline underline-offset-4"
           >
             Schedule Requests
+          </Link>
+          <Link
+            to="/salary"
+            className="hover:underline underline-offset-4 flex items-center"
+          >
+            <DollarSign className="h-4 w-4 mr-1" />
+            Salary
+          </Link>
+          <Link
+            to="/payroll"
+            className="hover:underline underline-offset-4 flex items-center"
+          >
+            <Receipt className="h-4 w-4 mr-1" />
+            Payslip
           </Link>
         </>
       )}

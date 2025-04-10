@@ -1,15 +1,14 @@
 
+import { Button } from "@/components/ui/button"
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
+import { Menu, Home, User, Users, Calendar, Clock, FileText, Workflow, PanelLeft, DollarSign, Receipt } from "lucide-react"
 import { Link } from "react-router-dom"
-import { Menu } from "lucide-react"
 
 interface MobileNavProps {
   isAuthenticated: boolean;
@@ -19,69 +18,92 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <Menu className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="lg:hidden">
+          <Menu />
+          <span className="sr-only">Toggle menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-full sm:w-64">
+      <SheetContent side="left">
         <SheetHeader className="text-left">
-          <SheetTitle>Menu</SheetTitle>
-          <SheetDescription>
-            Make changes to your profile here. Click save when you're
-            done.
-          </SheetDescription>
+          <SheetTitle>Acme</SheetTitle>
         </SheetHeader>
-        <div className="grid gap-4">
-          <Link to="/" className="hover:underline underline-offset-4">
-            Home
+        <nav className="grid gap-4 py-4">
+          <Link
+            to="/"
+            className="flex items-center py-2 text-lg font-semibold"
+          >
+            <Home className="mr-2 h-5 w-5" />
+            <span>Home</span>
           </Link>
           <Link
             to="/about"
-            className="hover:underline underline-offset-4"
+            className="flex items-center py-2 text-lg font-semibold"
           >
-            About
+            <FileText className="mr-2 h-5 w-5" />
+            <span>About</span>
           </Link>
           <Link
             to="/contact"
-            className="hover:underline underline-offset-4"
+            className="flex items-center py-2 text-lg font-semibold"
           >
-            Contact
+            <User className="mr-2 h-5 w-5" />
+            <span>Contact</span>
           </Link>
           {isAuthenticated && (
             <>
+              <hr className="my-2" />
               <Link
                 to="/profile"
-                className="hover:underline underline-offset-4"
+                className="flex items-center py-2 text-lg font-semibold"
               >
-                Profile
+                <User className="mr-2 h-5 w-5" />
+                <span>Profile</span>
               </Link>
               <Link
                 to="/people"
-                className="hover:underline underline-offset-4"
+                className="flex items-center py-2 text-lg font-semibold"
               >
-                Employees
+                <Users className="mr-2 h-5 w-5" />
+                <span>Employees</span>
               </Link>
               <Link
                 to="/employee-workflow"
-                className="hover:underline underline-offset-4"
+                className="flex items-center py-2 text-lg font-semibold"
               >
-                Employee Workflow
+                <Workflow className="mr-2 h-5 w-5" />
+                <span>Employee Workflow</span>
               </Link>
               <Link
                 to="/leave-management"
-                className="hover:underline underline-offset-4"
+                className="flex items-center py-2 text-lg font-semibold"
               >
-                Leave Management
+                <Calendar className="mr-2 h-5 w-5" />
+                <span>Leave Management</span>
               </Link>
               <Link
                 to="/schedule-requests"
-                className="hover:underline underline-offset-4"
+                className="flex items-center py-2 text-lg font-semibold"
               >
-                Schedule Requests
+                <Clock className="mr-2 h-5 w-5" />
+                <span>Schedule Requests</span>
+              </Link>
+              <Link
+                to="/salary"
+                className="flex items-center py-2 text-lg font-semibold"
+              >
+                <DollarSign className="mr-2 h-5 w-5" />
+                <span>Salary</span>
+              </Link>
+              <Link
+                to="/payroll"
+                className="flex items-center py-2 text-lg font-semibold"
+              >
+                <Receipt className="mr-2 h-5 w-5" />
+                <span>Payslip</span>
               </Link>
             </>
           )}
-        </div>
+        </nav>
       </SheetContent>
     </Sheet>
   );
