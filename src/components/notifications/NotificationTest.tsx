@@ -1,13 +1,9 @@
-
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/auth';
-import { 
-  createTestNotification, 
-  verifyNotificationsTable 
-} from '@/services/NotificationService';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { createTestNotification, verifyNotificationsTable } from "@/services/notifications";
 
 const NotificationTest: React.FC = () => {
   const { toast } = useToast();

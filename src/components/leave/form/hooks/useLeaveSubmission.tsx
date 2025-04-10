@@ -7,7 +7,7 @@ import { calculateBusinessDays } from "@/utils/leave-utils";
 import { 
   createLeaveRequestNotification,
   notifyManagersAboutLeaveRequest 
-} from "@/services/NotificationService";
+} from "@/services/notifications";
 import type { FormStatus } from "./useFormState";
 
 /**

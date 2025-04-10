@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useWebhookNotification } from "@/hooks/leave/useWebhookNotification";
-import { sendNotification } from "@/services/NotificationService";
+import { sendNotification } from "@/services/notifications";
 
 const LeaveRealtimeUpdates: React.FC = () => {
   const { toast } = useToast();
