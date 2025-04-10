@@ -1,0 +1,170 @@
+
+import React, { useState, useEffect } from 'react';
+import { Bell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read: boolean;
+  created_at: string;
+}
+
+const NotificationBell = () => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+
+    // Load initial notifications
+    const fetchNotifications = async () => {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        return;
+      }
+      
+      if (data) {
+        setNotifications(data);
+        setUnreadCount(data.filter(notification => !notification.read).length);
+      }
+    };
+    
+    fetchNotifications();
+    
+    // Set up real-time listener for new notifications
+    const channel = supabase
+      .channel('notification_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('New notification:', payload);
+          setNotifications(prevNotifications => [payload.new as Notification, ...prevNotifications]);
+          setUnreadCount(prevCount => prevCount + 1);
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+  
+  const markAsRead = async (id: string) => {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error marking notification as read:', error);
+      return;
+    }
+    
+    setNotifications(prevNotifications => 
+      prevNotifications.map(notification => 
+        notification.id === id ? { ...notification, read: true } : notification
+      )
+    );
+    
+    setUnreadCount(prevCount => Math.max(0, prevCount - 1));
+  };
+  
+  const markAllAsRead = async () => {
+    if (!user || notifications.length === 0) return;
+    
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('user_id', user.id)
+      .eq('read', false);
+    
+    if (error) {
+      console.error('Error marking all notifications as read:', error);
+      return;
+    }
+    
+    setNotifications(prevNotifications => 
+      prevNotifications.map(notification => ({ ...notification, read: true }))
+    );
+    
+    setUnreadCount(0);
+  };
+  
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span className="absolute top-0 right-0 h-4 w-4 rounded-full bg-red-500 text-xs text-white flex items-center justify-center transform translate-x-1 -translate-y-1">
+              {unreadCount}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0" align="end">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h3 className="font-medium">Notifications</h3>
+          {unreadCount > 0 && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={markAllAsRead}
+              className="text-xs"
+            >
+              Mark all as read
+            </Button>
+          )}
+        </div>
+        <div className="max-h-80 overflow-y-auto">
+          {notifications.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground">
+              <p>No notifications</p>
+            </div>
+          ) : (
+            notifications.map(notification => (
+              <div 
+                key={notification.id}
+                className={`p-4 border-b hover:bg-muted/50 cursor-pointer ${!notification.read ? 'bg-muted/20' : ''}`}
+                onClick={() => markAsRead(notification.id)}
+              >
+                <div className="flex justify-between items-start">
+                  <p className="font-medium">{notification.title}</p>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(notification.created_at).toLocaleTimeString([], { 
+                      hour: '2-digit', 
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+export default NotificationBell;

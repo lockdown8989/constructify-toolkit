@@ -9,16 +9,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/hooks/use-auth';
+import { sendNotification } from '@/services/NotificationService';
 
 const ScheduleRequests = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
   const [activeSection, setActiveSection] = useState<'requests' | 'form'>('requests');
   const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
   
   // Set up real-time listeners for shift swaps and availability requests
   useEffect(() => {
+    if (!user) return;
+    
     const channel = supabase
       .channel('schedule_changes')
       .on(
@@ -28,7 +33,7 @@ const ScheduleRequests = () => {
           schema: 'public',
           table: 'shift_swaps'
         },
-        (payload) => {
+        async (payload) => {
           // Invalidate queries to refresh data
           queryClient.invalidateQueries({ queryKey: ['shift_swaps'] });
           
@@ -42,11 +47,59 @@ const ScheduleRequests = () => {
                 title: "Shift swap approved",
                 description: "A shift swap request has been approved.",
               });
+              
+              // Send in-app notification to the requester
+              if (payload.new.requester_id && user.id !== payload.new.requester_id) {
+                try {
+                  await sendNotification({
+                    user_id: payload.new.requester_id,
+                    title: "Shift swap approved",
+                    message: "Your shift swap request has been approved.",
+                    type: "success",
+                    related_entity: "shift_swaps",
+                    related_id: payload.new.id
+                  });
+                } catch (error) {
+                  console.error("Error sending notification:", error);
+                }
+              }
+              
+              // Send in-app notification to the recipient if there is one
+              if (payload.new.recipient_id && user.id !== payload.new.recipient_id) {
+                try {
+                  await sendNotification({
+                    user_id: payload.new.recipient_id,
+                    title: "New shift assigned",
+                    message: "A shift has been assigned to you through a swap.",
+                    type: "info",
+                    related_entity: "shift_swaps",
+                    related_id: payload.new.id
+                  });
+                } catch (error) {
+                  console.error("Error sending notification:", error);
+                }
+              }
             } else if (oldStatus === 'Pending' && newStatus === 'Rejected') {
               toast({
                 title: "Shift swap rejected",
                 description: "A shift swap request has been rejected.",
               });
+              
+              // Send in-app notification to the requester
+              if (payload.new.requester_id && user.id !== payload.new.requester_id) {
+                try {
+                  await sendNotification({
+                    user_id: payload.new.requester_id,
+                    title: "Shift swap rejected",
+                    message: "Your shift swap request has been rejected.",
+                    type: "warning",
+                    related_entity: "shift_swaps",
+                    related_id: payload.new.id
+                  });
+                } catch (error) {
+                  console.error("Error sending notification:", error);
+                }
+              }
             } else if (newStatus === 'Completed') {
               toast({
                 title: "Shift swap completed",
@@ -58,6 +111,24 @@ const ScheduleRequests = () => {
               title: "New shift swap request",
               description: "A new shift swap request has been submitted.",
             });
+            
+            // Notify managers or admins about the new request
+            try {
+              // This function would need to be implemented to get manager user_ids
+              const managerIds = await getManagerUserIds();
+              for (const managerId of managerIds) {
+                await sendNotification({
+                  user_id: managerId,
+                  title: "New shift swap request",
+                  message: "A new shift swap request requires your review.",
+                  type: "info",
+                  related_entity: "shift_swaps",
+                  related_id: payload.new.id
+                });
+              }
+            } catch (error) {
+              console.error("Error sending notifications to managers:", error);
+            }
           }
         }
       )
@@ -68,7 +139,7 @@ const ScheduleRequests = () => {
           schema: 'public',
           table: 'availability_requests'
         },
-        (payload) => {
+        async (payload) => {
           // Invalidate queries to refresh data
           queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
           
@@ -82,17 +153,67 @@ const ScheduleRequests = () => {
                 title: "Availability request approved",
                 description: "An availability request has been approved.",
               });
+              
+              // Send in-app notification to the requester
+              if (payload.new.employee_id && user.id !== payload.new.employee_id) {
+                try {
+                  await sendNotification({
+                    user_id: payload.new.employee_id,
+                    title: "Availability request approved",
+                    message: "Your availability request has been approved.",
+                    type: "success",
+                    related_entity: "availability_requests",
+                    related_id: payload.new.id
+                  });
+                } catch (error) {
+                  console.error("Error sending notification:", error);
+                }
+              }
             } else if (oldStatus === 'Pending' && newStatus === 'Rejected') {
               toast({
                 title: "Availability request rejected",
                 description: "An availability request has been rejected.",
               });
+              
+              // Send in-app notification to the requester
+              if (payload.new.employee_id && user.id !== payload.new.employee_id) {
+                try {
+                  await sendNotification({
+                    user_id: payload.new.employee_id,
+                    title: "Availability request rejected",
+                    message: "Your availability request has been rejected.",
+                    type: "warning",
+                    related_entity: "availability_requests",
+                    related_id: payload.new.id
+                  });
+                } catch (error) {
+                  console.error("Error sending notification:", error);
+                }
+              }
             }
           } else if (payload.eventType === 'INSERT') {
             toast({
               title: "New availability request",
               description: "A new availability request has been submitted.",
             });
+            
+            // Notify managers or admins about the new request
+            try {
+              // This function would need to be implemented to get manager user_ids
+              const managerIds = await getManagerUserIds();
+              for (const managerId of managerIds) {
+                await sendNotification({
+                  user_id: managerId,
+                  title: "New availability request",
+                  message: "A new availability request requires your review.",
+                  type: "info",
+                  related_entity: "availability_requests",
+                  related_id: payload.new.id
+                });
+              }
+            } catch (error) {
+              console.error("Error sending notifications to managers:", error);
+            }
           }
         }
       )
@@ -101,7 +222,25 @@ const ScheduleRequests = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient, toast]);
+  }, [queryClient, toast, user]);
+  
+  // Function to get manager user IDs (simplified implementation)
+  const getManagerUserIds = async () => {
+    // In a real app, you would query your database for users with manager roles
+    // This is a simplified implementation
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'manager');
+      
+      if (error) throw error;
+      return data.map(item => item.user_id);
+    } catch (error) {
+      console.error("Error fetching manager IDs:", error);
+      return [];
+    }
+  };
   
   const renderMobileNavigation = () => {
     if (!isMobile) return null;
