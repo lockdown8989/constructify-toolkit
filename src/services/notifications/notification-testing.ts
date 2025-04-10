@@ -54,33 +54,32 @@ export const verifyNotificationsTable = async (): Promise<NotificationResult> =>
       throw error;
     }
     
-    // Check if required columns exist
-    const checkColumns = async () => {
-      // Using system tables to check columns (needs appropriate permissions)
-      const { data: columns, error: columnsError } = await supabase
-        .from('information_schema.columns')
-        .select('column_name')
-        .eq('table_name', 'notifications')
-        .eq('table_schema', 'public');
-      
-      if (columnsError) {
-        return false;
-      }
-      
-      const columnNames = columns.map(c => c.column_name);
-      const requiredColumns = ['id', 'user_id', 'title', 'message', 'type', 'read', 'created_at', 'related_entity', 'related_id'];
-      
-      return requiredColumns.every(col => columnNames.includes(col));
-    };
+    // Check if required columns exist using direct inspection
+    const requiredColumns = ['id', 'user_id', 'title', 'message', 'type', 'read', 'created_at', 'related_entity', 'related_id'];
     
-    const columnsExist = await checkColumns();
+    let columnsVerified = true;
+    
+    // Verify by checking if a sample record has these fields
+    if (data && data.length > 0) {
+      const record = data[0];
+      for (const col of requiredColumns) {
+        if (!(col in record)) {
+          columnsVerified = false;
+          console.error(`Column '${col}' missing from notifications table`);
+          break;
+        }
+      }
+    } else {
+      // If no records exist, we can only verify the table exists
+      columnsVerified = false;
+    }
     
     return {
       success: true,
       message: `Notifications table verified successfully. Found ${count} existing notifications.`,
       data: {
         count,
-        columnsVerified: columnsExist
+        columnsVerified
       }
     };
   } catch (error: any) {

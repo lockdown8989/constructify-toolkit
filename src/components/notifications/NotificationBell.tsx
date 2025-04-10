@@ -1,19 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/auth';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  read: boolean;
-  created_at: string;
-}
+import { Notification } from '@/types/supabase';
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -45,8 +36,10 @@ const NotificationBell = () => {
       
       if (data) {
         console.log('NotificationBell: Fetched notifications:', data.length);
-        setNotifications(data);
-        const unreadNotifications = data.filter(notification => !notification.read);
+        // Explicitly cast data to Notification[] type
+        const typedNotifications = data as unknown as Notification[];
+        setNotifications(typedNotifications);
+        const unreadNotifications = typedNotifications.filter(notification => !notification.read);
         setUnreadCount(unreadNotifications.length);
         console.log('NotificationBell: Unread count:', unreadNotifications.length);
       }
@@ -68,7 +61,8 @@ const NotificationBell = () => {
         },
         (payload) => {
           console.log('NotificationBell: New notification received:', payload);
-          setNotifications(prevNotifications => [payload.new as Notification, ...prevNotifications]);
+          const newNotification = payload.new as unknown as Notification;
+          setNotifications(prevNotifications => [newNotification, ...prevNotifications]);
           setUnreadCount(prevCount => prevCount + 1);
         }
       )

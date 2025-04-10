@@ -44,25 +44,25 @@ export interface ShiftSwap {
   updated_at: string;
 }
 
-// Define notification type - fixing the related_entity and related_id properties to match the DB schema
+// Define notification type - fixing to allow string type values
 export interface Notification {
   id: string;
   user_id: string;
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: string; // Changed from union type to string to match database
   read: boolean;
-  related_entity: string; // Changed from optional to required to match database schema
-  related_id: string; // Changed from optional to required to match database schema
+  related_entity: string;
+  related_id: string;
   created_at: string;
 }
 
-// Define webhook settings type
+// Define webhook settings type - adding for compatibility
 export interface WebhookSetting {
   id: string;
   user_id: string;
   webhook_url: string;
-  webhook_type: 'slack' | 'email';
+  webhook_type: string; // Changed from union type to string
   notify_shift_swaps: boolean;
   notify_availability: boolean;
   notify_leave: boolean;
