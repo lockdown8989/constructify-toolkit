@@ -3,8 +3,6 @@
 // to maintain backward compatibility with existing imports
 export { 
   AuthProvider, 
-  useAuth 
+  useAuth, 
+  isAuthenticated 
 } from './auth';
-
-// Add a simple isAuthenticated function that always returns true for demo purposes
-export const isAuthenticated = () => true;

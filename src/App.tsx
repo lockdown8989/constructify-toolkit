@@ -1,67 +1,37 @@
 
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './hooks/auth';
-import WorkflowPage from './pages/WorkflowPage';
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "./hooks/auth";
+import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/components/theme-provider";
+import { CurrencyProvider } from "@/hooks/use-currency-preference";
+import { LanguageProvider } from "@/hooks/use-language";
+import { NotificationProvider } from "@/hooks/use-notification-settings";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"; 
+import AppRoutes from "./routes/routes";
+import "./App.css";
 
-const App = () => {
-  const { session } = useAuth();
-  const [isAuthReady, setIsAuthReady] = React.useState(false);
+// Create a client
+const queryClient = new QueryClient();
 
-  React.useEffect(() => {
-    // Simulate checking authentication status
-    const checkAuth = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setIsAuthReady(true);
-    };
-
-    checkAuth();
-  }, []);
-
-  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    if (!isAuthReady) {
-      return <div>Loading...</div>;
-    }
-
-    if (!session) {
-      return <Navigate to="/login" />;
-    }
-
-    return <>{children}</>;
-  };
-
+function App() {
   return (
-    <BrowserRouter>
-      <div className="container" style={{ padding: '50px 0 100px 0' }}>
-        <Routes>
-          <Route
-            path="/login"
-            element={
-              !session ? (
-                <div>Login Page Placeholder</div>
-              ) : (
-                <Navigate to="/" />
-              )
-            }
-          />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <div>Home Page Placeholder</div>
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/workflow" element={
-            <ProtectedRoute>
-              <WorkflowPage />
-            </ProtectedRoute>
-          } />
-          <Route path="*" element={<div>Not Found</div>} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ThemeProvider defaultTheme="light" storageKey="ui-theme">
+          <AuthProvider>
+            <CurrencyProvider>
+              <LanguageProvider>
+                <NotificationProvider>
+                  <AppRoutes />
+                  <Toaster />
+                </NotificationProvider>
+              </LanguageProvider>
+            </CurrencyProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
-};
+}
 
 export default App;

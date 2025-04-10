@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -164,7 +165,7 @@ const LeaveRealtimeUpdates: React.FC = () => {
       console.log('LeaveRealtimeUpdates: Cleaning up channel subscription');
       supabase.removeChannel(channel);
     };
-  }, [queryClient, toast, user, hasManagerAccess, sendWebhookNotification, getManagerUserIds]);
+  }, [queryClient, toast, user, hasManagerAccess]);
   
   // This component doesn't render anything, it just sets up the listener
   return null;

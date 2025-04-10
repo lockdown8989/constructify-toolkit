@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ShiftSwapList from '@/components/schedule/ShiftSwapList';
@@ -19,6 +20,7 @@ const ScheduleRequests = () => {
   const [activeSection, setActiveSection] = useState<'requests' | 'form'>('requests');
   const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
   
+  // Set up real-time listeners for shift swaps and availability requests
   useEffect(() => {
     if (!user) return;
     
@@ -32,8 +34,10 @@ const ScheduleRequests = () => {
           table: 'shift_swaps'
         },
         async (payload) => {
+          // Invalidate queries to refresh data
           queryClient.invalidateQueries({ queryKey: ['shift_swaps'] });
           
+          // Show toast notification for specific events
           if (payload.eventType === 'UPDATE') {
             const newStatus = payload.new.status;
             const oldStatus = payload.old.status;
@@ -44,6 +48,7 @@ const ScheduleRequests = () => {
                 description: "A shift swap request has been approved.",
               });
               
+              // Send in-app notification to the requester
               if (payload.new.requester_id && user.id !== payload.new.requester_id) {
                 try {
                   await sendNotification({
@@ -59,6 +64,7 @@ const ScheduleRequests = () => {
                 }
               }
               
+              // Send in-app notification to the recipient if there is one
               if (payload.new.recipient_id && user.id !== payload.new.recipient_id) {
                 try {
                   await sendNotification({
@@ -79,6 +85,7 @@ const ScheduleRequests = () => {
                 description: "A shift swap request has been rejected.",
               });
               
+              // Send in-app notification to the requester
               if (payload.new.requester_id && user.id !== payload.new.requester_id) {
                 try {
                   await sendNotification({
@@ -105,7 +112,9 @@ const ScheduleRequests = () => {
               description: "A new shift swap request has been submitted.",
             });
             
+            // Notify managers or admins about the new request
             try {
+              // This function would need to be implemented to get manager user_ids
               const managerIds = await getManagerUserIds();
               for (const managerId of managerIds) {
                 await sendNotification({
@@ -131,8 +140,10 @@ const ScheduleRequests = () => {
           table: 'availability_requests'
         },
         async (payload) => {
+          // Invalidate queries to refresh data
           queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
           
+          // Show toast notification for specific events
           if (payload.eventType === 'UPDATE') {
             const newStatus = payload.new.status;
             const oldStatus = payload.old.status;
@@ -143,6 +154,7 @@ const ScheduleRequests = () => {
                 description: "An availability request has been approved.",
               });
               
+              // Send in-app notification to the requester
               if (payload.new.employee_id && user.id !== payload.new.employee_id) {
                 try {
                   await sendNotification({
@@ -163,6 +175,7 @@ const ScheduleRequests = () => {
                 description: "An availability request has been rejected.",
               });
               
+              // Send in-app notification to the requester
               if (payload.new.employee_id && user.id !== payload.new.employee_id) {
                 try {
                   await sendNotification({
@@ -184,7 +197,9 @@ const ScheduleRequests = () => {
               description: "A new availability request has been submitted.",
             });
             
+            // Notify managers or admins about the new request
             try {
+              // This function would need to be implemented to get manager user_ids
               const managerIds = await getManagerUserIds();
               for (const managerId of managerIds) {
                 await sendNotification({
@@ -209,12 +224,15 @@ const ScheduleRequests = () => {
     };
   }, [queryClient, toast, user]);
   
+  // Function to get manager user IDs (simplified implementation)
   const getManagerUserIds = async () => {
+    // In a real app, you would query your database for users with manager roles
+    // This is a simplified implementation
     try {
       const { data, error } = await supabase
         .from('user_roles')
         .select('user_id')
-        .eq('role', 'employer');
+        .eq('role', 'manager');
       
       if (error) throw error;
       return data.map(item => item.user_id);
@@ -296,29 +314,6 @@ const ScheduleRequests = () => {
       </Tabs>
     </div>
   );
-};
-
-export const isAuthorizedForAction = (
-  userRole: string | null,
-  requiredRole: "admin" | "hr" | "employee" | "employer"
-): boolean => {
-  if (!requiredRole) return true;
-  
-  if (!userRole) return false;
-  
-  if (userRole === "admin") return true;
-  
-  if (userRole === "hr" && 
-    (requiredRole === "employer" || requiredRole === "employee")) {
-    return true;
-  }
-  
-  if (userRole === "employer" && 
-    (requiredRole === "employer" || requiredRole === "employee")) {
-    return true;  
-  }
-  
-  return userRole === requiredRole;
 };
 
 export default ScheduleRequests;

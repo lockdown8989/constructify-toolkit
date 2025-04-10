@@ -1,92 +1,116 @@
 
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { useAuth } from '@/hooks/auth';
+import { Link } from "react-router-dom"
+import { Calendar, DollarSign, Receipt, Settings } from "lucide-react"
+import { useAuth } from "@/hooks/auth"
+import { useLanguage } from "@/hooks/use-language"
 
 interface DesktopNavProps {
-  isAuthenticated?: boolean;
+  isAuthenticated: boolean;
 }
 
-const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated: propIsAuthenticated }) => {
-  const { isAuthenticated: contextIsAuthenticated } = useAuth();
+const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
+  const { isManager, user } = useAuth();
+  const { t } = useLanguage();
   
-  // Use the prop if provided, otherwise use the context value
-  const isAuthenticated = propIsAuthenticated !== undefined ? propIsAuthenticated : contextIsAuthenticated;
-
-  const activeClassName = "text-primary";
-  const inactiveClassName = "hover:text-gray-500 transition-colors duration-200";
-
+  // Determine if user is an employee (not a manager)
+  const isEmployee = isAuthenticated && !isManager;
+  
   return (
-    <nav className="hidden lg:flex items-center space-x-6">
-      <NavLink
-        to="/"
-        className={({ isActive }) =>
-          isActive ? activeClassName : inactiveClassName
-        }
+    <div className="mx-auto flex items-center space-x-6">
+      <Link to="/" className="hover:underline underline-offset-4">
+        {t('home')}
+      </Link>
+      <Link
+        to="/about"
+        className="hover:underline underline-offset-4"
       >
-        Home
-      </NavLink>
-      <NavLink
-        to="/employees"
-        className={({ isActive }) =>
-          isActive ? activeClassName : inactiveClassName
-        }
+        {t('about')}
+      </Link>
+      <Link
+        to="/contact"
+        className="hover:underline underline-offset-4"
       >
-        Employees
-      </NavLink>
-      <NavLink
-        to="/projects"
-        className={({ isActive }) =>
-          isActive ? activeClassName : inactiveClassName
-        }
-      >
-        Projects
-      </NavLink>
-      <NavLink
-        to="/payroll"
-        className={({ isActive }) =>
-          isActive ? activeClassName : inactiveClassName
-        }
-      >
-        Payroll
-      </NavLink>
-      <NavLink
-        to="/attendance"
-        className={({ isActive }) =>
-          isActive ? activeClassName : inactiveClassName
-        }
-      >
-        Attendance
-      </NavLink>
+        {t('contact')}
+      </Link>
       {isAuthenticated && (
-        <NavLink
-          to="/leave"
-          className={({ isActive }) =>
-            isActive ? activeClassName : inactiveClassName
-          }
-        >
-          Leave
-        </NavLink>
+        <>
+          <Link
+            to="/profile"
+            className="hover:underline underline-offset-4"
+          >
+            {t('profile')}
+          </Link>
+          <Link
+            to="/settings"
+            className="hover:underline underline-offset-4 flex items-center"
+          >
+            <Settings className="h-4 w-4 mr-1" />
+            {t('settings')}
+          </Link>
+          
+          {/* Show these links only for managers */}
+          {!isEmployee && (
+            <>
+              <Link
+                to="/people"
+                className="hover:underline underline-offset-4"
+              >
+                {t('employees')}
+              </Link>
+              <Link
+                to="/employee-workflow"
+                className="hover:underline underline-offset-4"
+              >
+                {t('employeeWorkflow')}
+              </Link>
+              <Link
+                to="/leave-management"
+                className="hover:underline underline-offset-4"
+              >
+                {t('leaveManagement')}
+              </Link>
+            </>
+          )}
+          
+          {/* Always show shift calendar for all authenticated users */}
+          <Link
+            to="/shift-calendar"
+            className="hover:underline underline-offset-4 flex items-center"
+          >
+            <Calendar className="h-4 w-4 mr-1" />
+            {t('shiftCalendar')}
+          </Link>
+          
+          {/* Always show salary for all authenticated users */}
+          <Link
+            to="/salary"
+            className="hover:underline underline-offset-4 flex items-center"
+          >
+            <DollarSign className="h-4 w-4 mr-1" />
+            {t('salary')}
+          </Link>
+          
+          {/* Show payslip only for managers */}
+          {!isEmployee && (
+            <Link
+              to="/payroll"
+              className="hover:underline underline-offset-4 flex items-center"
+            >
+              <Receipt className="h-4 w-4 mr-1" />
+              {t('payslip')}
+            </Link>
+          )}
+          
+          {/* Always show schedule requests for all authenticated users */}
+          <Link
+            to="/schedule-requests"
+            className="hover:underline underline-offset-4"
+          >
+            {t('scheduleRequests')}
+          </Link>
+        </>
       )}
-      {isAuthenticated && (
-        <NavLink
-          to="/schedule"
-          className={({ isActive }) =>
-            isActive ? activeClassName : inactiveClassName
-          }
-        >
-          Schedule
-        </NavLink>
-      )}
-      <NavLink 
-        to="/workflow" 
-        className={({ isActive }) => 
-          isActive ? activeClassName : inactiveClassName
-        }
-      >
-        Workflow
-      </NavLink>
-    </nav>
+    </div>
   );
 };
 

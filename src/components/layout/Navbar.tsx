@@ -10,14 +10,17 @@ import ThemeToggle from "./navigation/ThemeToggle"
 import AuthButtons from "./navigation/AuthButtons"
 
 const Navbar = () => {
-  const { user, isAuthenticated, signOut } = useAuth()
+  const { user, signOut } = useAuth()
   const isMobile = useIsMobile()
+
+  // Check if user exists to determine authentication status
+  const isAuthenticated = !!user
 
   return (
     <div className="border-b sticky top-0 bg-background z-40 safe-area-inset">
       <div className="flex h-16 items-center px-4">
         {isMobile ? (
-          <MobileNav />
+          <MobileNav isAuthenticated={isAuthenticated} />
         ) : (
           <Link to="/" className="mr-6 flex items-center space-x-2">
             <span className="font-bold">TeamPulse</span>

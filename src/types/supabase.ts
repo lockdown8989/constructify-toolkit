@@ -44,25 +44,25 @@ export interface ShiftSwap {
   updated_at: string;
 }
 
-// Define notification type
+// Define notification type - fixing the related_entity and related_id properties to match the DB schema
 export interface Notification {
   id: string;
   user_id: string;
   title: string;
   message: string;
-  type: string;
+  type: 'info' | 'success' | 'warning' | 'error';
   read: boolean;
-  related_entity: string;
-  related_id: string;
+  related_entity: string; // Changed from optional to required to match database schema
+  related_id: string; // Changed from optional to required to match database schema
   created_at: string;
 }
 
-// Define webhook settings type for client-side use (used with localStorage)
+// Define webhook settings type
 export interface WebhookSetting {
   id: string;
   user_id: string;
   webhook_url: string;
-  webhook_type: string;
+  webhook_type: 'slack' | 'email';
   notify_shift_swaps: boolean;
   notify_availability: boolean;
   notify_leave: boolean;
@@ -71,50 +71,5 @@ export interface WebhookSetting {
   updated_at: string;
 }
 
-// Define the LeaveEvent type with correct audit_log handling
-export type LeaveEvent = {
-  id: string;
-  employee_id: string;
-  type: string;
-  start_date: string;
-  end_date: string;
-  status: string;
-  notes?: string;
-  audit_log?: any; // Using 'any' to accommodate both Json and array types
-  employees?: { // Add optional employees property for joined data
-    name: string;
-    job_title: string;
-    department: string;
-  };
-};
-
-// Export this as LeaveCalendar for backward compatibility
-export type LeaveCalendar = LeaveEvent;
-
-export type LeaveRequest = Omit<LeaveEvent, 'id'>;
-
 // Use the existing Database type directly
 export type Database = DatabaseType;
-
-// Define workflow notification type
-export interface WorkflowNotification {
-  id: string;
-  sender_id: string | null;
-  receiver_id: string;
-  type: string;
-  message: string;
-  status: string;
-  created_at: string;
-  read: boolean;
-}
-
-// Define workflow request type
-export interface WorkflowRequest {
-  id: string;
-  user_id: string;
-  request_type: string;
-  details: any; // Using 'any' for the JSONB field
-  status: string;
-  submitted_at: string;
-  reviewed_by?: string | null;
-}
