@@ -31,8 +31,14 @@ export const sendNotification = async (data: NotificationData) => {
 export const sendNotificationToMany = async (userIds: string[], notificationData: Omit<NotificationData, 'user_id'>) => {
   console.log('NotificationService: Sending notification to multiple users:', { 
     userCount: userIds.length, 
+    userIds: userIds,
     notificationData 
   });
+  
+  if (userIds.length === 0) {
+    console.warn('NotificationService: No user IDs provided, skipping notification');
+    return false;
+  }
   
   const notifications = userIds.map(userId => ({
     ...notificationData,

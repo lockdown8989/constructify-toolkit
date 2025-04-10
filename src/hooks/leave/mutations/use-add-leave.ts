@@ -45,6 +45,8 @@ export function useAddLeaveRequest() {
           throw new Error(error.message);
         }
 
+        // Log successful data insertion
+        console.log('Leave request added successfully:', data);
         return data as LeaveEvent;
       } catch (error: any) {
         console.error('Exception in useAddLeaveRequest:', error);
@@ -52,11 +54,14 @@ export function useAddLeaveRequest() {
       }
     },
     onSuccess: async (data) => {
+      console.log('OnSuccess handler called with data:', data);
       queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
       
       // Notify managers about the new leave request
       try {
+        console.log('Attempting to notify managers about new leave request');
         await notifyManagersOfNewLeaveRequest(data);
+        console.log('Manager notification completed');
       } catch (notifyError) {
         console.error('Error notifying managers:', notifyError);
         // Continue execution even if notification fails

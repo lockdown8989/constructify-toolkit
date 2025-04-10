@@ -10,7 +10,7 @@ import type { LeaveEvent } from "@/hooks/leave/leave-types";
  */
 export const notifyManagersOfNewLeaveRequest = async (leaveRequest: LeaveEvent): Promise<boolean> => {
   try {
-    console.log('NotificationService: Notifying managers of new leave request');
+    console.log('NotificationService: Notifying managers of new leave request', leaveRequest);
     
     // Get all manager user IDs
     const managerIds = await getManagerUserIds();
@@ -19,6 +19,8 @@ export const notifyManagersOfNewLeaveRequest = async (leaveRequest: LeaveEvent):
       console.log('NotificationService: No manager IDs found to notify');
       return false;
     }
+    
+    console.log('NotificationService: Found manager IDs:', managerIds);
     
     // Get employee name for the notification
     const { data: employeeData, error: employeeError } = await supabase
@@ -33,6 +35,7 @@ export const notifyManagersOfNewLeaveRequest = async (leaveRequest: LeaveEvent):
     }
     
     const employeeName = employeeData?.name || 'An employee';
+    console.log('NotificationService: Employee name:', employeeName);
     
     // Build notification data
     const notificationData: Omit<NotificationData, 'user_id'> = {
@@ -42,6 +45,8 @@ export const notifyManagersOfNewLeaveRequest = async (leaveRequest: LeaveEvent):
       related_entity: 'leave_calendar',
       related_id: leaveRequest.id
     };
+    
+    console.log('NotificationService: Preparing to send notifications with data:', notificationData);
     
     // Send notifications to all managers
     await sendNotificationToMany(managerIds, notificationData);
