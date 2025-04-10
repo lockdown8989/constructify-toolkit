@@ -5,15 +5,8 @@ import { useScheduleView } from './use-schedule-view';
 import { useScheduleStats } from './use-schedule-stats';
 import { Employee, ViewMode } from '@/types/restaurant-schedule';
 
-// Sample data for the restaurant schedule
-const SAMPLE_EMPLOYEES: Employee[] = [
-  { id: '1', name: 'Eleanor Pena', role: 'Kitchen Manager', avatarUrl: '/placeholder.svg', hourlyRate: 18.50 },
-  { id: '2', name: 'John Lane', role: 'Head Chef', avatarUrl: '/placeholder.svg', hourlyRate: 22.00 },
-  { id: '3', name: 'Leslie Alexander', role: 'Chef', avatarUrl: '/placeholder.svg', hourlyRate: 16.75 },
-  { id: '4', name: 'Ronald Richards', role: 'Waiting Staff', avatarUrl: '/placeholder.svg', hourlyRate: 12.50 },
-  { id: '5', name: 'Maria Rodriguez', role: 'Bartender', avatarUrl: '/placeholder.svg', hourlyRate: 14.00 },
-  { id: '6', name: 'Sam Johnson', role: 'Host', avatarUrl: '/placeholder.svg', hourlyRate: 13.25 },
-];
+// Empty data for the restaurant schedule
+const SAMPLE_EMPLOYEES: Employee[] = [];
 
 export const useRestaurantSchedule = (initialWeekNumber: number = 17, initialViewMode: ViewMode = 'week') => {
   const [employees] = useState<Employee[]>(SAMPLE_EMPLOYEES);

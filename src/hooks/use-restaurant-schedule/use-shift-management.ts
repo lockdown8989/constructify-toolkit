@@ -4,21 +4,8 @@ import { Shift, OpenShift, Employee } from '@/types/restaurant-schedule';
 import { useToast } from '@/hooks/use-toast';
 
 export const useShiftManagement = (employees: Employee[]) => {
-  const [shifts, setShifts] = useState<Shift[]>([
-    { id: '1', employeeId: '1', day: 'monday', startTime: '07:00', endTime: '12:00', role: 'Kitchen Manager' },
-    { id: '2', employeeId: '1', day: 'tuesday', startTime: '16:00', endTime: '23:00', role: 'Kitchen Manager' },
-    { id: '3', employeeId: '2', day: 'monday', startTime: '12:00', endTime: '23:00', role: 'Head Chef' },
-    { id: '4', employeeId: '2', day: 'tuesday', startTime: '07:00', endTime: '12:00', role: 'Head Chef' },
-    { id: '5', employeeId: '3', day: 'monday', startTime: '16:00', endTime: '22:30', role: 'Chef', hasBreak: true, breakDuration: 30 },
-    { id: '6', employeeId: '3', day: 'tuesday', startTime: '08:00', endTime: '18:00', role: 'Chef', isUnavailable: true, unavailabilityReason: 'vacation' },
-    { id: '7', employeeId: '4', day: 'monday', startTime: '07:00', endTime: '12:00', role: 'Waiting Staff' },
-    { id: '8', employeeId: '4', day: 'tuesday', startTime: '08:00', endTime: '18:00', role: 'Waiting Staff', isUnavailable: true, unavailabilityReason: 'vacation' },
-  ]);
-  
-  const [openShifts, setOpenShifts] = useState<OpenShift[]>([
-    { id: '1', day: 'monday', startTime: '16:00', endTime: '23:00', role: 'Bar Staff' },
-    { id: '2', day: 'tuesday', startTime: '07:00', endTime: '19:00', role: 'Waiting Staff' },
-  ]);
+  const [shifts, setShifts] = useState<Shift[]>([]);
+  const [openShifts, setOpenShifts] = useState<OpenShift[]>([]);
   
   const { toast } = useToast();
 
