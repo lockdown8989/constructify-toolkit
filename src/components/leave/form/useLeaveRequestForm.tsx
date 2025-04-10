@@ -9,6 +9,10 @@ import { useProjectsForDepartment } from "@/hooks/use-projects";
 import { calculateBusinessDays, checkProjectConflicts } from "@/utils/leave-utils";
 import type { ProjectConflict } from "@/utils/leave-utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { createLeaveRequestNotification } from "@/services/NotificationService";
+
+// Define form status type
+type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
 
 export const useLeaveRequestForm = () => {
   const [leaveType, setLeaveType] = useState<string>("");
@@ -17,6 +21,7 @@ export const useLeaveRequestForm = () => {
   const [notes, setNotes] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [conflicts, setConflicts] = useState<ProjectConflict[]>([]);
+  const [formStatus, setFormStatus] = useState<FormStatus>('idle');
   
   // Get the current authenticated user
   const { user } = useAuth();
@@ -56,6 +61,7 @@ export const useLeaveRequestForm = () => {
     setNotes("");
     setIsSubmitting(false);
     setConflicts([]);
+    setFormStatus('idle');
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,6 +73,7 @@ export const useLeaveRequestForm = () => {
         description: "You must be logged in to submit leave requests.",
         variant: "destructive",
       });
+      setFormStatus('error');
       return;
     }
     
@@ -76,6 +83,7 @@ export const useLeaveRequestForm = () => {
         description: "Your user account is not linked to an employee record.",
         variant: "destructive",
       });
+      setFormStatus('error');
       return;
     }
     
@@ -85,6 +93,7 @@ export const useLeaveRequestForm = () => {
         description: "Please fill in all required fields.",
         variant: "destructive",
       });
+      setFormStatus('error');
       return;
     }
     
@@ -94,12 +103,14 @@ export const useLeaveRequestForm = () => {
         description: "End date cannot be before start date.",
         variant: "destructive",
       });
+      setFormStatus('error');
       return;
     }
     
     const leaveDays = calculateBusinessDays(startDate, endDate);
     
     setIsSubmitting(true);
+    setFormStatus('submitting');
     
     const formattedStartDate = format(startDate, "yyyy-MM-dd");
     const formattedEndDate = format(endDate, "yyyy-MM-dd");
@@ -126,16 +137,35 @@ export const useLeaveRequestForm = () => {
           status: 'Pending'
         },
         {
-          onSuccess: () => {
+          onSuccess: async (data) => {
+            // Create notification for the leave request
+            if (data && data.id) {
+              try {
+                await createLeaveRequestNotification(
+                  user.id,
+                  data.id,
+                  format(startDate, "MMM d, yyyy"),
+                  format(endDate, "MMM d, yyyy"),
+                  leaveType
+                );
+              } catch (error) {
+                console.error("Error creating leave request notification:", error);
+                // Continue with success even if notification fails
+              }
+            }
+            
+            // Show toast notification
             toast({
               title: "Leave request submitted",
-              description: "Your leave request has been submitted successfully.",
+              description: "Your leave request has been submitted successfully and is pending approval.",
             });
             
             // Invalidate queries to refresh the calendar data
             queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
             
-            resetForm();
+            // Update form status to success
+            setFormStatus('success');
+            setIsSubmitting(false);
           },
           onError: (error: any) => {
             console.error("Error submitting leave request:", error);
@@ -144,6 +174,7 @@ export const useLeaveRequestForm = () => {
               description: `Failed to submit leave request: ${error.message || 'Please try again'}`,
               variant: "destructive",
             });
+            setFormStatus('error');
             setIsSubmitting(false);
           },
         }
@@ -155,6 +186,7 @@ export const useLeaveRequestForm = () => {
         description: `Failed to submit leave request: ${error.message || 'Please try again'}`,
         variant: "destructive",
       });
+      setFormStatus('error');
       setIsSubmitting(false);
     }
   };
@@ -173,5 +205,6 @@ export const useLeaveRequestForm = () => {
     currentEmployee,
     isLoadingEmployees,
     handleSubmit,
+    formStatus,
   };
 };

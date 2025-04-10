@@ -117,3 +117,33 @@ export const createTestNotification = async (userId: string) => {
     };
   }
 };
+
+// Function to create a leave request notification
+export const createLeaveRequestNotification = async (userId: string, leaveId: string, start: string, end: string, type: string) => {
+  console.log('NotificationService: Creating leave request notification for user:', userId);
+  
+  try {
+    const notificationData: NotificationData = {
+      user_id: userId,
+      title: 'Leave Request Submitted',
+      message: `Your ${type} request for ${start} to ${end} has been submitted successfully and is pending approval.`,
+      type: 'success',
+      related_entity: 'leave_request',
+      related_id: leaveId
+    };
+    
+    await sendNotification(notificationData);
+    
+    console.log('NotificationService: Leave request notification created successfully');
+    return {
+      success: true,
+      message: 'Leave request notification created successfully'
+    };
+  } catch (error) {
+    console.error('Error creating leave request notification:', error);
+    return {
+      success: false,
+      message: `Error: ${error}`
+    };
+  }
+};

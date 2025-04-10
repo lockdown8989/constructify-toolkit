@@ -9,6 +9,7 @@ import {
   CardFooter 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Loader2, CheckCircle } from "lucide-react";
 import LeaveTypeSelector from "./form/LeaveTypeSelector";
 import DateSelector from "./form/DateSelector";
 import NotesField from "./form/NotesField";
@@ -37,6 +38,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = () => {
     currentEmployee,
     isLoadingEmployees,
     handleSubmit,
+    formStatus,
   } = useLeaveRequestForm();
   
   // Display loading state while employee data is being fetched
@@ -74,6 +76,31 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = () => {
     // Invalidate queries to refresh the calendar
     queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
   };
+  
+  // If the form was submitted successfully, show the success message
+  if (formStatus === 'success') {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center p-6 space-y-4">
+            <div className="flex justify-center">
+              <CheckCircle className="h-16 w-16 text-green-500" />
+            </div>
+            <h3 className="text-xl font-medium">Leave Request Submitted</h3>
+            <p className="text-muted-foreground">
+              Your leave request has been submitted successfully and is pending approval.
+            </p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-4"
+            >
+              Submit Another Request
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card>
@@ -125,10 +152,15 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = () => {
             className="w-full"
             disabled={isSubmitting || conflicts.some(c => c.conflictSeverity === 'High')}
           >
-            {isSubmitting ? "Submitting..." : 
-             conflicts.some(c => c.conflictSeverity === 'High') ? 
-             "High Priority Conflict Detected" : 
-             "Submit Request"}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : conflicts.some(c => c.conflictSeverity === 'High') ? 
+              "High Priority Conflict Detected" : 
+              "Submit Request"
+            }
           </Button>
         </CardFooter>
       </form>
