@@ -1,131 +1,106 @@
 
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { useAuth } from '@/hooks/use-auth';
-import { useCreateAvailabilityRequest } from '@/hooks/use-availability';
+import { Save, CalendarIcon, Clock, Check, X } from 'lucide-react';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
-import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { CalendarIcon, Clock } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { useAuth } from '@/hooks/use-auth';
+import { useEmployees } from '@/hooks/use-employees';
+import { useCreateAvailabilityRequest } from '@/hooks/use-availability';
+import { cn } from '@/lib/utils';
 
-const AvailabilityRequestForm = () => {
+interface AvailabilityRequestFormProps {
+  onClose: () => void;
+}
+
+const AvailabilityRequestForm = ({ onClose }: AvailabilityRequestFormProps) => {
   const { user } = useAuth();
-  const { mutate: createRequest, isPending } = useCreateAvailabilityRequest();
   const { toast } = useToast();
+  const { data: employees = [] } = useEmployees();
+  const { mutateAsync: createAvailabilityRequest, isPending } = useCreateAvailabilityRequest();
   
-  const [date, setDate] = useState<Date | undefined>(undefined);
-  const [startTime, setStartTime] = useState<string>('');
-  const [endTime, setEndTime] = useState<string>('');
-  const [isAvailable, setIsAvailable] = useState<boolean>(true);
-  const [notes, setNotes] = useState<string>('');
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('17:00');
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [notes, setNotes] = useState('');
   
-  // Generate time options (30 min intervals from 6am to 10pm)
-  const generateTimeOptions = () => {
-    const options = [];
-    for (let hour = 6; hour <= 22; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const formattedHour = hour % 12 || 12;
-        const period = hour < 12 ? 'AM' : 'PM';
-        const formattedMinute = minute === 0 ? '00' : minute;
-        const label = `${formattedHour}:${formattedMinute} ${period}`;
-        const value = `${hour.toString().padStart(2, '0')}:${formattedMinute}`;
-        
-        options.push({ label, value });
-      }
-    }
-    return options;
-  };
+  // Get current employee
+  const currentEmployee = user ? employees.find(emp => emp.user_id === user.id) : null;
   
-  const timeOptions = generateTimeOptions();
-  
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) {
+    if (!currentEmployee) {
       toast({
         title: "Error",
-        description: "You must be signed in to submit an availability request",
+        description: "Employee record not found.",
         variant: "destructive",
       });
       return;
     }
     
-    if (!date || !startTime || !endTime) {
+    if (!date) {
       toast({
         title: "Error",
-        description: "Please select a date and time range",
+        description: "Please select a date.",
         variant: "destructive",
       });
       return;
     }
     
-    const formattedDate = format(date, 'yyyy-MM-dd');
-    
-    createRequest({
-      employee_id: user.id,
-      date: formattedDate,
-      start_time: startTime,
-      end_time: endTime,
-      is_available: isAvailable,
-      notes: notes || undefined,
-      status: 'Pending'
-    });
-    
-    // Reset form after submission
-    setDate(undefined);
-    setStartTime('');
-    setEndTime('');
-    setIsAvailable(true);
-    setNotes('');
+    try {
+      await createAvailabilityRequest({
+        employee_id: currentEmployee.id,
+        date: format(date, 'yyyy-MM-dd'),
+        start_time: startTime,
+        end_time: endTime,
+        is_available: isAvailable,
+        notes: notes || null
+      });
+      
+      toast({
+        title: "Success",
+        description: `Availability ${isAvailable ? 'set' : 'blocked'} for ${format(date, 'MMMM d, yyyy')}.`,
+      });
+      
+      onClose();
+      
+    } catch (error) {
+      console.error("Error submitting availability:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit availability. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
-  if (!user) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">
-            Please sign in to submit an availability request
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-  
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Submit Availability Request</CardTitle>
-      </CardHeader>
-      
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Set Availability</DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  id="date"
                   variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
+                  className="w-full justify-start text-left font-normal"
+                  id="date"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, 'PPP') : <span>Select date</span>}
+                  {date ? format(date, 'PPP') : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -142,77 +117,77 @@ const AvailabilityRequestForm = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="startTime">Start Time</Label>
-              <Select 
-                value={startTime} 
-                onValueChange={setStartTime}
-              >
-                <SelectTrigger id="startTime">
-                  <SelectValue placeholder="Select time" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <input
+                id="startTime"
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="endTime">End Time</Label>
-              <Select 
-                value={endTime} 
-                onValueChange={setEndTime}
-              >
-                <SelectTrigger id="endTime">
-                  <SelectValue placeholder="Select time" />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeOptions.map((option) => (
-                    <SelectItem 
-                      key={option.value} 
-                      value={option.value}
-                      disabled={option.value <= startTime}
-                    >
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <input
+                id="endTime"
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="available"
-              checked={isAvailable}
-              onCheckedChange={setIsAvailable}
-            />
-            <Label htmlFor="available">
-              {isAvailable ? "I am available during this time" : "I am NOT available during this time"}
-            </Label>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="availability">Availability Status</Label>
+              <div className="flex-1"></div>
+              <Button 
+                type="button" 
+                variant={isAvailable ? "default" : "outline"}
+                size="sm" 
+                className={cn("gap-1", isAvailable && "bg-green-600 hover:bg-green-700")}
+                onClick={() => setIsAvailable(true)}
+              >
+                <Check className="h-4 w-4" />
+                Available
+              </Button>
+              <Button 
+                type="button" 
+                variant={!isAvailable ? "default" : "outline"}
+                size="sm" 
+                className={cn("gap-1", !isAvailable && "bg-red-600 hover:bg-red-700")}
+                onClick={() => setIsAvailable(false)}
+              >
+                <X className="h-4 w-4" />
+                Unavailable
+              </Button>
+            </div>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="notes">Additional Notes (Optional)</Label>
+            <Label htmlFor="notes">Notes (Optional)</Label>
             <Textarea
               id="notes"
-              placeholder="Add any additional information about your availability"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              rows={3}
+              placeholder="Add any additional information about your availability..."
+              className="min-h-[80px]"
             />
           </div>
-        </CardContent>
-        
-        <CardFooter>
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? "Submitting..." : "Submit Request"}
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              <Save className="h-4 w-4 mr-1" />
+              Submit
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 
