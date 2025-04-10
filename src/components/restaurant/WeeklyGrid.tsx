@@ -11,7 +11,7 @@ interface WeeklyGridProps {
   employees: Employee[];
   daysDisplayNames: string[];
   formatCurrency: (amount: number) => string;
-  handleAssignOpenShift: (openShiftId: string, employeeId: string) => void;
+  handleAssignOpenShift: (openShiftId: string, employeeId?: string) => void;
   previousWeek: () => void;
   nextWeek: () => void;
 }
