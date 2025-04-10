@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Link } from "react-router-dom"
 import { User } from "@supabase/supabase-js"
+import { useAuth } from "@/hooks/use-auth"
+import { Badge } from "@/components/ui/badge"
 
 interface UserMenuProps {
   user: User;
@@ -18,6 +20,24 @@ interface UserMenuProps {
 }
 
 const UserMenu = ({ user, signOut }: UserMenuProps) => {
+  const { isManager, isAdmin, isHR } = useAuth();
+  
+  // Determine user role for display
+  const getUserRole = () => {
+    if (isAdmin) return "Admin";
+    if (isHR) return "HR";
+    if (isManager) return "Manager";
+    return "Employee";
+  };
+  
+  // Get role badge color
+  const getRoleBadgeVariant = () => {
+    if (isAdmin) return "destructive";
+    if (isHR) return "purple";
+    if (isManager) return "default";
+    return "secondary";
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -37,6 +57,11 @@ const UserMenu = ({ user, signOut }: UserMenuProps) => {
             <p className="text-xs leading-none text-muted-foreground">
               {user?.email}
             </p>
+            <div className="mt-2">
+              <Badge variant={getRoleBadgeVariant()} className="mt-1">
+                {getUserRole()}
+              </Badge>
+            </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

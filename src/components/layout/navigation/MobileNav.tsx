@@ -28,7 +28,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
       </SheetTrigger>
       <SheetContent side="left">
         <SheetHeader className="text-left">
-          <SheetTitle>Acme</SheetTitle>
+          <SheetTitle>TeamPulse</SheetTitle>
         </SheetHeader>
         <nav className="grid gap-4 py-4">
           <Link

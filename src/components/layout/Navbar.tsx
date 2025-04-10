@@ -23,7 +23,7 @@ const Navbar = () => {
           <MobileNav isAuthenticated={isAuthenticated} />
         ) : (
           <Link to="/" className="mr-6 flex items-center space-x-2">
-            <span className="font-bold">Acme</span>
+            <span className="font-bold">TeamPulse</span>
           </Link>
         )}
         
