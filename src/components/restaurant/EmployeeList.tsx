@@ -40,12 +40,12 @@ const EmployeeList = ({ employees }: EmployeeListProps) => {
                 className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-move transition-colors"
               >
                 <Avatar className="h-9 w-9 mr-2 border border-gray-200">
-                  <AvatarImage src={employee.avatarUrl} alt={employee.name} />
+                  <AvatarImage src={employee.avatarUrl || '/placeholder.svg'} alt={employee.name} />
                   <AvatarFallback className="bg-blue-100 text-blue-800">{initials}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
                   <span className="font-medium text-sm text-gray-900">{employee.name}</span>
-                  <span className="text-xs text-gray-500">{employee.role}</span>
+                  <span className="text-xs text-gray-500">{employee.role || employee.job_title}</span>
                 </div>
               </div>
             );

@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect } from 'react';
 import { useRestaurantSchedule } from '@/hooks/use-restaurant-schedule';
 import { Shift, ViewMode } from '@/types/restaurant-schedule';
@@ -147,6 +146,24 @@ const RestaurantSchedule = () => {
     }
   };
   
+  // Add function to create an open shift
+  const handleAddOpenShift = () => {
+    const newOpenShift: Omit<OpenShift, 'id'> = {
+      day: 'monday',
+      startTime: '09:00',
+      endTime: '17:00',
+      role: 'Staff',
+      notes: 'New open shift'
+    };
+    
+    addOpenShift(newOpenShift);
+    
+    toast({
+      title: "Open shift added",
+      description: "A new open shift has been added to Monday",
+    });
+  };
+  
   // Handle showing assignment dialog for an open shift
   const handleAssignOpenShift = (openShiftId: string, employeeId?: string) => {
     if (employeeId) {
@@ -174,7 +191,15 @@ const RestaurantSchedule = () => {
   
   return (
     <div className="container py-6 max-w-full">
-      <ScheduleHeader setViewMode={setViewMode} />
+      <div className="flex justify-between items-center mb-4">
+        <ScheduleHeader setViewMode={setViewMode} />
+        <button
+          onClick={handleAddOpenShift}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+        >
+          Add Open Shift
+        </button>
+      </div>
       
       <WeeklyGrid 
         weekStats={weekStats}
