@@ -57,6 +57,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
           <nav className="grid gap-1 px-2 py-2">
             <Link
               to="/"
+              onClick={() => setIsOpen(false)}
               className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
             >
               <Home className="mr-3 h-5 w-5 text-neutral-600" />
@@ -65,6 +66,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
             
             <Link
               to="/about"
+              onClick={() => setIsOpen(false)}
               className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
             >
               <FileText className="mr-3 h-5 w-5 text-neutral-600" />
@@ -72,6 +74,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
             </Link>
             <Link
               to="/contact"
+              onClick={() => setIsOpen(false)}
               className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
             >
               <User className="mr-3 h-5 w-5 text-neutral-600" />
@@ -82,6 +85,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                 <div className="h-[1px] bg-neutral-200 my-3 mx-6" />
                 <Link
                   to="/profile"
+                  onClick={() => setIsOpen(false)}
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <User className="mr-3 h-5 w-5 text-neutral-600" />
@@ -89,6 +93,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                 </Link>
                 <Link
                   to="/settings"
+                  onClick={() => setIsOpen(false)}
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <Settings className="mr-3 h-5 w-5 text-neutral-600" />
@@ -96,6 +101,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                 </Link>
                 <Link
                   to="/people"
+                  onClick={() => setIsOpen(false)}
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <Users className="mr-3 h-5 w-5 text-neutral-600" />
@@ -103,6 +109,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                 </Link>
                 <Link
                   to="/employee-workflow"
+                  onClick={() => setIsOpen(false)}
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <Workflow className="mr-3 h-5 w-5 text-neutral-600" />
@@ -110,6 +117,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                 </Link>
                 <Link
                   to="/leave-management"
+                  onClick={() => setIsOpen(false)}
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <Calendar className="mr-3 h-5 w-5 text-neutral-600" />
@@ -117,6 +125,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                 </Link>
                 <Link
                   to="/shift-calendar"
+                  onClick={() => setIsOpen(false)}
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <Utensils className="mr-3 h-5 w-5 text-neutral-600" />
@@ -124,6 +133,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                 </Link>
                 <Link
                   to="/salary"
+                  onClick={() => setIsOpen(false)}
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <DollarSign className="mr-3 h-5 w-5 text-neutral-600" />
@@ -131,6 +141,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                 </Link>
                 <Link
                   to="/payroll"
+                  onClick={() => setIsOpen(false)}
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                 >
                   <Receipt className="mr-3 h-5 w-5 text-neutral-600" />

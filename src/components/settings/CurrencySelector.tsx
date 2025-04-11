@@ -1,6 +1,5 @@
 
 import { DollarSign, Euro, PoundSterling } from "lucide-react";
-import { Label } from "@/components/ui/label";
 import { 
   Select,
   SelectContent,
@@ -23,21 +22,22 @@ interface CurrencySelectorProps {
 export const CurrencySelector = ({ currency, onChange }: CurrencySelectorProps) => {
   return (
     <div className="space-y-2">
-      <Label htmlFor="currency">Preferred Currency</Label>
       <Select 
         value={currency} 
         onValueChange={onChange}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full rounded-lg border-input bg-background h-10">
           <SelectValue placeholder="Select currency" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="rounded-lg border shadow-lg">
           {currencyOptions.map((option) => {
             const Icon = option.icon;
             return (
-              <SelectItem key={option.value} value={option.value}>
+              <SelectItem key={option.value} value={option.value} className="cursor-pointer py-2.5">
                 <div className="flex items-center">
-                  <Icon className="w-4 h-4 mr-2" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 mr-2">
+                    <Icon className="w-4 h-4 text-primary" />
+                  </div>
                   <span>{option.label}</span>
                 </div>
               </SelectItem>

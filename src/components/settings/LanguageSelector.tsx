@@ -1,7 +1,5 @@
 
 import { useLanguage, languageOptions } from "@/hooks/use-language";
-import { Label } from "@/components/ui/label";
-import { Languages } from "lucide-react";
 import { 
   Select,
   SelectContent,
@@ -9,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { Globe } from "lucide-react";
 
 interface LanguageSelectorProps {
   language: string;
@@ -20,19 +19,20 @@ export const LanguageSelector = ({ language, onChange }: LanguageSelectorProps) 
   
   return (
     <div className="space-y-2">
-      <Label htmlFor="language">{t('preferredLanguage')}</Label>
       <Select 
         value={language} 
         onValueChange={onChange}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full rounded-lg border-input bg-background h-10">
           <SelectValue placeholder={t('chooseLanguage')} />
         </SelectTrigger>
-        <SelectContent className="bg-popover"> 
+        <SelectContent className="rounded-lg border shadow-lg">
           {languageOptions.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
+            <SelectItem key={option.value} value={option.value} className="cursor-pointer py-2.5">
               <div className="flex items-center">
-                <Languages className="w-4 h-4 mr-2" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 mr-2">
+                  <Globe className="w-4 h-4 text-primary" />
+                </div>
                 <span>{option.label}</span>
               </div>
             </SelectItem>

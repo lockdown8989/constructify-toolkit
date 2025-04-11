@@ -5,6 +5,8 @@ import { Switch } from "@/components/ui/switch";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Bell, Mail, Calendar } from "lucide-react";
 
 export const NotificationSettings = () => {
   const { settings, updateSettings, isLoading } = useNotificationSettings();
@@ -35,54 +37,86 @@ export const NotificationSettings = () => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <Label htmlFor="email_notifications" className="flex-1">
-              <div>Email Notifications</div>
-              <p className="text-sm text-muted-foreground">
-                Receive notifications via email
-              </p>
-            </Label>
-            <Switch 
-              id="email_notifications"
-              checked={localSettings.email_notifications}
-              onCheckedChange={() => handleChange('email_notifications')}
-            />
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <Label htmlFor="push_notifications" className="flex-1">
-              <div>Push Notifications</div>
-              <p className="text-sm text-muted-foreground">
-                Receive notifications in-app
-              </p>
-            </Label>
-            <Switch 
+      <CardContent className="space-y-4 pt-2">
+        <Card className="p-4 rounded-xl bg-background/40 border shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Bell className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <Label htmlFor="push_notifications" className="text-base font-medium">
+                  Push Notifications
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Receive notifications in-app
+                </p>
+              </div>
+            </div>
+            <Switch
               id="push_notifications"
               checked={localSettings.push_notifications}
               onCheckedChange={() => handleChange('push_notifications')}
+              className="data-[state=checked]:bg-primary"
             />
           </div>
-          
-          <div className="flex justify-between items-center">
-            <Label htmlFor="meeting_reminders" className="flex-1">
-              <div>Meeting Reminders</div>
-              <p className="text-sm text-muted-foreground">
-                Receive reminders for upcoming meetings
-              </p>
-            </Label>
-            <Switch 
+        </Card>
+        
+        <Card className="p-4 rounded-xl bg-background/40 border shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Mail className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <Label htmlFor="email_notifications" className="text-base font-medium">
+                  Email Notifications
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Receive notifications via email
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="email_notifications"
+              checked={localSettings.email_notifications}
+              onCheckedChange={() => handleChange('email_notifications')}
+              className="data-[state=checked]:bg-primary"
+            />
+          </div>
+        </Card>
+        
+        <Card className="p-4 rounded-xl bg-background/40 border shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                <Calendar className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <Label htmlFor="meeting_reminders" className="text-base font-medium">
+                  Meeting Reminders
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Receive reminders for upcoming meetings
+                </p>
+              </div>
+            </div>
+            <Switch
               id="meeting_reminders"
               checked={localSettings.meeting_reminders}
               onCheckedChange={() => handleChange('meeting_reminders')}
+              className="data-[state=checked]:bg-primary"
             />
           </div>
-        </div>
+        </Card>
       </CardContent>
       
-      <CardFooter>
-        <Button type="submit" disabled={isSaving}>
+      <CardFooter className="pb-6">
+        <Button 
+          type="submit" 
+          disabled={isSaving} 
+          className="w-full rounded-xl py-6"
+        >
           {isSaving ? "Saving..." : "Save Changes"}
         </Button>
       </CardFooter>
