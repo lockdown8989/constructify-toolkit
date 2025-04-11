@@ -39,7 +39,7 @@ const Settings = () => {
       
       <div className="max-w-2xl mx-auto pt-10 md:pt-0">
         <div className="mb-8 text-center md:text-left">
-          <h1 className="text-3xl font-semibold mb-2">{t('profileSettings')}</h1>
+          <h1 className="text-3xl font-semibold mb-2">{t('profile_settings')}</h1>
           <p className="text-muted-foreground text-sm">
             {t('manageSettings')}
           </p>
@@ -51,7 +51,7 @@ const Settings = () => {
             <CardHeader className="bg-muted/30 pb-4">
               <CardTitle className="text-xl font-medium flex items-center">
                 <UserCog className="mr-3 h-5 w-5 text-primary" />
-                {t('account')}
+                {t('account_settings')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -99,7 +99,7 @@ const Settings = () => {
             <CardHeader className="bg-muted/30 pb-4">
               <CardTitle className="text-xl font-medium flex items-center">
                 <Globe className="mr-3 h-5 w-5 text-primary" />
-                {t('regionLanguage')}
+                {t('region_language')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
