@@ -39,7 +39,7 @@ const FilterPopover: React.FC<FilterPopoverProps> = ({
         <Button 
           variant="outline" 
           size="sm" 
-          className={`flex items-center gap-2 border rounded-xl px-3 py-2 ${hasActiveFilters ? "border-apple-blue bg-apple-blue/5 text-apple-blue hover:bg-apple-blue/10" : "border-apple-gray-200 hover:bg-apple-gray-50 text-apple-gray-700"}`}
+          className={`flex items-center gap-2 border rounded-full px-4 py-2.5 ${hasActiveFilters ? "border-apple-blue bg-apple-blue/5 text-apple-blue hover:bg-apple-blue/10" : "border-apple-gray-200 hover:bg-apple-gray-50 text-apple-gray-700"}`}
         >
           <Filter className="h-4 w-4" />
           <span>Filter</span>
@@ -50,7 +50,7 @@ const FilterPopover: React.FC<FilterPopoverProps> = ({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[280px] p-3 rounded-xl shadow-lg border-apple-gray-200">
+      <PopoverContent className="w-[300px] p-4 rounded-2xl shadow-lg border-apple-gray-200">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h4 className="font-medium text-sm text-apple-gray-900">Filters</h4>
@@ -59,7 +59,7 @@ const FilterPopover: React.FC<FilterPopoverProps> = ({
                 variant="ghost" 
                 size="sm" 
                 onClick={clearFilters}
-                className="h-auto py-1 px-2 text-xs text-apple-blue hover:bg-apple-blue/5"
+                className="h-auto py-1.5 px-2.5 text-xs text-apple-blue hover:bg-apple-blue/5 rounded-full"
               >
                 Clear all
               </Button>
@@ -69,11 +69,11 @@ const FilterPopover: React.FC<FilterPopoverProps> = ({
           <Separator />
           
           {isLoadingFilters ? (
-            <div className="py-4 text-center text-apple-gray-500 text-sm">
+            <div className="py-6 text-center text-apple-gray-500 text-sm">
               Loading filters...
             </div>
           ) : (
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+            <div className="space-y-5 max-h-[60vh] overflow-y-auto pr-2">
               {filterOptions && (
                 <>
                   <FilterGroup 

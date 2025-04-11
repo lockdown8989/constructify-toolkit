@@ -8,10 +8,10 @@ interface PageHeaderProps {
 
 const PageHeader: React.FC<PageHeaderProps> = ({ handleAddPerson }) => {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
       <div>
-        <h1 className="text-2xl md:text-4xl font-bold mb-1 text-apple-gray-900">My Employees</h1>
-        <p className="text-apple-gray-600">Manage your team members and their account permissions here</p>
+        <h1 className="text-2xl md:text-3xl font-semibold mb-1.5 text-apple-gray-900 tracking-tight">My Employees</h1>
+        <p className="text-apple-gray-600 text-sm md:text-base">Manage your team members and their account permissions here</p>
       </div>
       
       <button 

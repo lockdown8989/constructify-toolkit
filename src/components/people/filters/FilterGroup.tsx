@@ -27,7 +27,7 @@ const FilterGroup: React.FC<FilterGroupProps> = ({
 }) => {
   return (
     <div className="space-y-2">
-      <label htmlFor={`${label.toLowerCase()}-filter`} className="text-sm font-medium">
+      <label htmlFor={`${label.toLowerCase()}-filter`} className="text-sm font-medium text-apple-gray-700">
         {label}
       </label>
       <Select 
@@ -35,11 +35,14 @@ const FilterGroup: React.FC<FilterGroupProps> = ({
         onValueChange={onChange}
         disabled={isLoading}
       >
-        <SelectTrigger id={`${label.toLowerCase()}-filter`}>
+        <SelectTrigger 
+          id={`${label.toLowerCase()}-filter`}
+          className="rounded-xl border-apple-gray-200 focus:ring-apple-blue/20 bg-apple-gray-50/50"
+        >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="">{placeholder}</SelectItem>
+        <SelectContent className="rounded-xl border-apple-gray-200">
+          <SelectItem value="" className="text-apple-gray-600">{placeholder}</SelectItem>
           {options.map(option => (
             <SelectItem key={option} value={option}>{option}</SelectItem>
           ))}

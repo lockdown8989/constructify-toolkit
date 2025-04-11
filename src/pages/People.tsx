@@ -95,11 +95,14 @@ const People = () => {
     <div className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
       <div className="max-w-[1800px] mx-auto">
         <div className="flex items-center mb-8">
-          <div className="bg-gradient-to-br from-apple-blue to-apple-indigo p-2.5 rounded-xl mr-3 shadow-sm">
+          <div className="bg-gradient-to-br from-apple-blue to-apple-indigo p-3 rounded-2xl mr-4 shadow-sm">
             <Users className="h-7 w-7 text-white" />
           </div>
-          <h1 className="text-3xl font-medium tracking-tight text-apple-gray-900">My Employees</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-apple-gray-900">My Employees</h1>
         </div>
+        
+        {/* Page Header with Add Person Button */}
+        <PageHeader handleAddPerson={handleAddPerson} />
         
         {/* Filters and Search Section */}
         <div className="mb-8">

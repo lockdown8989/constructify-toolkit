@@ -43,6 +43,7 @@
     height: 100%;
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
+    font-feature-settings: "kern", "liga", "calt";
   }
 
   /* Custom styling for borders */
@@ -73,4 +74,6 @@
   --apple-red: #FF3B30;
   --apple-orange: #FF9500;
   --apple-yellow: #FFCC00;
+  --apple-teal: #64D2FF;
+  --apple-pink: #FF2D55;
 }

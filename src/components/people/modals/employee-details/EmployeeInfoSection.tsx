@@ -12,8 +12,8 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
   employee,
 }) => {
   return (
-    <div className="p-6">
-      <h3 className="text-sm font-medium text-apple-gray-500 mb-4 uppercase tracking-wider">Employee Information</h3>
+    <div className="p-6 bg-white">
+      <h3 className="text-xs font-semibold text-apple-gray-500 mb-5 uppercase tracking-wider">Employee Information</h3>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <InfoItem icon={<Briefcase className="h-4 w-4 text-apple-blue" />} 
@@ -39,7 +39,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
 
       <Separator className="my-6" />
 
-      <h3 className="text-sm font-medium text-apple-gray-500 mb-4 uppercase tracking-wider">Contact Information</h3>
+      <h3 className="text-xs font-semibold text-apple-gray-500 mb-5 uppercase tracking-wider">Contact Information</h3>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <InfoItem icon={<Mail className="h-4 w-4 text-apple-blue" />} 
@@ -62,13 +62,13 @@ interface InfoItemProps {
 
 const InfoItem: React.FC<InfoItemProps> = ({ icon, label, value }) => {
   return (
-    <div className="p-3 rounded-xl bg-apple-gray-50 hover:bg-apple-gray-100 transition-colors">
-      <div className="flex items-start gap-3">
-        <div className="mt-0.5 p-2 bg-white rounded-md shadow-sm">
+    <div className="p-3.5 rounded-xl bg-apple-gray-50 hover:bg-apple-gray-100/80 transition-colors">
+      <div className="flex items-start gap-3.5">
+        <div className="mt-0.5 p-2 bg-white rounded-lg shadow-sm">
           {icon}
         </div>
         <div>
-          <p className="text-sm text-apple-gray-500 mb-1">{label}</p>
+          <p className="text-xs text-apple-gray-500 mb-1">{label}</p>
           <p className="font-medium break-words text-apple-gray-900">{value}</p>
         </div>
       </div>
