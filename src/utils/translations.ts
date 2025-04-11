@@ -21,7 +21,10 @@ export type TranslationKey =
   | 'manageProfile'
   | 'personalInfo'
   | 'updatePersonalInfo'
-  | 'loading';
+  | 'loading'
+  | 'profile_settings'
+  | 'account_settings'  
+  | 'region_language';
 
 export type Translations = Record<TranslationKey, string>;
 
@@ -48,7 +51,10 @@ export const translations: Record<string, Translations> = {
     manageProfile: 'Manage your personal information and preferences',
     personalInfo: 'Personal Information',
     updatePersonalInfo: 'Update your personal details and preferences',
-    loading: 'Loading...'
+    loading: 'Loading...',
+    profile_settings: 'Profile Settings',
+    account_settings: 'Account Settings',
+    region_language: 'Region & Language'
   },
   es: {
     settings: 'Configuración',
@@ -72,7 +78,10 @@ export const translations: Record<string, Translations> = {
     manageProfile: 'Administre su información personal y preferencias',
     personalInfo: 'Información personal',
     updatePersonalInfo: 'Actualice sus datos personales y preferencias',
-    loading: 'Cargando...'
+    loading: 'Cargando...',
+    profile_settings: 'Configuración de perfil',
+    account_settings: 'Configuración de la cuenta',
+    region_language: 'Región e idioma'
   },
   bg: {
     settings: 'Настройки',
@@ -96,7 +105,10 @@ export const translations: Record<string, Translations> = {
     manageProfile: 'Управлявайте личната си информация и предпочитания',
     personalInfo: 'Лична информация',
     updatePersonalInfo: 'Актуализирайте личните си данни и предпочитания',
-    loading: 'Зареждане...'
+    loading: 'Зареждане...',
+    profile_settings: 'Настройки на профила',
+    account_settings: 'Настройки на акаунта',
+    region_language: 'Регион и език'
   },
   pl: {
     settings: 'Ustawienia',
@@ -120,7 +132,10 @@ export const translations: Record<string, Translations> = {
     manageProfile: 'Zarządzaj swoimi danymi osobowymi i preferencjami',
     personalInfo: 'Informacje osobiste',
     updatePersonalInfo: 'Zaktualizuj swoje dane osobowe i preferencje',
-    loading: 'Ładowanie...'
+    loading: 'Ładowanie...',
+    profile_settings: 'Ustawienia profilu',
+    account_settings: 'Ustawienia konta',
+    region_language: 'Region i język'
   },
   ro: {
     settings: 'Setări',
@@ -144,6 +159,9 @@ export const translations: Record<string, Translations> = {
     manageProfile: 'Gestionați informațiile personale și preferințele',
     personalInfo: 'Informații personale',
     updatePersonalInfo: 'Actualizați-vă datele personale și preferințele',
-    loading: 'Se încarcă...'
+    loading: 'Se încarcă...',
+    profile_settings: 'Setări profil',
+    account_settings: 'Setări cont',
+    region_language: 'Regiune și limbă'
   }
 };
