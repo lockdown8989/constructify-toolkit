@@ -26,10 +26,10 @@ export const CurrencySelector = ({ currency, onChange }: CurrencySelectorProps) 
         value={currency} 
         onValueChange={onChange}
       >
-        <SelectTrigger className="w-full rounded-lg border-input bg-background h-10">
+        <SelectTrigger className="w-full rounded-xl border-input bg-background h-12">
           <SelectValue placeholder="Select currency" />
         </SelectTrigger>
-        <SelectContent className="rounded-lg border shadow-lg">
+        <SelectContent className="rounded-xl border shadow-lg">
           {currencyOptions.map((option) => {
             const Icon = option.icon;
             return (

@@ -1,7 +1,7 @@
 
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Loader2, MapPin, Languages, Moon, BellRing, ArrowLeft } from "lucide-react";
+import { Loader2, UserCog, Palette, Globe, BellRing, ArrowLeft, ChevronRight } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { RegionSettings } from "@/components/settings/RegionSettings";
 import { ThemeSelector } from "@/components/settings/ThemeSelector";
@@ -26,7 +26,7 @@ const Settings = () => {
   }
   
   return (
-    <div className="relative container mx-auto py-12 px-4 md:py-20 md:pt-24 max-w-4xl">
+    <div className="relative container mx-auto py-12 px-4 md:py-20 md:pt-24 max-w-3xl">
       <Button 
         variant="ghost" 
         size="icon" 
@@ -39,119 +39,103 @@ const Settings = () => {
       
       <div className="max-w-2xl mx-auto pt-10 md:pt-0">
         <div className="mb-8 text-center md:text-left">
-          <h1 className="text-3xl font-medium mb-2">{t('settings')}</h1>
+          <h1 className="text-3xl font-semibold mb-2">{t('profileSettings')}</h1>
           <p className="text-muted-foreground text-sm">
             {t('manageSettings')}
           </p>
           <Separator className="mt-4" />
         </div>
 
-        <Tabs defaultValue="region" className="w-full">
-          <TabsList className="mb-6 w-full md:w-auto grid grid-cols-4 gap-1 bg-background/90 backdrop-blur-sm p-1 rounded-xl">
-            <TabsTrigger value="region" className="flex items-center justify-center text-xs md:text-sm rounded-lg py-2">
-              <MapPin className="mr-2 h-4 w-4" />
-              <span className="hidden md:inline">{t('regionCurrency')}</span>
-              <span className="inline md:hidden">Region</span>
-            </TabsTrigger>
-            <TabsTrigger value="appearance" className="flex items-center justify-center text-xs md:text-sm rounded-lg py-2">
-              <Moon className="mr-2 h-4 w-4" />
-              <span className="hidden md:inline">{t('appearance')}</span>
-              <span className="inline md:hidden">Theme</span>
-            </TabsTrigger>
-            <TabsTrigger value="language" className="flex items-center justify-center text-xs md:text-sm rounded-lg py-2">
-              <Languages className="mr-2 h-4 w-4" />
-              <span className="hidden md:inline">{t('language')}</span>
-              <span className="inline md:hidden">Lang</span>
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center justify-center text-xs md:text-sm rounded-lg py-2">
-              <BellRing className="mr-2 h-4 w-4" />
-              <span className="hidden md:inline">{t('notifications')}</span>
-              <span className="inline md:hidden">Alerts</span>
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="region">
-            <Card className="border rounded-2xl shadow-sm bg-card/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-xl font-medium">{t('regionCurrency')}</CardTitle>
-                <CardDescription className="text-sm">
-                  {t('configureLocation')}
-                </CardDescription>
-              </CardHeader>
+        <div className="space-y-4">
+          <Card className="border rounded-xl shadow-sm overflow-hidden">
+            <CardHeader className="bg-muted/30 pb-4">
+              <CardTitle className="text-xl font-medium flex items-center">
+                <UserCog className="mr-3 h-5 w-5 text-primary" />
+                {t('account')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-between py-6 rounded-none text-base font-normal"
+                onClick={() => navigate('/profile')}
+              >
+                <span className="flex items-center">
+                  {t('personalInfo')}
+                </span>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </Button>
               
-              <RegionSettings user={user} />
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="appearance">
-            <Card className="border rounded-2xl shadow-sm bg-card/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-xl font-medium">{t('appearance')}</CardTitle>
-                <CardDescription className="text-sm">
-                  {t('customizeAppearance')}
-                </CardDescription>
-              </CardHeader>
+              <Separator />
               
-              <CardContent>
-                <ThemeSelector />
-              </CardContent>
-            </Card>
-          </TabsContent>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-between py-6 rounded-none text-base font-normal"
+                onClick={() => {
+                  navigate('/settings', { state: { section: 'notifications' } });
+                }}
+              >
+                <span className="flex items-center">
+                  {t('notifications')}
+                </span>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </Button>
+            </CardContent>
+          </Card>
           
-          <TabsContent value="language">
-            <Card className="border rounded-2xl shadow-sm bg-card/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-xl font-medium">{t('language')}</CardTitle>
-                <CardDescription className="text-sm">
-                  {t('chooseLanguage')}
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {languageOptions.map((option) => (
-                      <Button 
-                        key={option.value}
-                        variant={language === option.value ? "default" : "outline"} 
-                        onClick={() => setLanguage(option.value as any)}
-                        className="px-4 py-2 rounded-full"
-                        size="sm"
-                      >
-                        {option.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          <Card className="border rounded-xl shadow-sm overflow-hidden">
+            <CardHeader className="bg-muted/30 pb-4">
+              <CardTitle className="text-xl font-medium flex items-center">
+                <Palette className="mr-3 h-5 w-5 text-primary" />
+                {t('appearance')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-4">
+              <ThemeSelector />
+            </CardContent>
+          </Card>
           
-          <TabsContent value="notifications">
-            <Card className="border rounded-2xl shadow-sm bg-card/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-xl font-medium">{t('notifications')}</CardTitle>
-                <CardDescription className="text-sm">
-                  {t('manageNotifications')}
-                </CardDescription>
-              </CardHeader>
+          <Card className="border rounded-xl shadow-sm overflow-hidden">
+            <CardHeader className="bg-muted/30 pb-4">
+              <CardTitle className="text-xl font-medium flex items-center">
+                <Globe className="mr-3 h-5 w-5 text-primary" />
+                {t('regionLanguage')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-between py-6 rounded-none text-base font-normal"
+                onClick={() => {
+                  navigate('/settings', { state: { section: 'region' } });
+                }}
+              >
+                <span className="flex items-center">
+                  {t('regionCurrency')}
+                </span>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </Button>
               
-              <NotificationSettings />
-            </Card>
-          </TabsContent>
-        </Tabs>
+              <Separator />
+              
+              <Button 
+                variant="ghost" 
+                className="w-full justify-between py-6 rounded-none text-base font-normal"
+                onClick={() => {
+                  navigate('/settings', { state: { section: 'language' } });
+                }}
+              >
+                <span className="flex items-center">
+                  {t('language')}
+                </span>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
 };
-
-// Language options from use-language.tsx
-const languageOptions = [
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Español' },
-  { value: 'bg', label: 'Български' },
-  { value: 'pl', label: 'Polski' },
-  { value: 'ro', label: 'Română' }
-];
 
 export default Settings;

@@ -23,14 +23,14 @@ export const CountryInput = ({ country, isLocating, onChange, onDetect }: Countr
           value={country}
           onChange={onChange}
           placeholder="Enter your country"
-          className="flex-1 rounded-lg border-input bg-background h-10"
+          className="flex-1 rounded-xl border-input bg-background h-12"
         />
         <Button 
           type="button" 
           variant="outline" 
           onClick={onDetect}
           disabled={isLocating}
-          className="whitespace-nowrap rounded-lg border-input"
+          className="whitespace-nowrap rounded-xl border-input h-12"
           size="sm"
         >
           <MapPin className="w-4 h-4 mr-2" />

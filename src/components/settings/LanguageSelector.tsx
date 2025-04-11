@@ -23,10 +23,10 @@ export const LanguageSelector = ({ language, onChange }: LanguageSelectorProps) 
         value={language} 
         onValueChange={onChange}
       >
-        <SelectTrigger className="w-full rounded-lg border-input bg-background h-10">
+        <SelectTrigger className="w-full rounded-xl border-input bg-background h-12">
           <SelectValue placeholder={t('chooseLanguage')} />
         </SelectTrigger>
-        <SelectContent className="rounded-lg border shadow-lg">
+        <SelectContent className="rounded-xl border shadow-lg">
           {languageOptions.map((option) => (
             <SelectItem key={option.value} value={option.value} className="cursor-pointer py-2.5">
               <div className="flex items-center">
