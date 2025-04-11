@@ -31,7 +31,7 @@ const FilterPopover: React.FC<FilterPopoverProps> = ({
   clearFilters,
   isLoadingFilters,
 }) => {
-  const hasActiveFilters = Object.keys(activeFilters).length > 0;
+  const hasActiveFilters = Object.values(activeFilters).some(filter => filter !== undefined);
   
   return (
     <Popover>
@@ -45,7 +45,7 @@ const FilterPopover: React.FC<FilterPopoverProps> = ({
           <span>Filter</span>
           {hasActiveFilters && (
             <span className="flex items-center justify-center bg-apple-blue text-white rounded-full text-xs w-5 h-5 font-medium">
-              {Object.keys(activeFilters).length}
+              {Object.keys(activeFilters).filter(key => activeFilters[key as keyof typeof activeFilters] !== undefined).length}
             </span>
           )}
         </Button>
@@ -77,31 +77,39 @@ const FilterPopover: React.FC<FilterPopoverProps> = ({
               {filterOptions && (
                 <>
                   <FilterGroup 
-                    title="Department" 
+                    label="Department"
                     options={filterOptions.departments}
-                    selected={activeFilters.department}
+                    value={activeFilters.department}
                     onChange={(value) => handleFilterChange('department', value)}
+                    isLoading={isLoadingFilters}
+                    placeholder="All departments"
                   />
                   
                   <FilterGroup 
-                    title="Site" 
+                    label="Site"
                     options={filterOptions.sites}
-                    selected={activeFilters.site}
+                    value={activeFilters.site}
                     onChange={(value) => handleFilterChange('site', value)}
+                    isLoading={isLoadingFilters}
+                    placeholder="All sites"
                   />
                   
                   <FilterGroup 
-                    title="Lifecycle" 
+                    label="Lifecycle"
                     options={filterOptions.lifecycles}
-                    selected={activeFilters.lifecycle}
+                    value={activeFilters.lifecycle}
                     onChange={(value) => handleFilterChange('lifecycle', value)}
+                    isLoading={isLoadingFilters}
+                    placeholder="All lifecycles"
                   />
                   
                   <FilterGroup 
-                    title="Status" 
+                    label="Status"
                     options={filterOptions.statuses}
-                    selected={activeFilters.status}
+                    value={activeFilters.status}
                     onChange={(value) => handleFilterChange('status', value)}
+                    isLoading={isLoadingFilters}
+                    placeholder="All statuses"
                   />
                 </>
               )}
