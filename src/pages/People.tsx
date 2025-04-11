@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PeopleTable from '@/components/people/PeopleTable';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Users } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useEmployees, useEmployeeFilters, useAddEmployee, useUpdateEmployee } from '@/hooks/use-employees';
 import { useToast } from '@/hooks/use-toast';
@@ -94,30 +94,36 @@ const People = () => {
   return (
     <div className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
       <div className="max-w-[1800px] mx-auto">
-        {/* Header */}
-        <PageHeader handleAddPerson={handleAddPerson} />
+        <div className="flex items-center mb-8">
+          <Users className="h-8 w-8 text-primary mr-3" />
+          <h1 className="text-3xl font-medium tracking-tight">My Employees</h1>
+        </div>
         
         {/* Filters and Search Section */}
-        <FilterSection 
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          activeFilters={activeFilters}
-          handleFilterChange={handleFilterChange}
-          clearFilters={clearFilters}
-          filterOptions={filterOptions}
-          isLoadingFilters={isLoadingFilters}
-          sortField={sortField}
-          sortDirection={sortDirection}
-          setSortField={setSortField}
-          setSortDirection={setSortDirection}
-        />
+        <div className="mb-8">
+          <FilterSection 
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            activeFilters={activeFilters}
+            handleFilterChange={handleFilterChange}
+            clearFilters={clearFilters}
+            filterOptions={filterOptions}
+            isLoadingFilters={isLoadingFilters}
+            sortField={sortField}
+            sortDirection={sortDirection}
+            setSortField={setSortField}
+            setSortDirection={setSortDirection}
+          />
+        </div>
         
         {/* People Table */}
-        <PeopleTable 
-          employees={processedEmployees}
-          isLoading={isLoading}
-          onUpdateStatus={handleUpdateStatus}
-        />
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <PeopleTable 
+            employees={processedEmployees}
+            isLoading={isLoading}
+            onUpdateStatus={handleUpdateStatus}
+          />
+        </div>
         
         {/* Add Employee Modal */}
         <AddEmployeeModal

@@ -71,22 +71,26 @@ const RestaurantSchedule = () => {
   };
   
   return (
-    <div className="container py-6 max-w-full">
-      <div className="flex justify-between items-center mb-4">
+    <div className="container py-6 max-w-full px-4 md:px-6">
+      <div className="mb-4">
         <ScheduleHeader setViewMode={setViewMode} />
-        <OpenShiftActions addOpenShift={addOpenShift} />
+        <div className="flex justify-end">
+          <OpenShiftActions addOpenShift={addOpenShift} />
+        </div>
       </div>
       
-      <WeeklyGrid 
-        weekStats={weekStats}
-        openShifts={openShifts}
-        employees={employees}
-        daysDisplayNames={['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
-        formatCurrency={formatCurrency}
-        handleAssignOpenShift={handleAssignOpenShift}
-        previousWeek={previousWeek}
-        nextWeek={nextWeek}
-      />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+        <WeeklyGrid 
+          weekStats={weekStats}
+          openShifts={openShifts}
+          employees={employees}
+          daysDisplayNames={['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
+          formatCurrency={formatCurrency}
+          handleAssignOpenShift={handleAssignOpenShift}
+          previousWeek={previousWeek}
+          nextWeek={nextWeek}
+        />
+      </div>
       
       {/* Role sections */}
       <RolesSectionList

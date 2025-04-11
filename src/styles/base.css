@@ -22,7 +22,7 @@
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --ring: 240 5.9% 10%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 }
 
@@ -44,9 +44,15 @@
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
   }
+
+  /* Custom styling for borders */
+  .border-l-3 {
+    border-left-width: 3px;
+  }
 }
 
 :root {
   --teampulse-accent: #FFCB45;
   --teampulse-success: #34D399;
 }
+

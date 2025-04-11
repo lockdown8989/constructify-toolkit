@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search } from 'lucide-react';
+import { Search, Calendar } from 'lucide-react';
 import { ViewMode } from '@/types/restaurant-schedule';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -11,10 +11,13 @@ interface ScheduleHeaderProps {
 
 const ScheduleHeader = ({ setViewMode }: ScheduleHeaderProps) => {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-      <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Shift Calendar Schedule</h1>
+    <div className="mb-8">
+      <div className="flex items-center mb-4">
+        <Calendar className="h-8 w-8 text-primary mr-3" />
+        <h1 className="text-3xl font-medium tracking-tight">Shift Calendar Schedule</h1>
+      </div>
       
-      <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <Tabs 
           defaultValue="week" 
           onValueChange={(value) => setViewMode(value as ViewMode)}
@@ -36,11 +39,11 @@ const ScheduleHeader = ({ setViewMode }: ScheduleHeaderProps) => {
           </TabsList>
         </Tabs>
         
-        <div className="relative w-full sm:w-64">
+        <div className="relative w-full sm:w-80">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input 
             placeholder="Search employees or roles..." 
-            className="pl-9 rounded-full border-gray-200"
+            className="pl-9 rounded-full border-gray-200 w-full"
           />
         </div>
       </div>

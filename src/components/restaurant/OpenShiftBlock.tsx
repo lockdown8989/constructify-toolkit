@@ -21,8 +21,8 @@ const OpenShiftBlock = ({
   onAssign 
 }: OpenShiftBlockProps) => {
   const colorClasses = {
-    blue: 'border-l-4 border-blue-500 bg-white',
-    yellow: 'border-l-4 border-yellow-500 bg-white',
+    blue: 'border-l-3 border-blue-500 bg-white',
+    yellow: 'border-l-3 border-yellow-500 bg-white',
   };
   
   const handleDragOver = (e: React.DragEvent) => {

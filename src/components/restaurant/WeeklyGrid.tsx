@@ -27,7 +27,7 @@ const WeeklyGrid = ({
   nextWeek
 }: WeeklyGridProps) => {
   return (
-    <div className="grid grid-cols-10 gap-0 border rounded-t-xl bg-white shadow-sm overflow-hidden">
+    <div className="grid grid-cols-10 gap-0">
       {/* Employee list column */}
       <EmployeeList employees={employees} />
       

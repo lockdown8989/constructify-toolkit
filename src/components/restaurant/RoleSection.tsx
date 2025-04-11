@@ -64,8 +64,8 @@ const RoleSection = ({
           <h3 className="font-medium text-gray-900">{role.name}</h3>
         </div>
         <div className="flex items-center space-x-4 text-sm text-gray-500">
-          <span>{role.totalHours.toFixed(1)}h</span>
-          <span>{role.totalShifts} shifts</span>
+          <span className="font-medium">{role.totalHours.toFixed(1)}h</span>
+          <span className="bg-gray-100 px-2 py-0.5 rounded-full text-xs">{role.totalShifts} shifts</span>
         </div>
       </div>
       

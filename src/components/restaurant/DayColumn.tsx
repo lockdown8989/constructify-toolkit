@@ -39,26 +39,26 @@ const DayColumn = ({
       className="col-span-1 border-r border-gray-200"
       onDragOver={handleColumnDragOver}
     >
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+      <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/80">
         <div className="flex items-center">
-          <span className="font-bold text-lg mr-2">{index + 1}</span>
+          <span className="font-semibold text-lg mr-2">{index + 1}</span>
           <span className="text-gray-700">{dayDisplayName}</span>
         </div>
         <div className="flex space-x-2">
           {index === 0 && previousWeek && (
-            <Button variant="outline" size="icon" onClick={previousWeek} className="rounded-full h-7 w-7">
-              <ChevronLeft className="h-4 w-4" />
+            <Button variant="outline" size="icon" onClick={previousWeek} className="rounded-full h-7 w-7 border-gray-200 bg-white hover:bg-gray-50">
+              <ChevronLeft className="h-4 w-4 text-gray-600" />
             </Button>
           )}
           {index === 1 && nextWeek && (
-            <Button variant="outline" size="icon" onClick={nextWeek} className="rounded-full h-7 w-7">
-              <ChevronRight className="h-4 w-4" />
+            <Button variant="outline" size="icon" onClick={nextWeek} className="rounded-full h-7 w-7 border-gray-200 bg-white hover:bg-gray-50">
+              <ChevronRight className="h-4 w-4 text-gray-600" />
             </Button>
           )}
         </div>
       </div>
       
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200 bg-white/50">
         <div className="flex flex-col space-y-1">
           <div className="text-gray-900 font-semibold">{day.totalHours.toFixed(0)}h</div>
           <div className="text-gray-900 font-semibold">{formatCurrency(day.totalCost)}</div>
