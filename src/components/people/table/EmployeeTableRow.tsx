@@ -44,11 +44,16 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
     }
   };
 
+  const statusColors = {
+    green: "bg-apple-green/15 text-apple-green",
+    gray: "bg-apple-gray-200 text-apple-gray-700"
+  };
+
   return (
     <tr 
       className={cn(
-        "group transition-colors cursor-pointer",
-        isSelected ? "bg-crextio-accent/10" : "hover:bg-gray-50"
+        "group transition-colors cursor-pointer border-b border-apple-gray-100",
+        isSelected ? "bg-apple-blue/5" : "hover:bg-apple-gray-50"
       )}
       onClick={handleRowClick}
     >
@@ -58,41 +63,40 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
             type="checkbox"
             checked={isSelected}
             onChange={() => onSelect(employee.id)}
-            className="rounded border-gray-300 text-black focus:ring-black"
+            className="rounded border-apple-gray-300 text-apple-blue focus:ring-apple-blue/30"
           />
         </div>
       </td>
       <td className="py-4 px-6">
         <div className="flex items-center">
-          <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
+          <div className="w-10 h-10 rounded-full overflow-hidden mr-3 border border-apple-gray-200 shadow-sm">
             <img 
               src={employee.avatar} 
               alt={employee.name}
               className="w-full h-full object-cover"
             />
           </div>
-          <span className="font-medium">{employee.name}</span>
+          <span className="font-medium text-apple-gray-900">{employee.name}</span>
         </div>
       </td>
-      <td className="py-4 px-6 text-gray-600">{employee.jobTitle}</td>
-      <td className="py-4 px-6 text-gray-600">{employee.department}</td>
+      <td className="py-4 px-6 text-apple-gray-700">{employee.jobTitle}</td>
+      <td className="py-4 px-6 text-apple-gray-700">{employee.department}</td>
       <td className="py-4 px-6">
         <div className="flex items-center">
           {employee.siteIcon && (
             <span className="mr-2">{employee.siteIcon}</span>
           )}
-          <span className="text-gray-600">{employee.site}</span>
+          <span className="text-apple-gray-700">{employee.site}</span>
         </div>
       </td>
-      <td className="py-4 px-6 font-medium">{employee.salary}</td>
-      <td className="py-4 px-6 text-gray-600">{employee.startDate}</td>
-      <td className="py-4 px-6 text-gray-600">{employee.lifecycle}</td>
+      <td className="py-4 px-6 font-medium text-apple-gray-900">{employee.salary}</td>
+      <td className="py-4 px-6 text-apple-gray-700">{employee.startDate}</td>
+      <td className="py-4 px-6 text-apple-gray-700">{employee.lifecycle}</td>
       <td className="py-4 px-6">
         <div className="flex items-center justify-between">
           <span className={cn(
             "inline-block px-3 py-1 rounded-full text-xs font-medium",
-            employee.statusColor === 'green' && "bg-crextio-success/20 text-green-700",
-            employee.statusColor === 'gray' && "bg-gray-200 text-gray-700"
+            statusColors[employee.statusColor as keyof typeof statusColors]
           )}>
             {employee.status}
           </span>
@@ -100,24 +104,24 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
           {onStatusChange && (
             <div className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()} data-dropdown>
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100">
-                  <MoreHorizontal className="w-4 h-4 text-gray-500" />
+                <DropdownMenuTrigger className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-apple-gray-100">
+                  <MoreHorizontal className="w-4 h-4 text-apple-gray-600" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleStatusChange('Active')}>
-                    <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                <DropdownMenuContent align="end" className="rounded-xl shadow-lg border-apple-gray-200">
+                  <DropdownMenuItem onClick={() => handleStatusChange('Active')} className="focus:bg-apple-gray-50">
+                    <CheckCircle className="mr-2 h-4 w-4 text-apple-green" />
                     <span>Set as Active</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStatusChange('Inactive')}>
-                    <XCircle className="mr-2 h-4 w-4 text-gray-500" />
+                  <DropdownMenuItem onClick={() => handleStatusChange('Inactive')} className="focus:bg-apple-gray-50">
+                    <XCircle className="mr-2 h-4 w-4 text-apple-gray-600" />
                     <span>Set as Inactive</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStatusChange('Invited')}>
-                    <Mail className="mr-2 h-4 w-4 text-blue-500" />
+                  <DropdownMenuItem onClick={() => handleStatusChange('Invited')} className="focus:bg-apple-gray-50">
+                    <Mail className="mr-2 h-4 w-4 text-apple-blue" />
                     <span>Set as Invited</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStatusChange('Absent')}>
-                    <Users className="mr-2 h-4 w-4 text-orange-500" />
+                  <DropdownMenuItem onClick={() => handleStatusChange('Absent')} className="focus:bg-apple-gray-50">
+                    <Users className="mr-2 h-4 w-4 text-apple-orange" />
                     <span>Set as Absent</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

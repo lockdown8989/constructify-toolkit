@@ -23,8 +23,8 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
   onDelete,
 }) => {
   const statusColors = {
-    green: 'bg-green-100 text-green-800 hover:bg-green-100',
-    gray: 'bg-gray-100 text-gray-800 hover:bg-gray-100'
+    green: 'bg-apple-green/15 text-apple-green hover:bg-apple-green/15',
+    gray: 'bg-apple-gray-200 text-apple-gray-700 hover:bg-apple-gray-200'
   };
 
   const handleStatusChange = (status: string) => {
@@ -34,15 +34,15 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
   };
 
   return (
-    <div className="bg-gray-50 p-6">
+    <div className="bg-apple-gray-50 p-6 rounded-t-xl">
       <div className="flex items-start gap-4">
-        <Avatar className="h-16 w-16 border-2 border-white">
+        <Avatar className="h-16 w-16 border-2 border-white shadow-sm">
           <AvatarImage src={employee.avatar} alt={employee.name} />
           <AvatarFallback>{getInitials(employee.name)}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <DialogTitle className="text-xl font-semibold mb-1">{employee.name}</DialogTitle>
-          <p className="text-gray-500 text-sm mb-2">{employee.jobTitle}</p>
+          <DialogTitle className="text-xl font-semibold mb-1 text-apple-gray-900">{employee.name}</DialogTitle>
+          <p className="text-apple-gray-600 text-sm mb-2">{employee.jobTitle}</p>
           <Badge variant="outline" className={statusColors[employee.statusColor]}>
             {employee.status}
           </Badge>

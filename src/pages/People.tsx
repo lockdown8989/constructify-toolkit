@@ -95,8 +95,10 @@ const People = () => {
     <div className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
       <div className="max-w-[1800px] mx-auto">
         <div className="flex items-center mb-8">
-          <Users className="h-8 w-8 text-primary mr-3" />
-          <h1 className="text-3xl font-medium tracking-tight">My Employees</h1>
+          <div className="bg-gradient-to-br from-apple-blue to-apple-indigo p-2.5 rounded-xl mr-3 shadow-sm">
+            <Users className="h-7 w-7 text-white" />
+          </div>
+          <h1 className="text-3xl font-medium tracking-tight text-apple-gray-900">My Employees</h1>
         </div>
         
         {/* Filters and Search Section */}
@@ -117,7 +119,7 @@ const People = () => {
         </div>
         
         {/* People Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-apple-gray-200 overflow-hidden">
           <PeopleTable 
             employees={processedEmployees}
             isLoading={isLoading}

@@ -19,13 +19,13 @@
     
     /* Improved touch feedback for cards */
     .touch-active {
-      @apply bg-gray-50 transition-colors duration-200;
+      @apply bg-apple-gray-50 transition-colors duration-200;
     }
   }
   
   /* Employee info cards */
   .employee-info-card {
-    @apply rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors p-3;
+    @apply rounded-lg bg-apple-gray-50 hover:bg-apple-gray-100 transition-colors p-3;
   }
   
   .employee-info-icon {
@@ -34,11 +34,11 @@
   
   /* Mobile table styles */
   .employee-table-mobile {
-    @apply w-full divide-y divide-gray-200;
+    @apply w-full divide-y divide-apple-gray-200;
   }
   
   .employee-table-row-mobile {
-    @apply flex flex-wrap border-b border-gray-200 py-3;
+    @apply flex flex-wrap border-b border-apple-gray-200 py-3;
   }
   
   .employee-table-cell-mobile {
@@ -46,19 +46,42 @@
   }
   
   .employee-table-label-mobile {
-    @apply text-xs text-gray-500 block;
+    @apply text-xs text-apple-gray-500 block;
   }
   
   /* Mobile navigation bottom bar */
   .mobile-nav-bar {
-    @apply fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center p-2 z-50 safe-area-inset;
+    @apply fixed bottom-0 left-0 right-0 bg-white border-t border-apple-gray-200 flex justify-around items-center p-2 z-50 safe-area-inset;
   }
   
   .mobile-nav-item {
-    @apply flex flex-col items-center justify-center p-2 text-gray-500 hover:text-black;
+    @apply flex flex-col items-center justify-center p-2 text-apple-gray-600 hover:text-black;
   }
   
   .mobile-nav-text {
     @apply text-xs mt-1;
+  }
+  
+  /* Apple-inspired glass morphism effect */
+  .apple-glass {
+    @apply backdrop-blur-xl bg-white/80 border border-white/20;
+  }
+  
+  /* Apple-like card styling */
+  .apple-card {
+    @apply bg-white rounded-2xl border border-apple-gray-200 shadow-sm overflow-hidden;
+  }
+  
+  /* Apple buttons */
+  .apple-button {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium px-5 py-2 transition-colors;
+  }
+  
+  .apple-button-primary {
+    @apply bg-apple-blue text-white hover:bg-apple-blue/90 shadow-sm;
+  }
+  
+  .apple-button-secondary {
+    @apply bg-apple-gray-100 text-apple-gray-900 hover:bg-apple-gray-200;
   }
 }

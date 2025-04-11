@@ -12,41 +12,41 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
   employee,
 }) => {
   return (
-    <div className="p-4 sm:p-6">
-      <h3 className="text-sm font-medium text-gray-500 mb-4 uppercase tracking-wider">Employee Information</h3>
+    <div className="p-6">
+      <h3 className="text-sm font-medium text-apple-gray-500 mb-4 uppercase tracking-wider">Employee Information</h3>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-        <InfoItem icon={<Briefcase className="h-4 w-4 text-indigo-500" />} 
+        <InfoItem icon={<Briefcase className="h-4 w-4 text-apple-blue" />} 
                  label="Department" 
                  value={employee.department} />
         
-        <InfoItem icon={<MapPin className="h-4 w-4 text-indigo-500" />} 
+        <InfoItem icon={<MapPin className="h-4 w-4 text-apple-blue" />} 
                  label="Site" 
                  value={`${employee.siteIcon} ${employee.site}`} />
         
-        <InfoItem icon={<DollarSign className="h-4 w-4 text-indigo-500" />} 
+        <InfoItem icon={<DollarSign className="h-4 w-4 text-apple-blue" />} 
                  label="Salary" 
                  value={employee.salary} />
         
-        <InfoItem icon={<Calendar className="h-4 w-4 text-indigo-500" />} 
+        <InfoItem icon={<Calendar className="h-4 w-4 text-apple-blue" />} 
                  label="Start Date" 
                  value={employee.startDate} />
         
-        <InfoItem icon={<Users className="h-4 w-4 text-indigo-500" />} 
+        <InfoItem icon={<Users className="h-4 w-4 text-apple-blue" />} 
                  label="Lifecycle" 
                  value={employee.lifecycle} />
       </div>
 
-      <Separator className="my-4 sm:my-6" />
+      <Separator className="my-6" />
 
-      <h3 className="text-sm font-medium text-gray-500 mb-4 uppercase tracking-wider">Contact Information</h3>
+      <h3 className="text-sm font-medium text-apple-gray-500 mb-4 uppercase tracking-wider">Contact Information</h3>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-        <InfoItem icon={<Mail className="h-4 w-4 text-indigo-500" />} 
+        <InfoItem icon={<Mail className="h-4 w-4 text-apple-blue" />} 
                  label="Email" 
                  value={`${employee.name.toLowerCase().replace(/\s/g, '.')}@company.com`} />
         
-        <InfoItem icon={<Phone className="h-4 w-4 text-indigo-500" />} 
+        <InfoItem icon={<Phone className="h-4 w-4 text-apple-blue" />} 
                  label="Phone" 
                  value={`+1 (555) ${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000 + Math.random() * 9000)}`} />
       </div>
@@ -62,14 +62,14 @@ interface InfoItemProps {
 
 const InfoItem: React.FC<InfoItemProps> = ({ icon, label, value }) => {
   return (
-    <div className="p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+    <div className="p-3 rounded-xl bg-apple-gray-50 hover:bg-apple-gray-100 transition-colors">
       <div className="flex items-start gap-3">
         <div className="mt-0.5 p-2 bg-white rounded-md shadow-sm">
           {icon}
         </div>
         <div>
-          <p className="text-sm text-gray-500 mb-1">{label}</p>
-          <p className="font-medium break-words">{value}</p>
+          <p className="text-sm text-apple-gray-500 mb-1">{label}</p>
+          <p className="font-medium break-words text-apple-gray-900">{value}</p>
         </div>
       </div>
     </div>

@@ -27,14 +27,15 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
       <table className="w-full">
         <EmployeeTableHeader 
           onSelectAll={onSelectAll} 
-          allSelected={selectedEmployees.length === employees.length}
+          allSelected={selectedEmployees.length === employees.length && employees.length > 0}
           hasEmployees={employees.length > 0}
         />
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-apple-gray-100">
           {employees.length === 0 ? (
             <tr>
-              <td colSpan={9} className="py-8 text-center text-gray-500">
-                No employees found. Try adjusting your filters.
+              <td colSpan={9} className="py-12 text-center text-apple-gray-500">
+                <p className="text-base">No employees found</p>
+                <p className="text-sm mt-1 text-apple-gray-400">Try adjusting your filters or adding new employees</p>
               </td>
             </tr>
           ) : (
