@@ -16,14 +16,14 @@ import NotFound from "@/pages/NotFound";
 import AppLayout from "@/components/layout/AppLayout";
 import { Navigate, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import Index from "@/pages/Index";
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/auth" element={<Auth />} />
+      <Route path="/" element={<Index />} />
       <Route element={<AppLayout />}>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/index" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/people" element={<ProtectedRoute><People /></ProtectedRoute>} />
         <Route path="/my-employees" element={<ProtectedRoute><People /></ProtectedRoute>} />

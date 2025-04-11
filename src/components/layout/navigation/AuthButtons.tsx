@@ -5,12 +5,12 @@ import { Link } from "react-router-dom"
 const AuthButtons = () => {
   return (
     <>
-      <Link to="/sign-in">
+      <Link to="/auth">
         <Button variant="ghost" size="sm">
           Sign In
         </Button>
       </Link>
-      <Link to="/sign-up">
+      <Link to="/auth?tab=signup">
         <Button variant="ghost" size="sm">
           Sign Up
         </Button>

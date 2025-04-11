@@ -48,7 +48,9 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
       >
         <div className="flex items-center px-6 pt-8 pb-4">
           <div className="flex-1 text-center">
-            <SheetTitle className="font-semibold text-lg">TeamPulse</SheetTitle>
+            <Link to="/" onClick={() => setIsOpen(false)}>
+              <SheetTitle className="font-semibold text-lg">TeamPulse</SheetTitle>
+            </Link>
           </div>
         </div>
         <ScrollArea className="h-[calc(100vh-80px)]">
