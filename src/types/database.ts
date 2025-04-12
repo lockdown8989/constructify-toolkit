@@ -1,4 +1,3 @@
-
 export interface EmployeeModel {
   id: string;
   name: string;
@@ -59,11 +58,10 @@ export interface EmployeeCompositionModel {
 export interface DocumentModel {
   id: string;
   employee_id: string;
-  document_type: string;
   name: string;
+  document_type: string;
   path?: string;
   size?: string;
   created_at?: string;
   updated_at?: string;
-  url?: string;
 }

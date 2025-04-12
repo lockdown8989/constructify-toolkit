@@ -102,7 +102,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
     }
   };
   
-  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>, docType: 'contract' | 'resume') => {
+  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>, docType: 'contract' | 'resume' | 'payslip') => {
     if (!e.target.files || e.target.files.length === 0) {
       return;
     }

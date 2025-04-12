@@ -12,7 +12,6 @@ import { useEmployee } from '@/hooks/use-employees';
 import { mapDbEmployeeToUiEmployee } from './types';
 import EmployeeInfoSection from './modals/employee-details/EmployeeInfoSection';
 import { useAuth } from '@/hooks/use-auth';
-import { DocumentIcon } from 'lucide-react';
 
 const EmployeeDetailsPage = () => {
   const { id } = useParams<{ id: string }>();

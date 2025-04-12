@@ -7,7 +7,8 @@ import { CurrencyProvider } from "@/hooks/use-currency-preference";
 import { LanguageProvider } from "@/hooks/use-language";
 import { NotificationProvider } from "@/hooks/use-notification-settings";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"; 
-import AppRoutes from "./routes/routes";
+import router from "./routes/routes";
+import { RouterProvider } from "react-router-dom";
 import "./App.css";
 
 // Create a client
@@ -16,20 +17,18 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-          <AuthProvider>
-            <CurrencyProvider>
-              <LanguageProvider>
-                <NotificationProvider>
-                  <AppRoutes />
-                  <Toaster />
-                </NotificationProvider>
-              </LanguageProvider>
-            </CurrencyProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </BrowserRouter>
+      <ThemeProvider defaultTheme="light" storageKey="ui-theme">
+        <AuthProvider>
+          <CurrencyProvider>
+            <LanguageProvider>
+              <NotificationProvider>
+                <RouterProvider router={router} />
+                <Toaster />
+              </NotificationProvider>
+            </LanguageProvider>
+          </CurrencyProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
