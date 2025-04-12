@@ -1,20 +1,39 @@
 
 import React from 'react';
-import { Briefcase, MapPin, DollarSign, Calendar, Users, Mail, Phone } from 'lucide-react';
+import { Briefcase, MapPin, DollarSign, Calendar, Users, Mail, Phone, ChevronLeft } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Employee } from '@/components/people/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import DocumentsSection from './DocumentsSection';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
 
 interface EmployeeInfoSectionProps {
   employee: Employee;
+  onBack?: () => void;
 }
 
 const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
   employee,
+  onBack
 }) => {
+  const { isManager } = useAuth();
+  
   return (
     <ScrollArea className="max-h-[calc(100vh-180px)] overflow-y-auto">
       <div className="p-4 sm:p-6 bg-white">
+        {onBack && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="mb-4 text-apple-gray-600 hover:text-apple-gray-900 hover:bg-apple-gray-100"
+            onClick={onBack}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1.5" />
+            Back
+          </Button>
+        )}
+        
         <h3 className="text-xs font-semibold text-apple-gray-500 mb-5 uppercase tracking-wider">Employee Information</h3>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
@@ -52,6 +71,10 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
                    label="Phone" 
                    value={`+1 (555) ${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000 + Math.random() * 9000)}`} />
         </div>
+        
+        <Separator className="my-6" />
+        
+        <DocumentsSection employee={employee} />
       </div>
     </ScrollArea>
   );

@@ -84,7 +84,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-2xl">
           <EmployeeHeader 
             employee={employee}
             onStatusChange={onStatusChange}

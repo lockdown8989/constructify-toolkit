@@ -3,9 +3,9 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, X } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
-import { DialogTitle } from '@/components/ui/dialog';
+import { DialogTitle, DialogClose } from '@/components/ui/dialog';
 import EmployeeStatusDropdown from './EmployeeStatusDropdown';
 import { Employee } from '@/components/people/types';
 
@@ -69,6 +69,16 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
           >
             <Trash2 className="h-4 w-4 text-apple-gray-700" />
           </Button>
+          <DialogClose asChild>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="rounded-full border-apple-gray-200 bg-white" 
+              title="Close"
+            >
+              <X className="h-4 w-4 text-apple-gray-700" />
+            </Button>
+          </DialogClose>
         </div>
       </div>
     </div>

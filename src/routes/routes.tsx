@@ -1,45 +1,104 @@
 
-import React from "react";
-import Auth from "@/pages/Auth";
+import { createBrowserRouter } from "react-router-dom";
+import AppLayout from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
+import Auth from "@/pages/Auth";
 import People from "@/pages/People";
-import Schedule from "@/pages/Schedule";
-import EmployeeWorkflow from "@/pages/EmployeeWorkflow";
-import Salary from "@/pages/Salary";
-import Payroll from "@/pages/Payroll";
 import LeaveManagement from "@/pages/LeaveManagement";
+import Schedule from "@/pages/Schedule";
+import ScheduleRequests from "@/pages/ScheduleRequests";
+import EmployeeWorkflow from "@/pages/EmployeeWorkflow";
 import Hiring from "@/pages/Hiring";
-import Profile from "@/pages/Profile";
+import Payroll from "@/pages/Payroll";
+import Salary from "@/pages/Salary";
 import Settings from "@/pages/Settings";
+import Profile from "@/pages/Profile";
 import RestaurantSchedule from "@/pages/RestaurantSchedule";
 import NotFound from "@/pages/NotFound";
-import AppLayout from "@/components/layout/AppLayout";
-import { Navigate, Routes, Route } from "react-router-dom";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Index from "@/pages/Index";
+import LandingPage from "@/pages/LandingPage";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import EmployeeDetailsPage from "@/components/people/EmployeeDetailsPage";
 
-export default function AppRoutes() {
-  return (
-    <Routes>
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/" element={<Index />} />
-      <Route element={<AppLayout />}>
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/people" element={<ProtectedRoute><People /></ProtectedRoute>} />
-        <Route path="/my-employees" element={<ProtectedRoute><People /></ProtectedRoute>} />
-        <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
-        <Route path="/schedule-requests" element={<ProtectedRoute><Navigate to="/leave-management" state={{ initialView: "schedule-requests" }} replace /></ProtectedRoute>} />
-        <Route path="/restaurant-schedule" element={<ProtectedRoute><RestaurantSchedule /></ProtectedRoute>} />
-        <Route path="/shift-calendar" element={<ProtectedRoute><RestaurantSchedule /></ProtectedRoute>} />
-        <Route path="/employee-workflow" element={<ProtectedRoute><EmployeeWorkflow /></ProtectedRoute>} />
-        <Route path="/salary" element={<ProtectedRoute><Salary /></ProtectedRoute>} />
-        <Route path="/payroll" element={<ProtectedRoute requiredRole="manager"><Payroll /></ProtectedRoute>} />
-        <Route path="/leave-management" element={<ProtectedRoute><LeaveManagement /></ProtectedRoute>} />
-        <Route path="/hiring" element={<ProtectedRoute><Hiring /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-        <Route path="*" element={<NotFound />} />
-      </Route>
-    </Routes>
-  );
-}
+const router = createBrowserRouter([
+  {
+    path: "/auth",
+    element: <Auth />,
+  },
+  {
+    path: "/",
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <Index />,
+      },
+      {
+        path: "dashboard",
+        element: <Dashboard />,
+      },
+      {
+        path: "people",
+        element: <People />,
+      },
+      {
+        path: "people/:id",
+        element: <EmployeeDetailsPage />,
+      },
+      {
+        path: "leave",
+        element: <LeaveManagement />,
+      },
+      {
+        path: "schedule",
+        element: <Schedule />,
+      },
+      {
+        path: "schedule-requests",
+        element: <ScheduleRequests />,
+      },
+      {
+        path: "employee-workflow",
+        element: <EmployeeWorkflow />,
+      },
+      {
+        path: "hiring",
+        element: <Hiring />,
+      },
+      {
+        path: "payroll",
+        element: <Payroll />,
+      },
+      {
+        path: "salary",
+        element: <Salary />,
+      },
+      {
+        path: "restaurant-schedule",
+        element: <RestaurantSchedule />,
+      },
+      {
+        path: "settings",
+        element: <Settings />,
+      },
+      {
+        path: "profile",
+        element: <Profile />,
+      },
+    ],
+  },
+  {
+    path: "/landing",
+    element: <LandingPage />,
+  },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
+]);
+
+export default router;
