@@ -3,12 +3,13 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, X } from 'lucide-react';
+import { Edit, Pencil } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { DialogTitle, DialogClose } from '@/components/ui/dialog';
 import EmployeeStatusDropdown from './EmployeeStatusDropdown';
 import { Employee } from '@/components/people/types';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface EmployeeHeaderProps {
   employee: Employee;
@@ -55,30 +56,38 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
             <EmployeeStatusDropdown onStatusChange={handleStatusChange} />
           )}
           {onEdit && (
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="rounded-full border-apple-gray-200 bg-white shadow-sm" 
-              title="Edit Employee"
-              onClick={onEdit}
-            >
-              <Edit className="h-4 w-4 text-apple-gray-700" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="rounded-full border-apple-blue/30 bg-white/80 hover:bg-apple-blue/5 shadow-sm transition-all duration-300 ease-in-out" 
+                    onClick={onEdit}
+                  >
+                    <Pencil className="h-4 w-4 text-apple-blue stroke-[2.5px] transition-transform hover:scale-110" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="bg-apple-gray-900 text-white">
+                  <p>Edit Employee Details</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
           <Button 
             variant="outline" 
             size="icon"
-            className="rounded-full border-apple-gray-200 bg-white hover:bg-red-50 hover:text-red-500 hover:border-red-200 shadow-sm" 
+            className="rounded-full border-red-200/30 bg-white/80 hover:bg-red-50 hover:text-red-500 shadow-sm" 
             title="Delete Employee"
             onClick={onDelete}
           >
-            <Trash2 className="h-4 w-4 text-apple-gray-700" />
+            <Trash2 className="h-4 w-4 text-apple-gray-700 transition-transform hover:scale-110" />
           </Button>
           <DialogClose asChild>
             <Button 
               variant="outline" 
               size="icon" 
-              className="rounded-full border-apple-gray-200 bg-white shadow-sm" 
+              className="rounded-full border-apple-gray-200/30 bg-white/80 shadow-sm" 
               title="Close"
             >
               <X className="h-4 w-4 text-apple-gray-700" />
@@ -91,3 +100,4 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
 };
 
 export default EmployeeHeader;
+
