@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, Upload, File, Loader2 } from 'lucide-react';
+import { FileText, Download, Upload, File, Loader2, Trash2 } from 'lucide-react'; // Added Trash2 import here
 import { Employee } from '@/components/people/types';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
