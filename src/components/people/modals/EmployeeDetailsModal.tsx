@@ -8,6 +8,7 @@ import EmployeeHeader from './employee-details/EmployeeHeader';
 import EmployeeInfoSection from './employee-details/EmployeeInfoSection';
 import DeleteConfirmationDialog from './employee-details/DeleteConfirmationDialog';
 import AddEmployeeModal from './AddEmployeeModal';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface EmployeeDetailsModalProps {
   employee: Employee | null;
@@ -28,6 +29,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const deleteEmployee = useDeleteEmployee();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   if (!employee) return null;
 
@@ -74,8 +76,8 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       status: uiEmployee.status,
       avatar: uiEmployee.avatar,
       location: uiEmployee.siteIcon === '🌐' ? 'Remote' : 'Office',
-      annual_leave_days: 25, // Default values
-      sick_leave_days: 10,    // Default values
+      annual_leave_days: uiEmployee.annual_leave_days || 25, 
+      sick_leave_days: uiEmployee.sick_leave_days || 10,
       manager_id: uiEmployee.managerId || null,
       user_id: uiEmployee.userId || null
     };
@@ -84,14 +86,14 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-2xl">
+        <DialogContent className={`p-0 overflow-hidden rounded-2xl ${isMobile ? 'w-[95vw] max-w-[95vw]' : 'sm:max-w-[500px]'}`}>
           <EmployeeHeader 
             employee={employee}
             onStatusChange={onStatusChange}
             onEdit={handleEdit}
             onDelete={() => setIsDeleteDialogOpen(true)}
           />
-          <EmployeeInfoSection employee={employee} />
+          <EmployeeInfoSection employee={employee} onBack={onClose} />
         </DialogContent>
       </Dialog>
 

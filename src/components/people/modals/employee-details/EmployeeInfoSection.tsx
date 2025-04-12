@@ -7,6 +7,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import DocumentsSection from './DocumentsSection';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
+import EmployeeStatistics from '../../EmployeeStatistics';
 
 interface EmployeeInfoSectionProps {
   employee: Employee;
@@ -18,19 +20,20 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
   onBack
 }) => {
   const { isManager } = useAuth();
+  const isMobile = useIsMobile();
   
   return (
-    <ScrollArea className="max-h-[calc(100vh-180px)] overflow-y-auto">
+    <ScrollArea className={`${isMobile ? 'max-h-[75vh]' : 'max-h-[calc(100vh-180px)]'} overflow-y-auto momentum-scroll`}>
       <div className="p-4 sm:p-6 bg-white">
         {onBack && (
           <Button 
             variant="ghost" 
             size="sm" 
-            className="mb-4 text-apple-gray-600 hover:text-apple-gray-900 hover:bg-apple-gray-100"
+            className="mb-4 text-apple-gray-600 hover:text-apple-gray-900 hover:bg-apple-gray-100 touch-target flex items-center"
             onClick={onBack}
           >
             <ChevronLeft className="h-4 w-4 mr-1.5" />
-            Back
+            <span>Back</span>
           </Button>
         )}
         
@@ -74,6 +77,15 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
         
         <Separator className="my-6" />
         
+        <h3 className="text-xs font-semibold text-apple-gray-500 mb-5 uppercase tracking-wider">Statistics</h3>
+        
+        <EmployeeStatistics 
+          annual_leave_days={employee.annual_leave_days} 
+          sick_leave_days={employee.sick_leave_days}
+        />
+        
+        <Separator className="my-6" />
+        
         <DocumentsSection employee={employee} />
       </div>
     </ScrollArea>
@@ -88,7 +100,7 @@ interface InfoItemProps {
 
 const InfoItem: React.FC<InfoItemProps> = ({ icon, label, value }) => {
   return (
-    <div className="p-3.5 rounded-xl bg-apple-gray-50 hover:bg-apple-gray-100/80 transition-colors">
+    <div className="p-3.5 rounded-xl bg-apple-gray-50 hover:bg-apple-gray-100/80 transition-colors active-touch-state">
       <div className="flex items-start gap-3.5">
         <div className="mt-0.5 p-2 bg-white rounded-lg shadow-sm">
           {icon}
