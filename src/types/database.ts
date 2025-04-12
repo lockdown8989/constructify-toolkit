@@ -1,3 +1,4 @@
+
 export interface EmployeeModel {
   id: string;
   name: string;
@@ -64,4 +65,5 @@ export interface DocumentModel {
   size?: string;
   created_at?: string;
   updated_at?: string;
+  url?: string;
 }

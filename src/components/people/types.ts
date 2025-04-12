@@ -1,22 +1,22 @@
-
 import { Employee as DbEmployee } from '@/hooks/use-employees';
 
 export interface Employee {
   id: string;
-  avatar: string;
   name: string;
   jobTitle: string;
   department: string;
   site: string;
-  siteIcon?: string;
+  siteIcon: string;
   salary: string;
   startDate: string;
   lifecycle: string;
   status: string;
   statusColor: 'green' | 'gray';
-  selected?: boolean;
+  avatar?: string;
   managerId?: string;
   userId?: string;
+  annual_leave_days?: number;
+  sick_leave_days?: number;
 }
 
 export interface PeopleTableProps {
@@ -27,25 +27,41 @@ export interface PeopleTableProps {
   isLoading?: boolean;
 }
 
-export const mapDbEmployeeToUiEmployee = (dbEmployee: DbEmployee): Employee => {
+export const mapDbEmployeeToUiEmployee = (dbEmployee: any): Employee => {
+  const siteIcon = dbEmployee.location === 'Remote' ? '🌐' : '🏢';
+  const statusColor = dbEmployee.status === 'Active' ? 'green' : 'gray';
+  
+  // Format salary with appropriate currency symbol
+  const formattedSalary = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  }).format(dbEmployee.salary);
+  
+  // Format date in readable format
+  const formattedDate = new Date(dbEmployee.start_date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  
   return {
     id: dbEmployee.id,
-    avatar: dbEmployee.avatar || `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'women' : 'men'}/${Math.floor(Math.random() * 99)}.jpg`,
     name: dbEmployee.name,
     jobTitle: dbEmployee.job_title,
     department: dbEmployee.department,
     site: dbEmployee.site,
-    siteIcon: dbEmployee.site.includes('Remote') ? '🌐' : '🏢',
-    salary: `$${dbEmployee.salary.toLocaleString()}`,
-    startDate: new Date(dbEmployee.start_date).toLocaleDateString('en-US', { 
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    }),
+    siteIcon,
+    salary: formattedSalary,
+    startDate: formattedDate,
     lifecycle: dbEmployee.lifecycle,
     status: dbEmployee.status,
-    statusColor: dbEmployee.status === 'Active' ? 'green' : 'gray',
-    managerId: dbEmployee.manager_id || undefined,
-    userId: dbEmployee.user_id || undefined,
+    statusColor,
+    avatar: dbEmployee.avatar,
+    managerId: dbEmployee.manager_id,
+    userId: dbEmployee.user_id,
+    annual_leave_days: dbEmployee.annual_leave_days,
+    sick_leave_days: dbEmployee.sick_leave_days
   };
 };

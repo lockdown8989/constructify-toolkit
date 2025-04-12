@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { DocumentModel } from '@/types/database';
 
 interface DocumentsSectionProps {
   employee: Employee;
@@ -17,6 +18,8 @@ interface Document {
   name: string;
   type: 'contract' | 'resume' | 'payslip';
   size: string;
+  icon?: React.ReactNode;
+  bgColor?: string;
   url?: string;
 }
 
@@ -56,7 +59,9 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
           id: 'contract-placeholder', 
           name: 'Contract', 
           type: 'contract', 
-          size: '0 KB' 
+          size: '0 KB',
+          icon: <img src="/word-icon.png" alt="Word" className="w-8 h-8" />,
+          bgColor: 'bg-blue-50'
         });
       }
       
@@ -65,7 +70,9 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
           id: 'resume-placeholder', 
           name: 'Resume', 
           type: 'resume', 
-          size: '0 KB' 
+          size: '0 KB',
+          icon: <img src="/pdf-icon.png" alt="PDF" className="w-8 h-8" />,
+          bgColor: 'bg-red-50'
         });
       }
       
@@ -83,11 +90,30 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
                 ? 'resume'
                 : 'payslip';
                 
+            let icon = <FileText className="w-8 h-8" />;
+            let bgColor = 'bg-gray-50';
+            
+            if (type === 'contract') {
+              icon = <img src="/word-icon.png" alt="Word" className="w-8 h-8" onError={(e) => {
+                e.currentTarget.src = '';
+                e.currentTarget.onerror = null;
+              }} />;
+              bgColor = 'bg-blue-50';
+            } else if (type === 'resume' || type === 'payslip') {
+              icon = <img src="/pdf-icon.png" alt="PDF" className="w-8 h-8" onError={(e) => {
+                e.currentTarget.src = '';
+                e.currentTarget.onerror = null;
+              }} />;
+              bgColor = 'bg-red-50';
+            }
+            
             formattedDocs.push({
               id: doc.id,
               name: doc.name,
               type: type as 'contract' | 'resume' | 'payslip',
               size: doc.size || `0 KB`,
+              icon,
+              bgColor,
               url: urlData.publicUrl
             });
           }
@@ -200,79 +226,51 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
     }
   };
   
-  const getDocumentColor = (type: string) => {
-    switch (type) {
-      case 'contract':
-        return "bg-blue-50 text-blue-700";
-      case 'resume':
-        return "bg-green-50 text-green-700";
-      case 'payslip':
-        return "bg-purple-50 text-purple-700";
-      default:
-        return "bg-gray-50 text-gray-700";
-    }
-  };
-  
   return (
-    <div>
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-xs font-semibold text-apple-gray-500 uppercase tracking-wider">Documents</h3>
-        {isManager && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-xs h-8 rounded-full bg-apple-gray-50 border-apple-gray-200 text-apple-gray-800 hover:bg-apple-gray-100"
-            disabled={uploading}
-          >
-            <Upload className="h-3.5 w-3.5 mr-1.5" />
-            Upload
-          </Button>
-        )}
-      </div>
-      
+    <div className="mb-6">
       {isLoading ? (
         <div className="flex justify-center py-8">
           <div className="animate-pulse text-apple-gray-500">Loading documents...</div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {documents.map((doc) => (
             <div 
               key={doc.id}
-              className="relative group p-3.5 rounded-xl bg-apple-gray-50 hover:bg-apple-gray-100/90 transition-colors cursor-pointer"
+              className={`relative group p-4 rounded-2xl ${doc.bgColor || 'bg-gray-50'} hover:bg-opacity-80 transition-colors cursor-pointer flex items-center`}
               onClick={() => {
                 if (!isManager || doc.url) {
                   handleDocumentDownload(doc);
                 }
               }}
             >
-              <div className="flex items-center">
-                <div className={`p-2.5 rounded-lg ${getDocumentColor(doc.type)} mr-3 flex-shrink-0`}>
-                  <FileText className="h-4 w-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-apple-gray-900 truncate">{doc.name}</p>
-                  <p className="text-xs text-apple-gray-500">{doc.size}</p>
-                </div>
-                {isManager && !doc.url ? (
-                  <label className="cursor-pointer p-2 rounded-full hover:bg-apple-gray-200/50 transition-colors">
-                    <Upload className="h-4 w-4 text-apple-gray-600" />
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      onChange={(e) => handleDocumentUpload(e, doc.type)}
-                      disabled={uploading}
-                      accept=".pdf,.doc,.docx,.txt"
-                    />
-                  </label>
-                ) : (
-                  doc.url && (
-                    <div className="p-2 rounded-full hover:bg-apple-gray-200/50 transition-colors">
-                      <Download className="h-4 w-4 text-apple-gray-600" />
-                    </div>
-                  )
-                )}
+              <div className="flex-shrink-0 mr-3">
+                {doc.icon || <FileText className="w-8 h-8 text-gray-500" />}
               </div>
+              
+              <div className="flex-1">
+                <p className="font-medium text-gray-900">{doc.name}</p>
+                <p className="text-xs text-gray-500">{doc.size}</p>
+              </div>
+              
+              {isManager && !doc.url ? (
+                <label className="cursor-pointer p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors">
+                  <Upload className="h-5 w-5 text-gray-600" />
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    onChange={(e) => handleDocumentUpload(e, doc.type)}
+                    disabled={uploading}
+                    accept=".pdf,.doc,.docx,.txt"
+                  />
+                </label>
+              ) : (
+                doc.url && (
+                  <div className="p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors">
+                    <Download className="h-5 w-5 text-gray-600" />
+                  </div>
+                )
+              )}
             </div>
           ))}
         </div>
