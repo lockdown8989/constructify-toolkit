@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +37,7 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
   };
 
   return (
-    <div className="bg-gradient-to-br from-apple-gray-50 to-apple-gray-100/60 p-4 sm:p-6 rounded-t-xl backdrop-blur-sm">
+    <div className="bg-gradient-to-br from-apple-gray-50 to-apple-gray-100/60 p-4 sm:p-6 rounded-t-xl backdrop-blur-sm sticky top-0 z-10 shadow-sm">
       <div className={`flex items-start ${isMobile ? 'flex-col gap-4' : 'gap-5'}`}>
         <Avatar className="h-16 w-16 sm:h-20 sm:w-20 border-2 border-white shadow-sm rounded-2xl">
           <AvatarImage src={employee.avatar} alt={employee.name} className="object-cover" />
@@ -50,7 +51,7 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
           </Badge>
         </div>
         
-        <div className={`flex gap-2 ${isMobile ? 'self-end' : ''}`}>
+        <div className={`flex gap-2 ${isMobile ? 'self-end' : ''} sticky top-0`}>
           {onStatusChange && (
             <EmployeeStatusDropdown onStatusChange={handleStatusChange} />
           )}

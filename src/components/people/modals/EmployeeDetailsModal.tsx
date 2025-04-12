@@ -86,14 +86,16 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className={`p-0 overflow-hidden rounded-2xl ${isMobile ? 'w-[95vw] max-w-[95vw]' : 'sm:max-w-[500px]'}`}>
+        <DialogContent className={`p-0 overflow-hidden rounded-2xl ${isMobile ? 'w-[95vw] max-w-[95vw]' : 'sm:max-w-[500px]'} max-h-[90vh] flex flex-col`}>
           <EmployeeHeader 
             employee={employee}
             onStatusChange={onStatusChange}
             onEdit={handleEdit}
             onDelete={() => setIsDeleteDialogOpen(true)}
           />
-          <EmployeeInfoSection employee={employee} onBack={onClose} />
+          <div className="flex-1 overflow-auto">
+            <EmployeeInfoSection employee={employee} onBack={onClose} />
+          </div>
         </DialogContent>
       </Dialog>
 

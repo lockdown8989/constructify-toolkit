@@ -96,31 +96,40 @@ export type Database = {
           created_at: string | null
           document_type: string
           employee_id: string | null
+          file_type: string | null
           id: string
           name: string
           path: string | null
           size: string | null
           updated_at: string | null
+          uploaded_by: string | null
+          url: string | null
         }
         Insert: {
           created_at?: string | null
           document_type: string
           employee_id?: string | null
+          file_type?: string | null
           id?: string
           name: string
           path?: string | null
           size?: string | null
           updated_at?: string | null
+          uploaded_by?: string | null
+          url?: string | null
         }
         Update: {
           created_at?: string | null
           document_type?: string
           employee_id?: string | null
+          file_type?: string | null
           id?: string
           name?: string
           path?: string | null
           size?: string | null
           updated_at?: string | null
+          uploaded_by?: string | null
+          url?: string | null
         }
         Relationships: [
           {

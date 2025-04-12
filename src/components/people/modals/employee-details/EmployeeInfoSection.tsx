@@ -23,7 +23,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
   const isMobile = useIsMobile();
   
   return (
-    <ScrollArea className={`${isMobile ? 'max-h-[75vh]' : 'max-h-[calc(100vh-180px)]'} overflow-y-auto momentum-scroll`}>
+    <ScrollArea className={`${isMobile ? 'max-h-[75vh]' : 'max-h-[calc(100vh-180px)]'} overflow-y-auto momentum-scroll pb-6`}>
       <div className="p-4 sm:p-6 bg-white">
         {onBack && (
           <Button 
