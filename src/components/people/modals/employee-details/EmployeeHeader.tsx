@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Edit, Pencil } from 'lucide-react';
+import { Pencil, Trash2, X } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { DialogTitle, DialogClose } from '@/components/ui/dialog';
 import EmployeeStatusDropdown from './EmployeeStatusDropdown';
@@ -100,4 +99,3 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
 };
 
 export default EmployeeHeader;
-
