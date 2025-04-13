@@ -4,7 +4,8 @@ import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/hooks/use-auth';
+import { formatDistanceToNow } from 'date-fns';
 
 interface Notification {
   id: string;
@@ -20,6 +21,7 @@ interface Notification {
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -129,15 +131,39 @@ const NotificationBell = () => {
     
     setUnreadCount(0);
   };
+
+  const getNotificationTimeAgo = (createdAt: string) => {
+    try {
+      return formatDistanceToNow(new Date(createdAt), { addSuffix: true });
+    } catch (error) {
+      return 'recently';
+    }
+  };
+  
+  const getNotificationBgColor = (type: string, read: boolean) => {
+    if (read) return '';
+    
+    switch (type) {
+      case 'success':
+        return 'bg-green-50';
+      case 'warning':
+        return 'bg-yellow-50';
+      case 'error':
+        return 'bg-red-50';
+      case 'info':
+      default:
+        return 'bg-blue-50';
+    }
+  };
   
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <span className="absolute top-0 right-0 h-4 w-4 rounded-full bg-red-500 text-xs text-white flex items-center justify-center transform translate-x-1 -translate-y-1">
-              {unreadCount}
+              {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
         </Button>
@@ -165,16 +191,13 @@ const NotificationBell = () => {
             notifications.map(notification => (
               <div 
                 key={notification.id}
-                className={`p-4 border-b hover:bg-muted/50 cursor-pointer ${!notification.read ? 'bg-muted/20' : ''}`}
+                className={`p-4 border-b hover:bg-muted/50 cursor-pointer ${getNotificationBgColor(notification.type, notification.read)}`}
                 onClick={() => markAsRead(notification.id)}
               >
                 <div className="flex justify-between items-start">
                   <p className="font-medium">{notification.title}</p>
                   <span className="text-xs text-muted-foreground">
-                    {new Date(notification.created_at).toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit'
-                    })}
+                    {getNotificationTimeAgo(notification.created_at)}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>

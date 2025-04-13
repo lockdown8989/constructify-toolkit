@@ -1,60 +1,59 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { 
+  Clock, 
+  CheckCircle2, 
+  XCircle, 
+  CircleCheck 
+} from 'lucide-react';
 
 interface ShiftSwapStatusBadgeProps {
   status: string;
-  className?: string;
 }
 
-const ShiftSwapStatusBadge: React.FC<ShiftSwapStatusBadgeProps> = ({ 
-  status, 
-  className 
-}) => {
+const ShiftSwapStatusBadge = ({ status }: ShiftSwapStatusBadgeProps) => {
   switch (status) {
+    case 'Pending':
+      return (
+        <Badge 
+          className="bg-yellow-100 text-yellow-800 border border-yellow-300 flex items-center"
+        >
+          <Clock className="h-3 w-3 mr-1" />
+          Pending
+        </Badge>
+      );
     case 'Approved':
       return (
         <Badge 
-          className={cn(
-            "bg-green-100 text-green-800 border-green-300",
-            className
-          )}
+          className="bg-green-100 text-green-800 border border-green-300 flex items-center"
         >
+          <CheckCircle2 className="h-3 w-3 mr-1" />
           Approved
         </Badge>
       );
     case 'Rejected':
       return (
         <Badge 
-          className={cn(
-            "bg-red-100 text-red-800 border-red-300",
-            className
-          )}
+          className="bg-red-100 text-red-800 border border-red-300 flex items-center"
         >
+          <XCircle className="h-3 w-3 mr-1" />
           Rejected
         </Badge>
       );
     case 'Completed':
       return (
         <Badge 
-          className={cn(
-            "bg-blue-100 text-blue-800 border-blue-300",
-            className
-          )}
+          className="bg-blue-100 text-blue-800 border border-blue-300 flex items-center"
         >
+          <CircleCheck className="h-3 w-3 mr-1" />
           Completed
         </Badge>
       );
     default:
       return (
-        <Badge 
-          className={cn(
-            "bg-yellow-100 text-yellow-800 border-yellow-300",
-            className
-          )}
-        >
-          Pending
+        <Badge>
+          {status}
         </Badge>
       );
   }

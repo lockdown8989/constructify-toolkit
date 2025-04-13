@@ -3,7 +3,24 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, RefreshCw, Plus, Filter } from 'lucide-react';
+import { 
+  Calendar, 
+  Clock, 
+  RefreshCw, 
+  Plus, 
+  Filter, 
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  ArrowLeftRight
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import ShiftSwapList from '@/components/schedule/ShiftSwapList';
 import ShiftSwapForm from '@/components/schedule/ShiftSwapForm';
 import AvailabilityRequestList from '@/components/schedule/AvailabilityRequestList';
@@ -20,10 +37,46 @@ const ScheduleRequestsTab: React.FC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
-  const { user } = useAuth();
+  const { user, isManager } = useAuth();
   const [activeSection, setActiveSection] = useState<'requests' | 'form'>('requests');
   const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
+  const [pendingCount, setPendingCount] = useState({ shifts: 0, availability: 0 });
+  
+  // Fetch pending counts on load and when data changes
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchPendingCounts = async () => {
+      try {
+        // Get pending shift swap requests count
+        const { data: pendingShifts, error: shiftError } = await supabase
+          .from('shift_swaps')
+          .select('id', { count: 'exact' })
+          .eq('status', 'Pending');
+        
+        // Get pending availability requests count
+        const { data: pendingAvailability, error: availError } = await supabase
+          .from('availability_requests')
+          .select('id', { count: 'exact' })
+          .eq('status', 'Pending');
+        
+        if (shiftError || availError) {
+          console.error("Error fetching pending counts:", shiftError || availError);
+          return;
+        }
+        
+        setPendingCount({
+          shifts: pendingShifts?.length || 0,
+          availability: pendingAvailability?.length || 0
+        });
+      } catch (error) {
+        console.error("Error in fetchPendingCounts:", error);
+      }
+    };
+    
+    fetchPendingCounts();
+  }, [user, queryClient]);
   
   // Set up real-time listeners for shift swaps and availability requests
   useEffect(() => {
@@ -41,6 +94,17 @@ const ScheduleRequestsTab: React.FC = () => {
         async (payload) => {
           // Invalidate queries to refresh data
           queryClient.invalidateQueries({ queryKey: ['shift_swaps'] });
+          
+          // Recalculate pending counts
+          const { data: pendingShifts } = await supabase
+            .from('shift_swaps')
+            .select('id', { count: 'exact' })
+            .eq('status', 'Pending');
+          
+          setPendingCount(prev => ({
+            ...prev,
+            shifts: pendingShifts?.length || 0
+          }));
           
           // Show toast notification for specific events
           if (payload.eventType === 'UPDATE') {
@@ -123,14 +187,16 @@ const ScheduleRequestsTab: React.FC = () => {
               const managerIds = await getManagerUserIds();
               
               for (const managerId of managerIds) {
-                await sendNotification({
-                  user_id: managerId,
-                  title: "New shift swap request",
-                  message: "A new shift swap request requires your review.",
-                  type: "info",
-                  related_entity: "shift_swaps",
-                  related_id: payload.new.id
-                });
+                if (managerId !== user.id) { // Don't notify the current user if they're a manager
+                  await sendNotification({
+                    user_id: managerId,
+                    title: "New shift swap request",
+                    message: "A new shift swap request requires your review.",
+                    type: "info",
+                    related_entity: "shift_swaps",
+                    related_id: payload.new.id
+                  });
+                }
               }
             } catch (error) {
               console.error("Error sending notifications to managers:", error);
@@ -148,6 +214,17 @@ const ScheduleRequestsTab: React.FC = () => {
         async (payload) => {
           // Invalidate queries to refresh data
           queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
+          
+          // Recalculate pending counts
+          const { data: pendingAvailability } = await supabase
+            .from('availability_requests')
+            .select('id', { count: 'exact' })
+            .eq('status', 'Pending');
+          
+          setPendingCount(prev => ({
+            ...prev,
+            availability: pendingAvailability?.length || 0
+          }));
           
           // Show toast notification for specific events
           if (payload.eventType === 'UPDATE') {
@@ -209,14 +286,16 @@ const ScheduleRequestsTab: React.FC = () => {
               const managerIds = await getManagerUserIds();
               
               for (const managerId of managerIds) {
-                await sendNotification({
-                  user_id: managerId,
-                  title: "New availability request",
-                  message: "A new availability request requires your review.",
-                  type: "info",
-                  related_entity: "availability_requests",
-                  related_id: payload.new.id
-                });
+                if (managerId !== user.id) { // Don't notify the current user if they're a manager
+                  await sendNotification({
+                    user_id: managerId,
+                    title: "New availability request",
+                    message: "A new availability request requires your review.",
+                    type: "info",
+                    related_entity: "availability_requests",
+                    related_id: payload.new.id
+                  });
+                }
               }
             } catch (error) {
               console.error("Error sending notifications to managers:", error);
@@ -258,7 +337,7 @@ const ScheduleRequestsTab: React.FC = () => {
   };
   
   return (
-    <Card className="border shadow-sm">
+    <Card className="border shadow-sm rounded-xl">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div>
@@ -267,15 +346,23 @@ const ScheduleRequestsTab: React.FC = () => {
               Manage shift swaps and availability requests
             </CardDescription>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleRefreshData}
-            className="flex items-center"
-          >
-            <RefreshCw className="h-4 w-4 mr-1" />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            {isManager && (pendingCount.shifts > 0 || pendingCount.availability > 0) && (
+              <Badge className="bg-amber-100 text-amber-800 border border-amber-300 flex items-center">
+                <AlertCircle className="h-3.5 w-3.5 mr-1" />
+                {pendingCount.shifts + pendingCount.availability} pending
+              </Badge>
+            )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefreshData}
+              className="flex items-center"
+            >
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Refresh
+            </Button>
+          </div>
         </div>
         <div className="text-xs text-muted-foreground mt-2">
           Last updated: {lastRefreshed.toLocaleTimeString()}
@@ -287,13 +374,23 @@ const ScheduleRequestsTab: React.FC = () => {
         
         <Tabs defaultValue="shift-swaps" className="mt-2">
           <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
-            <TabsTrigger value="shift-swaps" className="text-xs sm:text-sm flex items-center">
-              <RefreshCw className="h-3 w-3 mr-1.5" />
+            <TabsTrigger value="shift-swaps" className="text-xs sm:text-sm flex items-center justify-center">
+              <ArrowLeftRight className="h-3.5 w-3.5 mr-1.5" />
               Shift Swaps
+              {pendingCount.shifts > 0 && (
+                <Badge className="ml-1.5 bg-amber-100 text-amber-800 border border-amber-300">
+                  {pendingCount.shifts}
+                </Badge>
+              )}
             </TabsTrigger>
-            <TabsTrigger value="availability" className="text-xs sm:text-sm flex items-center">
-              <Clock className="h-3 w-3 mr-1.5" />
+            <TabsTrigger value="availability" className="text-xs sm:text-sm flex items-center justify-center">
+              <Clock className="h-3.5 w-3.5 mr-1.5" />
               Availability
+              {pendingCount.availability > 0 && (
+                <Badge className="ml-1.5 bg-amber-100 text-amber-800 border border-amber-300">
+                  {pendingCount.availability}
+                </Badge>
+              )}
             </TabsTrigger>
           </TabsList>
           
@@ -301,7 +398,7 @@ const ScheduleRequestsTab: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
               {(!isMobile || activeSection === 'form') && (
                 <div className="md:col-span-1">
-                  <Card className="border shadow-sm">
+                  <Card className="border shadow-sm rounded-xl">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium flex items-center">
                         <Plus className="h-4 w-4 mr-1" />
@@ -317,13 +414,37 @@ const ScheduleRequestsTab: React.FC = () => {
               
               {(!isMobile || activeSection === 'requests') && (
                 <div className="md:col-span-2">
-                  <Card className="border shadow-sm">
+                  <Card className="border shadow-sm rounded-xl">
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-sm font-medium flex items-center">
                           <Filter className="h-4 w-4 mr-1" />
                           Shift Swap Requests
                         </CardTitle>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              Quick Actions
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              className="flex items-center cursor-pointer"
+                              onClick={() => setActiveSection('form')}
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              New Swap Request
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="flex items-center cursor-pointer"
+                              onClick={handleRefreshData}
+                            >
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Refresh Data
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -340,7 +461,7 @@ const ScheduleRequestsTab: React.FC = () => {
               {(!isMobile || activeSection === 'form') && (
                 <div className="md:col-span-1">
                   {showAvailabilityForm ? (
-                    <Card className="border shadow-sm">
+                    <Card className="border shadow-sm rounded-xl">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium flex items-center">
                           <Calendar className="h-4 w-4 mr-1" />
@@ -355,7 +476,7 @@ const ScheduleRequestsTab: React.FC = () => {
                     <div className="h-10 flex justify-center">
                       <Button 
                         onClick={() => setShowAvailabilityForm(true)}
-                        className="bg-primary text-primary-foreground shadow flex items-center"
+                        className="bg-primary text-primary-foreground shadow flex items-center rounded-lg"
                       >
                         <Plus className="h-4 w-4 mr-1" />
                         Set Availability
@@ -367,12 +488,41 @@ const ScheduleRequestsTab: React.FC = () => {
               
               {(!isMobile || activeSection === 'requests') && (
                 <div className="md:col-span-2">
-                  <Card className="border shadow-sm">
+                  <Card className="border shadow-sm rounded-xl">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium flex items-center">
-                        <Filter className="h-4 w-4 mr-1" />
-                        Availability Requests
-                      </CardTitle>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium flex items-center">
+                          <Filter className="h-4 w-4 mr-1" />
+                          Availability Requests
+                        </CardTitle>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              Quick Actions
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              className="flex items-center cursor-pointer"
+                              onClick={() => {
+                                setActiveSection('form');
+                                setShowAvailabilityForm(true);
+                              }}
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              New Availability Request
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="flex items-center cursor-pointer"
+                              onClick={handleRefreshData}
+                            >
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Refresh Data
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </CardHeader>
                     <CardContent>
                       <AvailabilityRequestList />

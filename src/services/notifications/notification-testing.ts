@@ -1,77 +1,45 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import type { NotificationData, NotificationResult } from '@/models/notification';
 import { sendNotification } from './notification-sender';
 
 /**
- * Verifies if the notifications table is configured correctly
+ * Sends a test notification to the current user
  */
-export const verifyNotificationsTable = async (): Promise<NotificationResult> => {
-  console.log('NotificationService: Verifying notifications table');
-  
+export const sendTestNotification = async (userId: string) => {
   try {
-    // Try to fetch a single notification to verify the table structure
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .limit(1);
-    
-    if (error) {
-      console.error('Error verifying notifications table:', error);
-      return {
-        success: false,
-        message: `Error: ${error.message}`
-      };
-    }
-    
-    console.log('NotificationService: Notifications table verified successfully');
-    return {
-      success: true,
-      message: 'Notifications table verified successfully',
-      data
-    };
+    return sendNotification({
+      user_id: userId,
+      title: 'Test Notification',
+      message: 'This is a test notification. If you can see this, notifications are working correctly!',
+      type: 'info',
+      related_entity: 'test',
+      related_id: 'test-notification'
+    });
   } catch (error) {
-    console.error('Exception verifying notifications table:', error);
-    return {
-      success: false,
-      message: `Exception: ${error}`
-    };
+    console.error('Error sending test notification:', error);
+    return false;
   }
 };
 
 /**
- * Creates a test notification for a user
+ * Cleans up all test notifications for a user
  */
-export const createTestNotification = async (
-  userId: string,
-  title: string = 'Test Notification',
-  message: string = 'This is a test notification to verify the notification system.',
-  type: 'info' | 'success' | 'warning' | 'error' = 'info',
-  related_entity: string = 'system',
-  related_id: string = 'test'
-): Promise<NotificationResult> => {
-  console.log('NotificationService: Creating test notification for user:', userId);
-  
+export const cleanupTestNotifications = async (userId: string) => {
   try {
-    await sendNotification({
-      user_id: userId,
-      title,
-      message,
-      type,
-      related_entity,
-      related_id
-    });
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('user_id', userId)
+      .eq('related_entity', 'test');
     
-    console.log('NotificationService: Test notification created successfully');
-    return {
-      success: true,
-      message: 'Test notification created successfully'
-    };
+    if (error) {
+      console.error('Error cleaning up test notifications:', error);
+      return false;
+    }
+    
+    return true;
   } catch (error) {
-    console.error('Error creating test notification:', error);
-    return {
-      success: false,
-      message: `Error: ${error}`
-    };
+    console.error('Exception in cleanupTestNotifications:', error);
+    return false;
   }
 };

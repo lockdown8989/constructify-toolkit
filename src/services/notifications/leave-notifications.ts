@@ -1,121 +1,104 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import type { NotificationData } from "@/models/notification";
-import { getManagerUserIds } from "./role-utils";
-import { sendNotificationToMany } from "./notification-sender";
-import type { LeaveEvent } from "@/hooks/leave/leave-types";
+import { supabase } from '@/integrations/supabase/client';
+import { sendNotification, sendNotificationToMany } from './notification-sender';
+import { getManagerUserIds } from './role-utils';
 
 /**
- * Notifies managers when a new leave request is submitted
+ * Sends a notification to managers about a new leave request
  */
-export const notifyManagersOfNewLeaveRequest = async (leaveRequest: LeaveEvent): Promise<boolean> => {
+export const notifyManagersAboutLeaveRequest = async (
+  leaveId: string, 
+  employeeId: string,
+  startDate: string, 
+  endDate: string
+) => {
   try {
-    console.log('NotificationService: Notifying managers of new leave request', leaveRequest.id);
+    // Get employee name
+    const { data: employeeData } = await supabase
+      .from('employees')
+      .select('name')
+      .eq('id', employeeId)
+      .single();
+    
+    const employeeName = employeeData?.name || 'An employee';
     
     // Get all manager user IDs
     const managerIds = await getManagerUserIds();
     
-    if (!managerIds || managerIds.length === 0) {
-      console.warn('NotificationService: No manager IDs found to notify. Check user_roles table for manager roles.');
-      return false;
-    }
-    
-    console.log('NotificationService: Found manager IDs:', managerIds);
-    
-    // Get employee name for the notification
-    const { data: employeeData, error: employeeError } = await supabase
-      .from('employees')
-      .select('name, department')
-      .eq('id', leaveRequest.employee_id)
-      .single();
-      
-    if (employeeError) {
-      console.error('Error getting employee name:', employeeError);
-      throw employeeError;
-    }
-    
-    if (!employeeData) {
-      console.error('No employee data found for ID:', leaveRequest.employee_id);
-      return false;
-    }
-    
-    const employeeName = employeeData?.name || 'An employee';
-    const department = employeeData?.department || 'Unknown department';
-    console.log('NotificationService: Employee name:', employeeName, 'Department:', department);
-    
-    // Format dates for better readability
-    const startDate = new Date(leaveRequest.start_date).toLocaleDateString();
-    const endDate = new Date(leaveRequest.end_date).toLocaleDateString();
-    
-    // Build notification data
-    const notificationData: Omit<NotificationData, 'user_id'> = {
-      title: 'New Leave Request',
-      message: `${employeeName} (${department}) has submitted a new leave request from ${startDate} to ${endDate} for ${leaveRequest.type} leave.`,
-      type: 'info',
-      related_entity: 'leave_calendar',
-      related_id: leaveRequest.id
-    };
-    
-    console.log('NotificationService: Preparing to send notifications with data:', notificationData);
+    // Format dates for the message
+    const formattedDates = startDate === endDate
+      ? `on ${new Date(startDate).toLocaleDateString()}`
+      : `from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}`;
     
     // Send notifications to all managers
-    const result = await sendNotificationToMany(managerIds, notificationData);
-    console.log('NotificationService: Managers notification result:', result);
+    await sendNotificationToMany(managerIds, {
+      title: 'New Leave Request',
+      message: `${employeeName} has requested leave ${formattedDates}`,
+      type: 'info',
+      related_entity: 'leave_calendar',
+      related_id: leaveId
+    });
     
-    return result;
+    console.log(`Notified ${managerIds.length} managers about leave request ${leaveId}`);
+    return true;
   } catch (error) {
-    console.error('Exception notifying managers of new leave request:', error);
+    console.error('Error sending leave request notifications:', error);
     return false;
   }
 };
 
 /**
- * Notifies an employee when their leave request status changes
+ * Notifies an employee about their leave request status change
  */
-export const notifyEmployeeOfLeaveStatusChange = async (
-  leaveRequest: LeaveEvent, 
-  status: 'Approved' | 'Rejected'
-): Promise<boolean> => {
+export const notifyEmployeeAboutLeaveStatus = async (
+  leaveId: string,
+  employeeId: string,
+  status: 'Approved' | 'Rejected',
+  startDate: string,
+  endDate: string
+) => {
   try {
-    console.log(`NotificationService: Notifying employee of leave request ${status.toLowerCase()}`);
-    
-    // Get the employee's user ID
+    // Get employee user ID from employee table
     const { data: employeeData, error: employeeError } = await supabase
       .from('employees')
-      .select('user_id, name')
-      .eq('id', leaveRequest.employee_id)
+      .select('user_id')
+      .eq('id', employeeId)
       .single();
-      
-    if (employeeError) {
-      console.error('Error getting employee user ID:', employeeError);
-      throw employeeError;
-    }
     
-    if (!employeeData?.user_id) {
-      console.log('No user ID associated with employee record');
+    if (employeeError || !employeeData?.user_id) {
+      console.error('Error finding user ID for employee:', employeeError);
       return false;
     }
     
-    // Format dates for better readability
-    const startDate = new Date(leaveRequest.start_date).toLocaleDateString();
-    const endDate = new Date(leaveRequest.end_date).toLocaleDateString();
+    // Format dates for the message
+    const formattedDates = startDate === endDate
+      ? `on ${new Date(startDate).toLocaleDateString()}`
+      : `from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}`;
     
-    // Build notification data
-    const notificationData: Omit<NotificationData, 'user_id'> = {
-      title: `Leave Request ${status}`,
-      message: `Your leave request for ${leaveRequest.type} from ${startDate} to ${endDate} has been ${status.toLowerCase()}.`,
-      type: status === 'Approved' ? 'success' : 'warning',
-      related_entity: 'leave_calendar',
-      related_id: leaveRequest.id
-    };
+    const title = status === 'Approved' 
+      ? 'Leave Request Approved'
+      : 'Leave Request Rejected';
+    
+    const message = status === 'Approved'
+      ? `Your leave request ${formattedDates} has been approved`
+      : `Your leave request ${formattedDates} has been rejected`;
+    
+    const type = status === 'Approved' ? 'success' : 'warning';
     
     // Send notification to the employee
-    await sendNotificationToMany([employeeData.user_id], notificationData);
-    console.log(`NotificationService: Employee ${employeeData.name} (${employeeData.user_id}) notified successfully of ${status}`);
+    await sendNotification({
+      user_id: employeeData.user_id,
+      title,
+      message,
+      type,
+      related_entity: 'leave_calendar',
+      related_id: leaveId
+    });
     
+    console.log(`Notified employee ${employeeId} about leave status change to ${status}`);
     return true;
   } catch (error) {
-    console.error(`Exception notifying employee of leave request ${status.toLowerCase()}:`, error);
+    console.error('Error sending leave status notification:', error);
     return false;
   }
 };

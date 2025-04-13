@@ -2,73 +2,83 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Gets all user IDs with manager roles (admin, employer, hr)
+ * Gets all user IDs that have a manager role
  */
 export const getManagerUserIds = async (): Promise<string[]> => {
   try {
-    console.log('Getting manager user IDs');
-    
+    // Query for users with role 'manager' or 'admin'
     const { data, error } = await supabase
       .from('user_roles')
-      .select('user_id, role')
-      .in('role', ['admin', 'employer', 'hr']);
+      .select('user_id')
+      .in('role', ['manager', 'admin']);
     
     if (error) {
-      console.error('Error fetching manager IDs:', error);
+      console.error("Error fetching manager IDs:", error);
       throw error;
     }
     
     if (!data || data.length === 0) {
-      console.warn('No manager roles found in the database. Please check if user_roles table has entries for admin, employer, or hr roles.');
+      console.warn('No manager users found in the system');
       return [];
     }
     
-    const managerIds = data.map(item => item.user_id);
-    console.log(`Found ${managerIds.length} manager IDs:`, managerIds);
-    
-    // Verify these users actually exist
-    const { data: users, error: usersError } = await supabase
-      .from('profiles')
-      .select('id, first_name, last_name')
-      .in('id', managerIds);
-      
-    if (usersError) {
-      console.error('Error verifying manager users:', usersError);
-    } else {
-      console.log(`Verified ${users?.length || 0} manager users out of ${managerIds.length}`);
-    }
-    
-    return managerIds;
+    return data.map(item => item.user_id);
   } catch (error) {
-    console.error('Error in getManagerUserIds:', error);
+    console.error("Exception in getManagerUserIds:", error);
     return [];
   }
 };
 
 /**
- * Checks if a user has a manager role
+ * Checks if a user has a specific role
  */
-export const hasManagerRole = async (userId: string): Promise<boolean> => {
+export const hasRole = async (userId: string, role: string): Promise<boolean> => {
   try {
-    console.log(`Checking if user ${userId} has manager role`);
-    
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .in('role', ['admin', 'employer', 'hr']);
+      .eq('role', role)
+      .single();
     
     if (error) {
-      console.error('Error checking manager role:', error);
+      // Don't throw on not found errors
+      if (error.code === 'PGRST116') {
+        return false;
+      }
+      console.error("Error checking role:", error);
       throw error;
     }
     
-    const hasRole = data && data.length > 0;
-    console.log(`User ${userId} has manager role: ${hasRole}`);
-    
-    return hasRole;
+    return !!data;
   } catch (error) {
-    console.error('Error in hasManagerRole:', error);
+    console.error("Exception in hasRole:", error);
     return false;
+  }
+};
+
+/**
+ * Gets all roles for a user
+ */
+export const getUserRoles = async (userId: string): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error("Error fetching user roles:", error);
+      throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      return [];
+    }
+    
+    return data.map(item => item.role);
+  } catch (error) {
+    console.error("Exception in getUserRoles:", error);
+    return [];
   }
 };
