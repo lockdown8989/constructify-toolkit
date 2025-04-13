@@ -78,6 +78,10 @@ const router = createBrowserRouter([
         element: <Salary />,
       },
       {
+        path: "shift-calendar",
+        element: <RestaurantSchedule />,
+      },
+      {
         path: "restaurant-schedule",
         element: <RestaurantSchedule />,
       },

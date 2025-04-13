@@ -48,7 +48,7 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
             Employee Workflow
           </Link>
           <Link
-            to="/leave-management"
+            to="/leave"
             className="hover:underline underline-offset-4 flex items-center"
           >
             <Calendar className="h-4 w-4 mr-1" />
