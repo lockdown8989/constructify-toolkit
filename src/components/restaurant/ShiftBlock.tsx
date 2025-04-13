@@ -1,7 +1,6 @@
-
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Coffee, FileText, Plane, Trash, Edit, Plus } from 'lucide-react';
+import { Coffee, FileText, Plane, Trash2, Edit, Plus } from 'lucide-react';
 import { Shift } from '@/types/restaurant-schedule';
 import {
   Tooltip,
@@ -127,7 +126,7 @@ const ShiftBlock = ({
               className="p-1 hover:bg-gray-100 rounded-full transition-colors"
               aria-label="Delete shift"
             >
-              <Trash className="h-3.5 w-3.5 text-red-500" />
+              <Trash2 className="h-3.5 w-3.5 text-red-500" />
             </button>
           )}
         </div>

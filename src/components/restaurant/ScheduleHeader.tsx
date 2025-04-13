@@ -11,10 +11,10 @@ interface ScheduleHeaderProps {
 
 const ScheduleHeader = ({ setViewMode }: ScheduleHeaderProps) => {
   return (
-    <div className="mb-8">
-      <div className="flex items-center mb-4">
+    <div className="mb-6">
+      <div className="flex items-center mb-5">
         <Calendar className="h-8 w-8 text-primary mr-3" />
-        <h1 className="text-3xl font-medium tracking-tight">Shift Calendar Schedule</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Shift Calendar</h1>
       </div>
       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -26,13 +26,13 @@ const ScheduleHeader = ({ setViewMode }: ScheduleHeaderProps) => {
           <TabsList className="bg-transparent">
             <TabsTrigger 
               value="week" 
-              className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow"
             >
               Week
             </TabsTrigger>
             <TabsTrigger 
               value="month" 
-              className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow"
             >
               Month
             </TabsTrigger>
@@ -43,7 +43,7 @@ const ScheduleHeader = ({ setViewMode }: ScheduleHeaderProps) => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input 
             placeholder="Search employees or roles..." 
-            className="pl-9 rounded-full border-gray-200 w-full"
+            className="pl-9 rounded-full border-gray-200 w-full focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
           />
         </div>
       </div>

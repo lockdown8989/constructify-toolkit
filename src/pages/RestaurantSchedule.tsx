@@ -71,15 +71,16 @@ const RestaurantSchedule = () => {
   };
   
   return (
-    <div className="container py-6 max-w-full px-4 md:px-6">
-      <div className="mb-4">
+    <div className="container py-8 max-w-[1400px] px-4 md:px-6 mx-auto">
+      <div className="mb-6">
         <ScheduleHeader setViewMode={setViewMode} />
-        <div className="flex justify-end">
-          <OpenShiftActions addOpenShift={addOpenShift} />
-        </div>
       </div>
       
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+      <div className="flex justify-end mb-4">
+        <OpenShiftActions addOpenShift={addOpenShift} />
+      </div>
+      
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
         <WeeklyGrid 
           weekStats={weekStats}
           openShifts={openShifts}
@@ -93,15 +94,17 @@ const RestaurantSchedule = () => {
       </div>
       
       {/* Role sections */}
-      <RolesSectionList
-        roles={weekStats.roles}
-        organizedShifts={organizedShifts}
-        onEditShift={shiftDialog.handleEditShift}
-        onDeleteShift={removeShift}
-        onAddShift={shiftDialog.handleAddShift}
-        onAddNote={(shiftId) => handleAddNote(shiftId, shifts)}
-        onAddBreak={(shiftId) => handleAddBreak(shiftId, shifts)}
-      />
+      <div className="space-y-5">
+        <RolesSectionList
+          roles={weekStats.roles}
+          organizedShifts={organizedShifts}
+          onEditShift={shiftDialog.handleEditShift}
+          onDeleteShift={removeShift}
+          onAddShift={shiftDialog.handleAddShift}
+          onAddNote={(shiftId) => handleAddNote(shiftId, shifts)}
+          onAddBreak={(shiftId) => handleAddBreak(shiftId, shifts)}
+        />
+      </div>
       
       {/* Shift edit dialog */}
       {shiftDialog.ShiftDialogComponent}

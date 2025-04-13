@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { format, startOfWeek, addDays, getHours, getMinutes, isSameDay, isToday } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
@@ -65,7 +66,7 @@ const ScheduleCalendar = () => {
     for (let hour = 9; hour <= 17; hour++) {
       const formattedHour = hour > 12 ? `${hour - 12}:00 ${hour >= 12 ? 'PM' : 'AM'}` : `${hour}:00 ${hour >= 12 ? 'PM' : 'AM'}`;
       slots.push(
-        <div key={hour} className="flex border-t border-gray-200">
+        <div key={hour} className="flex border-t border-gray-200/70">
           <div className="w-16 pr-2 py-2 text-right text-xs text-gray-500 font-medium">
             {formattedHour}
           </div>
@@ -91,11 +92,11 @@ const ScheduleCalendar = () => {
 
   const getEventColor = (index: number) => {
     const colors = [
-      'bg-blue-100 border-blue-500 hover:bg-blue-200',
-      'bg-purple-100 border-purple-500 hover:bg-purple-200',
-      'bg-green-100 border-green-500 hover:bg-green-200',
-      'bg-amber-100 border-amber-500 hover:bg-amber-200',
-      'bg-pink-100 border-pink-500 hover:bg-pink-200',
+      'bg-blue-100/80 border-blue-500 hover:bg-blue-200/80',
+      'bg-purple-100/80 border-purple-500 hover:bg-purple-200/80',
+      'bg-green-100/80 border-green-500 hover:bg-green-200/80',
+      'bg-amber-100/80 border-amber-500 hover:bg-amber-200/80',
+      'bg-pink-100/80 border-pink-500 hover:bg-pink-200/80',
     ];
     
     return colors[index % colors.length];
@@ -108,18 +109,18 @@ const ScheduleCalendar = () => {
     );
 
     return (
-      <div className="bg-white rounded-3xl p-6 card-shadow">
+      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-semibold text-gray-800">
             {format(currentDate, 'EEEE, MMMM d, yyyy')}
           </h3>
-          <div className="bg-gray-50 rounded-lg px-2 py-1 text-sm text-gray-500 flex items-center">
+          <div className="bg-gray-50 rounded-full px-3 py-1 text-sm text-gray-500 flex items-center">
             <Clock className="h-3.5 w-3.5 mr-1 text-blue-500" />
             {isToday(currentDate) ? 'Today' : ''}
           </div>
         </div>
         
-        <div className="relative mt-4 border border-gray-100 rounded-xl overflow-hidden">
+        <div className="relative mt-4 border border-gray-100 rounded-xl overflow-hidden bg-white">
           {timeSlots}
           
           {/* Current time indicator */}
@@ -139,7 +140,7 @@ const ScheduleCalendar = () => {
               <div
                 key={schedule.id}
                 className={cn(
-                  "absolute left-16 right-4 border-l-4 rounded p-2 overflow-hidden shadow-sm transition-all duration-150",
+                  "absolute left-16 right-4 border-l-4 rounded-xl p-2 overflow-hidden shadow-sm transition-all duration-150",
                   getEventColor(index)
                 )}
                 style={{ top: `${top}px`, height: `${height}px` }}
@@ -163,7 +164,7 @@ const ScheduleCalendar = () => {
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(startOfTheWeek, i));
     
     return (
-      <div className="bg-white rounded-3xl p-6 card-shadow">
+      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-semibold text-gray-800">
             Week of {format(startOfTheWeek, 'MMMM d, yyyy')}
@@ -183,7 +184,7 @@ const ScheduleCalendar = () => {
                 key={index} 
                 className={cn(
                   "border rounded-xl p-2 min-h-[150px]",
-                  isCurrentDay ? "bg-blue-50 border-blue-200" : "bg-white border-gray-100"
+                  isCurrentDay ? "bg-blue-50/50 border-blue-200" : "bg-white border-gray-100"
                 )}
               >
                 <div className={cn(
@@ -231,23 +232,23 @@ const ScheduleCalendar = () => {
     <div className="space-y-4">
       <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" onClick={handlePrevious} className="rounded-full w-9 h-9 p-0">
+          <Button variant="outline" size="sm" onClick={handlePrevious} className="rounded-full w-9 h-9 p-0 border-gray-200 shadow-sm">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={handleToday} className="font-medium">
+          <Button variant="outline" size="sm" onClick={handleToday} className="font-medium rounded-full px-4 border-gray-200 shadow-sm">
             Today
           </Button>
-          <Button variant="outline" size="sm" onClick={handleNext} className="rounded-full w-9 h-9 p-0">
+          <Button variant="outline" size="sm" onClick={handleNext} className="rounded-full w-9 h-9 p-0 border-gray-200 shadow-sm">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
         
-        <div className="flex items-center bg-gray-100 rounded-lg p-1">
+        <div className="flex items-center bg-gray-100 rounded-full p-1">
           <Button 
             variant={view === 'day' ? 'default' : 'ghost'} 
             size="sm" 
             onClick={() => setView('day')}
-            className="rounded-md"
+            className="rounded-full"
           >
             Day
           </Button>
@@ -255,7 +256,7 @@ const ScheduleCalendar = () => {
             variant={view === 'week' ? 'default' : 'ghost'} 
             size="sm" 
             onClick={() => setView('week')}
-            className="rounded-md"
+            className="rounded-full"
           >
             Week
           </Button>
