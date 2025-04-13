@@ -49,73 +49,98 @@ const LeaveRealtimeUpdates: React.FC = () => {
         async (payload) => {
           console.log('LeaveRealtimeUpdates: Leave calendar update received:', payload);
           
-          // Invalidate queries to refresh data
+          // Invalidate queries to refresh data - both manager and employee views
           queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
+          queryClient.invalidateQueries({ queryKey: ['employee-leave-requests'] });
           
           // Show toast notification for specific events
           if (payload.eventType === 'UPDATE') {
             const newStatus = payload.new.status;
+            const oldStatus = payload.old.status;
             
-            if (newStatus === 'Approved') {
-              console.log('LeaveRealtimeUpdates: Leave request approved');
-              toast({
-                title: "Leave request approved",
-                description: "A leave request has been approved.",
-              });
+            // Get current user's employee ID to check if this update affects them
+            let userEmployeeId = null;
+            try {
+              const { data: employeeData } = await supabase
+                .from('employees')
+                .select('id')
+                .eq('user_id', user.id)
+                .single();
               
-              // Send in-app notification to the employee
-              if (user.id !== payload.new.employee_id) {
-                try {
-                  console.log('LeaveRealtimeUpdates: Sending notification to employee:', payload.new.employee_id);
-                  await sendNotification({
-                    user_id: payload.new.employee_id,
-                    title: "Leave request approved",
-                    message: "Your leave request has been approved.",
-                    type: "success",
-                    related_entity: "leave_calendar",
-                    related_id: payload.new.id
-                  });
-                  
-                  // Send webhook notification if configured
-                  await sendWebhookNotification(
-                    payload.new.employee_id,
-                    'Leave Request Approved',
-                    `A leave request for ${payload.new.type} from ${payload.new.start_date} to ${payload.new.end_date} has been approved.`,
-                    'leave'
-                  );
-                } catch (error) {
-                  console.error("Error sending notification:", error);
+              userEmployeeId = employeeData?.id;
+            } catch (error) {
+              console.error('Error getting user employee ID:', error);
+            }
+            
+            // Only show toast if this is your request or you're a manager
+            const isYourRequest = userEmployeeId === payload.new.employee_id;
+            
+            if ((isYourRequest || hasManagerAccess) && oldStatus === 'Pending') {
+              if (newStatus === 'Approved') {
+                console.log('LeaveRealtimeUpdates: Leave request approved');
+                toast({
+                  title: isYourRequest ? "Your leave request approved" : "Leave request approved",
+                  description: isYourRequest 
+                    ? `Your leave request from ${payload.new.start_date} to ${payload.new.end_date} has been approved.`
+                    : "A leave request has been approved.",
+                });
+                
+                // Send in-app notification to the employee
+                if (user.id !== payload.new.employee_id) {
+                  try {
+                    console.log('LeaveRealtimeUpdates: Sending notification to employee:', payload.new.employee_id);
+                    await sendNotification({
+                      user_id: payload.new.employee_id,
+                      title: "Leave request approved",
+                      message: `Your leave request from ${payload.new.start_date} to ${payload.new.end_date} has been approved.`,
+                      type: "success",
+                      related_entity: "leave_calendar",
+                      related_id: payload.new.id
+                    });
+                    
+                    // Send webhook notification if configured
+                    await sendWebhookNotification(
+                      payload.new.employee_id,
+                      'Leave Request Approved',
+                      `A leave request for ${payload.new.type} from ${payload.new.start_date} to ${payload.new.end_date} has been approved.`,
+                      'leave'
+                    );
+                  } catch (error) {
+                    console.error("Error sending notification:", error);
+                  }
                 }
-              }
-            } else if (newStatus === 'Rejected') {
-              console.log('LeaveRealtimeUpdates: Leave request rejected');
-              toast({
-                title: "Leave request rejected",
-                description: "A leave request has been rejected.",
-              });
-              
-              // Send in-app notification to the employee
-              if (user.id !== payload.new.employee_id) {
-                try {
-                  console.log('LeaveRealtimeUpdates: Sending notification to employee:', payload.new.employee_id);
-                  await sendNotification({
-                    user_id: payload.new.employee_id,
-                    title: "Leave request rejected",
-                    message: "Your leave request has been rejected.",
-                    type: "warning",
-                    related_entity: "leave_calendar",
-                    related_id: payload.new.id
-                  });
-                  
-                  // Send webhook notification if configured
-                  await sendWebhookNotification(
-                    payload.new.employee_id,
-                    'Leave Request Rejected',
-                    `A leave request for ${payload.new.type} from ${payload.new.start_date} to ${payload.new.end_date} has been rejected.`,
-                    'leave'
-                  );
-                } catch (error) {
-                  console.error("Error sending notification:", error);
+              } else if (newStatus === 'Rejected') {
+                console.log('LeaveRealtimeUpdates: Leave request rejected');
+                toast({
+                  title: isYourRequest ? "Your leave request rejected" : "Leave request rejected",
+                  description: isYourRequest 
+                    ? `Your leave request from ${payload.new.start_date} to ${payload.new.end_date} has been rejected.`
+                    : "A leave request has been rejected.",
+                });
+                
+                // Send in-app notification to the employee
+                if (user.id !== payload.new.employee_id) {
+                  try {
+                    console.log('LeaveRealtimeUpdates: Sending notification to employee:', payload.new.employee_id);
+                    await sendNotification({
+                      user_id: payload.new.employee_id,
+                      title: "Leave request rejected",
+                      message: `Your leave request from ${payload.new.start_date} to ${payload.new.end_date} has been rejected.`,
+                      type: "warning",
+                      related_entity: "leave_calendar",
+                      related_id: payload.new.id
+                    });
+                    
+                    // Send webhook notification if configured
+                    await sendWebhookNotification(
+                      payload.new.employee_id,
+                      'Leave Request Rejected',
+                      `A leave request for ${payload.new.type} from ${payload.new.start_date} to ${payload.new.end_date} has been rejected.`,
+                      'leave'
+                    );
+                  } catch (error) {
+                    console.error("Error sending notification:", error);
+                  }
                 }
               }
             }

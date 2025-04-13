@@ -55,7 +55,9 @@ export function useAddLeaveRequest() {
     },
     onSuccess: async (data) => {
       console.log('OnSuccess handler called with data:', data);
+      // Invalidate both query keys for consistent updates
       queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
+      queryClient.invalidateQueries({ queryKey: ['employee-leave-requests'] });
       
       // Notify managers about the new leave request
       try {

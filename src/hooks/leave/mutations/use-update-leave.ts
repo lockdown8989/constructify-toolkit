@@ -31,7 +31,9 @@ export function useUpdateLeaveRequest() {
       return data as LeaveEvent;
     },
     onSuccess: async (data) => {
+      // Invalidate both query keys for consistent updates
       queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
+      queryClient.invalidateQueries({ queryKey: ['employee-leave-requests'] });
       
       // If status changed to Approved or Rejected, notify the employee
       if (data.status === 'Approved' || data.status === 'Rejected') {
