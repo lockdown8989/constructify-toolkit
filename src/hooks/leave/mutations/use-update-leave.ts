@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LeaveEvent } from '../leave-types';
-import { notifyEmployeeOfLeaveStatusChange } from '@/services/notifications/leave-notifications';
+import { notifyEmployeeAboutLeaveStatus } from '@/services/notifications/leave-notifications';
 import { sendNotification } from '@/services/notifications';
 
 /**
@@ -49,7 +49,13 @@ export function useUpdateLeaveRequest() {
           });
           
           // Also send email notification if configured
-          const notificationResult = await notifyEmployeeOfLeaveStatusChange(data, data.status as 'Approved' | 'Rejected');
+          const notificationResult = await notifyEmployeeAboutLeaveStatus(
+            data.id,
+            data.employee_id,
+            data.status as 'Approved' | 'Rejected',
+            data.start_date,
+            data.end_date
+          );
           console.log('Employee notification completed with result:', notificationResult);
         } catch (notifyError) {
           console.error('Error notifying employee:', notifyError);

@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useIsMobile } from '@/hooks/use-mobile';
 import ScheduleRequestsTab from '@/components/leave/tabs/ScheduleRequestsTab';
 
 const ScheduleRequests = () => {
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const isMobile = useIsMobile();
   
   return (
     <div className="container py-4 sm:py-6">

@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { LeaveEvent, LeaveRequest } from '../leave-types';
-import { notifyManagersOfNewLeaveRequest } from '@/services/notifications/leave-notifications';
+import { notifyManagersAboutLeaveRequest } from '@/services/notifications/leave-notifications';
 
 /**
  * Hook for adding a new leave request
@@ -60,7 +60,12 @@ export function useAddLeaveRequest() {
       // Notify managers about the new leave request
       try {
         console.log('Attempting to notify managers about new leave request');
-        const notificationResult = await notifyManagersOfNewLeaveRequest(data);
+        const notificationResult = await notifyManagersAboutLeaveRequest(
+          data.id, 
+          data.employee_id,
+          data.start_date, 
+          data.end_date
+        );
         console.log('Manager notification completed with result:', notificationResult);
         
         if (!notificationResult) {

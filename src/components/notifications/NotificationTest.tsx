@@ -1,9 +1,11 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { createTestNotification, verifyNotificationsTable } from "@/services/notifications";
+import { sendTestNotification, cleanupTestNotifications } from "@/services/notifications";
+import { supabase } from "@/integrations/supabase/client";
 
 const NotificationTest: React.FC = () => {
   const { toast } = useToast();
@@ -23,9 +25,9 @@ const NotificationTest: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const result = await createTestNotification(user.id);
+      const result = await sendTestNotification(user.id);
       
-      if (result.success) {
+      if (result) {
         toast({
           title: "Success",
           description: "Test notification sent successfully. Check the notification bell.",
@@ -33,7 +35,7 @@ const NotificationTest: React.FC = () => {
       } else {
         toast({
           title: "Error",
-          description: result.message,
+          description: "Failed to send test notification",
           variant: "destructive",
         });
       }
@@ -52,7 +54,26 @@ const NotificationTest: React.FC = () => {
   const handleVerifyTable = async () => {
     setIsLoading(true);
     try {
-      const result = await verifyNotificationsTable();
+      // Manually verify the notifications table
+      const { data, error, count } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact' })
+        .limit(1);
+      
+      let result;
+      if (error) {
+        result = {
+          success: false,
+          message: `Error accessing notifications table: ${error.message}`,
+        };
+      } else {
+        result = {
+          success: true,
+          message: `Notifications table verified successfully. Contains ${count} notifications.`,
+          data: { count, sample: data }
+        };
+      }
+      
       setVerifyResult(result);
       
       if (result.success) {
