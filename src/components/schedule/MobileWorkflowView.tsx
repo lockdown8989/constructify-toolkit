@@ -55,7 +55,7 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
               To submit a leave request, please visit the Leave Management page.
             </p>
             <Button 
-              onClick={() => window.location.href = '/leave-management'}
+              onClick={() => window.location.href = '/leave'}
               className="w-full"
             >
               <CalendarDays className="mr-2 h-4 w-4" />

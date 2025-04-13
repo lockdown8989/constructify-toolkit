@@ -54,6 +54,10 @@ const router = createBrowserRouter([
         element: <LeaveManagement />,
       },
       {
+        path: "leave-management",
+        element: <LeaveManagement />,
+      },
+      {
         path: "schedule",
         element: <Schedule />,
       },

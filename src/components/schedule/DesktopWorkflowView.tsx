@@ -59,7 +59,7 @@ const DesktopWorkflowView = ({ schedules, employeeNames, leaveBalance }: Desktop
                   To submit a leave request or check your leave history, please visit the Leave Management page.
                 </p>
                 <Button 
-                  onClick={() => window.location.href = '/leave-management'}
+                  onClick={() => window.location.href = '/leave'}
                 >
                   <CalendarDays className="mr-2 h-4 w-4" />
                   Go to Leave Management
