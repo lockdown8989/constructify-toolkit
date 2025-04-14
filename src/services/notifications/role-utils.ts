@@ -6,11 +6,11 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const getManagerUserIds = async (): Promise<string[]> => {
   try {
-    // Query for users with role 'manager' or 'admin'
+    // Query for users with role 'employer' (which is manager in the database) or 'admin'
     const { data, error } = await supabase
       .from('user_roles')
       .select('user_id')
-      .in('role', ['manager', 'admin']);
+      .in('role', ['employer', 'admin']);
     
     if (error) {
       console.error("Error fetching manager IDs:", error);
@@ -34,11 +34,14 @@ export const getManagerUserIds = async (): Promise<string[]> => {
  */
 export const hasRole = async (userId: string, role: string): Promise<boolean> => {
   try {
+    // If role is 'manager', convert it to 'employer' for database compatibility
+    const dbRole = role === 'manager' ? 'employer' : role;
+    
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .eq('role', role)
+      .eq('role', dbRole)
       .single();
     
     if (error) {
@@ -76,7 +79,8 @@ export const getUserRoles = async (userId: string): Promise<string[]> => {
       return [];
     }
     
-    return data.map(item => item.role);
+    // Map 'employer' role to 'manager' for frontend compatibility
+    return data.map(item => item.role === 'employer' ? 'manager' : item.role);
   } catch (error) {
     console.error("Exception in getUserRoles:", error);
     return [];
