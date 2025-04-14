@@ -169,24 +169,11 @@ export const useAuthActions = () => {
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error('Sign out error:', error);
-        toast({
-          title: "Sign out failed",
-          description: "An error occurred while signing out. Please try again.",
-          variant: "destructive",
-        });
-        return { error };
-      }
-      
+      await supabase.auth.signOut();
       toast({
         title: "Signed out",
         description: "You have been successfully signed out.",
       });
-      
-      return { error: null };
     } catch (error) {
       console.error('Sign out error:', error);
       toast({
@@ -194,11 +181,6 @@ export const useAuthActions = () => {
         description: "An error occurred while signing out. Please try again.",
         variant: "destructive",
       });
-      return { 
-        error: error instanceof Error ? 
-          { message: error.message } as AuthError : 
-          { message: "An unexpected error occurred" } as AuthError 
-      };
     }
   };
 

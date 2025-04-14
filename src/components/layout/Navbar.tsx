@@ -15,12 +15,6 @@ const Navbar = () => {
 
   // Check if user exists to determine authentication status
   const isAuthenticated = !!user
-  
-  // Handle sign out with proper error handling
-  const handleSignOut = async () => {
-    const { error } = await signOut();
-    return { error };
-  }
 
   return (
     <div className="border-b sticky top-0 bg-background z-40 safe-area-inset">
@@ -42,7 +36,7 @@ const Navbar = () => {
           {isAuthenticated && <NotificationBell />}
           
           {isAuthenticated ? (
-            <UserMenu user={user} signOut={handleSignOut} />
+            <UserMenu user={user} signOut={signOut} />
           ) : (
             <AuthButtons />
           )}
