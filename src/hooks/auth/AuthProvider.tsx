@@ -35,14 +35,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         // Then set up auth state listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log("Auth state changed:", event, session?.user?.email);
-            setSession(session);
-            setUser(session?.user ?? null);
+          async (event, newSession) => {
+            console.log("Auth state changed:", event, newSession?.user?.email);
             
-            if (session?.user) {
-              await fetchUserRoles(session.user.id);
+            // Update state based on the new session
+            setSession(newSession);
+            setUser(newSession?.user ?? null);
+            
+            if (newSession?.user) {
+              await fetchUserRoles(newSession.user.id);
             } else {
+              resetRoles();
+            }
+            
+            // If the event is SIGNED_OUT, ensure we clear all auth state
+            if (event === 'SIGNED_OUT') {
+              console.log("User signed out, clearing auth state");
+              setUser(null);
+              setSession(null);
               resetRoles();
             }
             

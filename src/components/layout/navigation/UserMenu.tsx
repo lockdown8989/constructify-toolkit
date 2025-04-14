@@ -13,15 +13,17 @@ import { Link } from "react-router-dom"
 import { User } from "@supabase/supabase-js"
 import { useAuth } from "@/hooks/auth"
 import { Badge } from "@/components/ui/badge"
-import { Settings } from "lucide-react"
+import { Settings, LogOut } from "lucide-react"
+import { useState } from "react"
 
 interface UserMenuProps {
   user: User;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 }
 
 const UserMenu = ({ user, signOut }: UserMenuProps) => {
   const { isManager, isAdmin, isHR } = useAuth();
+  const [isSigningOut, setIsSigningOut] = useState(false);
   
   // Determine user role for display
   const getUserRole = () => {
@@ -37,6 +39,18 @@ const UserMenu = ({ user, signOut }: UserMenuProps) => {
     if (isHR) return "secondary";     
     if (isManager) return "default";
     return "outline";                 
+  };
+
+  const handleSignOut = async () => {
+    try {
+      setIsSigningOut(true);
+      console.log("User clicked sign out");
+      await signOut();
+    } catch (error) {
+      console.error("Error during sign out:", error);
+    } finally {
+      setIsSigningOut(false);
+    }
   };
 
   return (
@@ -77,10 +91,12 @@ const UserMenu = ({ user, signOut }: UserMenuProps) => {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => signOut()}
-          className="cursor-pointer"
+          onClick={handleSignOut}
+          className="cursor-pointer flex items-center text-red-600"
+          disabled={isSigningOut}
         >
-          Sign Out
+          <LogOut className="mr-2 h-4 w-4" />
+          {isSigningOut ? "Signing out..." : "Sign Out"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

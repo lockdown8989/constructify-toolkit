@@ -10,11 +10,20 @@ import ThemeToggle from "./navigation/ThemeToggle"
 import AuthButtons from "./navigation/AuthButtons"
 
 const Navbar = () => {
-  const { user, signOut } = useAuth()
-  const isMobile = useIsMobile()
+  const { user, signOut } = useAuth();
+  const isMobile = useIsMobile();
 
   // Check if user exists to determine authentication status
-  const isAuthenticated = !!user
+  const isAuthenticated = !!user;
+
+  const handleSignOut = async () => {
+    try {
+      console.log("Navbar: initiating sign out");
+      await signOut();
+    } catch (error) {
+      console.error("Navbar: error during sign out:", error);
+    }
+  };
 
   return (
     <div className="border-b sticky top-0 bg-background z-40 safe-area-inset">
@@ -36,7 +45,7 @@ const Navbar = () => {
           {isAuthenticated && <NotificationBell />}
           
           {isAuthenticated ? (
-            <UserMenu user={user} signOut={signOut} />
+            <UserMenu user={user} signOut={handleSignOut} />
           ) : (
             <AuthButtons />
           )}
