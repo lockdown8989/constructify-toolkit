@@ -23,8 +23,11 @@ const Navbar = () => {
       if (error) {
         console.error("Navbar: signOut error:", error);
       }
+      // Return the expected object format
+      return { error: error || null };
     } catch (error) {
       console.error("Navbar: error during sign out:", error);
+      return { error };
     }
   };
 
