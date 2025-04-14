@@ -18,7 +18,7 @@ import { useState } from "react"
 
 interface UserMenuProps {
   user: User;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<{ error: any | null }>;
 }
 
 const UserMenu = ({ user, signOut }: UserMenuProps) => {
@@ -45,7 +45,10 @@ const UserMenu = ({ user, signOut }: UserMenuProps) => {
     try {
       setIsSigningOut(true);
       console.log("User clicked sign out");
-      await signOut();
+      const { error } = await signOut();
+      if (error) {
+        console.error("Error during sign out:", error);
+      }
     } catch (error) {
       console.error("Error during sign out:", error);
     } finally {

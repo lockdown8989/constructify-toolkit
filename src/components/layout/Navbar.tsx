@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom"
 import { useAuth } from "@/hooks/auth"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -19,7 +18,10 @@ const Navbar = () => {
   const handleSignOut = async () => {
     try {
       console.log("Navbar: initiating sign out");
-      await signOut();
+      const { error } = await signOut();
+      if (error) {
+        console.error("Navbar: signOut error:", error);
+      }
     } catch (error) {
       console.error("Navbar: error during sign out:", error);
     }
