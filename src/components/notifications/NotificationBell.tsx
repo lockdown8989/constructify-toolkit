@@ -1,11 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { formatDistanceToNow } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface Notification {
   id: string;
@@ -22,7 +22,9 @@ const NotificationBell = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) {
@@ -33,29 +35,6 @@ const NotificationBell = () => {
     console.log('NotificationBell: Setting up notifications for user', user.id);
 
     // Load initial notifications
-    const fetchNotifications = async () => {
-      console.log('NotificationBell: Fetching notifications for user', user.id);
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-      
-      if (error) {
-        console.error('Error fetching notifications:', error);
-        return;
-      }
-      
-      if (data) {
-        console.log('NotificationBell: Fetched notifications:', data.length);
-        setNotifications(data);
-        const unreadNotifications = data.filter(notification => !notification.read);
-        setUnreadCount(unreadNotifications.length);
-        console.log('NotificationBell: Unread count:', unreadNotifications.length);
-      }
-    };
-    
     fetchNotifications();
     
     // Set up real-time listener for new notifications
@@ -74,6 +53,12 @@ const NotificationBell = () => {
           console.log('NotificationBell: New notification received:', payload);
           setNotifications(prevNotifications => [payload.new as Notification, ...prevNotifications]);
           setUnreadCount(prevCount => prevCount + 1);
+          
+          // Show a toast for the new notification
+          toast({
+            title: (payload.new as Notification).title,
+            description: (payload.new as Notification).message,
+          });
         }
       )
       .subscribe();
@@ -84,7 +69,50 @@ const NotificationBell = () => {
       console.log('NotificationBell: Cleaning up notification listener');
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, toast]);
+  
+  const fetchNotifications = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    console.log('NotificationBell: Fetching notifications for user', user.id);
+    
+    try {
+      // Fetch notifications
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        return;
+      }
+      
+      if (data) {
+        console.log('NotificationBell: Fetched notifications:', data.length);
+        setNotifications(data);
+        
+        // Count unread notifications
+        const { count, error: countError } = await supabase
+          .from('notifications')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('read', false);
+        
+        if (!countError && count !== null) {
+          console.log('NotificationBell: Unread count:', count);
+          setUnreadCount(count);
+        }
+      }
+    } catch (err) {
+      console.error('Exception in fetchNotifications:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const markAsRead = async (id: string) => {
     console.log('NotificationBell: Marking notification as read:', id);
@@ -113,6 +141,7 @@ const NotificationBell = () => {
       return;
     }
     
+    setIsLoading(true);
     console.log('NotificationBell: Marking all notifications as read');
     const { error } = await supabase
       .from('notifications')
@@ -122,6 +151,7 @@ const NotificationBell = () => {
     
     if (error) {
       console.error('Error marking all notifications as read:', error);
+      setIsLoading(false);
       return;
     }
     
@@ -130,6 +160,12 @@ const NotificationBell = () => {
     );
     
     setUnreadCount(0);
+    setIsLoading(false);
+  };
+
+  const handleBellClick = () => {
+    // We'll keep the default behavior of toggling the popover
+    // But you could add markAllAsRead() here if that's the desired behavior
   };
 
   const getNotificationTimeAgo = (createdAt: string) => {
@@ -159,8 +195,17 @@ const NotificationBell = () => {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="relative"
+          onClick={handleBellClick}
+        >
+          {unreadCount > 0 ? (
+            <BellRing className="h-5 w-5 text-primary" />
+          ) : (
+            <Bell className="h-5 w-5" />
+          )}
           {unreadCount > 0 && (
             <span className="absolute top-0 right-0 h-4 w-4 rounded-full bg-red-500 text-xs text-white flex items-center justify-center transform translate-x-1 -translate-y-1">
               {unreadCount > 9 ? '9+' : unreadCount}
@@ -176,14 +221,19 @@ const NotificationBell = () => {
               variant="ghost" 
               size="sm" 
               onClick={markAllAsRead}
+              disabled={isLoading}
               className="text-xs"
             >
-              Mark all as read
+              {isLoading ? "Processing..." : "Mark all as read"}
             </Button>
           )}
         </div>
         <div className="max-h-80 overflow-y-auto">
-          {notifications.length === 0 ? (
+          {isLoading && notifications.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground">
+              <p>Loading notifications...</p>
+            </div>
+          ) : notifications.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
               <p>No notifications</p>
             </div>
