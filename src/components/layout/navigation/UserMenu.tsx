@@ -17,7 +17,7 @@ import { Settings } from "lucide-react"
 
 interface UserMenuProps {
   user: User;
-  signOut: () => void;
+  signOut: () => Promise<{ error: any }>;
 }
 
 const UserMenu = ({ user, signOut }: UserMenuProps) => {
