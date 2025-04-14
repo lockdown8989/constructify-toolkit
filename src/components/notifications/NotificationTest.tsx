@@ -1,156 +1,105 @@
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
-import { sendTestNotification, cleanupTestNotifications } from "@/services/notifications";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { sendTestNotification, verifyNotificationsTable } from '@/services/notifications';
 
-const NotificationTest: React.FC = () => {
+const NotificationTest = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [verifyResult, setVerifyResult] = useState<any>(null);
+  const [isTesting, setIsTesting] = useState(false);
+  const [databaseStatus, setDatabaseStatus] = useState<{
+    verified: boolean;
+    message: string;
+  }>({ verified: false, message: 'Not verified yet' });
 
-  const handleTestNotification = async () => {
+  const handleTest = async () => {
     if (!user) {
       toast({
-        title: "Error",
-        description: "You must be logged in to test notifications",
-        variant: "destructive",
+        title: 'Authentication required',
+        description: 'You need to be logged in to test notifications',
+        variant: 'destructive',
       });
       return;
     }
 
-    setIsLoading(true);
+    setIsTesting(true);
+    
     try {
-      const result = await sendTestNotification(user.id);
+      // First verify the notifications table exists
+      const verifyResult = await verifyNotificationsTable();
+      setDatabaseStatus({
+        verified: verifyResult.success,
+        message: verifyResult.message
+      });
       
-      if (result) {
+      if (!verifyResult.success) {
         toast({
-          title: "Success",
-          description: "Test notification sent successfully. Check the notification bell.",
+          title: 'Database verification failed',
+          description: verifyResult.message,
+          variant: 'destructive',
+        });
+        setIsTesting(false);
+        return;
+      }
+      
+      // Send a test notification
+      const testResult = await sendTestNotification(user.id);
+      
+      if (testResult.success) {
+        toast({
+          title: 'Test notification sent',
+          description: 'Check the notification bell to see the test notification',
         });
       } else {
         toast({
-          title: "Error",
-          description: "Failed to send test notification",
-          variant: "destructive",
+          title: 'Test failed',
+          description: testResult.message,
+          variant: 'destructive',
         });
       }
     } catch (error) {
-      console.error('Error testing notification:', error);
+      console.error('Error in notification test:', error);
       toast({
-        title: "Error",
-        description: "Failed to send test notification",
-        variant: "destructive",
+        title: 'Test error',
+        description: `An unexpected error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyTable = async () => {
-    setIsLoading(true);
-    try {
-      // Manually verify the notifications table
-      const { data, error, count } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact' })
-        .limit(1);
-      
-      let result;
-      if (error) {
-        result = {
-          success: false,
-          message: `Error accessing notifications table: ${error.message}`,
-        };
-      } else {
-        result = {
-          success: true,
-          message: `Notifications table verified successfully. Contains ${count} notifications.`,
-          data: { count, sample: data }
-        };
-      }
-      
-      setVerifyResult(result);
-      
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: "Notifications table verified successfully",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: result.message,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error verifying table:', error);
-      toast({
-        title: "Error",
-        description: "Failed to verify notifications table",
-        variant: "destructive",
-      });
-      setVerifyResult({ success: false, message: String(error) });
-    } finally {
-      setIsLoading(false);
+      setIsTesting(false);
     }
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card>
       <CardHeader>
-        <CardTitle>Notification System Test</CardTitle>
+        <CardTitle>Notification Test</CardTitle>
         <CardDescription>
-          Test the notification system to ensure it's working correctly
+          Test if notifications are working correctly for this user
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <h3 className="text-sm font-medium">Test Actions</h3>
-          <div className="flex space-x-2">
-            <Button 
-              onClick={handleTestNotification} 
-              disabled={isLoading || !user}
-            >
-              Send Test Notification
-            </Button>
-            <Button 
-              onClick={handleVerifyTable} 
-              variant="outline" 
-              disabled={isLoading}
-            >
-              Verify DB Table
-            </Button>
-          </div>
+          <p className="text-sm text-muted-foreground">
+            Database status: <span className={databaseStatus.verified ? "text-green-500" : "text-amber-500"}>{databaseStatus.message}</span>
+          </p>
+          
+          <p className="text-sm text-muted-foreground">
+            {user 
+              ? `Sending test notification to user: ${user.email || user.id}`
+              : 'You need to be logged in to test notifications'}
+          </p>
         </div>
         
-        {verifyResult && (
-          <div className="pt-4 border-t">
-            <h3 className="text-sm font-medium mb-2">Verification Result</h3>
-            <div className={`p-3 rounded-md text-sm ${
-              verifyResult.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
-            }`}>
-              <p className="font-medium">{verifyResult.success ? 'Success' : 'Error'}</p>
-              <p>{verifyResult.message}</p>
-              {verifyResult.data && (
-                <pre className="mt-2 text-xs overflow-auto">
-                  {JSON.stringify(verifyResult.data, null, 2)}
-                </pre>
-              )}
-            </div>
-          </div>
-        )}
-        
-        {!user && (
-          <div className="p-3 rounded-md bg-yellow-50 text-yellow-800 text-sm">
-            You must be logged in to test notifications.
-          </div>
-        )}
+        <Button 
+          onClick={handleTest} 
+          disabled={isTesting || !user}
+          className="w-full"
+        >
+          {isTesting ? 'Sending...' : 'Send Test Notification'}
+        </Button>
       </CardContent>
     </Card>
   );
