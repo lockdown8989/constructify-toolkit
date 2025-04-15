@@ -34,16 +34,14 @@ export const getManagerUserIds = async (): Promise<string[]> => {
  */
 export const hasRole = async (userId: string, role: string): Promise<boolean> => {
   try {
-    // Special handling for 'manager' role check
-    if (role === 'manager') {
-      return isManager(userId);
-    }
+    // Special handling for 'manager' role check - map to 'employer' in DB
+    const dbRole = role === 'manager' ? 'employer' : role;
     
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .eq('role', role)
+      .eq('role', dbRole)
       .single();
     
     if (error) {

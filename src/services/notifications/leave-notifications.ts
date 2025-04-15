@@ -22,7 +22,7 @@ export const notifyManagersAboutLeaveRequest = async (
     
     const employeeName = employeeData?.name || 'An employee';
     
-    // Get all manager user IDs
+    // Get all manager user IDs - this function should map 'manager' to 'employer' internally
     const managerIds = await getManagerUserIds();
     
     // Format dates for the message
