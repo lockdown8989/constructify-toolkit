@@ -22,6 +22,12 @@ export interface AuthContextType {
   isAdmin: boolean;
   isHR: boolean;
   isManager: boolean;
+  isAuthenticated?: boolean;
+  signIn?: (email: string, password: string) => Promise<any>;
+  signUp?: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;
+  resetPassword?: (email: string) => Promise<any>;
+  updatePassword?: (password: string) => Promise<any>;
+  signOut?: () => Promise<void>;
 }
 
 // Function to check if user is authenticated

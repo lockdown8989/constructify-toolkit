@@ -148,7 +148,7 @@ export const useSignUpSubmit = ({
         console.log("Employee record creation result:", employeeSuccess);
         
         // Show appropriate success message
-        if (userRole === 'employer') {
+        if (userRole === 'manager') {
           toast({
             title: "Success",
             description: `Account created with manager role. Your Manager ID is ${managerId}. Share this with your employees to connect them to your account.`,

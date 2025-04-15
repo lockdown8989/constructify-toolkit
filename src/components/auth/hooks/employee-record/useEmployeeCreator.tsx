@@ -42,14 +42,14 @@ export const useEmployeeCreator = () => {
       }
     }
     
-    // If this is an employer/manager, use their own manager ID
-    if (userRole === 'employer') {
-      console.log(`Employer/manager registering with manager ID: ${managerId}`);
+    // If this is a manager, use their own manager ID
+    if (userRole === 'manager') {
+      console.log(`Manager registering with manager ID: ${managerId}`);
       managerIdToUse = managerId;
     }
     
     // Create record based on role
-    if (userRole === 'employee' || userRole === 'employer') {
+    if (userRole === 'employee' || userRole === 'manager') {
       const result = await insertEmployeeRecord(userId, fullName, userRole, managerIdToUse);
       
       if (!result) {
@@ -76,7 +76,7 @@ export const useEmployeeCreator = () => {
     userRole: UserRole,
     managerId: string | null
   ) => {
-    const jobTitle = userRole === 'employer' ? 'Manager' : 'Employee';
+    const jobTitle = userRole === 'manager' ? 'Manager' : 'Employee';
     
     console.log(`Creating record with job title: ${jobTitle} and manager ID: ${managerId || 'none'}`);
     
