@@ -12,7 +12,7 @@ export const useUserRole = () => {
     if (userRole === "employer" && !managerId) {
       generateManagerId();
     }
-  }, [userRole]);
+  }, [userRole, managerId]);
 
   // Generate a unique manager ID (format: MGR-XXXXX)
   const generateManagerId = () => {
@@ -24,16 +24,17 @@ export const useUserRole = () => {
   };
 
   const handleRoleChange = (value: string) => {
-    if (value === "admin" || value === "hr" || value === "employee" || value === "manager") {
+    // Map UI "manager" value to database "employer" value
+    if (value === "admin" || value === "hr" || value === "employee" || value === "manager" || value === "employer") {
       // If "manager" is selected, set userRole to "employer" for database compatibility
       const newRole = value === "manager" ? "employer" : value as UserRole;
       setUserRole(newRole);
       console.log("Role selected:", value, "DB role:", newRole);
       
-      // Generate a manager ID if the role is manager and no ID exists yet
-      if (value === "manager" && !managerId) {
+      // Generate a manager ID if the role is manager/employer and no ID exists yet
+      if ((value === "manager" || value === "employer") && !managerId) {
         generateManagerId();
-      } else if (value !== "manager") {
+      } else if (value !== "manager" && value !== "employer") {
         // Clear manager ID when switching to other roles
         setManagerId("");
       }

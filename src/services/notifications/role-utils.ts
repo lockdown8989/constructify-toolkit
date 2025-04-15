@@ -6,11 +6,11 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const getManagerUserIds = async (): Promise<string[]> => {
   try {
-    // Query for users with role 'employer' (manager) or 'admin'
+    // Query for users with role 'employer' (manager) or 'admin' or 'hr'
     const { data, error } = await supabase
       .from('user_roles')
       .select('user_id')
-      .in('role', ['employer', 'admin']);
+      .in('role', ['employer', 'admin', 'hr']);
     
     if (error) {
       console.error("Error fetching manager IDs:", error);
@@ -34,6 +34,11 @@ export const getManagerUserIds = async (): Promise<string[]> => {
  */
 export const hasRole = async (userId: string, role: string): Promise<boolean> => {
   try {
+    // Special handling for 'manager' role check
+    if (role === 'manager') {
+      return isManager(userId);
+    }
+    
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
@@ -58,6 +63,29 @@ export const hasRole = async (userId: string, role: string): Promise<boolean> =>
 };
 
 /**
+ * Checks if a user has manager-level access (employer, admin, or hr)
+ */
+export const isManager = async (userId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .in('role', ['employer', 'admin', 'hr']);
+    
+    if (error) {
+      console.error("Error checking manager status:", error);
+      throw error;
+    }
+    
+    return data && data.length > 0;
+  } catch (error) {
+    console.error("Exception in isManager:", error);
+    return false;
+  }
+};
+
+/**
  * Gets all roles for a user
  */
 export const getUserRoles = async (userId: string): Promise<string[]> => {
@@ -76,7 +104,8 @@ export const getUserRoles = async (userId: string): Promise<string[]> => {
       return [];
     }
     
-    return data.map(item => item.role);
+    // Map 'employer' role to 'manager' for UI consistency
+    return data.map(item => item.role === 'employer' ? 'manager' : item.role);
   } catch (error) {
     console.error("Exception in getUserRoles:", error);
     return [];
