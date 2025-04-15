@@ -73,7 +73,7 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
             onRoleChange={handleRoleChange} 
           />
           
-          {userRole === "employer" && (
+          {userRole === "manager" && (
             <ManagerIdInput 
               managerId={managerId}
               onGenerateManagerId={generateManagerId}
