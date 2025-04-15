@@ -6,11 +6,11 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const getManagerUserIds = async (): Promise<string[]> => {
   try {
-    // Query for users with role 'manager' or 'admin'
+    // Query for users with role 'employer' (manager) or 'admin'
     const { data, error } = await supabase
       .from('user_roles')
       .select('user_id')
-      .in('role', ['manager', 'admin']);
+      .in('role', ['employer', 'admin']);
     
     if (error) {
       console.error("Error fetching manager IDs:", error);
