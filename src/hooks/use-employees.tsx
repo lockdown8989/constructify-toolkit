@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/types/supabase';
@@ -27,6 +26,7 @@ export function useEmployees(filters?: Partial<{
       
       // If user is not a manager, only show their own data
       if (!isManager && user) {
+        console.log("Non-manager user, fetching own data only");
         // Find the employee record associated with the current user
         const { data: currentEmployeeData } = await supabase
           .from('employees')
@@ -35,10 +35,9 @@ export function useEmployees(filters?: Partial<{
           .single();
           
         if (currentEmployeeData) {
-          // For non-managers, only return their own record
           query = query.eq('id', currentEmployeeData.id);
         } else {
-          // If employee record not found, return empty array
+          console.log("No employee record found for user");
           return [];
         }
       } else if (isManager && user) {
@@ -65,7 +64,12 @@ export function useEmployees(filters?: Partial<{
       
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching employees:", error);
+        throw error;
+      }
+      
+      console.log("Fetched employees data:", data);
       return data as Employee[];
     }
   });
@@ -209,5 +213,38 @@ export function useEmployeeFilters() {
         statuses
       };
     }
+  });
+}
+
+export function useOwnEmployeeData() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  return useQuery({
+    queryKey: ['own-employee-data', user?.id],
+    queryFn: async () => {
+      if (!user) {
+        throw new Error('No authenticated user');
+      }
+
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching own employee data:", error);
+        toast({
+          title: "Error",
+          description: "Could not fetch your employee information",
+          variant: "destructive"
+        });
+        throw error;
+      }
+
+      return data as Employee;
+    },
+    enabled: !!user
   });
 }

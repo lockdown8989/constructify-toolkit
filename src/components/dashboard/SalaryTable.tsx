@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Search, Filter, Download, ChevronDown, FileText, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { generatePayslipPDF, attachPayslipToResume } from '@/utils/export-utils';
 import { useToast } from '@/hooks/use-toast';
+import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
 
 interface Employee {
   id: string;
@@ -44,13 +44,15 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
   const [statusFilter, setStatusFilter] = useState<'All' | 'Paid' | 'Absent' | 'Pending'>('All');
   const [isProcessing, setIsProcessing] = useState<{ [key: string]: boolean }>({});
   const { toast } = useToast();
+  const { employeeId } = useEmployeeDataManagement();
   
   const filteredEmployees = employees.filter(employee => {
     const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          employee.title.toLowerCase().includes(searchQuery.toLowerCase());
+                         employee.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'All' || employee.status === statusFilter;
+    const isOwnData = !employeeId || employee.id === employeeId;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && isOwnData;
   });
   
   const handleStatusChange = (employeeId: string, newStatus: 'Paid' | 'Absent' | 'Pending') => {
