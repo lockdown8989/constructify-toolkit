@@ -1,104 +1,76 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { sendNotification, sendNotificationToMany } from './notification-sender';
-import { getManagerUserIds } from './role-utils';
+import { mapUIRoleToDBRole } from '@/hooks/auth/types';
 
 /**
- * Sends a notification to managers about a new leave request
+ * Notifies managers about a new leave request
+ * @param leaveRequestId The ID of the leave request
+ * @param employeeId The ID of the employee who submitted the request
+ * @param startDate The start date of the leave request
+ * @param endDate The end date of the leave request
+ * @returns true if notifications were sent successfully, false otherwise
  */
 export const notifyManagersAboutLeaveRequest = async (
-  leaveId: string, 
+  leaveRequestId: string,
   employeeId: string,
-  startDate: string, 
+  startDate: string,
   endDate: string
-) => {
+): Promise<boolean> => {
   try {
-    // Get employee name
-    const { data: employeeData } = await supabase
+    // Get all users with manager/employer role
+    const { data: managerRoles, error: roleError } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'employer'); // Use the database role value 'employer' not 'manager'
+      
+    if (roleError) {
+      console.error("Error fetching managers:", roleError);
+      return false;
+    }
+    
+    if (!managerRoles || managerRoles.length === 0) {
+      console.warn("No managers found in the system");
+      return false;
+    }
+    
+    // Get the employee name for better notification content
+    const { data: employeeData, error: employeeError } = await supabase
       .from('employees')
       .select('name')
       .eq('id', employeeId)
       .single();
-    
-    const employeeName = employeeData?.name || 'An employee';
-    
-    // Get all manager user IDs - this function should map 'manager' to 'employer' internally
-    const managerIds = await getManagerUserIds();
-    
-    // Format dates for the message
-    const formattedDates = startDate === endDate
-      ? `on ${new Date(startDate).toLocaleDateString()}`
-      : `from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}`;
-    
-    // Send notifications to all managers
-    await sendNotificationToMany(managerIds, {
-      title: 'New Leave Request',
-      message: `${employeeName} has requested leave ${formattedDates}`,
-      type: 'info',
-      related_entity: 'leave_calendar',
-      related_id: leaveId
-    });
-    
-    console.log(`Notified ${managerIds.length} managers about leave request ${leaveId}`);
-    return true;
-  } catch (error) {
-    console.error('Error sending leave request notifications:', error);
-    return false;
-  }
-};
-
-/**
- * Notifies an employee about their leave request status change
- */
-export const notifyEmployeeAboutLeaveStatus = async (
-  leaveId: string,
-  employeeId: string,
-  status: 'Approved' | 'Rejected',
-  startDate: string,
-  endDate: string
-) => {
-  try {
-    // Get employee user ID from employee table
-    const { data: employeeData, error: employeeError } = await supabase
-      .from('employees')
-      .select('user_id')
-      .eq('id', employeeId)
-      .single();
-    
-    if (employeeError || !employeeData?.user_id) {
-      console.error('Error finding user ID for employee:', employeeError);
-      return false;
+      
+    if (employeeError) {
+      console.error("Error fetching employee data:", employeeError);
+      // Continue even if we can't get the employee name
     }
     
-    // Format dates for the message
-    const formattedDates = startDate === endDate
-      ? `on ${new Date(startDate).toLocaleDateString()}`
-      : `from ${new Date(startDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}`;
+    const employeeName = employeeData?.name || "An employee";
     
-    const title = status === 'Approved' 
-      ? 'Leave Request Approved'
-      : 'Leave Request Rejected';
-    
-    const message = status === 'Approved'
-      ? `Your leave request ${formattedDates} has been approved`
-      : `Your leave request ${formattedDates} has been rejected`;
-    
-    const type = status === 'Approved' ? 'success' : 'warning';
-    
-    // Send notification to the employee
-    await sendNotification({
-      user_id: employeeData.user_id,
-      title,
-      message,
-      type,
+    // Create notifications for all managers
+    const notifications = managerRoles.map(manager => ({
+      user_id: manager.user_id,
+      title: 'New Leave Request',
+      message: `${employeeName} has requested leave from ${startDate} to ${endDate}. Please review.`,
+      type: 'info',
       related_entity: 'leave_calendar',
-      related_id: leaveId
-    });
+      related_id: leaveRequestId
+    }));
     
-    console.log(`Notified employee ${employeeId} about leave status change to ${status}`);
+    if (notifications.length > 0) {
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert(notifications);
+        
+      if (notificationError) {
+        console.error("Error creating manager notifications:", notificationError);
+        return false;
+      }
+    }
+    
     return true;
   } catch (error) {
-    console.error('Error sending leave status notification:', error);
+    console.error("Exception in notifyManagersAboutLeaveRequest:", error);
     return false;
   }
 };
