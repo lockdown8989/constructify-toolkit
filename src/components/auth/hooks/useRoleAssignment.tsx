@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserRole } from "./useUserRole";
+import { UserRole, mapUIRoleToDBRole } from "@/hooks/auth/types";
 
 export const useRoleAssignment = () => {
   const { toast } = useToast();
@@ -24,9 +24,10 @@ export const useRoleAssignment = () => {
         return false;
       }
       
+      // Map the UI role to the database role
+      const dbRole = mapUIRoleToDBRole(userRole);
+      
       // Check specifically for the role we're trying to add
-      // Map 'manager' to 'employer' for database storage
-      const dbRole = userRole === "manager" ? "employer" : userRole;
       const hasRequestedRole = existingRoles?.some(r => r.role === dbRole);
       
       if (!hasRequestedRole) {

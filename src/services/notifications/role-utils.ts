@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { mapDBRoleToUIRole, mapUIRoleToDBRole } from '@/hooks/auth/types';
 
 /**
  * Gets all user IDs that have a manager role
@@ -102,8 +103,11 @@ export const getUserRoles = async (userId: string): Promise<string[]> => {
       return [];
     }
     
-    // Map 'employer' role to 'manager' for UI consistency
-    return data.map(item => item.role === 'employer' ? 'manager' : item.role);
+    // Map database roles to UI roles (employer -> manager)
+    return data.map(item => {
+      const dbRole = item.role;
+      return dbRole === 'employer' ? 'manager' : dbRole;
+    });
   } catch (error) {
     console.error("Exception in getUserRoles:", error);
     return [];

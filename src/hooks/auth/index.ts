@@ -1,13 +1,9 @@
 
+// Create a new index file to re-export auth hooks with proper typing
+
 export { AuthProvider, useAuth } from './AuthProvider';
-export { useRoles } from './useRoles';
 export { useAuthActions } from './useAuthActions';
-export type { AuthContextType } from './types';
-
-// Helper function to check if user is authenticated (for direct imports)
-import { supabase } from "@/integrations/supabase/client";
-
-export const isAuthenticated = async () => {
-  const { data } = await supabase.auth.getSession();
-  return !!data.session;
-};
+export { useAuthPage } from './useAuthPage';
+export { useRoles } from './useRoles';
+export { isAuthenticated } from './types';
+export type { UserRole } from './types';

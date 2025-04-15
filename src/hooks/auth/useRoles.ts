@@ -29,7 +29,7 @@ export const useRoles = (user: User | null) => {
         setIsAdmin(userRoles.includes('admin'));
         setIsHR(userRoles.includes('hr'));
         
-        // Check for 'employer' role which corresponds to manager
+        // Check for 'employer' role which corresponds to manager in the UI
         const hasEmployerRole = userRoles.includes('employer');
         console.log("Has employer/manager role:", hasEmployerRole);
         setIsManager(hasEmployerRole);
