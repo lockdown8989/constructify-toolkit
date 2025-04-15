@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 
-export type UserRole = "admin" | "hr" | "employee" | "employer";
+export type UserRole = "admin" | "hr" | "employee" | "employer" | "manager";
 
 export const useUserRole = () => {
   const [userRole, setUserRole] = useState<UserRole>("employee");
@@ -9,7 +9,7 @@ export const useUserRole = () => {
   
   // Generate a unique manager ID only when role first changes to employer
   useEffect(() => {
-    if (userRole === "employer" && !managerId) {
+    if ((userRole === "employer" || userRole === "manager") && !managerId) {
       generateManagerId();
     }
   }, [userRole, managerId]);
@@ -26,10 +26,9 @@ export const useUserRole = () => {
   const handleRoleChange = (value: string) => {
     // Map UI "manager" value to database "employer" value
     if (value === "admin" || value === "hr" || value === "employee" || value === "manager" || value === "employer") {
-      // If "manager" is selected, set userRole to "employer" for database compatibility
-      const newRole = value === "manager" ? "employer" : value as UserRole;
+      const newRole = value as UserRole;
       setUserRole(newRole);
-      console.log("Role selected:", value, "DB role:", newRole);
+      console.log("Role selected:", value);
       
       // Generate a manager ID if the role is manager/employer and no ID exists yet
       if ((value === "manager" || value === "employer") && !managerId) {
