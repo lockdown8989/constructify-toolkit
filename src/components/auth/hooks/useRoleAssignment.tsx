@@ -28,12 +28,15 @@ export const useRoleAssignment = () => {
       const hasRequestedRole = existingRoles?.some(r => r.role === userRole);
       
       if (!hasRequestedRole) {
+        // Make sure we're not trying to insert 'manager' as this is not a valid enum value
+        const dbRole = userRole === "manager" ? "employer" : userRole;
+        
         // Add the new role (without removing existing roles)
         const { error: insertError } = await supabase
           .from('user_roles')
           .insert({ 
             user_id: userId, 
-            role: userRole 
+            role: dbRole 
           });
             
         if (insertError) {
@@ -46,7 +49,7 @@ export const useRoleAssignment = () => {
           return false;
         } 
         
-        console.log(`Role ${userRole} inserted successfully`);
+        console.log(`Role ${dbRole} inserted successfully`);
       } else {
         console.log(`User already has role: ${userRole}, not adding again`);
       }

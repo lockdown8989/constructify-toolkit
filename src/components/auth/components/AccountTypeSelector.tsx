@@ -26,7 +26,8 @@ export const AccountTypeSelector = ({ userRole, onRoleChange }: AccountTypeSelec
         
         <div 
           className={`flex items-center border rounded-md px-4 py-2 cursor-pointer transition-colors ${userRole === "employer" ? "bg-primary text-primary-foreground border-primary" : "border-input bg-background hover:bg-accent hover:text-accent-foreground"}`}
-          onClick={() => onRoleChange("employer")}
+          // Important: Use "manager" for UI labeling but pass "employer" to the backend
+          onClick={() => onRoleChange("manager")}
         >
           <div className={`h-4 w-4 rounded-full border mr-2 flex items-center justify-center ${userRole === "employer" ? "border-primary-foreground" : "border-primary"}`}>
             {userRole === "employer" && (
