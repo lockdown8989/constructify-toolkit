@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { sendWebhookNotification } from "@/hooks/leave/useWebhookNotification";
+import { useWebhookNotification } from "@/hooks/leave/useWebhookNotification";
 import { sendNotification } from "@/services/notifications";
 import { getManagerUserIds } from "@/services/notifications/role-utils";
 
@@ -12,6 +12,7 @@ export const useLeaveRealtime = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user, isManager, isAdmin, isHR } = useAuth();
+  const { sendWebhookNotification } = useWebhookNotification();
   
   const hasManagerAccess = isManager || isAdmin || isHR;
   
@@ -41,9 +42,9 @@ export const useLeaveRealtime = () => {
           queryClient.invalidateQueries({ queryKey: ['employee-leave-requests'] });
           
           if (payload.eventType === 'UPDATE') {
-            await handleLeaveUpdate(payload, user.id, hasManagerAccess, toast);
+            await handleLeaveUpdate(payload, user.id, hasManagerAccess, toast, sendWebhookNotification);
           } else if (payload.eventType === 'INSERT') {
-            await handleLeaveInsert(payload, user.id, hasManagerAccess, toast);
+            await handleLeaveInsert(payload, user.id, hasManagerAccess, toast, sendWebhookNotification);
           }
         }
       )
@@ -57,7 +58,7 @@ export const useLeaveRealtime = () => {
       console.log('LeaveRealtimeUpdates: Cleaning up channel subscription');
       supabase.removeChannel(channel);
     };
-  }, [queryClient, toast, user, hasManagerAccess]);
+  }, [queryClient, toast, user, hasManagerAccess, sendWebhookNotification]);
 };
 
 // Helper functions
@@ -65,13 +66,14 @@ const handleLeaveUpdate = async (
   payload: any,
   userId: string,
   hasManagerAccess: boolean,
-  toast: any
+  toast: any,
+  sendWebhookNotification: (userId: string, title: string, message: string, notificationType: string) => Promise<void>
 ) => {
   const newStatus = payload.new.status;
   const oldStatus = payload.old.status;
   
   if (oldStatus === 'Pending') {
-    await handleStatusChange(payload, userId, hasManagerAccess, toast, newStatus);
+    await handleStatusChange(payload, userId, hasManagerAccess, toast, newStatus, sendWebhookNotification);
   }
 };
 
@@ -79,7 +81,8 @@ const handleLeaveInsert = async (
   payload: any,
   userId: string,
   hasManagerAccess: boolean,
-  toast: any
+  toast: any,
+  sendWebhookNotification: (userId: string, title: string, message: string, notificationType: string) => Promise<void>
 ) => {
   // Only show toast for other users' requests if user is a manager
   if (hasManagerAccess || userId === payload.new.employee_id) {
@@ -100,17 +103,18 @@ const handleStatusChange = async (
   userId: string,
   hasManagerAccess: boolean,
   toast: any,
-  newStatus: string
+  newStatus: string,
+  sendWebhookNotification: (userId: string, title: string, message: string, notificationType: string) => Promise<void>
 ) => {
   const isYourRequest = userId === payload.new.employee_id;
   
   if ((isYourRequest || hasManagerAccess)) {
     if (newStatus === 'Approved') {
       showStatusChangeToast(toast, isYourRequest, payload.new, 'approved');
-      await sendEmployeeNotification(payload.new, 'Approved');
+      await sendEmployeeNotification(payload.new, 'Approved', sendWebhookNotification);
     } else if (newStatus === 'Rejected') {
       showStatusChangeToast(toast, isYourRequest, payload.new, 'rejected');
-      await sendEmployeeNotification(payload.new, 'Rejected');
+      await sendEmployeeNotification(payload.new, 'Rejected', sendWebhookNotification);
     }
   }
 };
@@ -129,7 +133,11 @@ const showStatusChangeToast = (
   });
 };
 
-const sendEmployeeNotification = async (leaveData: any, status: 'Approved' | 'Rejected') => {
+const sendEmployeeNotification = async (
+  leaveData: any, 
+  status: 'Approved' | 'Rejected',
+  sendWebhookNotification: (userId: string, title: string, message: string, notificationType: string) => Promise<void>
+) => {
   if (!leaveData.employee_id) return;
   
   try {
