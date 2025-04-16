@@ -8,6 +8,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Globe } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface LanguageSelectorProps {
   language: string;
@@ -16,12 +17,25 @@ interface LanguageSelectorProps {
 
 export const LanguageSelector = ({ language, onChange }: LanguageSelectorProps) => {
   const { t } = useLanguage();
+  const { toast } = useToast();
+  
+  const handleLanguageChange = (value: string) => {
+    onChange(value);
+    
+    // Get language label for toast
+    const selectedLanguage = languageOptions.find(option => option.value === value);
+    
+    toast({
+      title: "Language updated",
+      description: `Language has been changed to ${selectedLanguage?.label || value}`,
+    });
+  };
   
   return (
     <div className="space-y-2">
       <Select 
         value={language} 
-        onValueChange={onChange}
+        onValueChange={handleLanguageChange}
       >
         <SelectTrigger className="w-full rounded-xl border-input bg-background h-12">
           <SelectValue placeholder={t('chooseLanguage')} />

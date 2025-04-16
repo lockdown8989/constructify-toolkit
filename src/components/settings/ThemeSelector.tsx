@@ -4,10 +4,12 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export const ThemeSelector = () => {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
+  const { toast } = useToast();
   
   // Prevent hydration mismatch
   useEffect(() => {
@@ -19,6 +21,15 @@ export const ThemeSelector = () => {
   }
   
   const isDarkTheme = theme === "dark";
+  
+  const handleThemeChange = (checked: boolean) => {
+    const newTheme = checked ? "dark" : "light";
+    setTheme(newTheme);
+    toast({
+      title: `${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)} theme enabled`,
+      description: `Application theme has been changed to ${newTheme} mode.`,
+    });
+  };
   
   return (
     <div className="flex items-center justify-between">
@@ -42,7 +53,7 @@ export const ThemeSelector = () => {
       <Switch 
         id="dark-mode"
         checked={isDarkTheme}
-        onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+        onCheckedChange={handleThemeChange}
         className="data-[state=checked]:bg-primary"
       />
     </div>

@@ -9,6 +9,7 @@ import { useRegionSettings } from "@/hooks/use-region-settings";
 import { useLanguage } from "@/hooks/use-language";
 import { Card } from "@/components/ui/card";
 import { MapPin, Currency, Languages } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface RegionSettingsProps {
   user: User | null;
@@ -27,9 +28,21 @@ export const RegionSettings = ({ user }: RegionSettingsProps) => {
   } = useRegionSettings(user);
 
   const { t } = useLanguage();
+  const { toast } = useToast();
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    toast({
+      title: "Saving changes",
+      description: "Updating your region and language settings...",
+    });
+    
+    await handleSubmit(e);
+  };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={onSubmit}>
       <CardContent className="space-y-6 pt-2">
         <Card className="p-4 rounded-xl bg-background/40 border shadow-sm">
           <div className="flex items-start space-x-4">

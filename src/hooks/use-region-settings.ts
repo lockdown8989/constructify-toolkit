@@ -40,6 +40,11 @@ export const useRegionSettings = (user: User | null) => {
         
         if (error) {
           console.error("Error fetching profile:", error);
+          toast({
+            title: "Error fetching profile",
+            description: error.message,
+            variant: "destructive",
+          });
           return;
         }
         
@@ -51,22 +56,29 @@ export const useRegionSettings = (user: User | null) => {
           });
           
           // If the country is empty, try to detect user's location
-          if (!data.country || !data.preferred_currency) {
+          if (!data.country) {
             autoDetectLocation();
           }
         } else {
           // New user, auto-detect location
           autoDetectLocation();
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error:", error);
+        toast({
+          title: "An unexpected error occurred",
+          description: error.message || "Could not fetch your profile data",
+          variant: "destructive",
+        });
       }
     };
     
     fetchRegionData();
-  }, [user]);
+  }, [user, toast]);
 
   const autoDetectLocation = async () => {
+    if (isLocating) return; // Prevent multiple simultaneous detection attempts
+    
     setIsLocating(true);
     try {
       const { country, currencyCode } = await detectUserLocation();
@@ -77,7 +89,7 @@ export const useRegionSettings = (user: User | null) => {
       setRegionData(prev => ({
         ...prev, 
         country: countryName || prev.country,
-        preferred_currency: currencyCode
+        preferred_currency: currencyCode || prev.preferred_currency
       }));
       
       if (country) {
@@ -85,9 +97,20 @@ export const useRegionSettings = (user: User | null) => {
           title: "Location detected",
           description: `Detected country: ${countryName} (${currencyCode})`,
         });
+      } else {
+        toast({
+          title: "Location detection failed",
+          description: "Could not detect your location automatically. Please enter it manually.",
+          variant: "destructive",
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error auto-detecting location:", error);
+      toast({
+        title: "Location detection failed",
+        description: error.message || "Could not detect your location",
+        variant: "destructive",
+      });
     } finally {
       setIsLocating(false);
     }
@@ -142,11 +165,11 @@ export const useRegionSettings = (user: User | null) => {
         title: "Settings updated",
         description: "Your region and language settings have been successfully updated.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error:", error);
       toast({
         title: "An unexpected error occurred",
-        description: "Please try again later",
+        description: error.message || "Please try again later",
         variant: "destructive",
       });
     } finally {

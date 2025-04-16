@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 const currencyOptions = [
   { value: "USD", label: "US Dollar ($)", icon: DollarSign },
@@ -20,11 +21,25 @@ interface CurrencySelectorProps {
 }
 
 export const CurrencySelector = ({ currency, onChange }: CurrencySelectorProps) => {
+  const { toast } = useToast();
+  
+  const handleCurrencyChange = (value: string) => {
+    onChange(value);
+    
+    // Get currency label for toast
+    const selectedCurrency = currencyOptions.find(option => option.value === value);
+    
+    toast({
+      title: "Currency updated",
+      description: `Currency has been changed to ${selectedCurrency?.label || value}`,
+    });
+  };
+  
   return (
     <div className="space-y-2">
       <Select 
         value={currency} 
-        onValueChange={onChange}
+        onValueChange={handleCurrencyChange}
       >
         <SelectTrigger className="w-full rounded-xl border-input bg-background h-12">
           <SelectValue placeholder="Select currency" />
