@@ -55,7 +55,7 @@ export const useWebhookNotification = () => {
       const { data, error } = await supabase
         .from('user_roles')
         .select('user_id')
-        .eq('role', 'manager');
+        .eq('role', 'employer');
       
       if (error) throw error;
       return data.map(item => item.user_id);
