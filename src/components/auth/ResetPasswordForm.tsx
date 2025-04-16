@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { AlertCircle, Mail, ArrowLeft } from "lucide-react";
 
 type ResetPasswordFormProps = {
   onBackToSignIn: () => void;
@@ -43,13 +44,13 @@ export const ResetPasswordForm = ({ onBackToSignIn }: ResetPasswordFormProps) =>
   };
 
   return (
-    <Card>
+    <Card className="w-full shadow-md">
       <CardHeader>
-        <CardTitle>Reset Password</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-center">Reset Your Password</CardTitle>
+        <CardDescription className="text-center">
           {isSubmitted 
-            ? "Check your email for a password reset link" 
-            : "Enter your email to receive a password reset link"}
+            ? "Please check your email for a password reset link" 
+            : "Enter your email address and we'll send you a link to reset your password"}
         </CardDescription>
       </CardHeader>
       
@@ -57,43 +58,51 @@ export const ResetPasswordForm = ({ onBackToSignIn }: ResetPasswordFormProps) =>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="reset-email">Email</Label>
-              <Input
-                id="reset-email"
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <Label htmlFor="reset-email">Email Address</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
             </div>
           </CardContent>
           
-          <CardFooter className="flex flex-col space-y-2">
+          <CardFooter className="flex flex-col space-y-3">
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Sending..." : "Send Reset Link"}
             </Button>
             <Button
               type="button"
               variant="outline"
-              className="w-full"
+              className="w-full flex items-center gap-2"
               onClick={onBackToSignIn}
             >
-              Back to Sign In
+              <ArrowLeft className="h-4 w-4" /> Back to Sign In
             </Button>
           </CardFooter>
         </form>
       ) : (
-        <CardFooter className="flex flex-col space-y-4 pt-2">
-          <p className="text-center text-sm text-gray-600">
-            If your email exists in our system, you'll receive a password reset link shortly.
-          </p>
+        <CardFooter className="flex flex-col space-y-5 pt-4">
+          <div className="bg-blue-50 p-4 rounded-md text-center">
+            <Mail className="h-10 w-10 mx-auto text-blue-500 mb-2" />
+            <p className="text-sm text-gray-700">
+              If your email exists in our system, you'll receive a password reset link shortly.
+              Please check your inbox and spam folder.
+            </p>
+          </div>
           <Button
             type="button"
-            className="w-full"
+            className="w-full flex items-center gap-2 justify-center"
             onClick={onBackToSignIn}
           >
-            Back to Sign In
+            <ArrowLeft className="h-4 w-4" /> Return to Sign In
           </Button>
         </CardFooter>
       )}

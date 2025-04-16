@@ -1,6 +1,6 @@
 
-import React from "react";
-import { Navigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthPage } from "@/hooks/auth/useAuthPage";
 import { AuthHeader } from "@/components/auth/AuthHeader";
@@ -9,6 +9,7 @@ import { ResetPasswordMode } from "@/components/auth/ResetPasswordMode";
 
 const Auth = () => {
   const { signIn, signUp } = useAuth();
+  const [searchParams] = useSearchParams();
   const {
     user,
     from,
@@ -20,13 +21,30 @@ const Auth = () => {
     handleBackToSignIn
   } = useAuthPage();
 
+  // Check for recovery token in URL
+  const hasRecoveryToken = searchParams.has("token") || window.location.hash.includes("access_token=");
+  
+  useEffect(() => {
+    // Log authentication state for debugging
+    console.log("Auth page state:", { 
+      isAuthenticated: !!user,
+      isResetMode, 
+      isRecoveryMode, 
+      hasRecoveryToken,
+      from
+    });
+  }, [user, isResetMode, isRecoveryMode, hasRecoveryToken, from]);
+
+  // If we have a token in the URL but not in reset mode, force reset mode
+  const shouldShowReset = isResetMode || isRecoveryMode || hasRecoveryToken;
+
   // Redirect authenticated users to dashboard if not in reset mode
-  if (user && !isResetMode && !isRecoveryMode) {
+  if (user && !shouldShowReset) {
     return <Navigate to={from} replace />;
   }
 
   // Show password reset form if in reset or recovery mode
-  if (isResetMode || isRecoveryMode) {
+  if (shouldShowReset) {
     return <ResetPasswordMode />;
   }
 

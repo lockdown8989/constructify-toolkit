@@ -109,11 +109,18 @@ export const useAuthActions = () => {
 
   const resetPassword = async (email: string) => {
     try {
+      // Get the current origin for creating the correct redirect URL
+      const origin = window.location.origin;
+      const resetRedirectUrl = `${origin}/auth?reset=true`;
+      
+      console.log(`Sending password reset to ${email} with redirect to: ${resetRedirectUrl}`);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?reset=true`,
+        redirectTo: resetRedirectUrl,
       });
       
       if (error) {
+        console.error('Password reset error:', error);
         toast({
           title: "Password reset failed",
           description: error.message,
@@ -122,7 +129,7 @@ export const useAuthActions = () => {
       } else {
         toast({
           title: "Password reset email sent",
-          description: "Check your email for the password reset link",
+          description: "Check your email for the password reset link. If you don't see it, check your spam folder.",
         });
       }
       return { error };
