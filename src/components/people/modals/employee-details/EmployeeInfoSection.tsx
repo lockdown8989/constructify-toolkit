@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Briefcase, MapPin, DollarSign, Calendar, Users, Mail, Phone, ChevronLeft } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -19,7 +18,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
   employee,
   onBack
 }) => {
-  const { isManager } = useAuth();
+  const { isManager, user } = useAuth();
   const isMobile = useIsMobile();
   
   return (
@@ -68,7 +67,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
           <InfoItem icon={<Mail className="h-4 w-4 text-apple-blue" />} 
                    label="Email" 
-                   value={`${employee.name.toLowerCase().replace(/\s/g, '.')}@company.com`} />
+                   value={employee.user_id === user?.id ? user.email : `${employee.name.toLowerCase().replace(/\s/g, '.')}@company.com`} />
           
           <InfoItem icon={<Phone className="h-4 w-4 text-apple-blue" />} 
                    label="Phone" 
