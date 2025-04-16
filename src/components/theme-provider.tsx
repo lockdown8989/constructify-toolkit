@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -34,10 +35,14 @@ export function ThemeProvider({
   );
   const { user } = useAuth();
   const { toast } = useToast();
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const fetchUserTheme = async () => {
-      if (!user) return;
+      if (!user) {
+        setIsInitialized(true);
+        return;
+      }
 
       try {
         const { data, error } = await supabase
@@ -48,14 +53,18 @@ export function ThemeProvider({
 
         if (error) {
           console.error('Error fetching theme:', error);
+          setIsInitialized(true);
           return;
         }
 
         if (data?.theme) {
           setTheme(data.theme as Theme);
         }
+        
+        setIsInitialized(true);
       } catch (error) {
         console.error('Error:', error);
+        setIsInitialized(true);
       }
     };
 
