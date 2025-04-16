@@ -49,7 +49,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
 
         if (error) {
           console.error('Error fetching language preference:', error);
-        } else if (data && data.preferred_language) {
+        } else if (data?.preferred_language) {
           setLanguageState(data.preferred_language as LanguageCode);
         }
       } catch (error) {
