@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { format, startOfWeek, addDays, isToday } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
-import { Clock } from 'lucide-react';
+import { Clock, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { type Schedule } from '@/hooks/use-schedules';
@@ -17,6 +17,28 @@ const WeekView = ({ currentDate, schedules, getEventColor }: WeekViewProps) => {
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const startOfTheWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(startOfTheWeek, i));
+  
+  // Track new schedules with a visual indicator
+  const [newSchedules, setNewSchedules] = useState<Record<string, boolean>>({});
+  
+  // This effect would ideally check against a last-seen timestamp in localStorage
+  // or a user preferences setting. For now, we'll just mark all schedules as "new"
+  // if they were created in the last 24 hours
+  useEffect(() => {
+    const now = new Date();
+    const newScheduleIds: Record<string, boolean> = {};
+    
+    schedules.forEach(schedule => {
+      const createdAt = new Date(schedule.created_at || schedule.start_time);
+      const hoursSinceCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursSinceCreation < 24) {
+        newScheduleIds[schedule.id] = true;
+      }
+    });
+    
+    setNewSchedules(newScheduleIds);
+  }, [schedules]);
   
   return (
     <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
@@ -53,21 +75,30 @@ const WeekView = ({ currentDate, schedules, getEventColor }: WeekViewProps) => {
                   <div className="text-xs text-gray-400 text-center py-2">No events</div>
                 )}
                 
-                {daySchedules.map((schedule, idx) => (
-                  <Card 
-                    key={schedule.id} 
-                    className={cn(
-                      "p-2 border-l-4 text-xs hover:shadow-md transition-shadow duration-200",
-                      getEventColor(idx)
-                    )}
-                  >
-                    <div className="font-medium truncate">{schedule.title}</div>
-                    <div className="flex items-center mt-1 text-gray-600">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {formatInTimeZone(new Date(schedule.start_time), timeZone, 'h:mm a')}
-                    </div>
-                  </Card>
-                ))}
+                {daySchedules.map((schedule, idx) => {
+                  const isNewSchedule = newSchedules[schedule.id];
+                  
+                  return (
+                    <Card 
+                      key={schedule.id} 
+                      className={cn(
+                        "p-2 border-l-4 text-xs hover:shadow-md transition-shadow duration-200",
+                        getEventColor(idx)
+                      )}
+                    >
+                      <div className="font-medium truncate flex items-center">
+                        {schedule.title}
+                        {isNewSchedule && (
+                          <Bell className="h-3 w-3 ml-1 text-blue-500 animate-pulse" />
+                        )}
+                      </div>
+                      <div className="flex items-center mt-1 text-gray-600">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {formatInTimeZone(new Date(schedule.start_time), timeZone, 'h:mm a')}
+                      </div>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           );

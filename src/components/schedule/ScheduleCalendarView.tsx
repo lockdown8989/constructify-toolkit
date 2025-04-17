@@ -1,11 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Bell } from 'lucide-react';
 import { Schedule } from '@/hooks/use-schedules';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface ScheduleCalendarViewProps {
   date: Date | undefined;
@@ -29,10 +31,53 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
   isHR
 }) => {
   const isMobile = useIsMobile();
+  const [newSchedules, setNewSchedules] = useState<Schedule[]>([]);
+  
+  // Identify new schedules (within the last 24 hours)
+  useEffect(() => {
+    if (!schedules.length) return;
+    
+    const now = new Date();
+    const recentSchedules = schedules.filter(schedule => {
+      const createdAt = new Date(schedule.created_at || schedule.start_time);
+      const hoursSinceCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+      return hoursSinceCreation < 24;
+    });
+    
+    setNewSchedules(recentSchedules);
+  }, [schedules]);
   
   return (
     <div className="bg-white rounded-3xl p-4 sm:p-6 card-shadow">
       <h2 className="text-lg sm:text-xl font-medium mb-4">Company Calendar</h2>
+      
+      {newSchedules.length > 0 && (
+        <Card className="mb-4 p-3 bg-blue-50 border-blue-200">
+          <div className="flex items-start">
+            <Bell className="h-4 w-4 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-blue-700">
+                You have {newSchedules.length} new shift{newSchedules.length > 1 ? 's' : ''}
+              </p>
+              <ul className="mt-1 space-y-1">
+                {newSchedules.slice(0, 3).map(schedule => (
+                  <li key={schedule.id} className="text-xs text-blue-600">
+                    <span className="font-medium">{schedule.title}</span> on {format(new Date(schedule.start_time), 'EEE, MMM d')}
+                  </li>
+                ))}
+                {newSchedules.length > 3 && (
+                  <li className="text-xs text-blue-600">
+                    <Badge variant="outline" className="text-blue-500 border-blue-200 bg-blue-50">
+                      +{newSchedules.length - 3} more
+                    </Badge>
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </Card>
+      )}
+      
       <Calendar
         mode="single"
         selected={date}
@@ -60,17 +105,25 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
           <p className="text-sm">Loading schedules...</p>
         ) : schedules.length > 0 ? (
           <ul className="space-y-2 max-h-[40vh] overflow-y-auto">
-            {schedules.map(schedule => (
-              <li key={schedule.id} className="flex items-center py-1 text-sm border-b border-gray-100">
-                <span className="w-14 text-xs sm:text-sm text-gray-500">
-                  {format(new Date(schedule.start_time), 'h:mm a')}
-                </span>
-                <span className="flex-1 truncate">{schedule.title}</span>
-                <span className="text-xs sm:text-sm text-gray-500 truncate max-w-[80px] sm:max-w-none">
-                  {employeeNames[schedule.employee_id] || 'Unknown'}
-                </span>
-              </li>
-            ))}
+            {schedules.map(schedule => {
+              // Check if this is a new schedule
+              const isNew = newSchedules.some(s => s.id === schedule.id);
+              
+              return (
+                <li key={schedule.id} className="flex items-center py-1 text-sm border-b border-gray-100">
+                  <span className="w-14 text-xs sm:text-sm text-gray-500">
+                    {format(new Date(schedule.start_time), 'h:mm a')}
+                  </span>
+                  <span className="flex-1 truncate flex items-center">
+                    {schedule.title}
+                    {isNew && <Bell className="h-3.5 w-3.5 ml-1.5 text-blue-500 animate-pulse" />}
+                  </span>
+                  <span className="text-xs sm:text-sm text-gray-500 truncate max-w-[80px] sm:max-w-none">
+                    {employeeNames[schedule.employee_id] || 'Unknown'}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <p className="text-gray-500 text-sm">No schedules for this date</p>

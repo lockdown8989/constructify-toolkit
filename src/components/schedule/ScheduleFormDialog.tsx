@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { sendNotification } from '@/services/notifications/notification-sender';
 
 interface ScheduleFormProps {
   isOpen: boolean;
@@ -43,6 +44,31 @@ const ScheduleFormDialog: React.FC<ScheduleFormProps> = ({
   employees,
   date
 }) => {
+  const handleFormSubmit = () => {
+    // Call the original submit handler
+    handleSubmit();
+    
+    // Send notification to the employee
+    const selectedEmployee = employees.find(emp => emp.id === newSchedule.employeeId);
+    if (selectedEmployee && selectedEmployee.user_id) {
+      const formattedDate = date ? format(date, 'MMMM d, yyyy') : 'the selected date';
+      const timeRange = `${newSchedule.startTime} - ${newSchedule.endTime}`;
+      
+      sendNotification({
+        user_id: selectedEmployee.user_id,
+        title: "New Shift Assigned",
+        message: `You have been assigned a new shift: "${newSchedule.title}" on ${formattedDate} at ${timeRange}`,
+        type: "info",
+        related_entity: "schedules",
+        related_id: Date.now().toString() // Using timestamp as temp ID until we get the real ID
+      });
+      
+      console.log(`Sent shift notification to employee ${selectedEmployee.name} (${selectedEmployee.user_id})`);
+    } else {
+      console.warn("Could not send notification: Employee not found or missing user_id");
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent>
@@ -118,7 +144,7 @@ const ScheduleFormDialog: React.FC<ScheduleFormProps> = ({
           <Button variant="outline" onClick={() => setIsOpen(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>
+          <Button onClick={handleFormSubmit}>
             Create Schedule
           </Button>
         </DialogFooter>
