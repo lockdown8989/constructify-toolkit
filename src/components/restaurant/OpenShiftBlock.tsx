@@ -12,12 +12,16 @@ import {
 interface OpenShiftBlockProps {
   openShift: OpenShift;
   color?: 'blue' | 'yellow' | 'purple' | 'green';
+  compact?: boolean; // Added compact prop
+  handleAssignOpenShift?: (openShiftId: string, employeeId?: string) => void; // Added handleAssignOpenShift prop
   onAssign?: (openShiftId: string, employeeId?: string) => void;
 }
 
 const OpenShiftBlock = ({ 
   openShift, 
   color = 'blue', 
+  compact = false, // Added compact parameter with default
+  handleAssignOpenShift, // Added handleAssignOpenShift parameter
   onAssign 
 }: OpenShiftBlockProps) => {
   const colorClasses = {
@@ -50,8 +54,12 @@ const OpenShiftBlock = ({
     target.classList.remove('scale-105', 'shadow', 'bg-blue-50/80', 'border', 'border-blue-300/50');
     
     const employeeId = e.dataTransfer.getData('employeeId');
-    if (employeeId && onAssign) {
-      onAssign(openShift.id, employeeId);
+    
+    // Use either handleAssignOpenShift or onAssign based on what was provided
+    const assignHandler = handleAssignOpenShift || onAssign;
+    
+    if (employeeId && assignHandler) {
+      assignHandler(openShift.id, employeeId);
     }
   };
   
@@ -82,9 +90,9 @@ const OpenShiftBlock = ({
                 </Tooltip>
               </TooltipProvider>
             )}
-            {onAssign && (
+            {(handleAssignOpenShift || onAssign) && (
               <button 
-                onClick={() => onAssign(openShift.id)} 
+                onClick={() => (handleAssignOpenShift || onAssign)?.(openShift.id)} 
                 className="text-blue-500 hover:text-blue-700 transition-colors p-1 rounded-full hover:bg-blue-100/50"
                 aria-label="Assign shift"
               >

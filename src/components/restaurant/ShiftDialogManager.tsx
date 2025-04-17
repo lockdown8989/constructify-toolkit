@@ -84,7 +84,7 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
     <ShiftEditDialog
       isOpen={isOpen}
       onClose={() => setIsOpen(false)}
-      onSubmit={handleFormSubmit}
+      onSave={handleFormSubmit} // Changed onSubmit to onSave to match the component props
       mode={mode}
       shift={currentShift}
     />

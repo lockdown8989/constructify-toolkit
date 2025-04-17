@@ -25,11 +25,12 @@ import { Label } from "@/components/ui/label";
 interface ShiftEditDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  shift?: Shift;
-  onSave: (shift: Shift) => void;
+  shift?: Shift | null;
+  onSave: (shift: Shift) => void; // This is the prop that will receive form data
+  mode?: 'add' | 'edit'; // Added mode prop
 }
 
-const ShiftEditDialog = ({ isOpen, onClose, shift, onSave }: ShiftEditDialogProps) => {
+const ShiftEditDialog = ({ isOpen, onClose, shift, onSave, mode = 'edit' }: ShiftEditDialogProps) => {
   const [editedShift, setEditedShift] = useState<Shift | null>(null);
   
   // Set the form data when a shift is provided
@@ -37,7 +38,18 @@ const ShiftEditDialog = ({ isOpen, onClose, shift, onSave }: ShiftEditDialogProp
     if (shift) {
       setEditedShift({ ...shift });
     } else {
-      setEditedShift(null);
+      // Initialize with default values for add mode
+      setEditedShift({
+        id: '',
+        employeeId: '',
+        day: '',
+        startTime: '',
+        endTime: '',
+        role: '',
+        hasBreak: false,
+        breakDuration: 30,
+        isUnavailable: false
+      });
     }
   }, [shift, isOpen]);
   
@@ -65,9 +77,9 @@ const ShiftEditDialog = ({ isOpen, onClose, shift, onSave }: ShiftEditDialogProp
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>{shift?.id ? 'Edit Shift' : 'Add Shift'}</DialogTitle>
+            <DialogTitle>{mode === 'edit' ? 'Edit Shift' : 'Add Shift'}</DialogTitle>
             <DialogDescription>
-              {shift?.id ? 'Update the shift details below.' : 'Enter the details for the new shift.'}
+              {mode === 'edit' ? 'Update the shift details below.' : 'Enter the details for the new shift.'}
             </DialogDescription>
           </DialogHeader>
           

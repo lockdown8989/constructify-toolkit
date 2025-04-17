@@ -1,7 +1,8 @@
+
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Coffee, FileText, Plane, Trash2, Edit, Plus } from 'lucide-react';
-import { Shift } from '@/types/restaurant-schedule';
+import { Shift, Employee } from '@/types/restaurant-schedule';
 import {
   Tooltip,
   TooltipContent,
@@ -11,7 +12,9 @@ import {
 
 interface ShiftBlockProps {
   shift: Shift;
+  employee?: Employee; // Added employee prop to interface
   color?: 'red' | 'blue' | 'yellow';
+  compact?: boolean; // Added compact prop
   onEdit?: (shift: Shift) => void;
   onDelete?: (shiftId: string) => void;
   onAddNote?: (shiftId: string) => void;
@@ -20,7 +23,9 @@ interface ShiftBlockProps {
 
 const ShiftBlock = ({ 
   shift, 
+  employee, // Added employee parameter
   color = 'blue', 
+  compact = false, // Added compact parameter with default
   onEdit, 
   onDelete,
   onAddNote,
