@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { WeekStats, OpenShift, Employee } from '@/types/restaurant-schedule';
-import WeekSummaryColumn from './WeekSummaryColumn';
+import { WeekStats, Employee, OpenShift } from '@/types/restaurant-schedule';
+import { days } from './utils/schedule-utils';
 import DayColumn from './DayColumn';
-import EmployeeList from './EmployeeList';
+import WeekSummaryColumn from './WeekSummaryColumn';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface WeeklyGridProps {
@@ -11,87 +11,71 @@ interface WeeklyGridProps {
   openShifts: OpenShift[];
   employees: Employee[];
   daysDisplayNames: string[];
-  formatCurrency: (amount: number) => string;
+  formatCurrency: (amount: number, currency?: string, locale?: string) => string;
   handleAssignOpenShift: (openShiftId: string, employeeId?: string) => void;
   previousWeek: () => void;
   nextWeek: () => void;
-  isMobile?: boolean;
+  isMobile: boolean;
 }
 
-const WeeklyGrid = ({
-  weekStats,
-  openShifts,
+const WeeklyGrid = ({ 
+  weekStats, 
+  openShifts, 
   employees,
   daysDisplayNames,
   formatCurrency,
   handleAssignOpenShift,
   previousWeek,
   nextWeek,
-  isMobile = false
+  isMobile
 }: WeeklyGridProps) => {
-  // For mobile, show only 4 days at a time and enable horizontal scrolling
-  const visibleDays = isMobile ? weekStats.days.slice(0, 4) : weekStats.days;
-  const visibleDayNames = isMobile ? daysDisplayNames.slice(0, 4) : daysDisplayNames;
-  
+  // Filter open shifts by day
+  const getOpenShiftsByDay = (day: string) => {
+    return openShifts.filter(shift => shift.day === day);
+  };
+
   return (
-    <div className={`${isMobile ? 'overflow-x-auto' : ''}`}>
-      <div className={`grid ${isMobile ? 'grid-cols-6' : 'grid-cols-10'} gap-0 min-w-full`}>
-        {/* Employee list column */}
-        <EmployeeList employees={employees} />
-        
-        {/* Week summary column */}
+    <div className="overflow-x-auto -mx-4 sm:mx-0">
+      <div className={`grid ${isMobile ? 'grid-cols-3' : 'grid-cols-8'} min-w-[600px]`}>
+        {/* Summary column */}
         <WeekSummaryColumn 
           weekStats={weekStats} 
-          openShifts={openShifts}
+          openShifts={openShifts} 
           formatCurrency={formatCurrency}
           handleAssignOpenShift={handleAssignOpenShift}
           previousWeek={previousWeek}
           nextWeek={nextWeek}
         />
         
-        {/* Day columns */}
-        {visibleDays.map((day, index) => (
-          <DayColumn
-            key={day.day}
+        {/* Only show 2 days at a time on mobile */}
+        {days.slice(0, isMobile ? 2 : 7).map((day, index) => (
+          <DayColumn 
+            key={day}
             day={day}
-            index={index}
-            dayDisplayName={visibleDayNames[index]}
-            formatCurrency={formatCurrency}
-            openShifts={openShifts}
-            onAssign={handleAssignOpenShift}
-            previousWeek={index === 0 && !isMobile ? previousWeek : undefined}
-            nextWeek={index === 1 && !isMobile ? nextWeek : undefined}
+            dayLabel={daysDisplayNames[index]}
+            dayStats={weekStats.days.find(d => d.day === day)!}
+            employees={employees}
+            openShifts={getOpenShiftsByDay(day)}
+            handleAssignOpenShift={handleAssignOpenShift}
           />
         ))}
       </div>
       
-      {/* Mobile pagination controls */}
+      {/* Mobile day pagination */}
       {isMobile && (
-        <div className="flex justify-center mt-4 space-x-2 pb-2">
-          <Button 
-            onClick={previousWeek} 
-            variant="outline" 
-            size="sm" 
-            className="h-9 w-9 p-0 rounded-full">
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center px-3 font-medium text-sm bg-gray-100 rounded-full">
-            Week {weekStats.weekNumber}
-          </div>
-          <Button 
-            onClick={nextWeek} 
-            variant="outline" 
-            size="sm" 
-            className="h-9 w-9 p-0 rounded-full">
-            <ChevronRight className="h-5 w-5" />
-          </Button>
+        <div className="flex justify-center mt-4 pb-4 gap-2">
+          {[0, 1, 2, 3].map((index) => (
+            <button 
+              key={index}
+              className={`w-2.5 h-2.5 rounded-full transition-colors ${index === 0 ? 'bg-primary' : 'bg-gray-300'}`}
+              // This would need to be implemented with state to show different day groups
+              onClick={() => console.log(`Show days ${index * 2} to ${index * 2 + 1}`)}
+            />
+          ))}
         </div>
       )}
     </div>
   );
 };
-
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 export default WeeklyGrid;

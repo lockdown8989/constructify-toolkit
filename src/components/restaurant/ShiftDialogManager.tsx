@@ -1,7 +1,9 @@
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Shift } from '@/types/restaurant-schedule';
 import ShiftEditDialog from './ShiftEditDialog';
+import { sendNotification } from '@/services/notifications/notification-sender';
+import { useAuth } from '@/hooks/use-auth';
 
 interface ShiftDialogManagerProps {
   addShift: (shift: Omit<Shift, 'id'>) => void;
@@ -9,77 +11,89 @@ interface ShiftDialogManagerProps {
 }
 
 const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) => {
-  const [isShiftDialogOpen, setIsShiftDialogOpen] = useState(false);
-  const [currentShift, setCurrentShift] = useState<Shift | undefined>(undefined);
-  const [newShiftEmployeeId, setNewShiftEmployeeId] = useState<string | null>(null);
-  const [newShiftDay, setNewShiftDay] = useState<string | null>(null);
-
-  const handleEditShift = (shift: Shift) => {
-    setCurrentShift(shift);
-    setIsShiftDialogOpen(true);
-  };
+  const [isOpen, setIsOpen] = useState(false);
+  const [mode, setMode] = useState<'add' | 'edit'>('add');
+  const [currentShift, setCurrentShift] = useState<Shift | null>(null);
+  const [employeeId, setEmployeeId] = useState<string | null>(null);
+  const [day, setDay] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const handleAddShift = (employeeId: string, day: string) => {
-    setNewShiftEmployeeId(employeeId);
-    setNewShiftDay(day);
-    
-    // Create a default new shift
-    const newShift: Shift = {
-      id: '',
-      employeeId,
-      day,
-      startTime: '09:00',
-      endTime: '17:00',
-      role: '', // This will be set from the employee's role in the parent component
-      hasBreak: false,
-      isUnavailable: false
-    };
-    
-    setCurrentShift(newShift);
-    setIsShiftDialogOpen(true);
+    setMode('add');
+    setEmployeeId(employeeId);
+    setDay(day);
+    setIsOpen(true);
   };
 
-  const handleSaveShift = (shift: Shift) => {
-    if (shift.id) {
-      // Update existing shift
-      updateShift(shift);
-    } else {
-      // Add new shift with specific employee and day
+  const handleEditShift = (shift: Shift) => {
+    setMode('edit');
+    setCurrentShift(shift);
+    setIsOpen(true);
+  };
+
+  const handleFormSubmit = (formData: any) => {
+    if (mode === 'add' && employeeId && day) {
       const newShift = {
-        ...shift,
-        employeeId: newShiftEmployeeId || '',
-        day: newShiftDay || ''
+        employeeId,
+        day,
+        ...formData
       };
       
       addShift(newShift);
+
+      // Send notification to the employee about the new shift
+      if (user && formData.employeeId) {
+        sendNotification({
+          user_id: formData.employeeId,
+          title: "New Shift Assigned",
+          message: `You have been assigned a new shift on ${day} from ${formData.startTime} to ${formData.endTime}`,
+          type: "info",
+          related_entity: "schedule",
+          related_id: Date.now().toString()
+        });
+      }
+    } else if (mode === 'edit' && currentShift) {
+      const updatedShift = {
+        ...currentShift,
+        ...formData
+      };
+      
+      updateShift(updatedShift);
+
+      // If the shift details changed, notify the employee
+      if (
+        currentShift.startTime !== formData.startTime || 
+        currentShift.endTime !== formData.endTime ||
+        currentShift.day !== formData.day
+      ) {
+        sendNotification({
+          user_id: currentShift.employeeId,
+          title: "Shift Updated",
+          message: `Your shift on ${currentShift.day} has been updated from ${formData.startTime} to ${formData.endTime}`,
+          type: "info",
+          related_entity: "schedule",
+          related_id: currentShift.id
+        });
+      }
     }
     
-    // Reset state
-    closeDialog();
+    setIsOpen(false);
   };
 
-  const closeDialog = () => {
-    setIsShiftDialogOpen(false);
-    setCurrentShift(undefined);
-    setNewShiftEmployeeId(null);
-    setNewShiftDay(null);
-  };
+  const ShiftDialogComponent = (
+    <ShiftEditDialog
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      onSubmit={handleFormSubmit}
+      mode={mode}
+      shift={currentShift}
+    />
+  );
 
   return {
-    isShiftDialogOpen,
-    currentShift,
-    handleEditShift,
     handleAddShift,
-    handleSaveShift,
-    closeDialog,
-    ShiftDialogComponent: (
-      <ShiftEditDialog
-        isOpen={isShiftDialogOpen}
-        onClose={closeDialog}
-        shift={currentShift}
-        onSave={handleSaveShift}
-      />
-    )
+    handleEditShift,
+    ShiftDialogComponent
   };
 };
 

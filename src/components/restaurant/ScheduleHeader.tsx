@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search, Calendar, RefreshCw } from 'lucide-react';
+import { Search, Calendar, RefreshCw, Users } from 'lucide-react';
 import { ViewMode } from '@/types/restaurant-schedule';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -11,9 +11,16 @@ import { cn } from '@/lib/utils';
 interface ScheduleHeaderProps {
   setViewMode: (value: ViewMode) => void;
   onSyncCalendar?: () => void;
+  onSyncEmployeeData?: () => void;
+  isSyncing?: boolean;
 }
 
-const ScheduleHeader = ({ setViewMode, onSyncCalendar }: ScheduleHeaderProps) => {
+const ScheduleHeader = ({ 
+  setViewMode, 
+  onSyncCalendar, 
+  onSyncEmployeeData,
+  isSyncing = false 
+}: ScheduleHeaderProps) => {
   const isMobile = useIsMobile();
 
   return (
@@ -22,17 +29,34 @@ const ScheduleHeader = ({ setViewMode, onSyncCalendar }: ScheduleHeaderProps) =>
         <Calendar className="h-7 w-7 sm:h-8 sm:w-8 text-primary mr-2 sm:mr-3" />
         <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-gray-900">Shift Calendar</h1>
         
-        {onSyncCalendar && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onSyncCalendar}
-            className="ml-auto rounded-full border-gray-200 hover:bg-gray-50"
-          >
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-            <span className={cn("", isMobile ? "sr-only" : "")}>Sync</span>
-          </Button>
-        )}
+        <div className="ml-auto flex items-center gap-2">
+          {onSyncEmployeeData && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onSyncEmployeeData}
+              disabled={isSyncing}
+              className="rounded-full border-gray-200 hover:bg-gray-50"
+            >
+              <Users className={cn("h-3.5 w-3.5 mr-1.5", isSyncing && "animate-pulse")} />
+              <span className={cn("", isMobile ? "sr-only" : "")}>
+                {isSyncing ? "Syncing..." : "Sync Staff"}
+              </span>
+            </Button>
+          )}
+          
+          {onSyncCalendar && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onSyncCalendar}
+              className="rounded-full border-gray-200 hover:bg-gray-50"
+            >
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+              <span className={cn("", isMobile ? "sr-only" : "")}>Sync Calendar</span>
+            </Button>
+          )}
+        </div>
       </div>
       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">

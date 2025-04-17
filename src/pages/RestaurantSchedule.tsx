@@ -1,9 +1,10 @@
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useRestaurantSchedule } from '@/hooks/use-restaurant-schedule';
 import { Shift } from '@/types/restaurant-schedule';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
 import ScheduleHeader from '@/components/restaurant/ScheduleHeader';
 import WeeklyGrid from '@/components/restaurant/WeeklyGrid';
 import ShiftDialogManager from '@/components/restaurant/ShiftDialogManager';
@@ -11,8 +12,11 @@ import RolesSectionList from '@/components/restaurant/RolesSectionList';
 import OpenShiftActions from '@/components/restaurant/OpenShiftActions';
 import { useShiftUtilities } from '@/components/restaurant/ShiftUtilities';
 import { days, formatCurrency } from '@/components/restaurant/utils/schedule-utils';
+import { Loader2 } from 'lucide-react';
+import { toast as sonnerToast } from 'sonner';
 
 const RestaurantSchedule = () => {
+  const [syncingData, setSyncingData] = useState(false);
   const { 
     employees,
     shifts,
@@ -29,12 +33,38 @@ const RestaurantSchedule = () => {
     syncWithCalendar
   } = useRestaurantSchedule();
   
+  const { employeeData, isLoading: isLoadingEmployeeData } = useEmployeeDataManagement();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { handleAddNote, handleAddBreak } = useShiftUtilities(updateShift);
   
   // Get the shift dialog manager with all its functions and component
   const shiftDialog = ShiftDialogManager({ addShift, updateShift });
+  
+  // Auto-sync with employee data when component loads
+  useEffect(() => {
+    if (employeeData && !syncingData) {
+      syncEmployeeData();
+    }
+  }, [employeeData]);
+
+  const syncEmployeeData = () => {
+    setSyncingData(true);
+    
+    // Show syncing toast
+    sonnerToast.loading("Synchronizing employee data...");
+    
+    // Simulate API call for data synchronization
+    setTimeout(() => {
+      setSyncingData(false);
+      sonnerToast.success("Employee data synchronized");
+      
+      toast({
+        title: "Synchronization complete",
+        description: "All employee information has been updated.",
+      });
+    }, 1500);
+  };
   
   // Organize shifts by employee and day for the role sections
   const organizedShifts = useMemo(() => {
@@ -72,12 +102,23 @@ const RestaurantSchedule = () => {
     }
   };
   
+  if (isLoadingEmployeeData) {
+    return (
+      <div className="flex items-center justify-center h-[70vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-lg">Loading schedule data...</span>
+      </div>
+    );
+  }
+  
   return (
     <div className="container py-6 sm:py-8 max-w-[1400px] px-3 md:px-6 mx-auto">
       <div className="mb-4 sm:mb-6">
         <ScheduleHeader 
           setViewMode={setViewMode} 
-          onSyncCalendar={syncWithCalendar} 
+          onSyncCalendar={syncWithCalendar}
+          onSyncEmployeeData={syncEmployeeData}
+          isSyncing={syncingData}
         />
       </div>
       

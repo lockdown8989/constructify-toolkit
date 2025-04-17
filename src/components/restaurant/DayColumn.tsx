@@ -1,87 +1,90 @@
 
 import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { DayStats, OpenShift } from '@/types/restaurant-schedule';
+import { DayStats, Employee, OpenShift } from '@/types/restaurant-schedule';
+import ShiftBlock from './ShiftBlock';
 import OpenShiftBlock from './OpenShiftBlock';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DayColumnProps {
-  day: DayStats;
-  index: number;
-  dayDisplayName: string;
-  formatCurrency: (amount: number, currency?: string, locale?: string) => string;
+  day: string;
+  dayLabel: string;
+  dayStats: DayStats;
+  employees: Employee[];
   openShifts: OpenShift[];
-  onAssign: (openShiftId: string, employeeId?: string) => void;
-  previousWeek?: () => void;
-  nextWeek?: () => void;
+  handleAssignOpenShift: (openShiftId: string, employeeId?: string) => void;
 }
 
-const DayColumn = ({ 
-  day, 
-  index, 
-  dayDisplayName, 
-  formatCurrency, 
-  openShifts, 
-  onAssign,
-  previousWeek,
-  nextWeek
+const DayColumn = ({
+  day,
+  dayLabel,
+  dayStats,
+  employees,
+  openShifts,
+  handleAssignOpenShift
 }: DayColumnProps) => {
-  // Handler for when there's no open shifts to drop on
-  const handleColumnDragOver = (e: React.DragEvent) => {
-    if (openShifts.filter(s => s.day === day.day).length === 0) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'none'; // Indicate that dropping is not allowed
+  const isMobile = useIsMobile();
+  
+  // Get all shifts for this day
+  const shifts = dayStats.shifts;
+
+  // Sort shifts by start time
+  const sortedShifts = [...shifts].sort((a, b) => {
+    return a.startTime.localeCompare(b.startTime);
+  });
+  
+  // Format hours for display
+  const formatHours = (totalHours: number) => {
+    const hours = Math.floor(totalHours);
+    const minutes = Math.round((totalHours - hours) * 60);
+    
+    if (minutes === 0) {
+      return `${hours}h`;
+    } else {
+      return `${hours}h ${minutes}m`;
     }
   };
-  
-  const dayShifts = openShifts.filter(s => s.day === day.day);
-  
+
   return (
-    <div 
-      className="col-span-1 border-r border-gray-200"
-      onDragOver={handleColumnDragOver}
-    >
-      <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/80">
-        <div className="flex items-center space-x-2">
-          <span className="font-medium text-gray-900">{dayDisplayName}</span>
-        </div>
-        <div className="flex space-x-1">
-          {index === 0 && previousWeek && (
-            <Button variant="ghost" size="icon" onClick={previousWeek} className="h-7 w-7 rounded-full hover:bg-gray-100">
-              <ChevronLeft className="h-4 w-4 text-gray-600" />
-            </Button>
-          )}
-          {index === 1 && nextWeek && (
-            <Button variant="ghost" size="icon" onClick={nextWeek} className="h-7 w-7 rounded-full hover:bg-gray-100">
-              <ChevronRight className="h-4 w-4 text-gray-600" />
-            </Button>
-          )}
+    <div className="col-span-1 border-r border-gray-200">
+      {/* Header */}
+      <div className="p-3 sm:p-4 border-b border-gray-200 bg-gray-50">
+        <div className="text-center">
+          <div className="text-gray-600 font-medium">{dayLabel}</div>
+          <div className="text-xs text-gray-500">{formatHours(dayStats.totalHours)}</div>
         </div>
       </div>
       
-      <div className="p-3 sm:p-4 border-b border-gray-200 bg-white/50">
-        <div className="flex justify-between items-center">
-          <div className="flex flex-col space-y-1">
-            <div className="text-gray-900 font-medium">{day.totalHours.toFixed(1)}h</div>
-            <div className="text-gray-900 font-medium">{formatCurrency(day.totalCost)}</div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="p-2">
-        {dayShifts.length > 0 ? (
-          dayShifts.map(openShift => (
-            <OpenShiftBlock
-              key={openShift.id}
-              openShift={openShift}
-              color={openShift.role.includes('Waiting') ? 'yellow' : 'blue'}
-              onAssign={onAssign}
+      {/* Shifts */}
+      <div className="p-2 flex flex-col gap-2">
+        {/* Employee shifts */}
+        {sortedShifts.map(shift => {
+          const employee = employees.find(e => e.id === shift.employeeId);
+          if (!employee) return null;
+          
+          return (
+            <ShiftBlock
+              key={shift.id}
+              shift={shift}
+              employee={employee}
+              compact={isMobile}
             />
-          ))
-        ) : (
-          <div className="py-6 text-center text-gray-400 text-sm">
-            <div className="rotate-45 transform inline-block mb-1 opacity-50">+</div>
-            <div>No shifts</div>
+          );
+        })}
+        
+        {/* Open shifts */}
+        {openShifts.map(openShift => (
+          <OpenShiftBlock
+            key={openShift.id}
+            openShift={openShift}
+            handleAssignOpenShift={handleAssignOpenShift}
+            compact={isMobile}
+          />
+        ))}
+        
+        {/* Empty state */}
+        {sortedShifts.length === 0 && openShifts.length === 0 && (
+          <div className="p-2 text-center text-xs text-gray-400">
+            No shifts scheduled
           </div>
         )}
       </div>
