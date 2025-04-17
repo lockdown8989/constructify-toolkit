@@ -10,6 +10,7 @@ interface RolesSectionListProps {
   onAddShift: (employeeId: string, day: string) => void;
   onAddNote: (shiftId: string) => void;
   onAddBreak: (shiftId: string) => void;
+  isMobile?: boolean; // Added isMobile prop as optional
 }
 
 const RolesSectionList = ({
@@ -19,7 +20,8 @@ const RolesSectionList = ({
   onDeleteShift,
   onAddShift,
   onAddNote,
-  onAddBreak
+  onAddBreak,
+  isMobile = false // Default value if not provided
 }: RolesSectionListProps) => {
   return (
     <>
@@ -33,6 +35,7 @@ const RolesSectionList = ({
           onAddShift={onAddShift}
           onAddNote={onAddNote}
           onAddBreak={onAddBreak}
+          isMobile={isMobile} // Pass the isMobile prop to RoleSection
         />
       ))}
     </>

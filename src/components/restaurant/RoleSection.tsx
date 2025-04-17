@@ -12,6 +12,7 @@ interface RoleSectionProps {
   onAddShift: (employeeId: string, day: string) => void;
   onAddNote: (shiftId: string) => void;
   onAddBreak: (shiftId: string) => void;
+  isMobile?: boolean; // Added isMobile prop as optional
 }
 
 const RoleSection = ({
@@ -21,7 +22,8 @@ const RoleSection = ({
   onDeleteShift,
   onAddShift,
   onAddNote,
-  onAddBreak
+  onAddBreak,
+  isMobile = false // Default value if not provided
 }: RoleSectionProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
   
@@ -86,6 +88,7 @@ const RoleSection = ({
                 onAddShift={onAddShift}
                 onAddNote={onAddNote}
                 onAddBreak={onAddBreak}
+                isMobile={isMobile} // Pass the isMobile prop to EmployeeRow
               />
             );
           })}
