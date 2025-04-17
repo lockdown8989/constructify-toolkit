@@ -25,10 +25,12 @@ const RestaurantSchedule = () => {
     assignOpenShift,
     previousWeek,
     nextWeek,
-    setViewMode
+    setViewMode,
+    syncWithCalendar
   } = useRestaurantSchedule();
   
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const { handleAddNote, handleAddBreak } = useShiftUtilities(updateShift);
   
   // Get the shift dialog manager with all its functions and component
@@ -71,30 +73,36 @@ const RestaurantSchedule = () => {
   };
   
   return (
-    <div className="container py-8 max-w-[1400px] px-4 md:px-6 mx-auto">
-      <div className="mb-6">
-        <ScheduleHeader setViewMode={setViewMode} />
+    <div className="container py-6 sm:py-8 max-w-[1400px] px-3 md:px-6 mx-auto">
+      <div className="mb-4 sm:mb-6">
+        <ScheduleHeader 
+          setViewMode={setViewMode} 
+          onSyncCalendar={syncWithCalendar} 
+        />
       </div>
       
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-3 sm:mb-4">
         <OpenShiftActions addOpenShift={addOpenShift} />
       </div>
       
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-6 sm:mb-8">
         <WeeklyGrid 
           weekStats={weekStats}
           openShifts={openShifts}
           employees={employees}
-          daysDisplayNames={['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
+          daysDisplayNames={isMobile 
+            ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] 
+            : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
           formatCurrency={formatCurrency}
           handleAssignOpenShift={handleAssignOpenShift}
           previousWeek={previousWeek}
           nextWeek={nextWeek}
+          isMobile={isMobile}
         />
       </div>
       
       {/* Role sections */}
-      <div className="space-y-5">
+      <div className="space-y-4 sm:space-y-5">
         <RolesSectionList
           roles={weekStats.roles}
           organizedShifts={organizedShifts}
@@ -103,6 +111,7 @@ const RestaurantSchedule = () => {
           onAddShift={shiftDialog.handleAddShift}
           onAddNote={(shiftId) => handleAddNote(shiftId, shifts)}
           onAddBreak={(shiftId) => handleAddBreak(shiftId, shifts)}
+          isMobile={isMobile}
         />
       </div>
       

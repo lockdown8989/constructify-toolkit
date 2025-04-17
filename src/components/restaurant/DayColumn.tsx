@@ -34,41 +34,43 @@ const DayColumn = ({
     }
   };
   
+  const dayShifts = openShifts.filter(s => s.day === day.day);
+  
   return (
     <div 
       className="col-span-1 border-r border-gray-200"
       onDragOver={handleColumnDragOver}
     >
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/80">
-        <div className="flex items-center">
-          <span className="font-semibold text-lg mr-2">{index + 1}</span>
-          <span className="text-gray-700">{dayDisplayName}</span>
+      <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/80">
+        <div className="flex items-center space-x-2">
+          <span className="font-medium text-gray-900">{dayDisplayName}</span>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex space-x-1">
           {index === 0 && previousWeek && (
-            <Button variant="outline" size="icon" onClick={previousWeek} className="rounded-full h-7 w-7 border-gray-200 bg-white hover:bg-gray-50">
+            <Button variant="ghost" size="icon" onClick={previousWeek} className="h-7 w-7 rounded-full hover:bg-gray-100">
               <ChevronLeft className="h-4 w-4 text-gray-600" />
             </Button>
           )}
           {index === 1 && nextWeek && (
-            <Button variant="outline" size="icon" onClick={nextWeek} className="rounded-full h-7 w-7 border-gray-200 bg-white hover:bg-gray-50">
+            <Button variant="ghost" size="icon" onClick={nextWeek} className="h-7 w-7 rounded-full hover:bg-gray-100">
               <ChevronRight className="h-4 w-4 text-gray-600" />
             </Button>
           )}
         </div>
       </div>
       
-      <div className="p-4 border-b border-gray-200 bg-white/50">
-        <div className="flex flex-col space-y-1">
-          <div className="text-gray-900 font-semibold">{day.totalHours.toFixed(0)}h</div>
-          <div className="text-gray-900 font-semibold">{formatCurrency(day.totalCost)}</div>
+      <div className="p-3 sm:p-4 border-b border-gray-200 bg-white/50">
+        <div className="flex justify-between items-center">
+          <div className="flex flex-col space-y-1">
+            <div className="text-gray-900 font-medium">{day.totalHours.toFixed(1)}h</div>
+            <div className="text-gray-900 font-medium">{formatCurrency(day.totalCost)}</div>
+          </div>
         </div>
       </div>
       
       <div className="p-2">
-        {openShifts
-          .filter(s => s.day === day.day)
-          .map(openShift => (
+        {dayShifts.length > 0 ? (
+          dayShifts.map(openShift => (
             <OpenShiftBlock
               key={openShift.id}
               openShift={openShift}
@@ -76,10 +78,10 @@ const DayColumn = ({
               onAssign={onAssign}
             />
           ))
-        }
-        {openShifts.filter(s => s.day === day.day).length === 0 && (
-          <div className="py-8 text-center text-gray-400 text-sm italic">
-            No open shifts
+        ) : (
+          <div className="py-6 text-center text-gray-400 text-sm">
+            <div className="rotate-45 transform inline-block mb-1 opacity-50">+</div>
+            <div>No shifts</div>
           </div>
         )}
       </div>

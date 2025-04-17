@@ -1,23 +1,41 @@
 
 import React from 'react';
-import { Search, Calendar } from 'lucide-react';
+import { Search, Calendar, RefreshCw } from 'lucide-react';
 import { ViewMode } from '@/types/restaurant-schedule';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 interface ScheduleHeaderProps {
   setViewMode: (value: ViewMode) => void;
+  onSyncCalendar?: () => void;
 }
 
-const ScheduleHeader = ({ setViewMode }: ScheduleHeaderProps) => {
+const ScheduleHeader = ({ setViewMode, onSyncCalendar }: ScheduleHeaderProps) => {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="mb-6">
-      <div className="flex items-center mb-5">
-        <Calendar className="h-8 w-8 text-primary mr-3" />
-        <h1 className="text-3xl font-semibold tracking-tight text-gray-900">Shift Calendar</h1>
+    <div className="mb-4 sm:mb-6">
+      <div className="flex flex-wrap items-center mb-4 sm:mb-5 gap-2">
+        <Calendar className="h-7 w-7 sm:h-8 sm:w-8 text-primary mr-2 sm:mr-3" />
+        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-gray-900">Shift Calendar</h1>
+        
+        {onSyncCalendar && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onSyncCalendar}
+            className="ml-auto rounded-full border-gray-200 hover:bg-gray-50"
+          >
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+            <span className={cn("", isMobile ? "sr-only" : "")}>Sync</span>
+          </Button>
+        )}
       </div>
       
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <Tabs 
           defaultValue="week" 
           onValueChange={(value) => setViewMode(value as ViewMode)}
@@ -26,13 +44,13 @@ const ScheduleHeader = ({ setViewMode }: ScheduleHeaderProps) => {
           <TabsList className="bg-transparent">
             <TabsTrigger 
               value="week" 
-              className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow"
+              className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm text-sm"
             >
               Week
             </TabsTrigger>
             <TabsTrigger 
               value="month" 
-              className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow"
+              className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm text-sm"
             >
               Month
             </TabsTrigger>

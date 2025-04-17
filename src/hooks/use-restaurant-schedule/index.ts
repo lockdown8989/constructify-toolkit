@@ -5,6 +5,8 @@ import { useScheduleView } from './use-schedule-view';
 import { useScheduleStats } from './use-schedule-stats';
 import { ViewMode, Employee } from '@/types/restaurant-schedule';
 import { useEmployees } from '@/hooks/use-employees';
+import { useToast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
 
 // Adapter function to convert database employees to restaurant schedule employees
 const adaptEmployees = (dbEmployees: any[]): Employee[] => {
@@ -20,6 +22,7 @@ const adaptEmployees = (dbEmployees: any[]): Employee[] => {
 export const useRestaurantSchedule = (initialWeekNumber: number = 17, initialViewMode: ViewMode = 'week') => {
   // Fetch real employees from the system
   const { data: dbEmployees = [] } = useEmployees({});
+  const { toast } = useToast();
   
   // Convert database employees to the expected format
   const employees = adaptEmployees(dbEmployees);
@@ -34,10 +37,29 @@ export const useRestaurantSchedule = (initialWeekNumber: number = 17, initialVie
     scheduleView.weekNumber
   );
 
+  // Function to sync with calendar
+  const syncWithCalendar = () => {
+    // Show a loading toast
+    sonnerToast.loading("Syncing with calendar...");
+    
+    // Simulate API call
+    setTimeout(() => {
+      // Success toast
+      sonnerToast.success("Calendar synchronized successfully");
+      
+      // Notify the user about the sync
+      toast({
+        title: "Calendar synchronized",
+        description: "All shifts have been synced with your calendar.",
+      });
+    }, 1500);
+  };
+  
   return {
     employees,
     ...shiftManagement,
     weekStats,
-    ...scheduleView
+    ...scheduleView,
+    syncWithCalendar
   };
 };

@@ -1,39 +1,78 @@
 
 import React from 'react';
 import { WeekStats, OpenShift } from '@/types/restaurant-schedule';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface WeekSummaryColumnProps {
   weekStats: WeekStats;
   openShifts: OpenShift[];
   formatCurrency: (amount: number, currency?: string, locale?: string) => string;
   handleAssignOpenShift: (openShiftId: string, employeeId?: string) => void;
+  previousWeek?: () => void;
+  nextWeek?: () => void;
 }
 
 const WeekSummaryColumn = ({ 
   weekStats, 
   openShifts,
   formatCurrency,
-  handleAssignOpenShift
+  handleAssignOpenShift,
+  previousWeek,
+  nextWeek
 }: WeekSummaryColumnProps) => {
+  const displayDate = new Date(weekStats.startDate);
+  const month = displayDate.toLocaleString('default', { month: 'short' });
+  const day = displayDate.getDate();
+  
   return (
     <div className="col-span-1 border-r border-gray-200">
-      <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+      <div className="p-3 sm:p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
         <div className="flex items-center">
-          <span className="font-medium text-gray-800">Week {weekStats.weekNumber}</span>
+          <span className="font-medium text-gray-800">
+            <span className="hidden sm:inline">Week </span>
+            {weekStats.weekNumber}
+          </span>
         </div>
+        
+        {(previousWeek || nextWeek) && (
+          <div className="flex space-x-1">
+            {previousWeek && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={previousWeek} 
+                className="h-7 w-7 p-0 rounded-full text-gray-600"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            )}
+            
+            {nextWeek && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={nextWeek} 
+                className="h-7 w-7 p-0 rounded-full text-gray-600"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        )}
       </div>
       
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-3 sm:p-4 border-b border-gray-200">
         <div className="flex flex-col space-y-1">
-          <div className="text-gray-700">Hours</div>
+          <div className="text-gray-700 text-sm">Hours</div>
           <div className="text-gray-900 font-semibold">{weekStats.totalHours.toFixed(0)}h</div>
-          <div className="text-gray-700 mt-2">Cost</div>
+          <div className="text-gray-700 text-sm mt-2">Cost</div>
           <div className="text-gray-900 font-semibold">{formatCurrency(weekStats.totalCost)}</div>
         </div>
       </div>
       
       <div className="p-2 flex flex-col gap-2">
-        <div className="flex flex-col p-2 border border-dashed border-blue-200 rounded-lg">
+        <div className="flex flex-col p-2 border border-dashed border-blue-200 rounded-lg bg-blue-50/30">
           <div className="text-sm text-blue-600 font-medium">Open shifts</div>
           <div className="text-sm">{openShifts.length} shifts</div>
           <div className="text-sm">{weekStats.openShiftsTotalHours.toFixed(1)}h</div>
