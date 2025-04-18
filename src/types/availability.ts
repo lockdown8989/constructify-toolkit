@@ -13,6 +13,11 @@ export type AvailabilityRequest = {
   status: AvailabilityStatus;
   created_at: string;
   updated_at: string;
+  employees?: {
+    name: string;
+    department: string;
+    job_title: string;
+  };
 };
 
 export type NewAvailabilityRequest = {

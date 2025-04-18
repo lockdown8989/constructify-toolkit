@@ -60,7 +60,7 @@ const AvailabilityRequestList = () => {
     <div className="space-y-3 mt-2">
       {requests.map((request) => {
         // Get employee information if it exists in the request
-        const employee = request.employees as any;
+        const employee = request.employees;
         
         return (
           <div key={request.id} className="p-3 border rounded-lg hover:bg-gray-50 transition-colors">
