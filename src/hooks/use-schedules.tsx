@@ -1,7 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/hooks/use-auth';
 
 export interface Schedule {
   id: string;
@@ -49,7 +49,14 @@ export function useSchedules() {
           return [];
         }
         
-        return data || [];
+        // Add default status if not available
+        const processedData = data?.map(schedule => ({
+          ...schedule,
+          status: schedule.status || 'confirmed'
+        })) || [];
+        
+        console.log('Fetched schedules for employee:', employees.id, processedData.length);
+        return processedData;
       } catch (error) {
         console.error('Error in useSchedules hook:', error);
         return [];
@@ -84,6 +91,41 @@ export function useCreateSchedule() {
   return {
     createSchedule: mutation.mutate,
     isCreating: mutation.isPending,
+    error: mutation.error
+  };
+}
+
+export function useUpdateSchedule() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (schedule: Schedule) => {
+      const { data, error } = await supabase
+        .from('schedules')
+        .update({
+          title: schedule.title,
+          start_time: schedule.start_time,
+          end_time: schedule.end_time,
+          notes: schedule.notes,
+          status: schedule.status,
+          location: schedule.location,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', schedule.id)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
+    },
+  });
+
+  return {
+    updateSchedule: mutation.mutate,
+    isUpdating: mutation.isPending,
     error: mutation.error
   };
 }
