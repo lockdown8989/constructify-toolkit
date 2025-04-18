@@ -3,7 +3,7 @@ import React from 'react';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
-import WeeklyCalendarView from './components/WeeklyCalendarView';
+import WeeklyCalendarView from '@/components/schedule/WeeklyCalendarView';
 import { ScheduleDialogs } from './components/ScheduleDialogs';
 import { ScheduleTabs } from './components/ScheduleTabs';
 import { Schedule } from '@/hooks/use-schedules';
