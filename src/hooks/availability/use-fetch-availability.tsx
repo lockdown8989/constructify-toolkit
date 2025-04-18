@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AvailabilityRequest } from '@/types/availability';
@@ -77,7 +78,14 @@ export function useAvailabilityRequest(id: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('availability_requests')
-        .select('*')
+        .select(`
+          *,
+          employees:employee_id (
+            name,
+            department,
+            job_title
+          )
+        `)
         .eq('id', id)
         .single();
       

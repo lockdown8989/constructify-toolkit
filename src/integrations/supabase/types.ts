@@ -46,37 +46,46 @@ export type Database = {
       }
       availability_requests: {
         Row: {
+          audit_log: Json | null
           created_at: string
           date: string
           employee_id: string
           end_time: string
           id: string
           is_available: boolean
+          manager_notes: string | null
           notes: string | null
+          reviewer_id: string | null
           start_time: string
           status: string
           updated_at: string
         }
         Insert: {
+          audit_log?: Json | null
           created_at?: string
           date: string
           employee_id: string
           end_time: string
           id?: string
           is_available?: boolean
+          manager_notes?: string | null
           notes?: string | null
+          reviewer_id?: string | null
           start_time: string
           status?: string
           updated_at?: string
         }
         Update: {
+          audit_log?: Json | null
           created_at?: string
           date?: string
           employee_id?: string
           end_time?: string
           id?: string
           is_available?: boolean
+          manager_notes?: string | null
           notes?: string | null
+          reviewer_id?: string | null
           start_time?: string
           status?: string
           updated_at?: string

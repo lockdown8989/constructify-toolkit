@@ -10,9 +10,17 @@ export type AvailabilityRequest = {
   end_time: string;
   is_available: boolean;
   notes: string | null;
+  manager_notes: string | null;
+  reviewer_id: string | null;
   status: AvailabilityStatus;
   created_at: string;
   updated_at: string;
+  audit_log: {
+    timestamp: string;
+    old_status: AvailabilityStatus;
+    new_status: AvailabilityStatus;
+    reviewer_id: string;
+  }[];
   employees?: {
     name: string;
     department: string;

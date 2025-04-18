@@ -23,7 +23,14 @@ export function useUpdateAvailabilityRequest() {
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
-        .select()
+        .select(`
+          *,
+          employees:employee_id (
+            name,
+            department,
+            job_title
+          )
+        `)
         .single();
       
       if (error) {
@@ -33,8 +40,8 @@ export function useUpdateAvailabilityRequest() {
       return data as AvailabilityRequest;
     },
     onSuccess: async (data, update) => {
-      queryClient.invalidateQueries({ queryKey: ['availability-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['availability_requests', data.employee_id] });
+      queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
+      queryClient.invalidateQueries({ queryKey: ['availability_request', data.id] });
       
       // Get employee details for notification
       const { data: employeeData } = await supabase
