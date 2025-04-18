@@ -25,7 +25,15 @@ const EmployeeWorkflow = () => {
           <EmployeeScheduleView />
         </div>
         <div>
-          <LeaveBalanceCard />
+          <LeaveBalanceCard 
+            leaveBalance={{
+              annual: 20,
+              sick: 10,
+              personal: 5,
+              used: 12,
+              remaining: 23
+            }} 
+          />
         </div>
       </div>
     </div>

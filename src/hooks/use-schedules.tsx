@@ -1,5 +1,5 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/auth';
 import { addDays, subDays, format } from 'date-fns';
@@ -125,4 +125,28 @@ export function useSchedules() {
     },
     enabled: !!user,
   });
+}
+
+export function useCreateSchedule() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  const mutation = useMutation({
+    mutationFn: async (schedule: Partial<Schedule>) => {
+      if (!user) throw new Error('User not authenticated');
+      
+      // In a real app, this would create a schedule in the database
+      // For demo purposes, we'll just return a mock success
+      return { id: Math.random().toString(), ...schedule };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
+    },
+  });
+
+  return {
+    createSchedule: mutation.mutate,
+    isCreating: mutation.isPending,
+    error: mutation.error
+  };
 }
