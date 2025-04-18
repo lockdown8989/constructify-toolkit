@@ -3,25 +3,33 @@ import { supabase } from '@/integrations/supabase/client';
 import { AvailabilityRequest } from '@/types/availability';
 import { useAuth } from '@/hooks/use-auth';
 
-// Get all availability requests for the current user
+// Get all availability requests for the current user or for all employees if manager
 export function useAvailabilityRequests(employeeId?: string) {
-  const { user } = useAuth();
+  const { user, isManager } = useAuth();
   
   return useQuery({
-    queryKey: ['availability_requests', employeeId],
+    queryKey: ['availability_requests', employeeId, isManager, user?.id],
     queryFn: async () => {
-      console.log('Fetching availability requests for employee:', employeeId || 'current user');
+      console.log('Fetching availability requests, user:', user?.id, 'isManager:', isManager, 'employeeId:', employeeId);
       
       let query = supabase
         .from('availability_requests')
-        .select('*')
-        .order('date', { ascending: false });
+        .select(`
+          *,
+          employees:employee_id (
+            name,
+            department,
+            job_title
+          )
+        `);
       
-      // If employeeId is provided, filter by that, otherwise try to get current user's employee record
-      if (employeeId) {
-        query = query.eq('employee_id', employeeId);
+      // If manager, fetch all requests or specific employee's requests if employeeId is provided
+      if (isManager) {
+        if (employeeId) {
+          query = query.eq('employee_id', employeeId);
+        }
       } else if (user) {
-        // First get the employee ID for the current user
+        // Not a manager, only fetch the user's own availability requests
         const { data: employeeData, error: employeeError } = await supabase
           .from('employees')
           .select('id')
@@ -45,6 +53,9 @@ export function useAvailabilityRequests(employeeId?: string) {
         return [];
       }
       
+      // Order by most recent first
+      query = query.order('created_at', { ascending: false });
+      
       const { data, error } = await query;
       
       if (error) {
@@ -55,7 +66,7 @@ export function useAvailabilityRequests(employeeId?: string) {
       console.log('Fetched availability requests:', data?.length || 0, data);
       return data as AvailabilityRequest[] || [];
     },
-    enabled: true // Always enabled, but will return empty array when needed
+    enabled: !!user
   });
 }
 
