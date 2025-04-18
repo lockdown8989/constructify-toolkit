@@ -39,7 +39,7 @@ const ScheduleHeader = ({
               className="rounded-full border-gray-200 hover:bg-gray-50"
             >
               <Users className={cn("h-3.5 w-3.5 mr-1.5", isSyncing && "animate-pulse")} />
-              <span className={cn("", isMobile ? "sr-only" : "")}>
+              <span className={isMobile ? "sr-only" : ""}>
                 {isSyncing ? "Syncing..." : "Sync Staff"}
               </span>
             </Button>
@@ -53,7 +53,7 @@ const ScheduleHeader = ({
               className="rounded-full border-gray-200 hover:bg-gray-50"
             >
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-              <span className={cn("", isMobile ? "sr-only" : "")}>Sync Calendar</span>
+              <span className={isMobile ? "sr-only" : ""}>Sync Calendar</span>
             </Button>
           )}
         </div>

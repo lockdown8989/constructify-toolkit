@@ -1,5 +1,5 @@
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { useRestaurantSchedule } from '@/hooks/use-restaurant-schedule';
 import { Shift } from '@/types/restaurant-schedule';
 import { useToast } from '@/hooks/use-toast';
@@ -41,14 +41,9 @@ const RestaurantSchedule = () => {
   // Get the shift dialog manager with all its functions and component
   const shiftDialog = ShiftDialogManager({ addShift, updateShift });
   
-  // Auto-sync with employee data when component loads
-  useEffect(() => {
-    if (employeeData && !syncingData) {
-      syncEmployeeData();
-    }
-  }, [employeeData]);
-
   const syncEmployeeData = () => {
+    if (syncingData) return; // Prevent multiple clicks
+    
     setSyncingData(true);
     
     // Show syncing toast
