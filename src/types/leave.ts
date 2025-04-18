@@ -2,7 +2,7 @@
 export interface LeaveBalance {
   annual: number;
   sick: number;
-  personal: number;
+  personal?: number;
   used: number;
   remaining: number;
 }

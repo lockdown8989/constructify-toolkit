@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
-import { format, addMonths, subMonths, isToday, isSameMonth, parseISO, isSameDay } from 'date-fns';
-import { ChevronLeft, ChevronRight, Check, Info, Mail, X, Plus, Clock, User, MapPin } from 'lucide-react';
+import { format, addDays, subDays, isToday, isSameMonth, parseISO, isSameDay } from 'date-fns';
+import { Clock, User, MapPin, Info, Mail, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSchedules } from '@/hooks/use-schedules';
 import { useAuth } from '@/hooks/auth';
 import { useEmployees } from '@/hooks/use-employees';
+import WeeklyCalendarView from './WeeklyCalendarView';
 import { 
   Tooltip,
   TooltipContent,
@@ -322,14 +322,11 @@ const EmployeeScheduleView: React.FC = () => {
   
   return (
     <div className="pb-6 max-w-4xl mx-auto">
-      {/* Schedule Header */}
-      <div className="bg-blue-500 text-white p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">MY SCHEDULE</h1>
-        <div className="text-sm">{format(new Date(), 'EEE dd, MMMM yyyy').toUpperCase()}</div>
-        <Button variant="outline" size="icon" className="text-white border-white hover:bg-blue-600">
-          <Plus className="h-5 w-5" />
-        </Button>
-      </div>
+      <WeeklyCalendarView
+        currentDate={currentDate}
+        onDateChange={setCurrentDate}
+        schedules={schedules}
+      />
       
       {/* Calendar Navigation */}
       <div className="flex justify-between items-center p-4 bg-white">
