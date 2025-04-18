@@ -93,7 +93,7 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
             start_time: startDateTime.toISOString(),
             end_time: endDateTime.toISOString(),
             notes: formData.notes || '',
-            status: 'confirmed',
+            status: 'confirmed' as 'confirmed' | 'pending' | 'completed', // Fix: Explicitly type as one of the allowed values
             location: formData.location || ''
           };
           
