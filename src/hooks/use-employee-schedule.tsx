@@ -1,7 +1,6 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSchedules } from '@/hooks/use-schedules';
-import { Schedule } from '@/hooks/use-schedules';
 
 export const useEmployeeSchedule = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -13,8 +12,8 @@ export const useEmployeeSchedule = () => {
   
   const { data: schedules = [], isLoading } = useSchedules();
   
-  // Track new schedules
-  useEffect(() => {
+  // Track new schedules (created in the last 24 hours)
+  useState(() => {
     const now = new Date();
     const newScheduleIds: Record<string, boolean> = {};
     
@@ -27,7 +26,7 @@ export const useEmployeeSchedule = () => {
     });
     
     setNewSchedules(newScheduleIds);
-  }, [schedules]);
+  });
 
   return {
     currentDate,
