@@ -11,7 +11,7 @@ import ScheduleCalendarView from '@/components/schedule/ScheduleCalendarView';
 import MeetingSidePanel from '@/components/schedule/MeetingSidePanel';
 import UpcomingEventsPanel from '@/components/schedule/UpcomingEventsPanel';
 import ScheduleFormDialog from '@/components/schedule/ScheduleFormDialog';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/auth';
 
 const SchedulePage = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -67,18 +67,16 @@ const SchedulePage = () => {
         end_time: `${selectedDate}T${newSchedule.endTime}:00`
       };
       
-      const result = await createSchedule(schedule);
+      await createSchedule(schedule);
       
-      if (result) {
-        setNewSchedule({
-          title: '',
-          employeeId: '',
-          startTime: '',
-          endTime: ''
-        });
-        setIsAddScheduleOpen(false);
-        refetchSchedules();
-      }
+      setNewSchedule({
+        title: '',
+        employeeId: '',
+        startTime: '',
+        endTime: ''
+      });
+      setIsAddScheduleOpen(false);
+      refetchSchedules();
     } catch (error: any) {
       toast({
         title: "Failed to create schedule",

@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
-import { format, addDays, subDays, isToday, isSameMonth, parseISO, isSameDay } from 'date-fns';
-import { Clock, User, MapPin, Info, Mail, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { format, addDays, subDays, isToday, isSameMonth, parseISO, isSameDay, addMonths, subMonths } from 'date-fns';
+import { Clock, User, MapPin, Info, Mail, X, Plus, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { useSchedules } from '@/hooks/use-schedules';
 import { useAuth } from '@/hooks/auth';
 import { useEmployees } from '@/hooks/use-employees';

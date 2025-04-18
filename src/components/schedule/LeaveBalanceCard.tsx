@@ -2,13 +2,7 @@
 import React from 'react';
 import { Calendar } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-
-interface LeaveBalanceCardProps {
-  leaveBalance: {
-    annual: number;
-    sick: number;
-  };
-}
+import { LeaveBalanceCardProps } from '@/types/leave';
 
 const LeaveBalanceCard = ({ leaveBalance }: LeaveBalanceCardProps) => {
   return (
@@ -31,6 +25,27 @@ const LeaveBalanceCard = ({ leaveBalance }: LeaveBalanceCardProps) => {
             <span className="text-gray-600">Sick Leave</span>
             <span className="font-medium">{leaveBalance.sick} days</span>
           </div>
+          
+          {leaveBalance.personal !== undefined && (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Personal Leave</span>
+              <span className="font-medium">{leaveBalance.personal} days</span>
+            </div>
+          )}
+          
+          {leaveBalance.used !== undefined && (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Used Leave</span>
+              <span className="font-medium">{leaveBalance.used} days</span>
+            </div>
+          )}
+          
+          {leaveBalance.remaining !== undefined && (
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Remaining Leave</span>
+              <span className="font-medium">{leaveBalance.remaining} days</span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
