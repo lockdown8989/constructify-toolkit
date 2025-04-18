@@ -1,20 +1,56 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { useAvailabilityRequests } from '@/hooks/availability';
+import { useAvailabilityRequests, useUpdateAvailabilityRequest } from '@/hooks/availability';
 import { useAuth } from '@/hooks/use-auth';
-import { Clock, Loader2, User, Building, CheckCircle2, XCircle, AlertCircle, History } from 'lucide-react';
+import { Clock, Loader2, User, Building, CheckCircle2, XCircle, AlertCircle, History, Check, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { useState } from 'react';
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const AvailabilityRequestList = () => {
   const { data: requests = [], isLoading: isLoadingRequests, isError, error } = useAvailabilityRequests();
   const { user, isManager } = useAuth();
+  const { mutate: updateRequest } = useUpdateAvailabilityRequest();
+  const [managerNotes, setManagerNotes] = useState("");
+  const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
+  
+  const handleApprove = (requestId: string) => {
+    updateRequest({
+      id: requestId,
+      status: 'Approved',
+      manager_notes: managerNotes,
+      reviewer_id: user?.id
+    });
+    setSelectedRequest(null);
+    setManagerNotes("");
+  };
+  
+  const handleReject = (requestId: string) => {
+    updateRequest({
+      id: requestId,
+      status: 'Rejected',
+      manager_notes: managerNotes,
+      reviewer_id: user?.id
+    });
+    setSelectedRequest(null);
+    setManagerNotes("");
+  };
   
   if (isLoadingRequests) {
     return (
@@ -116,10 +152,10 @@ const AvailabilityRequestList = () => {
             key={request.id} 
             className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-gray-300 transition-all"
           >
-            <div className="flex justify-between items-start">
-              <div className="space-y-2">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+              <div className="space-y-2 flex-grow">
                 {isManager && employee && (
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex flex-wrap gap-2 mb-1">
                     <div className="flex items-center gap-2 text-gray-600 bg-gray-50 px-2 py-1 rounded-md">
                       <User className="h-3.5 w-3.5" />
                       <span className="text-sm font-medium">{employee.name}</span>
@@ -153,12 +189,65 @@ const AvailabilityRequestList = () => {
                   </div>
                 )}
               </div>
-              <div className="flex flex-col items-end space-y-2">
+              <div className="flex flex-col items-start sm:items-end space-y-2">
                 {getStatusBadge(request.status)}
                 <span className="text-sm text-gray-600">
                   {request.is_available ? 'Available' : 'Unavailable'}
                 </span>
                 {getAuditTrail(request)}
+                {isManager && request.status === 'Pending' && (
+                  <Dialog open={selectedRequest === request.id} onOpenChange={(open) => {
+                    if (!open) {
+                      setSelectedRequest(null);
+                      setManagerNotes("");
+                    }
+                  }}>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="mt-2"
+                        onClick={() => setSelectedRequest(request.id)}
+                      >
+                        Review Request
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Review Availability Request</DialogTitle>
+                        <DialogDescription>
+                          Review and respond to the availability request from {employee?.name}.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 pt-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Manager Notes</label>
+                          <Textarea
+                            value={managerNotes}
+                            onChange={(e) => setManagerNotes(e.target.value)}
+                            placeholder="Add any notes or feedback about this request..."
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="destructive"
+                            onClick={() => handleReject(request.id)}
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            Reject
+                          </Button>
+                          <Button
+                            onClick={() => handleApprove(request.id)}
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            Approve
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )}
               </div>
             </div>
           </div>

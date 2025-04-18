@@ -1,5 +1,4 @@
 
-// Types for availability requests
 export type AvailabilityStatus = 'Pending' | 'Approved' | 'Rejected';
 
 export type AvailabilityRequest = {

@@ -3,9 +3,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { UpdateAvailabilityRequest, AvailabilityRequest } from '@/types/availability';
-import { sendNotification } from '@/services/NotificationService';
+import { sendNotification } from '@/services/notifications';
 
-// Update an availability request
 export function useUpdateAvailabilityRequest() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -37,6 +36,7 @@ export function useUpdateAvailabilityRequest() {
         console.error('Error updating availability request:', error);
         throw error;
       }
+      
       return data as AvailabilityRequest;
     },
     onSuccess: async (data, update) => {
@@ -64,7 +64,6 @@ export function useUpdateAvailabilityRequest() {
             });
           } catch (notifyError) {
             console.error('Error notifying employee:', notifyError);
-            // Continue execution even if notification fails
           }
         }
       }
