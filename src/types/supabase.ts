@@ -25,10 +25,13 @@ export interface AvailabilityRequest {
   start_time: string;
   end_time: string;
   is_available: boolean;
-  notes: string | null; // Changed to explicitly allow null to match the database schema
+  notes: string | null;
+  manager_notes: string | null;
+  reviewer_id: string | null;
   status: string;
   created_at: string;
   updated_at: string;
+  audit_log: any[] | null;
 }
 
 // Define shift swap type - updating to match the database schema
@@ -145,13 +148,16 @@ export interface ExtendedDatabase extends DatabaseType {
       
       availability_requests: {
         Row: {
+          audit_log: any | null;
           created_at: string;
           date: string;
           employee_id: string;
           end_time: string;
           id: string;
           is_available: boolean;
-          notes: string | null; // Updated to match the AvailabilityRequest interface
+          manager_notes: string | null;
+          notes: string | null;
+          reviewer_id: string | null;
           start_time: string;
           status: string;
           updated_at: string;

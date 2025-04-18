@@ -3,3 +3,7 @@
 export * from './use-fetch-availability';
 // Export the create availability hook
 export * from './use-create-availability';
+// Export the update availability hook
+export * from './use-update-availability';
+// Export the delete availability hook
+export * from './use-delete-availability';
