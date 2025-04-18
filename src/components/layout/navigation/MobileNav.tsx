@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -18,10 +17,11 @@ interface MobileNavProps {
 }
 
 const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
-  const { isManager } = useAuth();
+  const { isAdmin, isHR, isManager } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const isEmployee = !isManager && !isAdmin && !isHR;
   
   // Function to navigate back
   const handleBack = () => {
@@ -83,6 +83,16 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
             {isAuthenticated && (
               <>
                 <div className="h-[1px] bg-neutral-200 my-3 mx-6" />
+                {isEmployee && (
+                  <Link
+                    to="/employee-workflow"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
+                  >
+                    <Clock className="mr-3 h-5 w-5 text-neutral-600" />
+                    <span>My Schedule</span>
+                  </Link>
+                )}
                 <Link
                   to="/people"
                   onClick={() => setIsOpen(false)}
