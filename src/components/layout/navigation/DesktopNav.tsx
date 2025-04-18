@@ -30,12 +30,6 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
       {isAuthenticated && (
         <>
           <Link
-            to="/profile"
-            className="hover:underline underline-offset-4"
-          >
-            Profile
-          </Link>
-          <Link
             to="/people"
             className="hover:underline underline-offset-4"
           >

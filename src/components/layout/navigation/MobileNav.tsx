@@ -84,14 +84,6 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
               <>
                 <div className="h-[1px] bg-neutral-200 my-3 mx-6" />
                 <Link
-                  to="/profile"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                >
-                  <User className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>Profile</span>
-                </Link>
-                <Link
                   to="/people"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"

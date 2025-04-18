@@ -67,9 +67,6 @@ const UserMenu = ({ user, signOut }: UserMenuProps) => {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link to="/profile">Profile</Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
           <Link to="/settings" className="flex items-center">
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
