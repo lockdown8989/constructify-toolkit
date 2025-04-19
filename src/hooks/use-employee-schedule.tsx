@@ -17,11 +17,12 @@ export const useEmployeeSchedule = () => {
   const { user } = useAuth();
   
   // Fetch schedules with the refresh trigger
-  const { data: schedules = [], isLoading } = useSchedules();
+  const { data: schedules = [], isLoading, refetch } = useSchedules();
   
   // Function to manually refresh schedules
   const refreshSchedules = () => {
     setRefreshTrigger(prev => prev + 1);
+    refetch();
     toast({
       title: "Refreshing shifts",
       description: "Your schedule is being updated...",
@@ -48,8 +49,16 @@ export const useEmployeeSchedule = () => {
     const pendingShifts = schedules.filter(schedule => schedule.status === 'pending');
     if (pendingShifts.length > 0 && activeTab === 'my-shifts') {
       setActiveTab('pending');
+      
+      // Show a toast notification if there are pending shifts
+      if (pendingShifts.length > 0) {
+        toast({
+          title: `${pendingShifts.length} pending shift${pendingShifts.length > 1 ? 's' : ''} waiting`,
+          description: "You have shifts that require your response.",
+        });
+      }
     }
-  }, [schedules]);
+  }, [schedules, toast]);
 
   // Subscribe to realtime updates for new schedules
   useEffect(() => {

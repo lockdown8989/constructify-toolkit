@@ -31,6 +31,7 @@ const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: Shift
         ...formData
       };
       
+      // Add shift to the UI immediately
       addShift(newShift);
 
       if (user) {
@@ -56,7 +57,6 @@ const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: Shift
           const managerName = managerError ? 'Manager' : (manager?.name || 'Manager');
           
           // Create a valid date object from the day and time
-          // This is the main fix: parse date strings properly before converting to ISO
           const today = new Date();
           const dayMap: Record<string, number> = {
             monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0
@@ -90,27 +90,40 @@ const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: Shift
           
           console.log('Creating schedule with dates:', {
             startDate: startDate.toISOString(),
-            endDate: endDate.toISOString()
+            endDate: endDate.toISOString(),
+            employeeId: shiftDialog.employeeId,
+            role: formData.role || 'Shift'
           });
           
+          // Create the schedule in the database
           const scheduleData = await createSchedule.mutateAsync({
             employee_id: shiftDialog.employeeId,
             title: formData.role || 'Shift',
             start_time: startDate.toISOString(),
             end_time: endDate.toISOString(),
             status: 'pending' as const,
-            notes: formData.notes || ''
+            notes: formData.notes || '',
+            location: formData.location || ''
           });
 
+          console.log('Schedule created successfully:', scheduleData);
+
+          // Send notification to employee if we have their user ID
           if (employee?.user_id) {
-            await sendNotification({
-              user_id: employee.user_id,
-              title: 'New Shift Request 📅',
-              message: `You've received a new shift request from ${managerName}. Please respond.`,
-              type: 'info',
-              related_entity: 'schedules',
-              related_id: scheduleData.id
-            });
+            try {
+              await sendNotification({
+                user_id: employee.user_id,
+                title: 'New Shift Request 📅',
+                message: `You've received a new shift request from ${managerName}. Please respond.`,
+                type: 'info',
+                related_entity: 'schedules',
+                related_id: scheduleData.id
+              });
+              console.log('Notification sent to employee:', employee.user_id);
+            } catch (notificationError) {
+              console.error('Error sending notification:', notificationError);
+              // Continue execution even if notification fails
+            }
           }
 
           sonnerToast.success('Shift request sent to employee');

@@ -39,8 +39,10 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
     }
   };
   
+  const isPending = schedule.status === 'pending';
+  
   return (
-    <div className={`bg-white rounded-lg border ${schedule.status === 'pending' ? 'border-amber-200 bg-amber-50/30' : 'border-gray-200'} p-4 mb-4 shadow-sm hover:shadow-md transition-shadow`}>
+    <div className={`bg-white rounded-lg border ${isPending ? 'border-amber-200 bg-amber-50/30' : 'border-gray-200'} p-4 mb-4 shadow-sm hover:shadow-md transition-shadow`}>
       <div className="flex justify-between items-start mb-3">
         <div>
           <h3 className="text-lg font-medium">{schedule.title}</h3>
@@ -52,8 +54,8 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
             {formattedStartTime} - {formattedEndTime}
           </div>
         </div>
-        <Badge variant={getBadgeVariant()} className={schedule.status === 'pending' ? 'bg-amber-100 text-amber-800 border-amber-300' : ''}>
-          {schedule.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+        <Badge variant={getBadgeVariant()} className={isPending ? 'bg-amber-100 text-amber-800 border-amber-300' : ''}>
+          {isPending && <Clock className="h-3 w-3 mr-1" />}
           {schedule.status?.charAt(0).toUpperCase() + schedule.status?.slice(1)}
         </Badge>
       </div>
@@ -96,7 +98,7 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
         </div>
         
         {/* Show response actions only for pending shifts */}
-        {schedule.status === 'pending' && (
+        {isPending && (
           <ShiftResponseActions 
             schedule={schedule} 
             onResponseComplete={onResponseComplete}
