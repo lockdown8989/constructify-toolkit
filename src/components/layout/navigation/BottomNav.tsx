@@ -1,8 +1,9 @@
-
 import { Home, Users, Calendar, DollarSign, Utensils, ClipboardCheck, Clock } from "lucide-react"
 import { useNavigate, useLocation, Link } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/auth"
+import { Button } from "@/components/ui/button"
+import { useTimeClock } from "@/hooks/use-time-clock"
 
 interface BottomNavProps {
   isAuthenticated: boolean;
@@ -14,6 +15,9 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
   const { isManager, isAdmin, isHR } = useAuth();
   const hasManagerialAccess = isManager || isAdmin || isHR;
   
+  const { status, handleClockIn, handleClockOut } = useTimeClock();
+  const isClockingEnabled = !hasManagerialAccess;
+  
   if (!isAuthenticated) return null;
   
   const handleHomeClick = () => {
@@ -22,6 +26,28 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
   
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 safe-area-inset py-2 md:hidden">
+      {isClockingEnabled && (
+        <div className="px-4 mb-2">
+          {status === 'clocked-out' ? (
+            <Button 
+              onClick={handleClockIn}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              Clock In For Shift
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleClockOut}
+              className="w-full bg-red-600 hover:bg-red-700"
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              Clock Out
+            </Button>
+          )}
+        </div>
+      )}
+      
       <div className={cn("grid gap-1", hasManagerialAccess ? "grid-cols-6" : "grid-cols-5")}>
         <div 
           onClick={handleHomeClick}

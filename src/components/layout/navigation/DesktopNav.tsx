@@ -1,8 +1,9 @@
-
 import { Link, useNavigate } from "react-router-dom"
 import { Calendar, DollarSign, Receipt, Clock, Home, ClipboardCheck } from "lucide-react"
 import { useAuth } from "@/hooks/auth"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { useTimeClock } from "@/hooks/use-time-clock"
 import { useEmployeeSchedule } from "@/hooks/use-employee-schedule"
 
 interface DesktopNavProps {
@@ -13,6 +14,8 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
   const navigate = useNavigate();
   const { isManager, isAdmin, isHR } = useAuth();
   const hasManagerialAccess = isManager || isAdmin || isHR;
+  const { status, handleClockIn, handleClockOut } = useTimeClock();
+  const isClockingEnabled = !hasManagerialAccess;
   const { schedules = [] } = useEmployeeSchedule();
 
   const pendingCount = schedules?.filter(s => s.status === 'pending').length || 0;
@@ -25,6 +28,30 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
   
   return (
     <div className="mx-auto flex items-center space-x-6">
+      {isAuthenticated && isClockingEnabled && (
+        <div className="flex items-center space-x-2">
+          {status === 'clocked-out' ? (
+            <Button 
+              onClick={handleClockIn}
+              size="sm"
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              Clock In
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleClockOut}
+              size="sm"
+              className="bg-red-600 hover:bg-red-700"
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              Clock Out
+            </Button>
+          )}
+        </div>
+      )}
+      
       <button 
         onClick={handleHomeClick} 
         className="hover:underline underline-offset-4 flex items-center"
