@@ -7,5 +7,4 @@ export interface EnhancedSchedule extends BaseSchedule {
   manager_id?: string;
   break_duration?: number;
   coworkers?: string[];
-  is_published?: boolean;
 }

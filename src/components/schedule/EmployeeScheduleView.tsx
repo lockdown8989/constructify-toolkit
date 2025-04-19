@@ -1,21 +1,13 @@
 
 import React from 'react';
-import { format } from 'date-fns';
+import { format, addDays, startOfWeek } from 'date-fns';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
-import { Check, ChevronLeft, ChevronRight, RefreshCw, Calendar } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import WeeklyCalendarView from '@/components/schedule/WeeklyCalendarView';
 import { ScheduleDialogs } from './components/ScheduleDialogs';
 import { ScheduleTabs } from './components/ScheduleTabs';
 import { Schedule } from '@/hooks/use-schedules';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 const EmployeeScheduleView: React.FC = () => {
   const {
@@ -42,10 +34,14 @@ const EmployeeScheduleView: React.FC = () => {
   };
 
   const handleResponseComplete = () => {
+    // Refresh schedules data after a response
     refreshSchedules();
+    
+    // If we were in the pending tab and there are no more pending shifts,
+    // switch to the my-shifts tab
     if (activeTab === 'pending') {
       const pendingShifts = schedules.filter(s => s.status === 'pending');
-      if (pendingShifts.length <= 1) {
+      if (pendingShifts.length <= 1) { // Using <= 1 because the current item is still in the array
         setActiveTab('my-shifts');
       }
     }
@@ -56,97 +52,56 @@ const EmployeeScheduleView: React.FC = () => {
     : null;
 
   if (isLoading) {
-    return (
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center space-x-4">
-            <RefreshCw className="w-5 h-5 animate-spin text-primary" />
-            <p>Loading your schedule...</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <div className="p-4 text-center">Loading schedule...</div>;
   }
 
-  const pendingCount = schedules.filter(s => s.status === 'pending').length;
-  const upcomingShifts = schedules.filter(s => 
-    new Date(s.start_time) > new Date() && 
-    s.status === 'confirmed'
-  ).length;
-
   return (
-    <div className="space-y-6 pb-6 max-w-4xl mx-auto">
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>Your Schedule</CardTitle>
-              <CardDescription>Manage your upcoming shifts and requests</CardDescription>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={refreshSchedules}
-              className="flex items-center gap-1"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              <span>Refresh</span>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Upcoming Shifts</p>
-                    <h3 className="text-2xl font-bold">{upcomingShifts}</h3>
-                  </div>
-                  <Calendar className="h-8 w-8 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Pending Requests</p>
-                    <h3 className="text-2xl font-bold">{pendingCount}</h3>
-                  </div>
-                  <Badge variant={pendingCount > 0 ? "destructive" : "secondary"}>
-                    {pendingCount > 0 ? 'Action Needed' : 'All Clear'}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <WeeklyCalendarView
-            currentDate={currentDate}
-            onDateChange={setCurrentDate}
-            schedules={schedules}
-          />
-        </CardContent>
-      </Card>
+    <div className="pb-6 max-w-4xl mx-auto">
+      <div className="flex justify-between items-center px-4 pt-2 pb-4">
+        <h2 className="text-xl font-semibold">Your Schedule</h2>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={refreshSchedules}
+          className="flex items-center gap-1"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          <span>Refresh</span>
+        </Button>
+      </div>
       
-      <Card>
-        <CardContent className="p-0">
-          <ScheduleTabs
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            schedules={schedules}
-            newSchedules={newSchedules}
-            onInfoClick={setSelectedScheduleId}
-            onEmailClick={handleEmailClick}
-            onCancelClick={(id) => {
-              setSelectedScheduleId(id);
-              setIsCancelDialogOpen(true);
-            }}
-            onResponseComplete={handleResponseComplete}
-          />
-        </CardContent>
-      </Card>
+      <WeeklyCalendarView
+        currentDate={currentDate}
+        onDateChange={setCurrentDate}
+        schedules={schedules}
+      />
+      
+      {/* Calendar Navigation */}
+      <div className="flex justify-between items-center p-4 bg-white">
+        <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))} className="p-2">
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <h2 className="text-2xl font-bold">{format(currentDate, 'MMMM yyyy')}</h2>
+        <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))} className="p-2">
+          <ChevronRight className="h-6 w-6" />
+        </button>
+      </div>
+      
+      <div className="border-t border-gray-200 my-2" />
+
+      <ScheduleTabs
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        schedules={schedules}
+        newSchedules={newSchedules}
+        onInfoClick={setSelectedScheduleId}
+        onEmailClick={handleEmailClick}
+        onCancelClick={(id) => {
+          setSelectedScheduleId(id);
+          setIsCancelDialogOpen(true);
+        }}
+        onResponseComplete={handleResponseComplete}
+      />
 
       <ScheduleDialogs
         selectedSchedule={selectedSchedule}

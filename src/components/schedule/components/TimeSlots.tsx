@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { cn } from '@/lib/utils';
 
 interface TimeSlotsProps {
   timeSlots: React.ReactNode[];
@@ -8,17 +7,19 @@ interface TimeSlotsProps {
   isToday: boolean;
 }
 
-const TimeSlots: React.FC<TimeSlotsProps> = ({ timeSlots, currentTimeTop, isToday }) => {
+const TimeSlots = ({ timeSlots, currentTimeTop, isToday }: TimeSlotsProps) => {
   return (
-    <div className="relative">
+    <div className="relative mt-4 border border-gray-100 rounded-xl overflow-hidden bg-white">
       {timeSlots}
       
-      {isToday && (
-        <div
-          className="absolute left-0 right-0 border-t-2 border-red-500 z-10 pointer-events-none"
+      {/* Current time indicator */}
+      {isToday && currentTimeTop >= 0 && (
+        <div 
+          className="absolute left-0 right-0 flex items-center pointer-events-none z-10" 
           style={{ top: `${currentTimeTop}px` }}
         >
-          <div className="absolute -left-2 -top-2 w-4 h-4 rounded-full bg-red-500" />
+          <div className="w-2.5 h-2.5 rounded-full bg-red-500 ml-14 mr-1"></div>
+          <div className="flex-1 h-[2px] bg-red-500"></div>
         </div>
       )}
     </div>
