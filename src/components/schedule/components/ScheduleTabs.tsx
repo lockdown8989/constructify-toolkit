@@ -44,6 +44,9 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
       default: return tab;
     }
   };
+  
+  // Count pending shifts for badge display
+  const pendingShiftsCount = schedules.filter(schedule => schedule.status === 'pending').length;
 
   return (
     <div className="px-4 mt-4">
@@ -52,14 +55,26 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="w-[200px] justify-between">
               {getDisplayName(activeTab)}
-              <ChevronDown className="h-4 w-4 opacity-50" />
+              {pendingShiftsCount > 0 && activeTab !== 'pending' && (
+                <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
+                  {pendingShiftsCount}
+                </span>
+              )}
+              <ChevronDown className="h-4 w-4 opacity-50 ml-auto" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-[200px]">
             <DropdownMenuRadioGroup value={activeTab} onValueChange={setActiveTab}>
               <DropdownMenuRadioItem value="my-shifts">My Shifts</DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="open-shifts">Open Shifts</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="pending">Pending</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="pending">
+                Pending
+                {pendingShiftsCount > 0 && (
+                  <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
+                    {pendingShiftsCount}
+                  </span>
+                )}
+              </DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="rejected">Rejected</DropdownMenuRadioItem>
               <DropdownMenuRadioItem value="completed">Completed</DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { format, parseISO } from 'date-fns';
-import { Calendar, Info, Mail, XCircle } from 'lucide-react';
+import { Calendar, Info, Mail, XCircle, Clock } from 'lucide-react';
 import { Schedule } from '@/hooks/use-schedules';
 import { Badge } from '@/components/ui/badge';
 import ShiftResponseActions from './ShiftResponseActions';
@@ -31,7 +31,7 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
   // Determine badge variant based on status
   const getBadgeVariant = () => {
     switch(schedule.status) {
-      case 'pending': return 'secondary';
+      case 'pending': return 'outline';
       case 'confirmed': return 'default';
       case 'completed': return 'default';
       case 'rejected': return 'destructive';
@@ -40,7 +40,7 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
   };
   
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4 shadow-sm hover:shadow-md transition-shadow">
+    <div className={`bg-white rounded-lg border ${schedule.status === 'pending' ? 'border-amber-200 bg-amber-50/30' : 'border-gray-200'} p-4 mb-4 shadow-sm hover:shadow-md transition-shadow`}>
       <div className="flex justify-between items-start mb-3">
         <div>
           <h3 className="text-lg font-medium">{schedule.title}</h3>
@@ -52,7 +52,8 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
             {formattedStartTime} - {formattedEndTime}
           </div>
         </div>
-        <Badge variant={getBadgeVariant()}>
+        <Badge variant={getBadgeVariant()} className={schedule.status === 'pending' ? 'bg-amber-100 text-amber-800 border-amber-300' : ''}>
+          {schedule.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
           {schedule.status?.charAt(0).toUpperCase() + schedule.status?.slice(1)}
         </Badge>
       </div>
