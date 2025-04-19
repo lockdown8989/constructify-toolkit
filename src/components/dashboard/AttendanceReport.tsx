@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { ChevronRight, ChevronUp, ChevronDown, Calendar, Users, Clock } from 'lucide-react';
@@ -13,55 +12,52 @@ interface AttendanceReportProps {
 }
 
 const AttendanceReport: React.FC<AttendanceReportProps> = ({ 
-  present: initialPresent, 
-  absent: initialAbsent,
   className,
   employeeId
 }) => {
-  const [timeRange, setTimeRange] = useState<number>(30); // Default: 30 days
+  const [timeRange, setTimeRange] = useState<number>(30);
   const { data, isLoading } = useAttendance(employeeId, timeRange);
   
-  // Use the fetch data if available, otherwise use the props
-  const present = data?.present ?? initialPresent ?? 0;
-  const absent = data?.absent ?? initialAbsent ?? 0;
-  const late = data?.late ?? 0;
-  const totalAttendance = data?.total ?? (present + absent);
+  // Calculate attendance rate from live data
+  const attendanceRate = data?.total ? Math.round((data.present / data.total) * 100) : 0;
   
-  // Calculate attendance percentage
-  const attendanceRate = totalAttendance > 0 
-    ? Math.round((present / totalAttendance) * 100) 
-    : 0;
-  
-  // Generate grid data (6x8 grid)
+  // Generate grid data using live attendance data
   const generateGrid = () => {
-    const totalCells = 48; // 6x8 grid
-    const presentPercentage = totalAttendance > 0 ? present / totalAttendance : 0;
-    const absentPercentage = totalAttendance > 0 ? absent / totalAttendance : 0;
-    const latePercentage = totalAttendance > 0 ? late / totalAttendance : 0;
+    const totalCells = 48;
+    const presentPercentage = data?.total ? data.present / data.total : 0;
+    const absentPercentage = data?.total ? data.absent / data.total : 0;
+    const latePercentage = data?.total ? data.late / data.total : 0;
     
     const presentCells = Math.round(totalCells * presentPercentage);
     const absentCells = Math.round(totalCells * absentPercentage);
     const lateCells = Math.round(totalCells * latePercentage);
     
     return Array.from({ length: totalCells }).map((_, index) => {
-      if (index < presentCells) {
-        return 'present';
-      } else if (index < presentCells + absentCells) {
-        return 'absent';
-      } else if (index < presentCells + absentCells + lateCells) {
-        return 'late';
-      }
+      if (index < presentCells) return 'present';
+      if (index < presentCells + absentCells) return 'absent';
+      if (index < presentCells + absentCells + lateCells) return 'late';
       return 'empty';
     });
   };
-  
+
   const grid = generateGrid();
-  
-  // Handle time range change
-  const handleTimeRangeChange = (days: number) => {
-    setTimeRange(days);
-  };
-  
+
+  if (isLoading) {
+    return (
+      <div className={cn("bg-gray-900 text-white rounded-3xl p-6 card-shadow overflow-hidden relative", className)}>
+        <div className="space-y-4 animate-pulse">
+          <div className="h-8 w-1/3 bg-gray-800 rounded"></div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="h-20 bg-gray-800 rounded"></div>
+            <div className="h-20 bg-gray-800 rounded"></div>
+            <div className="h-20 bg-gray-800 rounded"></div>
+          </div>
+          <div className="h-40 bg-gray-800 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={cn(
       "bg-gray-900 text-white rounded-3xl p-6 card-shadow overflow-hidden relative", 
@@ -71,7 +67,7 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({
         <h3 className="text-xl font-medium">Attendance Report</h3>
         <div className="flex space-x-2">
           <button 
-            onClick={() => handleTimeRangeChange(7)} 
+            onClick={() => setTimeRange(7)} 
             className={cn(
               "text-xs px-2 py-1 rounded-full transition-colors",
               timeRange === 7 ? "bg-white text-black" : "bg-gray-800 text-gray-300 hover:bg-gray-700"
@@ -80,7 +76,7 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({
             7d
           </button>
           <button 
-            onClick={() => handleTimeRangeChange(30)} 
+            onClick={() => setTimeRange(30)} 
             className={cn(
               "text-xs px-2 py-1 rounded-full transition-colors",
               timeRange === 30 ? "bg-white text-black" : "bg-gray-800 text-gray-300 hover:bg-gray-700"
@@ -89,7 +85,7 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({
             30d
           </button>
           <button 
-            onClick={() => handleTimeRangeChange(90)} 
+            onClick={() => setTimeRange(90)} 
             className={cn(
               "text-xs px-2 py-1 rounded-full transition-colors",
               timeRange === 90 ? "bg-white text-black" : "bg-gray-800 text-gray-300 hover:bg-gray-700"
@@ -100,37 +96,28 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({
         </div>
       </div>
       
-      {isLoading ? (
-        <div className="space-y-4">
-          <Skeleton className="h-12 w-3/4 bg-gray-800" />
-          <div className="grid grid-cols-8 gap-2">
-            {Array.from({ length: 24 }).map((_, i) => (
-              <Skeleton key={i} className="w-5 h-5 rounded-full bg-gray-800" />
-            ))}
-          </div>
-        </div>
-      ) : (
+      
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-gray-800 rounded-xl p-3 flex items-center">
               <Users className="w-5 h-5 mr-3 text-green-400" />
               <div>
                 <p className="text-xs text-gray-400">Present</p>
-                <p className="text-lg font-semibold">{present}</p>
+                <p className="text-lg font-semibold">{data?.present}</p>
               </div>
             </div>
             <div className="bg-gray-800 rounded-xl p-3 flex items-center">
               <Calendar className="w-5 h-5 mr-3 text-red-400" />
               <div>
                 <p className="text-xs text-gray-400">Absent</p>
-                <p className="text-lg font-semibold">{absent}</p>
+                <p className="text-lg font-semibold">{data?.absent}</p>
               </div>
             </div>
             <div className="bg-gray-800 rounded-xl p-3 flex items-center">
               <Clock className="w-5 h-5 mr-3 text-yellow-400" />
               <div>
                 <p className="text-xs text-gray-400">Late</p>
-                <p className="text-lg font-semibold">{late}</p>
+                <p className="text-lg font-semibold">{data?.late}</p>
               </div>
             </div>
           </div>
@@ -182,7 +169,7 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({
             </div>
           </div>
         </>
-      )}
+      
       
       {/* Decorative elements */}
       <div className="absolute bottom-0 right-0 w-20 h-20 bg-green-400/10 rounded-full blur-2xl pointer-events-none" />
