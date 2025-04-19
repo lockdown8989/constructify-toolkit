@@ -1,9 +1,16 @@
+
 import React from 'react';
 import { format, parseISO } from 'date-fns';
-import { Calendar, Info, Mail, XCircle } from 'lucide-react';
+import { Calendar, Info, Mail, XCircle, MoreVertical } from 'lucide-react';
 import { Schedule } from '@/hooks/use-schedules';
 import { Badge } from '@/components/ui/badge';
 import ShiftResponseActions from './ShiftResponseActions';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ShiftDetailCardProps {
   schedule: Schedule;
@@ -51,9 +58,34 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
             {formattedStartTime} - {formattedEndTime}
           </div>
         </div>
-        <Badge variant={getBadgeVariant()}>
-          {schedule.status?.charAt(0).toUpperCase() + schedule.status?.slice(1)}
-        </Badge>
+        
+        <div className="flex items-center gap-2">
+          <Badge variant={getBadgeVariant()}>
+            {schedule.status?.charAt(0).toUpperCase() + schedule.status?.slice(1)}
+          </Badge>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+              <MoreVertical className="h-4 w-4 text-gray-500" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => onInfoClick()}>
+                <Info className="mr-2 h-4 w-4" />
+                View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEmailClick()}>
+                <Mail className="mr-2 h-4 w-4" />
+                Contact Manager
+              </DropdownMenuItem>
+              {schedule.status !== 'completed' && (
+                <DropdownMenuItem onClick={() => onCancelClick()} className="text-red-600">
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Cancel Shift
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
       
       {schedule.location && (
@@ -68,39 +100,13 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
         </div>
       )}
       
-      <div className="flex justify-between items-center">
-        <div className="flex space-x-2">
-          <button
-            onClick={onInfoClick}
-            className="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100"
-            aria-label="Show Info"
-          >
-            <Info className="h-4 w-4" />
-          </button>
-          <button
-            onClick={onEmailClick}
-            className="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100"
-            aria-label="Email about shift"
-          >
-            <Mail className="h-4 w-4" />
-          </button>
-          <button
-            onClick={onCancelClick}
-            className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50"
-            aria-label="Cancel shift"
-          >
-            <XCircle className="h-4 w-4" />
-          </button>
-        </div>
-        
-        {/* Show response actions only for pending shifts */}
-        {schedule.status === 'pending' && (
-          <ShiftResponseActions 
-            schedule={schedule} 
-            onResponseComplete={onResponseComplete}
-          />
-        )}
-      </div>
+      {/* Show response actions only for pending shifts */}
+      {schedule.status === 'pending' && (
+        <ShiftResponseActions 
+          schedule={schedule} 
+          onResponseComplete={onResponseComplete}
+        />
+      )}
     </div>
   );
 };
