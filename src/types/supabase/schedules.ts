@@ -1,4 +1,3 @@
-
 export interface OpenShiftType {
   id: string;
   title: string;
@@ -22,14 +21,16 @@ export interface OpenShiftAssignment {
   updated_at: string | null;
 }
 
+export type ScheduleStatus = 'pending' | 'confirmed' | 'completed' | 'rejected';
+
 export interface Schedule {
   id: string;
-  employee_id: string | null;
+  employee_id: string;
   title: string;
   start_time: string;
   end_time: string;
   created_at: string;
-  status?: 'pending' | 'confirmed' | 'completed' | 'rejected';
+  status?: ScheduleStatus;
   notes?: string | null;
   location?: string | null;
   updated_at?: string | null;
@@ -46,8 +47,6 @@ export interface ShiftSwap {
   created_at: string;
   updated_at: string;
 }
-
-export type ScheduleStatus = 'pending' | 'confirmed' | 'completed' | 'rejected';
 
 export interface ScheduleWithStatus extends Schedule {
   status: ScheduleStatus;

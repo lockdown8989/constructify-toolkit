@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { toast } from '@/hooks/use-toast';
 import { sendNotification } from '@/services/notifications/notification-sender';
 import { getManagerUserIds } from '@/services/notifications/role-utils';
+import { ScheduleStatus } from '@/types/supabase/schedules';
 
 export const useShiftResponse = () => {
   const { user } = useAuth();
@@ -26,7 +27,7 @@ export const useShiftResponse = () => {
         console.log(`Processing shift response: ${response} for schedule ID: ${scheduleId}`);
 
         // Map the response to the correct status enum value
-        const statusValue = response === 'accepted' ? 'confirmed' : 'rejected';
+        const statusValue: ScheduleStatus = response === 'accepted' ? 'confirmed' : 'rejected';
 
         // Update the shift status in Supabase
         const { data: scheduleData, error: updateError } = await supabase
@@ -60,36 +61,7 @@ export const useShiftResponse = () => {
 
         const employeeName = employeeData?.name || 'An employee';
         
-        // Notify managers about the shift response
-        try {
-          // Get all manager user IDs
-          console.log('Fetching manager user IDs...');
-          const managerIds = await getManagerUserIds();
-          console.log('Manager IDs retrieved:', managerIds);
-          
-          if (managerIds.length === 0) {
-            console.warn('No manager IDs found to notify');
-          }
-          
-          // Send notification to all managers
-          const notificationPromises = managerIds.map(managerId => 
-            sendNotification({
-              user_id: managerId,
-              title: `Shift ${response === 'accepted' ? 'Accepted' : 'Rejected'}`,
-              message: `${employeeName} has ${response === 'accepted' ? 'accepted' : 'rejected'} a shift scheduled for ${new Date(scheduleData.start_time).toLocaleString()}`,
-              type: response === 'accepted' ? 'success' : 'warning',
-              related_entity: 'schedules',
-              related_id: scheduleId
-            })
-          );
-          
-          await Promise.all(notificationPromises);
-          console.log(`Successfully sent notifications to ${managerIds.length} managers`);
-        } catch (notificationError) {
-          console.error('Error sending manager notifications:', notificationError);
-          // Continue execution even if notification sending fails
-        }
-
+        // The trigger will handle manager notifications, so we don't need to send them manually
         console.log('Successfully updated shift status:', response);
         return scheduleData;
       } catch (error) {
