@@ -3,8 +3,6 @@ import React from 'react';
 import { Schedule } from '@/hooks/use-schedules';
 import ShiftDetailCard from '../ShiftDetailCard';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { format } from 'date-fns';
 
 interface ScheduleTabsProps {
   activeTab: string;
@@ -21,24 +19,23 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
   activeTab,
   setActiveTab,
   schedules,
-  newSchedules,
   onInfoClick,
   onEmailClick,
   onCancelClick,
   onResponseComplete,
 }) => {
-  const [currentDate, setCurrentDate] = React.useState(new Date());
-  
   const tabs = [
-    { id: 'my-shifts', label: 'My Shifts' },
-    { id: 'open-shifts', label: 'Open Shifts' },
-    { id: 'pending', label: 'Pending' },
-    { id: 'completed', label: 'Completed' }
+    { id: 'my-shifts', label: 'My Shifts', status: 'confirmed' },
+    { id: 'pending', label: 'Pending', status: 'pending' },
+    { id: 'completed', label: 'Completed', status: 'completed' }
   ];
+  
+  const pendingShiftsCount = schedules.filter(schedule => schedule.status === 'pending').length;
 
-  const daysOfWeek = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-
-  const filteredSchedules = schedules.filter(schedule => {
+  // Filter out any duplicate schedules based on their ID
+  const uniqueSchedules = Array.from(new Map(schedules.map(schedule => [schedule.id, schedule])).values());
+  
+  const filteredSchedules = uniqueSchedules.filter(schedule => {
     switch (activeTab) {
       case 'my-shifts':
         return schedule.status === 'confirmed';
@@ -52,67 +49,32 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
   });
 
   return (
-    <div className="flex flex-col h-full bg-white">
-      {/* Calendar Header */}
-      <div className="p-4 border-b">
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))}>
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <h2 className="text-2xl font-bold">{format(currentDate, 'MMMM yyyy')}</h2>
-          <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))}>
-            <ChevronRight className="h-6 w-6" />
-          </button>
-        </div>
-        
-        {/* Calendar Days Header */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {daysOfWeek.map(day => (
-            <div key={day} className="text-center text-sm font-medium text-gray-600">
-              {day}
-            </div>
-          ))}
-        </div>
-        
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-1">
-          {Array.from({ length: 35 }, (_, i) => (
-            <div
-              key={i}
-              className={cn(
-                "aspect-square flex items-center justify-center text-lg border rounded-lg",
-                i === 29 && "text-blue-500 font-bold",
-                i === 30 && "text-green-500 font-bold"
-              )}
-            >
-              {i < 3 ? i + 29 : i - 2}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="border-b">
-        <div className="flex">
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="px-4 py-2 flex justify-between items-center border-b bg-white sticky top-0 z-10">
+        <div className="flex space-x-4 overflow-x-auto hide-scrollbar">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex-1 py-2 text-sm font-medium border-b-2 transition-colors",
+                "whitespace-nowrap px-3 py-2 text-sm font-medium border-b-2 transition-colors",
                 activeTab === tab.id
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  ? "border-cyan-500 text-cyan-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               )}
             >
               {tab.label}
+              {tab.id === 'pending' && pendingShiftsCount > 0 && (
+                <span className="ml-1.5 px-2 py-0.5 text-xs bg-red-100 text-red-600 rounded-full">
+                  {pendingShiftsCount}
+                </span>
+              )}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Shift Cards */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-4">
         {filteredSchedules.length > 0 ? (
           filteredSchedules.map(schedule => (
             <ShiftDetailCard

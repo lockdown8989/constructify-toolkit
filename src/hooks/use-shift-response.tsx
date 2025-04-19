@@ -1,10 +1,9 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
-import { toast } from '@/hooks/use-toast';
 import { sendNotification } from '@/services/notifications/notification-sender';
-import { getManagerUserIds } from '@/services/notifications/role-utils';
 
 export const useShiftResponse = () => {
   const { user } = useAuth();
@@ -13,19 +12,19 @@ export const useShiftResponse = () => {
   const respondToShift = useMutation({
     mutationFn: async ({ 
       scheduleId, 
-      response 
+      response, 
+      managerUserId 
     }: { 
       scheduleId: string, 
-      response: 'accepted' | 'rejected'
+      response: 'accepted' | 'rejected',
+      managerUserId?: string
     }) => {
       try {
         if (!user) {
           throw new Error('User not authenticated');
         }
 
-        console.log(`Processing shift response: ${response} for schedule ID: ${scheduleId}`);
-
-        // Update the shift status in Supabase
+        // Update the shift status
         const { data: scheduleData, error: updateError } = await supabase
           .from('schedules')
           .update({
@@ -37,57 +36,76 @@ export const useShiftResponse = () => {
           .single();
 
         if (updateError) {
-          console.error('Error updating shift status:', updateError);
           throw new Error(`Failed to update shift status: ${updateError.message}`);
         }
 
-        console.log('Schedule data after update:', scheduleData);
-
-        // Get employee name for the notification
-        const { data: employeeData, error: employeeError } = await supabase
+        // Get employee details
+        const { data: employee, error: employeeError } = await supabase
           .from('employees')
-          .select('name')
-          .eq('user_id', user.id)
+          .select('name, user_id')
+          .eq('id', scheduleData.employee_id)
           .single();
 
         if (employeeError) {
-          console.error('Error fetching employee data:', employeeError);
-          // Continue execution even if employee data fetch fails
+          console.error('Error fetching employee details:', employeeError);
         }
 
-        const employeeName = employeeData?.name || 'An employee';
-        
-        // Notify managers about the shift response
-        try {
-          // Get all manager user IDs
-          console.log('Fetching manager user IDs...');
-          const managerIds = await getManagerUserIds();
-          console.log('Manager IDs retrieved:', managerIds);
+        // Get manager details if we have their ID
+        let managerName = 'Manager';
+        if (managerUserId) {
+          const { data: managerData } = await supabase
+            .from('employees')
+            .select('name')
+            .eq('user_id', managerUserId)
+            .single();
           
-          if (managerIds.length === 0) {
-            console.warn('No manager IDs found to notify');
+          if (managerData) {
+            managerName = managerData.name;
           }
+        }
+        
+        // Send notification to manager
+        const employeeName = employee?.name || 'Employee';
+        const shiftDate = new Date(scheduleData.start_time).toLocaleDateString();
+        const shiftTime = new Date(scheduleData.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        // Find the manager's user_id
+        // If we don't have the manager's user ID directly, we need to find them from their employee record
+        if (!managerUserId) {
+          const { data: managers } = await supabase
+            .from('user_roles')
+            .select('user_id')
+            .eq('role', 'manager');
           
-          // Send notification to all managers
-          const notificationPromises = managerIds.map(managerId => 
-            sendNotification({
-              user_id: managerId,
-              title: `Shift ${response === 'accepted' ? 'Accepted' : 'Rejected'}`,
-              message: `${employeeName} has ${response === 'accepted' ? 'accepted' : 'rejected'} a shift scheduled for ${new Date(scheduleData.start_time).toLocaleString()}`,
-              type: response === 'accepted' ? 'success' : 'warning',
-              related_entity: 'schedules',
-              related_id: scheduleId
-            })
-          );
-          
-          await Promise.all(notificationPromises);
-          console.log(`Successfully sent notifications to ${managerIds.length} managers`);
-        } catch (notificationError) {
-          console.error('Error sending manager notifications:', notificationError);
-          // Continue execution even if notification sending fails
+          if (managers && managers.length > 0) {
+            for (const manager of managers) {
+              // Send notification to each manager
+              await sendNotification({
+                user_id: manager.user_id,
+                title: response === 'accepted' ? '✅ Shift Accepted' : '❌ Shift Rejected',
+                message: response === 'accepted' 
+                  ? `${employeeName} has accepted the shift on ${shiftDate} at ${shiftTime}.`
+                  : `${employeeName} has rejected the shift on ${shiftDate} at ${shiftTime}.`,
+                type: response === 'accepted' ? 'success' : 'warning',
+                related_entity: 'schedules',
+                related_id: scheduleId
+              });
+            }
+          }
+        } else {
+          // Send notification directly to the manager who created the shift
+          await sendNotification({
+            user_id: managerUserId,
+            title: response === 'accepted' ? '✅ Shift Accepted' : '❌ Shift Rejected',
+            message: response === 'accepted' 
+              ? `${employeeName} has accepted the shift on ${shiftDate} at ${shiftTime}.`
+              : `${employeeName} has rejected the shift on ${shiftDate} at ${shiftTime}.`,
+            type: response === 'accepted' ? 'success' : 'warning',
+            related_entity: 'schedules',
+            related_id: scheduleId
+          });
         }
 
-        console.log('Successfully updated shift status:', response);
         return scheduleData;
       } catch (error) {
         console.error('Error responding to shift:', error);
@@ -99,12 +117,8 @@ export const useShiftResponse = () => {
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
     },
     onError: (error) => {
-      // Add a user-friendly error toast
-      toast({
-        title: 'Shift Response Failed',
-        description: error instanceof Error ? error.message : 'Unable to process your shift response.',
-        variant: 'destructive',
-      });
+      console.error('Failed to respond to shift:', error);
+      toast.error('Failed to respond to shift. Please try again.');
     }
   });
 
