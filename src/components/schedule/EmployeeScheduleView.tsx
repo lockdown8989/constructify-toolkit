@@ -1,11 +1,13 @@
 
 import React from 'react';
+import { format } from 'date-fns';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
 import WeeklyCalendarView from '@/components/schedule/WeeklyCalendarView';
 import { ScheduleDialogs } from './components/ScheduleDialogs';
 import { ScheduleTabs } from './components/ScheduleTabs';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { Schedule } from '@/types/schedule.types';
 import {
   Card,
   CardContent,
