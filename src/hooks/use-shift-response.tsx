@@ -23,6 +23,8 @@ export const useShiftResponse = () => {
           throw new Error('User not authenticated');
         }
 
+        console.log(`Processing shift response: ${response} for schedule ID: ${scheduleId}`);
+
         // Update the shift status in Supabase
         const { data: scheduleData, error: updateError } = await supabase
           .from('schedules')
@@ -38,6 +40,8 @@ export const useShiftResponse = () => {
           console.error('Error updating shift status:', updateError);
           throw new Error(`Failed to update shift status: ${updateError.message}`);
         }
+
+        console.log('Schedule data after update:', scheduleData);
 
         // Get employee name for the notification
         const { data: employeeData, error: employeeError } = await supabase
@@ -56,20 +60,27 @@ export const useShiftResponse = () => {
         // Notify managers about the shift response
         try {
           // Get all manager user IDs
+          console.log('Fetching manager user IDs...');
           const managerIds = await getManagerUserIds();
+          console.log('Manager IDs retrieved:', managerIds);
+          
+          if (managerIds.length === 0) {
+            console.warn('No manager IDs found to notify');
+          }
           
           // Send notification to all managers
-          for (const managerId of managerIds) {
-            await sendNotification({
+          const notificationPromises = managerIds.map(managerId => 
+            sendNotification({
               user_id: managerId,
               title: `Shift ${response === 'accepted' ? 'Accepted' : 'Rejected'}`,
               message: `${employeeName} has ${response === 'accepted' ? 'accepted' : 'rejected'} a shift scheduled for ${new Date(scheduleData.start_time).toLocaleString()}`,
               type: response === 'accepted' ? 'success' : 'warning',
               related_entity: 'schedules',
               related_id: scheduleId
-            });
-          }
+            })
+          );
           
+          await Promise.all(notificationPromises);
           console.log(`Successfully sent notifications to ${managerIds.length} managers`);
         } catch (notificationError) {
           console.error('Error sending manager notifications:', notificationError);

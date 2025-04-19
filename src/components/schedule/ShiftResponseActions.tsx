@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useShiftResponse } from '@/hooks/use-shift-response';
 import { Schedule } from '@/hooks/use-schedules';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface ShiftResponseActionsProps {
@@ -16,9 +16,13 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
   onResponseComplete 
 }) => {
   const { respondToShift } = useShiftResponse();
+  const [loading, setLoading] = useState<'accepted' | 'rejected' | null>(null);
   
   const handleResponse = async (response: 'accepted' | 'rejected') => {
     try {
+      setLoading(response);
+      console.log(`Responding to shift ${schedule.id} with: ${response}`);
+      
       await respondToShift.mutateAsync({
         scheduleId: schedule.id,
         response
@@ -42,6 +46,8 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
         description: "Please try again later.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(null);
     }
   };
 
@@ -52,9 +58,13 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
         size="sm"
         className="flex items-center text-green-600 border-green-200 hover:bg-green-50"
         onClick={() => handleResponse('accepted')}
-        disabled={respondToShift.isPending}
+        disabled={respondToShift.isPending || loading !== null}
       >
-        <CheckCircle className="h-4 w-4 mr-1" />
+        {loading === 'accepted' ? (
+          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+        ) : (
+          <CheckCircle className="h-4 w-4 mr-1" />
+        )}
         Accept
       </Button>
       <Button 
@@ -62,9 +72,13 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
         size="sm"
         className="flex items-center text-red-600 border-red-200 hover:bg-red-50"
         onClick={() => handleResponse('rejected')}
-        disabled={respondToShift.isPending}
+        disabled={respondToShift.isPending || loading !== null}
       >
-        <XCircle className="h-4 w-4 mr-1" />
+        {loading === 'rejected' ? (
+          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+        ) : (
+          <XCircle className="h-4 w-4 mr-1" />
+        )}
         Reject
       </Button>
     </div>
