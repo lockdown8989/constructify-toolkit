@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { NotificationData } from '@/models/notification';
 
@@ -78,24 +79,4 @@ export const sendNotificationToMany = async (userIds: string[], notificationData
     console.error('Exception in sendNotificationToMany:', error);
     return false;
   }
-};
-
-/**
- * Sends a notification for a schedule assignment
- */
-export const sendScheduleAssignmentNotification = async (
-  userId: string,
-  shiftTitle: string,
-  startTime: string,
-  endTime: string,
-  scheduleId: string
-) => {
-  return sendNotification({
-    user_id: userId,
-    title: 'New Shift Assignment',
-    message: `You have been assigned to ${shiftTitle} from ${new Date(startTime).toLocaleString()} to ${new Date(endTime).toLocaleString()}`,
-    type: 'info',
-    related_entity: 'schedules',
-    related_id: scheduleId
-  });
 };

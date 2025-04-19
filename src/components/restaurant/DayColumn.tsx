@@ -6,21 +6,21 @@ import OpenShiftBlock from './OpenShiftBlock';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DayColumnProps {
+  day: string;
+  dayLabel: string;
   dayStats: DayStats;
-  dayDisplayName: string;
-  openShifts: OpenShift[];
   employees: Employee[];
+  openShifts: OpenShift[];
   handleAssignOpenShift: (openShiftId: string, employeeId?: string) => void;
-  formatCurrency: (value: number) => string;
 }
 
-const DayColumn: React.FC<DayColumnProps> = ({
+const DayColumn = ({
+  day,
+  dayLabel,
   dayStats,
-  dayDisplayName,
-  openShifts,
   employees,
-  handleAssignOpenShift,
-  formatCurrency
+  openShifts,
+  handleAssignOpenShift
 }: DayColumnProps) => {
   const isMobile = useIsMobile();
   
@@ -49,7 +49,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
       {/* Header */}
       <div className="p-3 sm:p-4 border-b border-gray-200 bg-gray-50">
         <div className="text-center">
-          <div className="text-gray-600 font-medium">{dayDisplayName}</div>
+          <div className="text-gray-600 font-medium">{dayLabel}</div>
           <div className="text-xs text-gray-500">{formatHours(dayStats.totalHours)}</div>
         </div>
       </div>

@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { useEmployees } from '@/hooks/use-employees';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useSchedules, useCreateSchedule, Schedule } from '@/hooks/use-schedules';
+import { useSchedules, useCreateSchedule } from '@/hooks/use-schedules';
 import ScheduleList from '@/components/schedule/ScheduleList';
 import ScheduleCalendar from '@/components/schedule/ScheduleCalendar';
 import { SAMPLE_MEETINGS } from '@/data/sample-meetings';
@@ -12,7 +11,7 @@ import ScheduleCalendarView from '@/components/schedule/ScheduleCalendarView';
 import MeetingSidePanel from '@/components/schedule/MeetingSidePanel';
 import UpcomingEventsPanel from '@/components/schedule/UpcomingEventsPanel';
 import ScheduleFormDialog from '@/components/schedule/ScheduleFormDialog';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/hooks/use-auth';
 
 const SchedulePage = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -65,27 +64,22 @@ const SchedulePage = () => {
         employee_id: newSchedule.employeeId,
         title: newSchedule.title,
         start_time: `${selectedDate}T${newSchedule.startTime}:00`,
-        end_time: `${selectedDate}T${newSchedule.endTime}:00`,
-        status: 'confirmed' as const // Use const assertion to satisfy the type system
+        end_time: `${selectedDate}T${newSchedule.endTime}:00`
       };
       
-      await createSchedule.mutateAsync(schedule);
+      const result = await createSchedule(schedule);
       
-      setNewSchedule({
-        title: '',
-        employeeId: '',
-        startTime: '',
-        endTime: ''
-      });
-      setIsAddScheduleOpen(false);
-      refetchSchedules();
-      
-      toast({
-        title: "Schedule created",
-        description: "The shift has been successfully added.",
-      });
+      if (result) {
+        setNewSchedule({
+          title: '',
+          employeeId: '',
+          startTime: '',
+          endTime: ''
+        });
+        setIsAddScheduleOpen(false);
+        refetchSchedules();
+      }
     } catch (error: any) {
-      console.error('Error creating schedule:', error);
       toast({
         title: "Failed to create schedule",
         description: error.message || "An unexpected error occurred",

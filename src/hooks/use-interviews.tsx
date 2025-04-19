@@ -1,9 +1,11 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Interview } from '@/types/supabase';
+import type { Database } from '@/types/supabase';
 
-export type NewInterview = Omit<Interview, 'id'> & { id?: string };
-export type InterviewUpdate = Partial<Interview>;
+export type Interview = Database['public']['Tables']['interviews']['Row'];
+export type NewInterview = Database['public']['Tables']['interviews']['Insert'];
+export type InterviewUpdate = Database['public']['Tables']['interviews']['Update'];
 
 export function useInterviews() {
   return useQuery({

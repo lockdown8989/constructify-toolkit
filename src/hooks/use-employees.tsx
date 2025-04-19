@@ -19,12 +19,15 @@ export function useEmployees(filters?: Partial<{
   return useQuery({
     queryKey: ['employees', filters, isManager, user?.id],
     queryFn: async () => {
+      // Start building the query
       let query = supabase
         .from('employees')
         .select('*');
       
+      // If user is not a manager, only show their own data
       if (!isManager && user) {
         console.log("Non-manager user, fetching own data only");
+        // Find the employee record associated with the current user
         const { data: currentEmployeeData } = await supabase
           .from('employees')
           .select('*')
@@ -38,17 +41,20 @@ export function useEmployees(filters?: Partial<{
           return [];
         }
       } else if (isManager && user) {
+        // For managers, get their manager_id first
         const { data: managerData } = await supabase
           .from('employees')
           .select('manager_id')
           .eq('user_id', user.id)
           .single();
         
+        // Include only employees who are linked to this manager's ID or the manager themselves
         if (managerData && managerData.manager_id) {
           query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
         }
       }
       
+      // Apply any filters passed to the hook
       if (filters) {
         if (filters.status) query = query.eq('status', filters.status);
         if (filters.department) query = query.eq('department', filters.department);

@@ -1,8 +1,11 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
-import type { HiringStatistic } from '@/types/supabase';
+import type { Database } from '@/types/supabase';
+
+export type HiringStatistic = Database['public']['Tables']['hiring_statistics']['Row'];
 
 export type HiringStatisticsData = {
   name: string;
@@ -14,18 +17,21 @@ export function useHiringStatistics(year: number = new Date().getFullYear()) {
   const { toast } = useToast();
   const [selectedYear, setSelectedYear] = useState<number>(year);
 
+  // Convert database data to chart format
   const transformData = (data: HiringStatistic[]): HiringStatisticsData[] => {
     const months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
     
+    // Initialize with all months
     const chartData: HiringStatisticsData[] = months.map(month => ({
       name: month,
       design: 0,
       others: 0
     }));
     
+    // Fill in actual data
     data.forEach(item => {
       const monthIndex = months.indexOf(item.month);
       if (monthIndex >= 0) {
@@ -37,6 +43,7 @@ export function useHiringStatistics(year: number = new Date().getFullYear()) {
     return chartData;
   };
 
+  // Fetch hiring statistics data
   const { data, isLoading, error } = useQuery({
     queryKey: ['hiring-statistics', selectedYear],
     queryFn: async () => {
@@ -60,11 +67,13 @@ export function useHiringStatistics(year: number = new Date().getFullYear()) {
           variant: "destructive",
         });
         
+        // Return sample data if fetch fails
         return getSampleData();
       }
     },
   });
 
+  // Add new hiring statistics
   const addHiringStatistic = async (newData: Omit<HiringStatistic, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       const { data, error } = await supabase
@@ -93,10 +102,12 @@ export function useHiringStatistics(year: number = new Date().getFullYear()) {
     }
   };
 
+  // Handle year change
   const changeYear = (year: number) => {
     setSelectedYear(year);
   };
 
+  // Get sample data for fallback
   const getSampleData = (): HiringStatisticsData[] => {
     return [
       { name: 'Jan', design: 120, others: 130 },
