@@ -4,7 +4,7 @@ import { Schedule as SupabaseSchedule } from '@/types/supabase/schedules';
 import { Schedule as AppSchedule } from '@/types/schedule.types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Clock } from 'lucide-react';
-import ShiftCard from '../../calendar/ShiftCard';
+import { ShiftCard } from '../../components/ShiftCard';
 
 type Schedule = AppSchedule | SupabaseSchedule;
 
@@ -19,7 +19,6 @@ interface ScheduleContentProps {
 
 export const ScheduleContent: React.FC<ScheduleContentProps> = ({
   isLoading,
-  schedules,
   filteredSchedules,
   onInfoClick,
   onEmailClick,
