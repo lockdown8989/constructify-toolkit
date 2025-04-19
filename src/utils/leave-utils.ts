@@ -1,6 +1,6 @@
 
 import { differenceInCalendarDays, addDays, parseISO, format } from 'date-fns';
-import type { Project } from '@/hooks/use-projects';
+import type { Project } from '@/types/supabase';
 
 export interface ProjectConflict {
   projectName: string;
