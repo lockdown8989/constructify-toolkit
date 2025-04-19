@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format, parseISO } from 'date-fns';
 import { Calendar, Info, Mail, XCircle } from 'lucide-react';
@@ -28,12 +27,12 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
   const formattedStartTime = format(startTime, 'h:mm a');
   const formattedEndTime = format(endTime, 'h:mm a');
   
-  // Determine badge color based on status
+  // Determine badge variant based on status
   const getBadgeVariant = () => {
     switch(schedule.status) {
       case 'pending': return 'secondary';
       case 'confirmed': return 'default';
-      case 'completed': return 'success';
+      case 'completed': return 'default';
       case 'rejected': return 'destructive';
       default: return 'default';
     }
