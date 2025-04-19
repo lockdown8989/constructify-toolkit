@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -89,7 +88,7 @@ export function useCreateSchedule() {
   });
 
   return {
-    createSchedule: mutation.mutate,
+    createSchedule: mutation,
     isCreating: mutation.isPending,
     error: mutation.error
   };

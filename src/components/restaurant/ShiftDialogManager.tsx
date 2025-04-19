@@ -33,7 +33,8 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
 
       if (user) {
         try {
-          const scheduleData = await createSchedule({
+          // Using mutateAsync instead of mutate to get the returned data
+          const scheduleData = await createSchedule.mutateAsync({
             employee_id: shiftDialog.employeeId,
             title: formData.role || 'Shift',
             start_time: new Date().toISOString(),
