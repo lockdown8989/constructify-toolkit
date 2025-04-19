@@ -37,123 +37,111 @@ const ShiftSwapTabContent = ({
         <div className="flex flex-col items-center justify-center">
           {activeTab === 'pending' && (
             <>
-              <Clock className="h-12 w-12 text-gray-300 mb-3" />
-              <p className="font-medium">No pending shift swap requests</p>
-              <p className="text-sm mt-1">
-                {canApproveSwaps 
-                  ? "There are no shift swap requests waiting for your review." 
-                  : "You don't have any pending shift swap requests."}
-              </p>
+              <Clock className="h-8 w-8 mb-2 text-gray-400" />
+              <p>No pending shift swap requests</p>
             </>
           )}
-          
           {activeTab === 'approved' && (
             <>
-              <Check className="h-12 w-12 text-gray-300 mb-3" />
-              <p className="font-medium">No approved shift swaps</p>
-              <p className="text-sm mt-1">
-                Approved shift swaps will appear here.
-              </p>
+              <Check className="h-8 w-8 mb-2 text-gray-400" />
+              <p>No approved shift swaps</p>
             </>
           )}
-          
           {activeTab === 'rejected' && (
             <>
-              <X className="h-12 w-12 text-gray-300 mb-3" />
-              <p className="font-medium">No rejected shift swaps</p>
-              <p className="text-sm mt-1">
-                Rejected shift swaps will appear here.
-              </p>
+              <X className="h-8 w-8 mb-2 text-gray-400" />
+              <p>No rejected shift swaps</p>
             </>
           )}
-          
           {activeTab === 'completed' && (
             <>
-              <AlertCircle className="h-12 w-12 text-gray-300 mb-3" />
-              <p className="font-medium">No completed shift swaps</p>
-              <p className="text-sm mt-1">
-                Completed shift swaps will appear here.
-              </p>
+              <Check className="h-8 w-8 mb-2 text-gray-400" />
+              <p>No completed shift swaps</p>
             </>
           )}
         </div>
       </div>
     );
   }
-  
+
   return (
-    <div className="space-y-3 mt-2">
+    <div className="space-y-4">
       {swaps.map((swap) => (
-        <div key={swap.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-          <div className="flex flex-col gap-3">
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="font-medium">
-                  {getEmployeeName(swap.requester_id)} 
-                  <span className="text-gray-500"> → </span>
-                  {swap.recipient_id ? getEmployeeName(swap.recipient_id) : 'Any Available Employee'}
-                </div>
-                <div className="text-sm text-gray-600 mt-1">
-                  {getScheduleDetails(swap.requester_schedule_id)}
-                </div>
-              </div>
-              <div>
-                {renderStatusBadge(swap.status)}
-                <div className="text-xs text-gray-500 mt-1">
-                  {format(new Date(swap.created_at), 'MMM d, yyyy')}
-                </div>
-              </div>
+        <div 
+          key={swap.id} 
+          className="p-4 border rounded-lg shadow-sm bg-white"
+        >
+          <div className="flex justify-between items-start mb-3">
+            <div>
+              <p className="font-medium">
+                {getEmployeeName(swap.requester_id)} → {swap.recipient_id ? getEmployeeName(swap.recipient_id) : 'Any available employee'}
+              </p>
+              <p className="text-sm text-gray-500">
+                Created: {format(new Date(swap.created_at), 'MMM d, yyyy')}
+              </p>
             </div>
-            
+            <div>
+              {renderStatusBadge(swap.status)}
+            </div>
+          </div>
+          
+          <div className="mb-3">
+            <div className="text-sm">
+              <span className="font-medium">Requesting to swap:</span> {getScheduleDetails(swap.requester_schedule_id)}
+            </div>
             {swap.recipient_schedule_id && (
-              <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded border">
-                <span className="font-medium">In exchange for:</span> {getScheduleDetails(swap.recipient_schedule_id)}
-              </div>
-            )}
-            
-            {swap.notes && (
-              <div className="text-sm text-gray-600 italic">
-                Note: {swap.notes}
-              </div>
-            )}
-            
-            {activeTab === 'pending' && canApproveSwaps && (
-              <div className="flex justify-end gap-2 mt-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                  onClick={() => onReject(swap)}
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Reject
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
-                  onClick={() => onApprove(swap)}
-                >
-                  <Check className="h-4 w-4 mr-1" />
-                  Approve
-                </Button>
-              </div>
-            )}
-            
-            {activeTab === 'approved' && (swap.requester_id === userId || canApproveSwaps) && (
-              <div className="flex justify-end gap-2 mt-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                  onClick={() => onComplete(swap)}
-                >
-                  <Check className="h-4 w-4 mr-1" />
-                  Mark as Completed
-                </Button>
+              <div className="text-sm mt-1">
+                <span className="font-medium">With shift:</span> {getScheduleDetails(swap.recipient_schedule_id)}
               </div>
             )}
           </div>
+          
+          {swap.notes && (
+            <div className="text-sm bg-gray-50 p-2 rounded-md mb-3">
+              <span className="font-medium">Notes:</span> {swap.notes}
+            </div>
+          )}
+          
+          {canApproveSwaps && swap.status === 'Pending' && (
+            <div className="flex gap-2 mt-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-green-500 text-green-600 hover:bg-green-50"
+                onClick={() => onApprove(swap)}
+              >
+                <Check className="h-4 w-4 mr-1" /> Approve
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-red-500 text-red-600 hover:bg-red-50"
+                onClick={() => onReject(swap)}
+              >
+                <X className="h-4 w-4 mr-1" /> Reject
+              </Button>
+            </div>
+          )}
+          
+          {canApproveSwaps && swap.status === 'Approved' && (
+            <div className="flex gap-2 mt-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                onClick={() => onComplete(swap)}
+              >
+                Mark as Completed
+              </Button>
+            </div>
+          )}
+          
+          {swap.requester_id === userId && swap.status === 'Pending' && (
+            <div className="mt-3 text-sm text-gray-500 flex items-center">
+              <AlertCircle className="h-4 w-4 mr-1 text-amber-500" />
+              Awaiting approval
+            </div>
+          )}
         </div>
       ))}
     </div>

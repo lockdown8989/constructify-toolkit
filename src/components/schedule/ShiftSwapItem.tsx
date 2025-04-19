@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/auth';
 import { ShiftSwap } from '@/hooks/use-shift-swaps';
 import { useEmployees } from '@/hooks/use-employees';
 import { useSchedules } from '@/hooks/use-schedules';
@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Check, X, Clock } from 'lucide-react';
+import { MoreVertical, Check, X, Clock, Trash2 } from 'lucide-react';
 
 interface ShiftSwapItemProps {
   swap: ShiftSwap;
@@ -48,7 +48,7 @@ const ShiftSwapItem = ({ swap, onApprove, onReject, onDelete }: ShiftSwapItemPro
         <div className="flex items-start justify-between">
           <div className="space-y-1">
             <p className="text-sm font-medium">
-              {requester?.name} → {recipient?.name}
+              {requester?.name} → {recipient?.name || 'Any available employee'}
             </p>
             {requesterSchedule && (
               <p className="text-xs text-gray-500">
@@ -99,6 +99,7 @@ const ShiftSwapItem = ({ swap, onApprove, onReject, onDelete }: ShiftSwapItemPro
                       className="text-gray-600 focus:text-gray-600 cursor-pointer"
                       onClick={() => onDelete(swap.id)}
                     >
+                      <Trash2 className="h-4 w-4 mr-2" />
                       Delete
                     </DropdownMenuItem>
                   )}

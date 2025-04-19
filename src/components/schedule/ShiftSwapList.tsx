@@ -3,13 +3,14 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { useEmployees } from '@/hooks/use-employees';
 import { useSchedules } from '@/hooks/use-schedules';
-import { useShiftSwaps, useUpdateShiftSwap, ShiftSwap } from '@/hooks/use-shift-swaps';
+import { useShiftSwaps, useUpdateShiftSwap, useDeleteShiftSwap, ShiftSwap } from '@/hooks/use-shift-swaps';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeftRight } from 'lucide-react';
 import ShiftSwapStatusBadge from './ShiftSwapStatusBadge';
 import ShiftSwapTabContent from './ShiftSwapTabContent';
+import { useToast } from '@/hooks/use-toast';
 
 const ShiftSwapList = () => {
   const { data: swaps = [], isLoading: isLoadingSwaps } = useShiftSwaps();
@@ -17,6 +18,8 @@ const ShiftSwapList = () => {
   const { data: employees = [] } = useEmployees();
   const { user, isAdmin, isHR, isManager } = useAuth();
   const { mutate: updateSwap } = useUpdateShiftSwap();
+  const { mutate: deleteSwap } = useDeleteShiftSwap();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'completed'>('pending');
   
   if (!user) {
@@ -87,6 +90,19 @@ const ShiftSwapList = () => {
       status: 'Completed',
       updated_at: new Date().toISOString()
     });
+  };
+  
+  const handleDelete = (swapId: string) => {
+    if (confirm('Are you sure you want to delete this shift swap request?')) {
+      deleteSwap(swapId, {
+        onSuccess: () => {
+          toast({
+            title: "Shift swap deleted",
+            description: "The shift swap request has been deleted successfully.",
+          });
+        }
+      });
+    }
   };
   
   if (isLoadingSwaps) {
