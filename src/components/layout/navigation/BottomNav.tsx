@@ -1,4 +1,5 @@
-import { Home, Users, Calendar, DollarSign, Utensils, ClipboardCheck, Clock } from "lucide-react"
+
+import { Home, Users, Calendar, DollarSign, Utensils, ClipboardCheck, Clock, Coffee } from "lucide-react"
 import { useNavigate, useLocation, Link } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/auth"
@@ -15,8 +16,8 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
   const { isManager, isAdmin, isHR } = useAuth();
   const hasManagerialAccess = isManager || isAdmin || isHR;
   
-  const { status, handleClockIn, handleClockOut } = useTimeClock();
-  const isClockingEnabled = !hasManagerialAccess;
+  const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
+  const isClockingEnabled = !hasManagerialAccess && isAuthenticated;
   
   if (!isAuthenticated) return null;
   
@@ -31,18 +32,36 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
           {status === 'clocked-out' ? (
             <Button 
               onClick={handleClockIn}
-              className="w-full bg-green-600 hover:bg-green-700"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-medium"
             >
               <Clock className="h-4 w-4 mr-2" />
               Clock In For Shift
             </Button>
+          ) : status === 'clocked-in' ? (
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                onClick={handleBreakStart}
+                variant="outline"
+                className="border-blue-300"
+              >
+                <Coffee className="h-4 w-4 mr-2" />
+                Start Break
+              </Button>
+              <Button 
+                onClick={handleClockOut}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <Clock className="h-4 w-4 mr-2" />
+                Clock Out
+              </Button>
+            </div>
           ) : (
             <Button 
-              onClick={handleClockOut}
-              className="w-full bg-red-600 hover:bg-red-700"
+              onClick={handleBreakEnd}
+              className="w-full bg-blue-600 hover:bg-blue-700"
             >
               <Clock className="h-4 w-4 mr-2" />
-              Clock Out
+              End Break
             </Button>
           )}
         </div>

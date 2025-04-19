@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -6,11 +7,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/sheet"
-import { Menu, Home, User, Users, Calendar, FileText, Workflow, DollarSign, Receipt, Utensils, Clock, ClipboardCheck } from "lucide-react"
+import { Menu, Home, User, Users, Calendar, FileText, Workflow, DollarSign, Receipt, Utensils, Clock, ClipboardCheck, Coffee } from "lucide-react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "@/hooks/auth"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useState } from "react"
+import { useTimeClock } from "@/hooks/use-time-clock"
+import { Badge } from "@/components/ui/badge"
 
 interface MobileNavProps {
   isAuthenticated: boolean;
@@ -22,6 +25,8 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
+  const isClockingEnabled = !hasManagerialAccess && isAuthenticated;
   
   const handleBack = () => {
     if (location.pathname !== '/') {
@@ -58,6 +63,70 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
             </Link>
           </div>
         </div>
+        
+        {isClockingEnabled && (
+          <div className="px-4 mb-4">
+            {status === 'clocked-out' ? (
+              <Button 
+                onClick={() => {
+                  handleClockIn();
+                  setIsOpen(false);
+                }}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                <Clock className="h-4 w-4 mr-2" />
+                Clock In
+              </Button>
+            ) : status === 'clocked-in' ? (
+              <div className="grid grid-cols-2 gap-2">
+                <Button 
+                  onClick={() => {
+                    handleBreakStart();
+                    setIsOpen(false);
+                  }}
+                  variant="outline"
+                  className="border-blue-300"
+                >
+                  <Coffee className="h-4 w-4 mr-2" />
+                  Break
+                </Button>
+                <Button 
+                  onClick={() => {
+                    handleClockOut();
+                    setIsOpen(false);
+                  }}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  <Clock className="h-4 w-4 mr-2" />
+                  Out
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                onClick={() => {
+                  handleBreakEnd();
+                  setIsOpen(false);
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                <Clock className="h-4 w-4 mr-2" />
+                End Break
+              </Button>
+            )}
+            
+            <div className="text-center mt-2 text-sm">
+              <Badge variant={status === 'clocked-in' ? 'default' : status === 'on-break' ? 'outline' : 'secondary'} 
+                className={status === 'clocked-in' ? 'bg-green-100 text-green-800 border border-green-300' : 
+                         status === 'on-break' ? 'bg-blue-100 text-blue-800 border border-blue-300' : 
+                         'bg-gray-100 text-gray-800 border border-gray-300'}>
+                {status === 'clocked-in' ? 'Currently Clocked In' : 
+                 status === 'on-break' ? 'On Break' : 
+                 'Clocked Out'}
+              </Badge>
+            </div>
+          </div>
+        )}
+        
         <ScrollArea className="h-[calc(100vh-80px)]">
           <nav className="grid gap-1 px-2 py-2">
             <div

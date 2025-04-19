@@ -6,8 +6,18 @@ import { format } from 'date-fns';
 type TimeClockStatus = 'clocked-in' | 'clocked-out' | 'on-break';
 
 export const useTimeClock = () => {
-  const [status, setStatus] = useState<TimeClockStatus>('clocked-out');
+  // Use localStorage to persist clock status between page refreshes
+  const [status, setStatus] = useState<TimeClockStatus>(() => {
+    const savedStatus = localStorage.getItem('timeClock.status');
+    return (savedStatus as TimeClockStatus) || 'clocked-out';
+  });
+  
   const { toast } = useToast();
+
+  // Save status to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('timeClock.status', status);
+  }, [status]);
 
   const handleClockIn = () => {
     setStatus('clocked-in');
@@ -25,9 +35,27 @@ export const useTimeClock = () => {
     });
   };
 
+  const handleBreakStart = () => {
+    setStatus('on-break');
+    toast({
+      title: "Break Started",
+      description: `Your break started at ${format(new Date(), 'h:mm a')}`,
+    });
+  };
+
+  const handleBreakEnd = () => {
+    setStatus('clocked-in');
+    toast({
+      title: "Break Ended",
+      description: `Your break ended at ${format(new Date(), 'h:mm a')}`,
+    });
+  };
+
   return {
     status,
     handleClockIn,
-    handleClockOut
+    handleClockOut,
+    handleBreakStart,
+    handleBreakEnd
   };
 };
