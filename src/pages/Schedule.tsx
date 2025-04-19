@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { useEmployees } from '@/hooks/use-employees';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useSchedules, useCreateSchedule } from '@/hooks/use-schedules';
+import { useSchedules, useCreateSchedule, Schedule } from '@/hooks/use-schedules';
 import ScheduleList from '@/components/schedule/ScheduleList';
 import ScheduleCalendar from '@/components/schedule/ScheduleCalendar';
 import { SAMPLE_MEETINGS } from '@/data/sample-meetings';
@@ -66,7 +66,7 @@ const SchedulePage = () => {
         title: newSchedule.title,
         start_time: `${selectedDate}T${newSchedule.startTime}:00`,
         end_time: `${selectedDate}T${newSchedule.endTime}:00`,
-        status: 'confirmed'
+        status: 'confirmed' as const // Use const assertion to satisfy the type system
       };
       
       await createSchedule.mutateAsync(schedule);

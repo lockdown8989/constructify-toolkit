@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Shift, OpenShift } from '@/types/restaurant-schedule';
 import ShiftEditDialog from './ShiftEditDialog';
@@ -39,7 +38,7 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
             title: formData.role || 'Shift',
             start_time: new Date().toISOString(),
             end_time: new Date().toISOString(),
-            status: 'confirmed',
+            status: 'confirmed' as const,
             notes: formData.notes || ''
           });
 
