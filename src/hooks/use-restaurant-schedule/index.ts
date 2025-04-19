@@ -38,21 +38,17 @@ export const useRestaurantSchedule = (initialWeekNumber: number = 17, initialVie
   );
 
   // Function to sync with calendar
-  const syncWithCalendar = () => {
-    // Show a loading toast
-    sonnerToast.loading("Syncing with calendar...");
-    
-    // Simulate API call
-    setTimeout(() => {
-      // Success toast
-      sonnerToast.success("Calendar synchronized successfully");
-      
-      // Notify the user about the sync
-      toast({
-        title: "Calendar synchronized",
-        description: "All shifts have been synced with your calendar.",
-      });
-    }, 1500);
+  const syncWithCalendar = async (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      try {
+        // Simulate API call
+        setTimeout(() => {
+          resolve();
+        }, 1500);
+      } catch (error) {
+        reject(error);
+      }
+    });
   };
   
   return {
