@@ -586,7 +586,7 @@ export type Database = {
           location: string | null
           notes: string | null
           start_time: string
-          status: string | null
+          status: Database["public"]["Enums"]["shift_status"] | null
           title: string
           updated_at: string | null
         }
@@ -598,7 +598,7 @@ export type Database = {
           location?: string | null
           notes?: string | null
           start_time: string
-          status?: string | null
+          status?: Database["public"]["Enums"]["shift_status"] | null
           title: string
           updated_at?: string | null
         }
@@ -610,7 +610,7 @@ export type Database = {
           location?: string | null
           notes?: string | null
           start_time?: string
-          status?: string | null
+          status?: Database["public"]["Enums"]["shift_status"] | null
           title?: string
           updated_at?: string | null
         }
@@ -787,6 +787,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "hr" | "employee" | "employer"
+      shift_status: "confirmed" | "pending" | "rejected" | "completed" | "open"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -903,6 +904,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "hr", "employee", "employer"],
+      shift_status: ["confirmed", "pending", "rejected", "completed", "open"],
     },
   },
 } as const

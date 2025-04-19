@@ -93,7 +93,6 @@ export function useCreateSchedule() {
     },
   });
 
-  // Return an object with the mutation to match the usage pattern
   return {
     createSchedule: mutation,
     isCreating: mutation.isPending,
