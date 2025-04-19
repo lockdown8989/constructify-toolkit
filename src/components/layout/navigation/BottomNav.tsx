@@ -1,7 +1,5 @@
-
 import { Home, Users, Calendar, DollarSign, Utensils } from "lucide-react"
-import { Link } from "react-router-dom"
-import { useLocation } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
 
 interface BottomNavProps {
@@ -10,26 +8,34 @@ interface BottomNavProps {
 
 const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   if (!isAuthenticated) return null;
+  
+  const handleHomeClick = () => {
+    navigate('/dashboard');
+  };
   
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 safe-area-inset py-2 md:hidden">
       <div className="grid grid-cols-5 gap-1">
-        <Link to="/" className="flex flex-col items-center justify-center p-2">
+        <div 
+          onClick={handleHomeClick}
+          className="flex flex-col items-center justify-center p-2 cursor-pointer"
+        >
           <Home 
             className={cn(
               "h-6 w-6 mb-1", 
-              location.pathname === "/" ? "text-primary" : "text-muted-foreground"
+              location.pathname === "/dashboard" ? "text-primary" : "text-muted-foreground"
             )} 
           />
           <span className={cn(
             "text-xs", 
-            location.pathname === "/" ? "text-primary font-medium" : "text-muted-foreground"
+            location.pathname === "/dashboard" ? "text-primary font-medium" : "text-muted-foreground"
           )}>
             Home
           </span>
-        </Link>
+        </div>
         
         <Link to="/people" className="flex flex-col items-center justify-center p-2">
           <Users 

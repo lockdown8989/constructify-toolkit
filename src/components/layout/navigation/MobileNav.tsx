@@ -31,8 +31,14 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
     setIsOpen(false);
   };
   
+  const handleHomeClick = () => {
+    navigate('/dashboard');
+    setIsOpen(false);
+  };
+  
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="lg:hidden touch-target">
           <Menu className="h-6 w-6" />
@@ -55,14 +61,13 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
         </div>
         <ScrollArea className="h-[calc(100vh-80px)]">
           <nav className="grid gap-1 px-2 py-2">
-            <Link
-              to="/"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
+            <div
+              onClick={handleHomeClick}
+              className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target cursor-pointer"
             >
               <Home className="mr-3 h-5 w-5 text-neutral-600" />
               <span>Home</span>
-            </Link>
+            </div>
             
             <Link
               to="/about"

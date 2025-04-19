@@ -1,6 +1,5 @@
-
-import { Link } from "react-router-dom"
-import { Calendar, DollarSign, Receipt, Clock } from "lucide-react"
+import { Link, useNavigate } from "react-router-dom"
+import { Calendar, DollarSign, Receipt, Clock, Home } from "lucide-react"
 import { useAuth } from "@/hooks/auth"
 import { useEmployeeSchedule } from "@/hooks/use-employee-schedule"
 import { Badge } from "@/components/ui/badge"
@@ -10,6 +9,7 @@ interface DesktopNavProps {
 }
 
 const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
+  const navigate = useNavigate();
   const { isManager, isAdmin, isHR } = useAuth();
   const hasManagerialAccess = isManager || isAdmin || isHR;
   const { schedules } = useEmployeeSchedule();
@@ -19,11 +19,21 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
   const acceptedCount = schedules?.filter(s => s.status === 'confirmed').length || 0;
   const rejectedCount = schedules?.filter(s => s.status === 'rejected').length || 0;
   
+  const handleHomeClick = () => {
+    navigate('/dashboard');
+  };
+  
   return (
     <div className="mx-auto flex items-center space-x-6">
-      <Link to="/" className="hover:underline underline-offset-4">
+      <button 
+        onClick={handleHomeClick} 
+        className="hover:underline underline-offset-4 flex items-center"
+      >
+        <Home className="h-4 w-4 mr-1" />
         Home
-      </Link>
+      </button>
+      
+      
       <Link
         to="/about"
         className="hover:underline underline-offset-4"
