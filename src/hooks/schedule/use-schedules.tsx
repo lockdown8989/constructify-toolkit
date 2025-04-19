@@ -4,7 +4,7 @@ import { useCreateSchedule, useUpdateSchedule } from './use-schedule-mutations';
 import { useScheduleRealtime } from './use-schedule-realtime';
 import { Schedule } from '@/types/schedule.types';
 
-export { Schedule };
+export type { Schedule };
 
 export function useSchedules() {
   const query = useScheduleQueries();
