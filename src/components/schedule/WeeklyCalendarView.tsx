@@ -1,11 +1,13 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { type Schedule } from '@/hooks/use-schedules';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface WeeklyCalendarViewProps {
   currentDate: Date;
@@ -18,7 +20,40 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
   onDateChange,
   schedules
 }) => {
+  const { toast } = useToast();
   const startDate = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start from Monday
+
+  // Subscribe to real-time updates for schedules
+  useEffect(() => {
+    const channel = supabase
+      .channel('schedule_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'schedules'
+        },
+        (payload) => {
+          if (payload.eventType === 'UPDATE') {
+            toast({
+              title: "Schedule Updated",
+              description: "Your schedule has been updated.",
+            });
+          } else if (payload.eventType === 'INSERT') {
+            toast({
+              title: "New Schedule",
+              description: "A new schedule has been assigned to you.",
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [toast]);
   
   const weekDays = Array.from({ length: 7 }).map((_, index) => {
     const date = addDays(startDate, index);
