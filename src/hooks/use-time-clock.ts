@@ -13,8 +13,52 @@ export const useTimeClock = () => {
   const [status, setStatus] = useState<TimeClockStatus>('clocked-out');
   const [currentRecord, setCurrentRecord] = useState<string | null>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { employeeData } = useEmployeeDataManagement();
+
+  // Auto-clockout function when user logs out
+  const performAutoClockout = async (employeeId: string, recordId: string) => {
+    console.log('Performing auto-clockout for employee:', employeeId, 'record:', recordId);
+    
+    const now = new Date();
+    
+    // Check if the user is on break
+    const { data: record } = await supabase
+      .from('attendance')
+      .select('break_start')
+      .eq('id', recordId)
+      .single();
+      
+    // If on break, calculate break minutes
+    if (record?.break_start) {
+      const breakStart = new Date(record.break_start);
+      const breakMinutes = Math.round((now.getTime() - breakStart.getTime()) / (1000 * 60));
+      
+      // Update the record with break minutes and clock out
+      await supabase
+        .from('attendance')
+        .update({
+          break_minutes: breakMinutes,
+          break_start: null,
+          check_out: now.toISOString(),
+          status: 'Auto-logout'
+        })
+        .eq('id', recordId);
+    } else {
+      // Just clock out
+      await supabase
+        .from('attendance')
+        .update({
+          check_out: now.toISOString(),
+          status: 'Auto-logout'
+        })
+        .eq('id', recordId);
+    }
+    
+    // Reset local state
+    setCurrentRecord(null);
+    setStatus('clocked-out');
+  };
 
   // Check current status on load
   useEffect(() => {
@@ -80,6 +124,30 @@ export const useTimeClock = () => {
       supabase.removeChannel(channel);
     };
   }, [employeeData?.id]);
+
+  // Handle auto-clockout when user logs out
+  useEffect(() => {
+    // Only do something if the user was logged in (has employeeData) but now is logged out
+    if (!isAuthenticated && currentRecord && employeeData?.id) {
+      performAutoClockout(employeeData.id, currentRecord);
+    }
+  }, [isAuthenticated, currentRecord, employeeData?.id]);
+
+  // Additional auth state monitoring for logout situations
+  useEffect(() => {
+    const handleStorageChange = async (event: StorageEvent) => {
+      // React to supabase auth storage changes
+      if (event.key?.includes('supabase.auth') && employeeData?.id && currentRecord && status !== 'clocked-out') {
+        // User likely logged out in another tab or window
+        if (event.newValue === null || !event.newValue.includes('access_token')) {
+          await performAutoClockout(employeeData.id, currentRecord);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [currentRecord, employeeData?.id, status]);
 
   const handleClockIn = async () => {
     if (!employeeData?.id) return;

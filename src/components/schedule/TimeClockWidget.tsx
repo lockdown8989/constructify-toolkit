@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,6 @@ const TimeClockWidget = () => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [breakTime, setBreakTime] = useState(0);
   
-  // Update current time every second
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -32,7 +30,6 @@ const TimeClockWidget = () => {
     return () => clearInterval(interval);
   }, []);
   
-  // Calculate elapsed time when status changes or current time updates
   useEffect(() => {
     if (status === 'clocked-in' || status === 'on-break') {
       const clockInEntry = timelog.find(entry => entry.type === 'clock-in');
@@ -40,7 +37,6 @@ const TimeClockWidget = () => {
         let totalElapsed = differenceInSeconds(currentTime, clockInEntry.timestamp);
         let totalBreak = 0;
         
-        // Calculate break time
         for (let i = 0; i < timelog.length; i++) {
           if (timelog[i].type === 'break-start') {
             const breakEndIndex = timelog.findIndex((entry, idx) => idx > i && entry.type === 'break-end');
@@ -57,6 +53,60 @@ const TimeClockWidget = () => {
       }
     }
   }, [status, currentTime, timelog]);
+  
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (status !== 'clocked-out' && timelog.length > 0) {
+        const autoClockOutEvent = {
+          type: 'auto-clock-out',
+          timestamp: new Date(),
+          status: status
+        };
+        localStorage.setItem('pending_clock_out', JSON.stringify(autoClockOutEvent));
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [status, timelog]);
+  
+  useEffect(() => {
+    const pendingClockOut = localStorage.getItem('pending_clock_out');
+    if (pendingClockOut) {
+      try {
+        const event = JSON.parse(pendingClockOut);
+        if (event.type === 'auto-clock-out' && event.timestamp) {
+          const newEntry: TimelogEntry = { 
+            type: 'clock-out', 
+            timestamp: new Date(event.timestamp) 
+          };
+          
+          if (event.status === 'on-break') {
+            setTimelog(prev => [...prev, 
+              { type: 'break-end', timestamp: new Date(event.timestamp) },
+              newEntry
+            ]);
+          } else {
+            setTimelog(prev => [...prev, newEntry]);
+          }
+          
+          setStatus('clocked-out');
+          
+          toast({
+            title: "Auto Clock-Out",
+            description: `You were automatically clocked out at ${format(new Date(event.timestamp), 'h:mm a')} due to session end`,
+          });
+        }
+      } catch (e) {
+        console.error('Error processing pending clock out:', e);
+      }
+      
+      localStorage.removeItem('pending_clock_out');
+    }
+  }, [toast]);
   
   const handleClockIn = async () => {
     if (!user) return;
