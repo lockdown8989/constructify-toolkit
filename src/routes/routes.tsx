@@ -1,3 +1,4 @@
+
 import { createBrowserRouter } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
@@ -18,9 +19,10 @@ import Index from "@/pages/Index";
 import LandingPage from "@/pages/LandingPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import EmployeeDetailsPage from "@/components/people/EmployeeDetailsPage";
-import ShiftHistoryTab from "@/components/shiftHistory/ShiftHistoryTab";
-import CalendarTab from "@/components/calendar/CalendarTab";
-import ScheduleRequestsTab from "@/components/scheduleRequests/ScheduleRequestsTab";
+// Corrected import paths for tab components
+import ShiftHistoryTab from "@/components/leave/tabs/ShiftHistoryTab";
+import CalendarTab from "@/components/leave/tabs/CalendarTab";
+import ScheduleRequestsTab from "@/components/leave/tabs/ScheduleRequestsTab";
 
 const router = createBrowserRouter([
   {
