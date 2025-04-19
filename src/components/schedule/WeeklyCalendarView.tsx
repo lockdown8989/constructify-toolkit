@@ -1,11 +1,13 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { type Schedule } from '@/hooks/use-schedules';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface WeeklyCalendarViewProps {
   currentDate: Date;
@@ -18,7 +20,40 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
   onDateChange,
   schedules
 }) => {
+  const { toast } = useToast();
   const startDate = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start from Monday
+
+  // Subscribe to real-time updates for schedules
+  useEffect(() => {
+    const channel = supabase
+      .channel('schedule_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'schedules'
+        },
+        (payload) => {
+          if (payload.eventType === 'UPDATE') {
+            toast({
+              title: "Schedule Updated",
+              description: "Your schedule has been updated.",
+            });
+          } else if (payload.eventType === 'INSERT') {
+            toast({
+              title: "New Schedule",
+              description: "A new schedule has been assigned to you.",
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [toast]);
   
   const weekDays = Array.from({ length: 7 }).map((_, index) => {
     const date = addDays(startDate, index);
@@ -26,13 +61,15 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
       isSameDay(new Date(schedule.start_time), date)
     );
     
-    const hasShift = daySchedules.length > 0;
+    const hasOpenShift = daySchedules.some(s => s.status === 'pending');
+    const hasAcceptedShift = daySchedules.some(s => s.status === 'confirmed');
     
     return {
       date,
       dayName: format(date, 'EEE'),
       dayNumber: format(date, 'd'),
-      hasShift,
+      hasOpenShift,
+      hasAcceptedShift,
       isToday: isSameDay(date, new Date())
     };
   });
@@ -79,7 +116,7 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
           </div>
           
           <div className="grid grid-cols-7 gap-2 text-center">
-            {weekDays.map(({ date, dayName, dayNumber, hasShift, isToday }) => (
+            {weekDays.map(({ date, dayName, dayNumber, hasOpenShift, hasAcceptedShift, isToday }) => (
               <div 
                 key={date.toString()} 
                 className={cn(
@@ -96,11 +133,14 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
                 )}>
                   {dayNumber}
                 </div>
-                {hasShift && (
-                  <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
-                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                  </div>
-                )}
+                <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex gap-1">
+                  {hasOpenShift && (
+                    <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full" />
+                  )}
+                  {hasAcceptedShift && (
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                  )}
+                </div>
               </div>
             ))}
           </div>

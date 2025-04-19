@@ -1,10 +1,7 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { Database } from '@/types/supabase';
-
-export type AttendanceRecord = Database['public']['Tables']['attendance']['Row'];
+import type { AttendanceRecord } from '@/types/supabase';
 
 export type AttendanceData = {
   present: number;

@@ -12,14 +12,15 @@ export interface Schedule {
   created_at?: string;
   updated_at?: string;
   notes?: string;
-  status?: 'confirmed' | 'pending' | 'completed';
+  status?: 'confirmed' | 'pending' | 'completed' | 'rejected';
   location?: string;
 }
 
 export function useSchedules() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
-  return useQuery({
+  const query = useQuery({
     queryKey: ['schedules'],
     queryFn: async () => {
       if (!user) {
@@ -64,6 +65,15 @@ export function useSchedules() {
     },
     enabled: !!user,
   });
+  
+  return {
+    ...query,
+    refetch: async () => {
+      console.log('Manually refetching schedules...');
+      const result = await query.refetch();
+      return result;
+    }
+  };
 }
 
 export function useCreateSchedule() {
@@ -74,22 +84,35 @@ export function useCreateSchedule() {
     mutationFn: async (schedule: Partial<Schedule>) => {
       if (!user) throw new Error('User not authenticated');
       
+      console.log('Creating schedule with data:', schedule);
+      
       const { data, error } = await supabase
         .from('schedules')
-        .insert([schedule])
+        .insert([{
+          ...schedule,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          status: schedule.status || 'confirmed'
+        }])
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating schedule:', error);
+        throw error;
+      }
+      
+      console.log('Schedule created successfully:', data);
       return data;
     },
     onSuccess: () => {
+      console.log('Invalidating schedules query after successful creation');
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
     },
   });
 
   return {
-    createSchedule: mutation.mutate,
+    createSchedule: mutation,
     isCreating: mutation.isPending,
     error: mutation.error
   };
@@ -100,6 +123,8 @@ export function useUpdateSchedule() {
 
   const mutation = useMutation({
     mutationFn: async (schedule: Schedule) => {
+      console.log('Updating schedule:', schedule);
+      
       const { data, error } = await supabase
         .from('schedules')
         .update({
@@ -115,10 +140,16 @@ export function useUpdateSchedule() {
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating schedule:', error);
+        throw error;
+      }
+      
+      console.log('Schedule updated successfully:', data);
       return data;
     },
     onSuccess: () => {
+      console.log('Invalidating schedules query after successful update');
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
     },
   });

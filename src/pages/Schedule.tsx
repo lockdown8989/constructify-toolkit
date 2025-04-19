@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { useEmployees } from '@/hooks/use-employees';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useSchedules, useCreateSchedule } from '@/hooks/use-schedules';
+import { useSchedules, useCreateSchedule, Schedule } from '@/hooks/use-schedules';
 import ScheduleList from '@/components/schedule/ScheduleList';
 import ScheduleCalendar from '@/components/schedule/ScheduleCalendar';
 import { SAMPLE_MEETINGS } from '@/data/sample-meetings';
@@ -64,10 +65,11 @@ const SchedulePage = () => {
         employee_id: newSchedule.employeeId,
         title: newSchedule.title,
         start_time: `${selectedDate}T${newSchedule.startTime}:00`,
-        end_time: `${selectedDate}T${newSchedule.endTime}:00`
+        end_time: `${selectedDate}T${newSchedule.endTime}:00`,
+        status: 'confirmed' as const // Use const assertion to satisfy the type system
       };
       
-      await createSchedule(schedule);
+      await createSchedule.mutateAsync(schedule);
       
       setNewSchedule({
         title: '',
@@ -77,7 +79,13 @@ const SchedulePage = () => {
       });
       setIsAddScheduleOpen(false);
       refetchSchedules();
+      
+      toast({
+        title: "Schedule created",
+        description: "The shift has been successfully added.",
+      });
     } catch (error: any) {
+      console.error('Error creating schedule:', error);
       toast({
         title: "Failed to create schedule",
         description: error.message || "An unexpected error occurred",

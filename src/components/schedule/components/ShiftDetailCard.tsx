@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format, parseISO } from 'date-fns';
 import { Clock, User, MapPin, Info, Mail, X } from 'lucide-react';
@@ -10,6 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Schedule } from '@/hooks/use-schedules';
+import { cn } from '@/lib/utils';
 
 interface ShiftDetailCardProps {
   schedule: Schedule;

@@ -17,18 +17,19 @@ export const useEmployeeSchedule = () => {
   const { user } = useAuth();
   
   // Fetch schedules with the refresh trigger
-  const { data: schedules = [], isLoading } = useSchedules();
+  const { data: schedules = [], isLoading, refetch } = useSchedules();
   
   // Function to manually refresh schedules
   const refreshSchedules = () => {
     setRefreshTrigger(prev => prev + 1);
+    refetch();
     toast({
       title: "Refreshing shifts",
       description: "Your schedule is being updated...",
     });
   };
   
-  // Track new schedules (created in the last 24 hours)
+  // Track new schedules (created in the last 24 hours) and set initial tab
   useEffect(() => {
     const now = new Date();
     const newScheduleIds: Record<string, boolean> = {};
@@ -42,7 +43,22 @@ export const useEmployeeSchedule = () => {
     });
     
     setNewSchedules(newScheduleIds);
-  }, [schedules]);
+    
+    // Check for pending shifts and set the active tab to 'pending' if there are any
+    // but only on initial load or when a new pending shift appears
+    const pendingShifts = schedules.filter(schedule => schedule.status === 'pending');
+    if (pendingShifts.length > 0 && activeTab === 'my-shifts') {
+      setActiveTab('pending');
+      
+      // Show a toast notification if there are pending shifts
+      if (pendingShifts.length > 0) {
+        toast({
+          title: `${pendingShifts.length} pending shift${pendingShifts.length > 1 ? 's' : ''} waiting`,
+          description: "You have shifts that require your response.",
+        });
+      }
+    }
+  }, [schedules, toast]);
 
   // Subscribe to realtime updates for new schedules
   useEffect(() => {
@@ -74,10 +90,21 @@ export const useEmployeeSchedule = () => {
                 refreshSchedules();
                 
                 if (payload.eventType === 'INSERT') {
-                  toast({
-                    title: "New shift assigned",
-                    description: "You have been assigned a new shift.",
-                  });
+                  const newSchedule = payload.new as any;
+                  
+                  // Check if it's a pending shift and switch to pending tab
+                  if (newSchedule.status === 'pending') {
+                    setActiveTab('pending');
+                    toast({
+                      title: "New shift requires response",
+                      description: "You have a new shift request waiting for your response.",
+                    });
+                  } else {
+                    toast({
+                      title: "New shift assigned",
+                      description: "You have been assigned a new shift.",
+                    });
+                  }
                 } else if (payload.eventType === 'UPDATE') {
                   toast({
                     title: "Shift updated",

@@ -1,151 +1,151 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { Shift, OpenShift } from '@/types/restaurant-schedule';
 import ShiftEditDialog from './ShiftEditDialog';
-import { sendNotification } from '@/services/notifications/notification-sender';
 import { useAuth } from '@/hooks/use-auth';
-import { supabase } from '@/integrations/supabase/client';
-import { toast as sonnerToast } from 'sonner';
 import { useCreateSchedule } from '@/hooks/use-schedules';
+import { useShiftDialog } from '@/hooks/use-shift-dialog';
+import { createShiftScheduleEntry } from '@/utils/shift-assignment-utils';
+import { toast as sonnerToast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useShiftAssignment } from '@/hooks/use-shift-assignment';
+import { sendNotification } from '@/services/notifications/notification-sender';
 
 interface ShiftDialogManagerProps {
   addShift: (shift: Omit<Shift, 'id'>) => void;
   updateShift: (shift: Shift) => void;
+  onResponseComplete?: () => void;
 }
 
-const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [mode, setMode] = useState<'add' | 'edit'>('add');
-  const [currentShift, setCurrentShift] = useState<Shift | null>(null);
-  const [employeeId, setEmployeeId] = useState<string | null>(null);
-  const [day, setDay] = useState<string | null>(null);
+const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: ShiftDialogManagerProps) => {
   const { user } = useAuth();
-  const { createSchedule } = useCreateSchedule();
-
-  const handleAddShift = (employeeId: string, day: string) => {
-    setMode('add');
-    setEmployeeId(employeeId);
-    setDay(day);
-    setIsOpen(true);
-  };
-
-  const handleEditShift = (shift: Shift) => {
-    setMode('edit');
-    setCurrentShift(shift);
-    setIsOpen(true);
-  };
+  const { createSchedule, isCreating } = useCreateSchedule();
+  const { assignShift } = useShiftAssignment();
+  const shiftDialog = useShiftDialog();
 
   const handleFormSubmit = async (formData: any) => {
-    if (mode === 'add' && employeeId && day) {
+    if (shiftDialog.mode === 'add' && shiftDialog.employeeId && shiftDialog.day) {
       const newShift = {
-        employeeId,
-        day,
+        employeeId: shiftDialog.employeeId,
+        day: shiftDialog.day,
         ...formData
       };
       
+      // Add shift to the UI immediately
       addShift(newShift);
 
-      try {
-        const { data: employeeData, error: employeeError } = await supabase
-          .from('employees')
-          .select('user_id, name')
-          .eq('id', employeeId)
-          .single();
+      if (user) {
+        try {
+          const { data: employee, error: employeeError } = await supabase
+            .from('employees')
+            .select('user_id, name')
+            .eq('id', shiftDialog.employeeId)
+            .single();
 
-        if (employeeError) {
-          console.error('Failed to get employee data:', employeeError);
-          throw employeeError;
-        }
-
-        if (!employeeData.user_id) {
-          console.error('Employee has no user_id, cannot send notification');
-        } else {
-          const startHour = formData.startTime || '09:00';
-          const endHour = formData.endTime || '17:00';
-          
-          let startDate = new Date();
-          const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-          const targetDayIndex = weekdays.indexOf(day.toLowerCase());
-          
-          if (targetDayIndex !== -1) {
-            const currentDayIndex = startDate.getDay();
-            const daysToAdd = (targetDayIndex - currentDayIndex + 7) % 7;
-            startDate.setDate(startDate.getDate() + daysToAdd);
+          if (employeeError) {
+            console.error('Error fetching employee details:', employeeError);
+            sonnerToast.error('Could not find employee details');
+            return;
           }
+
+          const { data: manager, error: managerError } = await supabase
+            .from('employees')
+            .select('name')
+            .eq('user_id', user.id)
+            .single();
+
+          const managerName = managerError ? 'Manager' : (manager?.name || 'Manager');
           
-          const startDateTime = new Date(startDate);
-          const [startHours, startMinutes] = startHour.split(':').map(Number);
-          startDateTime.setHours(startHours, startMinutes, 0, 0);
-          
-          const endDateTime = new Date(startDate);
-          const [endHours, endMinutes] = endHour.split(':').map(Number);
-          endDateTime.setHours(endHours, endMinutes, 0, 0);
-          
-          const scheduleData = {
-            employee_id: employeeId,
-            title: formData.role || 'Shift',
-            start_time: startDateTime.toISOString(),
-            end_time: endDateTime.toISOString(),
-            notes: formData.notes || '',
-            status: 'confirmed' as 'confirmed' | 'pending' | 'completed',
-            location: formData.location || ''
+          // Create a valid date object from the day and time
+          const today = new Date();
+          const dayMap: Record<string, number> = {
+            monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0
           };
           
-          createSchedule(scheduleData);
+          // Get the date of the next occurrence of the day
+          const dayOfWeek = dayMap[shiftDialog.day.toLowerCase()];
+          const daysUntilNext = (dayOfWeek - today.getDay() + 7) % 7;
+          const targetDate = new Date(today);
+          targetDate.setDate(today.getDate() + daysUntilNext);
           
-          sendNotification({
-            user_id: employeeData.user_id,
-            title: "New Shift Assigned",
-            message: `You have been assigned a new ${formData.role || ''} shift on ${day} from ${startHour} to ${endHour}`,
-            type: "info",
-            related_entity: "schedule",
-            related_id: Date.now().toString()
+          // Set the hours and minutes from the time strings
+          const startTimeParts = formData.startTime.split(':');
+          const endTimeParts = formData.endTime.split(':');
+          
+          if (startTimeParts.length !== 2 || endTimeParts.length !== 2) {
+            sonnerToast.error('Invalid time format. Please use HH:MM format');
+            return;
+          }
+          
+          const startDate = new Date(targetDate);
+          startDate.setHours(parseInt(startTimeParts[0], 10), parseInt(startTimeParts[1], 10), 0, 0);
+          
+          const endDate = new Date(targetDate);
+          endDate.setHours(parseInt(endTimeParts[0], 10), parseInt(endTimeParts[1], 10), 0, 0);
+          
+          // If end time is earlier than start time, it must be the next day
+          if (endDate < startDate) {
+            endDate.setDate(endDate.getDate() + 1);
+          }
+          
+          console.log('Creating schedule with dates:', {
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+            employeeId: shiftDialog.employeeId,
+            role: formData.role || 'Shift'
           });
           
-          sonnerToast.success(`Shift assigned to ${employeeData.name}`);
+          // Create the schedule in the database
+          const scheduleData = await createSchedule.mutateAsync({
+            employee_id: shiftDialog.employeeId,
+            title: formData.role || 'Shift',
+            start_time: startDate.toISOString(),
+            end_time: endDate.toISOString(),
+            status: 'pending' as const,
+            notes: formData.notes || '',
+            location: formData.location || ''
+          });
+
+          console.log('Schedule created successfully:', scheduleData);
+
+          // Send notification to employee if we have their user ID
+          if (employee?.user_id) {
+            try {
+              await sendNotification({
+                user_id: employee.user_id,
+                title: 'New Shift Request 📅',
+                message: `You've received a new shift request from ${managerName}. Please respond.`,
+                type: 'info',
+                related_entity: 'schedules',
+                related_id: scheduleData.id
+              });
+              console.log('Notification sent to employee:', employee.user_id);
+            } catch (notificationError) {
+              console.error('Error sending notification:', notificationError);
+              // Continue execution even if notification fails
+            }
+          }
+
+          sonnerToast.success('Shift request sent to employee');
+          
+          if (onResponseComplete) {
+            onResponseComplete();
+          }
+        } catch (error) {
+          console.error('Error adding shift:', error);
+          sonnerToast.error('Failed to save shift');
         }
-      } catch (error) {
-        console.error('Error adding shift to database:', error);
-        sonnerToast.error('Failed to save shift to database');
       }
-    } else if (mode === 'edit' && currentShift) {
+    } else if (shiftDialog.mode === 'edit' && shiftDialog.currentShift) {
       const updatedShift = {
-        ...currentShift,
+        ...shiftDialog.currentShift,
         ...formData
       };
       
       updateShift(updatedShift);
-
-      try {
-        const { data: employeeData, error: employeeError } = await supabase
-          .from('employees')
-          .select('user_id, name')
-          .eq('id', currentShift.employeeId)
-          .single();
-
-        if (employeeError) {
-          console.error('Failed to get employee data for notification:', employeeError);
-        } else if (employeeData.user_id) {
-          if (
-            currentShift.startTime !== formData.startTime || 
-            currentShift.endTime !== formData.endTime ||
-            currentShift.day !== formData.day
-          ) {
-            sendNotification({
-              user_id: employeeData.user_id,
-              title: "Shift Updated",
-              message: `Your shift on ${currentShift.day} has been updated from ${formData.startTime} to ${formData.endTime}`,
-              type: "info",
-              related_entity: "schedule",
-              related_id: currentShift.id
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error updating shift:', error);
-      }
     }
     
-    setIsOpen(false);
+    shiftDialog.closeDialog();
   };
 
   const handleAssignOpenShift = async (openShiftId: string, employeeId?: string) => {
@@ -161,67 +161,32 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
         return;
       }
 
-      setMode('add');
-      setEmployeeId(null);
-      setIsOpen(true);
-    } else {
-      try {
-        const { data: employeeData, error: employeeError } = await supabase
-          .from('employees')
-          .select('user_id, name')
-          .eq('id', employeeId)
-          .single();
+      shiftDialog.openAddShiftDialog(employees[0].id, 'monday');
+      return;
+    }
 
-        if (employeeError) {
-          console.error('Failed to get employee data:', employeeError);
-          throw employeeError;
-        }
-
-        const scheduleData = {
-          employee_id: employeeId,
-          title: 'Assigned Open Shift',
-          start_time: new Date().toISOString(),
-          end_time: new Date().toISOString(),
-          status: 'confirmed' as 'confirmed' | 'pending' | 'completed',
-          location: ''
-        };
-        
-        await createSchedule(scheduleData);
-
-        if (employeeData.user_id) {
-          await sendNotification({
-            user_id: employeeData.user_id,
-            title: "Shift Assigned",
-            message: `You have been assigned an open shift`,
-            type: "info",
-            related_entity: "schedule",
-            related_id: openShiftId
-          });
-
-          sonnerToast.success(`Shift assigned to ${employeeData.name}`);
-        }
-      } catch (error) {
-        console.error('Error assigning shift:', error);
-        sonnerToast.error('Failed to assign shift');
-      }
+    try {
+      await assignShift.mutateAsync({ openShiftId, employeeId });
+      sonnerToast.success('Shift assigned successfully');
+    } catch (error) {
+      console.error('Error assigning shift:', error);
+      sonnerToast.error('Failed to assign shift');
     }
   };
 
-  const ShiftDialogComponent = (
-    <ShiftEditDialog
-      isOpen={isOpen}
-      onClose={() => setIsOpen(false)}
-      onSave={handleFormSubmit}
-      mode={mode}
-      shift={currentShift}
-    />
-  );
-
   return {
-    handleAddShift,
-    handleEditShift,
+    handleAddShift: shiftDialog.openAddShiftDialog,
+    handleEditShift: shiftDialog.openEditShiftDialog,
     handleAssignOpenShift,
-    ShiftDialogComponent
+    ShiftDialogComponent: (
+      <ShiftEditDialog
+        isOpen={shiftDialog.isOpen}
+        onClose={shiftDialog.closeDialog}
+        onSave={handleFormSubmit}
+        mode={shiftDialog.mode}
+        shift={shiftDialog.currentShift}
+      />
+    )
   };
 };
 

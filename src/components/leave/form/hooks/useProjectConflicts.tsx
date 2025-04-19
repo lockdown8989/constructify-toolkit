@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { checkProjectConflicts } from "@/utils/leave-utils";
 import type { ProjectConflict } from "@/utils/leave-utils";
 import type { Conflict } from "./useFormState";
-import type { Project } from "@/hooks/use-projects";
+import type { Project } from "@/types/supabase";
 
 /**
  * Hook to check for project conflicts with leave dates
