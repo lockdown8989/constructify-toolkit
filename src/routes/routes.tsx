@@ -1,4 +1,3 @@
-
 import { createBrowserRouter } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
@@ -19,6 +18,7 @@ import Index from "@/pages/Index";
 import LandingPage from "@/pages/LandingPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import EmployeeDetailsPage from "@/components/people/EmployeeDetailsPage";
+import Attendance from "@/pages/Attendance";
 
 const router = createBrowserRouter([
   {
@@ -96,6 +96,10 @@ const router = createBrowserRouter([
       {
         path: "profile",
         element: <Profile />,
+      },
+      {
+        path: "attendance",
+        element: <Attendance />,
       },
     ],
   },
