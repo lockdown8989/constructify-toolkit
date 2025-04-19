@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
+import React, { useEffect, useState } from 'react';
+import { format, addDays, startOfWeek, isSameDay, isSameMonth, startOfMonth, endOfMonth } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -18,6 +18,7 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
   onDateChange,
   schedules
 }) => {
+  const [isOpen, setIsOpen] = useState(true);
   const startDate = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start from Monday
   
   const weekDays = Array.from({ length: 7 }).map((_, index) => {
@@ -33,7 +34,8 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
       dayName: format(date, 'EEE'),
       dayNumber: format(date, 'd'),
       hasShift,
-      isToday: isSameDay(date, new Date())
+      isToday: isSameDay(date, new Date()),
+      isCurrentMonth: isSameMonth(date, currentDate)
     };
   });
 
@@ -46,7 +48,7 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
   };
 
   return (
-    <Collapsible className="w-full">
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
       <div className="bg-blue-500 text-white p-4 flex justify-between items-center">
         <h1 className="text-xl font-bold">MY SCHEDULE</h1>
         <div className="text-sm">{format(currentDate, 'EEE dd, MMMM yyyy').toUpperCase()}</div>
@@ -79,12 +81,13 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
           </div>
           
           <div className="grid grid-cols-7 gap-2 text-center">
-            {weekDays.map(({ date, dayName, dayNumber, hasShift, isToday }) => (
+            {weekDays.map(({ date, dayName, dayNumber, hasShift, isToday, isCurrentMonth }) => (
               <div 
                 key={date.toString()} 
                 className={cn(
                   "p-2 relative cursor-pointer rounded-lg transition-colors",
                   isToday && "bg-blue-50",
+                  !isCurrentMonth && "text-gray-400",
                   "hover:bg-gray-50"
                 )}
                 onClick={() => onDateChange(date)}
@@ -92,7 +95,8 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
                 <div className="text-sm text-gray-600">{dayName}</div>
                 <div className={cn(
                   "text-lg font-semibold",
-                  isToday && "text-blue-600"
+                  isToday && "text-blue-600",
+                  !isCurrentMonth && "text-gray-400"
                 )}>
                   {dayNumber}
                 </div>

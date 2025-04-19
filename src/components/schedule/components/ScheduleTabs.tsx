@@ -1,10 +1,10 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Schedule } from '@/hooks/use-schedules';
 import ShiftDetailCard from '../ShiftDetailCard';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addDays, isSameMonth } from 'date-fns';
 
 interface ScheduleTabsProps {
   activeTab: string;
@@ -27,7 +27,8 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
   onCancelClick,
   onResponseComplete,
 }) => {
-  const [currentDate, setCurrentDate] = React.useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [calendarDays, setCalendarDays] = useState<(Date | null)[]>([]);
   
   const tabs = [
     { id: 'my-shifts', label: 'My Shifts' },
@@ -37,6 +38,48 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
   ];
 
   const daysOfWeek = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+
+  // Generate calendar grid whenever the current date changes
+  useEffect(() => {
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
+    const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    
+    // Find the day of the week the month starts on (0 = Sunday, 1 = Monday, etc.)
+    // Adjusting for Monday as first day of week
+    const startDayIndex = getDay(monthStart) === 0 ? 6 : getDay(monthStart) - 1;
+    
+    // Create a grid for the calendar
+    const grid: (Date | null)[] = [];
+    
+    // Add empty cells for days before the month starts
+    for (let i = 0; i < startDayIndex; i++) {
+      grid.push(null);
+    }
+    
+    // Add all days of the month
+    grid.push(...monthDays);
+    
+    // Add empty cells to complete the grid (total of 42 cells for 6 weeks)
+    const remainingCells = 42 - grid.length;
+    for (let i = 0; i < remainingCells; i++) {
+      grid.push(null);
+    }
+    
+    setCalendarDays(grid);
+  }, [currentDate]);
+
+  const handlePreviousMonth = () => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(newDate.getMonth() - 1);
+    setCurrentDate(newDate);
+  };
+
+  const handleNextMonth = () => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(newDate.getMonth() + 1);
+    setCurrentDate(newDate);
+  };
 
   const filteredSchedules = schedules.filter(schedule => {
     switch (activeTab) {
@@ -51,16 +94,28 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
     }
   });
 
+  // Function to check if a day has a scheduled shift
+  const hasScheduledShift = (day: Date | null) => {
+    if (!day) return false;
+    
+    return schedules.some(schedule => {
+      const scheduleDate = new Date(schedule.start_time);
+      return scheduleDate.getDate() === day.getDate() && 
+             scheduleDate.getMonth() === day.getMonth() && 
+             scheduleDate.getFullYear() === day.getFullYear();
+    });
+  };
+
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Calendar Header */}
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-4">
-          <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))}>
+          <button onClick={handlePreviousMonth} className="p-1">
             <ChevronLeft className="h-6 w-6" />
           </button>
           <h2 className="text-2xl font-bold">{format(currentDate, 'MMMM yyyy')}</h2>
-          <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))}>
+          <button onClick={handleNextMonth} className="p-1">
             <ChevronRight className="h-6 w-6" />
           </button>
         </div>
@@ -76,16 +131,17 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
         
         {/* Calendar Grid */}
         <div className="grid grid-cols-7 gap-1">
-          {Array.from({ length: 35 }, (_, i) => (
+          {calendarDays.map((day, i) => (
             <div
               key={i}
               className={cn(
-                "aspect-square flex items-center justify-center text-lg border rounded-lg",
-                i === 29 && "text-blue-500 font-bold",
-                i === 30 && "text-green-500 font-bold"
+                "aspect-square flex items-center justify-center text-sm border rounded-lg",
+                day && isSameMonth(day, currentDate) ? "bg-white" : "bg-gray-50 text-gray-400",
+                day && hasScheduledShift(day) && "text-blue-500 font-bold",
+                day && format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') && "border-blue-500 border-2"
               )}
             >
-              {i < 3 ? i + 29 : i - 2}
+              {day ? format(day, 'd') : ''}
             </div>
           ))}
         </div>

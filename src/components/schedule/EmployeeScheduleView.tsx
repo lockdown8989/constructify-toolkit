@@ -47,6 +47,13 @@ const EmployeeScheduleView: React.FC = () => {
     }
   };
 
+  // Function to handle previous/next month navigation
+  const handleMonthChange = (increment: number) => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(newDate.getMonth() + increment);
+    setCurrentDate(newDate);
+  };
+
   const selectedSchedule = selectedScheduleId 
     ? schedules.find(s => s.id === selectedScheduleId) 
     : null;
@@ -76,16 +83,7 @@ const EmployeeScheduleView: React.FC = () => {
         schedules={schedules}
       />
       
-      {/* Calendar Navigation */}
-      <div className="flex justify-between items-center p-4 bg-white">
-        <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))} className="p-2">
-          <ChevronLeft className="h-6 w-6" />
-        </button>
-        <h2 className="text-2xl font-bold">{format(currentDate, 'MMMM yyyy')}</h2>
-        <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))} className="p-2">
-          <ChevronRight className="h-6 w-6" />
-        </button>
-      </div>
+      {/* Calendar Navigation - Removed here since it's handled within ScheduleTabs */}
       
       <div className="border-t border-gray-200 my-2" />
 
