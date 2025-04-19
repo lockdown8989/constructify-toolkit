@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { format, parseISO } from 'date-fns';
-import { Schedule } from '@/hooks/use-schedules';
+import { Schedule, useUpdateSchedule } from '@/hooks/use-schedules';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -12,6 +12,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/use-auth';
+import { sendNotification } from '@/services/notifications/notification-sender';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ScheduleDialogsProps {
   selectedSchedule: Schedule | null;
@@ -28,9 +31,58 @@ export const ScheduleDialogs: React.FC<ScheduleDialogsProps> = ({
   isCancelDialogOpen,
   setIsCancelDialogOpen,
 }) => {
-  const handleCancelShift = (scheduleId: string) => {
-    toast.success("Shift cancellation request sent.");
-    setIsCancelDialogOpen(false);
+  const { user } = useAuth();
+  const { updateSchedule, isUpdating } = useUpdateSchedule();
+
+  const handleCancelShift = async (scheduleId: string) => {
+    if (!selectedSchedule) return;
+    
+    try {
+      // Update the schedule status to 'rejected'
+      await updateSchedule({
+        ...selectedSchedule,
+        status: 'rejected'
+      });
+
+      // If we have a user, send notification to managers
+      if (user) {
+        // Get employee details
+        const { data: employee } = await supabase
+          .from('employees')
+          .select('name')
+          .eq('user_id', user.id)
+          .single();
+
+        // Find managers to notify
+        const { data: managers } = await supabase
+          .from('user_roles')
+          .select('user_id')
+          .eq('role', 'manager');
+        
+        if (managers && managers.length > 0) {
+          const shiftDate = format(parseISO(selectedSchedule.start_time), 'MMMM d, yyyy');
+          const shiftTime = format(parseISO(selectedSchedule.start_time), 'h:mm a');
+          
+          // Notify all managers
+          for (const manager of managers) {
+            await sendNotification({
+              user_id: manager.user_id,
+              title: '❌ Shift Cancellation Request',
+              message: `${employee?.name || 'An employee'} has requested to cancel their shift on ${shiftDate} at ${shiftTime}.`,
+              type: 'warning',
+              related_entity: 'schedules',
+              related_id: scheduleId
+            });
+          }
+        }
+      }
+
+      toast.success("Shift cancellation request sent.");
+      setIsCancelDialogOpen(false);
+    } catch (error) {
+      console.error('Error cancelling shift:', error);
+      toast.error("Failed to cancel shift. Please try again.");
+    }
   };
 
   return (
@@ -110,6 +162,7 @@ export const ScheduleDialogs: React.FC<ScheduleDialogsProps> = ({
               type="button"
               variant="outline"
               onClick={() => setIsCancelDialogOpen(false)}
+              disabled={isUpdating}
             >
               No, keep shift
             </Button>
@@ -117,6 +170,7 @@ export const ScheduleDialogs: React.FC<ScheduleDialogsProps> = ({
               type="button"
               variant="destructive"
               onClick={() => selectedSchedule?.id && handleCancelShift(selectedSchedule.id)}
+              disabled={isUpdating}
             >
               Yes, cancel shift
             </Button>
