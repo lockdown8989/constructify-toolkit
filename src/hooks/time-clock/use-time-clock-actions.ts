@@ -1,13 +1,16 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { TimeClockStatus } from './types';
+import { useAttendanceMetadata } from './use-attendance-metadata';
 
 export const useTimeClockActions = (
   setStatus: (status: TimeClockStatus) => void,
   setCurrentRecord: (record: string | null) => void
 ) => {
   const { toast } = useToast();
+  const { location, deviceInfo } = useAttendanceMetadata();
 
   const handleClockIn = async (employeeId: string | undefined) => {
     if (!employeeId) return;
@@ -19,7 +22,10 @@ export const useTimeClockActions = (
         employee_id: employeeId,
         check_in: now.toISOString(),
         date: now.toISOString().split('T')[0],
-        status: 'Present'
+        status: 'Present',
+        location,
+        device_info: deviceInfo,
+        notes: ''
       })
       .select()
       .single();
@@ -49,7 +55,9 @@ export const useTimeClockActions = (
     const { error } = await supabase
       .from('attendance')
       .update({
-        check_out: now.toISOString()
+        check_out: now.toISOString(),
+        location,
+        device_info: deviceInfo
       })
       .eq('id', currentRecord);
 
@@ -78,7 +86,9 @@ export const useTimeClockActions = (
     const { error } = await supabase
       .from('attendance')
       .update({
-        break_start: now.toISOString()
+        break_start: now.toISOString(),
+        location,
+        device_info: deviceInfo
       })
       .eq('id', currentRecord);
 
@@ -128,7 +138,9 @@ export const useTimeClockActions = (
         .from('attendance')
         .update({
           break_minutes: newBreakMinutes,
-          break_start: null
+          break_start: null,
+          location,
+          device_info: deviceInfo
         })
         .eq('id', currentRecord);
 

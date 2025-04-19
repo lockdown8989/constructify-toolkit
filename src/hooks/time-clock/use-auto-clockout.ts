@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { TimeClockStatus } from './types';
+import { useAttendanceMetadata } from './use-attendance-metadata';
 
 export const useAutoClockout = (
   employeeId: string | undefined,
@@ -13,6 +14,7 @@ export const useAutoClockout = (
   setCurrentRecord: (record: string | null) => void
 ) => {
   const { toast } = useToast();
+  const { location, deviceInfo } = useAttendanceMetadata();
 
   useEffect(() => {
     const handleStorageChange = async (event: StorageEvent) => {
@@ -49,7 +51,10 @@ export const useAutoClockout = (
           break_minutes: breakMinutes,
           break_start: null,
           check_out: now.toISOString(),
-          status: 'Auto-logout'
+          status: 'Auto-logout',
+          location,
+          device_info: deviceInfo,
+          notes: 'Automatically clocked out due to session end'
         })
         .eq('id', recordId);
     } else {
@@ -57,7 +62,10 @@ export const useAutoClockout = (
         .from('attendance')
         .update({
           check_out: now.toISOString(),
-          status: 'Auto-logout'
+          status: 'Auto-logout',
+          location,
+          device_info: deviceInfo,
+          notes: 'Automatically clocked out due to session end'
         })
         .eq('id', recordId);
     }

@@ -4,8 +4,10 @@ import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management'
 import { useAutoClockout } from './use-auto-clockout';
 import { useTimeClockActions } from './use-time-clock-actions';
 import { useStatusCheck } from './use-status-check';
+import { useAttendanceSync } from './use-attendance-sync';
 import { TimeClockStatus, TimelogEntry } from './types';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export const useTimeClock = () => {
   const [status, setStatus] = useState<TimeClockStatus>('clocked-out');
@@ -15,6 +17,7 @@ export const useTimeClock = () => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [breakTime, setBreakTime] = useState(0);
   const { employeeData } = useEmployeeDataManagement();
+  const { toast } = useToast();
 
   // Initialize auto-clockout
   useAutoClockout(
@@ -35,6 +38,46 @@ export const useTimeClock = () => {
     handleBreakStart,
     handleBreakEnd
   } = useTimeClockActions(setStatus, setCurrentRecord);
+
+  // Handle real-time sync of attendance data
+  const refreshAttendanceData = async () => {
+    try {
+      if (!currentRecord) return;
+      
+      console.log('Refreshing attendance data for record:', currentRecord);
+      
+      const { data, error } = await supabase
+        .from('attendance')
+        .select('*')
+        .eq('id', currentRecord)
+        .single();
+      
+      if (error) {
+        console.error('Error refreshing attendance data:', error);
+        return;
+      }
+      
+      if (data) {
+        // Update status based on synced data
+        if (data.check_out) {
+          setStatus('clocked-out');
+          setCurrentRecord(null);
+          toast({
+            title: "Status Updated",
+            description: "Your clock-out was registered from another device.",
+          });
+        } else if (data.break_start) {
+          setStatus('on-break');
+        } else {
+          setStatus('clocked-in');
+        }
+      }
+    } catch (err) {
+      console.error('Error in refreshAttendanceData:', err);
+    }
+  };
+
+  useAttendanceSync(refreshAttendanceData);
 
   // Update elapsed time based on current status
   useEffect(() => {
@@ -78,6 +121,7 @@ export const useTimeClock = () => {
           }
           
           setElapsedTime(Math.max(0, totalSeconds));
+          setCurrentTime(now);
         }, 1000);
 
         return () => clearInterval(timer);
@@ -105,7 +149,10 @@ export const useTimeClock = () => {
     setElapsedTime,
     breakTime,
     setBreakTime,
-    currentRecord
+    currentRecord,
+    
+    // Employee data
+    employeeId: employeeData?.id
   };
 };
 
