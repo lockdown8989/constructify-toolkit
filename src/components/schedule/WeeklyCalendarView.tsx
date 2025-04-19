@@ -26,13 +26,15 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
       isSameDay(new Date(schedule.start_time), date)
     );
     
-    const hasShift = daySchedules.length > 0;
+    const hasOpenShift = daySchedules.some(s => s.status === 'pending');
+    const hasAcceptedShift = daySchedules.some(s => s.status === 'confirmed');
     
     return {
       date,
       dayName: format(date, 'EEE'),
       dayNumber: format(date, 'd'),
-      hasShift,
+      hasOpenShift,
+      hasAcceptedShift,
       isToday: isSameDay(date, new Date())
     };
   });
@@ -79,7 +81,7 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
           </div>
           
           <div className="grid grid-cols-7 gap-2 text-center">
-            {weekDays.map(({ date, dayName, dayNumber, hasShift, isToday }) => (
+            {weekDays.map(({ date, dayName, dayNumber, hasOpenShift, hasAcceptedShift, isToday }) => (
               <div 
                 key={date.toString()} 
                 className={cn(
@@ -96,11 +98,14 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
                 )}>
                   {dayNumber}
                 </div>
-                {hasShift && (
-                  <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
-                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                  </div>
-                )}
+                <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex gap-1">
+                  {hasOpenShift && (
+                    <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full" />
+                  )}
+                  {hasAcceptedShift && (
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                  )}
+                </div>
               </div>
             ))}
           </div>
