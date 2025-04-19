@@ -7,40 +7,40 @@ const AttendanceStats = () => {
   return (
     <div className="grid grid-cols-6 gap-4 mb-8">
       <StatCard
-        title="Day off"
-        value={stats?.dayOff ?? 12}
+        title="Present"
+        value={stats?.present ?? 0}
         change={12}
         trend="up"
       />
       <StatCard
         title="Late clock-in"
-        value={stats?.lateClock ?? 6}
+        value={stats?.late ?? 0}
         change={-2}
         trend="down"
       />
       <StatCard
-        title="Late clock-out"
-        value={stats?.lateClockOut ?? 21}
-        change={-12}
-        trend="down"
+        title="Absent"
+        value={stats?.absent ?? 0}
+        change={0}
+        trend="neutral"
       />
       <StatCard
-        title="No clock-out"
-        value={stats?.noClockOut ?? 2}
+        title="Total"
+        value={stats?.total ?? 0}
         change={4}
         trend="up"
       />
       <StatCard
-        title="Off time quota"
-        value={stats?.offTimeQuota ?? 1}
+        title="Pending"
+        value={stats?.recentRecords?.filter(r => r.status === "Pending").length ?? 0}
         change={0}
         trend="neutral"
       />
       <StatCard
-        title="Absent"
-        value={stats?.absent ?? 2}
-        change={0}
-        trend="neutral"
+        title="Approved"
+        value={stats?.recentRecords?.filter(r => r.status === "Approved").length ?? 2}
+        change={2}
+        trend="up"
       />
     </div>
   );
