@@ -6,7 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, RefreshCw } from 'lucide-react';
-import { ShiftCard } from '@/components/schedule/ShiftCard';
+import ShiftCard from './ShiftCard';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
@@ -37,7 +37,7 @@ const EmployeeScheduleView: React.FC = () => {
   });
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-50 pb-safe-area-inset-bottom">
       <div className="bg-cyan-500 text-white p-4">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-semibold">My Schedule</h1>

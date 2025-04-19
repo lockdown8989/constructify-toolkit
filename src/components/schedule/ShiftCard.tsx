@@ -17,29 +17,29 @@ export const ShiftCard: React.FC<ShiftCardProps> = ({ schedule }) => {
   const getStatusColor = (status?: string) => {
     switch (status) {
       case 'confirmed':
-        return 'bg-green-100 border-green-500 text-green-700';
+        return 'bg-cyan-100 text-cyan-950';
       case 'pending':
-        return 'bg-amber-100 border-amber-500 text-amber-700';
+        return 'bg-amber-100 text-amber-950';
       case 'completed':
-        return 'bg-gray-100 border-gray-500 text-gray-700';
+        return 'bg-gray-100 text-gray-950';
       default:
-        return 'bg-blue-100 border-blue-500 text-blue-700';
+        return 'bg-gray-100 text-gray-950';
     }
   };
 
   return (
-    <div className={cn(
-      "flex gap-4 p-4 rounded-lg border-l-4 mb-3",
-      getStatusColor(schedule.status)
-    )}>
-      <div className="flex-shrink-0 w-16 bg-cyan-500 text-white rounded-lg py-2 text-center">
-        <div className="text-sm font-bold">{format(startTime, 'EEE').toUpperCase()}</div>
+    <div className="flex gap-4 rounded-2xl bg-white p-4 shadow-sm">
+      <div className={cn(
+        "flex-shrink-0 w-16 h-16 rounded-xl flex flex-col items-center justify-center",
+        "bg-cyan-500 text-white"
+      )}>
+        <div className="text-xs font-semibold">{format(startTime, 'EEE').toUpperCase()}</div>
         <div className="text-2xl font-bold">{format(startTime, 'd')}</div>
         <div className="text-xs">{format(startTime, 'MMM')}</div>
       </div>
       
       <div className="flex-1">
-        <div className="text-xl font-bold mb-1">
+        <div className="text-lg font-semibold mb-1">
           {format(startTime, 'HH:mm')} → {format(endTime, 'HH:mm')}
         </div>
         
@@ -50,13 +50,22 @@ export const ShiftCard: React.FC<ShiftCardProps> = ({ schedule }) => {
           </div>
           <div className="flex items-center gap-2">
             <User className="h-4 w-4" />
-            <span>{schedule.title || 'Staff'}</span>
+            <span>{schedule.title || 'Waitress'}</span>
           </div>
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4" />
             <span>{schedule.location || 'Main Location'}</span>
           </div>
         </div>
+        
+        {schedule.status && (
+          <div className={cn(
+            "mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
+            getStatusColor(schedule.status)
+          )}>
+            {schedule.status.toUpperCase()}
+          </div>
+        )}
       </div>
     </div>
   );

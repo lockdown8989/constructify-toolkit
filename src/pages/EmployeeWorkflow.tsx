@@ -7,8 +7,8 @@ import EmployeeScheduleView from '@/components/schedule/EmployeeScheduleView';
 const EmployeeWorkflow = () => {
   const { user, isManager, isAdmin, isHR } = useAuth();
   
-  // Redirect managers/admins/HR to the main schedule page
-  if (isManager || isAdmin || isHR) {
+  // Regular employees should be redirected to the main schedule page
+  if (!isManager && !isAdmin && !isHR) {
     return <Navigate to="/schedule" replace />;
   }
   
