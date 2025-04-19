@@ -33,13 +33,6 @@ export interface Schedule {
   notes?: string | null;
   location?: string | null;
   updated_at?: string | null;
-  is_published?: boolean;
-  break_duration?: number;
-  manager_notes?: string;
-  priority?: string;
-  recurring?: boolean;
-  shift_code?: string;
-  color?: string;
 }
 
 export interface ShiftSwap {
