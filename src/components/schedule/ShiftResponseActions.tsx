@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useShiftResponse } from '@/hooks/use-shift-response';
 import { Schedule } from '@/hooks/use-schedules';
 import { CheckCircle, XCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 interface ShiftResponseActionsProps {
   schedule: Schedule;
@@ -24,27 +24,33 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
         response
       });
       
-      toast.success(
-        response === 'accepted' 
-          ? 'Shift accepted successfully' 
-          : 'Shift rejected successfully'
-      );
+      toast({
+        title: response === 'accepted' ? 'Shift accepted' : 'Shift rejected',
+        description: response === 'accepted' 
+          ? 'You have successfully accepted this shift.' 
+          : 'You have successfully rejected this shift.',
+      });
       
+      // Call the callback after successful response
       if (onResponseComplete) {
         onResponseComplete();
       }
     } catch (error) {
       console.error(`Error ${response === 'accepted' ? 'accepting' : 'rejecting'} shift:`, error);
-      toast.error(`Failed to ${response === 'accepted' ? 'accept' : 'reject'} shift. Please try again.`);
+      toast({
+        title: `Failed to ${response === 'accepted' ? 'accept' : 'reject'} shift`,
+        description: "Please try again later.",
+        variant: "destructive",
+      });
     }
   };
 
   return (
-    <div className="flex space-x-2 mt-2">
+    <div className="flex space-x-2">
       <Button 
         variant="outline" 
         size="sm"
-        className="flex items-center text-green-600 border-green-600 hover:bg-green-50"
+        className="flex items-center text-green-600 border-green-200 hover:bg-green-50"
         onClick={() => handleResponse('accepted')}
         disabled={respondToShift.isPending}
       >
@@ -54,7 +60,7 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
       <Button 
         variant="outline" 
         size="sm"
-        className="flex items-center text-red-600 border-red-600 hover:bg-red-50"
+        className="flex items-center text-red-600 border-red-200 hover:bg-red-50"
         onClick={() => handleResponse('rejected')}
         disabled={respondToShift.isPending}
       >

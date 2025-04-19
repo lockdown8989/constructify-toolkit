@@ -21,6 +21,7 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
   activeTab,
   setActiveTab,
   schedules,
+  newSchedules,
   onInfoClick,
   onEmailClick,
   onCancelClick,

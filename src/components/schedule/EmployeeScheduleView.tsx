@@ -33,6 +33,20 @@ const EmployeeScheduleView: React.FC = () => {
     window.location.href = `mailto:manager@workplace.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
+  const handleResponseComplete = () => {
+    // Refresh schedules data after a response
+    refreshSchedules();
+    
+    // If we were in the pending tab and there are no more pending shifts,
+    // switch to the my-shifts tab
+    if (activeTab === 'pending') {
+      const pendingShifts = schedules.filter(s => s.status === 'pending');
+      if (pendingShifts.length <= 1) { // Using <= 1 because the current item is still in the array
+        setActiveTab('my-shifts');
+      }
+    }
+  };
+
   const selectedSchedule = selectedScheduleId 
     ? schedules.find(s => s.id === selectedScheduleId) 
     : null;
@@ -86,7 +100,7 @@ const EmployeeScheduleView: React.FC = () => {
           setSelectedScheduleId(id);
           setIsCancelDialogOpen(true);
         }}
-        onResponseComplete={refreshSchedules}
+        onResponseComplete={handleResponseComplete}
       />
 
       <ScheduleDialogs
