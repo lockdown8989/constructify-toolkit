@@ -1,9 +1,12 @@
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Calendar } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useEmployees } from "@/hooks/use-employees"
 import { useState } from "react"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface AttendanceControlsProps {
   onSearchChange: (value: string) => void;
@@ -13,6 +16,7 @@ interface AttendanceControlsProps {
 const AttendanceControls = ({ onSearchChange, onEmployeeSelect }: AttendanceControlsProps) => {
   const { data: employees = [] } = useEmployees();
   const [month, setMonth] = useState("October 2023");
+  const isMobile = useIsMobile();
   
   const handlePreviousMonth = () => {
     setMonth("September 2023");
