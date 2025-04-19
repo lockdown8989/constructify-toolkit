@@ -26,7 +26,7 @@ const EmployeeScheduleView: React.FC = () => {
       case 'my-shifts':
         return schedule.status === 'confirmed';
       case 'open-shifts':
-        return schedule.status === 'pending' && !schedule.employee_id;
+        return schedule.status === 'open';
       case 'pending':
         return schedule.status === 'pending';
       case 'completed':
