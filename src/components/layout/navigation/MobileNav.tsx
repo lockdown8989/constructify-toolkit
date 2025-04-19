@@ -89,32 +89,21 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                     onClick={() => setIsOpen(false)}
                     className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                   >
-                    <Calendar className="mr-3 h-5 w-5 text-neutral-600" />
-                    <span>My Calendar</span>
-                  </Link>
-                )}
-
-                {hasManagerialAccess ? (
-                  <Link
-                    to="/employee-workflow"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                  >
-                    <Clock className="mr-3 h-5 w-5 text-neutral-600" />
-                    <span>My Employee Schedule</span>
-                  </Link>
-                ) : (
-                  <Link
-                    to="/employee-workflow"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                  >
                     <Clock className="mr-3 h-5 w-5 text-neutral-600" />
                     <span>My Schedule</span>
                   </Link>
                 )}
+                
                 {hasManagerialAccess && (
                   <>
+                    <Link
+                      to="/employee-workflow"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
+                    >
+                      <Clock className="mr-3 h-5 w-5 text-neutral-600" />
+                      <span>My Employee Schedule</span>
+                    </Link>
                     <Link
                       to="/people"
                       onClick={() => setIsOpen(false)}
@@ -141,14 +130,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                     </Link>
                   </>
                 )}
-                <Link
-                  to="/leave-management"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                >
-                  <Calendar className="mr-3 h-5 w-5 text-neutral-600" />
-                  <span>Leave & Schedule</span>
-                </Link>
+
                 <Link
                   to="/salary"
                   onClick={() => setIsOpen(false)}

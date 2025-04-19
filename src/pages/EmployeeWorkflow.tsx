@@ -2,11 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EmployeeScheduleView from '@/components/schedule/EmployeeScheduleView';
-import TimeClockWidget from '@/components/schedule/TimeClockWidget';
-import LeaveBalanceCard from '@/components/schedule/LeaveBalanceCard';
-import AvailabilityManagement from '@/components/schedule/AvailabilityManagement';
 import { cn } from '@/lib/utils';
 
 const EmployeeWorkflow = () => {
@@ -31,58 +27,7 @@ const EmployeeWorkflow = () => {
         "bg-white",
         isMobile ? "" : "rounded-lg shadow-sm"
       )}>
-        <Tabs defaultValue="shifts" className="w-full">
-          <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
-            <TabsTrigger 
-              value="shifts"
-              className="relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4 data-[state=active]:border-b-primary data-[state=active]:text-primary"
-            >
-              My Shifts
-            </TabsTrigger>
-            <TabsTrigger 
-              value="open-shifts"
-              className="relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4 data-[state=active]:border-b-primary data-[state=active]:text-primary"
-            >
-              Open Shifts
-            </TabsTrigger>
-            <TabsTrigger 
-              value="pending"
-              className="relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4 data-[state=active]:border-b-primary data-[state=active]:text-primary"
-            >
-              Pending
-            </TabsTrigger>
-            <TabsTrigger 
-              value="completed"
-              className="relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4 data-[state=active]:border-b-primary data-[state=active]:text-primary"
-            >
-              Completed
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="shifts" className="p-0">
-            <EmployeeScheduleView />
-          </TabsContent>
-
-          <TabsContent value="timeclock" className="p-4">
-            <TimeClockWidget />
-          </TabsContent>
-
-          <TabsContent value="availability" className="p-4">
-            <AvailabilityManagement />
-          </TabsContent>
-
-          <TabsContent value="leave" className="p-4">
-            <LeaveBalanceCard 
-              leaveBalance={{
-                annual: 20,
-                sick: 10,
-                personal: 5,
-                used: 12,
-                remaining: 23
-              }}
-            />
-          </TabsContent>
-        </Tabs>
+        <EmployeeScheduleView />
       </div>
     </div>
   );
