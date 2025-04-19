@@ -70,7 +70,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
       <div className="grid grid-cols-8 border-b divide-x">
         {/* Summary column */}
         <WeekSummaryColumn 
-          totalHours={weekStats.totalHours} 
+          totalHours={weekStats.totalHours}
           totalCost={weekStats.totalCost}
           formatCurrency={formatCurrency}
           openShiftsCount={weekStats.openShiftsTotalCount}
@@ -93,7 +93,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
       
       {/* Syncing with calendar overlay */}
       {isSyncingCalendar && (
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10">
           <div className="bg-white rounded-xl shadow-md p-4 flex items-center space-x-3">
             <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
             <span className="text-gray-700 font-medium">Syncing with calendar...</span>

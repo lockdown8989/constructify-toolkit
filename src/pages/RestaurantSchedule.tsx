@@ -64,6 +64,8 @@ const RestaurantSchedule = () => {
 
   // Handle calendar synchronization
   const handleSyncWithCalendar = async () => {
+    if (syncingCalendar) return; // Prevent multiple clicks
+    
     setSyncingCalendar(true);
     sonnerToast.loading("Syncing with calendar...");
     
@@ -71,17 +73,16 @@ const RestaurantSchedule = () => {
       // Call the actual sync function
       await syncWithCalendar();
       
-      // Add a delay to make the notification visible
-      setTimeout(() => {
-        setSyncingCalendar(false);
-        sonnerToast.success("Calendar synchronized");
-        
-        toast({
-          title: "Calendar synchronized",
-          description: "All shifts have been synced with your calendar.",
-        });
-      }, 1500);
+      // Update state and show success notification
+      setSyncingCalendar(false);
+      sonnerToast.success("Calendar synchronized");
+      
+      toast({
+        title: "Calendar synchronized",
+        description: "All shifts have been synced with your calendar.",
+      });
     } catch (error) {
+      // Handle errors
       setSyncingCalendar(false);
       sonnerToast.error("Sync failed");
       
