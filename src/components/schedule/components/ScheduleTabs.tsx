@@ -8,6 +8,7 @@ interface ScheduleTabsProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   schedules: Schedule[];
+  newSchedules?: Record<string, boolean>;
   onInfoClick: (scheduleId: string) => void;
   onEmailClick: (schedule: Schedule) => void;
   onCancelClick: (scheduleId: string) => void;
@@ -18,6 +19,7 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
   activeTab,
   setActiveTab,
   schedules,
+  newSchedules = {},
   onInfoClick,
   onEmailClick,
   onCancelClick,
