@@ -37,7 +37,7 @@ const EmployeeWorkflow = () => {
               value="shifts"
               className="flex-1 h-12 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary"
             >
-              Open Shifts Employee
+              Shifts
             </TabsTrigger>
             <TabsTrigger 
               value="timeclock"
