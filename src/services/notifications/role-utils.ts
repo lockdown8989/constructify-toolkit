@@ -1,122 +1,52 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { mapDBRoleToUIRole, mapUIRoleToDBRole } from '@/hooks/auth/types';
 
 /**
- * Gets all user IDs that have a manager role
+ * Retrieves user IDs of all users with manager role
  */
 export const getManagerUserIds = async (): Promise<string[]> => {
   try {
-    console.log('getManagerUserIds: Starting to fetch manager IDs');
-    
-    // Query for users with role 'employer' (manager) or 'admin' or 'hr'
+    // Query user_roles table for users with manager, admin, or hr roles
+    // The issue was here - we were using incorrect enum values
     const { data, error } = await supabase
       .from('user_roles')
-      .select('user_id, role')
-      .in('role', ['employer', 'admin', 'hr']);
+      .select('user_id')
+      .in('role', ['manager', 'admin', 'hr']);
     
     if (error) {
-      console.error("Error fetching manager IDs:", error);
-      throw error;
-    }
-    
-    console.log('getManagerUserIds: Raw data from query:', data);
-    
-    if (!data || data.length === 0) {
-      console.warn('No manager users found in the system');
+      console.error('Error fetching manager user IDs:', error);
       return [];
     }
     
-    const managerIds = data.map(item => item.user_id);
-    console.log('getManagerUserIds: Returning manager IDs:', managerIds);
-    
-    return managerIds;
+    return data.map(item => item.user_id);
   } catch (error) {
-    console.error("Exception in getManagerUserIds:", error);
+    console.error('Exception in getManagerUserIds:', error);
     return [];
   }
 };
 
 /**
- * Checks if a user has a specific role
+ * Checks if a user has a manager role
  */
-export const hasRole = async (userId: string, role: string): Promise<boolean> => {
+export const userHasManagerRole = async (userId: string): Promise<boolean> => {
+  if (!userId) return false;
+  
   try {
-    // Special handling for 'manager' role check - map to 'employer' in DB
-    const dbRole = role === 'manager' ? 'employer' : role;
-    
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .eq('role', dbRole)
-      .single();
+      .in('role', ['manager', 'admin', 'hr'])
+      .maybeSingle();
     
     if (error) {
-      // Don't throw on not found errors
-      if (error.code === 'PGRST116') {
-        return false;
-      }
-      console.error("Error checking role:", error);
-      throw error;
+      console.error('Error checking user role:', error);
+      return false;
     }
     
     return !!data;
   } catch (error) {
-    console.error("Exception in hasRole:", error);
+    console.error('Exception in userHasManagerRole:', error);
     return false;
-  }
-};
-
-/**
- * Checks if a user has manager-level access (employer, admin, or hr)
- */
-export const isManager = async (userId: string): Promise<boolean> => {
-  try {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .in('role', ['employer', 'admin', 'hr']);
-    
-    if (error) {
-      console.error("Error checking manager status:", error);
-      throw error;
-    }
-    
-    return data && data.length > 0;
-  } catch (error) {
-    console.error("Exception in isManager:", error);
-    return false;
-  }
-};
-
-/**
- * Gets all roles for a user
- */
-export const getUserRoles = async (userId: string): Promise<string[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId);
-    
-    if (error) {
-      console.error("Error fetching user roles:", error);
-      throw error;
-    }
-    
-    if (!data || data.length === 0) {
-      return [];
-    }
-    
-    // Map database roles to UI roles (employer -> manager)
-    return data.map(item => {
-      const dbRole = item.role;
-      return dbRole === 'employer' ? 'manager' : dbRole;
-    });
-  } catch (error) {
-    console.error("Exception in getUserRoles:", error);
-    return [];
   }
 };
