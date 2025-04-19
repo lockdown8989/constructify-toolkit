@@ -1,4 +1,3 @@
-
 import { cn } from '@/lib/utils';
 import { Coffee, FileText, UserPlus } from 'lucide-react';
 import { OpenShift } from '@/types/restaurant-schedule';
@@ -12,16 +11,16 @@ import {
 interface OpenShiftBlockProps {
   openShift: OpenShift;
   color?: 'blue' | 'yellow' | 'purple' | 'green';
-  compact?: boolean; // Added compact prop
-  handleAssignOpenShift?: (openShiftId: string, employeeId?: string) => void; // Added handleAssignOpenShift prop
+  compact?: boolean;
+  handleAssignOpenShift?: (openShiftId: string, employeeId?: string) => void;
   onAssign?: (openShiftId: string, employeeId?: string) => void;
 }
 
 const OpenShiftBlock = ({ 
   openShift, 
   color = 'blue', 
-  compact = false, // Added compact parameter with default
-  handleAssignOpenShift, // Added handleAssignOpenShift parameter
+  compact = false,
+  handleAssignOpenShift,
   onAssign 
 }: OpenShiftBlockProps) => {
   const colorClasses = {
@@ -63,12 +62,20 @@ const OpenShiftBlock = ({
     }
   };
   
+  const handleAssign = () => {
+    // Use either handleAssignOpenShift or onAssign based on what was provided
+    const assignHandler = handleAssignOpenShift || onAssign;
+    if (assignHandler) {
+      assignHandler(openShift.id);
+    }
+  };
+  
   return (
     <div 
       className={cn(
         "p-3 my-1 rounded-xl shadow-sm hover:shadow transition-all relative",
         colorClasses[color],
-        "active-touch-state" // For mobile touch interaction
+        "active-touch-state"
       )}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -92,7 +99,7 @@ const OpenShiftBlock = ({
             )}
             {(handleAssignOpenShift || onAssign) && (
               <button 
-                onClick={() => (handleAssignOpenShift || onAssign)?.(openShift.id)} 
+                onClick={handleAssign}
                 className="text-blue-500 hover:text-blue-700 transition-colors p-1 rounded-full hover:bg-blue-100/50"
                 aria-label="Assign shift"
               >
