@@ -1,10 +1,9 @@
-
 import { Home, Users, Calendar, DollarSign, Utensils, ClipboardCheck, Clock, Coffee } from "lucide-react"
 import { useNavigate, useLocation, Link } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/auth"
 import { Button } from "@/components/ui/button"
-import { useTimeClock } from "@/hooks/use-time-clock"
+import { useTimeClock } from "@/hooks/time-clock"
 
 interface BottomNavProps {
   isAuthenticated: boolean;

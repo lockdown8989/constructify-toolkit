@@ -3,7 +3,7 @@ import { Calendar, DollarSign, Receipt, Clock, Home, ClipboardCheck, Coffee } fr
 import { useAuth } from "@/hooks/auth"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { useTimeClock } from "@/hooks/use-time-clock"
+import { useTimeClock } from "@/hooks/time-clock"
 import { useEmployeeSchedule } from "@/hooks/use-employee-schedule"
 
 interface DesktopNavProps {
