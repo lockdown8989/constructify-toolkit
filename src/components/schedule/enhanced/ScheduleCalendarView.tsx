@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from 'date-fns';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Mail, Info, X, Check, Clock, Grid3X3 } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Mail, Info, X, Check, Clock, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -66,7 +65,6 @@ export const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
             const isSelected = isSameDay(day, currentDate);
             const dayNumber = day.getDate();
             
-            // Handle first day of month placement
             if (i === 0) {
               const firstDayOfWeek = day.getDay();
               const placeholders = Array.from({ length: firstDayOfWeek }).map((_, index) => (
@@ -153,183 +151,136 @@ export const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
 
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-      {/* Header */}
-      <div className="p-4 border-b flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <CalendarIcon className="h-5 w-5 text-primary" />
-          <h2 className="font-semibold text-lg">My Schedule</h2>
-        </div>
-        <div className="flex items-center gap-4">
+      <div className="bg-blue-500 p-4 text-white">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={() => onDateChange(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="font-medium">
-              {format(currentDate, 'MMMM yyyy')}
-            </span>
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={() => onDateChange(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            <CalendarIcon className="h-5 w-5" />
+            <h2 className="font-semibold text-lg">MY SCHEDULE</h2>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant={view === 'list' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setView('list')}
-              className="flex items-center gap-1"
-            >
-              <CalendarIcon className="h-4 w-4" />
-              List
-            </Button>
-            <Button
-              variant={view === 'month' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setView('month')}
-              className="flex items-center gap-1"
-            >
-              <Grid3X3 className="h-4 w-4" />
-              Month
-            </Button>
+          <div className="text-sm">
+            {format(currentDate, 'MMMM yyyy')}
           </div>
         </div>
       </div>
 
-      {view === 'month' ? (
-        <div className="p-4">
-          {renderMonthView()}
-        </div>
-      ) : (
-        <Tabs defaultValue="my-shifts" className="w-full">
-          <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
-            <TabsTrigger
-              value="my-shifts"
-              className={cn(
-                "relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4",
-                "data-[state=active]:border-b-primary data-[state=active]:text-primary"
-              )}
-            >
-              My Shifts
-            </TabsTrigger>
-            <TabsTrigger
-              value="pending"
-              className={cn(
-                "relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4",
-                "data-[state=active]:border-b-primary data-[state=active]:text-primary"
-              )}
-            >
-              Pending
-              {schedules.filter(s => s.status === 'pending').length > 0 && (
-                <Badge variant="destructive" className="ml-2">
-                  {schedules.filter(s => s.status === 'pending').length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger
-              value="completed"
-              className={cn(
-                "relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4",
-                "data-[state=active]:border-b-primary data-[state=active]:text-primary"
-              )}
-            >
-              Completed
-            </TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="my-shifts" className="w-full">
+        <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
+          <TabsTrigger
+            value="my-shifts"
+            className={cn(
+              "relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4",
+              "data-[state=active]:border-b-blue-500 data-[state=active]:text-blue-500"
+            )}
+          >
+            My Shifts
+          </TabsTrigger>
+          <TabsTrigger
+            value="open-shifts"
+            className={cn(
+              "relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4",
+              "data-[state=active]:border-b-blue-500 data-[state=active]:text-blue-500"
+            )}
+          >
+            Open Shifts
+          </TabsTrigger>
+          <TabsTrigger
+            value="pending"
+            className={cn(
+              "relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4",
+              "data-[state=active]:border-b-blue-500 data-[state=active]:text-blue-500"
+            )}
+          >
+            Pending
+            {schedules.filter(s => s.status === 'pending').length > 0 && (
+              <Badge variant="default" className="ml-2 bg-orange-100 text-orange-700">
+                {schedules.filter(s => s.status === 'pending').length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger
+            value="completed"
+            className={cn(
+              "relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4",
+              "data-[state=active]:border-b-blue-500 data-[state=active]:text-blue-500"
+            )}
+          >
+            Completed
+          </TabsTrigger>
+        </TabsList>
 
-          <ScrollArea className="h-[600px]">
-            <div className="p-4 space-y-4">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Clock className="h-5 w-5 animate-spin text-primary mr-2" />
-                  <span>Loading shifts...</span>
-                </div>
-              ) : schedules.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No shifts found for this period
-                </div>
-              ) : (
-                schedules.map((schedule) => (
-                  <div
-                    key={schedule.id}
-                    className={cn(
-                      "p-4 rounded-lg border transition-all hover:shadow-sm",
-                      isSameDay(new Date(schedule.start_time), new Date()) && "bg-blue-50 border-blue-200",
-                      getStatusColor(schedule.status)
-                    )}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className={cn(
-                          "w-12 h-12 rounded-lg flex flex-col items-center justify-center",
-                          schedule.status === 'confirmed' ? "bg-green-100 text-green-700" :
-                          schedule.status === 'pending' ? "bg-yellow-100 text-yellow-700" :
-                          schedule.status === 'rejected' ? "bg-red-100 text-red-700" :
-                          "bg-gray-100 text-gray-700"
-                        )}>
-                          <span className="text-sm font-medium">
-                            {format(new Date(schedule.start_time), 'MMM')}
-                          </span>
-                          <span className="text-lg font-bold">
-                            {format(new Date(schedule.start_time), 'd')}
-                          </span>
-                        </div>
-                        <div>
-                          <h3 className="font-medium">{schedule.title}</h3>
-                          <p className="text-sm text-gray-500">
-                            {format(new Date(schedule.start_time), 'HH:mm')} → {format(new Date(schedule.end_time), 'HH:mm')}
-                          </p>
-                        </div>
+        <ScrollArea className="h-[600px]">
+          <div className="p-4 space-y-4">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Clock className="h-5 w-5 animate-spin text-blue-500 mr-2" />
+                <span>Loading shifts...</span>
+              </div>
+            ) : schedules.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No shifts found for this period
+              </div>
+            ) : (
+              schedules.map((schedule) => (
+                <div
+                  key={schedule.id}
+                  className={cn(
+                    "p-4 rounded-lg border transition-all hover:shadow-sm",
+                    schedule.status === 'confirmed' ? "border-green-200 bg-green-50" :
+                    schedule.status === 'pending' ? "border-orange-200 bg-orange-50" :
+                    "border-gray-200 bg-white"
+                  )}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className={cn(
+                        "w-14 h-14 rounded-lg flex flex-col items-center justify-center",
+                        schedule.status === 'confirmed' ? "bg-green-100 text-green-700" :
+                        schedule.status === 'pending' ? "bg-orange-100 text-orange-700" :
+                        "bg-gray-100 text-gray-700"
+                      )}>
+                        <span className="text-xs font-medium">
+                          {format(new Date(schedule.start_time), 'MMM').toUpperCase()}
+                        </span>
+                        <span className="text-lg font-bold">
+                          {format(new Date(schedule.start_time), 'd')}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                          <Info className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                          <Mail className="h-4 w-4" />
-                        </Button>
-                        {schedule.status === 'pending' && !isManager && (
-                          <Button 
-                            size="sm" 
-                            variant="destructive"
-                            className="h-8"
-                            onClick={() => onShiftAction(schedule.id, 'cancel')}
-                          >
-                            <X className="h-4 w-4 mr-1" />
-                            Cancel
-                          </Button>
-                        )}
-                        {schedule.status === 'pending' && isManager && (
-                          <Button 
-                            size="sm" 
-                            variant="default"
-                            className="h-8"
-                            onClick={() => onShiftAction(schedule.id, 'confirm')}
-                          >
-                            <Check className="h-4 w-4 mr-1" />
-                            Confirm
-                          </Button>
-                        )}
+                      <div>
+                        <div className="text-lg font-semibold">
+                          {format(new Date(schedule.start_time), 'HH:mm')} → {format(new Date(schedule.end_time), 'HH:mm')}
+                        </div>
+                        <div className="text-sm text-gray-600 flex items-center gap-2">
+                          <MapPin className="h-4 w-4" />
+                          {schedule.location || 'Main Location'}
+                        </div>
                       </div>
                     </div>
-                    {schedule.location && (
-                      <div className="text-sm text-gray-500 mt-2">
-                        📍 {schedule.location}
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Info className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                      {schedule.status === 'pending' && (
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          className="h-8"
+                          onClick={() => onShiftAction(schedule.id, 'cancel')}
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Cancel
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                ))
-              )}
-            </div>
-          </ScrollArea>
-        </Tabs>
-      )}
+                </div>
+              ))
+            )}
+          </div>
+        </ScrollArea>
+      </Tabs>
     </div>
   );
 };
