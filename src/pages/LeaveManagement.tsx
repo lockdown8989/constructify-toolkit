@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Calendar, Users, Bell, RefreshCw, Clock } from "lucide-react";
+import { ChevronDown, Calendar, Users, Bell, RefreshCw, Clock, History } from "lucide-react";
 import LeaveRealtimeUpdates from "@/components/leave/LeaveRealtimeUpdates";
 import EmployeeTab from "@/components/leave/tabs/EmployeeTab";
 import ManagerTab from "@/components/leave/tabs/ManagerTab";
@@ -18,7 +17,7 @@ import { useAccessControl } from "@/hooks/leave/useAccessControl";
 import { useLocation } from "react-router-dom";
 
 // Define the view types
-type ViewType = "employee" | "manager" | "calendar" | "notifications" | "schedule-requests";
+type ViewType = "employee" | "manager" | "calendar" | "notifications" | "schedule-requests" | "shift-history";
 
 // Define the view option type
 type ViewOption = {
@@ -48,6 +47,7 @@ const LeaveManagement = () => {
   const getViewOptions = (): Record<string, ViewOption> => {
     const baseOptions: Record<string, ViewOption> = {
       employee: { label: "Employee View", icon: <Users className="h-4 w-4 mr-2" /> },
+      "shift-history": { label: "Shift History", icon: <History className="h-4 w-4 mr-2" /> },
       calendar: { label: "Calendar View", icon: <Calendar className="h-4 w-4 mr-2" /> },
       "schedule-requests": { label: "Schedule Requests", icon: <Clock className="h-4 w-4 mr-2" /> }
     };
@@ -91,6 +91,14 @@ const LeaveManagement = () => {
             </DropdownMenuItem>
             
             <DropdownMenuItem 
+              onClick={() => setCurrentView("shift-history")}
+              className="cursor-pointer flex items-center"
+            >
+              <History className="h-4 w-4 mr-2" />
+              Shift History
+            </DropdownMenuItem>
+            
+            <DropdownMenuItem 
               onClick={() => setCurrentView("calendar")}
               className="cursor-pointer flex items-center"
             >
@@ -131,6 +139,7 @@ const LeaveManagement = () => {
       
       <div className="space-y-4">
         {currentView === "employee" && <EmployeeTab />}
+        {currentView === "shift-history" && <ShiftHistoryTab />}
         {currentView === "manager" && hasManagerAccess && <ManagerTab />}
         {currentView === "calendar" && <CalendarTab />}
         {currentView === "notifications" && hasManagerAccess && <NotificationsTab />}
