@@ -11,28 +11,46 @@ export type Database = {
     Tables: {
       attendance: {
         Row: {
+          break_minutes: number | null
           check_in: string | null
           check_out: string | null
           date: string | null
           employee_id: string | null
           id: string
+          overtime_approved_at: string | null
+          overtime_approved_by: string | null
+          overtime_minutes: number | null
+          overtime_status: string | null
           status: string | null
+          working_minutes: number | null
         }
         Insert: {
+          break_minutes?: number | null
           check_in?: string | null
           check_out?: string | null
           date?: string | null
           employee_id?: string | null
           id?: string
+          overtime_approved_at?: string | null
+          overtime_approved_by?: string | null
+          overtime_minutes?: number | null
+          overtime_status?: string | null
           status?: string | null
+          working_minutes?: number | null
         }
         Update: {
+          break_minutes?: number | null
           check_in?: string | null
           check_out?: string | null
           date?: string | null
           employee_id?: string | null
           id?: string
+          overtime_approved_at?: string | null
+          overtime_approved_by?: string | null
+          overtime_minutes?: number | null
+          overtime_status?: string | null
           status?: string | null
+          working_minutes?: number | null
         }
         Relationships: [
           {

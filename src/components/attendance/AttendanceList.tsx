@@ -2,6 +2,9 @@ import { useAttendance } from "@/hooks/use-attendance";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 
 interface AttendanceListProps {
   employeeId?: string;
@@ -9,8 +12,46 @@ interface AttendanceListProps {
 }
 
 const AttendanceList = ({ employeeId, searchQuery = "" }: AttendanceListProps) => {
-  const { data: attendance } = useAttendance(employeeId);
+  const { data: attendance, refetch } = useAttendance(employeeId);
   const isMobile = useIsMobile();
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  const handleOvertimeApproval = async (recordId: string, approved: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('attendance')
+        .update({
+          overtime_status: approved ? 'approved' : 'rejected',
+          overtime_approved_by: user?.id,
+          overtime_approved_at: new Date().toISOString()
+        })
+        .eq('id', recordId);
+
+      if (error) throw error;
+
+      toast({
+        title: approved ? "Overtime Approved" : "Overtime Rejected",
+        description: `The overtime request has been ${approved ? 'approved' : 'rejected'}.`,
+        variant: approved ? "default" : "destructive",
+      });
+
+      refetch();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to process overtime request.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const formatDuration = (minutes: number | null | undefined) => {
+    if (!minutes) return '-';
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
 
   const workingTimeData = {
     clockIn: "09:00 AM",
@@ -47,54 +88,9 @@ const AttendanceList = ({ employeeId, searchQuery = "" }: AttendanceListProps) =
 
   return (
     <div className="space-y-6">
-      <div className="border rounded-xl p-4 md:p-6 bg-white">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
-          <div>
-            <h3 className="font-semibold mb-1">Today</h3>
-            <div className="flex flex-col md:flex-row gap-2 md:gap-6 text-gray-600 text-sm">
-              <span>Clock-in: {workingTimeData.clockIn}</span>
-              <span>Clock-out: {workingTimeData.clockOut}</span>
-              <span>Duration: {workingTimeData.duration}</span>
-            </div>
-          </div>
-          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
-            <Button variant="outline" className="text-red-600 border-red-200 bg-red-50">
-              Overtime approval
-            </Button>
-            <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700">
-              Approve
-            </Button>
-          </div>
-        </div>
-        
-        <div className="relative mt-8">
-          <div className="absolute -left-2 md:-left-4 text-sm text-gray-500 top-1/2 -translate-y-1/2">
-            Working time
-          </div>
-          <div className="h-8 flex ml-16 md:ml-20 rounded-full overflow-hidden bg-gray-100">
-            {workingTimeData.timeline.map((segment, index) => (
-              <div
-                key={index}
-                className={`${segment.color} relative group`}
-                style={{ width: `${calculateSegmentWidth(segment)}%` }}
-              >
-                <div className="hidden group-hover:block absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded whitespace-nowrap">
-                  {segment.start} - {segment.end}
-                  {segment.duration && ` (${segment.duration})`}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="ml-16 md:ml-20 mt-2 flex justify-between text-xs text-gray-500">
-            <span>09:00</span>
-            <span>21:00</span>
-          </div>
-        </div>
-      </div>
-
       {filteredRecords?.map((record) => (
         <div key={record.id} className="border rounded-xl p-4 md:p-6 bg-white">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-3 mb-4">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
             <div>
               <h3 className="font-semibold mb-1">
                 {format(new Date(record.date || ""), "EEEE, dd")}
@@ -102,13 +98,42 @@ const AttendanceList = ({ employeeId, searchQuery = "" }: AttendanceListProps) =
               <div className="flex flex-col md:flex-row gap-2 md:gap-6 text-gray-600 text-sm">
                 <span>Clock-in: {record.check_in ? format(new Date(record.check_in), "hh:mm a") : "-"}</span>
                 <span>Clock-out: {record.check_out ? format(new Date(record.check_out), "hh:mm a") : "-"}</span>
-                <span>Duration: 8 hours</span>
+                <span>Working time: {formatDuration(record.working_minutes)}</span>
+                {record.overtime_minutes && record.overtime_minutes > 0 && (
+                  <span>Overtime: {formatDuration(record.overtime_minutes)}</span>
+                )}
               </div>
             </div>
-            {record.status === "Approved" && (
-              <span className="px-2 py-1 text-sm rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 whitespace-nowrap">
-                Approved
-              </span>
+            {record.overtime_minutes && record.overtime_minutes > 0 && (
+              <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
+                {record.overtime_status === 'pending' ? (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      className="text-red-600 border-red-200 bg-red-50"
+                      onClick={() => handleOvertimeApproval(record.id, false)}
+                    >
+                      Reject Overtime
+                    </Button>
+                    <Button 
+                      variant="default" 
+                      className="bg-emerald-600 hover:bg-emerald-700"
+                      onClick={() => handleOvertimeApproval(record.id, true)}
+                    >
+                      Approve Overtime
+                    </Button>
+                  </>
+                ) : (
+                  <span className={`px-2 py-1 text-sm rounded-full whitespace-nowrap
+                    ${record.overtime_status === 'approved' 
+                      ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' 
+                      : 'bg-red-50 text-red-600 border border-red-200'
+                    }`}
+                  >
+                    Overtime {record.overtime_status}
+                  </span>
+                )}
+              </div>
             )}
           </div>
           
