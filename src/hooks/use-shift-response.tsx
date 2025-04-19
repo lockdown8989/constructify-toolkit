@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { toast } from '@/hooks/use-toast';
 
 export const useShiftResponse = () => {
   const { user } = useAuth();
@@ -46,6 +47,14 @@ export const useShiftResponse = () => {
     onSuccess: () => {
       // Refresh the schedules data after successful response
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
+    },
+    onError: (error) => {
+      // Add a user-friendly error toast
+      toast({
+        title: 'Shift Response Failed',
+        description: error instanceof Error ? error.message : 'Unable to process your shift response.',
+        variant: 'destructive',
+      });
     }
   });
 
