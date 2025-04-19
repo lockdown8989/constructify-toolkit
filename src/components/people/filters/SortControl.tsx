@@ -27,7 +27,7 @@ const SortControl: React.FC<SortControlProps> = ({
     <div className="flex items-center gap-2 ml-auto">
       <span className="text-sm text-gray-500">Sort by:</span>
       <Select 
-        value={String(sortField)} 
+        value={sortField} 
         onValueChange={(value) => setSortField(value as keyof Employee)}
       >
         <SelectTrigger className="h-9 min-w-[120px]">

@@ -1,162 +1,178 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 
-export interface Schedule {
+export type Schedule = {
   id: string;
   title: string;
-  employee_id: string;
   start_time: string;
   end_time: string;
-  created_at?: string;
-  updated_at?: string;
-  notes?: string;
-  status?: 'confirmed' | 'pending' | 'completed' | 'rejected';
-  location?: string;
-}
+  employee_id: string;
+  created_at: string;
+};
+
+export type NewSchedule = Omit<Schedule, 'id' | 'created_at'>;
 
 export function useSchedules() {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  
-  const query = useQuery({
-    queryKey: ['schedules'],
+  const { user, isManager } = useAuth();
+
+  return useQuery({
+    queryKey: ['schedules', isManager, user?.id],
     queryFn: async () => {
-      if (!user) {
-        return [];
-      }
-      
-      try {
-        const { data: employees } = await supabase
+      let query = supabase.from('schedules').select('*');
+
+      // If not a manager, only fetch the user's own schedules
+      if (!isManager && user) {
+        // First, find the employee record associated with this user
+        const { data: employeeData } = await supabase
           .from('employees')
           .select('id')
           .eq('user_id', user.id)
           .single();
-          
-        if (!employees) {
-          console.log('No employee record found for the current user');
+
+        if (employeeData) {
+          // Filter schedules to show only this employee's schedules
+          query = query.eq('employee_id', employeeData.id);
+        } else {
+          // If no employee record found, return empty array
           return [];
         }
-          
-        const { data, error } = await supabase
-          .from('schedules')
-          .select('*')
-          .eq('employee_id', employees.id)
-          .order('start_time', { ascending: true });
-          
-        if (error) {
-          console.error('Error fetching schedules:', error);
-          return [];
-        }
-        
-        // Add default status if not available
-        const processedData = data?.map(schedule => ({
-          ...schedule,
-          status: schedule.status || 'confirmed'
-        })) || [];
-        
-        console.log('Fetched schedules for employee:', employees.id, processedData.length);
-        return processedData;
-      } catch (error) {
-        console.error('Error in useSchedules hook:', error);
-        return [];
       }
-    },
-    enabled: !!user,
-  });
-  
-  return {
-    ...query,
-    refetch: async () => {
-      console.log('Manually refetching schedules...');
-      const result = await query.refetch();
-      return result;
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as Schedule[];
     }
-  };
+  });
 }
 
 export function useCreateSchedule() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
-
-  const mutation = useMutation({
-    mutationFn: async (schedule: Partial<Schedule>) => {
-      if (!user) throw new Error('User not authenticated');
-      
-      console.log('Creating schedule with data:', schedule);
-      
-      const { data, error } = await supabase
-        .from('schedules')
-        .insert([{
-          ...schedule,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          status: schedule.status || 'confirmed'
-        }])
-        .select()
-        .single();
-        
-      if (error) {
-        console.error('Error creating schedule:', error);
-        throw error;
-      }
-      
-      console.log('Schedule created successfully:', data);
-      return data;
-    },
-    onSuccess: () => {
-      console.log('Invalidating schedules query after successful creation');
-      queryClient.invalidateQueries({ queryKey: ['schedules'] });
-    },
-  });
+  const { toast } = useToast();
 
   return {
-    createSchedule: mutation,
-    isCreating: mutation.isPending,
-    error: mutation.error
+    createSchedule: async (newSchedule: NewSchedule) => {
+      try {
+        const { data, error } = await supabase
+          .from('schedules')
+          .insert(newSchedule)
+          .select()
+          .single();
+
+        if (error) throw error;
+        
+        queryClient.invalidateQueries({ queryKey: ['schedules'] });
+        toast({
+          title: "Schedule created",
+          description: "New schedule has been successfully created."
+        });
+        
+        return data as Schedule;
+      } catch (error: any) {
+        toast({
+          title: "Failed to create schedule",
+          description: error.message,
+          variant: "destructive"
+        });
+        throw error;
+      }
+    }
   };
+}
+
+export function useAddSchedule() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (newSchedule: NewSchedule) => {
+      const { data, error } = await supabase
+        .from('schedules')
+        .insert(newSchedule)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as Schedule;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
+      toast({
+        title: "Schedule added",
+        description: "New schedule has been successfully added."
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to add schedule",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
 }
 
 export function useUpdateSchedule() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  const mutation = useMutation({
-    mutationFn: async (schedule: Schedule) => {
-      console.log('Updating schedule:', schedule);
-      
+  return useMutation({
+    mutationFn: async ({ id, ...update }: Partial<Schedule> & { id: string }) => {
       const { data, error } = await supabase
         .from('schedules')
-        .update({
-          title: schedule.title,
-          start_time: schedule.start_time,
-          end_time: schedule.end_time,
-          notes: schedule.notes,
-          status: schedule.status,
-          location: schedule.location,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', schedule.id)
+        .update(update)
+        .eq('id', id)
         .select()
         .single();
-        
-      if (error) {
-        console.error('Error updating schedule:', error);
-        throw error;
-      }
-      
-      console.log('Schedule updated successfully:', data);
-      return data;
+
+      if (error) throw error;
+      return data as Schedule;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
+      toast({
+        title: "Schedule updated",
+        description: "Schedule has been successfully updated."
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to update schedule",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+}
+
+export function useDeleteSchedule() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('schedules')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return id;
     },
     onSuccess: () => {
-      console.log('Invalidating schedules query after successful update');
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
+      toast({
+        title: "Schedule deleted",
+        description: "Schedule has been successfully removed."
+      });
     },
+    onError: (error) => {
+      toast({
+        title: "Failed to delete schedule",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
-
-  return {
-    updateSchedule: mutation.mutate,
-    isUpdating: mutation.isPending,
-    error: mutation.error
-  };
 }

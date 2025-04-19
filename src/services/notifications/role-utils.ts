@@ -7,12 +7,10 @@ import { mapDBRoleToUIRole, mapUIRoleToDBRole } from '@/hooks/auth/types';
  */
 export const getManagerUserIds = async (): Promise<string[]> => {
   try {
-    console.log('getManagerUserIds: Starting to fetch manager IDs');
-    
     // Query for users with role 'employer' (manager) or 'admin' or 'hr'
     const { data, error } = await supabase
       .from('user_roles')
-      .select('user_id, role')
+      .select('user_id')
       .in('role', ['employer', 'admin', 'hr']);
     
     if (error) {
@@ -20,17 +18,12 @@ export const getManagerUserIds = async (): Promise<string[]> => {
       throw error;
     }
     
-    console.log('getManagerUserIds: Raw data from query:', data);
-    
     if (!data || data.length === 0) {
       console.warn('No manager users found in the system');
       return [];
     }
     
-    const managerIds = data.map(item => item.user_id);
-    console.log('getManagerUserIds: Returning manager IDs:', managerIds);
-    
-    return managerIds;
+    return data.map(item => item.user_id);
   } catch (error) {
     console.error("Exception in getManagerUserIds:", error);
     return [];

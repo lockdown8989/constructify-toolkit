@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -92,16 +91,6 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                   >
                     <Clock className="mr-3 h-5 w-5 text-neutral-600" />
                     <span>My Schedule</span>
-                  </Link>
-                )}
-                {(isManager || isAdmin || isHR) && (
-                  <Link
-                    to="/employee-workflow"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-                  >
-                    <Clock className="mr-3 h-5 w-5 text-neutral-600" />
-                    <span>My Employee Schedule</span>
                   </Link>
                 )}
                 <Link
