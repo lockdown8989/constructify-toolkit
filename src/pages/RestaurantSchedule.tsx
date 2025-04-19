@@ -1,5 +1,5 @@
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { useRestaurantSchedule } from '@/hooks/use-restaurant-schedule';
 import { Shift } from '@/types/restaurant-schedule';
 import { useToast } from '@/hooks/use-toast';
@@ -63,12 +63,14 @@ const RestaurantSchedule = () => {
   };
 
   // Handle calendar synchronization
-  const handleSyncWithCalendar = () => {
+  const handleSyncWithCalendar = async () => {
     setSyncingCalendar(true);
     sonnerToast.loading("Syncing with calendar...");
     
-    // Call the actual sync function
-    syncWithCalendar().then(() => {
+    try {
+      // Call the actual sync function
+      await syncWithCalendar();
+      
       // Add a delay to make the notification visible
       setTimeout(() => {
         setSyncingCalendar(false);
@@ -79,7 +81,7 @@ const RestaurantSchedule = () => {
           description: "All shifts have been synced with your calendar.",
         });
       }, 1500);
-    }).catch(error => {
+    } catch (error) {
       setSyncingCalendar(false);
       sonnerToast.error("Sync failed");
       
@@ -87,7 +89,7 @@ const RestaurantSchedule = () => {
         title: "Synchronization failed",
         description: "There was an error syncing with your calendar.",
       });
-    });
+    }
   };
   
   // Organize shifts by employee and day for the role sections

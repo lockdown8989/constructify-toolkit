@@ -78,12 +78,12 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
         />
         
         {/* Day columns */}
-        {weekStats.days.map((day, index) => (
+        {weekStats.days.map((dayStats, index) => (
           <DayColumn 
-            key={day.day}
-            day={day}
+            key={dayStats.day}
+            dayStats={dayStats}
             dayDisplayName={daysDisplayNames[index]}
-            openShifts={openShifts.filter(s => s.day === day.day)}
+            openShifts={openShifts.filter(s => s.day === dayStats.day)}
             employees={employees}
             handleAssignOpenShift={handleAssignOpenShift}
             formatCurrency={formatCurrency}
