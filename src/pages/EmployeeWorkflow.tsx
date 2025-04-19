@@ -32,34 +32,34 @@ const EmployeeWorkflow = () => {
         isMobile ? "" : "rounded-lg shadow-sm"
       )}>
         <Tabs defaultValue="shifts" className="w-full">
-          <TabsList className="w-full border-b rounded-none p-0 h-12">
+          <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
             <TabsTrigger 
               value="shifts"
-              className="flex-1 h-12 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary"
+              className="relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4 data-[state=active]:border-b-primary data-[state=active]:text-primary"
             >
-              Shifts
+              My Shifts
             </TabsTrigger>
             <TabsTrigger 
-              value="timeclock"
-              className="flex-1 h-12 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary"
+              value="open-shifts"
+              className="relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4 data-[state=active]:border-b-primary data-[state=active]:text-primary"
             >
-              Time Clock
+              Open Shifts
             </TabsTrigger>
             <TabsTrigger 
-              value="availability"
-              className="flex-1 h-12 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary"
+              value="pending"
+              className="relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4 data-[state=active]:border-b-primary data-[state=active]:text-primary"
             >
-              Availability
+              Pending
             </TabsTrigger>
             <TabsTrigger 
-              value="leave"
-              className="flex-1 h-12 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary"
+              value="completed"
+              className="relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4 data-[state=active]:border-b-primary data-[state=active]:text-primary"
             >
-              Leave
+              Completed
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="shifts" className="p-4">
+          <TabsContent value="shifts" className="p-0">
             <EmployeeScheduleView />
           </TabsContent>
 
