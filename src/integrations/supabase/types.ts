@@ -583,24 +583,36 @@ export type Database = {
           employee_id: string | null
           end_time: string
           id: string
+          location: string | null
+          notes: string | null
           start_time: string
+          status: string | null
           title: string
+          updated_at: string | null
         }
         Insert: {
           created_at?: string
           employee_id?: string | null
           end_time: string
           id?: string
+          location?: string | null
+          notes?: string | null
           start_time: string
+          status?: string | null
           title: string
+          updated_at?: string | null
         }
         Update: {
           created_at?: string
           employee_id?: string | null
           end_time?: string
           id?: string
+          location?: string | null
+          notes?: string | null
           start_time?: string
+          status?: string | null
           title?: string
+          updated_at?: string | null
         }
         Relationships: [
           {

@@ -64,7 +64,8 @@ const SchedulePage = () => {
         employee_id: newSchedule.employeeId,
         title: newSchedule.title,
         start_time: `${selectedDate}T${newSchedule.startTime}:00`,
-        end_time: `${selectedDate}T${newSchedule.endTime}:00`
+        end_time: `${selectedDate}T${newSchedule.endTime}:00`,
+        status: 'confirmed'
       };
       
       await createSchedule.mutateAsync(schedule);
@@ -77,7 +78,13 @@ const SchedulePage = () => {
       });
       setIsAddScheduleOpen(false);
       refetchSchedules();
+      
+      toast({
+        title: "Schedule created",
+        description: "The shift has been successfully added.",
+      });
     } catch (error: any) {
+      console.error('Error creating schedule:', error);
       toast({
         title: "Failed to create schedule",
         description: error.message || "An unexpected error occurred",

@@ -75,7 +75,12 @@ export function useCreateSchedule() {
       
       const { data, error } = await supabase
         .from('schedules')
-        .insert([schedule])
+        .insert([{
+          ...schedule,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          status: schedule.status || 'confirmed'
+        }])
         .select()
         .single();
         
@@ -87,11 +92,7 @@ export function useCreateSchedule() {
     },
   });
 
-  return {
-    createSchedule: mutation,
-    isCreating: mutation.isPending,
-    error: mutation.error
-  };
+  return mutation;
 }
 
 export function useUpdateSchedule() {
