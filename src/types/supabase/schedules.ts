@@ -42,3 +42,9 @@ export interface ShiftSwap {
   created_at: string;
   updated_at: string;
 }
+
+export type ScheduleStatus = 'pending' | 'confirmed' | 'completed';
+
+export interface ScheduleWithStatus extends Schedule {
+  status: ScheduleStatus;
+}
