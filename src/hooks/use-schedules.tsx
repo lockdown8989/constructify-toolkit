@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -92,7 +93,12 @@ export function useCreateSchedule() {
     },
   });
 
-  return mutation;
+  // Return an object with the mutation to match the usage pattern
+  return {
+    createSchedule: mutation,
+    isCreating: mutation.isPending,
+    error: mutation.error
+  };
 }
 
 export function useUpdateSchedule() {

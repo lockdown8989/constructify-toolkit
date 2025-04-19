@@ -17,7 +17,7 @@ interface ShiftDialogManagerProps {
 
 const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) => {
   const { user } = useAuth();
-  const { createSchedule } = useCreateSchedule();
+  const { createSchedule, isCreating } = useCreateSchedule();
   const { assignShift } = useShiftAssignment();
   const shiftDialog = useShiftDialog();
 
