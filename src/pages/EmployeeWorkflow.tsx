@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/auth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import EmployeeScheduleView from '@/components/schedule/EmployeeScheduleView';
 import LeaveBalanceCard from '@/components/schedule/LeaveBalanceCard';
+import { cn } from '@/lib/utils';
 
 const EmployeeWorkflow = () => {
   const { user } = useAuth();
