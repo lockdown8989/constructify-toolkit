@@ -1,10 +1,16 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/auth';
+import { Navigate } from 'react-router-dom';
 import EmployeeScheduleView from '@/components/schedule/EmployeeScheduleView';
 
 const EmployeeWorkflow = () => {
-  const { user } = useAuth();
+  const { user, isManager, isAdmin, isHR } = useAuth();
+  
+  // Redirect managers/admins/HR to the main schedule page
+  if (isManager || isAdmin || isHR) {
+    return <Navigate to="/schedule" replace />;
+  }
   
   if (!user) {
     return (
