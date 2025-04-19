@@ -1,9 +1,12 @@
 
 import React from 'react';
-import { Schedule } from '@/types/supabase/schedules';
+import { Schedule as SupabaseSchedule } from '@/types/supabase/schedules';
+import { Schedule as AppSchedule } from '@/types/schedule.types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Clock } from 'lucide-react';
 import ShiftCard from '../../calendar/ShiftCard';
+
+type Schedule = AppSchedule | SupabaseSchedule;
 
 interface ScheduleContentProps {
   isLoading: boolean;
@@ -45,7 +48,7 @@ export const ScheduleContent: React.FC<ScheduleContentProps> = ({
         {filteredSchedules.map((schedule) => (
           <ShiftCard
             key={schedule.id}
-            schedule={schedule}
+            schedule={schedule as SupabaseSchedule}
             onInfoClick={() => onInfoClick(schedule.id)}
             onEmailClick={() => onEmailClick(schedule)}
             onCancelClick={() => onCancelClick(schedule.id)}

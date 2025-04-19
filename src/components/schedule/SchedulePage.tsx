@@ -4,6 +4,7 @@ import { ScheduleCalendarView } from './enhanced/ScheduleCalendarView';
 import { useSchedules } from '@/hooks/use-schedules';
 import { useScheduleActions } from '@/hooks/use-schedule-actions';
 import { Loader2 } from 'lucide-react';
+import { Schedule } from '@/types/schedule.types';
 
 export const SchedulePage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -24,9 +25,8 @@ export const SchedulePage: React.FC = () => {
       <ScheduleCalendarView
         currentDate={currentDate}
         onDateChange={setCurrentDate}
-        schedules={schedules}
+        schedules={schedules as Schedule[]}
         onShiftAction={handleShiftAction}
-        isLoading={isActionLoading}
       />
     </div>
   );

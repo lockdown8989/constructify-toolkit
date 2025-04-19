@@ -5,7 +5,7 @@ export interface Schedule {
   employee_id: string;
   start_time: string;
   end_time: string;
-  created_at?: string;
+  created_at: string;
   updated_at?: string;
   notes?: string;
   status?: 'confirmed' | 'pending' | 'completed' | 'rejected';
@@ -19,7 +19,7 @@ export type ScheduleResponse = {
   employee_id: string;
   start_time: string;
   end_time: string;
-  created_at?: string;
+  created_at: string;
   updated_at?: string;
   notes?: string;
   status?: 'confirmed' | 'pending' | 'completed' | 'rejected';
