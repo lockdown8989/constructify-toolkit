@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Clock, PlayCircle, StopCircle, PauseCircle, Timer } from 'lucide-react';
 import { format, differenceInSeconds } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { useTimeClock } from '@/hooks/time-clock';
 
 type TimelogEntry = {
   type: 'clock-in' | 'break-start' | 'break-end' | 'clock-out';
@@ -16,11 +17,7 @@ type TimelogStatus = 'clocked-out' | 'clocked-in' | 'on-break';
 const TimeClockWidget = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [status, setStatus] = useState<TimelogStatus>('clocked-out');
-  const [timelog, setTimelog] = useState<TimelogEntry[]>([]);
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [breakTime, setBreakTime] = useState(0);
+  const { status, setStatus, timelog, setTimelog, currentTime, setCurrentTime, elapsedTime, setElapsedTime, breakTime, setBreakTime } = useTimeClock();
   
   useEffect(() => {
     const interval = setInterval(() => {
