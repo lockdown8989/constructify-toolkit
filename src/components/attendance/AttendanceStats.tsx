@@ -1,3 +1,4 @@
+
 import { useAttendance } from "@/hooks/use-attendance";
 
 interface AttendanceStatsProps {
