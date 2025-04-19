@@ -12,6 +12,7 @@ export type Database = {
       attendance: {
         Row: {
           break_minutes: number | null
+          break_start: string | null
           check_in: string | null
           check_out: string | null
           date: string | null
@@ -26,6 +27,7 @@ export type Database = {
         }
         Insert: {
           break_minutes?: number | null
+          break_start?: string | null
           check_in?: string | null
           check_out?: string | null
           date?: string | null
@@ -40,6 +42,7 @@ export type Database = {
         }
         Update: {
           break_minutes?: number | null
+          break_start?: string | null
           check_in?: string | null
           check_out?: string | null
           date?: string | null

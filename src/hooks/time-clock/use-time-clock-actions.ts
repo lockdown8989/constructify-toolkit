@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -106,7 +105,7 @@ export const useTimeClockActions = (
     const now = new Date();
     const { data: record, error: fetchError } = await supabase
       .from('attendance')
-      .select('break_start')
+      .select('break_start, break_minutes')
       .eq('id', currentRecord)
       .single();
 
@@ -122,12 +121,13 @@ export const useTimeClockActions = (
 
     if (record?.break_start) {
       const breakStart = new Date(record.break_start);
-      const breakMinutes = Math.round((now.getTime() - breakStart.getTime()) / (1000 * 60));
+      const existingBreakMinutes = record.break_minutes || 0;
+      const newBreakMinutes = Math.round((now.getTime() - breakStart.getTime()) / (1000 * 60)) + existingBreakMinutes;
 
       const { error } = await supabase
         .from('attendance')
         .update({
-          break_minutes: breakMinutes,
+          break_minutes: newBreakMinutes,
           break_start: null
         })
         .eq('id', currentRecord);

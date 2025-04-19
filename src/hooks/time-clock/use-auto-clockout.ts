@@ -14,7 +14,6 @@ export const useAutoClockout = (
 ) => {
   const { toast } = useToast();
 
-  // Handle auto-clockout when user logs out
   useEffect(() => {
     const handleStorageChange = async (event: StorageEvent) => {
       if (event.key?.includes('supabase.auth') && employeeId && currentRecord && status !== 'clocked-out') {
@@ -35,13 +34,14 @@ export const useAutoClockout = (
     
     const { data: record } = await supabase
       .from('attendance')
-      .select('break_start')
+      .select('break_start, break_minutes')
       .eq('id', recordId)
       .single();
       
     if (record?.break_start) {
       const breakStart = new Date(record.break_start);
-      const breakMinutes = Math.round((now.getTime() - breakStart.getTime()) / (1000 * 60));
+      const existingBreakMinutes = record.break_minutes || 0;
+      const breakMinutes = Math.round((now.getTime() - breakStart.getTime()) / (1000 * 60)) + existingBreakMinutes;
       
       await supabase
         .from('attendance')
