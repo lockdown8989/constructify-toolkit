@@ -1,13 +1,14 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { OpenShiftType } from '@/types/supabase/schedules';
+import { useShiftCancellation } from './use-shift-cancellation';
 
 export function useOpenShifts() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { cancelShift } = useShiftCancellation();
 
   const { data: openShifts = [], isLoading } = useQuery({
     queryKey: ['open-shifts'],
@@ -105,6 +106,7 @@ export function useOpenShifts() {
   return {
     openShifts,
     isLoading,
-    assignShift
+    assignShift,
+    cancelShift
   };
 }
