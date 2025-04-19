@@ -47,15 +47,15 @@ const DayColumn = ({
   return (
     <div className="col-span-1 border-r border-gray-200">
       {/* Header */}
-      <div className="p-3 sm:p-4 border-b border-gray-200 bg-gray-50">
+      <div className="p-2 sm:p-4 border-b border-gray-200 bg-gray-50">
         <div className="text-center">
-          <div className="text-gray-600 font-medium">{dayLabel}</div>
+          <div className="text-gray-600 font-medium text-sm sm:text-base">{dayLabel}</div>
           <div className="text-xs text-gray-500">{formatHours(dayStats.totalHours)}</div>
         </div>
       </div>
       
       {/* Shifts */}
-      <div className="p-2 flex flex-col gap-2">
+      <div className="p-1 sm:p-2 flex flex-col gap-1 sm:gap-2 min-h-[100px]">
         {/* Employee shifts */}
         {sortedShifts.map(shift => {
           const employee = employees.find(e => e.id === shift.employeeId);
@@ -84,7 +84,7 @@ const DayColumn = ({
         {/* Empty state */}
         {sortedShifts.length === 0 && openShifts.length === 0 && (
           <div className="p-2 text-center text-xs text-gray-400">
-            No shifts scheduled
+            No shifts
           </div>
         )}
       </div>
