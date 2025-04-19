@@ -11,8 +11,11 @@ interface DateBoxProps {
 export const DateBox: React.FC<DateBoxProps> = ({ startTime, status }) => {
   const { getDateBoxStyles } = useStatusStyles();
   
+  // We need to cast the status string to the expected type
+  const typedStatus = status as 'pending' | 'confirmed' | 'completed' | 'rejected';
+  
   return (
-    <div className={getDateBoxStyles(status)}>
+    <div className={getDateBoxStyles(typedStatus)}>
       <span className="text-xs font-medium">
         {format(startTime, 'MMM').toUpperCase()}
       </span>

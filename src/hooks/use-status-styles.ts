@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { Schedule } from '@/types/supabase/schedules';
 
 export const useStatusStyles = () => {
-  const getCardStyles = (status: Schedule['status']) => {
+  const getCardStyles = (status: Schedule['status'] | string | undefined) => {
     return cn(
       "p-4 rounded-lg border transition-all hover:shadow-sm",
       status === 'confirmed' ? "border-green-200 bg-green-50" :
@@ -12,7 +12,7 @@ export const useStatusStyles = () => {
     );
   };
 
-  const getDateBoxStyles = (status: Schedule['status']) => {
+  const getDateBoxStyles = (status: Schedule['status'] | string | undefined) => {
     return cn(
       "w-14 h-14 rounded-lg flex flex-col items-center justify-center",
       status === 'confirmed' ? "bg-green-100 text-green-700" :
