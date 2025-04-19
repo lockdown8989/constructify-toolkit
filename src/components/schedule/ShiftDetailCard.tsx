@@ -1,9 +1,16 @@
+
 import React from 'react';
 import { format, parseISO } from 'date-fns';
-import { Calendar, Info, Mail, XCircle, Clock, MapPin, User } from 'lucide-react';
+import { Clock, User, MapPin, Info, Mail, X, Check } from 'lucide-react';
 import { Schedule } from '@/hooks/use-schedules';
 import { Badge } from '@/components/ui/badge';
-import ShiftResponseActions from './ShiftResponseActions';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from '@/lib/utils';
 
 interface ShiftDetailCardProps {
@@ -23,15 +30,10 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
 }) => {
   const startTime = parseISO(schedule.start_time);
   const endTime = parseISO(schedule.end_time);
+  const duration = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60));
   
-  const formattedStartTime = format(startTime, 'HH:mm');
-  const formattedEndTime = format(endTime, 'HH:mm');
-  const formattedDate = format(startTime, 'EEE');
-  const formattedDay = format(startTime, 'd');
-  const formattedMonth = format(startTime, 'MMM').toUpperCase();
-  
-  const getStatusColor = () => {
-    switch(schedule.status) {
+  const getStatusColor = (status: string | undefined) => {
+    switch(status) {
       case 'pending': return 'bg-amber-100 border-amber-300 text-amber-800';
       case 'confirmed': return 'bg-green-100 border-green-300 text-green-800';
       case 'completed': return 'bg-blue-100 border-blue-300 text-blue-800';
@@ -39,84 +41,117 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
       default: return 'bg-gray-100 border-gray-300 text-gray-800';
     }
   };
-  
+
   const isPending = schedule.status === 'pending';
-  
+
   return (
-    <div className="flex items-start space-x-4 bg-white rounded-lg p-4 mb-3 border border-gray-100 shadow-sm">
-      {/* Date Box */}
-      <div className="flex-shrink-0 w-16 h-16 bg-cyan-500 text-white rounded-lg flex flex-col items-center justify-center">
-        <span className="text-sm font-medium">{formattedDate}</span>
-        <span className="text-xl font-bold">{formattedDay}</span>
-        <span className="text-xs">{formattedMonth}</span>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex-1">
-            <h3 className="text-xl font-bold">
-              {formattedStartTime} → {formattedEndTime}
-            </h3>
-            <Badge 
-              variant="outline" 
-              className={`mt-1 ${getStatusColor()}`}
-            >
-              {schedule.status?.toUpperCase()}
-            </Badge>
-          </div>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-3">
+      <div className="flex items-start gap-4">
+        {/* Date Box */}
+        <div className="flex-shrink-0 w-20 h-20 bg-cyan-500 text-white rounded-lg flex flex-col items-center justify-center">
+          <span className="text-lg font-medium">{format(startTime, 'EEE')}</span>
+          <span className="text-2xl font-bold">{format(startTime, 'd')}</span>
+          <span className="text-sm">{format(startTime, 'MMM').toUpperCase()}</span>
         </div>
 
-        <div className="space-y-1 text-sm text-gray-600">
-          <div className="flex items-center">
-            <Clock className="h-4 w-4 mr-1.5 text-gray-400" />
-            <span>{format(endTime, 'H')} hours</span>
-          </div>
-          <div className="flex items-center">
-            <User className="h-4 w-4 mr-1.5 text-gray-400" />
-            <span>{schedule.title || 'General Shift'}</span>
-          </div>
-          {schedule.location && (
-            <div className="flex items-center">
-              <MapPin className="h-4 w-4 mr-1.5 text-gray-400" />
-              <span>{schedule.location}</span>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-3 flex justify-between items-center">
-          <div className="flex space-x-2">
-            <button
-              onClick={onInfoClick}
-              className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500"
-              aria-label="Show Info"
-            >
-              <Info className="h-4 w-4" />
-            </button>
-            <button
-              onClick={onEmailClick}
-              className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500"
-              aria-label="Email about shift"
-            >
-              <Mail className="h-4 w-4" />
-            </button>
-            {!schedule.status?.includes('completed') && (
-              <button
-                onClick={onCancelClick}
-                className="p-1.5 rounded-full hover:bg-red-50 text-red-500"
-                aria-label="Cancel shift"
+        {/* Content */}
+        <div className="flex-1">
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <h3 className="text-2xl font-bold mb-1">
+                {format(startTime, 'HH:mm')} → {format(endTime, 'HH:mm')}
+              </h3>
+              <Badge 
+                variant="outline" 
+                className={cn("mb-2", getStatusColor(schedule.status))}
               >
-                <XCircle className="h-4 w-4" />
-              </button>
+                {schedule.status?.toUpperCase() || 'PENDING'}
+              </Badge>
+            </div>
+          </div>
+
+          <div className="space-y-2 text-gray-600">
+            <div className="flex items-center">
+              <Clock className="h-4 w-4 mr-2 text-gray-400" />
+              <span>{duration} hours</span>
+            </div>
+            <div className="flex items-center">
+              <User className="h-4 w-4 mr-2 text-gray-400" />
+              <span>{schedule.title || 'Driver'}</span>
+            </div>
+            {schedule.location && (
+              <div className="flex items-center">
+                <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                <span>{schedule.location}</span>
+              </div>
             )}
           </div>
-          
-          {isPending && (
-            <ShiftResponseActions 
-              schedule={schedule} 
-              onResponseComplete={onResponseComplete}
-            />
-          )}
+
+          <div className="mt-4 flex items-center justify-between">
+            <div className="flex gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      className="h-9 w-9"
+                      onClick={onInfoClick}
+                    >
+                      <Info className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>View details</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      className="h-9 w-9"
+                      onClick={onEmailClick}
+                    >
+                      <Mail className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Contact manager</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            {isPending ? (
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="text-green-600 border-green-200 hover:bg-green-50"
+                  onClick={() => onResponseComplete?.()}
+                >
+                  <Check className="h-4 w-4 mr-1" />
+                  Accept
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="text-red-600 border-red-200 hover:bg-red-50"
+                  onClick={onCancelClick}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Reject
+                </Button>
+              </div>
+            ) : (
+              !schedule.status?.includes('completed') && (
+                <Button 
+                  variant="outline" 
+                  className="text-red-600 border-red-200 hover:bg-red-50"
+                  onClick={onCancelClick}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Cancel
+                </Button>
+              )
+            )}
+          </div>
         </div>
       </div>
     </div>
