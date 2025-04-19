@@ -67,7 +67,7 @@ const SchedulePage = () => {
         end_time: `${selectedDate}T${newSchedule.endTime}:00`
       };
       
-      await createSchedule(schedule);
+      await createSchedule.mutateAsync(schedule);
       
       setNewSchedule({
         title: '',
