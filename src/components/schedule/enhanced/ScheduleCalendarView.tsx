@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { format, isSameDay } from 'date-fns';
-import { Calendar, ChevronLeft, ChevronRight, Mail, Info, X } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Mail, Info, X, Check, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -16,20 +16,35 @@ interface ScheduleCalendarViewProps {
   onDateChange: (date: Date) => void;
   schedules: Schedule[];
   onShiftAction: (scheduleId: string, action: 'confirm' | 'cancel') => void;
+  isLoading?: boolean;
 }
 
 export const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
   currentDate,
   onDateChange,
   schedules,
-  onShiftAction
+  onShiftAction,
+  isLoading = false
 }) => {
   const { user } = useAuth();
   const { isManager } = useUserRole();
-  
+
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'confirmed':
+        return 'text-green-700 bg-green-50 border-green-200';
+      case 'pending':
+        return 'text-yellow-700 bg-yellow-50 border-yellow-200';
+      case 'rejected':
+        return 'text-red-700 bg-red-50 border-red-200';
+      default:
+        return 'text-gray-700 bg-gray-50 border-gray-200';
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-      {/* Header with navigation */}
+      {/* Header */}
       <div className="p-4 border-b flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-primary" />
@@ -56,7 +71,6 @@ export const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
         </div>
       </div>
 
-      {/* Tabs for different views */}
       <Tabs defaultValue="my-shifts" className="w-full">
         <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
           <TabsTrigger
@@ -67,15 +81,6 @@ export const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
             )}
           >
             My Shifts
-          </TabsTrigger>
-          <TabsTrigger
-            value="open-shifts"
-            className={cn(
-              "relative h-11 rounded-none border-b-2 border-b-transparent bg-transparent px-4",
-              "data-[state=active]:border-b-primary data-[state=active]:text-primary"
-            )}
-          >
-            Open Shifts
           </TabsTrigger>
           <TabsTrigger
             value="pending"
@@ -104,76 +109,87 @@ export const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
 
         <ScrollArea className="h-[600px]">
           <div className="p-4 space-y-4">
-            {schedules.map((schedule) => (
-              <div
-                key={schedule.id}
-                className={cn(
-                  "p-4 rounded-lg border",
-                  isSameDay(new Date(schedule.start_time), new Date()) && "bg-blue-50 border-blue-200",
-                  schedule.status === 'confirmed' && "border-green-200",
-                  schedule.status === 'pending' && "border-yellow-200",
-                  schedule.status === 'completed' && "border-gray-200"
-                )}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className={cn(
-                      "w-12 h-12 rounded-lg flex flex-col items-center justify-center",
-                      schedule.status === 'confirmed' ? "bg-green-100 text-green-700" :
-                      schedule.status === 'pending' ? "bg-yellow-100 text-yellow-700" :
-                      "bg-gray-100 text-gray-700"
-                    )}>
-                      <span className="text-sm font-medium">
-                        {format(new Date(schedule.start_time), 'MMM')}
-                      </span>
-                      <span className="text-lg font-bold">
-                        {format(new Date(schedule.start_time), 'd')}
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="font-medium">{schedule.title}</h3>
-                      <p className="text-sm text-gray-500">
-                        {format(new Date(schedule.start_time), 'HH:mm')} → {format(new Date(schedule.end_time), 'HH:mm')}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                      <Info className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                      <Mail className="h-4 w-4" />
-                    </Button>
-                    {schedule.status === 'pending' && !isManager && (
-                      <Button 
-                        size="sm" 
-                        variant="destructive"
-                        className="h-8"
-                        onClick={() => onShiftAction(schedule.id, 'cancel')}
-                      >
-                        <X className="h-4 w-4 mr-1" />
-                        Cancel
-                      </Button>
-                    )}
-                    {schedule.status === 'pending' && isManager && (
-                      <Button 
-                        size="sm" 
-                        variant="default"
-                        className="h-8"
-                        onClick={() => onShiftAction(schedule.id, 'confirm')}
-                      >
-                        Confirm
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                {schedule.location && (
-                  <div className="text-sm text-gray-500 mt-2">
-                    📍 {schedule.location}
-                  </div>
-                )}
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Clock className="h-5 w-5 animate-spin text-primary mr-2" />
+                <span>Loading shifts...</span>
               </div>
-            ))}
+            ) : schedules.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No shifts found for this period
+              </div>
+            ) : (
+              schedules.map((schedule) => (
+                <div
+                  key={schedule.id}
+                  className={cn(
+                    "p-4 rounded-lg border transition-all hover:shadow-sm",
+                    isSameDay(new Date(schedule.start_time), new Date()) && "bg-blue-50 border-blue-200",
+                    getStatusColor(schedule.status)
+                  )}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className={cn(
+                        "w-12 h-12 rounded-lg flex flex-col items-center justify-center",
+                        schedule.status === 'confirmed' ? "bg-green-100 text-green-700" :
+                        schedule.status === 'pending' ? "bg-yellow-100 text-yellow-700" :
+                        schedule.status === 'rejected' ? "bg-red-100 text-red-700" :
+                        "bg-gray-100 text-gray-700"
+                      )}>
+                        <span className="text-sm font-medium">
+                          {format(new Date(schedule.start_time), 'MMM')}
+                        </span>
+                        <span className="text-lg font-bold">
+                          {format(new Date(schedule.start_time), 'd')}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="font-medium">{schedule.title}</h3>
+                        <p className="text-sm text-gray-500">
+                          {format(new Date(schedule.start_time), 'HH:mm')} → {format(new Date(schedule.end_time), 'HH:mm')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Info className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                      {schedule.status === 'pending' && !isManager && (
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          className="h-8"
+                          onClick={() => onShiftAction(schedule.id, 'cancel')}
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Cancel
+                        </Button>
+                      )}
+                      {schedule.status === 'pending' && isManager && (
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          className="h-8"
+                          onClick={() => onShiftAction(schedule.id, 'confirm')}
+                        >
+                          <Check className="h-4 w-4 mr-1" />
+                          Confirm
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  {schedule.location && (
+                    <div className="text-sm text-gray-500 mt-2">
+                      📍 {schedule.location}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </ScrollArea>
       </Tabs>
