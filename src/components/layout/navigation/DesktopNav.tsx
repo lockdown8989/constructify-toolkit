@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom"
 import { Calendar, DollarSign, Receipt, Clock, Check, X } from "lucide-react"
 import { useAuth } from "@/hooks/auth"
@@ -44,7 +43,7 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
               className="hover:underline underline-offset-4 flex items-center group relative"
             >
               <Clock className="h-4 w-4 mr-1" />
-              My Employee Shifts
+              My Employee Schedule
               <div className="flex gap-1 ml-2">
                 {acceptedCount > 0 && (
                   <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 flex items-center">
@@ -74,18 +73,30 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
               My Schedule
             </Link>
           )}
-          <Link
-            to="/people"
-            className="hover:underline underline-offset-4"
-          >
-            Employees
-          </Link>
-          <Link
-            to="/employee-workflow"
-            className="hover:underline underline-offset-4"
-          >
-            Employee Workflow
-          </Link>
+          {/* Show these links only for managers */}
+          {hasManagerialAccess && (
+            <>
+              <Link
+                to="/people"
+                className="hover:underline underline-offset-4"
+              >
+                Employees
+              </Link>
+              <Link
+                to="/shift-calendar"
+                className="hover:underline underline-offset-4"
+              >
+                Shift Calendar
+              </Link>
+              <Link
+                to="/payroll"
+                className="hover:underline underline-offset-4 flex items-center"
+              >
+                <Receipt className="h-4 w-4 mr-1" />
+                Payslip
+              </Link>
+            </>
+          )}
           <Link
             to="/leave"
             className="hover:underline underline-offset-4 flex items-center"
@@ -94,24 +105,11 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
             Leave & Schedule
           </Link>
           <Link
-            to="/shift-calendar"
-            className="hover:underline underline-offset-4"
-          >
-            Shift Calendar
-          </Link>
-          <Link
             to="/salary"
             className="hover:underline underline-offset-4 flex items-center"
           >
             <DollarSign className="h-4 w-4 mr-1" />
             Salary
-          </Link>
-          <Link
-            to="/payroll"
-            className="hover:underline underline-offset-4 flex items-center"
-          >
-            <Receipt className="h-4 w-4 mr-1" />
-            Payslip
           </Link>
         </>
       )}
