@@ -19,6 +19,7 @@ import LandingPage from "@/pages/LandingPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import EmployeeDetailsPage from "@/components/people/EmployeeDetailsPage";
 import Attendance from "@/pages/Attendance";
+import TimeClock from "@/pages/TimeClock";
 
 const router = createBrowserRouter([
   {
@@ -100,6 +101,10 @@ const router = createBrowserRouter([
       {
         path: "attendance",
         element: <Attendance />,
+      },
+      {
+        path: "time-clock",
+        element: <TimeClock />,
       },
     ],
   },
