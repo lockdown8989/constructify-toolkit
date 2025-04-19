@@ -45,12 +45,12 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
             <ClipboardCheck 
               className={cn(
                 "h-6 w-6 mb-1", 
-                location.pathname === "/attendance" ? "text-[#2A6877]" : "text-muted-foreground"
+                location.pathname === "/attendance" ? "text-primary" : "text-muted-foreground"
               )} 
             />
             <span className={cn(
               "text-xs", 
-              location.pathname === "/attendance" ? "text-[#2A6877] font-medium" : "text-muted-foreground"
+              location.pathname === "/attendance" ? "text-primary font-medium" : "text-muted-foreground"
             )}>
               Attendance
             </span>

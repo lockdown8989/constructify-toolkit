@@ -91,10 +91,10 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                   <Link
                     to="/attendance"
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-white bg-[#2A6877] hover:bg-[#1d4d58] transition-colors touch-target"
+                    className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                   >
-                    <ClipboardCheck className="mr-3 h-5 w-5" />
-                    <span>Add Attendance</span>
+                    <ClipboardCheck className="mr-3 h-5 w-5 text-neutral-600" />
+                    <span>Attendance</span>
                   </Link>
                 )}
                 {hasManagerialAccess ? (
