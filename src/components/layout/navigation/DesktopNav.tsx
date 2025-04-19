@@ -3,6 +3,7 @@ import { Calendar, DollarSign, Receipt, Clock, Home, ClipboardCheck } from "luci
 import { useAuth } from "@/hooks/auth"
 import { useEmployeeSchedule } from "@/hooks/use-employee-schedule"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 
 interface DesktopNavProps {
   isAuthenticated: boolean;
@@ -46,14 +47,14 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
       </Link>
       {isAuthenticated && (
         <>
-          {hasManagerialAccess ? (
+          {hasManagerialAccess && (
             <>
               <Link
                 to="/attendance"
-                className="hover:underline underline-offset-4 flex items-center"
+                className="inline-flex items-center justify-center rounded-md bg-[#2A6877] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1d4d58] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#2A6877]"
               >
-                <ClipboardCheck className="h-4 w-4 mr-1" />
-                Attendance
+                <ClipboardCheck className="h-4 w-4 mr-2" />
+                Add Attendance
               </Link>
               <Link
                 to="/employee-workflow"
@@ -87,14 +88,6 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
                 Shift Calendar
               </Link>
             </>
-          ) : (
-            <Link
-              to="/employee-workflow"
-              className="hover:underline underline-offset-4 flex items-center"
-            >
-              <Clock className="h-4 w-4 mr-1" />
-              My Schedule
-            </Link>
           )}
           <Link
             to="/leave"
