@@ -25,11 +25,14 @@ export const useShiftResponse = () => {
 
         console.log(`Processing shift response: ${response} for schedule ID: ${scheduleId}`);
 
+        // Map the response to the correct status enum value
+        const statusValue = response === 'accepted' ? 'confirmed' : 'rejected';
+
         // Update the shift status in Supabase
         const { data: scheduleData, error: updateError } = await supabase
           .from('schedules')
           .update({
-            status: response === 'accepted' ? 'confirmed' : 'rejected',
+            status: statusValue,
             updated_at: new Date().toISOString()
           })
           .eq('id', scheduleId)
