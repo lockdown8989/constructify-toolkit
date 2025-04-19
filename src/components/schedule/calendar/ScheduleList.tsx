@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { Schedule } from '@/hooks/use-schedules';
+import { useShiftAssignmentDialog } from '@/hooks/use-shift-assignment-dialog';
+import { ShiftAssignmentDialog } from '../ShiftAssignmentDialog';
 
 interface ScheduleListProps {
   date: Date | undefined;
@@ -30,6 +32,22 @@ const ScheduleList = ({
   isHR,
   isMobile
 }: ScheduleListProps) => {
+  const shiftAssignment = useShiftAssignmentDialog();
+
+  const handleOpenShiftClick = (schedule: Schedule) => {
+    if (schedule.status === 'pending' && (isAdmin || isHR)) {
+      shiftAssignment.openDialog({
+        id: schedule.id,
+        title: schedule.title,
+        start_time: schedule.start_time,
+        end_time: schedule.end_time,
+        location: schedule.location || '',
+        status: 'open',
+        notes: ''
+      });
+    }
+  };
+
   return (
     <div className="mt-4">
       <h3 className="font-medium text-base sm:text-lg mb-2">
@@ -40,12 +58,16 @@ const ScheduleList = ({
       ) : schedules.length > 0 ? (
         <ul className="space-y-2 max-h-[40vh] overflow-y-auto">
           {schedules.map(schedule => {
-            // Check if this is a new schedule
             const isNew = newSchedules.some(s => s.id === schedule.id);
             const isPending = schedule.status === 'pending';
             
             return (
-              <li key={schedule.id} className="flex items-center py-1 text-sm border-b border-gray-100">
+              <li 
+                key={schedule.id} 
+                className="flex items-center py-1 text-sm border-b border-gray-100"
+                onClick={() => handleOpenShiftClick(schedule)}
+                style={{ cursor: isPending && (isAdmin || isHR) ? 'pointer' : 'default' }}
+              >
                 <span className="w-14 text-xs sm:text-sm text-gray-500">
                   {format(new Date(schedule.start_time), 'h:mm a')}
                 </span>
@@ -55,7 +77,7 @@ const ScheduleList = ({
                   {isPending && <Clock className="h-3.5 w-3.5 ml-1.5 text-amber-500" />}
                 </span>
                 <span className="text-xs sm:text-sm text-gray-500 truncate max-w-[80px] sm:max-w-none">
-                  {employeeNames[schedule.employee_id] || 'Unknown'}
+                  {employeeNames[schedule.employee_id] || 'Unassigned'}
                 </span>
                 {isPending && (
                   <Badge variant="outline" className="ml-2 text-xs bg-amber-50 text-amber-700 border-amber-300">
@@ -81,6 +103,14 @@ const ScheduleList = ({
           Add Schedule
         </Button>
       )}
+
+      <ShiftAssignmentDialog
+        isOpen={shiftAssignment.isOpen}
+        onClose={shiftAssignment.closeDialog}
+        shift={shiftAssignment.selectedShift}
+        employees={shiftAssignment.employees || []}
+        onAssign={shiftAssignment.handleAssign}
+      />
     </div>
   );
 };
