@@ -20,6 +20,12 @@ import { useLocation } from "react-router-dom";
 // Define the view types
 type ViewType = "employee" | "manager" | "calendar" | "notifications" | "schedule-requests";
 
+// Define the view option type
+type ViewOption = {
+  label: string;
+  icon: React.ReactNode;
+};
+
 const LeaveManagement = () => {
   const { hasManagerAccess } = useAccessControl();
   const [currentView, setCurrentView] = useState<ViewType>("employee");
@@ -39,8 +45,8 @@ const LeaveManagement = () => {
   }, [location.state, hasManagerAccess]);
 
   // Define view options based on user access
-  const getViewOptions = () => {
-    const baseOptions: Record<ViewType, { label: string, icon: React.ReactNode }> = {
+  const getViewOptions = (): Record<string, ViewOption> => {
+    const baseOptions: Record<string, ViewOption> = {
       employee: { label: "Employee View", icon: <Users className="h-4 w-4 mr-2" /> },
       calendar: { label: "Calendar View", icon: <Calendar className="h-4 w-4 mr-2" /> },
       "schedule-requests": { label: "Schedule Requests", icon: <Clock className="h-4 w-4 mr-2" /> }
@@ -70,8 +76,8 @@ const LeaveManagement = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="w-full md:w-auto flex justify-between items-center">
-              {viewOptions[currentView].icon}
-              {viewOptions[currentView].label}
+              {viewOptions[currentView]?.icon}
+              {viewOptions[currentView]?.label}
               <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
