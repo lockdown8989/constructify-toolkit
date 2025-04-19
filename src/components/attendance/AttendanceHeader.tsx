@@ -1,43 +1,47 @@
 
-import { ArrowLeft } from "lucide-react"
-import { Link } from "react-router-dom"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Clock, Building2 } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal } from "lucide-react";
 
 const AttendanceHeader = () => {
   return (
-    <>
-      <div className="flex items-center mb-6">
-        <Link to="/dashboard">
-          <Button variant="ghost" size="icon" className="mr-4">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <h1 className="text-2xl font-semibold">Employee details</h1>
-      </div>
-
-      <div className="flex items-center gap-4 mb-6">
+    <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center gap-4">
         <Avatar className="h-16 w-16">
           <AvatarImage src="/placeholder.svg" />
           <AvatarFallback>PD</AvatarFallback>
         </Avatar>
         <div>
-          <h2 className="text-xl font-semibold mb-2">Panji Dwi</h2>
-          <div className="flex items-center gap-4 text-muted-foreground">
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 mr-1.5" />
-              <span>Fulltime</span>
+          <h2 className="text-2xl font-semibold mb-1">Employee name</h2>
+          <div className="grid grid-cols-3 gap-8 text-gray-600">
+            <div>
+              <span className="block text-sm">Role</span>
+              <span>UI Designer</span>
             </div>
-            <div className="flex items-center">
-              <Building2 className="h-4 w-4 mr-1.5" />
-              <span>Onsite</span>
+            <div>
+              <span className="block text-sm">Employee ID</span>
+              <span>#EMP07</span>
+            </div>
+            <div>
+              <span className="block text-sm">Phone Number</span>
+              <span>+62 921 019 112</span>
             </div>
           </div>
         </div>
       </div>
-    </>
-  )
-}
+      <div className="flex items-center gap-2">
+        <Button variant="outline" className="text-gray-600">
+          View Details
+        </Button>
+        <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700">
+          Add Attendance
+        </Button>
+        <Button variant="ghost" size="icon">
+          <MoreHorizontal className="h-5 w-5" />
+        </Button>
+      </div>
+    </div>
+  );
+};
 
-export default AttendanceHeader
+export default AttendanceHeader;
