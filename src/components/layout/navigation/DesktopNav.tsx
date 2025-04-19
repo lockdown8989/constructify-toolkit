@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom"
 import { Calendar, DollarSign, Receipt, Clock } from "lucide-react"
 import { useAuth } from "@/hooks/auth"
@@ -8,7 +9,7 @@ interface DesktopNavProps {
 
 const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
   const { isManager, isAdmin, isHR } = useAuth();
-  const isEmployee = !isManager && !isAdmin && !isHR;
+  const hasManagerialAccess = isManager || isAdmin || isHR;
   
   return (
     <div className="mx-auto flex items-center space-x-6">
@@ -29,7 +30,7 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
       </Link>
       {isAuthenticated && (
         <>
-          {isEmployee && (
+          {hasManagerialAccess && (
             <Link
               to="/employee-workflow"
               className="hover:underline underline-offset-4 flex items-center"
