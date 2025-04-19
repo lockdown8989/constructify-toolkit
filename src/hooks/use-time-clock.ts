@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/auth';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
+import { AttendanceRecord } from '@/types/supabase/attendance';
 
 type TimeClockStatus = 'clocked-in' | 'clocked-out' | 'on-break';
 
@@ -30,12 +31,12 @@ export const useTimeClock = () => {
         .order('created_at', { ascending: false })
         .limit(1);
 
-      if (records && records[0]) {
-        const record = records[0];
+      if (records && records.length > 0) {
+        const record = records[0] as AttendanceRecord;
         setCurrentRecord(record.id);
         
         if (!record.check_out) {
-          setStatus(record.break_minutes > 0 ? 'on-break' : 'clocked-in');
+          setStatus(record.break_minutes && record.break_minutes > 0 ? 'on-break' : 'clocked-in');
         } else {
           setStatus('clocked-out');
         }
@@ -62,11 +63,11 @@ export const useTimeClock = () => {
         (payload) => {
           console.log('Real-time update:', payload);
           if (payload.new) {
-            const record = payload.new;
+            const record = payload.new as AttendanceRecord;
             setCurrentRecord(record.id);
             
             if (!record.check_out) {
-              setStatus(record.break_minutes > 0 ? 'on-break' : 'clocked-in');
+              setStatus(record.break_minutes && record.break_minutes > 0 ? 'on-break' : 'clocked-in');
             } else {
               setStatus('clocked-out');
             }
@@ -174,11 +175,21 @@ export const useTimeClock = () => {
     if (!currentRecord) return;
     
     const now = new Date();
-    const { data: record } = await supabase
+    const { data: record, error: fetchError } = await supabase
       .from('attendance')
       .select('break_start')
       .eq('id', currentRecord)
       .single();
+
+    if (fetchError) {
+      console.error('Error fetching break start time:', fetchError);
+      toast({
+        title: "Error Ending Break",
+        description: fetchError.message,
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (record?.break_start) {
       const breakStart = new Date(record.break_start);
