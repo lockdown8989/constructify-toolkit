@@ -6,12 +6,12 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const getManagerUserIds = async (): Promise<string[]> => {
   try {
-    // Query user_roles table for users with manager, admin, or hr roles
-    // The issue was here - we were using incorrect enum values
+    // Query user_roles table for users with management roles
+    // Using the correct enum values that match the database
     const { data, error } = await supabase
       .from('user_roles')
       .select('user_id')
-      .in('role', ['manager', 'admin', 'hr']);
+      .in('role', ['employer', 'admin', 'hr']);
     
     if (error) {
       console.error('Error fetching manager user IDs:', error);
@@ -36,7 +36,7 @@ export const userHasManagerRole = async (userId: string): Promise<boolean> => {
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .in('role', ['manager', 'admin', 'hr'])
+      .in('role', ['employer', 'admin', 'hr'])
       .maybeSingle();
     
     if (error) {
