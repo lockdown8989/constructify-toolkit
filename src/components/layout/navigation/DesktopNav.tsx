@@ -13,7 +13,7 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
   const hasManagerialAccess = isManager || isAdmin || isHR;
   const { schedules } = useEmployeeSchedule();
   
-  // Calculate counts
+  // Calculate pending, accepted, and rejected counts
   const pendingCount = schedules?.filter(s => s.status === 'pending').length || 0;
   const acceptedCount = schedules?.filter(s => s.status === 'confirmed').length || 0;
   const rejectedCount = schedules?.filter(s => s.status === 'rejected').length || 0;
@@ -35,10 +35,36 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
       >
         Contact
       </Link>
-      
       {isAuthenticated && (
         <>
-          {!hasManagerialAccess && (
+          {hasManagerialAccess ? (
+            <Link
+              to="/employee-workflow"
+              className="hover:underline underline-offset-4 flex items-center group relative"
+            >
+              <Clock className="h-4 w-4 mr-1" />
+              My Employee Schedule
+              <div className="flex gap-1 ml-2">
+                {acceptedCount > 0 && (
+                  <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 flex items-center">
+                    <Check className="h-3 w-3 mr-1" />
+                    {acceptedCount}
+                  </Badge>
+                )}
+                {rejectedCount > 0 && (
+                  <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300 flex items-center">
+                    <X className="h-3 w-3 mr-1" />
+                    {rejectedCount}
+                  </Badge>
+                )}
+                {pendingCount > 0 && (
+                  <Badge variant="outline" className="flex items-center">
+                    {pendingCount} pending
+                  </Badge>
+                )}
+              </div>
+            </Link>
+          ) : (
             <Link
               to="/employee-workflow"
               className="hover:underline underline-offset-4 flex items-center"
@@ -47,7 +73,7 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
               My Schedule
             </Link>
           )}
-          
+          {/* Show these links only for managers */}
           {hasManagerialAccess && (
             <>
               <Link
@@ -71,7 +97,13 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
               </Link>
             </>
           )}
-          
+          <Link
+            to="/leave"
+            className="hover:underline underline-offset-4 flex items-center"
+          >
+            <Calendar className="h-4 w-4 mr-1" />
+            Leave & Schedule
+          </Link>
           <Link
             to="/salary"
             className="hover:underline underline-offset-4 flex items-center"

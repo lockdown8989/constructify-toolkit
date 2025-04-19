@@ -2,13 +2,10 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { Schedule as SupabaseSchedule } from '@/types/supabase/schedules';
-import { Schedule as AppSchedule } from '@/types/schedule.types';
+import { Schedule } from '@/types/supabase/schedules';
 import { CalendarHeader } from './components/CalendarHeader';
 import { TabNavigation } from './components/TabNavigation';
 import { ScheduleContent } from './components/ScheduleContent';
-
-type Schedule = AppSchedule | SupabaseSchedule;
 
 interface ScheduleCalendarViewProps {
   currentDate: Date;
