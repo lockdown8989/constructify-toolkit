@@ -1,10 +1,10 @@
 
 import React from 'react';
 import { format, parseISO } from 'date-fns';
-import { Clock, User, MapPin, Mail, X } from 'lucide-react';
+import { Clock, User, MapPin, Mail, X, CheckCircle } from 'lucide-react';
 import { Schedule } from '@/hooks/use-schedules';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import ShiftResponseActions from './ShiftResponseActions';
 
 interface ShiftDetailCardProps {
   schedule: Schedule;
@@ -19,10 +19,12 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
   onInfoClick,
   onEmailClick,
   onCancelClick,
+  onResponseComplete
 }) => {
   const startTime = parseISO(schedule.start_time);
   const endTime = parseISO(schedule.end_time);
   const duration = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60));
+  const isPending = schedule.status === 'pending';
   
   return (
     <div className="bg-white rounded-lg shadow-sm border p-4">
@@ -36,7 +38,11 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
         
         {/* Content */}
         <div className="flex-1">
-          <div className="text-green-500 font-medium text-sm mb-1">
+          <div className={`text-sm font-medium mb-1 ${
+            schedule.status === 'confirmed' ? 'text-green-500' :
+            schedule.status === 'pending' ? 'text-amber-500' :
+            'text-gray-500'
+          }`}>
             {schedule.status?.toUpperCase()}
           </div>
           
@@ -60,6 +66,12 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
           </div>
           
           <div className="flex justify-end items-center gap-2 mt-3">
+            {isPending && (
+              <ShiftResponseActions 
+                schedule={schedule}
+                onResponseComplete={onResponseComplete}
+              />
+            )}
             <Button 
               variant="outline"
               size="icon"
@@ -76,15 +88,17 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
             >
               <Mail className="h-4 w-4" />
             </Button>
-            <Button 
-              variant="outline"
-              size="sm"
-              className="text-red-600 border-red-200 hover:bg-red-50"
-              onClick={onCancelClick}
-            >
-              <X className="h-4 w-4 mr-1" />
-              Cancel
-            </Button>
+            {!isPending && (
+              <Button 
+                variant="outline"
+                size="sm"
+                className="text-red-600 border-red-200 hover:bg-red-50"
+                onClick={onCancelClick}
+              >
+                <X className="h-4 w-4 mr-1" />
+                Cancel
+              </Button>
+            )}
           </div>
         </div>
       </div>
