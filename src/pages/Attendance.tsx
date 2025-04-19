@@ -9,13 +9,22 @@ import { useEmployeeDataManagement } from "@/hooks/use-employee-data-management"
 const Attendance = () => {
   const { employeeData, isLoading } = useEmployeeDataManagement();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | undefined>(
+    employeeData?.id
+  );
   
   return (
     <div className="container max-w-[1200px] mx-auto px-4 py-8">
       <AttendanceHeader />
-      <AttendanceStats employeeId={employeeData?.id} />
-      <AttendanceControls onSearchChange={setSearchQuery} />
-      <AttendanceList employeeId={employeeData?.id} searchQuery={searchQuery} />
+      <AttendanceStats employeeId={selectedEmployeeId} />
+      <AttendanceControls 
+        onSearchChange={setSearchQuery}
+        onEmployeeSelect={setSelectedEmployeeId}
+      />
+      <AttendanceList 
+        employeeId={selectedEmployeeId} 
+        searchQuery={searchQuery} 
+      />
     </div>
   );
 };

@@ -1,20 +1,19 @@
-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, Calendar } from "lucide-react"
+import { Calendar } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useIsMobile } from "@/hooks/use-mobile"
+import { useEmployees } from "@/hooks/use-employees"
 import { useState } from "react"
 
 interface AttendanceControlsProps {
   onSearchChange: (value: string) => void;
+  onEmployeeSelect?: (employeeId: string) => void;
 }
 
-const AttendanceControls = ({ onSearchChange }: AttendanceControlsProps) => {
-  const isMobile = useIsMobile();
+const AttendanceControls = ({ onSearchChange, onEmployeeSelect }: AttendanceControlsProps) => {
+  const { data: employees = [] } = useEmployees();
   const [month, setMonth] = useState("October 2023");
   
-  // Fake month navigation - in a real app, this would update the actual data
   const handlePreviousMonth = () => {
     setMonth("September 2023");
   };
@@ -57,6 +56,19 @@ const AttendanceControls = ({ onSearchChange }: AttendanceControlsProps) => {
       </div>
       
       <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto">
+        <Select onValueChange={onEmployeeSelect}>
+          <SelectTrigger className="w-full md:w-[200px]">
+            <SelectValue placeholder="Select Employee" />
+          </SelectTrigger>
+          <SelectContent>
+            {employees.map((employee) => (
+              <SelectItem key={employee.id} value={employee.id}>
+                {employee.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
         <Input 
           type="search" 
           placeholder="Search employee" 
