@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Shift, OpenShift } from '@/types/restaurant-schedule';
 import ShiftEditDialog from './ShiftEditDialog';
@@ -6,6 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useCreateSchedule } from '@/hooks/use-schedules';
 import { useOpenShifts } from '@/hooks/use-open-shifts';
 import { toast as sonnerToast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ShiftDialogManagerProps {
   addShift: (shift: Omit<Shift, 'id'>) => void;

@@ -3,17 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
-
-interface OpenShift {
-  id: string;
-  title: string;
-  role: string;
-  start_time: string;
-  end_time: string;
-  notes?: string;
-  location?: string;
-  status: string;
-}
+import { OpenShiftType } from '@/types/supabase';
 
 export function useOpenShifts() {
   const { user } = useAuth();
@@ -28,7 +18,7 @@ export function useOpenShifts() {
         .order('start_time', { ascending: true });
 
       if (error) throw error;
-      return data as OpenShift[];
+      return data as OpenShiftType[];
     },
     enabled: !!user
   });

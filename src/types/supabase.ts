@@ -1,4 +1,3 @@
-
 import { Database as DatabaseType } from "@/integrations/supabase/types";
 
 export interface Employee {
@@ -17,7 +16,6 @@ export interface Employee {
   sick_leave_days?: number;
 }
 
-// Define availability request type - updated to match the database schema
 export interface AvailabilityRequest {
   id: string;
   employee_id: string;
@@ -34,20 +32,18 @@ export interface AvailabilityRequest {
   audit_log: any[] | null;
 }
 
-// Define shift swap type - updating to match the database schema
 export interface ShiftSwap {
   id: string;
   requester_id: string;
-  recipient_id: string | null; // Updated to match database schema (can be null)
+  recipient_id: string | null;
   requester_schedule_id: string;
-  recipient_schedule_id?: string | null; // Can be null in the database
+  recipient_schedule_id?: string | null;
   status: string;
-  notes: string | null; // Updated to explicitly allow null to match the database schema
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
 
-// Define notification type - fixing the related_entity and related_id properties to match the DB schema
 export interface Notification {
   id: string;
   user_id: string;
@@ -55,12 +51,11 @@ export interface Notification {
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
   read: boolean;
-  related_entity: string; // Changed from optional to required to match database schema
-  related_id: string; // Changed from optional to required to match database schema
+  related_entity: string;
+  related_id: string;
   created_at: string;
 }
 
-// Define webhook settings type
 export interface WebhookSetting {
   id: string;
   user_id: string;
@@ -74,7 +69,6 @@ export interface WebhookSetting {
   updated_at: string;
 }
 
-// Define notification settings type
 export interface NotificationSetting {
   id: string;
   user_id: string;
@@ -85,7 +79,6 @@ export interface NotificationSetting {
   updated_at: string;
 }
 
-// Define workflow notification type
 export interface WorkflowNotification {
   id: string;
   receiver_id: string;
@@ -97,7 +90,6 @@ export interface WorkflowNotification {
   created_at: string;
 }
 
-// Define workflow request type
 export interface WorkflowRequest {
   id: string;
   user_id: string;
@@ -108,11 +100,32 @@ export interface WorkflowRequest {
   submitted_at: string;
 }
 
-// Extend the Database type to include our new tables
+export interface OpenShiftType {
+  id: string;
+  title: string;
+  role: string | null;
+  start_time: string;
+  end_time: string;
+  notes: string | null;
+  location: string | null;
+  status: string;
+  created_at: string | null;
+  created_by: string | null;
+}
+
+export interface OpenShiftAssignment {
+  id: string;
+  open_shift_id: string | null;
+  employee_id: string | null;
+  assigned_by: string | null;
+  status: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
 export interface ExtendedDatabase extends DatabaseType {
   public: {
     Tables: {
-      // Include all existing tables from DatabaseType
       attendance: DatabaseType['public']['Tables']['attendance'];
       documents: DatabaseType['public']['Tables']['documents'];
       employee_composition: DatabaseType['public']['Tables']['employee_composition'];
@@ -126,12 +139,39 @@ export interface ExtendedDatabase extends DatabaseType {
       schedules: DatabaseType['public']['Tables']['schedules'];
       user_roles: DatabaseType['public']['Tables']['user_roles'];
       
-      // Add missing tables from the base Database interface
       notification_settings: DatabaseType['public']['Tables']['notification_settings'];
       workflow_notifications: DatabaseType['public']['Tables']['workflow_notifications'];
       workflow_requests: DatabaseType['public']['Tables']['workflow_requests'];
       
-      // Add our custom tables with compatible relationship definitions
+      open_shifts: {
+        Row: OpenShiftType;
+        Insert: Omit<OpenShiftType, 'id' | 'created_at'> & { id?: string; created_at?: string };
+        Update: Partial<OpenShiftType>;
+        Relationships: []
+      };
+      
+      open_shift_assignments: {
+        Row: OpenShiftAssignment;
+        Insert: Omit<OpenShiftAssignment, 'id' | 'created_at' | 'updated_at'> & { id?: string; created_at?: string; updated_at?: string };
+        Update: Partial<OpenShiftAssignment>;
+        Relationships: [
+          {
+            foreignKeyName: "open_shift_assignments_employee_id_fkey";
+            columns: ["employee_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "open_shift_assignments_open_shift_id_fkey";
+            columns: ["open_shift_id"];
+            isOneToOne: false;
+            referencedRelation: "open_shifts";
+            referencedColumns: ["id"];
+          }
+        ]
+      };
+      
       notifications: {
         Row: Notification;
         Insert: Omit<Notification, 'id' | 'created_at'> & { id?: string; created_at?: string };
@@ -179,9 +219,9 @@ export interface ExtendedDatabase extends DatabaseType {
         Row: {
           created_at: string;
           id: string;
-          notes: string | null; // Updated to match the ShiftSwap interface (can be null)
-          recipient_id: string | null; // Updated to explicitly allow null
-          recipient_schedule_id: string | null; // Updated to explicitly allow null
+          notes: string | null;
+          recipient_id: string | null;
+          recipient_schedule_id: string | null;
           requester_id: string;
           requester_schedule_id: string;
           status: string;
