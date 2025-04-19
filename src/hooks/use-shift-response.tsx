@@ -3,6 +3,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from '@/hooks/use-toast';
+import { sendNotification } from '@/services/notifications/notification-sender';
+import { getManagerUserIds } from '@/services/notifications/role-utils';
 
 export const useShiftResponse = () => {
   const { user } = useAuth();
@@ -29,12 +31,49 @@ export const useShiftResponse = () => {
             updated_at: new Date().toISOString()
           })
           .eq('id', scheduleId)
-          .select()
+          .select('*, employees(name)')
           .single();
 
         if (updateError) {
           console.error('Error updating shift status:', updateError);
           throw new Error(`Failed to update shift status: ${updateError.message}`);
+        }
+
+        // Get employee name for the notification
+        const { data: employeeData, error: employeeError } = await supabase
+          .from('employees')
+          .select('name')
+          .eq('user_id', user.id)
+          .single();
+
+        if (employeeError) {
+          console.error('Error fetching employee data:', employeeError);
+          // Continue execution even if employee data fetch fails
+        }
+
+        const employeeName = employeeData?.name || 'An employee';
+        
+        // Notify managers about the shift response
+        try {
+          // Get all manager user IDs
+          const managerIds = await getManagerUserIds();
+          
+          // Send notification to all managers
+          for (const managerId of managerIds) {
+            await sendNotification({
+              user_id: managerId,
+              title: `Shift ${response === 'accepted' ? 'Accepted' : 'Rejected'}`,
+              message: `${employeeName} has ${response === 'accepted' ? 'accepted' : 'rejected'} a shift scheduled for ${new Date(scheduleData.start_time).toLocaleString()}`,
+              type: response === 'accepted' ? 'success' : 'warning',
+              related_entity: 'schedules',
+              related_id: scheduleId
+            });
+          }
+          
+          console.log(`Successfully sent notifications to ${managerIds.length} managers`);
+        } catch (notificationError) {
+          console.error('Error sending manager notifications:', notificationError);
+          // Continue execution even if notification sending fails
         }
 
         console.log('Successfully updated shift status:', response);

@@ -27,8 +27,8 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
       toast({
         title: response === 'accepted' ? 'Shift accepted' : 'Shift rejected',
         description: response === 'accepted' 
-          ? 'You have successfully accepted this shift.' 
-          : 'You have successfully rejected this shift.',
+          ? 'You have successfully accepted this shift. Managers have been notified.' 
+          : 'You have successfully rejected this shift. Managers have been notified.',
       });
       
       // Call the callback after successful response
