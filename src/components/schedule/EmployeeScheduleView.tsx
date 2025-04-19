@@ -86,6 +86,7 @@ const EmployeeScheduleView: React.FC = () => {
           setSelectedScheduleId(id);
           setIsCancelDialogOpen(true);
         }}
+        onResponseComplete={refreshSchedules}
       />
 
       <ScheduleDialogs

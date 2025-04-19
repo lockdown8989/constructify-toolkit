@@ -29,6 +29,10 @@ export interface Schedule {
   start_time: string;
   end_time: string;
   created_at: string;
+  status?: 'pending' | 'confirmed' | 'completed' | 'rejected';
+  notes?: string | null;
+  location?: string | null;
+  updated_at?: string | null;
 }
 
 export interface ShiftSwap {
@@ -43,7 +47,7 @@ export interface ShiftSwap {
   updated_at: string;
 }
 
-export type ScheduleStatus = 'pending' | 'confirmed' | 'completed';
+export type ScheduleStatus = 'pending' | 'confirmed' | 'completed' | 'rejected';
 
 export interface ScheduleWithStatus extends Schedule {
   status: ScheduleStatus;

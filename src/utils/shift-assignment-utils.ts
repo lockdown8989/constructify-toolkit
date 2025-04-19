@@ -32,7 +32,7 @@ export const createShiftScheduleEntry = async (
       title: openShift.title,
       start_time: openShift.start_time,
       end_time: openShift.end_time,
-      status: 'confirmed'
+      status: 'pending' // Set default status to pending
     })
     .select()
     .single();
@@ -60,6 +60,15 @@ export const sendShiftAssignmentNotification = async (
     throw new Error(`Failed to fetch employee details: ${employeeError.message}`);
   }
 
+  // Get manager information (the user who is creating the shift)
+  const { data: managers } = await supabase
+    .from('employees')
+    .select('name')
+    .eq('user_id', supabase.auth.getUser().then(data => data.data.user?.id))
+    .single();
+
+  const managerName = managers?.name || 'Manager';
+
   if (employee.user_id) {
     const notificationMessage = generateShiftNotificationMessage(
       openShift.title, 
@@ -69,8 +78,8 @@ export const sendShiftAssignmentNotification = async (
 
     await sendNotification({
       user_id: employee.user_id,
-      title: 'New Shift Assignment 📅',
-      message: notificationMessage,
+      title: 'New Shift Request 📅',
+      message: `You've received a new shift request from ${managerName}. Please respond.\n\n${notificationMessage}`,
       type: 'info',
       related_entity: 'schedules',
       related_id: scheduleDataId

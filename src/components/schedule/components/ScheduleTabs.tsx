@@ -19,6 +19,7 @@ interface ScheduleTabsProps {
   onInfoClick: (scheduleId: string) => void;
   onEmailClick: (schedule: Schedule) => void;
   onCancelClick: (scheduleId: string) => void;
+  onResponseComplete?: () => void;
 }
 
 export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
@@ -29,14 +30,16 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
   onInfoClick,
   onEmailClick,
   onCancelClick,
+  onResponseComplete,
 }) => {
   return (
     <div className="px-4 mt-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full grid grid-cols-4">
+        <TabsList className="w-full grid grid-cols-5">
           <TabsTrigger value="my-shifts">My Shifts</TabsTrigger>
           <TabsTrigger value="open-shifts">Open Shifts</TabsTrigger>
           <TabsTrigger value="pending">Pending</TabsTrigger>
+          <TabsTrigger value="rejected">Rejected</TabsTrigger>
           <TabsTrigger value="completed">Completed</TabsTrigger>
         </TabsList>
         
@@ -51,6 +54,7 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
                   onInfoClick={() => onInfoClick(schedule.id)}
                   onEmailClick={() => onEmailClick(schedule)}
                   onCancelClick={() => onCancelClick(schedule.id)}
+                  onResponseComplete={onResponseComplete}
                 />
               ))
           ) : (
@@ -72,8 +76,30 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
                 onInfoClick={() => onInfoClick(schedule.id)}
                 onEmailClick={() => onEmailClick(schedule)}
                 onCancelClick={() => onCancelClick(schedule.id)}
+                onResponseComplete={onResponseComplete}
               />
             ))}
+          {schedules.filter(schedule => schedule.status === 'pending').length === 0 && (
+            <p className="text-center text-gray-500 py-4">No pending shifts</p>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="rejected" className="mt-4">
+          {schedules
+            .filter(schedule => schedule.status === 'rejected')
+            .map(schedule => (
+              <ShiftDetailCard
+                key={schedule.id}
+                schedule={schedule}
+                onInfoClick={() => onInfoClick(schedule.id)}
+                onEmailClick={() => onEmailClick(schedule)}
+                onCancelClick={() => onCancelClick(schedule.id)}
+                onResponseComplete={onResponseComplete}
+              />
+            ))}
+          {schedules.filter(schedule => schedule.status === 'rejected').length === 0 && (
+            <p className="text-center text-gray-500 py-4">No rejected shifts</p>
+          )}
         </TabsContent>
         
         <TabsContent value="completed" className="mt-4">
@@ -86,8 +112,12 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
                 onInfoClick={() => onInfoClick(schedule.id)}
                 onEmailClick={() => onEmailClick(schedule)}
                 onCancelClick={() => onCancelClick(schedule.id)}
+                onResponseComplete={onResponseComplete}
               />
             ))}
+          {schedules.filter(schedule => schedule.status === 'completed').length === 0 && (
+            <p className="text-center text-gray-500 py-4">No completed shifts</p>
+          )}
         </TabsContent>
       </Tabs>
     </div>

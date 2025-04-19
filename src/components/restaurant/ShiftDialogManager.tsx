@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Shift, OpenShift } from '@/types/restaurant-schedule';
 import ShiftEditDialog from './ShiftEditDialog';
@@ -32,23 +33,51 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
 
       if (user) {
         try {
+          // Get employee details for notification
+          const { data: employee, error: employeeError } = await supabase
+            .from('employees')
+            .select('user_id, name')
+            .eq('id', shiftDialog.employeeId)
+            .single();
+
+          if (employeeError) {
+            console.error('Error fetching employee details:', employeeError);
+            sonnerToast.error('Could not find employee details');
+            return;
+          }
+
+          // Get manager details
+          const { data: manager, error: managerError } = await supabase
+            .from('employees')
+            .select('name')
+            .eq('user_id', user.id)
+            .single();
+
+          const managerName = managerError ? 'Manager' : (manager?.name || 'Manager');
+          
           // Using mutateAsync instead of mutate to get the returned data
           const scheduleData = await createSchedule.mutateAsync({
             employee_id: shiftDialog.employeeId,
             title: formData.role || 'Shift',
             start_time: new Date().toISOString(),
             end_time: new Date().toISOString(),
-            status: 'confirmed' as const,
+            status: 'pending' as const, // Set status as pending
             notes: formData.notes || ''
           });
 
-          await sendShiftAssignmentNotification(
-            shiftDialog.employeeId, 
-            { title: formData.role }, 
-            scheduleData.id
-          );
+          // If employee has a user account, send them a notification
+          if (employee?.user_id) {
+            await sendNotification({
+              user_id: employee.user_id,
+              title: 'New Shift Request 📅',
+              message: `You've received a new shift request from ${managerName}. Please respond.`,
+              type: 'info',
+              related_entity: 'schedules',
+              related_id: scheduleData.id
+            });
+          }
 
-          sonnerToast.success('Shift added successfully');
+          sonnerToast.success('Shift request sent to employee');
         } catch (error) {
           console.error('Error adding shift:', error);
           sonnerToast.error('Failed to save shift');

@@ -12,7 +12,7 @@ export interface Schedule {
   created_at?: string;
   updated_at?: string;
   notes?: string;
-  status?: 'confirmed' | 'pending' | 'completed';
+  status?: 'confirmed' | 'pending' | 'completed' | 'rejected';
   location?: string;
 }
 
