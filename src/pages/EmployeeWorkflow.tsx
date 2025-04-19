@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/auth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import EmployeeScheduleView from '@/components/schedule/EmployeeScheduleView';
 import LeaveBalanceCard from '@/components/schedule/LeaveBalanceCard';
+import AvailabilityManagement from '@/components/schedule/AvailabilityManagement';
 import { cn } from '@/lib/utils';
 
 const EmployeeWorkflow = () => {
@@ -34,8 +35,8 @@ const EmployeeWorkflow = () => {
         )}>
           <EmployeeScheduleView />
         </div>
-        {!isMobile && (
-          <div>
+        <div className="space-y-6">
+          {!isMobile && (
             <LeaveBalanceCard 
               leaveBalance={{
                 annual: 20,
@@ -45,8 +46,9 @@ const EmployeeWorkflow = () => {
                 remaining: 23
               }} 
             />
-          </div>
-        )}
+          )}
+          <AvailabilityManagement />
+        </div>
       </div>
     </div>
   );
