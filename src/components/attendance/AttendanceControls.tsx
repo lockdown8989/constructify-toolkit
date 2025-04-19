@@ -6,7 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useState } from "react"
 
-const AttendanceControls = () => {
+interface AttendanceControlsProps {
+  onSearchChange: (value: string) => void;
+}
+
+const AttendanceControls = ({ onSearchChange }: AttendanceControlsProps) => {
   const isMobile = useIsMobile();
   const [month, setMonth] = useState("October 2023");
   
@@ -57,6 +61,7 @@ const AttendanceControls = () => {
           type="search" 
           placeholder="Search employee" 
           className="md:w-48 h-9"
+          onChange={(e) => onSearchChange(e.target.value)}
         />
         <Select defaultValue="all">
           <SelectTrigger className="w-full md:w-36 h-9">

@@ -1,4 +1,3 @@
-
 import { useAttendance } from "@/hooks/use-attendance";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -6,9 +5,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AttendanceListProps {
   employeeId?: string;
+  searchQuery?: string;
 }
 
-const AttendanceList = ({ employeeId }: AttendanceListProps) => {
+const AttendanceList = ({ employeeId, searchQuery = "" }: AttendanceListProps) => {
   const { data: attendance } = useAttendance(employeeId);
   const isMobile = useIsMobile();
 
@@ -35,6 +35,15 @@ const AttendanceList = ({ employeeId }: AttendanceListProps) => {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
   };
+
+  const filteredRecords = attendance?.recentRecords?.filter(record => {
+    if (!searchQuery) return true;
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      record.employee_name?.toLowerCase().includes(searchLower) ||
+      record.employee_id?.toLowerCase().includes(searchLower)
+    );
+  });
 
   return (
     <div className="space-y-6">
@@ -83,7 +92,7 @@ const AttendanceList = ({ employeeId }: AttendanceListProps) => {
         </div>
       </div>
 
-      {attendance?.recentRecords?.map((record) => (
+      {filteredRecords?.map((record) => (
         <div key={record.id} className="border rounded-xl p-4 md:p-6 bg-white">
           <div className="flex flex-col md:flex-row justify-between items-start gap-3 mb-4">
             <div>
