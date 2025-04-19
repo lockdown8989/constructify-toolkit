@@ -1,77 +1,103 @@
 
 import React from 'react';
-import { WeekStats, Employee, OpenShift } from '@/types/restaurant-schedule';
-import { days } from './utils/schedule-utils';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import DayColumn from './DayColumn';
 import WeekSummaryColumn from './WeekSummaryColumn';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
+import { Employee, OpenShift, WeekStats } from '@/types/restaurant-schedule';
+import { format } from 'date-fns';
 
 interface WeeklyGridProps {
   weekStats: WeekStats;
   openShifts: OpenShift[];
   employees: Employee[];
   daysDisplayNames: string[];
-  formatCurrency: (amount: number, currency?: string, locale?: string) => string;
+  formatCurrency: (value: number) => string;
   handleAssignOpenShift: (openShiftId: string, employeeId?: string) => void;
   previousWeek: () => void;
   nextWeek: () => void;
   isMobile: boolean;
+  isSyncingCalendar?: boolean;
 }
 
-const WeeklyGrid = ({ 
-  weekStats, 
-  openShifts, 
+const WeeklyGrid: React.FC<WeeklyGridProps> = ({
+  weekStats,
+  openShifts,
   employees,
   daysDisplayNames,
   formatCurrency,
   handleAssignOpenShift,
   previousWeek,
   nextWeek,
-  isMobile
-}: WeeklyGridProps) => {
-  // Filter open shifts by day
-  const getOpenShiftsByDay = (day: string) => {
-    return openShifts.filter(shift => shift.day === day);
-  };
-
+  isMobile,
+  isSyncingCalendar = false
+}) => {
   return (
-    <div className="overflow-x-auto -mx-4 sm:mx-0">
-      <div className={`grid ${isMobile ? 'grid-cols-3' : 'grid-cols-8'} min-w-[600px]`}>
+    <div className="relative">
+      {/* Week navigation */}
+      <div className="flex justify-between items-center p-4 border-b">
+        <Button 
+          variant="ghost" 
+          size={isMobile ? "sm" : "default"} 
+          onClick={previousWeek}
+          className="text-gray-600"
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          Previous
+        </Button>
+        
+        <div className="flex flex-col items-center">
+          <h2 className="text-lg font-medium">
+            {format(weekStats.startDate, 'MMM d')} - {format(weekStats.endDate, 'MMM d, yyyy')}
+          </h2>
+          <div className="text-sm text-gray-500">
+            Week {weekStats.weekNumber}
+          </div>
+        </div>
+        
+        <Button 
+          variant="ghost" 
+          size={isMobile ? "sm" : "default"}
+          onClick={nextWeek}
+          className="text-gray-600"
+        >
+          Next
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+      
+      {/* Day columns */}
+      <div className="grid grid-cols-8 border-b divide-x">
         {/* Summary column */}
         <WeekSummaryColumn 
-          weekStats={weekStats} 
-          openShifts={openShifts} 
+          totalHours={weekStats.totalHours} 
+          totalCost={weekStats.totalCost}
           formatCurrency={formatCurrency}
-          handleAssignOpenShift={handleAssignOpenShift}
-          previousWeek={previousWeek}
-          nextWeek={nextWeek}
+          openShiftsCount={weekStats.openShiftsTotalCount}
+          openShiftsHours={weekStats.openShiftsTotalHours}
         />
         
-        {/* Only show 2 days at a time on mobile */}
-        {days.slice(0, isMobile ? 2 : 7).map((day, index) => (
+        {/* Day columns */}
+        {weekStats.days.map((day, index) => (
           <DayColumn 
-            key={day}
+            key={day.day}
             day={day}
-            dayLabel={daysDisplayNames[index]}
-            dayStats={weekStats.days.find(d => d.day === day)!}
+            dayDisplayName={daysDisplayNames[index]}
+            openShifts={openShifts.filter(s => s.day === day.day)}
             employees={employees}
-            openShifts={getOpenShiftsByDay(day)}
             handleAssignOpenShift={handleAssignOpenShift}
+            formatCurrency={formatCurrency}
           />
         ))}
       </div>
       
-      {/* Mobile day pagination */}
-      {isMobile && (
-        <div className="flex justify-center mt-4 pb-4 gap-2">
-          {[0, 1, 2, 3].map((index) => (
-            <button 
-              key={index}
-              className={`w-2.5 h-2.5 rounded-full transition-colors ${index === 0 ? 'bg-primary' : 'bg-gray-300'}`}
-              // This would need to be implemented with state to show different day groups
-              onClick={() => console.log(`Show days ${index * 2} to ${index * 2 + 1}`)}
-            />
-          ))}
+      {/* Syncing with calendar overlay */}
+      {isSyncingCalendar && (
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-md p-4 flex items-center space-x-3">
+            <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+            <span className="text-gray-700 font-medium">Syncing with calendar...</span>
+          </div>
         </div>
       )}
     </div>

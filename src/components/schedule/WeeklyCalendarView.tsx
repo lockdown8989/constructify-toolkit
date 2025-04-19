@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,12 +13,14 @@ interface WeeklyCalendarViewProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
   schedules: Schedule[];
+  isSyncingCalendar?: boolean;
 }
 
 const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
   currentDate,
   onDateChange,
-  schedules
+  schedules,
+  isSyncingCalendar = false
 }) => {
   const { toast } = useToast();
   const startDate = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start from Monday

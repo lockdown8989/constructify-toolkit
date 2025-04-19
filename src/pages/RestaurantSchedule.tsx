@@ -1,5 +1,5 @@
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useRestaurantSchedule } from '@/hooks/use-restaurant-schedule';
 import { Shift } from '@/types/restaurant-schedule';
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +17,7 @@ import { toast as sonnerToast } from 'sonner';
 
 const RestaurantSchedule = () => {
   const [syncingData, setSyncingData] = useState(false);
+  const [syncingCalendar, setSyncingCalendar] = useState(false);
   const { 
     employees,
     shifts,
@@ -59,6 +60,34 @@ const RestaurantSchedule = () => {
         description: "All employee information has been updated.",
       });
     }, 1500);
+  };
+
+  // Handle calendar synchronization
+  const handleSyncWithCalendar = () => {
+    setSyncingCalendar(true);
+    sonnerToast.loading("Syncing with calendar...");
+    
+    // Call the actual sync function
+    syncWithCalendar().then(() => {
+      // Add a delay to make the notification visible
+      setTimeout(() => {
+        setSyncingCalendar(false);
+        sonnerToast.success("Calendar synchronized");
+        
+        toast({
+          title: "Calendar synchronized",
+          description: "All shifts have been synced with your calendar.",
+        });
+      }, 1500);
+    }).catch(error => {
+      setSyncingCalendar(false);
+      sonnerToast.error("Sync failed");
+      
+      toast({
+        title: "Synchronization failed",
+        description: "There was an error syncing with your calendar.",
+      });
+    });
   };
   
   // Organize shifts by employee and day for the role sections
@@ -111,9 +140,9 @@ const RestaurantSchedule = () => {
       <div className="mb-4 sm:mb-6">
         <ScheduleHeader 
           setViewMode={setViewMode} 
-          onSyncCalendar={syncWithCalendar}
+          onSyncCalendar={handleSyncWithCalendar}
           onSyncEmployeeData={syncEmployeeData}
-          isSyncing={syncingData}
+          isSyncing={syncingData || syncingCalendar}
         />
       </div>
       
@@ -134,6 +163,7 @@ const RestaurantSchedule = () => {
           previousWeek={previousWeek}
           nextWeek={nextWeek}
           isMobile={isMobile}
+          isSyncingCalendar={syncingCalendar}
         />
       </div>
       
