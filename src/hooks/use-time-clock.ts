@@ -2,52 +2,211 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/auth';
+import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
 
 type TimeClockStatus = 'clocked-in' | 'clocked-out' | 'on-break';
 
 export const useTimeClock = () => {
-  // Use localStorage to persist clock status between page refreshes
-  const [status, setStatus] = useState<TimeClockStatus>(() => {
-    const savedStatus = localStorage.getItem('timeClock.status');
-    return (savedStatus as TimeClockStatus) || 'clocked-out';
-  });
-  
+  const [status, setStatus] = useState<TimeClockStatus>('clocked-out');
+  const [currentRecord, setCurrentRecord] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { employeeData } = useEmployeeDataManagement();
 
-  // Save status to localStorage whenever it changes
+  // Check current status on load
   useEffect(() => {
-    localStorage.setItem('timeClock.status', status);
-  }, [status]);
+    if (!employeeData?.id) return;
 
-  const handleClockIn = () => {
+    const checkCurrentStatus = async () => {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data: records } = await supabase
+        .from('attendance')
+        .select('*')
+        .eq('employee_id', employeeData.id)
+        .eq('date', today)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (records && records[0]) {
+        const record = records[0];
+        setCurrentRecord(record.id);
+        
+        if (!record.check_out) {
+          setStatus(record.break_minutes > 0 ? 'on-break' : 'clocked-in');
+        } else {
+          setStatus('clocked-out');
+        }
+      }
+    };
+
+    checkCurrentStatus();
+  }, [employeeData?.id]);
+
+  // Subscribe to real-time updates
+  useEffect(() => {
+    if (!employeeData?.id) return;
+
+    const channel = supabase
+      .channel('attendance-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'attendance',
+          filter: `employee_id=eq.${employeeData.id}`
+        },
+        (payload) => {
+          console.log('Real-time update:', payload);
+          if (payload.new) {
+            const record = payload.new;
+            setCurrentRecord(record.id);
+            
+            if (!record.check_out) {
+              setStatus(record.break_minutes > 0 ? 'on-break' : 'clocked-in');
+            } else {
+              setStatus('clocked-out');
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [employeeData?.id]);
+
+  const handleClockIn = async () => {
+    if (!employeeData?.id) return;
+
+    const now = new Date();
+    const { data, error } = await supabase
+      .from('attendance')
+      .insert({
+        employee_id: employeeData.id,
+        check_in: now.toISOString(),
+        date: now.toISOString().split('T')[0],
+        status: 'Present'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error clocking in:', error);
+      toast({
+        title: "Error Clocking In",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCurrentRecord(data.id);
     setStatus('clocked-in');
     toast({
       title: "Clocked In",
-      description: `You clocked in at ${format(new Date(), 'h:mm a')}`,
+      description: `You clocked in at ${format(now, 'h:mm a')}`,
     });
   };
 
-  const handleClockOut = () => {
+  const handleClockOut = async () => {
+    if (!currentRecord) return;
+
+    const now = new Date();
+    const { error } = await supabase
+      .from('attendance')
+      .update({
+        check_out: now.toISOString()
+      })
+      .eq('id', currentRecord);
+
+    if (error) {
+      console.error('Error clocking out:', error);
+      toast({
+        title: "Error Clocking Out",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCurrentRecord(null);
     setStatus('clocked-out');
     toast({
       title: "Clocked Out",
-      description: `You clocked out at ${format(new Date(), 'h:mm a')}`,
+      description: `You clocked out at ${format(now, 'h:mm a')}`,
     });
   };
 
-  const handleBreakStart = () => {
+  const handleBreakStart = async () => {
+    if (!currentRecord) return;
+    
+    const now = new Date();
+    const { error } = await supabase
+      .from('attendance')
+      .update({
+        break_start: now.toISOString()
+      })
+      .eq('id', currentRecord);
+
+    if (error) {
+      console.error('Error starting break:', error);
+      toast({
+        title: "Error Starting Break",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setStatus('on-break');
     toast({
       title: "Break Started",
-      description: `Your break started at ${format(new Date(), 'h:mm a')}`,
+      description: `Your break started at ${format(now, 'h:mm a')}`,
     });
   };
 
-  const handleBreakEnd = () => {
+  const handleBreakEnd = async () => {
+    if (!currentRecord) return;
+    
+    const now = new Date();
+    const { data: record } = await supabase
+      .from('attendance')
+      .select('break_start')
+      .eq('id', currentRecord)
+      .single();
+
+    if (record?.break_start) {
+      const breakStart = new Date(record.break_start);
+      const breakMinutes = Math.round((now.getTime() - breakStart.getTime()) / (1000 * 60));
+
+      const { error } = await supabase
+        .from('attendance')
+        .update({
+          break_minutes: breakMinutes,
+          break_start: null
+        })
+        .eq('id', currentRecord);
+
+      if (error) {
+        console.error('Error ending break:', error);
+        toast({
+          title: "Error Ending Break",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setStatus('clocked-in');
     toast({
       title: "Break Ended",
-      description: `Your break ended at ${format(new Date(), 'h:mm a')}`,
+      description: `Your break ended at ${format(now, 'h:mm a')}`,
     });
   };
 
