@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { format, parseISO } from 'date-fns';
 import { Calendar, Info, Mail, XCircle, Clock, MapPin, User } from 'lucide-react';
 import { Schedule } from '@/hooks/use-schedules';
 import { Badge } from '@/components/ui/badge';
 import ShiftResponseActions from './ShiftResponseActions';
+import { cn } from '@/lib/utils';
 
 interface ShiftDetailCardProps {
   schedule: Schedule;
