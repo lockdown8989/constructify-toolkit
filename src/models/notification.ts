@@ -19,3 +19,12 @@ export interface Notification extends NotificationData {
   read: boolean;
   created_at: string;
 }
+
+/**
+ * Result of a notification operation
+ */
+export interface NotificationResult {
+  success: boolean;
+  message: string;
+  data?: Record<string, any>;
+}
