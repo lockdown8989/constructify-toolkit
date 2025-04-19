@@ -3,11 +3,14 @@ import React from 'react';
 import { Schedule } from '@/hooks/use-schedules';
 import ShiftDetailCard from '../ShiftDetailCard';
 import { cn } from '@/lib/utils';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface ScheduleTabsProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   schedules: Schedule[];
+  newSchedules: Record<string, boolean>;
   onInfoClick: (scheduleId: string) => void;
   onEmailClick: (schedule: Schedule) => void;
   onCancelClick: (scheduleId: string) => void;
@@ -23,6 +26,8 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
   onCancelClick,
   onResponseComplete,
 }) => {
+  const [currentDate, setCurrentDate] = React.useState(new Date());
+  
   const tabs = [
     { id: 'my-shifts', label: 'My Shifts' },
     { id: 'open-shifts', label: 'Open Shifts' },
@@ -30,9 +35,7 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
     { id: 'completed', label: 'Completed' }
   ];
 
-  // Calendar days
-  const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-  const dates = [2, 3, 4, 5, 6, 7, 8];
+  const daysOfWeek = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
   const filteredSchedules = schedules.filter(schedule => {
     switch (activeTab) {
@@ -48,20 +51,40 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
   });
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white">
       {/* Calendar Header */}
       <div className="p-4 border-b">
-        <div className="grid grid-cols-7 gap-4 mb-2">
-          {days.map((day, index) => (
-            <div key={day} className="text-center">
-              <div className="text-sm font-medium text-gray-600">{day}</div>
-              <div className={cn(
-                "text-xl font-bold mt-1",
-                index === 5 && "text-amber-500",
-                index === 6 && "text-green-500"
-              )}>
-                {dates[index]}
-              </div>
+        <div className="flex items-center justify-between mb-4">
+          <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))}>
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <h2 className="text-2xl font-bold">{format(currentDate, 'MMMM yyyy')}</h2>
+          <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))}>
+            <ChevronRight className="h-6 w-6" />
+          </button>
+        </div>
+        
+        {/* Calendar Days Header */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {daysOfWeek.map(day => (
+            <div key={day} className="text-center text-sm font-medium text-gray-600">
+              {day}
+            </div>
+          ))}
+        </div>
+        
+        {/* Calendar Grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {Array.from({ length: 35 }, (_, i) => (
+            <div
+              key={i}
+              className={cn(
+                "aspect-square flex items-center justify-center text-lg border rounded-lg",
+                i === 29 && "text-blue-500 font-bold",
+                i === 30 && "text-green-500 font-bold"
+              )}
+            >
+              {i < 3 ? i + 29 : i - 2}
             </div>
           ))}
         </div>
@@ -75,23 +98,20 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex-1 py-3 text-sm font-medium relative",
+                "flex-1 py-2 text-sm font-medium border-b-2 transition-colors",
                 activeTab === tab.id
-                  ? "text-blue-600"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
               )}
             >
               {tab.label}
-              {activeTab === tab.id && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />
-              )}
             </button>
           ))}
         </div>
       </div>
 
       {/* Shift Cards */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {filteredSchedules.length > 0 ? (
           filteredSchedules.map(schedule => (
             <ShiftDetailCard
