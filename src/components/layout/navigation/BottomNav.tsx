@@ -1,7 +1,7 @@
-
-import { Home, Users, Calendar, DollarSign, Utensils } from "lucide-react"
+import { Home, Users, Calendar, DollarSign, Utensils, ClipboardCheck } from "lucide-react"
 import { useNavigate, useLocation, Link } from "react-router-dom"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/hooks/auth"
 
 interface BottomNavProps {
   isAuthenticated: boolean;
@@ -10,6 +10,8 @@ interface BottomNavProps {
 const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isManager, isAdmin, isHR } = useAuth();
+  const hasManagerialAccess = isManager || isAdmin || isHR;
   
   if (!isAuthenticated) return null;
   
@@ -19,7 +21,7 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
   
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 safe-area-inset py-2 md:hidden">
-      <div className="grid grid-cols-5 gap-1">
+      <div className={cn("grid gap-1", hasManagerialAccess ? "grid-cols-6" : "grid-cols-5")}>
         <div 
           onClick={handleHomeClick}
           className="flex flex-col items-center justify-center p-2 cursor-pointer"
@@ -37,6 +39,23 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
             Home
           </span>
         </div>
+        
+        {hasManagerialAccess && (
+          <Link to="/attendance" className="flex flex-col items-center justify-center p-2">
+            <ClipboardCheck 
+              className={cn(
+                "h-6 w-6 mb-1", 
+                location.pathname === "/attendance" ? "text-primary" : "text-muted-foreground"
+              )} 
+            />
+            <span className={cn(
+              "text-xs", 
+              location.pathname === "/attendance" ? "text-primary font-medium" : "text-muted-foreground"
+            )}>
+              Attendance
+            </span>
+          </Link>
+        )}
         
         <Link to="/people" className="flex flex-col items-center justify-center p-2">
           <Users 

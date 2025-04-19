@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom"
-import { Calendar, DollarSign, Receipt, Clock, Home } from "lucide-react"
+import { Calendar, DollarSign, Receipt, Clock, Home, ClipboardCheck } from "lucide-react"
 import { useAuth } from "@/hooks/auth"
 import { useEmployeeSchedule } from "@/hooks/use-employee-schedule"
 import { Badge } from "@/components/ui/badge"
@@ -14,7 +14,6 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
   const hasManagerialAccess = isManager || isAdmin || isHR;
   const { schedules } = useEmployeeSchedule();
   
-  // Calculate pending, accepted, and rejected counts
   const pendingCount = schedules?.filter(s => s.status === 'pending').length || 0;
   const acceptedCount = schedules?.filter(s => s.status === 'confirmed').length || 0;
   const rejectedCount = schedules?.filter(s => s.status === 'rejected').length || 0;
@@ -33,7 +32,6 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
         Home
       </button>
       
-      
       <Link
         to="/about"
         className="hover:underline underline-offset-4"
@@ -50,6 +48,13 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
         <>
           {hasManagerialAccess ? (
             <>
+              <Link
+                to="/attendance"
+                className="hover:underline underline-offset-4 flex items-center"
+              >
+                <ClipboardCheck className="h-4 w-4 mr-1" />
+                Attendance
+              </Link>
               <Link
                 to="/employee-workflow"
                 className="hover:underline underline-offset-4 flex items-center group relative"

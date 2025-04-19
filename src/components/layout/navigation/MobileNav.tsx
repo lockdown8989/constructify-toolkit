@@ -6,7 +6,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/sheet"
-import { Menu, Home, User, Users, Calendar, FileText, Workflow, DollarSign, Receipt, Utensils, Clock } from "lucide-react"
+import { Menu, Home, User, Users, Calendar, FileText, Workflow, DollarSign, Receipt, Utensils, Clock, ClipboardCheck } from "lucide-react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "@/hooks/auth"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -23,7 +23,6 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   
-  // Function to navigate back
   const handleBack = () => {
     if (location.pathname !== '/') {
       navigate(-1);
@@ -63,7 +62,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
           <nav className="grid gap-1 px-2 py-2">
             <div
               onClick={handleHomeClick}
-              className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target cursor-pointer"
+              className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
             >
               <Home className="mr-3 h-5 w-5 text-neutral-600" />
               <span>Home</span>
@@ -88,6 +87,16 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
             {isAuthenticated && (
               <>
                 <div className="h-[1px] bg-neutral-200 my-3 mx-6" />
+                {hasManagerialAccess && (
+                  <Link
+                    to="/attendance"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
+                  >
+                    <ClipboardCheck className="mr-3 h-5 w-5 text-neutral-600" />
+                    <span>Attendance</span>
+                  </Link>
+                )}
                 {hasManagerialAccess ? (
                   <Link
                     to="/employee-workflow"
