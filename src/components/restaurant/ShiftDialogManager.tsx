@@ -55,11 +55,49 @@ const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: Shift
 
           const managerName = managerError ? 'Manager' : (manager?.name || 'Manager');
           
+          // Create a valid date object from the day and time
+          // This is the main fix: parse date strings properly before converting to ISO
+          const today = new Date();
+          const dayMap: Record<string, number> = {
+            monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0
+          };
+          
+          // Get the date of the next occurrence of the day
+          const dayOfWeek = dayMap[shiftDialog.day.toLowerCase()];
+          const daysUntilNext = (dayOfWeek - today.getDay() + 7) % 7;
+          const targetDate = new Date(today);
+          targetDate.setDate(today.getDate() + daysUntilNext);
+          
+          // Set the hours and minutes from the time strings
+          const startTimeParts = formData.startTime.split(':');
+          const endTimeParts = formData.endTime.split(':');
+          
+          if (startTimeParts.length !== 2 || endTimeParts.length !== 2) {
+            sonnerToast.error('Invalid time format. Please use HH:MM format');
+            return;
+          }
+          
+          const startDate = new Date(targetDate);
+          startDate.setHours(parseInt(startTimeParts[0], 10), parseInt(startTimeParts[1], 10), 0, 0);
+          
+          const endDate = new Date(targetDate);
+          endDate.setHours(parseInt(endTimeParts[0], 10), parseInt(endTimeParts[1], 10), 0, 0);
+          
+          // If end time is earlier than start time, it must be the next day
+          if (endDate < startDate) {
+            endDate.setDate(endDate.getDate() + 1);
+          }
+          
+          console.log('Creating schedule with dates:', {
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString()
+          });
+          
           const scheduleData = await createSchedule.mutateAsync({
             employee_id: shiftDialog.employeeId,
             title: formData.role || 'Shift',
-            start_time: new Date(formData.startTime).toISOString(),
-            end_time: new Date(formData.endTime).toISOString(),
+            start_time: startDate.toISOString(),
+            end_time: endDate.toISOString(),
             status: 'pending' as const,
             notes: formData.notes || ''
           });
