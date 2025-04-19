@@ -42,6 +42,20 @@ const ShiftSwapItem = ({ swap, onApprove, onReject, onDelete }: ShiftSwapItemPro
     Completed: 'bg-blue-50 text-blue-700 border-blue-200',
   };
 
+  // Render a safe badge with status
+  const renderBadge = () => {
+    const colorClass = statusColors[swap.status as keyof typeof statusColors] || 'bg-gray-50 text-gray-700 border-gray-200';
+    
+    return (
+      <Badge className={colorClass}>
+        {swap.status === 'Pending' && <Clock className="h-3.5 w-3.5 mr-1" />}
+        {swap.status === 'Approved' && <Check className="h-3.5 w-3.5 mr-1" />}
+        {swap.status === 'Rejected' && <X className="h-3.5 w-3.5 mr-1" />}
+        {swap.status}
+      </Badge>
+    );
+  };
+
   return (
     <Card className="mb-4">
       <CardContent className="pt-6">
@@ -61,12 +75,7 @@ const ShiftSwapItem = ({ swap, onApprove, onReject, onDelete }: ShiftSwapItemPro
           </div>
           
           <div className="flex items-center space-x-2">
-            <Badge className={statusColors[swap.status as keyof typeof statusColors]}>
-              {swap.status === 'Pending' && <Clock className="h-3.5 w-3.5 mr-1" />}
-              {swap.status === 'Approved' && <Check className="h-3.5 w-3.5 mr-1" />}
-              {swap.status === 'Rejected' && <X className="h-3.5 w-3.5 mr-1" />}
-              {swap.status}
-            </Badge>
+            {renderBadge()}
             
             {(isManager || swap.status === 'Pending') && (
               <DropdownMenu>

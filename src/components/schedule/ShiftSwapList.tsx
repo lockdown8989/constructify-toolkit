@@ -11,6 +11,7 @@ import { ArrowLeftRight } from 'lucide-react';
 import ShiftSwapStatusBadge from './ShiftSwapStatusBadge';
 import ShiftSwapTabContent from './ShiftSwapTabContent';
 import { useToast } from '@/hooks/use-toast';
+import ShiftSwapItem from './ShiftSwapItem';
 
 const ShiftSwapList = () => {
   const { data: swaps = [], isLoading: isLoadingSwaps } = useShiftSwaps();
@@ -68,17 +69,17 @@ const ShiftSwapList = () => {
     return employee ? employee.name : 'Unknown Employee';
   };
   
-  const handleApprove = (swap: ShiftSwap) => {
+  const handleApprove = (swapId: string) => {
     updateSwap({
-      id: swap.id,
+      id: swapId,
       status: 'Approved',
       updated_at: new Date().toISOString()
     });
   };
   
-  const handleReject = (swap: ShiftSwap) => {
+  const handleReject = (swapId: string) => {
     updateSwap({
-      id: swap.id,
+      id: swapId,
       status: 'Rejected',
       updated_at: new Date().toISOString()
     });
@@ -131,18 +132,23 @@ const ShiftSwapList = () => {
         </div>
         
         <CardContent className="pt-6">
-          <ShiftSwapTabContent
-            swaps={filteredSwaps}
-            activeTab={activeTab}
-            getEmployeeName={getEmployeeName}
-            getScheduleDetails={getScheduleDetails}
-            renderStatusBadge={(status) => <ShiftSwapStatusBadge status={status} />}
-            onApprove={handleApprove}
-            onReject={handleReject}
-            onComplete={handleComplete}
-            canApproveSwaps={canApproveSwaps}
-            userId={user.id}
-          />
+          {filteredSwaps.length === 0 ? (
+            <div className="text-center py-6 text-gray-500">
+              No shift swaps found in this category.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredSwaps.map(swap => (
+                <ShiftSwapItem
+                  key={swap.id}
+                  swap={swap}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          )}
         </CardContent>
       </Tabs>
     </Card>
