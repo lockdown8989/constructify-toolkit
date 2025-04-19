@@ -1,10 +1,15 @@
+
 import { useAttendance } from "@/hooks/use-attendance";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const AttendanceList = () => {
-  const { data: attendance } = useAttendance();
+interface AttendanceListProps {
+  employeeId?: string;
+}
+
+const AttendanceList = ({ employeeId }: AttendanceListProps) => {
+  const { data: attendance } = useAttendance(employeeId);
   const isMobile = useIsMobile();
 
   const workingTimeData = {

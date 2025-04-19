@@ -1,11 +1,14 @@
-
 import { useAttendance } from "@/hooks/use-attendance";
 
-const AttendanceStats = () => {
-  const { data: stats } = useAttendance();
+interface AttendanceStatsProps {
+  employeeId?: string;
+}
+
+const AttendanceStats = ({ employeeId }: AttendanceStatsProps) => {
+  const { data: stats } = useAttendance(employeeId);
   
   return (
-    <div className="grid grid-cols-6 gap-4 mb-8">
+    <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
       <StatCard
         title="Present"
         value={stats?.present ?? 0}
