@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { format } from 'date-fns';
-import { MapPin, Clock, Mail, Info, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { Schedule } from '@/types/supabase/schedules';
+import { DateBox } from './shift-card/DateBox';
+import { TimeLocation } from './shift-card/TimeLocation';
+import { ActionButtons } from './shift-card/ActionButtons';
 
 interface ShiftCardProps {
   schedule: Schedule;
@@ -31,59 +31,20 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
     )}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={cn(
-            "w-14 h-14 rounded-lg flex flex-col items-center justify-center",
-            schedule.status === 'confirmed' ? "bg-green-100 text-green-700" :
-            schedule.status === 'pending' ? "bg-orange-100 text-orange-700" :
-            "bg-gray-100 text-gray-700"
-          )}>
-            <span className="text-xs font-medium">
-              {format(startTime, 'MMM').toUpperCase()}
-            </span>
-            <span className="text-lg font-bold">
-              {format(startTime, 'd')}
-            </span>
-          </div>
-          <div>
-            <div className="text-lg font-semibold">
-              {format(startTime, 'HH:mm')} → {format(endTime, 'HH:mm')}
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <MapPin className="h-4 w-4" />
-              <span>{schedule.location || 'Main Location'}</span>
-            </div>
-          </div>
+          <DateBox startTime={startTime} status={schedule.status || 'pending'} />
+          <TimeLocation
+            startTime={startTime}
+            endTime={endTime}
+            location={schedule.location}
+          />
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={onInfoClick}
-          >
-            <Info className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={onEmailClick}
-          >
-            <Mail className="h-4 w-4" />
-          </Button>
-          {schedule.status === 'pending' && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={onCancelClick}
-              className="h-8"
-            >
-              <X className="h-4 w-4 mr-1" />
-              Cancel
-            </Button>
-          )}
-        </div>
+        <ActionButtons
+          status={schedule.status || 'pending'}
+          onInfoClick={onInfoClick}
+          onEmailClick={onEmailClick}
+          onCancelClick={onCancelClick}
+        />
       </div>
     </div>
   );
