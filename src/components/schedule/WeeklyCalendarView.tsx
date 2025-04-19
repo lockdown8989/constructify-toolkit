@@ -1,11 +1,15 @@
 
 import React, { useEffect, useState } from 'react';
-import { format, addDays, startOfWeek, isSameDay, isSameMonth, startOfMonth, endOfMonth } from 'date-fns';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { format, addDays, startOfWeek, isSameDay, isSameMonth } from 'date-fns';
+import { ChevronLeft, ChevronRight, ArrowLeftRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { type Schedule } from '@/hooks/use-schedules';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/use-auth';
 
 interface WeeklyCalendarViewProps {
   currentDate: Date;
@@ -18,6 +22,9 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
   onDateChange,
   schedules
 }) => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(true);
   const startDate = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start from Monday
   
@@ -34,6 +41,7 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
       dayName: format(date, 'EEE'),
       dayNumber: format(date, 'd'),
       hasShift,
+      schedules: daySchedules,
       isToday: isSameDay(date, new Date()),
       isCurrentMonth: isSameMonth(date, currentDate)
     };
@@ -45,6 +53,24 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
 
   const handleNextWeek = () => {
     onDateChange(addDays(startDate, 7));
+  };
+
+  const handleShiftSwapRequest = (schedule: Schedule) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to request shift swaps.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    navigate('/schedule-requests', { 
+      state: { 
+        activeTab: 'shift-swaps',
+        initialSchedule: schedule 
+      } 
+    });
   };
 
   return (
@@ -81,7 +107,7 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
           </div>
           
           <div className="grid grid-cols-7 gap-2 text-center">
-            {weekDays.map(({ date, dayName, dayNumber, hasShift, isToday, isCurrentMonth }) => (
+            {weekDays.map(({ date, dayName, dayNumber, hasShift, schedules: daySchedules, isToday, isCurrentMonth }) => (
               <div 
                 key={date.toString()} 
                 className={cn(
@@ -100,11 +126,31 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
                 )}>
                   {dayNumber}
                 </div>
-                {hasShift && (
-                  <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
-                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                  </div>
-                )}
+                {hasShift && daySchedules.map((schedule) => (
+                  <TooltipProvider key={schedule.id}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="mt-1 flex justify-center">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="p-1 h-6 flex items-center gap-1 text-xs bg-green-100 hover:bg-green-200 text-green-800"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShiftSwapRequest(schedule);
+                            }}
+                          >
+                            <ArrowLeftRight className="h-3 w-3" />
+                            <span>Swap</span>
+                          </Button>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Request shift swap for {format(new Date(schedule.start_time), 'h:mm a')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ))}
               </div>
             ))}
           </div>

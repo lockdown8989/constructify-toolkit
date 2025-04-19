@@ -8,8 +8,10 @@ import { ScheduleDialogs } from './components/ScheduleDialogs';
 import { ScheduleTabs } from './components/ScheduleTabs';
 import { Schedule } from '@/hooks/use-schedules';
 import { Button } from '@/components/ui/button';
+import { useLocation } from 'react-router-dom';
 
 const EmployeeScheduleView: React.FC = () => {
+  const location = useLocation();
   const {
     currentDate,
     setCurrentDate,
@@ -82,8 +84,6 @@ const EmployeeScheduleView: React.FC = () => {
         onDateChange={setCurrentDate}
         schedules={schedules}
       />
-      
-      {/* Calendar Navigation - Removed here since it's handled within ScheduleTabs */}
       
       <div className="border-t border-gray-200 my-2" />
 
