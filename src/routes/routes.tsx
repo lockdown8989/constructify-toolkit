@@ -19,10 +19,6 @@ import Index from "@/pages/Index";
 import LandingPage from "@/pages/LandingPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import EmployeeDetailsPage from "@/components/people/EmployeeDetailsPage";
-// Corrected import paths for tab components
-import ShiftHistoryTab from "@/components/leave/tabs/ShiftHistoryTab";
-import CalendarTab from "@/components/leave/tabs/CalendarTab";
-import ScheduleRequestsTab from "@/components/leave/tabs/ScheduleRequestsTab";
 
 const router = createBrowserRouter([
   {
@@ -66,16 +62,8 @@ const router = createBrowserRouter([
         element: <Schedule />,
       },
       {
-        path: "shift-history",
-        element: <ShiftHistoryTab />,
-      },
-      {
-        path: "calendar-view",
-        element: <CalendarTab />,
-      },
-      {
         path: "schedule-requests",
-        element: <ScheduleRequestsTab />,
+        element: <ScheduleRequests />,
       },
       {
         path: "employee-workflow",
