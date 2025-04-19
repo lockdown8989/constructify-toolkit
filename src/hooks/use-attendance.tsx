@@ -47,10 +47,15 @@ export function useAttendance(employeeId?: string, daysToFetch: number = 30) {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - daysToFetch);
       
-      // Query to fetch attendance records
+      // Query to fetch attendance records with employee names (for better search in the future)
       const query = supabase
         .from('attendance')
-        .select('*')
+        .select(`
+          *,
+          employees:employee_id (
+            name
+          )
+        `)
         .gte('date', startDate.toISOString().split('T')[0]);
       
       // Filter by employee if provided
@@ -64,13 +69,23 @@ export function useAttendance(employeeId?: string, daysToFetch: number = 30) {
         throw error;
       }
       
-      // Process the data
-      const present = records.filter(r => r.status === 'Present').length;
-      const absent = records.filter(r => r.status === 'Absent').length;
-      const late = records.filter(r => r.status === 'Late').length;
+      // Process the data and map employee names
+      const processedRecords: AttendanceRecord[] = records.map(record => ({
+        id: record.id,
+        employee_id: record.employee_id,
+        date: record.date,
+        check_in: record.check_in,
+        check_out: record.check_out,
+        status: record.status,
+        employee_name: record.employees?.name
+      }));
+      
+      const present = processedRecords.filter(r => r.status === 'Present').length;
+      const absent = processedRecords.filter(r => r.status === 'Absent').length;
+      const late = processedRecords.filter(r => r.status === 'Late').length;
       
       // Sort records by date descending to get most recent first
-      const sortedRecords = records.sort((a, b) => 
+      const sortedRecords = processedRecords.sort((a, b) => 
         new Date(b.date || '') < new Date(a.date || '') ? -1 : 1
       );
       
@@ -78,7 +93,7 @@ export function useAttendance(employeeId?: string, daysToFetch: number = 30) {
         present,
         absent,
         late,
-        total: records.length,
+        total: processedRecords.length,
         recentRecords: sortedRecords.slice(0, 10)
       };
     } catch (err) {

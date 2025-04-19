@@ -40,8 +40,8 @@ const AttendanceList = ({ employeeId, searchQuery = "" }: AttendanceListProps) =
     if (!searchQuery) return true;
     const searchLower = searchQuery.toLowerCase();
     return (
-      record.employee_name?.toLowerCase().includes(searchLower) ||
-      record.employee_id?.toLowerCase().includes(searchLower)
+      (record.employee_id?.toLowerCase().includes(searchLower) || false) ||
+      (record.employee_name?.toLowerCase().includes(searchLower) || false)
     );
   });
 
