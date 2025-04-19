@@ -16,8 +16,11 @@ export type Database = {
           check_in: string | null
           check_out: string | null
           date: string | null
+          device_info: string | null
           employee_id: string | null
           id: string
+          location: string | null
+          notes: string | null
           overtime_approved_at: string | null
           overtime_approved_by: string | null
           overtime_minutes: number | null
@@ -31,8 +34,11 @@ export type Database = {
           check_in?: string | null
           check_out?: string | null
           date?: string | null
+          device_info?: string | null
           employee_id?: string | null
           id?: string
+          location?: string | null
+          notes?: string | null
           overtime_approved_at?: string | null
           overtime_approved_by?: string | null
           overtime_minutes?: number | null
@@ -46,8 +52,11 @@ export type Database = {
           check_in?: string | null
           check_out?: string | null
           date?: string | null
+          device_info?: string | null
           employee_id?: string | null
           id?: string
+          location?: string | null
+          notes?: string | null
           overtime_approved_at?: string | null
           overtime_approved_by?: string | null
           overtime_minutes?: number | null
