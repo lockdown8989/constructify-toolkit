@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'react-router-dom';
 
 const ShiftSwapForm = () => {
   const { user } = useAuth();
@@ -24,6 +25,7 @@ const ShiftSwapForm = () => {
   const { data: employees = [] } = useEmployees();
   const { mutate: createShiftSwap, isPending } = useCreateShiftSwap();
   const { toast } = useToast();
+  const location = useLocation();
   
   const [selectedSchedule, setSelectedSchedule] = useState<string>('');
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
@@ -31,6 +33,13 @@ const ShiftSwapForm = () => {
   const [notes, setNotes] = useState<string>('');
   const [recipientSchedules, setRecipientSchedules] = useState<typeof schedules>([]);
   
+  // Check location state for initial schedule
+  useEffect(() => {
+    if (location.state?.initialSchedule?.id) {
+      setSelectedSchedule(location.state.initialSchedule.id);
+    }
+  }, [location.state]);
+
   // Filter employee's schedules (excluding the current user)
   const userSchedules = user 
     ? schedules.filter(schedule => schedule.employee_id === user.id)

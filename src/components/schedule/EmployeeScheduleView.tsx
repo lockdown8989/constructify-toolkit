@@ -9,9 +9,11 @@ import { ScheduleTabs } from './components/ScheduleTabs';
 import { Schedule } from '@/hooks/use-schedules';
 import { Button } from '@/components/ui/button';
 import { useLocation } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 const EmployeeScheduleView: React.FC = () => {
   const location = useLocation();
+  const { toast } = useToast();
   const {
     currentDate,
     setCurrentDate,

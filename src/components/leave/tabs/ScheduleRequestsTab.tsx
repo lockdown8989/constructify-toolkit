@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -32,6 +31,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { getManagerUserIds } from '@/services/notifications/role-utils';
 import { sendNotification } from '@/services/notifications';
+import { useLocation } from 'react-router-dom';
 
 const ScheduleRequestsTab: React.FC = () => {
   const { toast } = useToast();
@@ -42,20 +42,18 @@ const ScheduleRequestsTab: React.FC = () => {
   const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
   const [pendingCount, setPendingCount] = useState({ shifts: 0, availability: 0 });
-  
-  // Fetch pending counts on load and when data changes
+  const location = useLocation();
+
   useEffect(() => {
     if (!user) return;
     
     const fetchPendingCounts = async () => {
       try {
-        // Get pending shift swap requests count
         const { data: pendingShifts, error: shiftError } = await supabase
           .from('shift_swaps')
           .select('id', { count: 'exact' })
           .eq('status', 'Pending');
         
-        // Get pending availability requests count
         const { data: pendingAvailability, error: availError } = await supabase
           .from('availability_requests')
           .select('id', { count: 'exact' })
@@ -78,7 +76,6 @@ const ScheduleRequestsTab: React.FC = () => {
     fetchPendingCounts();
   }, [user, queryClient]);
   
-  // Set up real-time listeners for shift swaps and availability requests
   useEffect(() => {
     if (!user) return;
     
@@ -92,10 +89,8 @@ const ScheduleRequestsTab: React.FC = () => {
           table: 'shift_swaps'
         },
         async (payload) => {
-          // Invalidate queries to refresh data
           queryClient.invalidateQueries({ queryKey: ['shift_swaps'] });
           
-          // Recalculate pending counts
           const { data: pendingShifts } = await supabase
             .from('shift_swaps')
             .select('id', { count: 'exact' })
@@ -106,7 +101,6 @@ const ScheduleRequestsTab: React.FC = () => {
             shifts: pendingShifts?.length || 0
           }));
           
-          // Show toast notification for specific events
           if (payload.eventType === 'UPDATE') {
             const newStatus = payload.new.status;
             const oldStatus = payload.old.status;
@@ -117,7 +111,6 @@ const ScheduleRequestsTab: React.FC = () => {
                 description: "A shift swap request has been approved.",
               });
               
-              // Send in-app notification to the requester
               if (payload.new.requester_id && user.id !== payload.new.requester_id) {
                 try {
                   await sendNotification({
@@ -133,7 +126,6 @@ const ScheduleRequestsTab: React.FC = () => {
                 }
               }
               
-              // Send in-app notification to the recipient if there is one
               if (payload.new.recipient_id && user.id !== payload.new.recipient_id) {
                 try {
                   await sendNotification({
@@ -154,7 +146,6 @@ const ScheduleRequestsTab: React.FC = () => {
                 description: "A shift swap request has been rejected.",
               });
               
-              // Send in-app notification to the requester
               if (payload.new.requester_id && user.id !== payload.new.requester_id) {
                 try {
                   await sendNotification({
@@ -181,13 +172,11 @@ const ScheduleRequestsTab: React.FC = () => {
               description: "A new shift swap request has been submitted.",
             });
             
-            // Notify managers or admins about the new request
             try {
-              // Get all manager user ids
               const managerIds = await getManagerUserIds();
               
               for (const managerId of managerIds) {
-                if (managerId !== user.id) { // Don't notify the current user if they're a manager
+                if (managerId !== user.id) {
                   await sendNotification({
                     user_id: managerId,
                     title: "New shift swap request",
@@ -212,10 +201,8 @@ const ScheduleRequestsTab: React.FC = () => {
           table: 'availability_requests'
         },
         async (payload) => {
-          // Invalidate queries to refresh data
           queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
           
-          // Recalculate pending counts
           const { data: pendingAvailability } = await supabase
             .from('availability_requests')
             .select('id', { count: 'exact' })
@@ -226,7 +213,6 @@ const ScheduleRequestsTab: React.FC = () => {
             availability: pendingAvailability?.length || 0
           }));
           
-          // Show toast notification for specific events
           if (payload.eventType === 'UPDATE') {
             const newStatus = payload.new.status;
             const oldStatus = payload.old.status;
@@ -237,7 +223,6 @@ const ScheduleRequestsTab: React.FC = () => {
                 description: "An availability request has been approved.",
               });
               
-              // Send in-app notification to the requester
               if (payload.new.employee_id && user.id !== payload.new.employee_id) {
                 try {
                   await sendNotification({
@@ -258,7 +243,6 @@ const ScheduleRequestsTab: React.FC = () => {
                 description: "An availability request has been rejected.",
               });
               
-              // Send in-app notification to the requester
               if (payload.new.employee_id && user.id !== payload.new.employee_id) {
                 try {
                   await sendNotification({
@@ -280,13 +264,11 @@ const ScheduleRequestsTab: React.FC = () => {
               description: "A new availability request has been submitted.",
             });
             
-            // Notify managers or admins about the new request
             try {
-              // Get all manager user ids
               const managerIds = await getManagerUserIds();
               
               for (const managerId of managerIds) {
-                if (managerId !== user.id) { // Don't notify the current user if they're a manager
+                if (managerId !== user.id) {
                   await sendNotification({
                     user_id: managerId,
                     title: "New availability request",
@@ -310,7 +292,6 @@ const ScheduleRequestsTab: React.FC = () => {
     };
   }, [queryClient, toast, user]);
   
-  // Handle manual data refresh
   const handleRefreshData = () => {
     queryClient.invalidateQueries({ queryKey: ['shift_swaps'] });
     queryClient.invalidateQueries({ queryKey: ['availability_requests'] });

@@ -65,12 +65,27 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
       return;
     }
     
-    navigate('/schedule-requests', { 
-      state: { 
-        activeTab: 'shift-swaps',
-        initialSchedule: schedule 
-      } 
-    });
+    try {
+      // Navigate to the schedule requests page with state information
+      navigate('/schedule-requests', { 
+        state: { 
+          activeTab: 'shift-swaps',
+          initialSchedule: {
+            id: schedule.id,
+            start_time: schedule.start_time,
+            end_time: schedule.end_time,
+            title: schedule.title
+          }
+        } 
+      });
+    } catch (error) {
+      console.error("Navigation error:", error);
+      toast({
+        title: "Navigation error",
+        description: "There was a problem navigating to the schedule requests page.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
