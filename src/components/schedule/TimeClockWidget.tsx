@@ -58,10 +58,11 @@ const TimeClockWidget = () => {
     }
   }, [status, currentTime, timelog]);
   
-  const handleClockIn = () => {
+  const handleClockIn = async () => {
     if (!user) return;
     
-    setTimelog([...timelog, { type: 'clock-in', timestamp: new Date() }]);
+    const newTimelog = [...timelog, { type: 'clock-in', timestamp: new Date() }];
+    setTimelog(newTimelog);
     setStatus('clocked-in');
     
     toast({
@@ -70,19 +71,17 @@ const TimeClockWidget = () => {
     });
   };
   
-  const handleClockOut = () => {
+  const handleClockOut = async () => {
     if (!user) return;
     
-    setTimelog([...timelog, { type: 'clock-out', timestamp: new Date() }]);
+    const newTimelog = [...timelog, { type: 'clock-out', timestamp: new Date() }];
+    setTimelog(newTimelog);
     setStatus('clocked-out');
     
     toast({
       title: "Clocked Out",
       description: `You clocked out at ${format(new Date(), 'h:mm a')}`,
     });
-    
-    // In a real app, this would send the timelog to a server
-    console.log("Timelog for submission:", timelog);
   };
   
   const handleBreakStart = () => {

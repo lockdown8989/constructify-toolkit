@@ -1,8 +1,6 @@
 import { Link, useNavigate } from "react-router-dom"
 import { Calendar, DollarSign, Receipt, Clock, Home, ClipboardCheck } from "lucide-react"
 import { useAuth } from "@/hooks/auth"
-import { useEmployeeSchedule } from "@/hooks/use-employee-schedule"
-import { Badge } from "@/components/ui/badge"
 
 interface DesktopNavProps {
   isAuthenticated: boolean;
@@ -12,8 +10,7 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
   const navigate = useNavigate();
   const { isManager, isAdmin, isHR } = useAuth();
   const hasManagerialAccess = isManager || isAdmin || isHR;
-  const { schedules } = useEmployeeSchedule();
-  
+
   const pendingCount = schedules?.filter(s => s.status === 'pending').length || 0;
   const acceptedCount = schedules?.filter(s => s.status === 'confirmed').length || 0;
   const rejectedCount = schedules?.filter(s => s.status === 'rejected').length || 0;
@@ -88,13 +85,22 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
               </Link>
             </>
           ) : (
-            <Link
-              to="/employee-workflow"
-              className="hover:underline underline-offset-4 flex items-center"
-            >
-              <Clock className="h-4 w-4 mr-1" />
-              My Schedule
-            </Link>
+            <>
+              <Link
+                to="/employee-workflow"
+                className="hover:underline underline-offset-4 flex items-center"
+              >
+                <Clock className="h-4 w-4 mr-1" />
+                My Schedule
+              </Link>
+              <Link
+                to="/time-clock"
+                className="hover:underline underline-offset-4 flex items-center"
+              >
+                <Clock className="h-4 w-4 mr-1" />
+                Time Clock
+              </Link>
+            </>
           )}
           <Link
             to="/leave"

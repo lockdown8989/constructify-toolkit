@@ -1,4 +1,4 @@
-import { Home, Users, Calendar, DollarSign, Utensils, ClipboardCheck } from "lucide-react"
+import { Home, Users, Calendar, DollarSign, Utensils, ClipboardCheck, Clock } from "lucide-react"
 import { useNavigate, useLocation, Link } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/auth"
@@ -116,6 +116,23 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
             Salary
           </span>
         </Link>
+        
+        {!hasManagerialAccess && (
+          <Link to="/time-clock" className="flex flex-col items-center justify-center p-2">
+            <Clock 
+              className={cn(
+                "h-6 w-6 mb-1", 
+                location.pathname === "/time-clock" ? "text-primary" : "text-muted-foreground"
+              )} 
+            />
+            <span className={cn(
+              "text-xs", 
+              location.pathname === "/time-clock" ? "text-primary font-medium" : "text-muted-foreground"
+            )}>
+              Time Clock
+            </span>
+          </Link>
+        )}
       </div>
     </div>
   );

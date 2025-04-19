@@ -805,6 +805,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "hr" | "employee" | "employer"
+      attendance_report_status: "pending" | "sent" | "acknowledged"
       shift_status: "confirmed" | "pending" | "rejected" | "completed" | "open"
     }
     CompositeTypes: {
@@ -922,6 +923,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "hr", "employee", "employer"],
+      attendance_report_status: ["pending", "sent", "acknowledged"],
       shift_status: ["confirmed", "pending", "rejected", "completed", "open"],
     },
   },
