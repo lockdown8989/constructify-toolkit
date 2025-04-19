@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -12,7 +11,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "@/hooks/auth"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useState } from "react"
-import { useTimeClock } from "@/hooks/use-time-clock"
+import { useTimeClock } from "@/hooks/time-clock"
 import { Badge } from "@/components/ui/badge"
 
 interface MobileNavProps {
