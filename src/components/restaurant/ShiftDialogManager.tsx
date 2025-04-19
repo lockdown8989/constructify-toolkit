@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Shift, OpenShift } from '@/types/restaurant-schedule';
 import ShiftEditDialog from './ShiftEditDialog';
@@ -13,9 +14,10 @@ import { sendNotification } from '@/services/notifications/notification-sender';
 interface ShiftDialogManagerProps {
   addShift: (shift: Omit<Shift, 'id'>) => void;
   updateShift: (shift: Shift) => void;
+  onResponseComplete?: () => void;
 }
 
-const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) => {
+const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: ShiftDialogManagerProps) => {
   const { user } = useAuth();
   const { createSchedule, isCreating } = useCreateSchedule();
   const { assignShift } = useShiftAssignment();
