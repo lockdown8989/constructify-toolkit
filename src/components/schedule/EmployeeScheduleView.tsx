@@ -2,110 +2,107 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
-import WeeklyCalendarView from '@/components/schedule/WeeklyCalendarView';
-import { ScheduleDialogs } from './components/ScheduleDialogs';
-import { ScheduleTabs } from './components/ScheduleTabs';
+import { Calendar } from '@/components/ui/calendar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
-import { Schedule } from '@/types/schedule.types';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Calendar as CalendarIcon, RefreshCw } from 'lucide-react';
+import ShiftCard from './ShiftCard';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 const EmployeeScheduleView: React.FC = () => {
   const {
     currentDate,
     setCurrentDate,
-    selectedScheduleId,
-    setSelectedScheduleId,
-    isInfoDialogOpen,
-    setIsInfoDialogOpen,
-    isCancelDialogOpen,
-    setIsCancelDialogOpen,
     activeTab,
     setActiveTab,
-    newSchedules,
     schedules,
     isLoading,
     refreshSchedules,
   } = useEmployeeSchedule();
 
-  const handleEmailClick = async (schedule: Schedule) => {
-    const subject = `Regarding shift on ${format(new Date(schedule.start_time), 'MMMM d, yyyy')}`;
-    const body = `Hello,\n\nI would like to discuss my shift scheduled for ${format(new Date(schedule.start_time), 'MMMM d, yyyy')} from ${format(new Date(schedule.start_time), 'h:mm a')} to ${format(new Date(schedule.end_time), 'h:mm a')}.`;
-    window.location.href = `mailto:manager@workplace.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  };
-
-  if (isLoading) {
-    return (
-      <Card className="w-full">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center space-x-4">
-            <RefreshCw className="w-5 h-5 animate-spin text-primary" />
-            <p>Loading your schedule...</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const filteredSchedules = schedules.filter(schedule => {
+    switch (activeTab) {
+      case 'my-shifts':
+        return schedule.status === 'confirmed';
+      case 'open-shifts':
+        return schedule.status === 'open';
+      case 'pending':
+        return schedule.status === 'pending';
+      case 'completed':
+        return schedule.status === 'completed';
+      default:
+        return true;
+    }
+  });
 
   return (
-    <div className="space-y-6 pb-6">
-      <Card className="bg-white">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="text-2xl">My Schedule</CardTitle>
-              <CardDescription className="text-blue-100">View and manage your upcoming shifts</CardDescription>
-            </div>
-            <Button 
-              variant="secondary" 
-              size="sm" 
-              onClick={refreshSchedules}
-              className="bg-white/10 hover:bg-white/20 text-white"
-            >
-              <RefreshCw className="h-3.5 w-3.5 mr-1" />
-              Refresh
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="h-[calc(100vh-12rem)]">
-            <WeeklyCalendarView
-              currentDate={currentDate}
-              onDateChange={setCurrentDate}
-              schedules={schedules}
-            />
-          </div>
-          
-          <div className="border-t">
-            <ScheduleTabs
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              schedules={schedules}
-              newSchedules={newSchedules}
-              onInfoClick={setSelectedScheduleId}
-              onEmailClick={handleEmailClick}
-              onCancelClick={(id) => {
-                setSelectedScheduleId(id);
-                setIsCancelDialogOpen(true);
-              }}
-            />
-          </div>
-        </CardContent>
-      </Card>
+    <div className="flex flex-col min-h-screen bg-gray-50 pb-safe-area-inset-bottom">
+      <div className="bg-cyan-500 text-white p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-semibold">My Schedule</h1>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="text-white hover:bg-cyan-400"
+            onClick={refreshSchedules}
+          >
+            <RefreshCw className="h-5 w-5" />
+          </Button>
+        </div>
+        <div className="flex items-center gap-2 text-cyan-100">
+          <CalendarIcon className="h-5 w-5" />
+          <span>{format(currentDate, 'dd MMMM yyyy')}</span>
+        </div>
+      </div>
 
-      <ScheduleDialogs
-        selectedSchedule={schedules.find(s => s.id === selectedScheduleId)}
-        isInfoDialogOpen={isInfoDialogOpen}
-        setIsInfoDialogOpen={setIsInfoDialogOpen}
-        isCancelDialogOpen={isCancelDialogOpen}
-        setIsCancelDialogOpen={setIsCancelDialogOpen}
+      <Calendar
+        mode="single"
+        selected={currentDate}
+        onSelect={(date) => date && setCurrentDate(date)}
+        className="rounded-none border-0"
+        classNames={{
+          day_today: "bg-cyan-600 text-white font-bold hover:bg-cyan-600",
+          day_selected: "bg-cyan-500 text-white hover:bg-cyan-500 focus:bg-cyan-500",
+          nav_button_previous: "hover:bg-cyan-50",
+          nav_button_next: "hover:bg-cyan-50",
+        }}
       />
+      
+      <Tabs defaultValue="my-shifts" onValueChange={setActiveTab} className="flex-1">
+        <TabsList className="w-full justify-start rounded-none border-b bg-white p-0">
+          {['my-shifts', 'open-shifts', 'pending', 'completed'].map((tab) => (
+            <TabsTrigger
+              key={tab}
+              value={tab}
+              className={cn(
+                "flex-1 rounded-none border-b-2 border-transparent px-3 py-3 text-sm capitalize",
+                "data-[state=active]:border-cyan-500 data-[state=active]:text-cyan-700"
+              )}
+            >
+              {tab.replace('-', ' ')}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        {['my-shifts', 'open-shifts', 'pending', 'completed'].map((tab) => (
+          <TabsContent key={tab} value={tab} className="flex-1 p-4">
+            <ScrollArea className="h-[calc(100vh-400px)]">
+              <div className="space-y-4">
+                {filteredSchedules.length > 0 ? (
+                  filteredSchedules.map((schedule) => (
+                    <ShiftCard key={schedule.id} schedule={schedule} />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No {tab.replace('-', ' ')} found
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 };
