@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { cn } from '@/lib/utils';
 import { Schedule } from '@/types/supabase/schedules';
 import { DateBox } from './shift-card/DateBox';
 import { TimeLocation } from './shift-card/TimeLocation';
 import { ActionButtons } from './shift-card/ActionButtons';
+import { useStatusStyles } from '@/hooks/use-status-styles';
 
 interface ShiftCardProps {
   schedule: Schedule;
@@ -19,16 +19,12 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
   onEmailClick,
   onCancelClick
 }) => {
+  const { getCardStyles } = useStatusStyles();
   const startTime = new Date(schedule.start_time);
   const endTime = new Date(schedule.end_time);
   
   return (
-    <div className={cn(
-      "p-4 rounded-lg border transition-all hover:shadow-sm",
-      schedule.status === 'confirmed' ? "border-green-200 bg-green-50" :
-      schedule.status === 'pending' ? "border-orange-200 bg-orange-50" :
-      "border-gray-200 bg-white"
-    )}>
+    <div className={getCardStyles(schedule.status)}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <DateBox startTime={startTime} status={schedule.status || 'pending'} />
