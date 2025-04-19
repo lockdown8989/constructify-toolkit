@@ -3,8 +3,6 @@ import React from 'react';
 import { Schedule } from '@/hooks/use-schedules';
 import ShiftDetailCard from '../ShiftDetailCard';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { format } from 'date-fns';
 
 interface ScheduleTabsProps {
   activeTab: string;
@@ -27,16 +25,12 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
   onCancelClick,
   onResponseComplete,
 }) => {
-  const [currentDate, setCurrentDate] = React.useState(new Date());
-  
   const tabs = [
     { id: 'my-shifts', label: 'My Shifts' },
     { id: 'open-shifts', label: 'Open Shifts' },
     { id: 'pending', label: 'Pending' },
     { id: 'completed', label: 'Completed' }
   ];
-
-  const daysOfWeek = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
   const filteredSchedules = schedules.filter(schedule => {
     switch (activeTab) {
@@ -53,44 +47,6 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-white">
-      {/* Calendar Header */}
-      <div className="p-4 border-b">
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))}>
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <h2 className="text-2xl font-bold">{format(currentDate, 'MMMM yyyy')}</h2>
-          <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))}>
-            <ChevronRight className="h-6 w-6" />
-          </button>
-        </div>
-        
-        {/* Calendar Days Header */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {daysOfWeek.map(day => (
-            <div key={day} className="text-center text-sm font-medium text-gray-600">
-              {day}
-            </div>
-          ))}
-        </div>
-        
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-1">
-          {Array.from({ length: 35 }, (_, i) => (
-            <div
-              key={i}
-              className={cn(
-                "aspect-square flex items-center justify-center text-lg border rounded-lg",
-                i === 29 && "text-blue-500 font-bold",
-                i === 30 && "text-green-500 font-bold"
-              )}
-            >
-              {i < 3 ? i + 29 : i - 2}
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Tabs */}
       <div className="border-b">
         <div className="flex">
