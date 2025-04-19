@@ -43,7 +43,10 @@ const ScheduleList = ({
         end_time: schedule.end_time,
         location: schedule.location || '',
         status: 'open',
-        notes: ''
+        notes: '',
+        role: null,           // Add missing required property with default value
+        created_at: schedule.created_at || null,  // Use schedule's created_at or null
+        created_by: null      // Add missing required property with default value
       });
     }
   };
