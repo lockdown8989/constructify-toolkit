@@ -19,22 +19,33 @@ const EmployeeWorkflow = () => {
   }
   
   return (
-    <div className="container py-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
+    <div className={cn(
+      "min-h-screen bg-gray-50",
+      isMobile ? "p-0" : "container py-6"
+    )}>
+      <div className={cn(
+        "grid gap-6",
+        isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"
+      )}>
+        <div className={cn(
+          "bg-white",
+          isMobile ? "" : "md:col-span-2 rounded-lg shadow-sm"
+        )}>
           <EmployeeScheduleView />
         </div>
-        <div>
-          <LeaveBalanceCard 
-            leaveBalance={{
-              annual: 20,
-              sick: 10,
-              personal: 5,
-              used: 12,
-              remaining: 23
-            }} 
-          />
-        </div>
+        {!isMobile && (
+          <div>
+            <LeaveBalanceCard 
+              leaveBalance={{
+                annual: 20,
+                sick: 10,
+                personal: 5,
+                used: 12,
+                remaining: 23
+              }} 
+            />
+          </div>
+        )}
       </div>
     </div>
   );
