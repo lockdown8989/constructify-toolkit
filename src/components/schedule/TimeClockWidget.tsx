@@ -1,23 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Clock, PlayCircle, StopCircle, PauseCircle, Timer } from 'lucide-react';
 import { format, differenceInSeconds } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { useTimeClock } from '@/hooks/time-clock';
-
-type TimelogEntry = {
-  type: 'clock-in' | 'break-start' | 'break-end' | 'clock-out';
-  timestamp: Date;
-};
+import { useTimeClock, TimelogEntry } from '@/hooks/time-clock';
 
 type TimelogStatus = 'clocked-out' | 'clocked-in' | 'on-break';
 
 const TimeClockWidget = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { status, setStatus, timelog, setTimelog, currentTime, setCurrentTime, elapsedTime, setElapsedTime, breakTime, setBreakTime } = useTimeClock();
+  const { 
+    status, 
+    setStatus, 
+    timelog, 
+    setTimelog, 
+    currentTime, 
+    setCurrentTime, 
+    elapsedTime, 
+    setElapsedTime, 
+    breakTime, 
+    setBreakTime 
+  } = useTimeClock();
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -25,7 +31,7 @@ const TimeClockWidget = () => {
     }, 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [setCurrentTime]);
   
   useEffect(() => {
     if (status === 'clocked-in' || status === 'on-break') {
