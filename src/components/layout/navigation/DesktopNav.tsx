@@ -1,6 +1,9 @@
+
 import { Link, useNavigate } from "react-router-dom"
 import { Calendar, DollarSign, Receipt, Clock, Home, ClipboardCheck } from "lucide-react"
 import { useAuth } from "@/hooks/auth"
+import { Badge } from "@/components/ui/badge"
+import { useEmployeeSchedule } from "@/hooks/use-employee-schedule"
 
 interface DesktopNavProps {
   isAuthenticated: boolean;
@@ -10,6 +13,7 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
   const navigate = useNavigate();
   const { isManager, isAdmin, isHR } = useAuth();
   const hasManagerialAccess = isManager || isAdmin || isHR;
+  const { schedules = [] } = useEmployeeSchedule();
 
   const pendingCount = schedules?.filter(s => s.status === 'pending').length || 0;
   const acceptedCount = schedules?.filter(s => s.status === 'confirmed').length || 0;

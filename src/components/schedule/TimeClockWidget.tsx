@@ -61,8 +61,8 @@ const TimeClockWidget = () => {
   const handleClockIn = async () => {
     if (!user) return;
     
-    const newTimelog = [...timelog, { type: 'clock-in', timestamp: new Date() }];
-    setTimelog(newTimelog);
+    const newEntry: TimelogEntry = { type: 'clock-in', timestamp: new Date() };
+    setTimelog([...timelog, newEntry]);
     setStatus('clocked-in');
     
     toast({
@@ -74,8 +74,8 @@ const TimeClockWidget = () => {
   const handleClockOut = async () => {
     if (!user) return;
     
-    const newTimelog = [...timelog, { type: 'clock-out', timestamp: new Date() }];
-    setTimelog(newTimelog);
+    const newEntry: TimelogEntry = { type: 'clock-out', timestamp: new Date() };
+    setTimelog([...timelog, newEntry]);
     setStatus('clocked-out');
     
     toast({
