@@ -3,9 +3,9 @@ import { Shift, OpenShift } from '@/types/restaurant-schedule';
 import ShiftEditDialog from './ShiftEditDialog';
 import { sendNotification } from '@/services/notifications/notification-sender';
 import { useAuth } from '@/hooks/use-auth';
-import { supabase } from '@/integrations/supabase/client';
-import { toast as sonnerToast } from 'sonner';
 import { useCreateSchedule } from '@/hooks/use-schedules';
+import { useOpenShifts } from '@/hooks/use-open-shifts';
+import { toast as sonnerToast } from 'sonner';
 
 interface ShiftDialogManagerProps {
   addShift: (shift: Omit<Shift, 'id'>) => void;
@@ -20,6 +20,7 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
   const [day, setDay] = useState<string | null>(null);
   const { user } = useAuth();
   const { createSchedule } = useCreateSchedule();
+  const { assignShift } = useOpenShifts();
 
   const handleAddShift = (employeeId: string, day: string) => {
     setMode('add');
@@ -164,46 +165,49 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
       setMode('add');
       setEmployeeId(null);
       setIsOpen(true);
-    } else {
-      try {
-        const { data: employeeData, error: employeeError } = await supabase
-          .from('employees')
-          .select('user_id, name')
-          .eq('id', employeeId)
-          .single();
+      return;
+    }
 
-        if (employeeError) {
-          console.error('Failed to get employee data:', employeeError);
-          throw employeeError;
-        }
+    try {
+      await assignShift.mutateAsync({ openShiftId, employeeId });
 
-        const scheduleData = {
-          employee_id: employeeId,
-          title: 'Assigned Open Shift',
-          start_time: new Date().toISOString(),
-          end_time: new Date().toISOString(),
-          status: 'confirmed' as 'confirmed' | 'pending' | 'completed',
-          location: ''
-        };
-        
-        await createSchedule(scheduleData);
+      const { data: employeeData, error: employeeError } = await supabase
+        .from('employees')
+        .select('user_id, name')
+        .eq('id', employeeId)
+        .single();
 
-        if (employeeData.user_id) {
-          await sendNotification({
-            user_id: employeeData.user_id,
-            title: "Shift Assigned",
-            message: `You have been assigned an open shift`,
-            type: "info",
-            related_entity: "schedule",
-            related_id: openShiftId
-          });
-
-          sonnerToast.success(`Shift assigned to ${employeeData.name}`);
-        }
-      } catch (error) {
-        console.error('Error assigning shift:', error);
-        sonnerToast.error('Failed to assign shift');
+      if (employeeError) {
+        console.error('Failed to get employee data:', employeeError);
+        return;
       }
+
+      const scheduleData = {
+        employee_id: employeeId,
+        title: 'Assigned Open Shift',
+        start_time: new Date().toISOString(),
+        end_time: new Date().toISOString(),
+        status: 'confirmed' as const,
+        location: ''
+      };
+      
+      await createSchedule(scheduleData);
+
+      if (employeeData.user_id) {
+        await sendNotification({
+          user_id: employeeData.user_id,
+          title: "Shift Assigned",
+          message: "You have been assigned an open shift",
+          type: "info",
+          related_entity: "schedule",
+          related_id: openShiftId
+        });
+
+        sonnerToast.success(`Shift assigned to ${employeeData.name}`);
+      }
+    } catch (error) {
+      console.error('Error assigning shift:', error);
+      sonnerToast.error('Failed to assign shift');
     }
   };
 

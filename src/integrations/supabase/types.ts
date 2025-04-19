@@ -386,6 +386,90 @@ export type Database = {
         }
         Relationships: []
       }
+      open_shift_assignments: {
+        Row: {
+          assigned_by: string | null
+          created_at: string | null
+          employee_id: string | null
+          id: string
+          open_shift_id: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string | null
+          employee_id?: string | null
+          id?: string
+          open_shift_id?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string | null
+          employee_id?: string | null
+          id?: string
+          open_shift_id?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "open_shift_assignments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "open_shift_assignments_open_shift_id_fkey"
+            columns: ["open_shift_id"]
+            isOneToOne: false
+            referencedRelation: "open_shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      open_shifts: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          end_time: string
+          id: string
+          location: string | null
+          notes: string | null
+          role: string | null
+          start_time: string
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          end_time: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          role?: string | null
+          start_time: string
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          end_time?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          role?: string | null
+          start_time?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
       payroll: {
         Row: {
           document_name: string | null
