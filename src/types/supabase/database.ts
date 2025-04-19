@@ -105,6 +105,112 @@ export interface Database {
         Update: Partial<UserRole>;
         Relationships: [];
       };
+      // Add the missing tables
+      attendance: {
+        Row: {
+          id: string;
+          employee_id: string | null;
+          date: string | null;
+          check_in: string | null;
+          check_out: string | null;
+          status: string | null;
+        };
+        Insert: {
+          id?: string;
+          employee_id?: string | null;
+          date?: string | null;
+          check_in?: string | null;
+          check_out?: string | null;
+          status?: string | null;
+        };
+        Update: Partial<{
+          id: string;
+          employee_id: string | null;
+          date: string | null;
+          check_in: string | null;
+          check_out: string | null;
+          status: string | null;
+        }>;
+        Relationships: [];
+      };
+      hiring_statistics: {
+        Row: {
+          id: string;
+          month: string;
+          year: number;
+          design_count: number;
+          others_count: number;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          month: string;
+          year: number;
+          design_count?: number;
+          others_count?: number;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: Partial<{
+          id: string;
+          month: string;
+          year: number;
+          design_count: number;
+          others_count: number;
+          created_at: string | null;
+          updated_at: string | null;
+        }>;
+        Relationships: [];
+      };
+      interviews: {
+        Row: {
+          id: string;
+          candidate_name: string;
+          stage: string;
+          progress: number;
+        };
+        Insert: {
+          id?: string;
+          candidate_name: string;
+          stage?: string;
+          progress?: number;
+        };
+        Update: Partial<{
+          id: string;
+          candidate_name: string;
+          stage: string;
+          progress: number;
+        }>;
+        Relationships: [];
+      };
+      projects: {
+        Row: {
+          id: string;
+          name: string;
+          department: string;
+          deadline: string;
+          priority: string;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          department: string;
+          deadline: string;
+          priority?: string;
+          created_at?: string | null;
+        };
+        Update: Partial<{
+          id: string;
+          name: string;
+          department: string;
+          deadline: string;
+          priority: string;
+          created_at: string | null;
+        }>;
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

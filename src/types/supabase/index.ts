@@ -6,3 +6,7 @@ export * from './employees';
 export * from './leave';
 export * from './notifications';
 export * from './schedules';
+export * from './attendance';
+export * from './hiring';
+export * from './interviews';
+export * from './projects';
