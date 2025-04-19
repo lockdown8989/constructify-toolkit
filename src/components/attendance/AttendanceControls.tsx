@@ -1,8 +1,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Calendar } from "lucide-react"
-import { ArrowLeft } from "lucide-react"
+import { Calendar, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useEmployees } from "@/hooks/use-employees"
 import { useState } from "react"
@@ -36,7 +35,7 @@ const AttendanceControls = ({ onSearchChange, onEmployeeSelect }: AttendanceCont
             className="h-8 w-8"
             onClick={handlePreviousMonth}
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" />
           </Button>
           
           <h3 className="text-sm md:text-base font-medium px-2">{month}</h3>
@@ -47,7 +46,7 @@ const AttendanceControls = ({ onSearchChange, onEmployeeSelect }: AttendanceCont
             className="h-8 w-8"
             onClick={handleNextMonth}
           >
-            <ArrowLeft className="h-4 w-4 rotate-180" />
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
         
