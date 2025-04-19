@@ -3,10 +3,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowLeft } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 const AttendanceControls = () => {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="flex items-center justify-between mb-6">
+    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
       <div className="flex items-center gap-2">
         <h3 className="text-lg font-medium">October 2023</h3>
         <div className="flex">
@@ -19,14 +22,14 @@ const AttendanceControls = () => {
         </div>
       </div>
       
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
         <Input 
           type="search" 
           placeholder="Search" 
-          className="w-64"
+          className="md:w-64"
         />
         <Select defaultValue="all">
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-full md:w-40">
             <SelectValue placeholder="All Status" />
           </SelectTrigger>
           <SelectContent>
