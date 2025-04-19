@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Shift } from '@/types/restaurant-schedule';
+import { Shift, OpenShift } from '@/types/restaurant-schedule';
 import ShiftEditDialog from './ShiftEditDialog';
 import { sendNotification } from '@/services/notifications/notification-sender';
 import { useAuth } from '@/hooks/use-auth';
@@ -43,11 +42,9 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
         ...formData
       };
       
-      // Add to local state for UI update
       addShift(newShift);
 
       try {
-        // Get employee data to check for user_id
         const { data: employeeData, error: employeeError } = await supabase
           .from('employees')
           .select('user_id, name')
@@ -62,11 +59,9 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
         if (!employeeData.user_id) {
           console.error('Employee has no user_id, cannot send notification');
         } else {
-          // Create actual schedule in database
           const startHour = formData.startTime || '09:00';
           const endHour = formData.endTime || '17:00';
           
-          // Create date from day string
           let startDate = new Date();
           const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
           const targetDayIndex = weekdays.indexOf(day.toLowerCase());
@@ -77,7 +72,6 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
             startDate.setDate(startDate.getDate() + daysToAdd);
           }
           
-          // Format start and end times for database
           const startDateTime = new Date(startDate);
           const [startHours, startMinutes] = startHour.split(':').map(Number);
           startDateTime.setHours(startHours, startMinutes, 0, 0);
@@ -86,21 +80,18 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
           const [endHours, endMinutes] = endHour.split(':').map(Number);
           endDateTime.setHours(endHours, endMinutes, 0, 0);
           
-          // Create schedule in database
           const scheduleData = {
             employee_id: employeeId,
             title: formData.role || 'Shift',
             start_time: startDateTime.toISOString(),
             end_time: endDateTime.toISOString(),
             notes: formData.notes || '',
-            status: 'confirmed' as 'confirmed' | 'pending' | 'completed', // Fix: Explicitly type as one of the allowed values
+            status: 'confirmed' as 'confirmed' | 'pending' | 'completed',
             location: formData.location || ''
           };
           
-          // Add to database
           createSchedule(scheduleData);
           
-          // Send notification to the employee
           sendNotification({
             user_id: employeeData.user_id,
             title: "New Shift Assigned",
@@ -124,7 +115,6 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
       
       updateShift(updatedShift);
 
-      // If the shift details changed, update in database and notify the employee
       try {
         const { data: employeeData, error: employeeError } = await supabase
           .from('employees')
@@ -135,7 +125,6 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
         if (employeeError) {
           console.error('Failed to get employee data for notification:', employeeError);
         } else if (employeeData.user_id) {
-          // If the shift details changed, notify the employee
           if (
             currentShift.startTime !== formData.startTime || 
             currentShift.endTime !== formData.endTime ||
@@ -159,6 +148,65 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
     setIsOpen(false);
   };
 
+  const handleAssignOpenShift = async (openShiftId: string, employeeId?: string) => {
+    if (!employeeId) {
+      const { data: employees, error: employeesError } = await supabase
+        .from('employees')
+        .select('id, name, user_id')
+        .order('name');
+
+      if (employeesError) {
+        console.error('Error fetching employees:', employeesError);
+        sonnerToast.error('Could not load employees');
+        return;
+      }
+
+      setMode('add');
+      setEmployeeId(null);
+      setIsOpen(true);
+    } else {
+      try {
+        const { data: employeeData, error: employeeError } = await supabase
+          .from('employees')
+          .select('user_id, name')
+          .eq('id', employeeId)
+          .single();
+
+        if (employeeError) {
+          console.error('Failed to get employee data:', employeeError);
+          throw employeeError;
+        }
+
+        const scheduleData = {
+          employee_id: employeeId,
+          title: 'Assigned Open Shift',
+          start_time: new Date().toISOString(),
+          end_time: new Date().toISOString(),
+          status: 'confirmed' as 'confirmed' | 'pending' | 'completed',
+          location: ''
+        };
+        
+        await createSchedule(scheduleData);
+
+        if (employeeData.user_id) {
+          await sendNotification({
+            user_id: employeeData.user_id,
+            title: "Shift Assigned",
+            message: `You have been assigned an open shift`,
+            type: "info",
+            related_entity: "schedule",
+            related_id: openShiftId
+          });
+
+          sonnerToast.success(`Shift assigned to ${employeeData.name}`);
+        }
+      } catch (error) {
+        console.error('Error assigning shift:', error);
+        sonnerToast.error('Failed to assign shift');
+      }
+    }
+  };
+
   const ShiftDialogComponent = (
     <ShiftEditDialog
       isOpen={isOpen}
@@ -172,6 +220,7 @@ const ShiftDialogManager = ({ addShift, updateShift }: ShiftDialogManagerProps) 
   return {
     handleAddShift,
     handleEditShift,
+    handleAssignOpenShift,
     ShiftDialogComponent
   };
 };
