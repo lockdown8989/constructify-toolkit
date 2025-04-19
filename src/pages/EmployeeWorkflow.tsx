@@ -3,7 +3,6 @@ import React from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import EmployeeScheduleView from '@/components/schedule/EmployeeScheduleView';
-import LeaveBalanceCard from '@/components/schedule/LeaveBalanceCard';
 import { cn } from '@/lib/utils';
 
 const EmployeeWorkflow = () => {
@@ -13,7 +12,7 @@ const EmployeeWorkflow = () => {
   if (!user) {
     return (
       <div className="container py-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">My Schedule</h1>
+        <h1 className="text-2xl font-bold mb-4">Employee Workflow</h1>
         <p>Please sign in to access your schedule.</p>
       </div>
     );
@@ -25,28 +24,10 @@ const EmployeeWorkflow = () => {
       isMobile ? "p-0" : "container py-6"
     )}>
       <div className={cn(
-        "grid gap-6",
-        isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"
+        "bg-white",
+        isMobile ? "" : "rounded-lg shadow-sm"
       )}>
-        <div className={cn(
-          "bg-white",
-          isMobile ? "" : "md:col-span-2 rounded-lg shadow-sm"
-        )}>
-          <EmployeeScheduleView />
-        </div>
-        {!isMobile && (
-          <div>
-            <LeaveBalanceCard 
-              leaveBalance={{
-                annual: 20,
-                sick: 10,
-                personal: 5,
-                used: 12,
-                remaining: 23
-              }} 
-            />
-          </div>
-        )}
+        <EmployeeScheduleView />
       </div>
     </div>
   );

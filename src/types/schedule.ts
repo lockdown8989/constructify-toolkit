@@ -1,5 +1,5 @@
 
-import { Schedule as BaseSchedule } from "@/hooks/use-schedules";
+import type { Schedule as BaseSchedule } from "@/types/schedule.types";
 
 export interface EnhancedSchedule extends BaseSchedule {
   status?: 'confirmed' | 'pending' | 'completed';
@@ -7,4 +7,5 @@ export interface EnhancedSchedule extends BaseSchedule {
   manager_id?: string;
   break_duration?: number;
   coworkers?: string[];
+  is_published?: boolean;
 }

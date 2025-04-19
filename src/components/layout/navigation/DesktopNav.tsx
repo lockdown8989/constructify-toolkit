@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom"
-import { Calendar, DollarSign, Receipt, Clock } from "lucide-react"
+import { Calendar, DollarSign, Receipt, Clock, Check, X } from "lucide-react"
 import { useAuth } from "@/hooks/auth"
+import { useEmployeeSchedule } from "@/hooks/use-employee-schedule"
+import { Badge } from "@/components/ui/badge"
 
 interface DesktopNavProps {
   isAuthenticated: boolean;
@@ -8,7 +10,13 @@ interface DesktopNavProps {
 
 const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
   const { isManager, isAdmin, isHR } = useAuth();
-  const isEmployee = !isManager && !isAdmin && !isHR;
+  const hasManagerialAccess = isManager || isAdmin || isHR;
+  const { schedules } = useEmployeeSchedule();
+  
+  // Calculate counts
+  const pendingCount = schedules?.filter(s => s.status === 'pending').length || 0;
+  const acceptedCount = schedules?.filter(s => s.status === 'confirmed').length || 0;
+  const rejectedCount = schedules?.filter(s => s.status === 'rejected').length || 0;
   
   return (
     <div className="mx-auto flex items-center space-x-6">
@@ -27,9 +35,10 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
       >
         Contact
       </Link>
+      
       {isAuthenticated && (
         <>
-          {isEmployee && (
+          {!hasManagerialAccess && (
             <Link
               to="/employee-workflow"
               className="hover:underline underline-offset-4 flex items-center"
@@ -38,44 +47,37 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
               My Schedule
             </Link>
           )}
-          <Link
-            to="/people"
-            className="hover:underline underline-offset-4"
-          >
-            Employees
-          </Link>
-          <Link
-            to="/employee-workflow"
-            className="hover:underline underline-offset-4"
-          >
-            Employee Workflow
-          </Link>
-          <Link
-            to="/leave"
-            className="hover:underline underline-offset-4 flex items-center"
-          >
-            <Calendar className="h-4 w-4 mr-1" />
-            Leave & Schedule
-          </Link>
-          <Link
-            to="/shift-calendar"
-            className="hover:underline underline-offset-4"
-          >
-            Shift Calendar
-          </Link>
+          
+          {hasManagerialAccess && (
+            <>
+              <Link
+                to="/people"
+                className="hover:underline underline-offset-4"
+              >
+                Employees
+              </Link>
+              <Link
+                to="/shift-calendar"
+                className="hover:underline underline-offset-4"
+              >
+                Shift Calendar
+              </Link>
+              <Link
+                to="/payroll"
+                className="hover:underline underline-offset-4 flex items-center"
+              >
+                <Receipt className="h-4 w-4 mr-1" />
+                Payslip
+              </Link>
+            </>
+          )}
+          
           <Link
             to="/salary"
             className="hover:underline underline-offset-4 flex items-center"
           >
             <DollarSign className="h-4 w-4 mr-1" />
             Salary
-          </Link>
-          <Link
-            to="/payroll"
-            className="hover:underline underline-offset-4 flex items-center"
-          >
-            <Receipt className="h-4 w-4 mr-1" />
-            Payslip
           </Link>
         </>
       )}

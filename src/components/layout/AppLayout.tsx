@@ -1,8 +1,9 @@
+
+import React, { useEffect } from 'react';
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import { useAuth } from "@/hooks/auth";
 import { setupRealtimeSubscriptions } from '@/services/setup-realtime';
-import { useEffect } from 'react';
 
 const AppLayout = ({ children }: React.PropsWithChildren) => {
   const { user } = useAuth();
