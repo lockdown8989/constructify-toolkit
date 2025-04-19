@@ -44,7 +44,7 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
               className="hover:underline underline-offset-4 flex items-center group relative"
             >
               <Clock className="h-4 w-4 mr-1" />
-              My Employee Shifts
+              My Employee Schedule
               <div className="flex gap-1 ml-2">
                 {acceptedCount > 0 && (
                   <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 flex items-center">
