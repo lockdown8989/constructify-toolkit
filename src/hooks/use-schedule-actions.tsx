@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Schedule } from '@/types/schedule';
+import { Schedule } from '@/types/supabase/schedules';
 
 export const useScheduleActions = () => {
   const [isLoading, setIsLoading] = useState(false);

@@ -5,7 +5,7 @@ import { Calendar, ChevronLeft, ChevronRight, Mail, Info, X } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { Schedule } from '@/types/schedule';
+import { Schedule } from '@/types/supabase/schedules';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
