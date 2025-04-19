@@ -3,16 +3,8 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Clock, PlayCircle, StopCircle, PauseCircle, Timer } from 'lucide-react';
-import { format } from 'date-fns';
 import { useTimeClock } from '@/hooks/time-clock';
-
-const formatDuration = (seconds: number) => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
-  
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-};
+import { formatDuration } from '@/utils/time-utils';
 
 const TimeClockWidget = () => {
   const {
