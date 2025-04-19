@@ -36,9 +36,7 @@ export const useShiftResponse = () => {
           throw new Error(`Failed to update shift status: ${updateError.message}`);
         }
 
-        // Skip the notification creation, as it's causing RLS policy violations
-        // We'll rely on the database trigger for notifications if one exists
-
+        console.log('Successfully updated shift status:', response);
         return scheduleData;
       } catch (error) {
         console.error('Error responding to shift:', error);
