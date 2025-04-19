@@ -1,7 +1,7 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 export interface Schedule {
   id: string;
@@ -19,6 +19,7 @@ export interface Schedule {
 export function useSchedules() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   const query = useQuery({
     queryKey: ['schedules'],
@@ -50,7 +51,6 @@ export function useSchedules() {
           return [];
         }
         
-        // Add default status if not available
         const processedData = data?.map(schedule => ({
           ...schedule,
           status: schedule.status || 'confirmed'
@@ -65,15 +65,51 @@ export function useSchedules() {
     },
     enabled: !!user,
   });
-  
-  return {
-    ...query,
-    refetch: async () => {
-      console.log('Manually refetching schedules...');
-      const result = await query.refetch();
-      return result;
-    }
-  };
+
+  React.useEffect(() => {
+    if (!user) return;
+
+    console.log('Setting up realtime subscription for schedules');
+    
+    const channel = supabase
+      .channel('schedule_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'schedules'
+        },
+        async (payload) => {
+          console.log('Received realtime update:', payload);
+          
+          if (payload.eventType === 'UPDATE') {
+            const schedule = payload.new;
+            toast({
+              title: 'Schedule Updated',
+              description: `The schedule for ${new Date(schedule.start_time).toLocaleDateString()} has been updated.`,
+            });
+          } else if (payload.eventType === 'INSERT') {
+            toast({
+              title: 'New Schedule',
+              description: 'A new schedule has been assigned.',
+            });
+          }
+          
+          await queryClient.invalidateQueries({ queryKey: ['schedules'] });
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
+
+    return () => {
+      console.log('Cleaning up realtime subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient, toast]);
+
+  return query;
 }
 
 export function useCreateSchedule() {
