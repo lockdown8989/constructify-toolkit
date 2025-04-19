@@ -14,4 +14,7 @@ export interface AttendanceRecord {
   overtime_approved_by?: string | null;
   break_minutes?: number | null;
   break_start?: string | null;
+  location?: string | null;
+  device_info?: string | null;
+  notes?: string | null;
 }
