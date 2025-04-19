@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import React from 'react';
 
 export interface Schedule {
   id: string;
@@ -14,6 +15,7 @@ export interface Schedule {
   notes?: string;
   status?: 'confirmed' | 'pending' | 'completed' | 'rejected';
   location?: string;
+  is_published?: boolean;
 }
 
 export function useSchedules() {
