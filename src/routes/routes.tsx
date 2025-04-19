@@ -1,4 +1,3 @@
-
 import { createBrowserRouter } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
@@ -19,6 +18,9 @@ import Index from "@/pages/Index";
 import LandingPage from "@/pages/LandingPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import EmployeeDetailsPage from "@/components/people/EmployeeDetailsPage";
+import ShiftHistoryTab from "@/components/shiftHistory/ShiftHistoryTab";
+import CalendarTab from "@/components/calendar/CalendarTab";
+import ScheduleRequestsTab from "@/components/scheduleRequests/ScheduleRequestsTab";
 
 const router = createBrowserRouter([
   {
@@ -62,8 +64,16 @@ const router = createBrowserRouter([
         element: <Schedule />,
       },
       {
+        path: "shift-history",
+        element: <ShiftHistoryTab />,
+      },
+      {
+        path: "calendar-view",
+        element: <CalendarTab />,
+      },
+      {
         path: "schedule-requests",
-        element: <ScheduleRequests />,
+        element: <ScheduleRequestsTab />,
       },
       {
         path: "employee-workflow",
