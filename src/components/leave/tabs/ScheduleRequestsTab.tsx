@@ -1,18 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Calendar, 
-  Clock, 
-  RefreshCw, 
-  Plus, 
-  Filter, 
-  AlertCircle,
-  CheckCircle2,
-  XCircle,
-  ArrowLeftRight
-} from 'lucide-react';
+import { Clock, Plus, Filter, ArrowLeftRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -29,9 +20,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { getManagerUserIds } from '@/services/notifications/role-utils';
-import { sendNotification } from '@/services/notifications';
-import { useLocation } from 'react-router-dom';
+import ScheduleHeader from '@/components/schedule/components/ScheduleHeader';
+import MobileNavigation from '@/components/schedule/components/MobileNavigation';
+import { useScheduleRealtime } from '@/hooks/leave/use-schedule-realtime';
 
 const ScheduleRequestsTab: React.FC = () => {
   const { toast } = useToast();
@@ -42,7 +33,9 @@ const ScheduleRequestsTab: React.FC = () => {
   const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
   const [pendingCount, setPendingCount] = useState({ shifts: 0, availability: 0 });
-  const location = useLocation();
+
+  // Use the real-time hook
+  useScheduleRealtime();
 
   useEffect(() => {
     if (!user) return;
@@ -76,225 +69,6 @@ const ScheduleRequestsTab: React.FC = () => {
     fetchPendingCounts();
   }, [user, queryClient]);
   
-  useEffect(() => {
-    if (!user) return;
-    
-    // Create a channel without trying to track presence immediately
-    const channel = supabase
-      .channel('schedule_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'shift_swaps'
-        },
-        async (payload) => {
-          queryClient.invalidateQueries({ queryKey: ['shift_swaps'] });
-          
-          const { data: pendingShifts } = await supabase
-            .from('shift_swaps')
-            .select('id', { count: 'exact' })
-            .eq('status', 'Pending');
-          
-          setPendingCount(prev => ({
-            ...prev,
-            shifts: pendingShifts?.length || 0
-          }));
-          
-          if (payload.eventType === 'UPDATE') {
-            const newStatus = payload.new.status;
-            const oldStatus = payload.old.status;
-            
-            if (oldStatus === 'Pending' && newStatus === 'Approved') {
-              toast({
-                title: "Shift swap approved",
-                description: "A shift swap request has been approved.",
-              });
-              
-              if (payload.new.requester_id && user.id !== payload.new.requester_id) {
-                try {
-                  await sendNotification({
-                    user_id: payload.new.requester_id,
-                    title: "Shift swap approved",
-                    message: "Your shift swap request has been approved.",
-                    type: "success",
-                    related_entity: "shift_swaps",
-                    related_id: payload.new.id
-                  });
-                } catch (error) {
-                  console.error("Error sending notification:", error);
-                }
-              }
-              
-              if (payload.new.recipient_id && user.id !== payload.new.recipient_id) {
-                try {
-                  await sendNotification({
-                    user_id: payload.new.recipient_id,
-                    title: "New shift assigned",
-                    message: "A shift has been assigned to you through a swap.",
-                    type: "info",
-                    related_entity: "shift_swaps",
-                    related_id: payload.new.id
-                  });
-                } catch (error) {
-                  console.error("Error sending notification:", error);
-                }
-              }
-            } else if (oldStatus === 'Pending' && newStatus === 'Rejected') {
-              toast({
-                title: "Shift swap rejected",
-                description: "A shift swap request has been rejected.",
-              });
-              
-              if (payload.new.requester_id && user.id !== payload.new.requester_id) {
-                try {
-                  await sendNotification({
-                    user_id: payload.new.requester_id,
-                    title: "Shift swap rejected",
-                    message: "Your shift swap request has been rejected.",
-                    type: "warning",
-                    related_entity: "shift_swaps",
-                    related_id: payload.new.id
-                  });
-                } catch (error) {
-                  console.error("Error sending notification:", error);
-                }
-              }
-            } else if (newStatus === 'Completed') {
-              toast({
-                title: "Shift swap completed",
-                description: "A shift swap has been marked as completed.",
-              });
-            }
-          } else if (payload.eventType === 'INSERT') {
-            toast({
-              title: "New shift swap request",
-              description: "A new shift swap request has been submitted.",
-            });
-            
-            try {
-              const managerIds = await getManagerUserIds();
-              
-              for (const managerId of managerIds) {
-                if (managerId !== user.id) {
-                  await sendNotification({
-                    user_id: managerId,
-                    title: "New shift swap request",
-                    message: "A new shift swap request requires your review.",
-                    type: "info",
-                    related_entity: "shift_swaps",
-                    related_id: payload.new.id
-                  });
-                }
-              }
-            } catch (error) {
-              console.error("Error sending notifications to managers:", error);
-            }
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'availability_requests'
-        },
-        async (payload) => {
-          queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
-          
-          const { data: pendingAvailability } = await supabase
-            .from('availability_requests')
-            .select('id', { count: 'exact' })
-            .eq('status', 'Pending');
-          
-          setPendingCount(prev => ({
-            ...prev,
-            availability: pendingAvailability?.length || 0
-          }));
-          
-          if (payload.eventType === 'UPDATE') {
-            const newStatus = payload.new.status;
-            const oldStatus = payload.old.status;
-            
-            if (oldStatus === 'Pending' && newStatus === 'Approved') {
-              toast({
-                title: "Availability request approved",
-                description: "An availability request has been approved.",
-              });
-              
-              if (payload.new.employee_id && user.id !== payload.new.employee_id) {
-                try {
-                  await sendNotification({
-                    user_id: payload.new.employee_id,
-                    title: "Availability request approved",
-                    message: "Your availability request has been approved.",
-                    type: "success",
-                    related_entity: "availability_requests",
-                    related_id: payload.new.id
-                  });
-                } catch (error) {
-                  console.error("Error sending notification:", error);
-                }
-              }
-            } else if (oldStatus === 'Pending' && newStatus === 'Rejected') {
-              toast({
-                title: "Availability request rejected",
-                description: "An availability request has been rejected.",
-              });
-              
-              if (payload.new.employee_id && user.id !== payload.new.employee_id) {
-                try {
-                  await sendNotification({
-                    user_id: payload.new.employee_id,
-                    title: "Availability request rejected",
-                    message: "Your availability request has been rejected.",
-                    type: "warning",
-                    related_entity: "availability_requests",
-                    related_id: payload.new.id
-                  });
-                } catch (error) {
-                  console.error("Error sending notification:", error);
-                }
-              }
-            }
-          } else if (payload.eventType === 'INSERT') {
-            toast({
-              title: "New availability request",
-              description: "A new availability request has been submitted.",
-            });
-            
-            try {
-              const managerIds = await getManagerUserIds();
-              
-              for (const managerId of managerIds) {
-                if (managerId !== user.id) {
-                  await sendNotification({
-                    user_id: managerId,
-                    title: "New availability request",
-                    message: "A new availability request requires your review.",
-                    type: "info",
-                    related_entity: "availability_requests",
-                    related_id: payload.new.id
-                  });
-                }
-              }
-            } catch (error) {
-              console.error("Error sending notifications to managers:", error);
-            }
-          }
-        }
-      )
-      .subscribe();
-
-    // Removed the presence channel that was causing the error
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient, toast, user]);
-  
   const handleRefreshData = () => {
     queryClient.invalidateQueries({ queryKey: ['shift_swaps'] });
     queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
@@ -304,57 +78,24 @@ const ScheduleRequestsTab: React.FC = () => {
       description: "Schedule request data has been refreshed."
     });
   };
-  
-  const renderMobileNavigation = () => {
-    if (!isMobile) return null;
-    
-    return (
-      <div className="flex justify-center mb-4">
-        <Tabs value={activeSection} onValueChange={(value) => setActiveSection(value as 'requests' | 'form')}>
-          <TabsList>
-            <TabsTrigger value="requests">View Requests</TabsTrigger>
-            <TabsTrigger value="form">Create Request</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-    );
-  };
-  
+
   return (
     <Card className="border shadow-sm rounded-xl">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-xl font-semibold">Schedule Requests</CardTitle>
-            <CardDescription className="text-sm text-muted-foreground mt-1">
-              Manage shift swaps and availability requests
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            {isManager && (pendingCount.shifts > 0 || pendingCount.availability > 0) && (
-              <Badge className="bg-amber-100 text-amber-800 border border-amber-300 flex items-center">
-                <AlertCircle className="h-3.5 w-3.5 mr-1" />
-                {pendingCount.shifts + pendingCount.availability} pending
-              </Badge>
-            )}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleRefreshData}
-              className="flex items-center"
-            >
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Refresh
-            </Button>
-          </div>
-        </div>
-        <div className="text-xs text-muted-foreground mt-2">
-          Last updated: {lastRefreshed.toLocaleTimeString()}
-        </div>
+        <ScheduleHeader 
+          pendingCount={pendingCount}
+          lastRefreshed={lastRefreshed}
+          isManager={isManager}
+          onRefresh={handleRefreshData}
+        />
       </CardHeader>
       
       <CardContent>
-        {renderMobileNavigation()}
+        <MobileNavigation 
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+          isMobile={isMobile}
+        />
         
         <Tabs defaultValue="shift-swaps" className="mt-2">
           <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
@@ -384,10 +125,10 @@ const ScheduleRequestsTab: React.FC = () => {
                 <div className="md:col-span-1">
                   <Card className="border shadow-sm rounded-xl">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium flex items-center">
+                      <h3 className="text-sm font-medium flex items-center">
                         <Plus className="h-4 w-4 mr-1" />
                         Create Shift Swap
-                      </CardTitle>
+                      </h3>
                     </CardHeader>
                     <CardContent>
                       <ShiftSwapForm />
@@ -401,10 +142,10 @@ const ScheduleRequestsTab: React.FC = () => {
                   <Card className="border shadow-sm rounded-xl">
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-medium flex items-center">
+                        <h3 className="text-sm font-medium flex items-center">
                           <Filter className="h-4 w-4 mr-1" />
                           Shift Swap Requests
-                        </CardTitle>
+                        </h3>
                         
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -424,7 +165,7 @@ const ScheduleRequestsTab: React.FC = () => {
                               className="flex items-center cursor-pointer"
                               onClick={handleRefreshData}
                             >
-                              <RefreshCw className="h-4 w-4 mr-2" />
+                              <Filter className="h-4 w-4 mr-2" />
                               Refresh Data
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -447,10 +188,10 @@ const ScheduleRequestsTab: React.FC = () => {
                   {showAvailabilityForm ? (
                     <Card className="border shadow-sm rounded-xl">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" />
+                        <h3 className="text-sm font-medium flex items-center">
+                          <Clock className="h-4 w-4 mr-1" />
                           Set Availability
-                        </CardTitle>
+                        </h3>
                       </CardHeader>
                       <CardContent>
                         <AvailabilityRequestForm onClose={() => setShowAvailabilityForm(false)} />
@@ -475,10 +216,10 @@ const ScheduleRequestsTab: React.FC = () => {
                   <Card className="border shadow-sm rounded-xl">
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-medium flex items-center">
+                        <h3 className="text-sm font-medium flex items-center">
                           <Filter className="h-4 w-4 mr-1" />
                           Availability Requests
-                        </CardTitle>
+                        </h3>
                         
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -501,7 +242,7 @@ const ScheduleRequestsTab: React.FC = () => {
                               className="flex items-center cursor-pointer"
                               onClick={handleRefreshData}
                             >
-                              <RefreshCw className="h-4 w-4 mr-2" />
+                              <Filter className="h-4 w-4 mr-2" />
                               Refresh Data
                             </DropdownMenuItem>
                           </DropdownMenuContent>
