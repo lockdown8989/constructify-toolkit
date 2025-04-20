@@ -79,6 +79,7 @@ const ScheduleRequestsTab: React.FC = () => {
   useEffect(() => {
     if (!user) return;
     
+    // Create a channel without trying to track presence immediately
     const channel = supabase
       .channel('schedule_changes')
       .on(
@@ -286,6 +287,8 @@ const ScheduleRequestsTab: React.FC = () => {
         }
       )
       .subscribe();
+
+    // Removed the presence channel that was causing the error
     
     return () => {
       supabase.removeChannel(channel);
