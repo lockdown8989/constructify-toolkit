@@ -1,25 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Download, FileText } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ChevronLeft } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import type { Employee } from '@/hooks/use-employees';
-import type { DocumentModel } from '@/types/database';
+import { Separator } from '@/components/ui/separator';
+import DocumentList from './components/DocumentList';
+import EmployeeStatistics from './components/EmployeeStatistics';
+import BasicInformation from './components/BasicInformation';
+import type { EmployeeDocument } from './types';
 
 interface EmployeeDetailsPanelProps {
   employee: Employee;
   onBack: () => void;
-}
-
-interface EmployeeDocument {
-  name: string;
-  type: 'contract' | 'resume' | 'payslip';
-  size: string;
-  path?: string;
-  url?: string;
 }
 
 const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
@@ -27,7 +21,6 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
   onBack
 }) => {
   const isMobile = useIsMobile();
-  const { toast } = useToast();
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -138,18 +131,6 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
     }
   }, [employee]);
   
-  const handleDocumentClick = async (doc: EmployeeDocument) => {
-    if (doc.url) {
-      window.open(doc.url, '_blank');
-    } else {
-      toast({
-        title: "Document not available",
-        description: "This document has not been uploaded yet.",
-        variant: "destructive"
-      });
-    }
-  };
-  
   return (
     <Card className="rounded-3xl overflow-hidden">
       <div className="relative h-44 bg-gradient-to-r from-amber-200 to-amber-500 overflow-hidden">
@@ -190,112 +171,33 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
         
         <div className="space-y-6">
           <div>
-            <h3 className="text-lg font-medium mb-3">Basic Information</h3>
-            <div className="space-y-3">
-              <div className="flex items-center">
-                <div className="w-6 h-6 mr-3 flex-shrink-0 text-gray-400">🎂</div>
-                <div className="text-sm font-medium w-28">Birthday</div>
-                <div className="text-sm text-gray-600">26 September 1998</div>
-              </div>
-              
-              <div className="flex items-center">
-                <div className="w-6 h-6 mr-3 flex-shrink-0 text-gray-400">📱</div>
-                <div className="text-sm font-medium w-28">Phone number</div>
-                <div className="text-sm text-gray-600">+33 170 36 39 50</div>
-              </div>
-              
-              <div className="flex items-center">
-                <div className="w-6 h-6 mr-3 flex-shrink-0 text-gray-400">✉️</div>
-                <div className="text-sm font-medium w-28">E-Mail</div>
-                <div className="text-sm text-gray-600 truncate">{employee.name.toLowerCase().replace(' ', '')}@company.com</div>
-              </div>
-              
-              <div className="flex items-center">
-                <div className="w-6 h-6 mr-3 flex-shrink-0 text-gray-400">🌍</div>
-                <div className="text-sm font-medium w-28">Citizenship</div>
-                <div className="text-sm text-gray-600">{employee.location || "United States"}</div>
-              </div>
-              
-              <div className="flex items-center">
-                <div className="w-6 h-6 mr-3 flex-shrink-0 text-gray-400">🏙️</div>
-                <div className="text-sm font-medium w-28">City</div>
-                <div className="text-sm text-gray-600">{employee.location || "New York"}</div>
-              </div>
-              
-              <div className="flex items-center">
-                <div className="w-6 h-6 mr-3 flex-shrink-0 text-gray-400">📍</div>
-                <div className="text-sm font-medium w-28">Address</div>
-                <div className="text-sm text-gray-600">123 Company Street</div>
-              </div>
-            </div>
+            <h3 className="text-xs font-semibold text-apple-gray-500 mb-5 uppercase tracking-wider">Basic Information</h3>
+            <BasicInformation 
+              department={employee.department}
+              site={employee.site}
+              siteIcon={employee.location === 'Remote' ? '🌐' : '🏢'}
+              salary={employee.salary.toString()}
+              startDate={employee.start_date}
+              lifecycle={employee.lifecycle}
+              email={`${employee.name.toLowerCase().replace(' ', '')}@company.com`}
+            />
           </div>
           
-          <div>
-            <h3 className="text-lg font-medium mb-3">Documents</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {isLoading ? (
-                <div className="col-span-2 py-4 text-center">
-                  <div className="animate-pulse">Loading documents...</div>
-                </div>
-              ) : (
-                documents.map((doc, index) => (
-                  <div 
-                    key={index} 
-                    className="flex items-center p-3 bg-gray-100 rounded-xl cursor-pointer hover:bg-gray-200 transition-colors"
-                    onClick={() => handleDocumentClick(doc)}
-                  >
-                    <div className={cn(
-                      "w-10 h-10 rounded-lg flex items-center justify-center mr-3",
-                      doc.type === 'contract' ? "bg-blue-100 text-blue-700" : 
-                      doc.type === 'resume' ? "bg-red-100 text-red-700" :
-                      "bg-green-100 text-green-700"
-                    )}>
-                      {doc.type === 'contract' ? 'C' : doc.type === 'resume' ? 'R' : 'P'}
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">{doc.name.split('_')[0]}</div>
-                      <div className="text-xs text-gray-500 flex items-center">
-                        {doc.size}
-                        {doc.url && (
-                          <Download className="h-3 w-3 ml-1 text-gray-400" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          <Separator className="my-6" />
           
           <div>
-            <h3 className="text-lg font-medium mb-3">Statistics</h3>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm">Holiday left</span>
-                  <span className="text-sm font-medium">{statisticsData.holidayLeft} days</span>
-                </div>
-                <div className="w-full h-2 bg-gray-200 rounded-full">
-                  <div 
-                    className="h-full bg-amber-400 rounded-full" 
-                    style={{ width: `${(statisticsData.holidayLeft / 30) * 100}%` }}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm">Sickness</span>
-                  <span className="text-sm font-medium">{statisticsData.sickness} days</span>
-                </div>
-                <div className="w-full h-2 bg-gray-200 rounded-full">
-                  <div 
-                    className="h-full bg-gray-800 rounded-full" 
-                    style={{ width: `${(statisticsData.sickness / 15) * 100}%` }}
-                  />
-                </div>
-              </div>
-            </div>
+            <h3 className="text-xs font-semibold text-apple-gray-500 mb-5 uppercase tracking-wider">Statistics</h3>
+            <EmployeeStatistics 
+              holidayLeft={statisticsData.holidayLeft}
+              sickness={statisticsData.sickness}
+            />
+          </div>
+          
+          <Separator className="my-6" />
+          
+          <div>
+            <h3 className="text-xs font-semibold text-apple-gray-500 mb-5 uppercase tracking-wider">Documents</h3>
+            <DocumentList documents={documents} isLoading={isLoading} />
           </div>
         </div>
       </div>
