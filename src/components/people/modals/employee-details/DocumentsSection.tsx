@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, Upload, File, Loader2, Trash2 } from 'lucide-react'; // Added Trash2 import here
+import { FileText, Download, Upload, File, Loader2, Trash2 } from 'lucide-react';
 import { Employee } from '@/components/people/types';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
@@ -28,7 +27,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
   const getPlaceholderDocuments = () => {
     const placeholders = [];
     const hasContract = documents?.some(doc => doc.document_type?.toLowerCase() === 'contract');
-    const hasResume = documents?.some(doc => doc.document_type?.toLowerCase() === 'resume');
+    const hasPayslip = documents?.some(doc => doc.document_type?.toLowerCase() === 'payslip');
     
     if (!hasContract) {
       placeholders.push({ 
@@ -41,14 +40,14 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
       });
     }
     
-    if (!hasResume) {
+    if (!hasPayslip) {
       placeholders.push({ 
-        id: 'resume-placeholder', 
-        name: 'Resume', 
-        document_type: 'resume', 
+        id: 'payslip-placeholder', 
+        name: 'Payslip', 
+        document_type: 'payslip', 
         size: '0 KB',
         icon: <img src="/pdf-icon.png" alt="PDF" className="w-8 h-8" />,
-        bgColor: 'bg-red-50'
+        bgColor: 'bg-green-50'
       });
     }
     
@@ -76,7 +75,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
         e.currentTarget.src = '';
         e.currentTarget.onerror = null;
       }} />;
-    } else if (type?.includes('resume') || type?.includes('payslip')) {
+    } else if (type?.includes('payslip')) {
       return <img src="/pdf-icon.png" alt="PDF" className="w-8 h-8" onError={(e) => {
         e.currentTarget.src = '';
         e.currentTarget.onerror = null;
@@ -91,8 +90,6 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
     
     if (type?.includes('contract')) {
       return 'bg-blue-50';
-    } else if (type?.includes('resume')) {
-      return 'bg-red-50';
     } else if (type?.includes('payslip')) {
       return 'bg-green-50';
     }
@@ -160,7 +157,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
           variant: "destructive"
         });
       }
-    } else if (action === 'delete' && doc.id && doc.id !== 'contract-placeholder' && doc.id !== 'resume-placeholder') {
+    } else if (action === 'delete' && doc.id && doc.id !== 'contract-placeholder' && doc.id !== 'payslip-placeholder') {
       try {
         await deleteDocument.mutateAsync({
           id: doc.id,
@@ -205,7 +202,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
                 <p className="text-xs text-gray-500">{doc.size}</p>
               </div>
               
-              {isManager && (!doc.path || doc.id === 'contract-placeholder' || doc.id === 'resume-placeholder') ? (
+              {isManager && (!doc.path || doc.id === 'contract-placeholder' || doc.id === 'payslip-placeholder') ? (
                 <label className={`cursor-pointer p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors ${uploading ? 'opacity-50 cursor-wait' : ''}`}>
                   {uploading ? (
                     <Loader2 className="h-5 w-5 animate-spin text-gray-600" />
@@ -236,7 +233,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
                     </Button>
                   )}
                   
-                  {isManager && doc.id !== 'contract-placeholder' && doc.id !== 'resume-placeholder' && (
+                  {isManager && doc.id !== 'contract-placeholder' && doc.id !== 'payslip-placeholder' && (
                     <Button 
                       variant="ghost" 
                       size="icon"

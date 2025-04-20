@@ -44,10 +44,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isLoading }) => 
             <div className={cn(
               "w-10 h-10 rounded-lg flex items-center justify-center mr-3",
               doc.type === 'contract' ? "bg-blue-100 text-blue-700" : 
-              doc.type === 'resume' ? "bg-red-100 text-red-700" :
               "bg-green-100 text-green-700"
             )}>
-              {doc.type === 'contract' ? 'C' : doc.type === 'resume' ? 'R' : 'P'}
+              {doc.type === 'contract' ? 'C' : 'P'}
             </div>
             <div>
               <div className="text-sm font-medium">{doc.name.split('_')[0]}</div>

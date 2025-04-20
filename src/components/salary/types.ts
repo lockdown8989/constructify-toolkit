@@ -1,7 +1,7 @@
 
 export interface EmployeeDocument {
   name: string;
-  type: 'contract' | 'resume' | 'payslip';
+  type: 'contract' | 'payslip';
   size: string;
   path?: string;
   url?: string;

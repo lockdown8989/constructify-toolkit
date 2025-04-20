@@ -10,7 +10,7 @@ const corsHeaders = {
 
 interface RequestParams {
   employeeId: string;
-  documentType?: 'resume' | 'contract' | 'payslip' | 'all';
+  documentType?: 'payslip' | 'contract' | 'all';
 }
 
 serve(async (req) => {

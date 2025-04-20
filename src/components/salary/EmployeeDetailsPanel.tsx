@@ -61,14 +61,14 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
         const formattedDocs: EmployeeDocument[] = [];
         
         const hasContract = storedDocs?.some(doc => doc.document_type?.toLowerCase() === 'contract');
-        const hasResume = storedDocs?.some(doc => doc.document_type?.toLowerCase() === 'resume');
+        const hasPayslip = storedDocs?.some(doc => doc.document_type?.toLowerCase() === 'payslip');
         
         if (!hasContract) {
           formattedDocs.push({ type: 'contract', name: 'Contract', size: '23 mb' });
         }
         
-        if (!hasResume) {
-          formattedDocs.push({ type: 'resume', name: 'Resume', size: '76 kb' });
+        if (!hasPayslip) {
+          formattedDocs.push({ type: 'payslip', name: 'Payslip', size: '76 kb' });
         }
         
         if (storedDocs && storedDocs.length > 0) {
@@ -80,13 +80,11 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
                 
               const type = doc.document_type?.toLowerCase().includes('contract') 
                 ? 'contract' 
-                : doc.document_type?.toLowerCase().includes('resume')
-                  ? 'resume'
-                  : 'payslip';
+                : 'payslip';
                   
               formattedDocs.push({
                 name: doc.name,
-                type: type as 'contract' | 'resume' | 'payslip',
+                type: type as 'contract' | 'payslip',
                 size: doc.size || `Unknown`,
                 path: doc.path,
                 url: urlData.publicUrl
@@ -119,7 +117,7 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
         console.error('Error in document fetching:', err);
         setDocuments([
           { type: 'contract', name: 'Contract', size: '23 mb' },
-          { type: 'resume', name: 'Resume', size: '76 kb' }
+          { type: 'payslip', name: 'Payslip', size: '76 kb' }
         ]);
       } finally {
         setIsLoading(false);
