@@ -32,8 +32,8 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   
   const statisticsData = {
-    businessTrips: 58,
-    sickness: 24
+    holidayLeft: employee.annual_leave_days || 25,
+    sickness: employee.sick_leave_days || 10
   };
   
   useEffect(() => {
@@ -272,13 +272,13 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm">Business trips</span>
-                  <span className="text-sm font-medium">{statisticsData.businessTrips} days</span>
+                  <span className="text-sm">Holiday left</span>
+                  <span className="text-sm font-medium">{statisticsData.holidayLeft} days</span>
                 </div>
                 <div className="w-full h-2 bg-gray-200 rounded-full">
                   <div 
                     className="h-full bg-amber-400 rounded-full" 
-                    style={{ width: `${(statisticsData.businessTrips / 100) * 100}%` }}
+                    style={{ width: `${(statisticsData.holidayLeft / 30) * 100}%` }}
                   />
                 </div>
               </div>
@@ -291,7 +291,7 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
                 <div className="w-full h-2 bg-gray-200 rounded-full">
                   <div 
                     className="h-full bg-gray-800 rounded-full" 
-                    style={{ width: `${(statisticsData.sickness / 100) * 100}%` }}
+                    style={{ width: `${(statisticsData.sickness / 15) * 100}%` }}
                   />
                 </div>
               </div>
