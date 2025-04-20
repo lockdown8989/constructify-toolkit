@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -124,13 +123,13 @@ const SalaryPage = () => {
               bgColor="bg-amber-100"
             />
             <SalaryStatCard
-              title="Vacation"
+              title="Overtime Hours"
               value="74 hrs"
               bgColor="bg-gray-200"
             />
             <SalaryStatCard
-              title="Truancy"
-              value="63 hrs"
+              title="Attendance% performance"
+              value="63%"
               bgColor="bg-gray-600"
               valueClassName="text-white"
               titleClassName="text-gray-200"
