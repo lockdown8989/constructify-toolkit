@@ -132,6 +132,7 @@ export type Database = {
       }
       documents: {
         Row: {
+          access_level: string
           created_at: string | null
           document_type: string
           employee_id: string | null
@@ -142,9 +143,11 @@ export type Database = {
           size: string | null
           updated_at: string | null
           uploaded_by: string | null
+          uploaded_by_role: string | null
           url: string | null
         }
         Insert: {
+          access_level?: string
           created_at?: string | null
           document_type: string
           employee_id?: string | null
@@ -155,9 +158,11 @@ export type Database = {
           size?: string | null
           updated_at?: string | null
           uploaded_by?: string | null
+          uploaded_by_role?: string | null
           url?: string | null
         }
         Update: {
+          access_level?: string
           created_at?: string | null
           document_type?: string
           employee_id?: string | null
@@ -168,6 +173,7 @@ export type Database = {
           size?: string | null
           updated_at?: string | null
           uploaded_by?: string | null
+          uploaded_by_role?: string | null
           url?: string | null
         }
         Relationships: [
