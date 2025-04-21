@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Download, Upload, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -8,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { sendDocumentUploadNotification } from '@/services/notifications/document-notifications';
+import DocumentUploadCard from './DocumentUploadCard';
 
 interface DocumentListProps {
   documents: EmployeeDocument[];
@@ -104,76 +104,43 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isLoading }) => 
     }
   };
 
-  const handleDocumentClick = async (doc: EmployeeDocument) => {
-    if (doc.url) {
-      window.open(doc.url, '_blank');
-    } else {
-      toast({
-        title: "Document not available",
-        description: "This document has not been uploaded yet.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const isUploadingType = (docType: string) => {
-    return uploading[docType] || false;
-  };
-
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-4">
       {isLoading ? (
         <div className="col-span-2 py-4 text-center">
           <div className="animate-pulse">Loading documents...</div>
         </div>
       ) : (
-        documents.map((doc, index) => (
-          <div 
-            key={index} 
-            className={cn(
-              "flex items-center p-3 bg-gray-100 rounded-xl",
-              doc.url ? "cursor-pointer hover:bg-gray-200" : "opacity-70",
-              "transition-colors"
-            )}
-            onClick={() => doc.url && handleDocumentClick(doc)}
-          >
-            <div className={cn(
-              "w-10 h-10 rounded-lg flex items-center justify-center mr-3",
-              doc.type === 'contract' ? "bg-blue-100 text-blue-700" : 
-              "bg-green-100 text-green-700"
-            )}>
-              {doc.type === 'contract' ? 'C' : 'P'}
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-medium">{doc.name.split('_')[0]}</div>
-              <div className="text-xs text-gray-500 flex items-center">
-                {doc.size}
-                {doc.url && (
-                  <Download className="h-3 w-3 ml-1 text-gray-400" />
-                )}
-              </div>
-            </div>
-            {isManager && !doc.url && (
-              <label className={cn(
-                "cursor-pointer p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors",
-                isUploadingType(doc.type) && "opacity-50 cursor-wait"
-              )}>
-                {isUploadingType(doc.type) ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-gray-600" />
-                ) : (
-                  <Upload className="h-5 w-5 text-gray-600" />
-                )}
-                <input 
-                  type="file" 
-                  className="hidden" 
-                  onChange={(e) => handleFileUpload(e, doc.type as 'contract' | 'payslip', doc.employeeId)}
-                  disabled={isUploadingType(doc.type)}
-                  accept=".pdf,.doc,.docx"
-                />
-              </label>
-            )}
-          </div>
-        ))
+        <>
+          {isManager && (
+            <DocumentUploadCard
+              type="contract"
+              size={
+                documents.find(doc => doc.type === 'contract')?.size || '0 KB'
+              }
+              onUpload={(e) => handleFileUpload(
+                e, 
+                'contract', 
+                documents[0]?.employeeId
+              )}
+              isUploading={uploading['contract']}
+            />
+          )}
+          {isManager && (
+            <DocumentUploadCard
+              type="payslip"
+              size={
+                documents.find(doc => doc.type === 'payslip')?.size || '0 KB'
+              }
+              onUpload={(e) => handleFileUpload(
+                e, 
+                'payslip', 
+                documents[0]?.employeeId
+              )}
+              isUploading={uploading['payslip']}
+            />
+          )}
+        </>
       )}
     </div>
   );
