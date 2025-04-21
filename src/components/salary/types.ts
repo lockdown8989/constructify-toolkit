@@ -5,4 +5,5 @@ export interface EmployeeDocument {
   size: string;
   path?: string;
   url?: string;
+  employeeId?: string; // Add this property to fix the TypeScript error
 }
