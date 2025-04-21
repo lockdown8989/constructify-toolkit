@@ -12,7 +12,7 @@ import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import EmployeeSalaryCard from '@/components/salary/EmployeeSalaryCard';
 import SalaryCalendarView from '@/components/salary/SalaryCalendarView';
 import EmployeeDetailsPanel from '@/components/salary/EmployeeDetailsPanel';
-import SalaryStatCard from '@/components/salary/SalaryStatCard';
+import SalaryStatsSection from '@/components/salary/SalaryStatsSection';
 
 const SalaryPage = () => {
   const navigate = useNavigate();
@@ -114,29 +114,8 @@ const SalaryPage = () => {
           "lg:col-span-6",
           selectedEmployee && (isMobile || isTablet) && "hidden"
         )}>
-          {/* Stats cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <SalaryStatCard
-              title="Work hours"
-              value="264.00 hrs"
-              secondaryValue="$2,647"
-              bgColor="bg-amber-100"
-            />
-            <SalaryStatCard
-              title="Overtime Hours"
-              value="74 hrs"
-              bgColor="bg-gray-200"
-            />
-            <SalaryStatCard
-              title="Attendance% performance"
-              value="63%"
-              bgColor="bg-gray-600"
-              valueClassName="text-white"
-              titleClassName="text-gray-200"
-            />
-          </div>
+          <SalaryStatsSection />
           
-          {/* Calendar */}
           <Card className="rounded-3xl p-6">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center">
@@ -171,7 +150,7 @@ const SalaryPage = () => {
           </Card>
         </div>
         
-        {/* Right panel - Employee details or mobile view when employee is selected */}
+        {/* Right panel - Employee details */}
         <div className={cn(
           "lg:col-span-3",
           !selectedEmployee && (isMobile || isTablet) && "hidden"
