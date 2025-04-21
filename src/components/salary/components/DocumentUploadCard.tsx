@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Upload, FileText } from 'lucide-react';
+import { Upload, FileText, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DocumentUploadCardProps {
@@ -9,6 +9,7 @@ interface DocumentUploadCardProps {
   onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isUploading?: boolean;
   disabled?: boolean;
+  fileName?: string;
 }
 
 const DocumentUploadCard: React.FC<DocumentUploadCardProps> = ({
@@ -16,7 +17,8 @@ const DocumentUploadCard: React.FC<DocumentUploadCardProps> = ({
   size,
   onUpload,
   isUploading = false,
-  disabled = false
+  disabled = false,
+  fileName
 }) => {
   const backgroundColors = {
     contract: 'bg-blue-50',
@@ -32,6 +34,8 @@ const DocumentUploadCard: React.FC<DocumentUploadCardProps> = ({
     contract: 'text-blue-600',
     payslip: 'text-green-600'
   };
+
+  const displayName = fileName || `${type.charAt(0).toUpperCase() + type.slice(1)}`;
 
   return (
     <div 
@@ -51,7 +55,7 @@ const DocumentUploadCard: React.FC<DocumentUploadCardProps> = ({
           <FileText className={cn("w-8 h-8", iconColors[type])} />
         </div>
         <div>
-          <h3 className="text-base font-medium capitalize">{type}</h3>
+          <h3 className="text-base font-medium capitalize">{displayName}</h3>
           <p className="text-sm text-gray-500">{size || '0 KB'}</p>
         </div>
       </div>
@@ -59,12 +63,13 @@ const DocumentUploadCard: React.FC<DocumentUploadCardProps> = ({
       <label 
         className={cn(
           "cursor-pointer rounded-full p-2 hover:bg-white/50 transition-colors",
-          isUploading && "pointer-events-none"
+          isUploading && "pointer-events-none",
+          disabled && "cursor-not-allowed"
         )}
       >
         {isUploading ? (
           <div className="animate-spin">
-            <Upload className="w-6 h-6 text-gray-400" />
+            <Loader2 className="w-6 h-6 text-gray-400" />
           </div>
         ) : (
           <Upload className={cn("w-6 h-6", iconColors[type])} />
@@ -82,4 +87,3 @@ const DocumentUploadCard: React.FC<DocumentUploadCardProps> = ({
 };
 
 export default DocumentUploadCard;
-

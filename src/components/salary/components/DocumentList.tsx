@@ -1,11 +1,9 @@
+
 import React, { useState } from 'react';
-import { Download, Upload, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import type { EmployeeDocument } from '../types';
 import { supabase } from '@/integrations/supabase/client';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { sendDocumentUploadNotification } from '@/services/notifications/document-notifications';
 import DocumentUploadCard from './DocumentUploadCard';
 
@@ -18,6 +16,10 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isLoading }) => 
   const { toast } = useToast();
   const { isManager, user } = useAuth();
   const [uploading, setUploading] = useState<{ [key: string]: boolean }>({});
+
+  // Find documents by type
+  const contractDoc = documents.find(doc => doc.type === 'contract');
+  const payslipDoc = documents.find(doc => doc.type === 'payslip');
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, docType: 'contract' | 'payslip', employeeId?: string) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -91,7 +93,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isLoading }) => 
       });
       
       // Refresh the document list - this would need to be implemented by the parent component
-      // You could use a callback or query invalidation here
+      window.location.reload(); // Simple refresh to show updated documents
     } catch (error) {
       console.error('Error uploading document:', error);
       toast({
@@ -105,9 +107,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isLoading }) => 
   };
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-4">
       {isLoading ? (
-        <div className="col-span-2 py-4 text-center">
+        <div className="col-span-1 py-4 text-center">
           <div className="animate-pulse">Loading documents...</div>
         </div>
       ) : (
@@ -115,29 +117,29 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isLoading }) => 
           {isManager && (
             <DocumentUploadCard
               type="contract"
-              size={
-                documents.find(doc => doc.type === 'contract')?.size || '0 KB'
-              }
+              size={contractDoc?.size || '0 KB'}
+              fileName={contractDoc?.name}
               onUpload={(e) => handleFileUpload(
                 e, 
                 'contract', 
                 documents[0]?.employeeId
               )}
               isUploading={uploading['contract']}
+              disabled={uploading['payslip']} // Disable when other is uploading
             />
           )}
           {isManager && (
             <DocumentUploadCard
               type="payslip"
-              size={
-                documents.find(doc => doc.type === 'payslip')?.size || '0 KB'
-              }
+              size={payslipDoc?.size || '0 KB'}
+              fileName={payslipDoc?.name}
               onUpload={(e) => handleFileUpload(
                 e, 
                 'payslip', 
                 documents[0]?.employeeId
               )}
               isUploading={uploading['payslip']}
+              disabled={uploading['contract']} // Disable when other is uploading
             />
           )}
         </>
