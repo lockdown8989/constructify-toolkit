@@ -16,6 +16,7 @@ export function useOpenShifts() {
       const { data, error } = await supabase
         .from('open_shifts')
         .select('*')
+        .order('position_order', { ascending: true })
         .order('start_time', { ascending: true });
 
       if (error) throw error;

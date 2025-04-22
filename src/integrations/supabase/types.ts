@@ -516,13 +516,17 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           created_platform: string | null
+          drag_disabled: boolean | null
           end_time: string
           id: string
+          last_dragged_at: string | null
+          last_dragged_by: string | null
           last_modified_platform: string | null
           location: string | null
           mobile_friendly_view: Json | null
           mobile_notification_sent: boolean | null
           notes: string | null
+          position_order: number | null
           role: string | null
           start_time: string
           status: string
@@ -532,13 +536,17 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           created_platform?: string | null
+          drag_disabled?: boolean | null
           end_time: string
           id?: string
+          last_dragged_at?: string | null
+          last_dragged_by?: string | null
           last_modified_platform?: string | null
           location?: string | null
           mobile_friendly_view?: Json | null
           mobile_notification_sent?: boolean | null
           notes?: string | null
+          position_order?: number | null
           role?: string | null
           start_time: string
           status?: string
@@ -548,13 +556,17 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           created_platform?: string | null
+          drag_disabled?: boolean | null
           end_time?: string
           id?: string
+          last_dragged_at?: string | null
+          last_dragged_by?: string | null
           last_modified_platform?: string | null
           location?: string | null
           mobile_friendly_view?: Json | null
           mobile_notification_sent?: boolean | null
           notes?: string | null
+          position_order?: number | null
           role?: string | null
           start_time?: string
           status?: string
@@ -720,14 +732,18 @@ export type Database = {
           color: string | null
           created_at: string
           created_platform: string | null
+          drag_disabled: boolean | null
           employee_id: string | null
           end_time: string
           id: string
+          last_dragged_at: string | null
+          last_dragged_by: string | null
           last_modified_platform: string | null
           location: string | null
           mobile_friendly_view: Json | null
           mobile_notification_sent: boolean | null
           notes: string | null
+          position_order: number | null
           published: boolean | null
           recurrence_pattern: Json | null
           recurring: boolean | null
@@ -742,14 +758,18 @@ export type Database = {
           color?: string | null
           created_at?: string
           created_platform?: string | null
+          drag_disabled?: boolean | null
           employee_id?: string | null
           end_time: string
           id?: string
+          last_dragged_at?: string | null
+          last_dragged_by?: string | null
           last_modified_platform?: string | null
           location?: string | null
           mobile_friendly_view?: Json | null
           mobile_notification_sent?: boolean | null
           notes?: string | null
+          position_order?: number | null
           published?: boolean | null
           recurrence_pattern?: Json | null
           recurring?: boolean | null
@@ -764,14 +784,18 @@ export type Database = {
           color?: string | null
           created_at?: string
           created_platform?: string | null
+          drag_disabled?: boolean | null
           employee_id?: string | null
           end_time?: string
           id?: string
+          last_dragged_at?: string | null
+          last_dragged_by?: string | null
           last_modified_platform?: string | null
           location?: string | null
           mobile_friendly_view?: Json | null
           mobile_notification_sent?: boolean | null
           notes?: string | null
+          position_order?: number | null
           published?: boolean | null
           recurrence_pattern?: Json | null
           recurring?: boolean | null
