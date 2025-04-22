@@ -11,14 +11,23 @@ const OpenShiftActions = ({ addOpenShift }: OpenShiftActionsProps) => {
   const { toast } = useToast();
 
   const handleAddOpenShift = () => {
+    // Get the current date
+    const today = new Date();
+    // Format as YYYY-MM-DD
+    const dateString = today.toISOString().split('T')[0];
+    
+    // Create proper ISO date-time strings for start and end times
+    const startTimeISO = new Date(`${dateString}T09:00:00`).toISOString();
+    const endTimeISO = new Date(`${dateString}T17:00:00`).toISOString();
+    
     const newOpenShift: Omit<OpenShift, 'id'> = {
       title: 'New Open Shift',
       day: 'monday',
       role: 'Staff',
       startTime: '09:00',
       endTime: '17:00',
-      start_time: new Date(`2024-04-22T09:00:00`).toISOString(),
-      end_time: new Date(`2024-04-22T17:00:00`).toISOString(),
+      start_time: startTimeISO,
+      end_time: endTimeISO,
       notes: 'New open shift',
       status: 'open',
       created_platform: 'web',
