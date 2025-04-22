@@ -17,6 +17,15 @@ export interface OpenShiftType {
   mobile_notification_sent: boolean;
   created_platform: string;
   last_modified_platform: string;
+  position_order?: number | null;
+  drag_disabled?: boolean | null;
+  last_dragged_at?: string | null;
+  last_dragged_by?: string | null;
+  
+  // Virtual property aliases for compatibility with restaurant-schedule types
+  startTime?: string;
+  endTime?: string;
+  day?: string;
 }
 
 export interface OpenShiftAssignment {

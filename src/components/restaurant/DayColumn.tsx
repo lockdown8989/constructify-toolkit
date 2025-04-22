@@ -1,16 +1,17 @@
 
 import React from 'react';
-import { DayStats, Employee, OpenShift } from '@/types/restaurant-schedule';
+import { DayStats, Employee } from '@/types/restaurant-schedule';
 import ShiftBlock from './ShiftBlock';
 import OpenShiftBlock from './OpenShiftBlock';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { OpenShiftType } from '@/types/supabase/schedules';
 
 interface DayColumnProps {
   day: string;
   dayLabel: string;
   dayStats: DayStats;
   employees: Employee[];
-  openShifts: OpenShift[];
+  openShifts: OpenShiftType[];
   handleAssignOpenShift: (openShiftId: string, employeeId?: string) => void;
 }
 
@@ -44,6 +45,25 @@ const DayColumn = ({
     }
   };
 
+  // Map our supabase OpenShiftType to the format expected by the OpenShiftBlock component
+  const processedOpenShifts = openShifts.map((openShift, index) => {
+    // Add day property if not present (required for restaurant-schedule format)
+    if (!openShift.day) {
+      openShift.day = day;
+    }
+    
+    // Add startTime/endTime aliases if using start_time/end_time
+    if (openShift.start_time && !openShift.startTime) {
+      openShift.startTime = new Date(openShift.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    if (openShift.end_time && !openShift.endTime) {
+      openShift.endTime = new Date(openShift.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    return openShift;
+  });
+
   return (
     <div className="col-span-1 border-r border-gray-200">
       {/* Header */}
@@ -72,12 +92,13 @@ const DayColumn = ({
         })}
         
         {/* Open shifts */}
-        {openShifts.map(openShift => (
+        {processedOpenShifts.map((openShift, index) => (
           <OpenShiftBlock
             key={openShift.id}
             openShift={openShift}
             handleAssignOpenShift={handleAssignOpenShift}
             compact={isMobile}
+            position={index}
           />
         ))}
         

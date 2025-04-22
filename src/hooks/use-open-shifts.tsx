@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -16,11 +17,18 @@ export function useOpenShifts() {
       const { data, error } = await supabase
         .from('open_shifts')
         .select('*')
-        .order('position_order', { ascending: true })
+        .order('position_order', { ascending: true, nullsLast: true })
         .order('start_time', { ascending: true });
 
       if (error) throw error;
-      return data as OpenShiftType[];
+      
+      // Process data to ensure compatibility with both formats
+      return data.map((shift: any) => ({
+        ...shift,
+        // Add virtual properties for compatibility
+        startTime: new Date(shift.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        endTime: new Date(shift.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      })) as OpenShiftType[];
     },
     enabled: !!user
   });

@@ -84,6 +84,19 @@ const OpenShiftBlock = ({
       }
     }
   };
+
+  // Function to handle the assign button click
+  const handleAssignClick = () => {
+    if (handleAssignOpenShift) {
+      handleAssignOpenShift(openShift.id);
+    } else if (onAssign) {
+      onAssign(openShift.id);
+    }
+  };
+  
+  // Get display times based on available properties
+  const startTimeDisplay = openShift.startTime || (openShift.start_time ? new Date(openShift.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
+  const endTimeDisplay = openShift.endTime || (openShift.end_time ? new Date(openShift.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
   
   return (
     <div 
@@ -104,7 +117,7 @@ const OpenShiftBlock = ({
     >
       <div className="flex flex-col">
         <div className="flex justify-between items-center">
-          <span className="font-medium text-gray-900">{openShift.startTime} - {openShift.endTime}</span>
+          <span className="font-medium text-gray-900">{startTimeDisplay} - {endTimeDisplay}</span>
           <div className="flex space-x-1">
             {openShift.notes && (
               <TooltipProvider>
@@ -120,7 +133,7 @@ const OpenShiftBlock = ({
             )}
             {(handleAssignOpenShift || onAssign) && (
               <button 
-                onClick={handleAssign}
+                onClick={handleAssignClick}
                 className="text-blue-500 hover:text-blue-700 transition-colors p-1 rounded-full hover:bg-blue-100/50"
                 aria-label="Assign shift"
               >
