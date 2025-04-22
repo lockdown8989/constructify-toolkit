@@ -34,6 +34,17 @@ export interface Schedule {
   notes?: string | null;
   location?: string | null;
   updated_at?: string | null;
+  color?: string | null;
+  published?: boolean;
+  calendar_id?: string | null;
+  shift_type?: string;
+  recurring?: boolean;
+  recurrence_pattern?: {
+    frequency: 'daily' | 'weekly' | 'monthly';
+    interval: number;
+    days?: number[];
+    end_date?: string;
+  } | null;
 }
 
 export interface ShiftSwap {

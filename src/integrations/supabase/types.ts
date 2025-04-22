@@ -130,6 +130,47 @@ export type Database = {
           },
         ]
       }
+      calendar_preferences: {
+        Row: {
+          color_scheme: string | null
+          created_at: string | null
+          default_view: string | null
+          employee_id: string
+          id: string
+          show_weekends: boolean | null
+          updated_at: string | null
+          visible_hours: Json | null
+        }
+        Insert: {
+          color_scheme?: string | null
+          created_at?: string | null
+          default_view?: string | null
+          employee_id: string
+          id?: string
+          show_weekends?: boolean | null
+          updated_at?: string | null
+          visible_hours?: Json | null
+        }
+        Update: {
+          color_scheme?: string | null
+          created_at?: string | null
+          default_view?: string | null
+          employee_id?: string
+          id?: string
+          show_weekends?: boolean | null
+          updated_at?: string | null
+          visible_hours?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_preferences_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           access_level: string
@@ -613,38 +654,101 @@ export type Database = {
         }
         Relationships: []
       }
+      schedule_templates: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          created_by: string | null
+          days_of_week: string[]
+          end_time: string
+          id: string
+          location: string | null
+          notes: string | null
+          role: string | null
+          shift_type: string | null
+          start_time: string
+          title: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          days_of_week: string[]
+          end_time: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          role?: string | null
+          shift_type?: string | null
+          start_time: string
+          title: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          days_of_week?: string[]
+          end_time?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          role?: string | null
+          shift_type?: string | null
+          start_time?: string
+          title?: string
+        }
+        Relationships: []
+      }
       schedules: {
         Row: {
+          calendar_id: string | null
+          color: string | null
           created_at: string
           employee_id: string | null
           end_time: string
           id: string
           location: string | null
           notes: string | null
+          published: boolean | null
+          recurrence_pattern: Json | null
+          recurring: boolean | null
+          shift_type: string | null
           start_time: string
           status: Database["public"]["Enums"]["shift_status"] | null
           title: string
           updated_at: string | null
         }
         Insert: {
+          calendar_id?: string | null
+          color?: string | null
           created_at?: string
           employee_id?: string | null
           end_time: string
           id?: string
           location?: string | null
           notes?: string | null
+          published?: boolean | null
+          recurrence_pattern?: Json | null
+          recurring?: boolean | null
+          shift_type?: string | null
           start_time: string
           status?: Database["public"]["Enums"]["shift_status"] | null
           title: string
           updated_at?: string | null
         }
         Update: {
+          calendar_id?: string | null
+          color?: string | null
           created_at?: string
           employee_id?: string | null
           end_time?: string
           id?: string
           location?: string | null
           notes?: string | null
+          published?: boolean | null
+          recurrence_pattern?: Json | null
+          recurring?: boolean | null
+          shift_type?: string | null
           start_time?: string
           status?: Database["public"]["Enums"]["shift_status"] | null
           title?: string
