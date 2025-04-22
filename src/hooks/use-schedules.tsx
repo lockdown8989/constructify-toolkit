@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -108,6 +109,43 @@ export function useSchedules() {
       const result = await query.refetch();
       return result;
     }
+  };
+}
+
+// Add the useCreateSchedule hook to export the createSchedule mutation separately
+export function useCreateSchedule() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
+
+  const createSchedule = useMutation({
+    mutationFn: async (schedule: Partial<Schedule>) => {
+      if (!user) throw new Error('User not authenticated');
+      
+      const { data, error } = await supabase
+        .from('schedules')
+        .insert([{
+          ...schedule,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          created_platform: isMobile ? 'mobile' : 'desktop',
+          last_modified_platform: isMobile ? 'mobile' : 'desktop',
+          status: schedule.status || 'confirmed'
+        }])
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
+    },
+  });
+
+  return {
+    createSchedule,
+    isCreating: createSchedule.isPending
   };
 }
 
