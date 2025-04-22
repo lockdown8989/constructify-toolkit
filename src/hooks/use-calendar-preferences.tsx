@@ -4,11 +4,13 @@ import { supabase } from '@/integrations/supabase/client';
 import type { CalendarPreferences } from '@/types/calendar';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function useCalendarPreferences() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   const { data: preferences, isLoading } = useQuery({
     queryKey: ['calendar-preferences'],
@@ -29,6 +31,16 @@ export function useCalendarPreferences() {
         .eq('employee_id', employee.id)
         .maybeSingle();
 
+      // Set default mobile view settings if not present
+      if (data && !data.mobile_view_settings) {
+        data.mobile_view_settings = {
+          font_size: 'medium',
+          compact_view: true,
+          days_visible: 3,
+          auto_refresh: true
+        };
+      }
+
       return data;
     },
     enabled: !!user
@@ -42,7 +54,10 @@ export function useCalendarPreferences() {
 
       const { data, error } = await supabase
         .from('calendar_preferences')
-        .update(newPreferences)
+        .update({
+          ...newPreferences,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', preferences.id)
         .select()
         .single();
@@ -70,6 +85,7 @@ export function useCalendarPreferences() {
   return {
     preferences,
     isLoading,
-    updatePreferences: updatePreferences.mutate
+    updatePreferences: updatePreferences.mutate,
+    isMobile
   };
 }

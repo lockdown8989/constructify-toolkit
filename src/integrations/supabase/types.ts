@@ -137,6 +137,7 @@ export type Database = {
           default_view: string | null
           employee_id: string
           id: string
+          mobile_view_settings: Json | null
           show_weekends: boolean | null
           updated_at: string | null
           visible_hours: Json | null
@@ -147,6 +148,7 @@ export type Database = {
           default_view?: string | null
           employee_id: string
           id?: string
+          mobile_view_settings?: Json | null
           show_weekends?: boolean | null
           updated_at?: string | null
           visible_hours?: Json | null
@@ -157,6 +159,7 @@ export type Database = {
           default_view?: string | null
           employee_id?: string
           id?: string
+          mobile_view_settings?: Json | null
           show_weekends?: boolean | null
           updated_at?: string | null
           visible_hours?: Json | null
@@ -512,9 +515,13 @@ export type Database = {
         Row: {
           created_at: string | null
           created_by: string | null
+          created_platform: string | null
           end_time: string
           id: string
+          last_modified_platform: string | null
           location: string | null
+          mobile_friendly_view: Json | null
+          mobile_notification_sent: boolean | null
           notes: string | null
           role: string | null
           start_time: string
@@ -524,9 +531,13 @@ export type Database = {
         Insert: {
           created_at?: string | null
           created_by?: string | null
+          created_platform?: string | null
           end_time: string
           id?: string
+          last_modified_platform?: string | null
           location?: string | null
+          mobile_friendly_view?: Json | null
+          mobile_notification_sent?: boolean | null
           notes?: string | null
           role?: string | null
           start_time: string
@@ -536,9 +547,13 @@ export type Database = {
         Update: {
           created_at?: string | null
           created_by?: string | null
+          created_platform?: string | null
           end_time?: string
           id?: string
+          last_modified_platform?: string | null
           location?: string | null
+          mobile_friendly_view?: Json | null
+          mobile_notification_sent?: boolean | null
           notes?: string | null
           role?: string | null
           start_time?: string
@@ -704,10 +719,14 @@ export type Database = {
           calendar_id: string | null
           color: string | null
           created_at: string
+          created_platform: string | null
           employee_id: string | null
           end_time: string
           id: string
+          last_modified_platform: string | null
           location: string | null
+          mobile_friendly_view: Json | null
+          mobile_notification_sent: boolean | null
           notes: string | null
           published: boolean | null
           recurrence_pattern: Json | null
@@ -722,10 +741,14 @@ export type Database = {
           calendar_id?: string | null
           color?: string | null
           created_at?: string
+          created_platform?: string | null
           employee_id?: string | null
           end_time: string
           id?: string
+          last_modified_platform?: string | null
           location?: string | null
+          mobile_friendly_view?: Json | null
+          mobile_notification_sent?: boolean | null
           notes?: string | null
           published?: boolean | null
           recurrence_pattern?: Json | null
@@ -740,10 +763,14 @@ export type Database = {
           calendar_id?: string | null
           color?: string | null
           created_at?: string
+          created_platform?: string | null
           employee_id?: string | null
           end_time?: string
           id?: string
+          last_modified_platform?: string | null
           location?: string | null
+          mobile_friendly_view?: Json | null
+          mobile_notification_sent?: boolean | null
           notes?: string | null
           published?: boolean | null
           recurrence_pattern?: Json | null

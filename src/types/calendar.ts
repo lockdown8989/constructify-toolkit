@@ -1,4 +1,3 @@
-
 export interface CalendarPreferences {
   id: string;
   employee_id: string;
@@ -9,6 +8,20 @@ export interface CalendarPreferences {
   };
   show_weekends: boolean;
   color_scheme: string;
+  mobile_view_settings: MobileViewSettings;
+}
+
+interface MobileViewSettings {
+  font_size: 'small' | 'medium' | 'large';
+  compact_view: boolean;
+  days_visible: number;
+  auto_refresh: boolean;
+}
+
+interface MobileFriendlyView {
+  font_size: 'small' | 'medium' | 'large';
+  compact_view: boolean;
+  high_contrast: boolean;
 }
 
 export interface ScheduleTemplate {
@@ -22,4 +35,5 @@ export interface ScheduleTemplate {
   role?: string;
   location?: string;
   notes?: string;
+  mobile_friendly_view?: MobileFriendlyView;
 }

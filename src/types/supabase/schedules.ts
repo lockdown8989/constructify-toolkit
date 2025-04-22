@@ -9,6 +9,14 @@ export interface OpenShiftType {
   status: string;
   created_at: string | null;
   created_by: string | null;
+  mobile_friendly_view?: {
+    font_size: 'small' | 'medium' | 'large';
+    compact_view: boolean;
+    high_contrast: boolean;
+  };
+  mobile_notification_sent: boolean;
+  created_platform: string;
+  last_modified_platform: string;
 }
 
 export interface OpenShiftAssignment {
@@ -45,6 +53,14 @@ export interface Schedule {
     days?: number[];
     end_date?: string;
   } | null;
+  mobile_friendly_view?: {
+    font_size: 'small' | 'medium' | 'large';
+    compact_view: boolean;
+    high_contrast: boolean;
+  };
+  mobile_notification_sent: boolean;
+  created_platform: string;
+  last_modified_platform: string;
 }
 
 export interface ShiftSwap {

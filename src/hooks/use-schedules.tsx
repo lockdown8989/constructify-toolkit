@@ -1,7 +1,7 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export interface Schedule {
   id: string;
@@ -14,18 +14,26 @@ export interface Schedule {
   notes?: string;
   status?: 'confirmed' | 'pending' | 'completed' | 'rejected';
   location?: string;
+  mobile_friendly_view?: {
+    font_size: 'small' | 'medium' | 'large';
+    compact_view: boolean;
+    high_contrast: boolean;
+  };
+  mobile_notification_sent: boolean;
+  created_platform: string;
+  last_modified_platform: string;
 }
 
 export function useSchedules() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   
   const query = useQuery({
     queryKey: ['schedules'],
+    
     queryFn: async () => {
-      if (!user) {
-        return [];
-      }
+      if (!user) return [];
       
       try {
         const { data: employees } = await supabase
@@ -50,14 +58,15 @@ export function useSchedules() {
           return [];
         }
         
-        // Add default status if not available
-        const processedData = data?.map(schedule => ({
+        return data?.map(schedule => ({
           ...schedule,
-          status: schedule.status || 'confirmed'
+          status: schedule.status || 'confirmed',
+          mobile_friendly_view: schedule.mobile_friendly_view || {
+            font_size: 'medium',
+            compact_view: false,
+            high_contrast: false
+          }
         })) || [];
-        
-        console.log('Fetched schedules for employee:', employees.id, processedData.length);
-        return processedData;
       } catch (error) {
         console.error('Error in useSchedules hook:', error);
         return [];
@@ -65,26 +74,10 @@ export function useSchedules() {
     },
     enabled: !!user,
   });
-  
-  return {
-    ...query,
-    refetch: async () => {
-      console.log('Manually refetching schedules...');
-      const result = await query.refetch();
-      return result;
-    }
-  };
-}
 
-export function useCreateSchedule() {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-
-  const mutation = useMutation({
+  const createSchedule = useMutation({
     mutationFn: async (schedule: Partial<Schedule>) => {
       if (!user) throw new Error('User not authenticated');
-      
-      console.log('Creating schedule with data:', schedule);
       
       const { data, error } = await supabase
         .from('schedules')
@@ -92,29 +85,29 @@ export function useCreateSchedule() {
           ...schedule,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
+          created_platform: isMobile ? 'mobile' : 'desktop',
+          last_modified_platform: isMobile ? 'mobile' : 'desktop',
           status: schedule.status || 'confirmed'
         }])
         .select()
         .single();
         
-      if (error) {
-        console.error('Error creating schedule:', error);
-        throw error;
-      }
-      
-      console.log('Schedule created successfully:', data);
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      console.log('Invalidating schedules query after successful creation');
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
     },
   });
 
   return {
-    createSchedule: mutation,
-    isCreating: mutation.isPending,
-    error: mutation.error
+    ...query,
+    createSchedule,
+    refetch: async () => {
+      console.log('Manually refetching schedules...');
+      const result = await query.refetch();
+      return result;
+    }
   };
 }
 
