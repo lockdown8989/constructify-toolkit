@@ -14,6 +14,7 @@ import { useShiftUtilities } from '@/components/restaurant/ShiftUtilities';
 import { days, formatCurrency } from '@/components/restaurant/utils/schedule-utils';
 import { Loader2 } from 'lucide-react';
 import { toast as sonnerToast } from 'sonner';
+import { OpenShiftType } from '@/types/supabase/schedules';
 
 const RestaurantSchedule = () => {
   const [syncingData, setSyncingData] = useState(false);
@@ -124,7 +125,7 @@ const RestaurantSchedule = () => {
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-6 sm:mb-8">
         <WeeklyGrid 
           weekStats={weekStats}
-          openShifts={openShifts}
+          openShifts={openShifts as OpenShiftType[]} // Type cast to resolve the error
           employees={employees}
           daysDisplayNames={isMobile 
             ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] 
