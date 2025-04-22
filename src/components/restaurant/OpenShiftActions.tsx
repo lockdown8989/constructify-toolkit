@@ -12,11 +12,18 @@ const OpenShiftActions = ({ addOpenShift }: OpenShiftActionsProps) => {
 
   const handleAddOpenShift = () => {
     const newOpenShift: Omit<OpenShift, 'id'> = {
+      title: 'New Open Shift',
       day: 'monday',
+      role: 'Staff',
       startTime: '09:00',
       endTime: '17:00',
-      role: 'Staff',
-      notes: 'New open shift'
+      start_time: new Date(`2024-04-22T09:00:00`).toISOString(),
+      end_time: new Date(`2024-04-22T17:00:00`).toISOString(),
+      notes: 'New open shift',
+      status: 'open',
+      created_platform: 'web',
+      last_modified_platform: 'web',
+      mobile_notification_sent: false
     };
     
     addOpenShift(newOpenShift);
