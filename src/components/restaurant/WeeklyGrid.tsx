@@ -1,16 +1,16 @@
-
 import React, { useState } from 'react';
-import { WeekStats, Employee, OpenShift } from '@/types/restaurant-schedule';
+import { WeekStats, Employee } from '@/types/restaurant-schedule';
 import { days } from './utils/schedule-utils';
 import DayColumn from './DayColumn';
 import WeekSummaryColumn from './WeekSummaryColumn';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { OpenShiftType } from '@/types/supabase/schedules';
 
 interface WeeklyGridProps {
   weekStats: WeekStats;
-  openShifts: OpenShift[];
+  openShifts: OpenShiftType[];
   employees: Employee[];
   daysDisplayNames: string[];
   formatCurrency: (amount: number, currency?: string, locale?: string) => string;
@@ -42,7 +42,12 @@ const WeeklyGrid = ({
 
   // Filter open shifts by day
   const getOpenShiftsByDay = (day: string) => {
-    return openShifts.filter(shift => shift.day === day);
+    return openShifts.filter(shift => {
+      // For compatibility with both formats, check both day property and derive from start_time
+      const shiftDay = shift.day || 
+        new Date(shift.start_time).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+      return shiftDay === day;
+    });
   };
 
   // Navigate to previous day group on mobile

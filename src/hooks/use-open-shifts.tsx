@@ -17,7 +17,7 @@ export function useOpenShifts() {
       const { data, error } = await supabase
         .from('open_shifts')
         .select('*')
-        .order('position_order', { ascending: true, nullsLast: true })
+        .order('position_order', { ascending: true, nullsFirst: false }) // Changed nullsLast to nullsFirst: false
         .order('start_time', { ascending: true });
 
       if (error) throw error;
@@ -25,9 +25,10 @@ export function useOpenShifts() {
       // Process data to ensure compatibility with both formats
       return data.map((shift: any) => ({
         ...shift,
-        // Add virtual properties for compatibility
+        // Add virtual property aliases for compatibility
         startTime: new Date(shift.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        endTime: new Date(shift.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        endTime: new Date(shift.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        day: shift.day || new Date(shift.start_time).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
       })) as OpenShiftType[];
     },
     enabled: !!user
