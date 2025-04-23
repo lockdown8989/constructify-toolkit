@@ -59,7 +59,8 @@ export const useTimeClockActions = (
       .update({
         check_out: now.toISOString(),
         location,
-        device_info: deviceInfo
+        device_info: deviceInfo,
+        updated_at: now.toISOString() // Add the updated_at field explicitly
       })
       .eq('id', currentRecord);
 
@@ -92,7 +93,8 @@ export const useTimeClockActions = (
       .update({
         break_start: now.toISOString(),
         location,
-        device_info: deviceInfo
+        device_info: deviceInfo,
+        updated_at: now.toISOString() // Add the updated_at field explicitly
       })
       .eq('id', currentRecord);
 
@@ -155,7 +157,8 @@ export const useTimeClockActions = (
           break_minutes: newBreakMinutes,
           break_start: null, // Clear break_start to indicate break is ended
           location,
-          device_info: deviceInfo
+          device_info: deviceInfo,
+          updated_at: now.toISOString() // Add the updated_at field explicitly
         })
         .eq('id', currentRecord);
 
