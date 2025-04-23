@@ -8,9 +8,18 @@ import { Card } from '@/components/ui/card';
 interface OpenShiftBlockProps {
   openShift: OpenShift;
   employeeId?: string;
+  handleAssignOpenShift?: (openShiftId: string, employeeId?: string) => void;
+  compact?: boolean;
+  position?: number;
 }
 
-const OpenShiftBlock = ({ openShift, employeeId }: OpenShiftBlockProps) => {
+const OpenShiftBlock = ({ 
+  openShift, 
+  employeeId,
+  handleAssignOpenShift,
+  compact = false,
+  position 
+}: OpenShiftBlockProps) => {
   const { user } = useAuth();
 
   return (
