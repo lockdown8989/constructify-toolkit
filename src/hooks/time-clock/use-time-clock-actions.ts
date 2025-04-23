@@ -51,6 +51,8 @@ export const useTimeClockActions = (
   const handleClockOut = async (currentRecord: string | null) => {
     if (!currentRecord) return;
 
+    console.log('Clocking out with record ID:', currentRecord);
+
     const now = new Date();
     const { error } = await supabase
       .from('attendance')
@@ -82,6 +84,8 @@ export const useTimeClockActions = (
   const handleBreakStart = async (currentRecord: string | null) => {
     if (!currentRecord) return;
     
+    console.log('Starting break with record ID:', currentRecord);
+    
     const now = new Date();
     const { error } = await supabase
       .from('attendance')
@@ -112,7 +116,9 @@ export const useTimeClockActions = (
   const handleBreakEnd = async (currentRecord: string | null) => {
     if (!currentRecord) return;
     
-    const now = new Date();
+    console.log('Ending break with record ID:', currentRecord);
+    
+    // First, retrieve the current break details to calculate duration
     const { data: record, error: fetchError } = await supabase
       .from('attendance')
       .select('break_start, break_minutes')
@@ -129,16 +135,25 @@ export const useTimeClockActions = (
       return;
     }
 
+    const now = new Date();
+    
     if (record?.break_start) {
       const breakStart = new Date(record.break_start);
       const existingBreakMinutes = record.break_minutes || 0;
       const newBreakMinutes = Math.round((now.getTime() - breakStart.getTime()) / (1000 * 60)) + existingBreakMinutes;
 
+      console.log('Break details:', {
+        breakStart,
+        existingBreakMinutes,
+        newBreakMinutes,
+        currentRecord
+      });
+
       const { error } = await supabase
         .from('attendance')
         .update({
           break_minutes: newBreakMinutes,
-          break_start: null,
+          break_start: null, // Clear break_start to indicate break is ended
           location,
           device_info: deviceInfo
         })

@@ -86,6 +86,8 @@ export const useTimeClock = () => {
     const fetchAttendanceData = async () => {
       if (!currentRecord) return;
 
+      console.log('Fetching attendance data for record:', currentRecord, 'status:', status);
+
       const { data, error } = await supabase
         .from('attendance')
         .select('check_in, break_minutes, break_start')
@@ -98,6 +100,8 @@ export const useTimeClock = () => {
       }
 
       if (data) {
+        console.log('Attendance data retrieved:', data);
+        
         const checkInTime = new Date(data.check_in);
         const breakMinutes = data.break_minutes || 0;
         const breakStartTime = data.break_start ? new Date(data.break_start) : null;
@@ -117,7 +121,6 @@ export const useTimeClock = () => {
           if (status === 'on-break' && breakStartTime) {
             const currentBreakSeconds = Math.floor((now.getTime() - breakStartTime.getTime()) / 1000);
             setBreakTime(breakMinutes * 60 + currentBreakSeconds);
-            // Don't subtract current break from elapsed time (it's already accounted for)
           }
           
           setElapsedTime(Math.max(0, totalSeconds));

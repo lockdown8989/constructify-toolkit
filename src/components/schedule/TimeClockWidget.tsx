@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Clock, PlayCircle, StopCircle, PauseCircle, Timer } from 'lucide-react';
+import { Clock, Coffee, StopCircle, PauseCircle, Timer } from 'lucide-react';
 import { useTimeClock } from '@/hooks/time-clock';
 import { formatDuration } from '@/utils/time-utils';
 
@@ -16,6 +16,8 @@ const TimeClockWidget = () => {
     elapsedTime,
     breakTime
   } = useTimeClock();
+
+  console.log('TimeClockWidget rendering. Status:', status);
 
   return (
     <Card>
@@ -49,7 +51,7 @@ const TimeClockWidget = () => {
               onClick={handleClockIn} 
               className="bg-green-600 hover:bg-green-700"
             >
-              <PlayCircle className="h-4 w-4 mr-2" />
+              <Clock className="h-4 w-4 mr-2" />
               Clock In
             </Button>
           )}
@@ -59,8 +61,9 @@ const TimeClockWidget = () => {
               <Button 
                 onClick={handleBreakStart} 
                 variant="outline"
+                className="border-blue-400 text-blue-500 hover:bg-blue-50"
               >
-                <PauseCircle className="h-4 w-4 mr-2" />
+                <Coffee className="h-4 w-4 mr-2" />
                 Start Break
               </Button>
               
