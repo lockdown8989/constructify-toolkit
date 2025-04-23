@@ -26,6 +26,7 @@ export type Database = {
           overtime_minutes: number | null
           overtime_status: string | null
           status: string | null
+          updated_at: string | null
           working_minutes: number | null
         }
         Insert: {
@@ -44,6 +45,7 @@ export type Database = {
           overtime_minutes?: number | null
           overtime_status?: string | null
           status?: string | null
+          updated_at?: string | null
           working_minutes?: number | null
         }
         Update: {
@@ -62,6 +64,7 @@ export type Database = {
           overtime_minutes?: number | null
           overtime_status?: string | null
           status?: string | null
+          updated_at?: string | null
           working_minutes?: number | null
         }
         Relationships: [

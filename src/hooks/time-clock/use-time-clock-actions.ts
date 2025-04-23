@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -153,7 +152,7 @@ export const useTimeClockActions = (
         .from('attendance')
         .update({
           break_minutes: newBreakMinutes,
-          break_start: null, // Clear break_start to indicate break is ended
+          break_start: null,
           location,
           device_info: deviceInfo
         })
