@@ -15,8 +15,9 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
   const navigate = useNavigate();
   const { isManager, isAdmin, isHR, user } = useAuth();
   const hasManagerialAccess = isManager || isAdmin || isHR;
+  const isEmployee = isAuthenticated && !hasManagerialAccess; // <--- new flag
   const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
-  const isClockingEnabled = !hasManagerialAccess && isAuthenticated;
+  const isClockingEnabled = isEmployee;
   const { schedules = [] } = useEmployeeSchedule();
 
   const pendingCount = schedules?.filter(s => s.status === 'pending').length || 0;
@@ -152,6 +153,14 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
                 <Clock className="h-4 w-4 mr-1" />
                 Time Clock
               </Link>
+              {/* Salary link moved here for EMPLOYEE users */}
+              <Link
+                to="/salary"
+                className="hover:underline underline-offset-4 flex items-center"
+              >
+                <DollarSign className="h-4 w-4 mr-1" />
+                Salary
+              </Link>
             </>
           )}
           <Link
@@ -163,13 +172,7 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
           </Link>
           {hasManagerialAccess && (
             <>
-              <Link
-                to="/salary"
-                className="hover:underline underline-offset-4 flex items-center"
-              >
-                <DollarSign className="h-4 w-4 mr-1" />
-                Salary
-              </Link>
+              {/* <Link to="/salary" ...> removed from manager/HR/admin */}
               <Link
                 to="/payroll"
                 className="hover:underline underline-offset-4 flex items-center"

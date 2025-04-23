@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
 import { cn } from '@/lib/utils';
 import { useEmployees } from '@/hooks/use-employees';
+import { useAuth } from '@/hooks/auth'; // <-- import useAuth
 import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import EmployeeSalaryCard from '@/components/salary/EmployeeSalaryCard';
 import SalaryCalendarView from '@/components/salary/SalaryCalendarView';
@@ -23,24 +25,35 @@ const SalaryPage = () => {
     from: new Date(),
     to: addMonths(new Date(), 1),
   });
-  
+
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
-  
+
   const { data: employees = [], isLoading } = useEmployees();
-  
+  const { user, isManager, isAdmin, isHR } = useAuth(); // <-- get auth info
+
+  // Determine if this user is a regular employee
+  const isEmployee = user && !isManager && !isAdmin && !isHR;
+  // Only show the logged-in employee if they are an employee
+  const myEmployeeId = user?.id;
+
+  // Filter employees: show all for manager/admin/hr, only self for employees
+  const employeesToShow = isEmployee && myEmployeeId
+    ? employees.filter(emp => emp.id === myEmployeeId)
+    : employees;
+
   const handlePreviousMonth = () => {
     setSelectedMonth(prev => subMonths(prev, 1));
   };
-  
+
   const handleNextMonth = () => {
     setSelectedMonth(prev => addMonths(prev, 1));
   };
-  
-  const filteredEmployees = employees.filter(emp => 
+
+  const filteredEmployees = employeesToShow.filter(emp => 
     emp.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
+
   const selectedEmployeeData = employees.find(emp => emp.id === selectedEmployee);
 
   return (
@@ -145,7 +158,7 @@ const SalaryPage = () => {
             
             <SalaryCalendarView
               month={selectedMonth}
-              employees={employees}
+              employees={employeesToShow}
             />
           </Card>
         </div>

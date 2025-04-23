@@ -1,3 +1,4 @@
+
 import { Home, Users, Calendar, DollarSign, Utensils, ClipboardCheck, Clock, Coffee } from "lucide-react"
 import { useNavigate, useLocation, Link } from "react-router-dom"
 import { cn } from "@/lib/utils"
@@ -14,9 +15,10 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
   const navigate = useNavigate();
   const { isManager, isAdmin, isHR } = useAuth();
   const hasManagerialAccess = isManager || isAdmin || isHR;
+  const isEmployee = isAuthenticated && !hasManagerialAccess; // new flag
   
   const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
-  const isClockingEnabled = !hasManagerialAccess && isAuthenticated;
+  const isClockingEnabled = isEmployee;
   
   if (!isAuthenticated) return null;
   
@@ -146,22 +148,26 @@ const BottomNav = ({ isAuthenticated }: BottomNavProps) => {
             Leave
           </span>
         </Link>
-        
-        <Link to="/salary" className="flex flex-col items-center justify-center p-2">
-          <DollarSign 
-            className={cn(
-              "h-6 w-6 mb-1", 
-              location.pathname === "/salary" ? "text-primary" : "text-muted-foreground"
-            )} 
-          />
-          <span className={cn(
-            "text-xs", 
-            location.pathname === "/salary" ? "text-primary font-medium" : "text-muted-foreground"
-          )}>
-            Salary
-          </span>
-        </Link>
-        
+
+        {/* Only show Salary for employees */}
+        {isEmployee && (
+          <Link to="/salary" className="flex flex-col items-center justify-center p-2">
+            <DollarSign 
+              className={cn(
+                "h-6 w-6 mb-1", 
+                location.pathname === "/salary" ? "text-primary" : "text-muted-foreground"
+              )} 
+            />
+            <span className={cn(
+              "text-xs", 
+              location.pathname === "/salary" ? "text-primary font-medium" : "text-muted-foreground"
+            )}>
+              Salary
+            </span>
+          </Link>
+        )}
+
+        {/* Show Time Clock for employees */}
         {!hasManagerialAccess && (
           <Link to="/time-clock" className="flex flex-col items-center justify-center p-2">
             <Clock 
