@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +10,8 @@ export type AttendanceData = {
   absent: number;
   late: number;
   total: number;
+  pending: number;
+  approved: number;
   recentRecords: AttendanceRecord[];
 };
 
@@ -18,7 +19,6 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Set up realtime subscription
   useEffect(() => {
     const channel = supabase
       .channel('attendance-changes')
@@ -30,7 +30,6 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
           table: 'attendance'
         },
         () => {
-          // Invalidate and refetch when attendance data changes
           queryClient.invalidateQueries({ queryKey: ['attendance', employeeId, format(selectedDate, 'yyyy-MM')] });
         }
       )
@@ -43,11 +42,9 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
   
   const fetchAttendanceData = async (): Promise<AttendanceData> => {
     try {
-      // Calculate the date range for the selected month
       const start = startOfMonth(selectedDate);
       const end = endOfMonth(selectedDate);
       
-      // Query to fetch attendance records with employee names
       const query = supabase
         .from('attendance')
         .select(`
@@ -59,7 +56,6 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
         .gte('date', format(start, 'yyyy-MM-dd'))
         .lte('date', format(end, 'yyyy-MM-dd'));
       
-      // Filter by employee if provided
       if (employeeId) {
         query.eq('employee_id', employeeId);
       }
@@ -70,32 +66,17 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
         throw error;
       }
       
-      // Process the data and map employee names
       const processedRecords: AttendanceRecord[] = records.map(record => ({
-        id: record.id,
-        employee_id: record.employee_id,
-        date: record.date,
-        check_in: record.check_in,
-        check_out: record.check_out,
-        status: record.status,
+        ...record,
         employee_name: record.employees?.name,
-        working_minutes: record.working_minutes,
-        overtime_minutes: record.overtime_minutes,
-        overtime_status: record.overtime_status,
-        overtime_approved_at: record.overtime_approved_at,
-        overtime_approved_by: record.overtime_approved_by,
-        break_minutes: record.break_minutes,
-        break_start: record.break_start,
-        location: record.location,
-        device_info: record.device_info,
-        notes: record.notes
       }));
       
-      const present = processedRecords.filter(r => r.status === 'Present').length;
-      const absent = processedRecords.filter(r => r.status === 'Absent').length;
-      const late = processedRecords.filter(r => r.status === 'Late').length;
+      const present = processedRecords.filter(r => r.attendance_status === 'Present').length;
+      const absent = processedRecords.filter(r => r.attendance_status === 'Absent').length;
+      const late = processedRecords.filter(r => r.attendance_status === 'Late').length;
+      const pending = processedRecords.filter(r => r.attendance_status === 'Pending').length;
+      const approved = processedRecords.filter(r => r.attendance_status === 'Approved').length;
       
-      // Sort records by date descending
       const sortedRecords = processedRecords.sort((a, b) => 
         new Date(b.date || '') < new Date(a.date || '') ? -1 : 1
       );
@@ -105,6 +86,8 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
         absent,
         late,
         total: processedRecords.length,
+        pending,
+        approved,
         recentRecords: sortedRecords
       };
     } catch (err) {
@@ -120,6 +103,8 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
         absent: 0,
         late: 0,
         total: 0,
+        pending: 0,
+        approved: 0,
         recentRecords: []
       };
     }

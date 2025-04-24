@@ -1,4 +1,3 @@
-
 import { useAttendance } from "@/hooks/use-attendance";
 
 interface AttendanceStatsProps {
@@ -13,37 +12,37 @@ const AttendanceStats = ({ employeeId }: AttendanceStatsProps) => {
       <StatCard
         title="Present"
         value={stats?.present ?? 0}
-        change={12}
-        trend="up"
+        change={stats?.present - (stats?.absent ?? 0)}
+        trend={stats?.present ?? 0 > (stats?.absent ?? 0) ? "up" : "down"}
       />
       <StatCard
         title="Late clock-in"
         value={stats?.late ?? 0}
-        change={-2}
+        change={-(stats?.late ?? 0)}
         trend="down"
       />
       <StatCard
         title="Absent"
         value={stats?.absent ?? 0}
-        change={0}
-        trend="neutral"
+        change={-(stats?.absent ?? 0)}
+        trend="down"
       />
       <StatCard
         title="Total"
         value={stats?.total ?? 0}
-        change={4}
-        trend="up"
-      />
-      <StatCard
-        title="Pending"
-        value={stats?.recentRecords?.filter(r => r.status === "Pending").length ?? 0}
         change={0}
         trend="neutral"
       />
       <StatCard
+        title="Pending"
+        value={stats?.pending ?? 0}
+        change={-(stats?.pending ?? 0)}
+        trend="down"
+      />
+      <StatCard
         title="Approved"
-        value={stats?.recentRecords?.filter(r => r.status === "Approved").length ?? 2}
-        change={2}
+        value={stats?.approved ?? 0}
+        change={stats?.approved ?? 0}
         trend="up"
       />
     </div>
