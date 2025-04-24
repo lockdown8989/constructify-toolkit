@@ -1,4 +1,3 @@
-
 import { useAttendance } from "@/hooks/use-attendance";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -13,10 +12,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 interface AttendanceListProps {
   employeeId?: string;
   searchQuery?: string;
+  selectedDate?: Date;
 }
 
-const AttendanceList = ({ employeeId, searchQuery = "" }: AttendanceListProps) => {
-  const { data: attendance, refetch } = useAttendance(employeeId);
+const AttendanceList = ({ employeeId, searchQuery = "", selectedDate = new Date() }: AttendanceListProps) => {
+  const { data: attendance, refetch } = useAttendance(employeeId, selectedDate);
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const { user, isManager } = useAuth();

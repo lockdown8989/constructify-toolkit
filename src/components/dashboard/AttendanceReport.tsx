@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { ChevronRight, ChevronUp, ChevronDown, Calendar, Users, Clock } from 'lucide-react';
 import { useAttendance } from '@/hooks/use-attendance';
 import { Skeleton } from '@/components/ui/skeleton';
+import { addDays } from 'date-fns';
 
 interface AttendanceReportProps {
   present?: number;
@@ -16,12 +17,11 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({
   employeeId
 }) => {
   const [timeRange, setTimeRange] = useState<number>(30);
-  const { data, isLoading } = useAttendance(employeeId, timeRange);
+  const rangeDate = addDays(new Date(), -timeRange);
+  const { data, isLoading } = useAttendance(employeeId, rangeDate);
   
-  // Calculate attendance rate from live data
   const attendanceRate = data?.total ? Math.round((data.present / data.total) * 100) : 0;
   
-  // Generate grid data using live attendance data
   const generateGrid = () => {
     const totalCells = 48;
     const presentPercentage = data?.total ? data.present / data.total : 0;

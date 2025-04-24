@@ -31,7 +31,7 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
         },
         () => {
           // Invalidate and refetch when attendance data changes
-          queryClient.invalidateQueries({ queryKey: ['attendance', employeeId, selectedDate] });
+          queryClient.invalidateQueries({ queryKey: ['attendance', employeeId, format(selectedDate, 'yyyy-MM')] });
         }
       )
       .subscribe();
