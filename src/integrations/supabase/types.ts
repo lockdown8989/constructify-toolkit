@@ -11,6 +11,9 @@ export type Database = {
     Tables: {
       attendance: {
         Row: {
+          attendance_status:
+            | Database["public"]["Enums"]["attendance_status_type"]
+            | null
           break_minutes: number | null
           break_start: string | null
           check_in: string | null
@@ -19,7 +22,11 @@ export type Database = {
           device_info: string | null
           employee_id: string | null
           id: string
+          last_month_status:
+            | Database["public"]["Enums"]["attendance_status_type"]
+            | null
           location: string | null
+          month_start_date: string | null
           notes: string | null
           overtime_approved_at: string | null
           overtime_approved_by: string | null
@@ -30,6 +37,9 @@ export type Database = {
           working_minutes: number | null
         }
         Insert: {
+          attendance_status?:
+            | Database["public"]["Enums"]["attendance_status_type"]
+            | null
           break_minutes?: number | null
           break_start?: string | null
           check_in?: string | null
@@ -38,7 +48,11 @@ export type Database = {
           device_info?: string | null
           employee_id?: string | null
           id?: string
+          last_month_status?:
+            | Database["public"]["Enums"]["attendance_status_type"]
+            | null
           location?: string | null
+          month_start_date?: string | null
           notes?: string | null
           overtime_approved_at?: string | null
           overtime_approved_by?: string | null
@@ -49,6 +63,9 @@ export type Database = {
           working_minutes?: number | null
         }
         Update: {
+          attendance_status?:
+            | Database["public"]["Enums"]["attendance_status_type"]
+            | null
           break_minutes?: number | null
           break_start?: string | null
           check_in?: string | null
@@ -57,7 +74,11 @@ export type Database = {
           device_info?: string | null
           employee_id?: string | null
           id?: string
+          last_month_status?:
+            | Database["public"]["Enums"]["attendance_status_type"]
+            | null
           location?: string | null
+          month_start_date?: string | null
           notes?: string | null
           overtime_approved_at?: string | null
           overtime_approved_by?: string | null
@@ -982,6 +1003,12 @@ export type Database = {
     Enums: {
       app_role: "admin" | "hr" | "employee" | "employer"
       attendance_report_status: "pending" | "sent" | "acknowledged"
+      attendance_status_type:
+        | "Pending"
+        | "Approved"
+        | "Late"
+        | "Present"
+        | "Absent"
       shift_status: "confirmed" | "pending" | "rejected" | "completed" | "open"
     }
     CompositeTypes: {
@@ -1100,6 +1127,13 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "hr", "employee", "employer"],
       attendance_report_status: ["pending", "sent", "acknowledged"],
+      attendance_status_type: [
+        "Pending",
+        "Approved",
+        "Late",
+        "Present",
+        "Absent",
+      ],
       shift_status: ["confirmed", "pending", "rejected", "completed", "open"],
     },
   },
