@@ -4,25 +4,39 @@ import { Input } from "@/components/ui/input"
 import { Calendar, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useEmployees } from "@/hooks/use-employees"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { format, addMonths, subMonths, startOfMonth } from 'date-fns'
 
 interface AttendanceControlsProps {
   onSearchChange: (value: string) => void;
   onEmployeeSelect?: (employeeId: string) => void;
+  onDateChange?: (date: Date) => void;
 }
 
-const AttendanceControls = ({ onSearchChange, onEmployeeSelect }: AttendanceControlsProps) => {
+const AttendanceControls = ({ onSearchChange, onEmployeeSelect, onDateChange }: AttendanceControlsProps) => {
   const { data: employees = [] } = useEmployees();
-  const [month, setMonth] = useState("October 2023");
+  const [selectedMonth, setSelectedMonth] = useState(startOfMonth(new Date()));
   const isMobile = useIsMobile();
   
+  useEffect(() => {
+    // Notify parent component of date changes
+    onDateChange?.(selectedMonth);
+  }, [selectedMonth, onDateChange]);
+
   const handlePreviousMonth = () => {
-    setMonth("September 2023");
+    const newDate = subMonths(selectedMonth, 1);
+    setSelectedMonth(newDate);
   };
   
   const handleNextMonth = () => {
-    setMonth("November 2023");
+    const newDate = addMonths(selectedMonth, 1);
+    setSelectedMonth(newDate);
+  };
+
+  const handleTodayClick = () => {
+    const today = startOfMonth(new Date());
+    setSelectedMonth(today);
   };
 
   return (
@@ -38,7 +52,9 @@ const AttendanceControls = ({ onSearchChange, onEmployeeSelect }: AttendanceCont
             <ChevronLeft className="h-4 w-4" />
           </Button>
           
-          <h3 className="text-sm md:text-base font-medium px-2">{month}</h3>
+          <h3 className="text-sm md:text-base font-medium px-2">
+            {format(selectedMonth, 'MMMM yyyy')}
+          </h3>
           
           <Button 
             variant="ghost" 
@@ -51,7 +67,12 @@ const AttendanceControls = ({ onSearchChange, onEmployeeSelect }: AttendanceCont
         </div>
         
         {!isMobile && (
-          <Button variant="outline" size="sm" className="ml-2 h-8">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="ml-2 h-8"
+            onClick={handleTodayClick}
+          >
             <Calendar className="h-3.5 w-3.5 mr-1.5" />
             <span>Today</span>
           </Button>

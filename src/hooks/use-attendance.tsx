@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { AttendanceRecord } from '@/types/supabase';
 import { useEffect } from 'react';
+import { startOfMonth, endOfMonth, format } from 'date-fns';
 
 export type AttendanceData = {
   present: number;
@@ -13,7 +14,7 @@ export type AttendanceData = {
   recentRecords: AttendanceRecord[];
 };
 
-export function useAttendance(employeeId?: string, daysToFetch: number = 30) {
+export function useAttendance(employeeId?: string, selectedDate: Date = new Date()) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -30,7 +31,7 @@ export function useAttendance(employeeId?: string, daysToFetch: number = 30) {
         },
         () => {
           // Invalidate and refetch when attendance data changes
-          queryClient.invalidateQueries({ queryKey: ['attendance', employeeId, daysToFetch] });
+          queryClient.invalidateQueries({ queryKey: ['attendance', employeeId, selectedDate] });
         }
       )
       .subscribe();
@@ -38,16 +39,15 @@ export function useAttendance(employeeId?: string, daysToFetch: number = 30) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [employeeId, daysToFetch, queryClient]);
+  }, [employeeId, selectedDate, queryClient]);
   
   const fetchAttendanceData = async (): Promise<AttendanceData> => {
     try {
-      // Calculate the date range
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - daysToFetch);
+      // Calculate the date range for the selected month
+      const start = startOfMonth(selectedDate);
+      const end = endOfMonth(selectedDate);
       
-      // Query to fetch attendance records with employee names (for better search in the future)
+      // Query to fetch attendance records with employee names
       const query = supabase
         .from('attendance')
         .select(`
@@ -56,7 +56,8 @@ export function useAttendance(employeeId?: string, daysToFetch: number = 30) {
             name
           )
         `)
-        .gte('date', startDate.toISOString().split('T')[0]);
+        .gte('date', format(start, 'yyyy-MM-dd'))
+        .lte('date', format(end, 'yyyy-MM-dd'));
       
       // Filter by employee if provided
       if (employeeId) {
@@ -77,14 +78,24 @@ export function useAttendance(employeeId?: string, daysToFetch: number = 30) {
         check_in: record.check_in,
         check_out: record.check_out,
         status: record.status,
-        employee_name: record.employees?.name
+        employee_name: record.employees?.name,
+        working_minutes: record.working_minutes,
+        overtime_minutes: record.overtime_minutes,
+        overtime_status: record.overtime_status,
+        overtime_approved_at: record.overtime_approved_at,
+        overtime_approved_by: record.overtime_approved_by,
+        break_minutes: record.break_minutes,
+        break_start: record.break_start,
+        location: record.location,
+        device_info: record.device_info,
+        notes: record.notes
       }));
       
       const present = processedRecords.filter(r => r.status === 'Present').length;
       const absent = processedRecords.filter(r => r.status === 'Absent').length;
       const late = processedRecords.filter(r => r.status === 'Late').length;
       
-      // Sort records by date descending to get most recent first
+      // Sort records by date descending
       const sortedRecords = processedRecords.sort((a, b) => 
         new Date(b.date || '') < new Date(a.date || '') ? -1 : 1
       );
@@ -94,7 +105,7 @@ export function useAttendance(employeeId?: string, daysToFetch: number = 30) {
         absent,
         late,
         total: processedRecords.length,
-        recentRecords: sortedRecords.slice(0, 10)
+        recentRecords: sortedRecords
       };
     } catch (err) {
       console.error('Error fetching attendance data:', err);
@@ -115,7 +126,7 @@ export function useAttendance(employeeId?: string, daysToFetch: number = 30) {
   };
 
   return useQuery({
-    queryKey: ['attendance', employeeId, daysToFetch],
+    queryKey: ['attendance', employeeId, format(selectedDate, 'yyyy-MM')],
     queryFn: fetchAttendanceData,
     refetchOnWindowFocus: true,
   });

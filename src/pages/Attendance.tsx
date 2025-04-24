@@ -9,6 +9,7 @@ import { useEmployeeDataManagement } from "@/hooks/use-employee-data-management"
 const Attendance = () => {
   const { employeeData, isLoading } = useEmployeeDataManagement();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | undefined>(
     employeeData?.id
   );
@@ -20,10 +21,12 @@ const Attendance = () => {
       <AttendanceControls 
         onSearchChange={setSearchQuery}
         onEmployeeSelect={setSelectedEmployeeId}
+        onDateChange={setSelectedDate}
       />
       <AttendanceList 
         employeeId={selectedEmployeeId} 
-        searchQuery={searchQuery} 
+        searchQuery={searchQuery}
+        selectedDate={selectedDate}
       />
     </div>
   );
