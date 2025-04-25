@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import SalaryTable from '@/components/dashboard/SalaryTable';
+import SalaryTable from '@/components/salary/table/SalaryTable';
 import { useEmployees } from '@/hooks/use-employees';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
