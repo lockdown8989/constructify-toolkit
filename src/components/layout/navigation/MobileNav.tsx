@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -21,6 +22,7 @@ interface MobileNavProps {
 const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
   const { isAdmin, isHR, isManager } = useAuth();
   const hasManagerialAccess = isManager || isAdmin || isHR;
+  const isEmployee = isAuthenticated && !hasManagerialAccess; // Added explicit isEmployee flag
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
@@ -214,6 +216,18 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                   <Calendar className="mr-3 h-5 w-5 text-neutral-600" />
                   <span>Leave & Schedule</span>
                 </Link>
+                
+                {/* Add Salary link for employees */}
+                {isEmployee && (
+                  <Link
+                    to="/salary"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
+                  >
+                    <DollarSign className="mr-3 h-5 w-5 text-neutral-600" />
+                    <span>Salary</span>
+                  </Link>
+                )}
                 
                 {hasManagerialAccess && (
                   <>
