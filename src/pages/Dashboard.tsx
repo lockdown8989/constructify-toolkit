@@ -1,11 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import ProgressBar from '@/components/dashboard/ProgressBar';
 import StatCard from '@/components/dashboard/StatCard';
 import Calendar from '@/components/dashboard/Calendar';
+import MeetingSchedule from '@/components/dashboard/MeetingSchedule';
 import SalaryTable from '@/components/salary/table/SalaryTable';
 import AttendanceReport from '@/components/dashboard/attendance-report';
 import HiringStatistics from '@/components/dashboard/HiringStatistics';
 import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
+import EmployeeTimeClock from '@/components/dashboard/EmployeeTimeClock';
 import { Users, Briefcase, FolderOpen } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useEmployees } from '@/hooks/use-employees';
@@ -66,6 +69,9 @@ const Dashboard = () => {
     setSelectedEmployee(id === selectedEmployee ? null : id);
   };
 
+  // Determine if the user is a regular employee (not a manager)
+  const isEmployee = user && !isManager;
+
   return (
     <div className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
       <div className="max-w-[1800px] mx-auto">
@@ -117,7 +123,11 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-3">
-            <Calendar meetings={sampleMeetings} />
+            {isEmployee ? (
+              <EmployeeTimeClock />
+            ) : (
+              <Calendar meetings={sampleMeetings} />
+            )}
           </div>
           
           {/* Middle Column */}
