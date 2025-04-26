@@ -8,9 +8,20 @@ import DocumentList from '@/components/salary/components/DocumentList';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import EmployeeAttendanceSummary from '@/components/dashboard/EmployeeAttendanceSummary';
+import ProgressBar from '@/components/dashboard/ProgressBar';
+import StatCard from '@/components/dashboard/StatCard';
+import Calendar from '@/components/dashboard/Calendar';
+import AttendanceReport from '@/components/dashboard/AttendanceReport';
+import HiringStatistics from '@/components/dashboard/HiringStatistics';
+import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
+import DashboardTimeClock from '@/components/dashboard/DashboardTimeClock';
+import SalaryTable from '@/components/salary/table/SalaryTable';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Users, FolderOpen } from 'lucide-react';
 
 const Dashboard = () => {
   const { isManager, user } = useAuth();
+  const isMobile = useIsMobile();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
   
