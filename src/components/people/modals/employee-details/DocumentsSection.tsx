@@ -24,7 +24,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
   const deleteDocument = useDeleteDocument();
 
   // Check if current user is the employee viewing their own documents
-  const isOwnProfile = user?.id === employee.user_id;
+  const isOwnProfile = user?.id === employee.userId;
   
   // Placeholder documents for empty state (only show to managers)
   const getPlaceholderDocuments = () => {
