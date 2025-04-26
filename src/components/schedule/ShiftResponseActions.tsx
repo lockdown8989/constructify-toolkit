@@ -21,6 +21,7 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
   const [loading, setLoading] = useState<'accepted' | 'rejected' | null>(null);
   
   // Only show response actions for managers, admins, and HR
+  // This component is for approving regular shifts, not open shifts
   const hasManagerialAccess = isManager || isAdmin || isHR;
   
   if (!hasManagerialAccess) {

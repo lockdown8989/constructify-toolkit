@@ -18,11 +18,14 @@ const OpenShiftResponseActions = ({
   className
 }: OpenShiftResponseActionsProps) => {
   const { respondToOpenShift } = useOpenShiftResponse();
-  const { isManager, isAdmin, isHR } = useAuth();
+  const { user, isManager, isAdmin, isHR } = useAuth();
   
   const hasManagerialAccess = isManager || isAdmin || isHR;
   
-  if (!hasManagerialAccess) {
+  // Allow response if user is the employee being offered the shift
+  const canRespond = hasManagerialAccess || user?.id === employeeId;
+  
+  if (!canRespond) {
     return null;
   }
 
