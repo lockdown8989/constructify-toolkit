@@ -1,4 +1,3 @@
-
 import { useLanguage, languageOptions } from "@/hooks/use-language";
 import { 
   Select,
@@ -9,33 +8,61 @@ import {
 } from "@/components/ui/select";
 import { Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
 
 interface LanguageSelectorProps {
-  language: string;
-  onChange: (value: string) => void;
+  language?: string;
+  onChange?: (value: string) => void;
 }
 
-export const LanguageSelector = ({ language, onChange }: LanguageSelectorProps) => {
-  const { t } = useLanguage();
+export const LanguageSelector = ({ language: externalLanguage, onChange }: LanguageSelectorProps) => {
+  const { language: contextLanguage, setLanguage, isLoading, t } = useLanguage();
   const { toast } = useToast();
+  const [selectedLanguage, setSelectedLanguage] = useState(externalLanguage || contextLanguage);
   
-  const handleLanguageChange = (value: string) => {
-    onChange(value);
+  useEffect(() => {
+    if (externalLanguage) {
+      setSelectedLanguage(externalLanguage);
+    } else if (contextLanguage) {
+      setSelectedLanguage(contextLanguage);
+    }
+  }, [externalLanguage, contextLanguage]);
+  
+  const handleLanguageChange = async (value: string) => {
+    setSelectedLanguage(value);
     
-    // Get language label for toast
-    const selectedLanguage = languageOptions.find(option => option.value === value);
+    if (onChange) {
+      onChange(value);
+      return;
+    }
     
-    toast({
-      title: "Language updated",
-      description: `Language has been changed to ${selectedLanguage?.label || value}`,
-    });
+    try {
+      await setLanguage(value as any);
+    } catch (error: any) {
+      console.error("Error updating language:", error);
+      toast({
+        title: "Error updating language",
+        description: error.message || "Failed to update language settings",
+        variant: "destructive",
+      });
+    }
   };
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center space-x-2">
+        <Globe className="h-5 w-5 animate-spin text-muted-foreground" />
+        <span>{t('loading')}</span>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-2">
       <Select 
-        value={language} 
+        value={selectedLanguage} 
         onValueChange={handleLanguageChange}
+        disabled={isLoading}
       >
         <SelectTrigger className="w-full rounded-xl border-input bg-background h-12">
           <SelectValue placeholder={t('chooseLanguage')} />
