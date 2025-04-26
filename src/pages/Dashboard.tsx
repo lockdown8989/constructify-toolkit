@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useAuth } from '@/hooks/use-auth';
 import ProgressBar from '@/components/dashboard/ProgressBar';
 import StatCard from '@/components/dashboard/StatCard';
 import Calendar from '@/components/dashboard/Calendar';
@@ -8,24 +8,39 @@ import SalaryTable from '@/components/salary/table/SalaryTable';
 import AttendanceReport from '@/components/dashboard/attendance-report';
 import HiringStatistics from '@/components/dashboard/HiringStatistics';
 import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
-import EmployeeTimeClock from '@/components/dashboard/EmployeeTimeClock';
 import { Users, Briefcase, FolderOpen } from 'lucide-react';
+import EmployeeAttendanceSummary from '@/components/dashboard/EmployeeAttendanceSummary';
+import DashboardTimeClock from '@/components/dashboard/DashboardTimeClock';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useEmployees } from '@/hooks/use-employees';
 import { useInterviews } from '@/hooks/use-interviews';
-import { useAuth } from '@/hooks/use-auth';
 
 const Dashboard = () => {
+  const { isManager, user } = useAuth();
   const isMobile = useIsMobile();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
-  const { user, isManager } = useAuth();
   
   // Get user's first name for greeting
   const firstName = user?.user_metadata?.first_name || 
                    user?.email?.split('@')[0] || 
                    'User';
-                   
+
+  // Render different dashboard layouts based on user role
+  if (!isManager) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <h1 className="text-2xl font-bold mb-6">Hello {firstName}</h1>
+        <div className="grid gap-6 md:grid-cols-2">
+          <EmployeeAttendanceSummary />
+          <DashboardTimeClock />
+        </div>
+      </div>
+    );
+  }
+
+  // Keep existing manager dashboard code
+  
   // Count employees excluding the manager themselves
   const employeeCount = isManager 
     ? employees.filter(emp => emp.user_id !== user?.id).length 
@@ -63,7 +78,7 @@ const Dashboard = () => {
     output: 0
   };
   
-  const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = React.useState<string | null>(null);
   
   const handleSelectEmployee = (id: string) => {
     setSelectedEmployee(id === selectedEmployee ? null : id);
@@ -124,7 +139,7 @@ const Dashboard = () => {
           {/* Left Column */}
           <div className="lg:col-span-3">
             {isEmployee ? (
-              <EmployeeTimeClock />
+              <DashboardTimeClock />
             ) : (
               <Calendar meetings={sampleMeetings} />
             )}
