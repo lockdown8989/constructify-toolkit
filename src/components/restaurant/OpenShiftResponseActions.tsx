@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Check, X } from 'lucide-react';
 import { useOpenShiftResponse } from '@/hooks/use-open-shift-response';
 import { OpenShift } from '@/types/restaurant-schedule';
+import { useAuth } from '@/hooks/use-auth';
 
 interface OpenShiftResponseActionsProps {
   shift: OpenShift;
@@ -17,6 +18,13 @@ const OpenShiftResponseActions = ({
   className
 }: OpenShiftResponseActionsProps) => {
   const { respondToOpenShift } = useOpenShiftResponse();
+  const { isManager, isAdmin, isHR } = useAuth();
+  
+  const hasManagerialAccess = isManager || isAdmin || isHR;
+  
+  if (!hasManagerialAccess) {
+    return null;
+  }
 
   const handleResponse = (response: 'confirmed' | 'rejected') => {
     respondToOpenShift.mutate({
