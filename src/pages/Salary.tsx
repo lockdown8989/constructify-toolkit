@@ -1,5 +1,6 @@
-
-import React, { useState } from 'react';
+import React from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import SalaryOverview from '@/components/salary/SalaryOverview';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -9,7 +10,6 @@ import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
 import { cn } from '@/lib/utils';
 import { useEmployees } from '@/hooks/use-employees';
-import { useAuth } from '@/hooks/use-auth';
 import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import EmployeeSalaryCard from '@/components/salary/EmployeeSalaryCard';
 import SalaryCalendarView from '@/components/salary/SalaryCalendarView';
@@ -32,10 +32,13 @@ const SalaryPage = () => {
   const { data: employees = [], isLoading } = useEmployees();
   const { user, isManager, isAdmin, isHR } = useAuth();
 
-  // Determine if this user is a regular employee
+  // If user is a regular employee, show the simplified salary overview
   const isEmployee = user && !isManager && !isAdmin && !isHR;
   
-  // For employees, automatically select their own profile
+  if (isEmployee) {
+    return <SalaryOverview />;
+  }
+
   React.useEffect(() => {
     if (isEmployee && employees.length > 0) {
       const ownEmployee = employees.find(emp => emp.user_id === user?.id);
