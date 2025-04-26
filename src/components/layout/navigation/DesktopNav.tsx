@@ -15,9 +15,7 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
   const navigate = useNavigate();
   const { isManager, isAdmin, isHR, user } = useAuth();
   const hasManagerialAccess = isManager || isAdmin || isHR;
-  const isEmployee = isAuthenticated && !hasManagerialAccess; // <--- new flag
-  const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
-  const isClockingEnabled = isEmployee;
+  const isEmployee = isAuthenticated && !hasManagerialAccess;
   const { schedules = [] } = useEmployeeSchedule();
 
   const pendingCount = schedules?.filter(s => s.status === 'pending').length || 0;
@@ -30,50 +28,6 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
   
   return (
     <div className="mx-auto flex items-center space-x-6">
-      {isClockingEnabled && (
-        <div className="flex items-center space-x-2 border-r pr-4 mr-2">
-          {status === 'clocked-out' ? (
-            <Button 
-              onClick={handleClockIn}
-              size="sm"
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Clock className="h-4 w-4 mr-2" />
-              Clock In
-            </Button>
-          ) : status === 'clocked-in' ? (
-            <div className="flex space-x-2">
-              <Button 
-                onClick={handleBreakStart}
-                size="sm"
-                variant="outline"
-                className="border-blue-300"
-              >
-                <Coffee className="h-4 w-4 mr-2" />
-                Break
-              </Button>
-              <Button 
-                onClick={handleClockOut}
-                size="sm"
-                className="bg-red-600 hover:bg-red-700"
-              >
-                <Clock className="h-4 w-4 mr-2" />
-                Clock Out
-              </Button>
-            </div>
-          ) : (
-            <Button 
-              onClick={handleBreakEnd}
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Clock className="h-4 w-4 mr-2" />
-              End Break
-            </Button>
-          )}
-        </div>
-      )}
-      
       <button 
         onClick={handleHomeClick} 
         className="hover:underline underline-offset-4 flex items-center"
@@ -147,14 +101,6 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
                 My Schedule
               </Link>
               <Link
-                to="/time-clock"
-                className="hover:underline underline-offset-4 flex items-center"
-              >
-                <Clock className="h-4 w-4 mr-1" />
-                Time Clock
-              </Link>
-              {/* Salary link moved here for EMPLOYEE users */}
-              <Link
                 to="/salary"
                 className="hover:underline underline-offset-4 flex items-center"
               >
@@ -172,7 +118,6 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
           </Link>
           {hasManagerialAccess && (
             <>
-              {/* <Link to="/salary" ...> removed from manager/HR/admin */}
               <Link
                 to="/payroll"
                 className="hover:underline underline-offset-4 flex items-center"
