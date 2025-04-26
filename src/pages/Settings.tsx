@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Loader2, UserCog, Palette, Globe, BellRing, ArrowLeft, ChevronRight } from "lucide-react";
@@ -203,7 +202,7 @@ const Settings = () => {
                   {t('configureLocation')}
                 </CardDescription>
               </CardHeader>
-              <RegionSettings user={user} />
+              <RegionSettings />
             </Card>
           </div>
         )}

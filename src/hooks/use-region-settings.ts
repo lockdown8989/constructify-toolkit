@@ -116,7 +116,14 @@ export const useRegionSettings = (user: User | null) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "You must be logged in to update settings",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsSaving(true);
     

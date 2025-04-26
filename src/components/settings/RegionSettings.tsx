@@ -1,5 +1,4 @@
 
-import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { CountryInput } from "./CountryInput";
@@ -10,12 +9,10 @@ import { useLanguage } from "@/hooks/use-language";
 import { Card } from "@/components/ui/card";
 import { MapPin, Currency, Languages } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
-interface RegionSettingsProps {
-  user: User | null;
-}
-
-export const RegionSettings = ({ user }: RegionSettingsProps) => {
+export const RegionSettings = () => {
+  const { user } = useAuth();
   const {
     regionData,
     isLocating,
