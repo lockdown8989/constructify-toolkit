@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { FileText, Download, Upload, File, Loader2, Trash2 } from 'lucide-react';
 import { Employee } from '@/components/people/types';
 import { Button } from '@/components/ui/button';
@@ -22,9 +22,14 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
   const { data: documents = [], isLoading } = useEmployeeDocuments(employee.id);
   const uploadDocument = useUploadDocument();
   const deleteDocument = useDeleteDocument();
+
+  // Check if current user is the employee viewing their own documents
+  const isOwnProfile = user?.id === employee.user_id;
   
-  // Placeholder documents for empty state
+  // Placeholder documents for empty state (only show to managers)
   const getPlaceholderDocuments = () => {
+    if (!isManager) return [];
+    
     const placeholders = [];
     const hasContract = documents?.some(doc => doc.document_type?.toLowerCase() === 'contract');
     const hasPayslip = documents?.some(doc => doc.document_type?.toLowerCase() === 'payslip');
@@ -53,19 +58,20 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
     
     return placeholders;
   };
+
+  // Only show upload/delete controls to managers
+  const showManagementControls = isManager;
   
-  // Combine actual documents with placeholders
+  // Combine actual documents with placeholders (for managers only)
   const allDocuments = [
     ...documents.map(doc => ({
       ...doc,
       icon: getDocumentIcon(doc.document_type),
       bgColor: getDocumentBgColor(doc.document_type)
     })),
-    ...getPlaceholderDocuments().filter(p => 
-      !documents.some(d => d.document_type?.toLowerCase() === p.document_type.toLowerCase())
-    )
+    ...(showManagementControls ? getPlaceholderDocuments() : [])
   ];
-  
+
   // Helper functions to get document display properties
   function getDocumentIcon(docType: string) {
     const type = docType?.toLowerCase();
@@ -157,7 +163,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
           variant: "destructive"
         });
       }
-    } else if (action === 'delete' && doc.id && doc.id !== 'contract-placeholder' && doc.id !== 'payslip-placeholder') {
+    } else if (action === 'delete' && isManager && doc.id && !doc.id.includes('placeholder')) {
       try {
         await deleteDocument.mutateAsync({
           id: doc.id,
@@ -181,14 +187,18 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
             <span className="text-apple-gray-500">Loading documents...</span>
           </div>
         </div>
+      ) : allDocuments.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          No documents available
+        </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
           {allDocuments.map((doc) => (
             <div 
               key={doc.id}
-              className={`relative group p-4 rounded-2xl ${doc.bgColor || 'bg-gray-50'} hover:bg-opacity-80 transition-colors ${uploading ? 'pointer-events-none opacity-60' : 'cursor-pointer'} flex items-center`}
+              className={`relative group p-4 rounded-2xl ${doc.bgColor || 'bg-gray-50'} hover:bg-opacity-80 transition-colors ${uploading ? 'pointer-events-none opacity-60' : ''} flex items-center`}
               onClick={() => {
-                if (!isManager && doc.path) {
+                if (doc.path) {
                   handleDocumentAction(doc, 'download');
                 }
               }}
@@ -202,52 +212,54 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
                 <p className="text-xs text-gray-500">{doc.size}</p>
               </div>
               
-              {isManager && (!doc.path || doc.id === 'contract-placeholder' || doc.id === 'payslip-placeholder') ? (
-                <label className={`cursor-pointer p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors ${uploading ? 'opacity-50 cursor-wait' : ''}`}>
-                  {uploading ? (
-                    <Loader2 className="h-5 w-5 animate-spin text-gray-600" />
-                  ) : (
-                    <Upload className="h-5 w-5 text-gray-600" />
-                  )}
-                  <input 
-                    type="file" 
-                    className="hidden" 
-                    onChange={(e) => handleDocumentUpload(e, doc.document_type)}
-                    disabled={uploading}
-                    accept=".pdf,.doc,.docx,.txt"
-                  />
-                </label>
-              ) : (
-                <div className="flex">
-                  {doc.path && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      className="p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDocumentAction(doc, 'download');
-                      }}
-                    >
-                      <Download className="h-5 w-5 text-gray-600" />
-                    </Button>
-                  )}
-                  
-                  {isManager && doc.id !== 'contract-placeholder' && doc.id !== 'payslip-placeholder' && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      className="p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors text-red-500"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDocumentAction(doc, 'delete');
-                      }}
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </Button>
-                  )}
-                </div>
-              )}
+              <div className="flex items-center space-x-2">
+                {showManagementControls && (!doc.path || doc.id.includes('placeholder')) ? (
+                  <label className={`cursor-pointer p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors ${uploading ? 'opacity-50 cursor-wait' : ''}`}>
+                    {uploading ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-gray-600" />
+                    ) : (
+                      <Upload className="h-5 w-5 text-gray-600" />
+                    )}
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      onChange={(e) => handleDocumentUpload(e, doc.document_type)}
+                      disabled={uploading}
+                      accept=".pdf,.doc,.docx"
+                    />
+                  </label>
+                ) : (
+                  <>
+                    {doc.path && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className="p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDocumentAction(doc, 'download');
+                        }}
+                      >
+                        <Download className="h-5 w-5 text-gray-600" />
+                      </Button>
+                    )}
+                    
+                    {showManagementControls && doc.path && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className="p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors text-red-500"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDocumentAction(doc, 'delete');
+                        }}
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           ))}
         </div>

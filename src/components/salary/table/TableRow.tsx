@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Employee } from './types';
 import { PayslipActions } from './PayslipActions';
 import { StatusActions } from './StatusActions';
+import { useAuth } from '@/hooks/use-auth';
 
 interface TableRowProps {
   employee: Employee;
@@ -22,6 +22,8 @@ export const TableRow: React.FC<TableRowProps> = ({
   onDownloadPayslip,
   onAttachToResume,
 }) => {
+  const { isManager } = useAuth();
+  
   return (
     <tr className={cn(
       "group transition-colors hover:bg-gray-50",
@@ -66,7 +68,7 @@ export const TableRow: React.FC<TableRowProps> = ({
       </td>
       <td className="py-4">
         <div className="flex items-center gap-2">
-          {employee.status === 'Paid' && (
+          {(employee.status === 'Paid' || !isManager) && (
             <PayslipActions
               employee={employee}
               isProcessing={isProcessing}
@@ -74,9 +76,11 @@ export const TableRow: React.FC<TableRowProps> = ({
               onAttach={onAttachToResume}
             />
           )}
-          <StatusActions
-            onStatusChange={(status) => onStatusChange(employee.id, status)}
-          />
+          {isManager && (
+            <StatusActions
+              onStatusChange={(status) => onStatusChange(employee.id, status)}
+            />
+          )}
         </div>
       </td>
     </tr>

@@ -14,7 +14,7 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         global: {
           headers: { Authorization: req.headers.get('Authorization')! },
@@ -40,10 +40,10 @@ serve(async (req) => {
       throw documentError;
     }
 
-    // Get employee details
+    // Get employee details including the uploader's information
     const { data: employee, error: employeeError } = await supabaseClient
       .from('employees')
-      .select('user_id, name')
+      .select('user_id, name, manager_id')
       .eq('id', employee_id)
       .single();
 
@@ -59,16 +59,30 @@ serve(async (req) => {
     const documentType = document.document_type;
     const formattedDocType = documentType.charAt(0).toUpperCase() + documentType.slice(1);
 
-    // Send notification
+    // Get uploader's name if available
+    let uploaderName = "A manager";
+    if (document.uploaded_by) {
+      const { data: uploader } = await supabaseClient
+        .from('employees')
+        .select('name')
+        .eq('user_id', document.uploaded_by)
+        .single();
+      
+      if (uploader) {
+        uploaderName = uploader.name;
+      }
+    }
+
+    // Send notification to the employee
     const { error: notificationError } = await supabaseClient
       .from('notifications')
       .insert({
         user_id: employee.user_id,
-        title: `New ${formattedDocType} Uploaded`,
-        message: `A new ${documentType.toLowerCase()} document (${document.name}) has been uploaded to your profile.`,
+        title: `New ${formattedDocType} Available`,
+        message: `${uploaderName} has uploaded a new ${documentType.toLowerCase()} document (${document.name}) to your profile.`,
         type: 'info',
         related_entity: 'documents',
-        related_id: document.id.toString()
+        related_id: document.id
       });
 
     if (notificationError) {
