@@ -48,7 +48,7 @@ export const useOpenShiftResponse = () => {
               title: openShift.title || 'Open Shift',
               start_time: openShift.start_time,
               end_time: openShift.end_time,
-              status: 'confirmed',
+              status: 'employee_accepted',
               location: openShift.location
             });
             

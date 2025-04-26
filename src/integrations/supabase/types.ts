@@ -1059,7 +1059,14 @@ export type Database = {
         | "Late"
         | "Present"
         | "Absent"
-      shift_status: "confirmed" | "pending" | "rejected" | "completed" | "open"
+      shift_status:
+        | "confirmed"
+        | "pending"
+        | "rejected"
+        | "completed"
+        | "open"
+        | "employee_rejected"
+        | "employee_accepted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1184,7 +1191,15 @@ export const Constants = {
         "Present",
         "Absent",
       ],
-      shift_status: ["confirmed", "pending", "rejected", "completed", "open"],
+      shift_status: [
+        "confirmed",
+        "pending",
+        "rejected",
+        "completed",
+        "open",
+        "employee_rejected",
+        "employee_accepted",
+      ],
     },
   },
 } as const
