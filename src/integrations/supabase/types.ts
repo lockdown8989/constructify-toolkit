@@ -705,6 +705,56 @@ export type Database = {
         }
         Relationships: []
       }
+      salary_statistics: {
+        Row: {
+          base_salary: number
+          bonus: number | null
+          created_at: string | null
+          deductions: number | null
+          employee_id: string | null
+          id: string
+          month: string
+          net_salary: number | null
+          payment_date: string | null
+          payment_status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          base_salary: number
+          bonus?: number | null
+          created_at?: string | null
+          deductions?: number | null
+          employee_id?: string | null
+          id?: string
+          month?: string
+          net_salary?: number | null
+          payment_date?: string | null
+          payment_status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          base_salary?: number
+          bonus?: number | null
+          created_at?: string | null
+          deductions?: number | null
+          employee_id?: string | null
+          id?: string
+          month?: string
+          net_salary?: number | null
+          payment_date?: string | null
+          payment_status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salary_statistics_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schedule_templates: {
         Row: {
           color: string | null

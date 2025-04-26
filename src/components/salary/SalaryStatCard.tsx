@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
 
 interface SalaryStatCardProps {
   title: string;
@@ -9,49 +10,32 @@ interface SalaryStatCardProps {
   bgColor?: string;
   valueClassName?: string;
   titleClassName?: string;
-  icon?: React.ReactNode;
 }
 
-const SalaryStatCard: React.FC<SalaryStatCardProps> = ({
+export const SalaryStatCard: React.FC<SalaryStatCardProps> = ({
   title,
   value,
   secondaryValue,
-  bgColor = "bg-white",
+  bgColor = 'bg-white',
   valueClassName,
   titleClassName,
-  icon,
 }) => {
   return (
-    <div className={cn(
-      "rounded-2xl p-4 flex flex-col justify-between h-24",
-      bgColor
-    )}>
-      <div className={cn(
-        "text-sm font-medium flex items-center",
-        titleClassName
-      )}>
-        {icon && <span className="mr-2">{icon}</span>}
+    <Card className={cn("p-4 rounded-xl", bgColor)}>
+      <h3 className={cn("text-sm font-medium mb-2", titleClassName)}>
         {title}
-      </div>
-      
-      <div className="flex items-baseline">
-        <div className={cn(
-          "text-xl font-bold",
-          valueClassName
-        )}>
+      </h3>
+      <div className="space-y-1">
+        <p className={cn("text-2xl font-bold", valueClassName)}>
           {value}
-        </div>
-        
+        </p>
         {secondaryValue && (
-          <div className={cn(
-            "ml-2 text-sm text-gray-600",
-            valueClassName
-          )}>
-            / {secondaryValue}
-          </div>
+          <p className="text-sm text-gray-500">
+            {secondaryValue}
+          </p>
         )}
       </div>
-    </div>
+    </Card>
   );
 };
 
