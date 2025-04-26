@@ -39,7 +39,13 @@ export interface OpenShiftAssignment {
   updated_at: string | null;
 }
 
-export type ScheduleStatus = 'pending' | 'confirmed' | 'completed' | 'rejected';
+export type ScheduleStatus = 
+  | 'pending' 
+  | 'confirmed' 
+  | 'completed' 
+  | 'rejected'
+  | 'employee_accepted'
+  | 'employee_rejected';
 
 export interface Schedule {
   id: string;
