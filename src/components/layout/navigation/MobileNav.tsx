@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -217,7 +216,6 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                   <span>Leave & Schedule</span>
                 </Link>
                 
-                {/* Add Salary link for employees */}
                 {isEmployee && (
                   <Link
                     to="/salary"

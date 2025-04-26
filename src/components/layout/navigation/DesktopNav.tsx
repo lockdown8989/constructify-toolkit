@@ -132,3 +132,4 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
 };
 
 export default DesktopNav;
+
