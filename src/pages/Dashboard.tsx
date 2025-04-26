@@ -1,23 +1,16 @@
+
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import ProgressBar from '@/components/dashboard/ProgressBar';
-import StatCard from '@/components/dashboard/StatCard';
-import Calendar from '@/components/dashboard/Calendar';
-import MeetingSchedule from '@/components/dashboard/MeetingSchedule';
-import SalaryTable from '@/components/salary/table/SalaryTable';
-import AttendanceReport from '@/components/dashboard/attendance-report';
-import HiringStatistics from '@/components/dashboard/HiringStatistics';
-import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
-import { Users, Briefcase, FolderOpen } from 'lucide-react';
-import EmployeeAttendanceSummary from '@/components/dashboard/EmployeeAttendanceSummary';
-import DashboardTimeClock from '@/components/dashboard/DashboardTimeClock';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useEmployees } from '@/hooks/use-employees';
 import { useInterviews } from '@/hooks/use-interviews';
+import EmployeeStatistics from '@/components/people/EmployeeStatistics';
+import DocumentList from '@/components/salary/components/DocumentList';
+import { Card } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import EmployeeAttendanceSummary from '@/components/dashboard/EmployeeAttendanceSummary';
 
 const Dashboard = () => {
   const { isManager, user } = useAuth();
-  const isMobile = useIsMobile();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
   
@@ -26,13 +19,27 @@ const Dashboard = () => {
                    user?.email?.split('@')[0] || 
                    'User';
 
-  // Render different dashboard layouts based on user role
+  // For employee users
   if (!isManager) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <h1 className="text-2xl font-bold mb-6">Hello {firstName}</h1>
-        <div className="grid gap-6 md:grid-cols-1">
+        <div className="grid gap-6">
           <EmployeeAttendanceSummary />
+          
+          <Card className="p-6">
+            <h3 className="text-xs font-semibold text-gray-500 mb-5 uppercase tracking-wider">
+              Statistics
+            </h3>
+            <EmployeeStatistics />
+          </Card>
+          
+          <Card className="p-6">
+            <h3 className="text-xs font-semibold text-gray-500 mb-5 uppercase tracking-wider">
+              Documents
+            </h3>
+            <DocumentList employeeId={user?.id} />
+          </Card>
         </div>
       </div>
     );
