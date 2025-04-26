@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
+import { useAttendanceSync } from '@/hooks/use-attendance-sync';
+import { useAttendance } from '@/hooks/use-attendance';
 
 interface EmployeeStatisticsProps {
   annual_leave_days?: number;
@@ -15,6 +17,10 @@ const EmployeeStatistics: React.FC<EmployeeStatisticsProps> = ({
   totalAnnualLeave = 30,
   totalSickLeave = 15
 }) => {
+  useAttendanceSync(); // Enable real-time sync
+
+  const { data: attendanceData } = useAttendance();
+
   // Calculate percentages and apply clamping for safety
   const annualLeavePercentage = Math.min(Math.max((annual_leave_days / totalAnnualLeave) * 100, 0), 100);
   const sickLeavePercentage = Math.min(Math.max((sick_leave_days / totalSickLeave) * 100, 0), 100);

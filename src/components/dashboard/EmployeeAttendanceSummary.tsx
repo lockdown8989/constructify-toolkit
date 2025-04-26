@@ -1,35 +1,28 @@
-
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-
-interface AttendanceStats {
-  onTime: number;
-  workFromHome: number;
-  lateAttendance: number;
-  absent: number;
-  totalHours: number;
-  maxHours: number;
-  percentageRank: number;
-}
-
-// This would typically come from an API/database
-const sampleStats: AttendanceStats = {
-  onTime: 1031,
-  workFromHome: 191,
-  lateAttendance: 212,
-  absent: 66,
-  totalHours: 1434,
-  maxHours: 1500,
-  percentageRank: 91.3
-};
+import { useAttendanceSync } from '@/hooks/use-attendance-sync';
+import { useAttendance } from '@/hooks/use-attendance';
 
 const EmployeeAttendanceSummary = () => {
+  useAttendanceSync(); // Enable real-time sync
+  const { data: attendanceData } = useAttendance();
+  
   const currentTime = format(new Date(), 'dd MMM yyyy, hh:mm a');
   
+  const stats = {
+    onTime: attendanceData?.present || 0,
+    workFromHome: 0, // Can be expanded with actual WFH data
+    lateAttendance: attendanceData?.late || 0,
+    absent: attendanceData?.absent || 0,
+    totalHours: 1434,
+    maxHours: 1500,
+    percentageRank: 91.3
+  };
+
   return (
     <Card className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -53,40 +46,40 @@ const EmployeeAttendanceSummary = () => {
         <div className="grid gap-3">
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-green-500" />
-            <span className="font-medium">{sampleStats.onTime}</span>
+            <span className="font-medium">{stats.onTime}</span>
             <span className="text-gray-500">on time</span>
           </div>
           
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-yellow-500" />
-            <span className="font-medium">{sampleStats.workFromHome}</span>
+            <span className="font-medium">{stats.workFromHome}</span>
             <span className="text-gray-500">Work from home</span>
           </div>
           
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-red-500" />
-            <span className="font-medium">{sampleStats.lateAttendance}</span>
+            <span className="font-medium">{stats.lateAttendance}</span>
             <span className="text-gray-500">late attendance</span>
           </div>
           
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-gray-500" />
-            <span className="font-medium">{sampleStats.absent}</span>
+            <span className="font-medium">{stats.absent}</span>
             <span className="text-gray-500">absent</span>
           </div>
         </div>
 
         <div className="relative pt-4">
           <div className="flex justify-between mb-2">
-            <span className="text-2xl font-bold">{sampleStats.totalHours}</span>
-            <span className="text-gray-500">/{sampleStats.maxHours}</span>
+            <span className="text-2xl font-bold">{stats.totalHours}</span>
+            <span className="text-gray-500">/{stats.maxHours}</span>
           </div>
           
           <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full"
               style={{ 
-                width: `${(sampleStats.totalHours / sampleStats.maxHours) * 100}%` 
+                width: `${(stats.totalHours / stats.maxHours) * 100}%` 
               }}
             />
           </div>
@@ -96,7 +89,7 @@ const EmployeeAttendanceSummary = () => {
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
             <span className="text-sm">
-              Better than {sampleStats.percentageRank}% employees!
+              Better than {stats.percentageRank}% employees!
             </span>
           </div>
         </div>

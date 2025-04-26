@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useEmployees } from '@/hooks/use-employees';
@@ -8,15 +7,7 @@ import DocumentList from '@/components/salary/components/DocumentList';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import EmployeeAttendanceSummary from '@/components/dashboard/EmployeeAttendanceSummary';
-import ProgressBar from '@/components/dashboard/ProgressBar';
-import StatCard from '@/components/dashboard/StatCard';
-import Calendar from '@/components/dashboard/Calendar';
-import AttendanceReport from '@/components/dashboard/AttendanceReport';
-import HiringStatistics from '@/components/dashboard/HiringStatistics';
-import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
-import DashboardTimeClock from '@/components/dashboard/DashboardTimeClock';
-import SalaryTable from '@/components/salary/table/SalaryTable';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useAttendanceSync } from '@/hooks/use-attendance-sync';
 import { Users, FolderOpen } from 'lucide-react';
 
 const Dashboard = () => {
@@ -25,6 +16,8 @@ const Dashboard = () => {
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
   
+  useAttendanceSync(); // Enable real-time sync at the dashboard level
+
   // Get user's first name for greeting
   const firstName = user?.user_metadata?.first_name || 
                    user?.email?.split('@')[0] || 
