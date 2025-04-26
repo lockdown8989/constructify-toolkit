@@ -3,8 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from '@/hooks/use-toast';
-import { sendNotification } from '@/services/notifications/notification-sender';
-import { getManagerUserIds } from '@/services/notifications/role-utils';
 import { ScheduleStatus } from '@/types/supabase/schedules';
 
 export const useShiftResponse = () => {
@@ -37,7 +35,7 @@ export const useShiftResponse = () => {
             updated_at: new Date().toISOString()
           })
           .eq('id', scheduleId)
-          .select('*, employees(name)')
+          .select('*')
           .single();
 
         if (updateError) {
@@ -61,7 +59,33 @@ export const useShiftResponse = () => {
 
         const employeeName = employeeData?.name || 'An employee';
         
-        // The trigger will handle manager notifications, so we don't need to send them manually
+        // Create notification for managers about the shift response
+        const { data: managerRoles } = await supabase
+          .from('user_roles')
+          .select('user_id')
+          .in('role', ['manager', 'admin', 'hr']);
+        
+        if (managerRoles && managerRoles.length > 0) {
+          // Create notifications for all managers
+          const notifications = managerRoles.map(manager => ({
+            user_id: manager.user_id,
+            title: `Shift ${response === 'accepted' ? 'Accepted' : 'Rejected'}`,
+            message: `${employeeName} has ${response === 'accepted' ? 'accepted' : 'rejected'} a shift scheduled for ${new Date(scheduleData.start_time).toLocaleDateString()}.`,
+            type: 'info',
+            related_entity: 'schedules',
+            related_id: scheduleId
+          }));
+          
+          // Insert all notifications
+          const { error: notificationError } = await supabase
+            .from('notifications')
+            .insert(notifications);
+            
+          if (notificationError) {
+            console.error('Error creating manager notifications:', notificationError);
+          }
+        }
+        
         console.log('Successfully updated shift status:', response);
         return scheduleData;
       } catch (error) {

@@ -29,7 +29,33 @@ export const useOpenShiftResponse = () => {
 
         if (error) throw error;
 
-        return { success: true };
+        // If the shift was confirmed, also create a schedule entry for the employee
+        if (response === 'confirmed') {
+          // Get the open shift details
+          const { data: openShift, error: shiftError } = await supabase
+            .from('open_shifts')
+            .select('*')
+            .eq('id', shiftId)
+            .single();
+            
+          if (shiftError) throw shiftError;
+          
+          // Create a schedule entry for the confirmed shift
+          const { error: scheduleError } = await supabase
+            .from('schedules')
+            .insert({
+              employee_id: employeeId,
+              title: openShift.title || 'Open Shift',
+              start_time: openShift.start_time,
+              end_time: openShift.end_time,
+              status: 'confirmed',
+              location: openShift.location
+            });
+            
+          if (scheduleError) throw scheduleError;
+        }
+
+        return { success: true, response };
       } catch (error) {
         console.error('Error responding to open shift:', error);
         throw error;
@@ -38,6 +64,7 @@ export const useOpenShiftResponse = () => {
     onSuccess: (_, variables) => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['open-shifts'] });
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
       
       // Show success message
       toast({
@@ -49,7 +76,7 @@ export const useOpenShiftResponse = () => {
       });
     },
     onError: (error) => {
-      console.error('Error in shift response:', error);
+      console.error('Error in open shift response:', error);
       toast({
         title: 'Error',
         description: 'Failed to respond to the shift. Please try again.',

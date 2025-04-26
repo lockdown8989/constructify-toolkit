@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Check, X } from 'lucide-react';
+import { Check, X, Loader2 } from 'lucide-react';
 import { useOpenShiftResponse } from '@/hooks/use-open-shift-response';
 import { OpenShift } from '@/types/restaurant-schedule';
+import { useToast } from '@/hooks/use-toast';
 
 interface OpenShiftResponseActionsProps {
   shift: OpenShift;
@@ -17,13 +18,31 @@ const OpenShiftResponseActions = ({
   className
 }: OpenShiftResponseActionsProps) => {
   const { respondToOpenShift } = useOpenShiftResponse();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState<'confirmed' | 'rejected' | null>(null);
 
-  const handleResponse = (response: 'confirmed' | 'rejected') => {
-    respondToOpenShift.mutate({
-      shiftId: shift.id,
-      employeeId,
-      response
-    });
+  const handleResponse = async (response: 'confirmed' | 'rejected') => {
+    try {
+      setLoading(response);
+      
+      await respondToOpenShift.mutateAsync({
+        shiftId: shift.id,
+        employeeId,
+        response
+      });
+      
+      // Toast is already handled in the hook's onSuccess callback
+    } catch (error) {
+      console.error(`Error ${response === 'confirmed' ? 'accepting' : 'rejecting'} open shift:`, error);
+      
+      toast({
+        title: `Failed to ${response === 'confirmed' ? 'accept' : 'reject'} shift`,
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(null);
+    }
   };
 
   return (
@@ -33,8 +52,13 @@ const OpenShiftResponseActions = ({
         variant="default"
         size="sm"
         className="bg-green-500 hover:bg-green-600"
+        disabled={loading !== null}
       >
-        <Check className="w-4 h-4 mr-1" />
+        {loading === 'confirmed' ? (
+          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+        ) : (
+          <Check className="w-4 h-4 mr-1" />
+        )}
         Accept
       </Button>
       <Button
@@ -42,8 +66,13 @@ const OpenShiftResponseActions = ({
         variant="outline"
         size="sm"
         className="border-red-500 text-red-500 hover:bg-red-50"
+        disabled={loading !== null}
       >
-        <X className="w-4 h-4 mr-1" />
+        {loading === 'rejected' ? (
+          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+        ) : (
+          <X className="w-4 h-4 mr-1" />
+        )}
         Decline
       </Button>
     </div>
