@@ -5,7 +5,6 @@ import { useShiftResponse } from '@/hooks/use-shift-response';
 import { Schedule } from '@/hooks/use-schedules';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
 
 interface ShiftResponseActionsProps {
   schedule: Schedule;
@@ -16,17 +15,8 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
   schedule, 
   onResponseComplete 
 }) => {
-  const { isManager, isAdmin, isHR } = useAuth();
   const { respondToShift } = useShiftResponse();
   const [loading, setLoading] = useState<'accepted' | 'rejected' | null>(null);
-  
-  // Only show response actions for managers, admins, and HR
-  // This component is for approving regular shifts, not open shifts
-  const hasManagerialAccess = isManager || isAdmin || isHR;
-  
-  if (!hasManagerialAccess) {
-    return null;
-  }
   
   const handleResponse = async (response: 'accepted' | 'rejected') => {
     try {
