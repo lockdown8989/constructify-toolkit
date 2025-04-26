@@ -50,7 +50,7 @@ export const useRegionSettings = (user: User | null) => {
         
         if (data) {
           setRegionData({
-            country: data.country ? getCountryName(data.country) : "",
+            country: data.country || "",
             preferred_currency: data.preferred_currency || "USD",
             preferred_language: data.preferred_language || "en",
           });
@@ -59,9 +59,6 @@ export const useRegionSettings = (user: User | null) => {
           if (!data.country) {
             autoDetectLocation();
           }
-        } else {
-          // New user, auto-detect location
-          autoDetectLocation();
         }
       } catch (error: any) {
         console.error("Error:", error);
@@ -77,33 +74,34 @@ export const useRegionSettings = (user: User | null) => {
   }, [user, toast]);
 
   const autoDetectLocation = async () => {
-    if (isLocating) return; // Prevent multiple simultaneous detection attempts
+    if (isLocating || !user) return;
     
     setIsLocating(true);
     try {
       const { country, currencyCode } = await detectUserLocation();
       
-      // Convert country code to full name if needed
-      const countryName = country === "GB" ? "United Kingdom" : getCountryName(country);
+      const countryName = getCountryName(country);
+      
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          country: countryName,
+          preferred_currency: currencyCode || "USD"
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
       
       setRegionData(prev => ({
         ...prev, 
-        country: countryName || prev.country,
+        country: countryName,
         preferred_currency: currencyCode || prev.preferred_currency
       }));
       
-      if (country) {
-        toast({
-          title: "Location detected",
-          description: `Detected country: ${countryName} (${currencyCode})`,
-        });
-      } else {
-        toast({
-          title: "Location detection failed",
-          description: "Could not detect your location automatically. Please enter it manually.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Location detected",
+        description: `Detected country: ${countryName} (${currencyCode})`,
+      });
     } catch (error: any) {
       console.error("Error auto-detecting location:", error);
       toast({
@@ -114,19 +112,6 @@ export const useRegionSettings = (user: User | null) => {
     } finally {
       setIsLocating(false);
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setRegionData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCurrencyChange = (value: string) => {
-    setRegionData((prev) => ({ ...prev, preferred_currency: value }));
-  };
-  
-  const handleLanguageChange = (value: string) => {
-    setRegionData((prev) => ({ ...prev, preferred_language: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -175,6 +160,19 @@ export const useRegionSettings = (user: User | null) => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setRegionData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCurrencyChange = (value: string) => {
+    setRegionData((prev) => ({ ...prev, preferred_currency: value }));
+  };
+  
+  const handleLanguageChange = (value: string) => {
+    setRegionData((prev) => ({ ...prev, preferred_language: value }));
   };
 
   return {

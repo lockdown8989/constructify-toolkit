@@ -1,7 +1,9 @@
+
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { translations, TranslationKey } from '@/utils/translations';
+import { useToast } from '@/hooks/use-toast';
 
 type LanguageCode = 'en' | 'es' | 'bg' | 'pl' | 'ro';
 
@@ -29,6 +31,7 @@ export const languageOptions = [
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [language, setLanguageState] = useState<LanguageCode>('en');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -48,6 +51,11 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
 
         if (error) {
           console.error('Error fetching language preference:', error);
+          toast({
+            title: "Error loading language preferences",
+            description: error.message,
+            variant: "destructive",
+          });
         } else if (data?.preferred_language) {
           setLanguageState(data.preferred_language as LanguageCode);
         }
@@ -59,7 +67,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     fetchLanguagePreference();
-  }, [user]);
+  }, [user, toast]);
 
   const setLanguage = async (newLanguage: LanguageCode) => {
     if (!user) return;
@@ -72,11 +80,25 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
 
       if (error) {
         console.error('Error updating language preference:', error);
+        toast({
+          title: "Error updating language",
+          description: error.message,
+          variant: "destructive",
+        });
       } else {
         setLanguageState(newLanguage);
+        toast({
+          title: "Language Updated",
+          description: `Language has been changed to ${languageOptions.find(opt => opt.value === newLanguage)?.label}`,
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error);
+      toast({
+        title: "Error updating language",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
