@@ -9,7 +9,7 @@ import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
 import { cn } from '@/lib/utils';
 import { useEmployees } from '@/hooks/use-employees';
-import { useAuth } from '@/hooks/auth'; // <-- import useAuth
+import { useAuth } from '@/hooks/use-auth';
 import { useIsMobile, useIsTablet } from '@/hooks/use-mobile';
 import EmployeeSalaryCard from '@/components/salary/EmployeeSalaryCard';
 import SalaryCalendarView from '@/components/salary/SalaryCalendarView';
@@ -30,17 +30,20 @@ const SalaryPage = () => {
   const isTablet = useIsTablet();
 
   const { data: employees = [], isLoading } = useEmployees();
-  const { user, isManager, isAdmin, isHR } = useAuth(); // <-- get auth info
+  const { user, isManager, isAdmin, isHR } = useAuth();
 
   // Determine if this user is a regular employee
   const isEmployee = user && !isManager && !isAdmin && !isHR;
-  // Only show the logged-in employee if they are an employee
-  const myEmployeeId = user?.id;
-
-  // Filter employees: show all for manager/admin/hr, only self for employees
-  const employeesToShow = isEmployee && myEmployeeId
-    ? employees.filter(emp => emp.id === myEmployeeId)
-    : employees;
+  
+  // For employees, automatically select their own profile
+  React.useEffect(() => {
+    if (isEmployee && employees.length > 0) {
+      const ownEmployee = employees.find(emp => emp.user_id === user?.id);
+      if (ownEmployee) {
+        setSelectedEmployee(ownEmployee.id);
+      }
+    }
+  }, [isEmployee, employees, user?.id]);
 
   const handlePreviousMonth = () => {
     setSelectedMonth(prev => subMonths(prev, 1));
@@ -50,7 +53,7 @@ const SalaryPage = () => {
     setSelectedMonth(prev => addMonths(prev, 1));
   };
 
-  const filteredEmployees = employeesToShow.filter(emp => 
+  const filteredEmployees = employees.filter(emp => 
     emp.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -64,7 +67,8 @@ const SalaryPage = () => {
         {/* Left sidebar - Employee list */}
         <div className={cn(
           "lg:col-span-3",
-          selectedEmployee && (isMobile || isTablet) && "hidden"
+          selectedEmployee && (isMobile || isTablet) && "hidden",
+          isEmployee && "hidden lg:block" // Hide the list for regular employees on mobile, show on desktop
         )}>
           <Card className="rounded-3xl overflow-hidden">
             <div className="p-4">
@@ -125,7 +129,8 @@ const SalaryPage = () => {
         {/* Main content - Calendar and Stats */}
         <div className={cn(
           "lg:col-span-6",
-          selectedEmployee && (isMobile || isTablet) && "hidden"
+          selectedEmployee && (isMobile || isTablet) && "hidden",
+          isEmployee && !selectedEmployeeData && "hidden" // Hide for regular employees if no selection
         )}>
           <SalaryStatsSection />
           
@@ -158,7 +163,7 @@ const SalaryPage = () => {
             
             <SalaryCalendarView
               month={selectedMonth}
-              employees={employeesToShow}
+              employees={isEmployee ? employees.filter(emp => emp.user_id === user?.id) : employees}
             />
           </Card>
         </div>
