@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useEmployees } from '@/hooks/use-employees';
@@ -9,6 +10,15 @@ import { Separator } from '@/components/ui/separator';
 import EmployeeAttendanceSummary from '@/components/dashboard/EmployeeAttendanceSummary';
 import { useAttendanceSync } from '@/hooks/use-attendance-sync';
 import { Users, FolderOpen } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import ProgressBar from '@/components/dashboard/ProgressBar';
+import StatCard from '@/components/dashboard/StatCard';
+import Calendar from '@/components/dashboard/Calendar';
+import DashboardTimeClock from '@/components/dashboard/DashboardTimeClock';
+import SalaryTable from '@/components/salary/table/SalaryTable';
+import AttendanceReport from '@/components/dashboard/AttendanceReport';
+import HiringStatistics from '@/components/dashboard/HiringStatistics';
+import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
 
 const Dashboard = () => {
   const { isManager, user } = useAuth();
