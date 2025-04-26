@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, Play, Pause, Stop } from 'lucide-react';
+import { Clock, Play, Pause, Square } from 'lucide-react';
 import { TimeClockStatus } from '@/hooks/time-clock/types';
 import { useTimeClock } from '@/hooks/time-clock';
 import { formatDuration } from '@/utils/time-utils';
@@ -17,7 +16,6 @@ export const EmployeeTimeClock = () => {
     elapsedTime
   } = useTimeClock();
   
-  // Helper function to display status in a user-friendly way
   const getStatusDisplay = (status: TimeClockStatus) => {
     switch (status) {
       case 'clocked-in':
@@ -58,7 +56,7 @@ export const EmployeeTimeClock = () => {
               className="w-full bg-red-500 hover:bg-red-600" 
               onClick={handleClockOut}
             >
-              <Stop className="mr-2 h-4 w-4" />
+              <Square className="mr-2 h-4 w-4" />
               End Shift
             </Button>
           </div>

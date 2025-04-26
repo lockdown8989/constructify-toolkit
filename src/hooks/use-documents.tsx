@@ -1,7 +1,18 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { DocumentModel } from '@/types/database';
+import { useAuth } from '@/hooks/use-auth';
+
+export type DocumentModel = {
+  id: string;
+  name: string;
+  document_type: string;
+  url?: string;
+  path?: string;
+  size?: string;
+  employee_id?: string;
+};
 
 export function useEmployeeDocuments(employeeId: string | undefined) {
   return useQuery({
@@ -9,35 +20,17 @@ export function useEmployeeDocuments(employeeId: string | undefined) {
     queryFn: async () => {
       if (!employeeId) return [];
       
-      try {
-        // Check if edge function exists
-        const { data: docsFunctionData, error: funcError } = await supabase.functions.invoke('get-employee-documents', {
-          body: { employeeId }
-        });
+      const { data: docs, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('employee_id', employeeId);
         
-        if (funcError) {
-          throw funcError;
-        }
-        
-        if (docsFunctionData?.success && docsFunctionData?.data) {
-          return docsFunctionData.data as DocumentModel[];
-        }
-        
-        // Fallback to direct query if edge function not available
-        const { data: docs, error } = await supabase
-          .from('documents')
-          .select('*')
-          .eq('employee_id', employeeId);
-          
-        if (error) {
-          throw error;
-        }
-        
-        return docs as DocumentModel[];
-      } catch (error) {
+      if (error) {
         console.error('Error fetching documents:', error);
         return [];
       }
+      
+      return docs as DocumentModel[];
     },
     enabled: !!employeeId
   });
@@ -57,16 +50,6 @@ export function useUploadDocument() {
       employeeId: string; 
       documentType: string;
     }) => {
-      // Check if storage bucket exists, create if needed
-      const { data: buckets } = await supabase.storage.listBuckets();
-      
-      if (!buckets?.some(bucket => bucket.name === 'documents')) {
-        await supabase.storage.createBucket('documents', {
-          public: true,
-          fileSizeLimit: 10485760 // 10MB
-        });
-      }
-      
       const fileExt = file.name.split('.').pop();
       const filePath = `${employeeId}/${documentType}_${Date.now()}.${fileExt}`;
       
@@ -85,6 +68,11 @@ export function useUploadDocument() {
         ? `${Math.round(sizeInBytes / 1024)} KB`
         : `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
       
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
+        
       // Save document metadata
       const { data, error: dbError } = await supabase
         .from('documents')
@@ -93,6 +81,7 @@ export function useUploadDocument() {
           name: file.name,
           document_type: documentType,
           path: filePath,
+          url: urlData.publicUrl,
           size: sizeString
         })
         .select()
@@ -102,15 +91,13 @@ export function useUploadDocument() {
         throw dbError;
       }
       
-      return data as DocumentModel;
+      return data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['employee-documents', variables.employeeId] });
-      queryClient.invalidateQueries({ queryKey: ['employee', variables.employeeId] });
-      
       toast({
         title: "Document uploaded",
-        description: `${variables.documentType.charAt(0).toUpperCase() + variables.documentType.slice(1)} uploaded successfully.`,
+        description: "Document has been uploaded successfully.",
       });
     },
     onError: (error) => {
@@ -128,42 +115,26 @@ export function useDeleteDocument() {
   const { toast } = useToast();
   
   return useMutation({
-    mutationFn: async ({ 
-      id, 
-      path, 
-      employeeId 
-    }: { 
-      id: string; 
-      path?: string; 
-      employeeId: string;
-    }) => {
-      // Delete file from storage if path exists
+    mutationFn: async ({ id, path, employeeId }: { id: string; path?: string; employeeId: string }) => {
       if (path) {
         const { error: storageError } = await supabase.storage
           .from('documents')
           .remove([path]);
           
-        if (storageError) {
-          throw storageError;
-        }
+        if (storageError) throw storageError;
       }
       
-      // Delete metadata from database
       const { error: dbError } = await supabase
         .from('documents')
         .delete()
         .eq('id', id);
         
-      if (dbError) {
-        throw dbError;
-      }
+      if (dbError) throw dbError;
       
       return { id, employeeId };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['employee-documents', data.employeeId] });
-      queryClient.invalidateQueries({ queryKey: ['employee', data.employeeId] });
-      
       toast({
         title: "Document deleted",
         description: "Document has been deleted successfully.",
