@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ProgressBar from '@/components/dashboard/ProgressBar';
 import StatCard from '@/components/dashboard/StatCard';
 import Calendar from '@/components/dashboard/Calendar';
@@ -6,6 +6,7 @@ import SalaryTable from '@/components/salary/table/SalaryTable';
 import AttendanceReport from '@/components/dashboard/attendance-report';
 import HiringStatistics from '@/components/dashboard/HiringStatistics';
 import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
+import EmployeeTimeClock from '@/components/dashboard/EmployeeTimeClock';
 import { Users, Briefcase, FolderOpen } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useEmployees } from '@/hooks/use-employees';
@@ -18,24 +19,20 @@ const Dashboard = () => {
   const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
   const { user, isManager } = useAuth();
   
-  // Get user's first name for greeting
   const firstName = user?.user_metadata?.first_name || 
                    user?.email?.split('@')[0] || 
                    'User';
                    
-  // Count employees excluding the manager themselves
   const employeeCount = isManager 
     ? employees.filter(emp => emp.user_id !== user?.id).length 
     : 1;
   
-  // Sample data for meetings (would come from another table in a real app)
   const sampleMeetings = [
     { id: '1', title: 'Daily Sync', time: '09:30', date: new Date(), dotColor: 'yellow' as const },
     { id: '2', title: 'Task Review With Team', time: '11:00', date: new Date(), dotColor: 'black' as const },
     { id: '3', title: 'Daily Meeting', time: '12:00', date: new Date(), dotColor: 'yellow' as const },
   ];
   
-  // Transform employees data for the SalaryTable
   const salaryEmployees = employees.slice(0, 3).map(emp => ({
     id: emp.id,
     name: emp.name,
@@ -45,7 +42,6 @@ const Dashboard = () => {
     status: emp.status === 'Active' ? 'Paid' as const : emp.status === 'Leave' ? 'Absent' as const : 'Pending' as const
   }));
   
-  // Get interview statistics - only show for managers
   const interviewStats = isManager ? {
     interviews: interviews.filter(i => i.stage === 'Interview').reduce((acc, i) => acc + i.progress, 0) / 
                 Math.max(interviews.filter(i => i.stage === 'Interview').length, 1),
@@ -71,7 +67,6 @@ const Dashboard = () => {
       <div className="max-w-[1800px] mx-auto">
         <h1 className="text-2xl md:text-4xl font-bold mb-2">Hello {firstName}</h1>
         
-        {/* Progress Bars - Only show for managers */}
         {isManager && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <ProgressBar label="Interviews" value={Math.round(interviewStats.interviews) || 0} color="black" />
@@ -81,7 +76,6 @@ const Dashboard = () => {
           </div>
         )}
         
-        {/* Stats */}
         <div className="flex flex-wrap -mx-2 mb-6">
           <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
             <StatCard 
@@ -113,14 +107,15 @@ const Dashboard = () => {
           )}
         </div>
         
-        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column */}
           <div className="lg:col-span-3">
-            <Calendar meetings={sampleMeetings} />
+            {isManager ? (
+              <Calendar meetings={sampleMeetings} />
+            ) : (
+              <EmployeeTimeClock />
+            )}
           </div>
           
-          {/* Middle Column */}
           <div className="lg:col-span-5">
             <SalaryTable 
               employees={salaryEmployees.map(emp => ({
@@ -131,15 +126,12 @@ const Dashboard = () => {
             />
           </div>
           
-          {/* Right Column */}
           <div className="lg:col-span-4">
-            {/* Updated to use the enhanced AttendanceReport */}
             <AttendanceReport 
               employeeId={selectedEmployee ?? undefined}
               className="mb-6" 
             />
             
-            {/* Only show stats for managers */}
             {isManager && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <HiringStatistics className="col-span-1" />
