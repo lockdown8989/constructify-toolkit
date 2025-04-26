@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useAuth } from '@/hooks/use-auth';
 import { useEmployeeDocuments } from '@/hooks/use-documents';
 import { Card } from '@/components/ui/card';
 import { FileText } from 'lucide-react';

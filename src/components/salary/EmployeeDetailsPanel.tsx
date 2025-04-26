@@ -64,7 +64,7 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
             <h3 className="text-xs font-semibold text-apple-gray-500 mb-5 uppercase tracking-wider">
               Documents
             </h3>
-            <DocumentList documents={[]} isLoading={false} />
+            <DocumentList employeeId={employee.id} />
           </div>
         </div>
       </div>
