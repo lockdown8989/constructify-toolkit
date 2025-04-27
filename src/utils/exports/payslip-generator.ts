@@ -11,11 +11,16 @@ interface PayslipData {
   paymentDate?: string;
 }
 
+type PayslipResult = 
+  | { success: boolean; error: string; localFile: string }
+  | { success: boolean; path: string; filename: string }
+  | { success: boolean; localFile: string };
+
 export async function generatePayslipPDF(
   employeeId: string,
   employeeData: PayslipData,
   uploadToStorage: boolean = false
-) {
+): Promise<PayslipResult> {
   const { name, title, salary, department, paymentDate } = employeeData;
   
   // Clean the salary string (removing $ and commas)
@@ -114,7 +119,7 @@ async function uploadPayslipToStorage(
   filename: string,
   employeeId: string,
   formattedDate: string
-) {
+): Promise<PayslipResult> {
   try {
     // Check if documents bucket exists
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();

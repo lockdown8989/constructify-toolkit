@@ -118,7 +118,7 @@ export async function attachPayslipToResume(
     if (!payslipResult.success) {
       return {
         success: false,
-        message: `Failed to generate payslip: ${payslipResult.error}`
+        message: `Failed to generate payslip: ${payslipResult.error || "Unknown error"}`
       };
     }
     
