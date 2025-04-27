@@ -20,6 +20,20 @@ export function useSalaryStatistics(employeeId?: string) {
   return useQuery({
     queryKey: ['salary-statistics', employeeId],
     queryFn: async () => {
+      if (!employeeId) return null;
+
+      // First, trigger the AI calculation through the edge function
+      const { data: calculatedSalary, error: calculationError } = await supabase.functions
+        .invoke('calculate-salary', {
+          body: { employeeId }
+        });
+
+      if (calculationError) {
+        console.error('Error calculating salary:', calculationError);
+        throw calculationError;
+      }
+
+      // Then fetch the latest salary statistics
       const { data, error } = await supabase
         .from('salary_statistics')
         .select('*')
