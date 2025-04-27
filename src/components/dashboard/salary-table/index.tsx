@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
 import { useToast } from '@/hooks/use-toast';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
-import { generatePayslipPDF, attachPayslipToResume } from '@/utils/export-utils';
+import { generatePayslipPDF, attachPayslipToResume } from '@/utils/exports'; // Fixed import path
 import { SalaryTableProps, Employee } from './types';
 import { SearchBar } from './SearchBar';
 import { StatusFilter } from './StatusFilter';

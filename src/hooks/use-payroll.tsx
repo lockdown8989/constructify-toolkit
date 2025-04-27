@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Employee } from '@/components/dashboard/salary-table/types';
-import { exportToCSV } from '@/utils/export-utils';
+import { exportToCSV } from '@/utils/exports'; // Fixed import path
 import { supabase } from '@/integrations/supabase/client';
 
 export const usePayroll = (employees: Employee[]) => {
