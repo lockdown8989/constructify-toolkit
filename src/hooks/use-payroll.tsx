@@ -1,7 +1,8 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Employee } from '@/components/dashboard/salary-table/types';
-import { exportToCSV } from '@/utils/exports'; // Fixed import path
+import { exportToCSV } from '@/utils/exports';
 import { supabase } from '@/integrations/supabase/client';
 
 export const usePayroll = (employees: Employee[]) => {
@@ -57,6 +58,27 @@ export const usePayroll = (employees: Employee[]) => {
           const employee = employees.find(emp => emp.id === employeeId);
           if (!employee) continue;
 
+          // Get attendance records for the current month to calculate working hours
+          const startOfMonth = new Date();
+          startOfMonth.setDate(1);
+          startOfMonth.setHours(0, 0, 0, 0);
+
+          const { data: attendanceData, error: attendanceError } = await supabase
+            .from('attendance')
+            .select('working_minutes, overtime_minutes')
+            .eq('employee_id', employeeId)
+            .gte('date', startOfMonth.toISOString())
+            .lt('date', new Date().toISOString());
+
+          if (attendanceError) throw attendanceError;
+
+          // Calculate total working and overtime hours
+          const workingHours = attendanceData?.reduce((sum, record) => 
+            sum + (record.working_minutes || 0) / 60, 0) || 0;
+          
+          const overtimeHours = attendanceData?.reduce((sum, record) => 
+            sum + (record.overtime_minutes || 0) / 60, 0) || 0;
+
           const baseSalary = parseInt(employee.salary.replace(/\$|,/g, ''), 10);
           const finalSalary = await calculateSalaryWithGPT(employeeId, baseSalary);
 
@@ -64,6 +86,9 @@ export const usePayroll = (employees: Employee[]) => {
             .from('payroll')
             .insert({
               employee_id: employeeId,
+              base_pay: baseSalary,
+              working_hours: workingHours,
+              overtime_hours: overtimeHours,
               salary_paid: finalSalary,
               payment_status: 'Paid',
               payment_date: new Date().toISOString().split('T')[0]

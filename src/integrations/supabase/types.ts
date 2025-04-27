@@ -600,31 +600,49 @@ export type Database = {
       }
       payroll: {
         Row: {
+          base_pay: number | null
+          bonus: number | null
+          deductions: number | null
           document_name: string | null
           document_url: string | null
           employee_id: string | null
           id: string
+          overtime_hours: number | null
+          overtime_pay: number | null
           payment_date: string | null
           payment_status: string | null
           salary_paid: number
+          working_hours: number | null
         }
         Insert: {
+          base_pay?: number | null
+          bonus?: number | null
+          deductions?: number | null
           document_name?: string | null
           document_url?: string | null
           employee_id?: string | null
           id?: string
+          overtime_hours?: number | null
+          overtime_pay?: number | null
           payment_date?: string | null
           payment_status?: string | null
           salary_paid: number
+          working_hours?: number | null
         }
         Update: {
+          base_pay?: number | null
+          bonus?: number | null
+          deductions?: number | null
           document_name?: string | null
           document_url?: string | null
           employee_id?: string | null
           id?: string
+          overtime_hours?: number | null
+          overtime_pay?: number | null
           payment_date?: string | null
           payment_status?: string | null
           salary_paid?: number
+          working_hours?: number | null
         }
         Relationships: [
           {
@@ -1043,6 +1061,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_final_salary: {
+        Args: {
+          base_salary: number
+          total_hours: number
+          overtime_hours: number
+        }
+        Returns: number
+      }
       has_role: {
         Args:
           | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
