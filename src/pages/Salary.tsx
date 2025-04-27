@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import SalaryOverview from '@/components/salary/SalaryOverview';
 import { useNavigate } from 'react-router-dom';
