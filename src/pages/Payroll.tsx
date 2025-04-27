@@ -1,507 +1,65 @@
-import React, { useState } from 'react';
-import SalaryTable from '@/components/salary/table/SalaryTable';
-import { useEmployees } from '@/hooks/use-employees';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { format, subMonths } from 'date-fns';
-import { DollarSign, Calendar, ArrowUpRight, Clock, CheckCircle, XCircle, Download, Loader2 } from 'lucide-react';
-import { exportToCSV } from '@/utils/export-utils';
-import { supabase } from '@/integrations/supabase/client';
 
-interface EmployeeSalary {
-  id: string;
-  name: string;
-  avatar: string;
-  title: string;
-  salary: string;
-  status: 'Paid' | 'Absent' | 'Pending';
-  selected?: boolean;
-  paymentDate?: string;
-  department?: string;
-}
+import React from 'react';
+import { PayrollStatsGrid } from '@/components/payroll/stats/PayrollStatsGrid';
+import { PayrollActions } from '@/components/payroll/actions/PayrollActions';
+import { PayrollHistoryTabs } from '@/components/payroll/history/PayrollHistoryTabs';
+import { usePayroll } from '@/hooks/use-payroll';
+import { Employee } from '@/components/dashboard/salary-table/types';
 
-const calculateSalaries = (employees: any[]): EmployeeSalary[] => {
-  return employees.map(employee => {
-    const statusRand = Math.random();
-    let status: 'Paid' | 'Absent' | 'Pending';
-    let paymentDate: string | undefined;
-    
-    if (statusRand < 0.7) {
-      status = 'Paid';
-      const randomDay = Math.floor(Math.random() * 7);
-      const date = new Date();
-      date.setDate(date.getDate() - randomDay);
-      paymentDate = format(date, 'MMM d, yyyy');
-    } else if (statusRand < 0.9) {
-      status = 'Pending';
-      paymentDate = undefined;
-    } else {
-      status = 'Absent';
-      paymentDate = undefined;
-    }
-    
-    return {
-      id: employee.id,
-      name: employee.name,
-      avatar: employee.avatar || '/placeholder.svg',
-      title: employee.job_title,
-      department: employee.department,
-      salary: `$${employee.salary.toLocaleString()}`,
-      status,
-      selected: false,
-      paymentDate
-    };
-  });
-};
+const PayrollPage = () => {
+  const initialEmployees: Employee[] = []; // This would be populated from your data source
+  const {
+    selectedEmployees,
+    isProcessing,
+    isExporting,
+    handleSelectEmployee,
+    handleProcessPayroll,
+    handleExportPayroll,
+  } = usePayroll(initialEmployees);
 
-const PayslipPage = () => {
-  const { data: employeesData = [] } = useEmployees();
-  const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
-  const { toast } = useToast();
-  const [isExporting, setIsExporting] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  
-  const [employees, setEmployees] = useState<EmployeeSalary[]>([]);
-  
-  React.useEffect(() => {
-    if (employeesData.length > 0) {
-      const calculatedEmployees = employeesData.map(employee => {
-        const statusRand = Math.random();
-        let status: 'Paid' | 'Absent' | 'Pending';
-        let paymentDate: string | undefined;
-        
-        if (statusRand < 0.7) {
-          status = 'Paid';
-          const randomDay = Math.floor(Math.random() * 7);
-          const date = new Date();
-          date.setDate(date.getDate() - randomDay);
-          paymentDate = format(date, 'MMM d, yyyy');
-        } else if (statusRand < 0.9) {
-          status = 'Pending';
-          paymentDate = undefined;
-        } else {
-          status = 'Absent';
-          paymentDate = undefined;
-        }
-        
-        return {
-          id: employee.id,
-          name: employee.name,
-          avatar: employee.avatar || '/placeholder.svg',
-          title: employee.job_title,
-          department: employee.department,
-          salary: `$${employee.salary.toLocaleString()}`,
-          status,
-          selected: false,
-          paymentDate
-        };
-      });
-      
-      setEmployees(calculatedEmployees);
-    }
-  }, [employeesData]);
-  
-  const handleSelectEmployee = (id: string) => {
-    setEmployees(employees.map(emp => 
-      emp.id === id ? { ...emp, selected: !emp.selected } : emp
-    ));
-    
-    setSelectedEmployees(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
-  
-  const handleUpdateStatus = (id: string, status: 'Paid' | 'Absent' | 'Pending') => {
-    setEmployees(employees.map(emp => {
-      if (emp.id === id) {
-        const paymentDate = status === 'Paid' ? format(new Date(), 'MMM d, yyyy') : undefined;
-        return { ...emp, status, paymentDate };
-      }
-      return emp;
-    }));
-    
-    toast({
-      title: `Employee status updated`,
-      description: `Payment status has been set to ${status}.`,
-    });
-  };
-
-  const calculateSalaryWithGPT = async (employeeId: string, baseSalary: number) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('calculate-salary', {
-        body: { employeeId, baseSalary }
-      });
-
-      if (error) {
-        console.error('Error calculating salary:', error);
-        throw new Error('Failed to calculate salary');
-      }
-
-      return data.finalSalary;
-    } catch (err) {
-      console.error('Error in calculateSalaryWithGPT:', err);
-      toast({
-        title: 'Calculation Error',
-        description: 'Failed to calculate salary using AI model.',
-        variant: 'destructive'
-      });
-      return baseSalary * 0.75; // Fallback calculation (25% deduction)
-    }
-  };
-
-  const processEmployeePayroll = async (employeeId: string) => {
-    try {
-      const employee = employeesData.find(emp => emp.id === employeeId);
-      if (!employee) {
-        toast({
-          title: 'Error processing payroll',
-          description: `Employee with ID ${employeeId} not found.`,
-          variant: 'destructive'
-        });
-        return false;
-      }
-
-      const baseSalary = employee.salary;
-      const finalSalary = await calculateSalaryWithGPT(employeeId, baseSalary);
-
-      const { error: payrollError } = await supabase
-        .from('payroll')
-        .insert({
-          employee_id: employeeId,
-          salary_paid: finalSalary,
-          payment_status: 'Paid',
-          payment_date: new Date().toISOString().split('T')[0]
-        });
-
-      if (payrollError) {
-        console.error('Error inserting payroll record:', payrollError);
-        throw new Error('Failed to record payroll');
-      }
-
-      return true;
-    } catch (err) {
-      console.error('Error processing payroll:', err);
-      return false;
-    }
-  };
-  
-  const handleProcessPayroll = async () => {
-    if (selectedEmployees.size === 0) {
-      toast({
-        title: "No employees selected",
-        description: "Please select at least one employee to process payslip.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsProcessing(true);
-    
-    try {
-      let successCount = 0;
-      let failCount = 0;
-      
-      for (const employeeId of selectedEmployees) {
-        const success = await processEmployeePayroll(employeeId);
-        if (success) {
-          successCount++;
-        } else {
-          failCount++;
-        }
-      }
-      
-      setEmployees(employees.map(emp => {
-        if (selectedEmployees.has(emp.id)) {
-          return { 
-            ...emp, 
-            status: 'Paid', 
-            paymentDate: format(new Date(), 'MMM d, yyyy'),
-            selected: false
-          };
-        }
-        return emp;
-      }));
-      
-      setSelectedEmployees(new Set());
-      
-      if (successCount > 0 && failCount === 0) {
-        toast({
-          title: "Payslips processed successfully",
-          description: `Processed payments for ${successCount} employees.`,
-        });
-      } else if (successCount > 0 && failCount > 0) {
-        toast({
-          title: "Payslips partially processed",
-          description: `Success: ${successCount} employees. Failed: ${failCount} employees.`,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Payslip processing failed",
-          description: "Failed to process any payments. Check the logs for more details.",
-          variant: "destructive"
-        });
-      }
-    } catch (err) {
-      console.error('Error in batch payslip processing:', err);
-      toast({
-        title: "Payslip processing error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-  
-  const handleExportPayroll = async () => {
-    setIsExporting(true);
-    try {
-      const { data, error } = await supabase
-        .from("payroll")
-        .select(`
-          id,
-          salary_paid,
-          payment_status,
-          payment_date,
-          employee_id,
-          employees(name, job_title)
-        `);
-
-      if (error) {
-        console.error("Error fetching payslip data:", error);
-        toast({
-          title: "Export failed",
-          description: "Could not fetch payslip data for export.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        toast({
-          title: "No data to export",
-          description: "There is no payslip data available for export.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const exportData = data.map(row => {
-        const employeeData = row.employees as any;
-        
-        let employeeName: string;
-        let jobTitle: string;
-        
-        if (Array.isArray(employeeData)) {
-          employeeName = employeeData[0]?.name || 'Unknown';
-          jobTitle = employeeData[0]?.job_title || 'Unknown';
-        } else if (employeeData && typeof employeeData === 'object') {
-          employeeName = employeeData.name || 'Unknown';
-          jobTitle = employeeData.job_title || 'Unknown';
-        } else {
-          employeeName = 'Unknown';
-          jobTitle = 'Unknown';
-        }
-
-        return {
-          ID: row.id,
-          Employee: employeeName,
-          Position: jobTitle,
-          'Employee ID': row.employee_id,
-          'Net Salary': row.salary_paid,
-          'Payment Date': row.payment_date,
-          Status: row.payment_status
-        };
-      });
-
-      exportToCSV(exportData, `payslips_report_${format(new Date(), 'yyyy-MM-dd')}`, {
-        ID: 'ID',
-        Employee: 'Employee Name',
-        Position: 'Job Title',
-        'Employee ID': 'Employee ID',
-        'Net Salary': 'Net Salary',
-        'Payment Date': 'Payment Date',
-        Status: 'Payment Status'
-      });
-
-      toast({
-        title: "Export successful",
-        description: "Payslip data has been exported to CSV.",
-      });
-    } catch (err) {
-      console.error("Error exporting payslips:", err);
-      toast({
-        title: "Export failed",
-        description: "An unexpected error occurred while exporting payslip data.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsExporting(false);
-    }
-  };
-  
-  const totalEmployees = employees.length;
-  const paidEmployees = employees.filter(e => e.status === 'Paid').length;
-  const pendingEmployees = employees.filter(e => e.status === 'Pending').length;
-  const absentEmployees = employees.filter(e => e.status === 'Absent').length;
-  
-  const totalPayroll = employees.reduce((sum, emp) => {
+  // Calculate statistics
+  const paidEmployees = initialEmployees.filter(e => e.status === 'Paid').length;
+  const pendingEmployees = initialEmployees.filter(e => e.status === 'Pending').length;
+  const absentEmployees = initialEmployees.filter(e => e.status === 'Absent').length;
+  const totalPayroll = initialEmployees.reduce((sum, emp) => {
     const salary = parseInt(emp.salary.replace(/\$|,/g, ''), 10);
     return sum + (emp.status !== 'Absent' ? salary : 0);
   }, 0);
-  
-  const currentMonth = format(new Date(), 'MMMM yyyy');
-  const previousMonth = format(subMonths(new Date(), 1), 'MMMM yyyy');
-  
+
   return (
     <div className="container py-6">
       <h1 className="text-2xl font-bold mb-6">Payslip Management</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Total Payslips</CardDescription>
-            <CardTitle className="text-2xl flex items-center">
-              <DollarSign className="h-5 w-5 mr-1 text-gray-500" />
-              ${totalPayroll.toLocaleString()}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-gray-500">
-              For {totalEmployees} employees
-            </div>
-          </CardContent>
-        </Card>
+        <div className="md:col-span-3">
+          <PayrollStatsGrid
+            totalPayroll={totalPayroll}
+            totalEmployees={initialEmployees.length}
+            paidEmployees={paidEmployees}
+            pendingEmployees={pendingEmployees}
+            absentEmployees={absentEmployees}
+          />
+        </div>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Current Period</CardDescription>
-            <CardTitle className="text-2xl flex items-center">
-              <Calendar className="h-5 w-5 mr-1 text-gray-500" />
-              {currentMonth}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-gray-500 flex items-center">
-              <ArrowUpRight className="h-4 w-4 mr-1 text-green-500" />
-              5% increase from {previousMonth}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Payment Status</CardDescription>
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <div className="flex items-center">
-                <CheckCircle className="h-5 w-5 mr-1 text-green-500" />
-                {paidEmployees}
-              </div>
-              <div className="text-sm text-gray-500">paid</div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Clock className="h-4 w-4 mr-1 text-yellow-500" />
-                <span className="text-sm">{pendingEmployees} pending</span>
-              </div>
-              <div className="flex items-center">
-                <XCircle className="h-4 w-4 mr-1 text-gray-500" />
-                <span className="text-sm">{absentEmployees} absent</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-black text-white">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-gray-300">Quick Actions</CardDescription>
-            <CardTitle className="text-xl">Process Payslips</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button 
-              className="w-full bg-white text-black hover:bg-gray-100"
-              onClick={handleProcessPayroll}
-              disabled={isProcessing || selectedEmployees.size === 0}
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                `Process Selected (${selectedEmployees.size})`
-              )}
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full border-white text-white hover:bg-white/10"
-              onClick={handleExportPayroll}
-              disabled={isExporting}
-            >
-              {isExporting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Exporting...
-                </>
-              ) : (
-                <>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Payslips CSV
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+        <PayrollActions
+          selectedCount={selectedEmployees.size}
+          isProcessing={isProcessing}
+          isExporting={isExporting}
+          onProcessPayroll={handleProcessPayroll}
+          onExportPayroll={handleExportPayroll}
+        />
       </div>
       
-      <Tabs defaultValue="current">
-        <TabsList className="mb-6">
-          <TabsTrigger value="current">Current Month</TabsTrigger>
-          <TabsTrigger value="previous">Previous Month</TabsTrigger>
-          <TabsTrigger value="history">Payment History</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="current">
-          <SalaryTable 
-            employees={employees}
-            onSelectEmployee={handleSelectEmployee}
-            onUpdateStatus={handleUpdateStatus}
-          />
-        </TabsContent>
-        
-        <TabsContent value="previous">
-          <div className="bg-white rounded-3xl p-6 text-center py-12">
-            <h3 className="text-xl font-medium mb-2">Previous Month's Payslips</h3>
-            <p className="text-gray-500">Payslip data for {previousMonth} is archived.</p>
-            <Button className="mt-4" variant="outline">
-              View Archive
-            </Button>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="history">
-          <div className="bg-white rounded-3xl p-6 text-center py-12">
-            <h3 className="text-xl font-medium mb-2">Payment History</h3>
-            <p className="text-gray-500">View detailed payslip history and generate reports.</p>
-            <Button className="mt-4" variant="outline">
-              Generate Report
-            </Button>
-          </div>
-        </TabsContent>
-      </Tabs>
+      <PayrollHistoryTabs
+        currentMonthEmployees={initialEmployees}
+        onSelectEmployee={handleSelectEmployee}
+        onUpdateStatus={(id, status) => {
+          // Update employee status logic would go here
+          console.log('Update status:', id, status);
+        }}
+      />
     </div>
   );
 };
 
-export default PayslipPage;
+export default PayrollPage;
