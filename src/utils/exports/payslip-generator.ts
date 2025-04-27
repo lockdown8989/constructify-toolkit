@@ -11,10 +11,13 @@ interface PayslipData {
   paymentDate?: string;
 }
 
-type PayslipResult = 
-  | { success: boolean; error: string; localFile: string }
-  | { success: boolean; path: string; filename: string }
-  | { success: boolean; localFile: string };
+export interface PayslipResult {
+  success: boolean;
+  error?: string;
+  localFile?: string;
+  path?: string;
+  filename?: string;
+}
 
 export async function generatePayslipPDF(
   employeeId: string,

@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { generatePayslipPDF } from './payslip-generator'; // Import the function
+import { generatePayslipPDF, PayslipResult } from './payslip-generator'; 
 
 export async function uploadEmployeeDocument(
   employeeId: string,
