@@ -1,6 +1,5 @@
-
 import { Link, useNavigate } from "react-router-dom"
-import { Calendar, DollarSign, Receipt, Clock, Home, ClipboardCheck, Coffee } from "lucide-react"
+import { Calendar, DollarSign, Receipt, Clock, Home, ClipboardCheck, Coffee, Users } from "lucide-react"
 import { useAuth } from "@/hooks/auth"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -80,9 +79,10 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
               </Link>
               <Link
                 to="/people"
-                className="hover:underline underline-offset-4"
+                className="hover:underline underline-offset-4 flex items-center transition-colors hover:text-primary"
               >
-                Employees
+                <Users className="h-4 w-4 mr-1 text-muted-foreground group-hover:text-primary" />
+                <span className="font-medium">Team Members</span>
               </Link>
               <Link
                 to="/shift-calendar"
