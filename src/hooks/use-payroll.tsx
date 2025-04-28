@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Employee } from '@/components/dashboard/salary-table/types';
-import { exportToCSV } from '@/utils/exports';
-import { supabase } from '@/integrations/supabase/client';
+import { processEmployeePayroll } from './payroll/use-payroll-processing';
+import { exportPayrollData } from './payroll/use-payroll-export';
 
 export const usePayroll = (employees: Employee[]) => {
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
@@ -21,20 +21,6 @@ export const usePayroll = (employees: Employee[]) => {
       }
       return newSet;
     });
-  };
-
-  const calculateSalaryWithGPT = async (employeeId: string, baseSalary: number) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('calculate-salary', {
-        body: { employeeId, baseSalary }
-      });
-
-      if (error) throw error;
-      return data.finalSalary;
-    } catch (err) {
-      console.error('Error in calculateSalaryWithGPT:', err);
-      return baseSalary * 0.75; // Fallback calculation
-    }
   };
 
   const handleProcessPayroll = async () => {
@@ -58,43 +44,7 @@ export const usePayroll = (employees: Employee[]) => {
           const employee = employees.find(emp => emp.id === employeeId);
           if (!employee) continue;
 
-          // Get attendance records for the current month to calculate working hours
-          const startOfMonth = new Date();
-          startOfMonth.setDate(1);
-          startOfMonth.setHours(0, 0, 0, 0);
-
-          const { data: attendanceData, error: attendanceError } = await supabase
-            .from('attendance')
-            .select('working_minutes, overtime_minutes')
-            .eq('employee_id', employeeId)
-            .gte('date', startOfMonth.toISOString())
-            .lt('date', new Date().toISOString());
-
-          if (attendanceError) throw attendanceError;
-
-          // Calculate total working and overtime hours
-          const workingHours = attendanceData?.reduce((sum, record) => 
-            sum + (record.working_minutes || 0) / 60, 0) || 0;
-          
-          const overtimeHours = attendanceData?.reduce((sum, record) => 
-            sum + (record.overtime_minutes || 0) / 60, 0) || 0;
-
-          const baseSalary = parseInt(employee.salary.replace(/\$|,/g, ''), 10);
-          const finalSalary = await calculateSalaryWithGPT(employeeId, baseSalary);
-
-          const { error: payrollError } = await supabase
-            .from('payroll')
-            .insert({
-              employee_id: employeeId,
-              base_pay: baseSalary,
-              working_hours: workingHours,
-              overtime_hours: overtimeHours,
-              salary_paid: finalSalary,
-              payment_status: 'Paid',
-              payment_date: new Date().toISOString().split('T')[0]
-            });
-
-          if (payrollError) throw payrollError;
+          await processEmployeePayroll(employeeId, employee);
           successCount++;
         } catch (err) {
           console.error('Error processing payroll:', err);
@@ -125,62 +75,7 @@ export const usePayroll = (employees: Employee[]) => {
   const handleExportPayroll = async () => {
     setIsExporting(true);
     try {
-      const { data, error } = await supabase
-        .from("payroll")
-        .select(`
-          id,
-          salary_paid,
-          payment_status,
-          payment_date,
-          employee_id,
-          employees(name, job_title)
-        `);
-
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
-        toast({
-          title: "No data to export",
-          description: "There is no payslip data available for export.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const exportData = data.map(row => {
-        const employeeName = row.employees && typeof row.employees === 'object' && !Array.isArray(row.employees) 
-          ? (row.employees as { name: string }).name 
-          : 'Unknown';
-          
-        const employeeJob = row.employees && typeof row.employees === 'object' && !Array.isArray(row.employees) 
-          ? (row.employees as { job_title: string }).job_title
-          : 'Unknown';
-
-        return {
-          ID: row.id,
-          Employee: employeeName,
-          Position: employeeJob,
-          'Employee ID': row.employee_id,
-          'Net Salary': row.salary_paid,
-          'Payment Date': row.payment_date,
-          Status: row.payment_status
-        };
-      });
-
-      exportToCSV(
-        exportData,
-        `payslips_report_${new Date().toISOString().split('T')[0]}`,
-        {
-          ID: 'ID',
-          Employee: 'Employee Name',
-          Position: 'Job Title',
-          'Employee ID': 'Employee ID',
-          'Net Salary': 'Net Salary',
-          'Payment Date': 'Payment Date',
-          Status: 'Payment Status'
-        }
-      );
-
+      await exportPayrollData();
       toast({
         title: "Export successful",
         description: "Payslip data has been exported to CSV.",
