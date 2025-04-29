@@ -24,18 +24,18 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
 }) => {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="min-w-full divide-y divide-gray-200 table-fixed">
         <EmployeeTableHeader 
           onSelectAll={onSelectAll} 
           allSelected={selectedEmployees.length === employees.length && employees.length > 0}
           hasEmployees={employees.length > 0}
         />
-        <tbody className="divide-y divide-apple-gray-100">
+        <tbody className="divide-y divide-gray-200 bg-white">
           {employees.length === 0 ? (
             <tr>
-              <td colSpan={9} className="py-12 text-center text-apple-gray-500">
-                <p className="text-base">No employees found</p>
-                <p className="text-sm mt-1 text-apple-gray-400">Try adjusting your filters or adding new employees</p>
+              <td colSpan={9} className="py-12 text-center text-gray-500">
+                <p className="text-base">No team members found</p>
+                <p className="text-sm mt-1 text-gray-400">Try adjusting your filters or adding new team members</p>
               </td>
             </tr>
           ) : (

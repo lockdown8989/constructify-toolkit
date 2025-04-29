@@ -7,79 +7,46 @@ interface EmployeeTableHeaderProps {
   hasEmployees: boolean;
 }
 
-const EmployeeTableHeader: React.FC<EmployeeTableHeaderProps> = ({ 
-  onSelectAll, 
+const EmployeeTableHeader: React.FC<EmployeeTableHeaderProps> = ({
+  onSelectAll,
   allSelected,
-  hasEmployees 
+  hasEmployees,
 }) => {
   return (
-    <thead>
-      <tr className="text-left text-sm text-gray-500 border-b border-gray-100">
-        <th className="py-4 px-6 font-medium w-6">
+    <thead className="bg-gray-50">
+      <tr>
+        <th scope="col" className="py-3.5 px-4 text-left w-12">
           <input
             type="checkbox"
-            checked={allSelected && hasEmployees}
+            checked={allSelected}
             onChange={onSelectAll}
             disabled={!hasEmployees}
-            className="rounded border-gray-300 text-black focus:ring-black"
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
         </th>
-        <th className="py-4 px-6 font-medium">Name</th>
-        <th className="py-4 px-6 font-medium">
-          <div className="flex items-center">
-            Job title
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1 h-4 w-4">
-              <path d="M9.44566 3.2871C9.44566 2.99909 9.19332 2.7598 8.89311 2.7598C8.59291 2.7598 8.34056 2.99909 8.34056 3.2871C8.34056 3.57512 8.59291 3.81441 8.89311 3.81441C9.19332 3.81441 9.44566 3.57512 9.44566 3.2871Z" fill="currentColor"></path>
-            </svg>
-          </div>
+        <th scope="col" className="py-3.5 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Employee
         </th>
-        <th className="py-4 px-6 font-medium">
-          <div className="flex items-center">
-            Department
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1 h-4 w-4">
-              <path d="M9.44566 3.2871C9.44566 2.99909 9.19332 2.7598 8.89311 2.7598C8.59291 2.7598 8.34056 2.99909 8.34056 3.2871C8.34056 3.57512 8.59291 3.81441 8.89311 3.81441C9.19332 3.81441 9.44566 3.57512 9.44566 3.2871Z" fill="currentColor"></path>
-            </svg>
-          </div>
+        <th scope="col" className="py-3.5 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Department
         </th>
-        <th className="py-4 px-6 font-medium">
-          <div className="flex items-center">
-            Site
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1 h-4 w-4">
-              <path d="M9.44566 3.2871C9.44566 2.99909 9.19332 2.7598 8.89311 2.7598C8.59291 2.7598 8.34056 2.99909 8.34056 3.2871C8.34056 3.57512 8.59291 3.81441 8.89311 3.81441C9.19332 3.81441 9.44566 3.57512 9.44566 3.2871Z" fill="currentColor"></path>
-            </svg>
-          </div>
+        <th scope="col" className="py-3.5 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Location
         </th>
-        <th className="py-4 px-6 font-medium">
-          <div className="flex items-center">
-            Salary
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1 h-4 w-4">
-              <path d="M9.44566 3.2871C9.44566 2.99909 9.19332 2.7598 8.89311 2.7598C8.59291 2.7598 8.34056 2.99909 8.34056 3.2871C8.34056 3.57512 8.59291 3.81441 8.89311 3.81441C9.19332 3.81441 9.44566 3.57512 9.44566 3.2871Z" fill="currentColor"></path>
-            </svg>
-          </div>
+        <th scope="col" className="py-3.5 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Salary
         </th>
-        <th className="py-4 px-6 font-medium">
-          <div className="flex items-center">
-            Start date
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1 h-4 w-4">
-              <path d="M9.44566 3.2871C9.44566 2.99909 9.19332 2.7598 8.89311 2.7598C8.59291 2.7598 8.34056 2.99909 8.34056 3.2871C8.34056 3.57512 8.59291 3.81441 8.89311 3.81441C9.19332 3.81441 9.44566 3.57512 9.44566 3.2871Z" fill="currentColor"></path>
-            </svg>
-          </div>
+        <th scope="col" className="py-3.5 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Start Date
         </th>
-        <th className="py-4 px-6 font-medium">
-          <div className="flex items-center">
-            Lifecycle
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1 h-4 w-4">
-              <path d="M9.44566 3.2871C9.44566 2.99909 9.19332 2.7598 8.89311 2.7598C8.59291 2.7598 8.34056 2.99909 8.34056 3.2871C8.34056 3.57512 8.59291 3.81441 8.89311 3.81441C9.19332 3.81441 9.44566 3.57512 9.44566 3.2871Z" fill="currentColor"></path>
-            </svg>
-          </div>
+        <th scope="col" className="py-3.5 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Lifecycle
         </th>
-        <th className="py-4 px-6 font-medium">
-          <div className="flex items-center">
-            Status
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-1 h-4 w-4">
-              <path d="M9.44566 3.2871C9.44566 2.99909 9.19332 2.7598 8.89311 2.7598C8.59291 2.7598 8.34056 2.99909 8.34056 3.2871C8.34056 3.57512 8.59291 3.81441 8.89311 3.81441C9.19332 3.81441 9.44566 3.57512 9.44566 3.2871Z" fill="currentColor"></path>
-            </svg>
-          </div>
+        <th scope="col" className="py-3.5 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Status
+        </th>
+        <th scope="col" className="py-3.5 px-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Actions
         </th>
       </tr>
     </thead>

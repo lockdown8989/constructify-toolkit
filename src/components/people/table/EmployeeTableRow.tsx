@@ -1,14 +1,15 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Employee } from '../types';
+import { MoreVertical, ChevronRight, Check } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, CheckCircle, XCircle, Mail, Users } from 'lucide-react';
+import { Employee } from '../types';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface EmployeeTableRowProps {
   employee: Employee;
@@ -26,8 +27,8 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
   onStatusChange,
 }) => {
   const handleRowClick = (e: React.MouseEvent) => {
-    // Don't trigger row click when clicking the checkbox or dropdown
-    if ((e.target as HTMLElement).tagName === 'INPUT' || 
+    // Don't trigger row click when clicking the checkbox, actions, or dropdown
+    if ((e.target as HTMLElement).tagName === 'INPUT' ||
         (e.target as HTMLElement).closest('input[type="checkbox"]') ||
         (e.target as HTMLElement).closest('[data-dropdown]')) {
       return;
@@ -37,97 +38,112 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
       onRowClick(employee);
     }
   };
-
-  const handleStatusChange = (status: string) => {
-    if (onStatusChange) {
-      onStatusChange(employee.id, status);
-    }
+  
+  const getInitials = (name: string): string => {
+    return name
+      .split(' ')
+      .map(part => part.charAt(0))
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
   };
 
   const statusColors = {
-    green: "bg-apple-green/15 text-apple-green",
-    gray: "bg-apple-gray-200 text-apple-gray-700"
+    Active: "bg-green-100 text-green-700 border border-green-200",
+    Inactive: "bg-gray-100 text-gray-700 border border-gray-200",
+    Invited: "bg-blue-100 text-blue-700 border border-blue-200",
+    Absent: "bg-amber-100 text-amber-700 border border-amber-200"
   };
 
   return (
-    <tr 
+    <tr
       className={cn(
-        "group transition-colors cursor-pointer border-b border-apple-gray-100",
-        isSelected ? "bg-apple-blue/5" : "hover:bg-apple-gray-50"
+        "transition-colors group hover:bg-gray-50 cursor-pointer",
+        isSelected && "bg-blue-50 hover:bg-blue-50"
       )}
       onClick={handleRowClick}
     >
-      <td className="py-4 px-6" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-center h-5">
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() => onSelect(employee.id)}
-            className="rounded border-apple-gray-300 text-apple-blue focus:ring-apple-blue/30"
-          />
-        </div>
+      <td className="py-3 px-4 whitespace-nowrap">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onSelect(employee.id)}
+          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          onClick={e => e.stopPropagation()}
+        />
       </td>
-      <td className="py-4 px-6">
-        <div className="flex items-center">
-          <div className="w-10 h-10 rounded-full overflow-hidden mr-3 border border-apple-gray-200 shadow-sm">
-            <img 
+      <td className="py-3 px-4 whitespace-nowrap">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-10 w-10 rounded-full border border-gray-200 flex-shrink-0">
+            <AvatarImage 
               src={employee.avatar} 
               alt={employee.name}
-              className="w-full h-full object-cover"
+              className="object-cover"
             />
+            <AvatarFallback className="bg-blue-100 text-blue-700 font-medium">
+              {getInitials(employee.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-medium text-gray-900">{employee.name}</div>
+            <div className="text-sm text-gray-500">{employee.jobTitle}</div>
           </div>
-          <span className="font-medium text-apple-gray-900">{employee.name}</span>
         </div>
       </td>
-      <td className="py-4 px-6 text-apple-gray-700">{employee.jobTitle}</td>
-      <td className="py-4 px-6 text-apple-gray-700">{employee.department}</td>
-      <td className="py-4 px-6">
+      <td className="py-3 px-4 whitespace-nowrap">
+        <span className="text-gray-700">{employee.department}</span>
+      </td>
+      <td className="py-3 px-4 whitespace-nowrap">
         <div className="flex items-center">
-          {employee.siteIcon && (
-            <span className="mr-2">{employee.siteIcon}</span>
-          )}
-          <span className="text-apple-gray-700">{employee.site}</span>
+          <span className="mr-1">{employee.siteIcon}</span>
+          <span className="text-gray-700">{employee.site}</span>
         </div>
       </td>
-      <td className="py-4 px-6 font-medium text-apple-gray-900">{employee.salary}</td>
-      <td className="py-4 px-6 text-apple-gray-700">{employee.startDate}</td>
-      <td className="py-4 px-6 text-apple-gray-700">{employee.lifecycle}</td>
-      <td className="py-4 px-6">
-        <div className="flex items-center justify-between">
-          <span className={cn(
-            "inline-block px-3 py-1 rounded-full text-xs font-medium",
-            statusColors[employee.statusColor as keyof typeof statusColors]
-          )}>
-            {employee.status}
-          </span>
-          
+      <td className="py-3 px-4 whitespace-nowrap">
+        <span className="font-medium text-gray-900">{employee.salary}</span>
+      </td>
+      <td className="py-3 px-4 whitespace-nowrap">
+        <span className="text-gray-700">{employee.startDate}</span>
+      </td>
+      <td className="py-3 px-4 whitespace-nowrap">
+        <span className="text-gray-700">{employee.lifecycle}</span>
+      </td>
+      <td className="py-3 px-4 whitespace-nowrap">
+        <span className={cn(
+          "inline-block px-2 py-1 rounded-full text-xs font-medium",
+          statusColors[employee.status as keyof typeof statusColors]
+        )}>
+          {employee.status}
+        </span>
+      </td>
+      <td className="py-3 px-4 whitespace-nowrap text-right">
+        <div className="flex items-center justify-end space-x-2" onClick={e => e.stopPropagation()}>
           {onStatusChange && (
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()} data-dropdown>
+            <div data-dropdown>
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-apple-gray-100">
-                  <MoreHorizontal className="w-4 h-4 text-apple-gray-600" />
+                <DropdownMenuTrigger className="p-1.5 rounded-full hover:bg-gray-200">
+                  <MoreVertical className="h-5 w-5 text-gray-500" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="rounded-xl shadow-lg border-apple-gray-200">
-                  <DropdownMenuItem onClick={() => handleStatusChange('Active')} className="focus:bg-apple-gray-50">
-                    <CheckCircle className="mr-2 h-4 w-4 text-apple-green" />
-                    <span>Set as Active</span>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => onStatusChange(employee.id, 'Active')}>
+                    Set as Active
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStatusChange('Inactive')} className="focus:bg-apple-gray-50">
-                    <XCircle className="mr-2 h-4 w-4 text-apple-gray-600" />
-                    <span>Set as Inactive</span>
+                  <DropdownMenuItem onClick={() => onStatusChange(employee.id, 'Inactive')}>
+                    Set as Inactive
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStatusChange('Invited')} className="focus:bg-apple-gray-50">
-                    <Mail className="mr-2 h-4 w-4 text-apple-blue" />
-                    <span>Set as Invited</span>
+                  <DropdownMenuItem onClick={() => onStatusChange(employee.id, 'Invited')}>
+                    Set as Invited
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStatusChange('Absent')} className="focus:bg-apple-gray-50">
-                    <Users className="mr-2 h-4 w-4 text-apple-orange" />
-                    <span>Set as Absent</span>
+                  <DropdownMenuItem onClick={() => onStatusChange(employee.id, 'Absent')}>
+                    Set as Absent
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           )}
+          <button className="p-1.5 rounded-full hover:bg-gray-200 text-gray-500">
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
       </td>
     </tr>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -93,16 +94,14 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
   
   if (isLoading) {
     return (
-      <div className={cn("bg-white rounded-3xl card-shadow", className)}>
+      <div className={cn("bg-white", className)}>
         <TableSkeleton isMobile={isMobile} />
       </div>
     );
   }
-  
-  const hasManagerConnections = employees.some(emp => emp.managerId);
-  
+
   return (
-    <div className={cn("bg-white rounded-3xl card-shadow", className)}>
+    <div className={cn("bg-white", className)}>
       {/* Table controls */}
       <TableControls 
         isMobile={isMobile} 
@@ -112,9 +111,9 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
       />
       
       {isManager && employees.length === 0 && (
-        <div className="p-6 text-center">
-          <p className="text-gray-500 mb-2">No employees connected yet</p>
-          <p className="text-sm text-gray-400">
+        <div className="p-8 text-center">
+          <p className="text-gray-600 mb-2 font-medium">No team members connected yet</p>
+          <p className="text-sm text-gray-500">
             Share your Manager ID with employees so they can connect to your account
           </p>
         </div>

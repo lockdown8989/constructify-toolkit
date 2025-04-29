@@ -1,93 +1,71 @@
 
 import React from 'react';
-import { Search, Plus, SlidersHorizontal, Download } from 'lucide-react';
+import { Search, Trash2, Download, Printer } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface TableControlsProps {
   isMobile: boolean;
-  searchQuery?: string;
-  onSearchChange?: (value: string) => void;
-  selectedCount?: number;
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
+  selectedCount: number;
 }
 
-const TableControls: React.FC<TableControlsProps> = ({ 
-  isMobile, 
-  searchQuery = '', 
+const TableControls: React.FC<TableControlsProps> = ({
+  isMobile,
+  searchQuery,
   onSearchChange,
-  selectedCount = 0
+  selectedCount
 }) => {
   return (
-    <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
-      {!isMobile && (
-        <div className="flex flex-wrap items-center gap-2">
-          <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
-            <span className="mr-2">Column</span>
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
-              <path d="M3.13523 6.15803C3.3241 5.95657 3.64052 5.94637 3.84197 6.13523L7.5 9.56464L11.158 6.13523C11.3595 5.94637 11.6759 5.95657 11.8648 6.15803C12.0536 6.35949 12.0434 6.67591 11.842 6.86477L7.84197 10.6148C7.64964 10.7951 7.35036 10.7951 7.15803 10.6148L3.15803 6.86477C2.95657 6.67591 2.94637 6.35949 3.13523 6.15803Z" fill="currentColor"></path>
-            </svg>
-          </button>
-          
-          <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
-            <span className="mr-2">Department</span>
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
-              <path d="M3.13523 6.15803C3.3241 5.95657 3.64052 5.94637 3.84197 6.13523L7.5 9.56464L11.158 6.13523C11.3595 5.94637 11.6759 5.95657 11.8648 6.15803C12.0536 6.35949 12.0434 6.67591 11.842 6.86477L7.84197 10.6148C7.64964 10.7951 7.35036 10.7951 7.15803 10.6148L3.15803 6.86477C2.95657 6.67591 2.94637 6.35949 3.13523 6.15803Z" fill="currentColor"></path>
-            </svg>
-          </button>
-          
-          <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
-            <span className="mr-2">Site</span>
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
-              <path d="M3.13523 6.15803C3.3241 5.95657 3.64052 5.94637 3.84197 6.13523L7.5 9.56464L11.158 6.13523C11.3595 5.94637 11.6759 5.95657 11.8648 6.15803C12.0536 6.35949 12.0434 6.67591 11.842 6.86477L7.84197 10.6148C7.64964 10.7951 7.35036 10.7951 7.15803 10.6148L3.15803 6.86477C2.95657 6.67591 2.94637 6.35949 3.13523 6.15803Z" fill="currentColor"></path>
-            </svg>
-          </button>
-          
-          {!isMobile && (
+    <div className="border-b border-gray-200">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 px-4 sm:px-6">
+        <div className="relative flex-grow max-w-md mb-4 sm:mb-0">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-gray-400" />
+          </div>
+          <Input
+            type="text"
+            placeholder="Search team members..."
+            className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
+        </div>
+        
+        <div className="flex items-center w-full sm:w-auto justify-between sm:justify-end space-x-2">
+          {selectedCount > 0 && (
             <>
-              <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
-                <span className="mr-2">Lifecycle</span>
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
-                  <path d="M3.13523 6.15803C3.3241 5.95657 3.64052 5.94637 3.84197 6.13523L7.5 9.56464L11.158 6.13523C11.3595 5.94637 11.6759 5.95657 11.8648 6.15803C12.0536 6.35949 12.0434 6.67591 11.842 6.86477L7.84197 10.6148C7.64964 10.7951 7.35036 10.7951 7.15803 10.6148L3.15803 6.86477C2.95657 6.67591 2.94637 6.35949 3.13523 6.15803Z" fill="currentColor"></path>
-                </svg>
-              </button>
-              
-              <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
-                <span className="mr-2">Status</span>
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
-                  <path d="M3.13523 6.15803C3.3241 5.95657 3.64052 5.94637 3.84197 6.13523L7.5 9.56464L11.158 6.13523C11.3595 5.94637 11.6759 5.95657 11.8648 6.15803C12.0536 6.35949 12.0434 6.67591 11.842 6.86477L7.84197 10.6148C7.64964 10.7951 7.35036 10.7951 7.15803 10.6148L3.15803 6.86477C2.95657 6.67591 2.94637 6.35949 3.13523 6.15803Z" fill="currentColor"></path>
-                </svg>
-              </button>
-              
-              <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-10 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
-                <span className="mr-2">Entity</span>
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
-                  <path d="M3.13523 6.15803C3.3241 5.95657 3.64052 5.94637 3.84197 6.13523L7.5 9.56464L11.158 6.13523C11.3595 5.94637 11.6759 5.95657 11.8648 6.15803C12.0536 6.35949 12.0434 6.67591 11.842 6.86477L7.84197 10.6148C7.64964 10.7951 7.35036 10.7951 7.15803 10.6148L3.15803 6.86477C2.95657 6.67591 2.94637 6.35949 3.13523 6.15803Z" fill="currentColor"></path>
-                </svg>
-              </button>
+              <span className="text-sm text-gray-600 mr-2">{selectedCount} selected</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-gray-200 hover:bg-gray-50 hover:text-gray-700 rounded-lg"
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Delete</span>
+              </Button>
             </>
           )}
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="border-gray-200 hover:bg-gray-50 hover:text-gray-700 rounded-lg"
+          >
+            <Download className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Export</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="border-gray-200 hover:bg-gray-50 hover:text-gray-700 rounded-lg"
+          >
+            <Printer className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Print</span>
+          </Button>
         </div>
-      )}
-      
-      <div className="relative w-full sm:w-auto">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search all fields (name, title, status, etc.)"
-          className="pl-9 pr-4 py-2 rounded-full bg-gray-100 text-sm w-full sm:w-[300px] focus:outline-none focus:ring-2 focus:ring-gray-200"
-          value={searchQuery}
-          onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-        />
-      </div>
-      
-      <div className="flex items-center space-x-2 ml-auto">
-        <button className="inline-flex items-center justify-center whitespace-nowrap rounded-full w-10 h-10 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors">
-          <Plus className="w-5 h-5" />
-        </button>
-        <button className="inline-flex items-center justify-center whitespace-nowrap rounded-full w-10 h-10 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors">
-          <SlidersHorizontal className="w-5 h-5" />
-        </button>
-        <button className="inline-flex items-center justify-center whitespace-nowrap rounded-full w-10 h-10 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors">
-          <Download className="w-5 h-5" />
-        </button>
       </div>
     </div>
   );

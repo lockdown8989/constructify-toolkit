@@ -74,9 +74,9 @@ const MobileTable: React.FC<MobileTableProps> = ({
   return (
     <div className="rounded-lg overflow-hidden flex flex-col" ref={containerRef}>
       {employees.length === 0 ? (
-        <div className="p-8 text-center text-apple-gray-500 min-h-[200px] flex flex-col items-center justify-center">
-          <p className="text-base">No employees found</p>
-          <p className="text-sm mt-1 text-apple-gray-400">Try adjusting your filters or adding new employees</p>
+        <div className="p-8 text-center text-gray-500 min-h-[200px] flex flex-col items-center justify-center">
+          <p className="text-base">No team members found</p>
+          <p className="text-sm mt-1 text-gray-400">Try adjusting your filters or adding new team members</p>
         </div>
       ) : (
         <>
@@ -103,7 +103,7 @@ const MobileTable: React.FC<MobileTableProps> = ({
           {shouldShowScrollIndicator && (
             <button 
               onClick={scrollToTop}
-              className="mt-2 flex items-center justify-center p-2 text-sm text-apple-gray-600 hover:text-apple-blue transition-colors touch-target"
+              className="mt-2 flex items-center justify-center p-2 text-sm text-gray-600 hover:text-blue-600 transition-colors touch-target"
               aria-label="Scroll to top"
             >
               <ChevronDown className="h-5 w-5 transform rotate-180 mr-1" />

@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { PlusCircle, Briefcase } from 'lucide-react';
 
 interface PageHeaderProps {
   handleAddPerson: () => void;
@@ -8,19 +9,23 @@ interface PageHeaderProps {
 
 const PageHeader: React.FC<PageHeaderProps> = ({ handleAddPerson }) => {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-semibold mb-1.5 text-apple-gray-900 tracking-tight">My Employees</h1>
-        <p className="text-apple-gray-600 text-sm md:text-base">Manage your team members and their account permissions here</p>
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <div className="flex items-center">
+        <h2 className="text-xl font-semibold text-gray-800">Team Management</h2>
+        <div className="ml-3 bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full">
+          Manager View
+        </div>
       </div>
-      
-      <button 
-        className="inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium h-10 px-5 py-2 bg-apple-blue text-white hover:bg-apple-blue/90 transition-colors self-start sm:self-center shadow-sm"
-        onClick={handleAddPerson}
-      >
-        <Plus className="w-4 h-4 mr-2" />
-        <span>Add person</span>
-      </button>
+
+      <div className="flex items-center gap-3">
+        <Button
+          onClick={handleAddPerson}
+          className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 py-2 flex items-center shadow-sm"
+        >
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Add Team Member
+        </Button>
+      </div>
     </div>
   );
 };
