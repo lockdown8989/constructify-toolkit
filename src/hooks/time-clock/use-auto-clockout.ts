@@ -20,15 +20,24 @@ export const useAutoClockout = (
     const handleStorageChange = async (event: StorageEvent) => {
       if (event.key?.includes('supabase.auth') && employeeId && currentRecord && status !== 'clocked-out') {
         if (event.newValue === null || !event.newValue.includes('access_token')) {
-          await performAutoClockout(employeeId, currentRecord);
+          // User is logging out, but we don't auto-clock-out anymore
+          // We just let the session persist - the active_session flag will handle this
+          console.log('Auth state changed while clocked in - session will persist');
+          
+          // Optionally notify user
+          toast({
+            title: "Time Clock Active",
+            description: "Your time clock session will remain active even after logout.",
+          });
         }
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [currentRecord, employeeId, status]);
+  }, [currentRecord, employeeId, status, toast]);
 
+  // This function is kept for manual session management if needed
   const performAutoClockout = async (employeeId: string, recordId: string) => {
     console.log('Performing auto-clockout for employee:', employeeId, 'record:', recordId);
     
@@ -51,6 +60,7 @@ export const useAutoClockout = (
           break_minutes: breakMinutes,
           break_start: null,
           check_out: now.toISOString(),
+          active_session: false,
           status: 'Auto-logout',
           location,
           device_info: deviceInfo,
@@ -62,6 +72,7 @@ export const useAutoClockout = (
         .from('attendance')
         .update({
           check_out: now.toISOString(),
+          active_session: false,
           status: 'Auto-logout',
           location,
           device_info: deviceInfo,

@@ -20,4 +20,6 @@ export interface AttendanceRecord {
   attendance_status: 'Pending' | 'Approved' | 'Late' | 'Present' | 'Absent';
   approval_date?: string | null;
   approved_by?: string | null;
+  active_session?: boolean;
+  device_identifier?: string | null;
 }

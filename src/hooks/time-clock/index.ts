@@ -59,13 +59,15 @@ export const useTimeClock = () => {
       
       if (data) {
         // Update status based on synced data
-        if (data.check_out) {
+        if (!data.active_session || data.check_out) {
           setStatus('clocked-out');
           setCurrentRecord(null);
-          toast({
-            title: "Status Updated",
-            description: "Your clock-out was registered from another device.",
-          });
+          if (!data.active_session) {
+            toast({
+              title: "Status Updated",
+              description: "Your clock-out was registered from another device.",
+            });
+          }
         } else if (data.break_start) {
           setStatus('on-break');
         } else {

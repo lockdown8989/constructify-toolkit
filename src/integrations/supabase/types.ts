@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       attendance: {
         Row: {
+          active_session: boolean | null
           attendance_status:
             | Database["public"]["Enums"]["attendance_status_type"]
             | null
@@ -19,6 +20,7 @@ export type Database = {
           check_in: string | null
           check_out: string | null
           date: string | null
+          device_identifier: string | null
           device_info: string | null
           employee_id: string | null
           id: string
@@ -37,6 +39,7 @@ export type Database = {
           working_minutes: number | null
         }
         Insert: {
+          active_session?: boolean | null
           attendance_status?:
             | Database["public"]["Enums"]["attendance_status_type"]
             | null
@@ -45,6 +48,7 @@ export type Database = {
           check_in?: string | null
           check_out?: string | null
           date?: string | null
+          device_identifier?: string | null
           device_info?: string | null
           employee_id?: string | null
           id?: string
@@ -63,6 +67,7 @@ export type Database = {
           working_minutes?: number | null
         }
         Update: {
+          active_session?: boolean | null
           attendance_status?:
             | Database["public"]["Enums"]["attendance_status_type"]
             | null
@@ -71,6 +76,7 @@ export type Database = {
           check_in?: string | null
           check_out?: string | null
           date?: string | null
+          device_identifier?: string | null
           device_info?: string | null
           employee_id?: string | null
           id?: string
