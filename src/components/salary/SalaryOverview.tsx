@@ -8,11 +8,24 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, Download, FileText, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/utils/format';
 import { format } from 'date-fns';
+import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const SalaryOverview = () => {
   const { user } = useAuth();
+  const { employeeId } = useEmployeeDataManagement();
   const navigate = useNavigate();
-  const { data: stats, isLoading, error } = useSalaryStatistics(user?.id);
+  const { toast } = useToast();
+  const { data: stats, isLoading, error, isError, refetch } = useSalaryStatistics(employeeId || user?.id);
+
+  const handleRetry = () => {
+    toast({
+      title: "Retrying...",
+      description: "Attempting to fetch your payslip data again."
+    });
+    refetch();
+  };
 
   return (
     <div className="container py-6 max-w-3xl mx-auto animate-fade-in">
@@ -31,21 +44,27 @@ export const SalaryOverview = () => {
 
       {isLoading ? (
         <Card className="p-6">
-          <div className="animate-pulse flex space-x-4">
-            <div className="flex-1 space-y-4 py-1">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="space-y-2">
-                <div className="h-4 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-              </div>
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-3/4" />
+            <div className="grid gap-4 md:grid-cols-2">
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-24 w-full" />
             </div>
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
           </div>
         </Card>
-      ) : error ? (
-        <Card className="p-6 bg-red-50">
-          <div className="flex items-center text-red-700">
-            <AlertCircle className="h-5 w-5 mr-2" />
-            <p>Error loading payslip data. Please try again later.</p>
+      ) : isError || !stats ? (
+        <Card className="p-6 bg-red-50 border border-red-100">
+          <div className="flex flex-col items-center text-red-700 text-center py-4">
+            <AlertCircle className="h-8 w-8 mb-2" />
+            <h2 className="font-semibold text-lg mb-2">Error loading payslip data</h2>
+            <p className="text-sm mb-4">
+              {error instanceof Error ? error.message : "Please try again later"}
+            </p>
+            <Button variant="outline" className="bg-white" onClick={handleRetry}>
+              Retry
+            </Button>
           </div>
         </Card>
       ) : (

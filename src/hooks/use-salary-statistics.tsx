@@ -1,6 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface SalaryStatistics {
   id: string;
@@ -17,34 +18,82 @@ interface SalaryStatistics {
 }
 
 export function useSalaryStatistics(employeeId?: string) {
+  const { toast } = useToast();
+  
   return useQuery({
     queryKey: ['salary-statistics', employeeId],
     queryFn: async () => {
-      if (!employeeId) return null;
-
-      // First, trigger the AI calculation through the edge function
-      const { data: calculatedSalary, error: calculationError } = await supabase.functions
-        .invoke('calculate-salary', {
-          body: { employeeId }
-        });
-
-      if (calculationError) {
-        console.error('Error calculating salary:', calculationError);
-        throw calculationError;
+      if (!employeeId) {
+        console.log("No employee ID provided to useSalaryStatistics");
+        return null;
       }
-
-      // Then fetch the latest salary statistics
-      const { data, error } = await supabase
-        .from('salary_statistics')
-        .select('*')
-        .eq('employee_id', employeeId)
-        .order('month', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error) throw error;
-      return data as SalaryStatistics;
+      
+      console.log("Fetching salary statistics for employee:", employeeId);
+      
+      try {
+        // Fetch the latest salary statistics directly without calculation
+        const { data, error } = await supabase
+          .from('salary_statistics')
+          .select('*')
+          .eq('employee_id', employeeId)
+          .order('month', { ascending: false })
+          .limit(1);
+          
+        if (error) {
+          console.error('Error fetching salary statistics:', error);
+          throw error;
+        }
+        
+        if (!data || data.length === 0) {
+          console.log("No salary statistics found, fetching employee data for default values");
+          
+          // If no salary stats exist, get employee basic info for defaults
+          const { data: employeeData, error: empError } = await supabase
+            .from('employees')
+            .select('salary')
+            .eq('id', employeeId)
+            .single();
+            
+          if (empError) {
+            console.error('Error fetching employee data:', empError);
+            throw empError;
+          }
+          
+          if (!employeeData) {
+            throw new Error("Employee not found");
+          }
+          
+          // Create default salary statistics based on employee data
+          const defaultStats: SalaryStatistics = {
+            id: 'default',
+            employee_id: employeeId,
+            month: new Date().toISOString(),
+            base_salary: employeeData.salary || 0,
+            bonus: 0,
+            deductions: (employeeData.salary || 0) * 0.25, // Example: 25% deductions
+            net_salary: (employeeData.salary || 0) * 0.75, // Example: Net is 75% of gross
+            payment_status: 'Pending',
+            payment_date: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          
+          return defaultStats;
+        }
+        
+        return data[0] as SalaryStatistics;
+      } catch (error) {
+        console.error("Error in useSalaryStatistics:", error);
+        toast({
+          title: "Error loading payslip data",
+          description: "Unable to load your payslip information. Please try again later.",
+          variant: "destructive"
+        });
+        throw error;
+      }
     },
-    enabled: !!employeeId
+    enabled: !!employeeId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2
   });
 }
