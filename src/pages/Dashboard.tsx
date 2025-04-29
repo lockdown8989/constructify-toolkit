@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/auth';
 import { useEmployees } from '@/hooks/use-employees';
 import { useInterviews } from '@/hooks/use-interviews';
 import EmployeeStatistics from '@/components/people/EmployeeStatistics';
@@ -19,12 +19,14 @@ import SalaryTable from '@/components/salary/table/SalaryTable';
 import AttendanceReport from '@/components/dashboard/AttendanceReport';
 import HiringStatistics from '@/components/dashboard/HiringStatistics';
 import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
+import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
 
 const Dashboard = () => {
   const { isManager, user } = useAuth();
   const isMobile = useIsMobile();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
+  const { employeeId: currentEmployeeId } = useEmployeeDataManagement();
   
   useAttendanceSync(); // Enable real-time sync at the dashboard level
 
@@ -45,14 +47,14 @@ const Dashboard = () => {
             <h3 className="text-xs font-semibold text-gray-500 mb-5 uppercase tracking-wider">
               Statistics
             </h3>
-            <EmployeeStatistics />
+            <EmployeeStatistics employeeId={currentEmployeeId} />
           </Card>
           
           <Card className="p-6">
             <h3 className="text-xs font-semibold text-gray-500 mb-5 uppercase tracking-wider">
               Documents
             </h3>
-            <DocumentList employeeId={user?.id} />
+            <DocumentList employeeId={currentEmployeeId} />
           </Card>
         </div>
       </div>

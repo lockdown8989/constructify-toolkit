@@ -22,9 +22,11 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
   const { isManager, isAdmin, isHR } = useAuth();
   const hasManagerAccess = isManager || isAdmin || isHR;
   
+  // Pass employee stats directly if available, otherwise the component will fetch them
   const statisticsData = {
-    holidayLeft: employee.annual_leave_days || 25,
-    sickness: employee.sick_leave_days || 10
+    employeeId: employee.id, // Pass the employee ID to fetch data
+    holidayLeft: employee.annual_leave_days,
+    sickness: employee.sick_leave_days
   };
 
   return (
@@ -60,10 +62,7 @@ const EmployeeDetailsPanel: React.FC<EmployeeDetailsPanelProps> = ({
             <h3 className="text-xs font-semibold text-apple-gray-500 mb-5 uppercase tracking-wider">
               Statistics
             </h3>
-            <EmployeeStatistics 
-              holidayLeft={statisticsData.holidayLeft}
-              sickness={statisticsData.sickness}
-            />
+            <EmployeeStatistics {...statisticsData} />
           </div>
           
           <Separator className="my-6" />

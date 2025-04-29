@@ -6,10 +6,14 @@ import EmployeeScheduleView from '@/components/schedule/EmployeeScheduleView';
 import LeaveBalanceCard from '@/components/schedule/LeaveBalanceCard';
 import AvailabilityManagement from '@/components/schedule/AvailabilityManagement';
 import { cn } from '@/lib/utils';
+import { useEmployeeLeave } from '@/hooks/use-employee-leave';
+import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
 
 const EmployeeWorkflow = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const { employeeId } = useEmployeeDataManagement();
+  const { data: leaveData, isLoading } = useEmployeeLeave(employeeId);
   
   if (!user) {
     return (
@@ -19,6 +23,15 @@ const EmployeeWorkflow = () => {
       </div>
     );
   }
+  
+  // Prepare leave balance data from our hook
+  const leaveBalance = {
+    annual: leaveData?.annual_leave_days || 20,
+    sick: leaveData?.sick_leave_days || 10,
+    personal: 5, // Default
+    used: 12, // Could be calculated from leave calendar in a future update
+    remaining: leaveData?.annual_leave_days || 20 // Also could be calculated more accurately
+  };
   
   return (
     <div className={cn(
@@ -36,16 +49,8 @@ const EmployeeWorkflow = () => {
           <EmployeeScheduleView />
         </div>
         <div className="space-y-6">
-          {!isMobile && (
-            <LeaveBalanceCard 
-              leaveBalance={{
-                annual: 20,
-                sick: 10,
-                personal: 5,
-                used: 12,
-                remaining: 23
-              }} 
-            />
+          {!isMobile && !isLoading && (
+            <LeaveBalanceCard leaveBalance={leaveBalance} />
           )}
           <AvailabilityManagement />
         </div>
