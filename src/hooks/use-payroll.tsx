@@ -4,12 +4,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Employee } from '@/components/dashboard/salary-table/types';
 import { processEmployeePayroll } from './payroll/use-payroll-processing';
 import { exportPayrollData } from './payroll/use-payroll-export';
+import { useCurrencyPreference } from '@/hooks/use-currency-preference';
 
 export const usePayroll = (employees: Employee[]) => {
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
   const [isProcessing, setIsProcessing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
+  const { currency } = useCurrencyPreference();
 
   const handleSelectEmployee = (id: string) => {
     setSelectedEmployees(prev => {
@@ -44,7 +46,7 @@ export const usePayroll = (employees: Employee[]) => {
           const employee = employees.find(emp => emp.id === employeeId);
           if (!employee) continue;
 
-          await processEmployeePayroll(employeeId, employee);
+          await processEmployeePayroll(employeeId, employee, currency);
           successCount++;
         } catch (err) {
           console.error('Error processing payroll:', err);
@@ -75,10 +77,10 @@ export const usePayroll = (employees: Employee[]) => {
   const handleExportPayroll = async () => {
     setIsExporting(true);
     try {
-      await exportPayrollData();
+      await exportPayrollData(currency);
       toast({
         title: "Export successful",
-        description: "Payslip data has been exported to CSV.",
+        description: `Payslip data has been exported to CSV in ${currency}.`,
       });
     } catch (err) {
       console.error("Error exporting payslips:", err);

@@ -16,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { baseSalary, employeeId } = await req.json();
+    const { baseSalary, employeeId, currency = 'GBP' } = await req.json();
 
     if (!baseSalary) {
       return new Response(
@@ -25,7 +25,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Calculating salary for employee ${employeeId} with base salary ${baseSalary}`);
+    console.log(`Calculating salary for employee ${employeeId} with base salary ${baseSalary} in ${currency}`);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -42,7 +42,7 @@ serve(async (req) => {
           },
           { 
             role: 'user', 
-            content: `Calculate the final salary for an employee with a base salary of ${baseSalary}. 
+            content: `Calculate the final salary for an employee with a base salary of ${baseSalary} ${currency}. 
                      Apply standard tax deductions (assume 20%) and insurance (assume 5%).
                      Return ONLY the final numeric value, without any text, currency symbols or formatting.` 
           }
@@ -68,10 +68,10 @@ serve(async (req) => {
       throw new Error('Failed to calculate a valid salary amount');
     }
 
-    console.log(`Calculated final salary: ${finalSalary}`);
+    console.log(`Calculated final salary: ${finalSalary} ${currency}`);
 
     return new Response(
-      JSON.stringify({ finalSalary: finalSalary }),
+      JSON.stringify({ finalSalary: finalSalary, currency }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

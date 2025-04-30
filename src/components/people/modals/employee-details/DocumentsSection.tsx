@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEmployeeDocuments, useUploadDocument, useDeleteDocument } from '@/hooks/use-documents';
+import { useCurrencyPreference } from '@/hooks/use-currency-preference';
 
 interface DocumentsSectionProps {
   employee: Employee;
@@ -16,6 +17,7 @@ interface DocumentsSectionProps {
 const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
   const { isManager, user } = useAuth();
   const { toast } = useToast();
+  const { currency } = useCurrencyPreference();
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
   
@@ -49,7 +51,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
     if (!hasPayslip) {
       placeholders.push({ 
         id: 'payslip-placeholder', 
-        name: 'Payslip', 
+        name: `Payslip (${currency})`, 
         document_type: 'payslip', 
         size: '0 KB',
         icon: <img src="/pdf-icon.png" alt="PDF" className="w-8 h-8" />,
@@ -117,7 +119,8 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
       await uploadDocument.mutateAsync({ 
         file, 
         employeeId: employee.id, 
-        documentType: docType 
+        documentType: docType,
+        currency: currency 
       });
     } catch (error) {
       console.error('Error uploading document:', error);
@@ -210,7 +213,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
               
               <div className="flex-1">
                 <p className="font-medium text-gray-900">{doc.name}</p>
-                <p className="text-xs text-gray-500">{doc.size}</p>
+                <p className="text-xs text-gray-500">{doc.size} {doc.document_type === 'payslip' && `(${currency})`}</p>
               </div>
               
               <div className="flex items-center space-x-2">

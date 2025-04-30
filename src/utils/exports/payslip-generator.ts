@@ -2,6 +2,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '@/integrations/supabase/client';
+import { formatCurrency } from '@/utils/format';
 
 interface PayslipData {
   name: string;
@@ -9,6 +10,7 @@ interface PayslipData {
   salary: string;
   department?: string;
   paymentDate?: string;
+  currency?: string;
 }
 
 export interface PayslipResult {
@@ -24,10 +26,10 @@ export async function generatePayslipPDF(
   employeeData: PayslipData,
   uploadToStorage: boolean = false
 ): Promise<PayslipResult> {
-  const { name, title, salary, department, paymentDate } = employeeData;
+  const { name, title, salary, department, paymentDate, currency = 'GBP' } = employeeData;
   
   // Clean the salary string (removing $ and commas)
-  const salaryNumeric = parseFloat(salary.replace(/\$|,/g, ''));
+  const salaryNumeric = parseFloat(salary.replace(/\$|£|,/g, ''));
   
   // Calculate deductions
   const taxDeduction = salaryNumeric * 0.2;
@@ -35,7 +37,7 @@ export async function generatePayslipPDF(
   const netSalary = salaryNumeric - taxDeduction - insuranceDeduction;
   
   // Format date
-  const formattedDate = paymentDate || new Date().toLocaleDateString('en-US', {
+  const formattedDate = paymentDate || new Date().toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
@@ -81,11 +83,19 @@ export async function generatePayslipPDF(
   const salaryStartY = finalY + 10;
   doc.text("Salary Details", 20, salaryStartY);
   
+  // Currency symbol for display
+  const currencySymbol = currency === 'GBP' ? '£' : 
+                         currency === 'EUR' ? '€' : '$';
+  
+  const formatAmount = (amount: number) => {
+    return `${currencySymbol}${amount.toLocaleString('en-GB', { maximumFractionDigits: 2 })}`;
+  };
+  
   const salaryDetails = [
-    ["Gross Salary:", `$${salaryNumeric.toLocaleString()}`],
-    ["Tax Deduction (20%):", `$${taxDeduction.toLocaleString()}`],
-    ["Insurance (5%):", `$${insuranceDeduction.toLocaleString()}`],
-    ["Net Salary:", `$${netSalary.toLocaleString()}`],
+    ["Gross Salary:", formatAmount(salaryNumeric)],
+    ["Tax Deduction (20%):", formatAmount(taxDeduction)],
+    ["Insurance (5%):", formatAmount(insuranceDeduction)],
+    ["Net Salary:", formatAmount(netSalary)],
   ];
   
   autoTable(doc, {
@@ -109,7 +119,7 @@ export async function generatePayslipPDF(
   const filename = `payslip_${sanitizedName}_${period}`;
   
   if (uploadToStorage) {
-    return await uploadPayslipToStorage(doc, filename, employeeId, formattedDate);
+    return await uploadPayslipToStorage(doc, filename, employeeId, formattedDate, currency);
   }
   
   // Save PDF locally
@@ -121,7 +131,8 @@ async function uploadPayslipToStorage(
   doc: jsPDF,
   filename: string,
   employeeId: string,
-  formattedDate: string
+  formattedDate: string,
+  currency: string = 'GBP'
 ): Promise<PayslipResult> {
   try {
     // Check if documents bucket exists
@@ -179,6 +190,21 @@ async function uploadPayslipToStorage(
       
     if (updateError) {
       console.error('Error updating payroll record:', updateError);
+    }
+    
+    // Add entry to documents table
+    const { error: docError } = await supabase
+      .from('documents')
+      .insert({
+        employee_id: employeeId,
+        document_type: 'payslip',
+        name: `Payslip - ${formattedDate} (${currency})`,
+        path: filePath,
+        size: 'auto-generated'
+      });
+    
+    if (docError) {
+      console.error('Error adding document record:', docError);
     }
     
     return { success: true, path: filePath, filename: `${filename}.pdf` };

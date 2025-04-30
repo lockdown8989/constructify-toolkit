@@ -5,6 +5,7 @@ import { TimeClockStatus } from './types';
 import { AttendanceRecord } from '@/types/supabase/attendance';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrencyPreference } from '@/hooks/use-currency-preference';
 
 export const useStatusCheck = (
   employeeId: string | undefined,
@@ -13,6 +14,7 @@ export const useStatusCheck = (
 ) => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { currency } = useCurrencyPreference();
 
   useEffect(() => {
     if (!employeeId) return;
@@ -42,6 +44,14 @@ export const useStatusCheck = (
           console.log('Found active time clock session:', record.id);
           setCurrentRecord(record.id);
           
+          // Store the current currency preference in the record
+          if (record.currency !== currency) {
+            await supabase
+              .from('attendance')
+              .update({ currency })
+              .eq('id', record.id);
+          }
+          
           // Determine status from record
           if (!record.check_out) {
             setStatus(record.break_start ? 'on-break' : 'clocked-in');
@@ -66,5 +76,5 @@ export const useStatusCheck = (
 
     // Execute once when component mounts
     checkCurrentStatus();
-  }, [employeeId, setCurrentRecord, setStatus, toast]);
+  }, [employeeId, setCurrentRecord, setStatus, toast, currency]);
 };

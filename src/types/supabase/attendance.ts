@@ -1,3 +1,4 @@
+
 export interface AttendanceRecord {
   id: string;
   employee_id: string | null;
@@ -21,4 +22,6 @@ export interface AttendanceRecord {
   approved_by?: string | null;
   active_session?: boolean;
   device_identifier?: string | null;
+  hourly_rate?: number | null;
+  currency?: string;
 }
