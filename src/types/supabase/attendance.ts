@@ -1,4 +1,3 @@
-
 export interface AttendanceRecord {
   id: string;
   employee_id: string | null;
