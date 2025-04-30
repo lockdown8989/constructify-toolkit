@@ -2,13 +2,14 @@
 export interface Employee {
   id: string;
   name: string;
-  avatar: string;
   title: string;
-  salary: string;
+  salary: string | number;
   status: 'Paid' | 'Absent' | 'Pending';
-  selected?: boolean;
-  paymentDate?: string;
+  paymentDate: string;
   department?: string;
+  avatar?: string;
+  selected?: boolean;
+  user_id?: string; // Add this field to fix the error
 }
 
 export interface SalaryTableProps {

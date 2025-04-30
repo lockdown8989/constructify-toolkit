@@ -4,6 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import SalaryTable from '@/components/dashboard/salary-table';
 import { Employee } from '@/components/dashboard/salary-table/types';
+import { PayrollProcessingHistory } from './PayrollProcessingHistory';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PayrollHistoryTabsProps {
   currentMonthEmployees: Employee[];
@@ -16,12 +18,15 @@ export const PayrollHistoryTabs: React.FC<PayrollHistoryTabsProps> = ({
   onSelectEmployee,
   onUpdateStatus,
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <Tabs defaultValue="current">
       <TabsList className="mb-6">
         <TabsTrigger value="current">Current Month</TabsTrigger>
         <TabsTrigger value="previous">Previous Month</TabsTrigger>
         <TabsTrigger value="history">Payment History</TabsTrigger>
+        <TabsTrigger value="processing">Processing Log</TabsTrigger>
       </TabsList>
       
       <TabsContent value="current">
@@ -50,6 +55,10 @@ export const PayrollHistoryTabs: React.FC<PayrollHistoryTabsProps> = ({
             Generate Report
           </Button>
         </div>
+      </TabsContent>
+      
+      <TabsContent value="processing">
+        <PayrollProcessingHistory />
       </TabsContent>
     </Tabs>
   );

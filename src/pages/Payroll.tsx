@@ -10,8 +10,11 @@ import { supabase } from '@/integrations/supabase/client';
 import ErrorDisplay from '@/components/people/ErrorDisplay';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const PayrollPage = () => {
+  const isMobile = useIsMobile();
+  
   // Fetch employees data
   const { data: employees, isLoading, error, refetch } = useQuery({
     queryKey: ['employees-payroll'],
@@ -82,8 +85,8 @@ const PayrollPage = () => {
     <div className="container py-6">
       <h1 className="text-2xl font-bold mb-6">Payslip Management</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="md:col-span-3">
+      <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-4'} gap-6 mb-6`}>
+        <div className={isMobile ? '' : 'md:col-span-3'}>
           <PayrollStatsGrid
             totalPayroll={totalPayroll}
             totalEmployees={initialEmployees.length}

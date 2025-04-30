@@ -2,16 +2,19 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Employee } from '@/components/dashboard/salary-table/types';
-import { processEmployeePayroll } from './payroll/use-payroll-processing';
+import { processEmployeePayroll, savePayrollHistory } from './payroll/use-payroll-processing';
 import { exportPayrollData } from './payroll/use-payroll-export';
 import { useCurrencyPreference } from '@/hooks/use-currency-preference';
+import { useAuth } from '@/hooks/use-auth';
 
 export const usePayroll = (employees: Employee[]) => {
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
   const [isProcessing, setIsProcessing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [processingHistory, setProcessingHistory] = useState<any[]>([]);
   const { toast } = useToast();
   const { currency } = useCurrencyPreference();
+  const { user } = useAuth();
 
   const handleSelectEmployee = (id: string) => {
     setSelectedEmployees(prev => {
@@ -40,6 +43,7 @@ export const usePayroll = (employees: Employee[]) => {
     try {
       let successCount = 0;
       let failCount = 0;
+      const processedEmployeeIds = Array.from(selectedEmployees);
       
       for (const employeeId of selectedEmployees) {
         try {
@@ -52,6 +56,16 @@ export const usePayroll = (employees: Employee[]) => {
           console.error('Error processing payroll:', err);
           failCount++;
         }
+      }
+      
+      // Save processing history
+      if (user) {
+        await savePayrollHistory(
+          processedEmployeeIds,
+          successCount,
+          failCount,
+          user.id
+        );
       }
       
       setSelectedEmployees(new Set());

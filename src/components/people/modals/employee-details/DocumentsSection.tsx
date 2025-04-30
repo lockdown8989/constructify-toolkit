@@ -1,274 +1,328 @@
-
 import React, { useState } from 'react';
-import { FileText, Download, Upload, File, Loader2, Trash2 } from 'lucide-react';
-import { Employee } from '@/components/people/types';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
-import { useEmployeeDocuments, useUploadDocument, useDeleteDocument } from '@/hooks/use-documents';
-import { useCurrencyPreference } from '@/hooks/use-currency-preference';
+import { formatFileSize } from '@/utils/file-utils';
+import { Plus, Loader2, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter
+} from '@/components/ui/card';
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+  TableCaption
+} from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
-interface DocumentsSectionProps {
-  employee: Employee;
+interface Document {
+  id: string;
+  employee_id: string;
+  document_type: string;
+  name: string;
+  path: string;
+  url: string;
+  size: string;
 }
 
-const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employee }) => {
-  const { isManager, user } = useAuth();
-  const { toast } = useToast();
-  const { currency } = useCurrencyPreference();
+interface DocumentsSectionProps {
+  employeeId: string;
+}
+
+const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [documentType, setDocumentType] = useState('resume');
   const queryClient = useQueryClient();
-  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
   
-  // Use the custom hooks for documents
-  const { data: documents = [], isLoading } = useEmployeeDocuments(employee.id);
-  const uploadDocument = useUploadDocument();
-  const deleteDocument = useDeleteDocument();
-
-  // Check if current user is the employee viewing their own documents
-  const isOwnProfile = user?.id === employee.userId;
+  const { data: documents, refetch } = useQuery({
+    queryKey: ['employee-documents', employeeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('employee_id', employeeId);
+        
+      if (error) throw error;
+      return data as Document[];
+    }
+  });
   
-  // Placeholder documents for empty state (only show to managers)
-  const getPlaceholderDocuments = () => {
-    if (!isManager) return [];
-    
-    const placeholders = [];
-    const hasContract = documents?.some(doc => doc.document_type?.toLowerCase() === 'contract');
-    const hasPayslip = documents?.some(doc => doc.document_type?.toLowerCase() === 'payslip');
-    
-    if (!hasContract) {
-      placeholders.push({ 
-        id: 'contract-placeholder', 
-        name: 'Contract', 
-        document_type: 'contract', 
-        size: '0 KB',
-        icon: <img src="/word-icon.png" alt="Word" className="w-8 h-8" />,
-        bgColor: 'bg-blue-50'
-      });
+  const { mutate: deleteDocument, isLoading: isDeleting } = useMutation(
+    async (documentId: string) => {
+      const { data: document, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('id', documentId)
+        .single();
+        
+      if (error) throw error;
+      
+      if (!document) {
+        throw new Error('Document not found');
+      }
+      
+      // Delete from storage bucket
+      const { error: storageError } = await supabase.storage
+        .from('documents')
+        .remove([document.path]);
+        
+      if (storageError) throw storageError;
+      
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', documentId);
+        
+      if (dbError) throw dbError;
+    },
+    {
+      onSuccess: () => {
+        refetch();
+        toast({
+          title: "Document deleted",
+          description: "The document has been successfully deleted.",
+        });
+      },
+      onError: (error: any) => {
+        console.error('Error deleting document:', error);
+        toast({
+          title: "Delete failed",
+          description: `Failed to delete document: ${error instanceof Error ? error.message : String(error)}`,
+          variant: "destructive"
+        });
+      },
     }
-    
-    if (!hasPayslip) {
-      placeholders.push({ 
-        id: 'payslip-placeholder', 
-        name: `Payslip (${currency})`, 
-        document_type: 'payslip', 
-        size: '0 KB',
-        icon: <img src="/pdf-icon.png" alt="PDF" className="w-8 h-8" />,
-        bgColor: 'bg-green-50'
-      });
-    }
-    
-    return placeholders;
+  );
+  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setSelectedFile(file || null);
   };
-
-  // Only show upload/delete controls to managers
-  const showManagementControls = isManager;
   
-  // Combine actual documents with placeholders (for managers only)
-  const allDocuments = [
-    ...documents.map(doc => ({
-      ...doc,
-      icon: getDocumentIcon(doc.document_type),
-      bgColor: getDocumentBgColor(doc.document_type)
-    })),
-    ...(showManagementControls ? getPlaceholderDocuments() : [])
-  ];
+  const uploadDocument = async (data: { file: File; employeeId: string; documentType: string }) => {
+    if (!data.file) return;
 
-  // Helper functions to get document display properties
-  function getDocumentIcon(docType: string) {
-    const type = docType?.toLowerCase();
-    
-    if (type?.includes('contract')) {
-      return <img src="/word-icon.png" alt="Word" className="w-8 h-8" onError={(e) => {
-        e.currentTarget.src = '';
-        e.currentTarget.onerror = null;
-      }} />;
-    } else if (type?.includes('payslip')) {
-      return <img src="/pdf-icon.png" alt="PDF" className="w-8 h-8" onError={(e) => {
-        e.currentTarget.src = '';
-        e.currentTarget.onerror = null;
-      }} />;
-    } 
-    
-    return <FileText className="w-8 h-8 text-gray-500" />;
-  }
-  
-  function getDocumentBgColor(docType: string) {
-    const type = docType?.toLowerCase();
-    
-    if (type?.includes('contract')) {
-      return 'bg-blue-50';
-    } else if (type?.includes('payslip')) {
-      return 'bg-green-50';
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', data.file);
+      
+      // Upload to storage bucket
+      const filePath = `employees/${data.employeeId}/${data.documentType}/${data.file.name}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, data.file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+        
+      if (uploadError) throw uploadError;
+      
+      // Get the public URL
+      const { data: urlData } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
+        
+      // Add record to documents table
+      const { error: dbError } = await supabase
+        .from('documents')
+        .insert({
+          employee_id: data.employeeId,
+          document_type: data.documentType,
+          name: data.file.name,
+          path: filePath,
+          url: urlData.publicUrl,
+          size: formatFileSize(data.file.size)
+        });
+        
+      if (dbError) throw dbError;
+      
+      refetch();
+      toast({
+        title: "Document uploaded successfully",
+        description: `${data.file.name} has been uploaded.`,
+      });
+      
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      toast({
+        title: "Upload failed",
+        description: `Failed to upload document: ${error instanceof Error ? error.message : String(error)}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
     }
-    
-    return 'bg-gray-50';
-  }
+  };
   
-  // Handle document upload
-  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>, docType: string) => {
-    if (!e.target.files || e.target.files.length === 0) {
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!selectedFile) {
+      toast({
+        title: "No file selected",
+        description: "Please select a file to upload.",
+        variant: "destructive"
+      });
       return;
     }
     
-    const file = e.target.files[0];
+    await uploadDocument({
+      file: selectedFile,
+      employeeId: employeeId,
+      documentType: documentType
+    });
     
-    try {
-      setUploading(true);
-      await uploadDocument.mutateAsync({ 
-        file, 
-        employeeId: employee.id, 
-        documentType: docType,
-        currency: currency 
-      });
-    } catch (error) {
-      console.error('Error uploading document:', error);
-    } finally {
-      setUploading(false);
-    }
-  };
-  
-  // Handle document download or delete
-  const handleDocumentAction = async (doc: any, action: 'download' | 'delete') => {
-    if (action === 'download') {
-      if (!doc.url && !doc.path) {
-        toast({
-          title: "Document not available",
-          description: "This document hasn't been uploaded yet.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      try {
-        let url = doc.url;
-        
-        // Get the URL if not already available
-        if (doc.path && !url) {
-          const { data } = supabase.storage
-            .from('documents')
-            .getPublicUrl(doc.path);
-            
-          url = data.publicUrl;
-        }
-        
-        // Open the document in a new tab
-        if (url) {
-          window.open(url, '_blank');
-        } else {
-          throw new Error('Document URL not available');
-        }
-      } catch (error) {
-        console.error('Error downloading document:', error);
-        toast({
-          title: "Download failed",
-          description: "Failed to download the document",
-          variant: "destructive"
-        });
-      }
-    } else if (action === 'delete' && isManager && doc.id && !doc.id.includes('placeholder')) {
-      try {
-        await deleteDocument.mutateAsync({
-          id: doc.id,
-          path: doc.path,
-          employeeId: employee.id
-        });
-      } catch (error) {
-        console.error('Error deleting document:', error);
-      }
+    setSelectedFile(null);
+    const input = document.getElementById('document-upload') as HTMLInputElement;
+    if (input) {
+      input.value = '';
     }
   };
   
   return (
-    <div className="mb-6">
-      <h3 className="text-xs font-semibold text-apple-gray-500 mb-5 uppercase tracking-wider">Documents</h3>
-      
-      {isLoading ? (
-        <div className="flex justify-center py-8">
-          <div className="flex items-center space-x-2">
-            <Loader2 className="h-5 w-5 animate-spin text-apple-gray-500" />
-            <span className="text-apple-gray-500">Loading documents...</span>
+    <Card>
+      <CardHeader>
+        <CardTitle>Documents</CardTitle>
+        <CardDescription>Upload and manage employee documents.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="document-type">Document Type</Label>
+            <Select onValueChange={setDocumentType}>
+              <SelectTrigger id="document-type">
+                <SelectValue placeholder="Select a document type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="resume">Resume</SelectItem>
+                <SelectItem value="cover_letter">Cover Letter</SelectItem>
+                <SelectItem value="id_card">ID Card</SelectItem>
+                <SelectItem value="contract">Contract</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </div>
-      ) : allDocuments.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          No documents available
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {allDocuments.map((doc) => (
-            <div 
-              key={doc.id}
-              className={`relative group p-4 rounded-2xl ${doc.bgColor || 'bg-gray-50'} hover:bg-opacity-80 transition-colors ${uploading ? 'pointer-events-none opacity-60' : ''} flex items-center`}
-              onClick={() => {
-                if (doc.path) {
-                  handleDocumentAction(doc, 'download');
-                }
-              }}
-            >
-              <div className="flex-shrink-0 mr-3">
-                {doc.icon || <FileText className="w-8 h-8 text-gray-500" />}
-              </div>
-              
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">{doc.name}</p>
-                <p className="text-xs text-gray-500">{doc.size} {doc.document_type === 'payslip' && `(${currency})`}</p>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                {showManagementControls && (!doc.path || doc.id.includes('placeholder')) ? (
-                  <label className={`cursor-pointer p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors ${uploading ? 'opacity-50 cursor-wait' : ''}`}>
-                    {uploading ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-gray-600" />
-                    ) : (
-                      <Upload className="h-5 w-5 text-gray-600" />
-                    )}
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      onChange={(e) => handleDocumentUpload(e, doc.document_type)}
-                      disabled={uploading}
-                      accept=".pdf,.doc,.docx"
-                    />
-                  </label>
-                ) : (
-                  <>
-                    {doc.path && (
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        className="p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDocumentAction(doc, 'download');
-                        }}
-                      >
-                        <Download className="h-5 w-5 text-gray-600" />
-                      </Button>
-                    )}
-                    
-                    {showManagementControls && doc.path && (
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        className="p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors text-red-500"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDocumentAction(doc, 'delete');
-                        }}
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </Button>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+          <div>
+            <Label htmlFor="document-upload">Upload Document</Label>
+            <Input
+              type="file"
+              id="document-upload"
+              onChange={handleFileChange}
+              disabled={isUploading}
+            />
+          </div>
+          <Button type="submit" disabled={isUploading || !selectedFile}>
+            {isUploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              "Upload"
+            )}
+          </Button>
+        </form>
+        
+        {documents && documents.length > 0 ? (
+          <div className="mt-6">
+            <h4 className="text-sm font-medium text-gray-500">Uploaded Documents</h4>
+            <Table>
+              <TableCaption>A list of your documents.</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Size</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {documents.map(document => (
+                  <TableRow key={document.id}>
+                    <TableCell>
+                      <a href={document.url} target="_blank" rel="noopener noreferrer" className="underline">
+                        {document.name}
+                      </a>
+                    </TableCell>
+                    <TableCell>{document.document_type}</TableCell>
+                    <TableCell>{document.size}</TableCell>
+                    <TableCell className="text-right">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" disabled={isDeleting}>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete the document
+                              from our servers.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => deleteDocument(document.id)}
+                              disabled={isDeleting}
+                            >
+                              {isDeleting ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Deleting...
+                                </>
+                              ) : (
+                                "Delete"
+                              )}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-muted-foreground">No documents uploaded yet.</p>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
