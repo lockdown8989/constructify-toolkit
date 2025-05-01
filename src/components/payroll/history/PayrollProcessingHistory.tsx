@@ -44,7 +44,8 @@ export const PayrollProcessingHistory = () => {
         .limit(10);
         
       if (error) throw error;
-      return data as PayrollHistoryRecord[];
+      // Cast the response to match our expected type
+      return (data as unknown) as PayrollHistoryRecord[];
     }
   });
   
