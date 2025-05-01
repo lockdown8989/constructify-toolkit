@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
 import { useToast } from '@/hooks/use-toast';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
-import { generatePayslipPDF, attachPayslipToResume } from '@/utils/exports'; // Fixed import path
+import { generatePayslipPDF, attachPayslipToResume } from '@/utils/exports'; 
 import { SalaryTableProps, Employee } from './types';
 import { SearchBar } from './SearchBar';
 import { StatusFilter } from './StatusFilter';
@@ -45,7 +45,7 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
       await generatePayslipPDF(employee.id, {
         name: employee.name,
         title: employee.title,
-        salary: employee.salary,
+        salary: typeof employee.salary === 'number' ? employee.salary.toString() : employee.salary,
         department: employee.department,
         paymentDate: employee.paymentDate
       });
@@ -73,7 +73,7 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
       const result = await attachPayslipToResume(employee.id, {
         name: employee.name,
         title: employee.title,
-        salary: employee.salary,
+        salary: typeof employee.salary === 'number' ? employee.salary.toString() : employee.salary,
         department: employee.department,
         paymentDate: employee.paymentDate
       });

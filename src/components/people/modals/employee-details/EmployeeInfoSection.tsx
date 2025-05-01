@@ -86,7 +86,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
         
         <Separator className="my-6" />
         
-        <DocumentsSection employee={employee} />
+        <DocumentsSection employeeId={employee.id} />
       </div>
     </ScrollArea>
   );

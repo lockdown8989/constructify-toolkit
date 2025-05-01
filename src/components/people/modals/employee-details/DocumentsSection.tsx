@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -77,8 +78,8 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
     }
   });
   
-  const { mutate: deleteDocument, isLoading: isDeleting } = useMutation(
-    async (documentId: string) => {
+  const deleteMutation = useMutation({
+    mutationFn: async (documentId: string) => {
       const { data: document, error } = await supabase
         .from('documents')
         .select('*')
@@ -106,24 +107,22 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
         
       if (dbError) throw dbError;
     },
-    {
-      onSuccess: () => {
-        refetch();
-        toast({
-          title: "Document deleted",
-          description: "The document has been successfully deleted.",
-        });
-      },
-      onError: (error: any) => {
-        console.error('Error deleting document:', error);
-        toast({
-          title: "Delete failed",
-          description: `Failed to delete document: ${error instanceof Error ? error.message : String(error)}`,
-          variant: "destructive"
-        });
-      },
-    }
-  );
+    onSuccess: () => {
+      refetch();
+      toast({
+        title: "Document deleted",
+        description: "The document has been successfully deleted.",
+      });
+    },
+    onError: (error: any) => {
+      console.error('Error deleting document:', error);
+      toast({
+        title: "Delete failed",
+        description: `Failed to delete document: ${error instanceof Error ? error.message : String(error)}`,
+        variant: "destructive"
+      });
+    },
+  });
   
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -281,7 +280,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
                     <TableCell className="text-right">
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" disabled={isDeleting}>
+                          <Button variant="ghost" size="sm" disabled={deleteMutation.isPending}>
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
                           </Button>
@@ -297,10 +296,10 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction 
-                              onClick={() => deleteDocument(document.id)}
-                              disabled={isDeleting}
+                              onClick={() => deleteMutation.mutate(document.id)}
+                              disabled={deleteMutation.isPending}
                             >
-                              {isDeleting ? (
+                              {deleteMutation.isPending ? (
                                 <>
                                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                   Deleting...

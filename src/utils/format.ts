@@ -1,36 +1,42 @@
 
-export const formatCurrency = (amount: number, currency: string = 'GBP') => {
-  const currencyMap = {
-    'USD': 'en-US',
-    'GBP': 'en-GB',
-    'EUR': 'de-DE'
-  };
+/**
+ * Format date to a readable string
+ */
+export const formatDate = (dateString: string): string => {
+  if (!dateString) return '-';
   
-  const locale = currencyMap[currency as keyof typeof currencyMap] || 'en-GB';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
   
-  return new Intl.NumberFormat(locale, {
+  return date.toLocaleDateString('en-GB', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+/**
+ * Format currency
+ */
+export const formatCurrency = (amount: number | string, currency: string = 'GBP'): string => {
+  if (typeof amount === 'string') {
+    amount = parseFloat(amount.replace(/[^\d.]/g, ''));
+  }
+  
+  if (isNaN(amount)) return '0';
+  
+  const formatter = new Intl.NumberFormat('en-GB', {
     style: 'currency',
-    currency: currency,
-  }).format(amount);
+    currency: currency || 'GBP',
+    minimumFractionDigits: 2
+  });
+  
+  return formatter.format(amount);
 };
 
-export const formatNumber = (num: number, decimals: number = 0): string => {
-  return new Intl.NumberFormat('en-GB', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(num);
-};
-
-export const formatPercentage = (value: number): string => {
-  return new Intl.NumberFormat('en-GB', {
-    style: 'percent',
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  }).format(value / 100);
-};
-
-export const formatDate = (date: string | Date): string => {
-  if (!date) return '';
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return dateObj.toLocaleDateString('en-GB');
+/**
+ * Format number with commas
+ */
+export const formatNumber = (num: number): string => {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };

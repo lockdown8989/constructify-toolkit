@@ -9,6 +9,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+interface PayrollHistoryRecord {
+  id: string;
+  employee_count: number;
+  success_count: number;
+  fail_count: number;
+  processed_by: string;
+  processing_date: string;
+  employee_ids: string[];
+  profiles?: {
+    first_name: string;
+    last_name: string;
+  } | null;
+}
+
 export const PayrollProcessingHistory = () => {
   const isMobile = useIsMobile();
   
@@ -24,13 +38,13 @@ export const PayrollProcessingHistory = () => {
           fail_count, 
           processed_by, 
           processing_date,
-          profiles(first_name, last_name)
+          profiles:processed_by(first_name, last_name)
         `)
         .order('processing_date', { ascending: false })
         .limit(10);
         
       if (error) throw error;
-      return data;
+      return data as PayrollHistoryRecord[];
     }
   });
   
