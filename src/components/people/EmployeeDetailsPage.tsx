@@ -166,7 +166,7 @@ const EmployeeDetailsPage = () => {
               
               {/* Documents Section */}
               <h2 className="text-2xl font-medium text-apple-gray-900 mb-6">Documents</h2>
-              <DocumentsSection employee={employee} />
+              <DocumentsSection employeeId={employee.id} />
               
               <Separator className="my-8" />
               

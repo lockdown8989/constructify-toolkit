@@ -16,7 +16,7 @@ interface PayrollHistoryRecord {
   fail_count: number;
   processed_by: string;
   processing_date: string;
-  employee_ids: string[];
+  employee_ids?: string[]; // Make this property optional
   profiles?: {
     first_name: string;
     last_name: string;
