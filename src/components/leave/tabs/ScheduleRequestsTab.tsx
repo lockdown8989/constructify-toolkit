@@ -80,186 +80,186 @@ const ScheduleRequestsTab: React.FC = () => {
   };
 
   return (
-    <Card className="border shadow-sm rounded-xl">
-      <CardHeader className="pb-3">
-        <ScheduleHeader 
-          pendingCount={pendingCount}
-          lastRefreshed={lastRefreshed}
-          isManager={isManager}
-          onRefresh={handleRefreshData}
-        />
-      </CardHeader>
+    <>
+      <ScheduleHeader 
+        pendingCount={pendingCount}
+        lastRefreshed={lastRefreshed}
+        isManager={isManager}
+        onRefresh={handleRefreshData}
+      />
       
-      <CardContent>
+      <CardContent className="p-0">
         <MobileNavigation 
           activeSection={activeSection}
           onSectionChange={setActiveSection}
           isMobile={isMobile}
         />
         
-        <Tabs defaultValue="shift-swaps" className="mt-2">
-          <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
-            <TabsTrigger value="shift-swaps" className="text-xs sm:text-sm flex items-center justify-center">
-              <ArrowLeftRight className="h-3.5 w-3.5 mr-1.5" />
-              Shift Swaps
-              {pendingCount.shifts > 0 && (
-                <Badge className="ml-1.5 bg-amber-100 text-amber-800 border border-amber-300">
-                  {pendingCount.shifts}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="availability" className="text-xs sm:text-sm flex items-center justify-center">
-              <Clock className="h-3.5 w-3.5 mr-1.5" />
-              Availability
-              {pendingCount.availability > 0 && (
-                <Badge className="ml-1.5 bg-amber-100 text-amber-800 border border-amber-300">
-                  {pendingCount.availability}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="shift-swaps" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-              {(!isMobile || activeSection === 'form') && (
-                <div className="md:col-span-1">
-                  <Card className="border shadow-sm rounded-xl">
-                    <CardHeader className="pb-2">
-                      <h3 className="text-sm font-medium flex items-center">
-                        <Plus className="h-4 w-4 mr-1" />
-                        Create Shift Swap
-                      </h3>
-                    </CardHeader>
-                    <CardContent>
-                      <ShiftSwapForm />
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-              
-              {(!isMobile || activeSection === 'requests') && (
-                <div className="md:col-span-2">
-                  <Card className="border shadow-sm rounded-xl">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium flex items-center">
-                          <Filter className="h-4 w-4 mr-1" />
-                          Shift Swap Requests
-                        </h3>
-                        
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              Quick Actions
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem 
-                              className="flex items-center cursor-pointer"
-                              onClick={() => setActiveSection('form')}
-                            >
-                              <Plus className="h-4 w-4 mr-2" />
-                              New Swap Request
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              className="flex items-center cursor-pointer"
-                              onClick={handleRefreshData}
-                            >
-                              <Filter className="h-4 w-4 mr-2" />
-                              Refresh Data
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <ShiftSwapList />
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="availability" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-              {(!isMobile || activeSection === 'form') && (
-                <div className="md:col-span-1">
-                  {showAvailabilityForm ? (
-                    <Card className="border shadow-sm rounded-xl">
-                      <CardHeader className="pb-2">
-                        <h3 className="text-sm font-medium flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          Set Availability
+        <div className="px-4 sm:px-6">
+          <Tabs defaultValue="shift-swaps" className="mt-2">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="shift-swaps" className="text-xs sm:text-sm flex items-center justify-center px-3 py-2.5">
+                <ArrowLeftRight className="h-3.5 w-3.5 mr-1.5" />
+                Shift Swaps
+                {pendingCount.shifts > 0 && (
+                  <Badge className="ml-1.5 bg-amber-100 text-amber-800 border border-amber-300">
+                    {pendingCount.shifts}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="availability" className="text-xs sm:text-sm flex items-center justify-center px-3 py-2.5">
+                <Clock className="h-3.5 w-3.5 mr-1.5" />
+                Availability
+                {pendingCount.availability > 0 && (
+                  <Badge className="ml-1.5 bg-amber-100 text-amber-800 border border-amber-300">
+                    {pendingCount.availability}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="shift-swaps" className="space-y-6 pb-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                {(!isMobile || activeSection === 'form') && (
+                  <div className="md:col-span-1 order-2 md:order-1">
+                    <Card className="bg-white border shadow-sm rounded-xl h-full">
+                      <CardHeader className="pb-3 border-b">
+                        <h3 className="text-sm font-semibold flex items-center">
+                          <Plus className="h-4 w-4 mr-2 text-primary" />
+                          Create Shift Swap
                         </h3>
                       </CardHeader>
-                      <CardContent>
-                        <AvailabilityRequestForm onClose={() => setShowAvailabilityForm(false)} />
+                      <CardContent className="pt-4">
+                        <ShiftSwapForm />
                       </CardContent>
                     </Card>
-                  ) : (
-                    <div className="h-10 flex justify-center">
-                      <Button 
-                        onClick={() => setShowAvailabilityForm(true)}
-                        className="bg-primary text-primary-foreground shadow flex items-center rounded-lg"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Set Availability
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {(!isMobile || activeSection === 'requests') && (
-                <div className="md:col-span-2">
-                  <Card className="border shadow-sm rounded-xl">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium flex items-center">
-                          <Filter className="h-4 w-4 mr-1" />
-                          Availability Requests
-                        </h3>
-                        
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              Quick Actions
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem 
-                              className="flex items-center cursor-pointer"
-                              onClick={() => {
-                                setActiveSection('form');
-                                setShowAvailabilityForm(true);
-                              }}
-                            >
-                              <Plus className="h-4 w-4 mr-2" />
-                              New Availability Request
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              className="flex items-center cursor-pointer"
-                              onClick={handleRefreshData}
-                            >
-                              <Filter className="h-4 w-4 mr-2" />
-                              Refresh Data
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                  </div>
+                )}
+                
+                {(!isMobile || activeSection === 'requests') && (
+                  <div className="md:col-span-2 order-1 md:order-2">
+                    <Card className="bg-white border shadow-sm rounded-xl">
+                      <CardHeader className="pb-3 border-b">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-semibold flex items-center">
+                            <Filter className="h-4 w-4 mr-2 text-primary" />
+                            Shift Swap Requests
+                          </h3>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="sm" className="h-8">
+                                Quick Actions
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem 
+                                className="flex items-center cursor-pointer"
+                                onClick={() => setActiveSection('form')}
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                New Swap Request
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                className="flex items-center cursor-pointer"
+                                onClick={handleRefreshData}
+                              >
+                                <Filter className="h-4 w-4 mr-2" />
+                                Refresh Data
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <ShiftSwapList />
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="availability" className="space-y-6 pb-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                {(!isMobile || activeSection === 'form') && (
+                  <div className="md:col-span-1 order-2 md:order-1">
+                    {showAvailabilityForm ? (
+                      <Card className="bg-white border shadow-sm rounded-xl">
+                        <CardHeader className="pb-3 border-b">
+                          <h3 className="text-sm font-semibold flex items-center">
+                            <Clock className="h-4 w-4 mr-2 text-primary" />
+                            Set Availability
+                          </h3>
+                        </CardHeader>
+                        <CardContent className="pt-4">
+                          <AvailabilityRequestForm onClose={() => setShowAvailabilityForm(false)} />
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="flex justify-center py-6 bg-white border shadow-sm rounded-xl">
+                        <Button 
+                          onClick={() => setShowAvailabilityForm(true)}
+                          className="bg-primary text-primary-foreground shadow flex items-center rounded-lg"
+                        >
+                          <Plus className="h-4 w-4 mr-1.5" />
+                          Set Availability
+                        </Button>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <AvailabilityRequestList />
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+                    )}
+                  </div>
+                )}
+                
+                {(!isMobile || activeSection === 'requests') && (
+                  <div className="md:col-span-2 order-1 md:order-2">
+                    <Card className="bg-white border shadow-sm rounded-xl">
+                      <CardHeader className="pb-3 border-b">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-semibold flex items-center">
+                            <Filter className="h-4 w-4 mr-2 text-primary" />
+                            Availability Requests
+                          </h3>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="sm" className="h-8">
+                                Quick Actions
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem 
+                                className="flex items-center cursor-pointer"
+                                onClick={() => {
+                                  setActiveSection('form');
+                                  setShowAvailabilityForm(true);
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                New Availability Request
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                className="flex items-center cursor-pointer"
+                                onClick={handleRefreshData}
+                              >
+                                <Filter className="h-4 w-4 mr-2" />
+                                Refresh Data
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <AvailabilityRequestList />
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
       </CardContent>
-    </Card>
+    </>
   );
 };
 

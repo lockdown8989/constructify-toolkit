@@ -1,17 +1,14 @@
 
 import React, { useState } from 'react';
-import { format } from 'date-fns';
 import { useEmployees } from '@/hooks/use-employees';
 import { useSchedules } from '@/hooks/use-schedules';
 import { useShiftSwaps, useUpdateShiftSwap, useDeleteShiftSwap, ShiftSwap } from '@/hooks/use-shift-swaps';
 import { useAuth } from '@/hooks/use-auth';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeftRight } from 'lucide-react';
-import ShiftSwapStatusBadge from './ShiftSwapStatusBadge';
-import ShiftSwapTabContent from './ShiftSwapTabContent';
 import { useToast } from '@/hooks/use-toast';
 import ShiftSwapItem from './ShiftSwapItem';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ShiftSwapList = () => {
   const { data: swaps = [], isLoading: isLoadingSwaps } = useShiftSwaps();
@@ -25,7 +22,7 @@ const ShiftSwapList = () => {
   
   if (!user) {
     return (
-      <div className="text-center p-6">
+      <div className="text-center p-6 text-gray-500">
         Please sign in to view shift swaps
       </div>
     );
@@ -53,21 +50,6 @@ const ShiftSwapList = () => {
       return swap.requester_id === user.id || swap.recipient_id === user.id;
     }
   });
-  
-  const getScheduleDetails = (scheduleId: string) => {
-    const schedule = schedules.find(s => s.id === scheduleId);
-    if (!schedule) return 'Unknown schedule';
-    
-    const startTime = new Date(schedule.start_time);
-    const endTime = new Date(schedule.end_time);
-    
-    return `${schedule.title} (${format(startTime, 'PPP')}, ${format(startTime, 'h:mm a')} - ${format(endTime, 'h:mm a')})`;
-  };
-  
-  const getEmployeeName = (userId: string) => {
-    const employee = employees.find(e => e.id === userId);
-    return employee ? employee.name : 'Unknown Employee';
-  };
   
   const handleApprove = (swapId: string) => {
     updateSwap({
@@ -107,34 +89,30 @@ const ShiftSwapList = () => {
   };
   
   if (isLoadingSwaps) {
-    return <div className="text-center p-6">Loading shift swaps...</div>;
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-24 w-full rounded-lg" />
+        <Skeleton className="h-24 w-full rounded-lg" />
+        <Skeleton className="h-24 w-full rounded-lg" />
+      </div>
+    );
   }
   
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ArrowLeftRight className="h-5 w-5" />
-            Shift Swap Requests
-          </div>
-        </CardTitle>
-      </CardHeader>
-      
+    <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
-        <div className="px-6">
-          <TabsList className="w-full">
-            <TabsTrigger value="pending" className="flex-1">Pending</TabsTrigger>
-            <TabsTrigger value="approved" className="flex-1">Approved</TabsTrigger>
-            <TabsTrigger value="rejected" className="flex-1">Rejected</TabsTrigger>
-            <TabsTrigger value="completed" className="flex-1">Completed</TabsTrigger>
-          </TabsList>
-        </div>
+        <TabsList className="grid grid-cols-4 mb-4">
+          <TabsTrigger value="pending" className="text-xs h-8">Pending</TabsTrigger>
+          <TabsTrigger value="approved" className="text-xs h-8">Approved</TabsTrigger>
+          <TabsTrigger value="rejected" className="text-xs h-8">Rejected</TabsTrigger>
+          <TabsTrigger value="completed" className="text-xs h-8">Completed</TabsTrigger>
+        </TabsList>
         
-        <CardContent className="pt-6">
+        <TabsContent value={activeTab} className="pt-2">
           {filteredSwaps.length === 0 ? (
-            <div className="text-center py-6 text-gray-500">
-              No shift swaps found in this category.
+            <div className="text-center py-6 text-gray-500 bg-gray-50 rounded-lg">
+              <ArrowLeftRight className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+              <p className="text-sm">No shift swaps found in this category</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -149,9 +127,9 @@ const ShiftSwapList = () => {
               ))}
             </div>
           )}
-        </CardContent>
+        </TabsContent>
       </Tabs>
-    </Card>
+    </div>
   );
 };
 

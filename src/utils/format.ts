@@ -77,3 +77,37 @@ export const formatDateRange = (startDate: string, endDate: string): string => {
   
   return `${startStr} - ${endStr}`;
 };
+
+/**
+ * Format time to 12-hour format with AM/PM
+ */
+export const formatTime = (timeString: string): string => {
+  if (!timeString) return '-';
+  
+  try {
+    // For full datetime strings
+    if (timeString.includes('T') || timeString.includes('-')) {
+      const date = new Date(timeString);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleTimeString('en-US', { 
+          hour: 'numeric', 
+          minute: '2-digit',
+          hour12: true 
+        });
+      }
+    }
+    
+    // For time-only strings (HH:MM format)
+    if (timeString.includes(':')) {
+      const [hours, minutes] = timeString.split(':').map(Number);
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const hour12 = hours % 12 || 12;
+      return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
+    }
+    
+    return timeString;
+  } catch (e) {
+    return timeString;
+  }
+};
+
