@@ -25,19 +25,22 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
   activeTab,
   isMobile
 }) => {
+  const cardClasses = isMobile ? "border shadow-sm mb-4" : "border shadow-sm";
+  const cardContentClasses = "p-4";
+
   return (
-    <div className="space-y-4">
-      <TabsContent value="personal" className="mt-0 space-y-4">
-        <Card className="border shadow-sm">
-          <CardContent className="p-4">
+    <div className={isMobile ? "pb-4" : "space-y-4"}>
+      <TabsContent value="personal" className={`mt-0 ${isMobile ? "" : "space-y-4"}`}>
+        <Card className={cardClasses}>
+          <CardContent className={cardContentClasses}>
             <h3 className="text-sm font-medium text-gray-700 mb-3">Personal Information</h3>
             <Separator className="mb-4" />
             <PersonalInfoFields form={form} />
           </CardContent>
         </Card>
         
-        <Card className="border shadow-sm">
-          <CardContent className="p-4">
+        <Card className={cardClasses}>
+          <CardContent className={cardContentClasses}>
             <h3 className="text-sm font-medium text-gray-700 mb-3">Compensation</h3>
             <Separator className="mb-4" />
             <CompensationFields form={form} />
@@ -46,8 +49,8 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
       </TabsContent>
       
       <TabsContent value="organization" className="mt-0">
-        <Card className="border shadow-sm">
-          <CardContent className="p-4">
+        <Card className={cardClasses}>
+          <CardContent className={cardContentClasses}>
             <h3 className="text-sm font-medium text-gray-700 mb-3">Organization Details</h3>
             <Separator className="mb-4" />
             <OrganizationFields form={form} departments={departments} sites={sites} />
@@ -56,8 +59,8 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
       </TabsContent>
       
       <TabsContent value="employment" className="mt-0">
-        <Card className="border shadow-sm">
-          <CardContent className="p-4">
+        <Card className={cardClasses}>
+          <CardContent className={cardContentClasses}>
             <h3 className="text-sm font-medium text-gray-700 mb-3">Employment Status</h3>
             <Separator className="mb-4" />
             <EmploymentStatusFields form={form} />

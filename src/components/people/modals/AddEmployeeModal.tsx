@@ -9,6 +9,7 @@ import EmployeeFormFields from './EmployeeFormFields';
 import { Employee } from '@/hooks/use-employees';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AddEmployeeModalProps {
   open: boolean;
@@ -45,8 +46,8 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={isMobile ? "w-full p-4 max-w-full h-full rounded-none" : "sm:max-w-[600px] p-6"}>
-        <DialogHeader>
+      <DialogContent className={isMobile ? "w-full p-0 max-w-full h-[100dvh] max-h-[100dvh] rounded-none flex flex-col" : "sm:max-w-[600px] p-6"}>
+        <DialogHeader className={isMobile ? "p-4 shrink-0" : ""}>
           <div className="flex items-center">
             <Button 
               variant="ghost" 
@@ -69,13 +70,13 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form onSubmit={onSubmit} className={`space-y-4 ${isMobile ? "flex flex-col flex-grow overflow-hidden" : ""}`}>
             {error && (
               <div className="text-sm font-medium text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>
             )}
             
-            <Tabs defaultValue="personal" value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-3 mb-4">
+            <Tabs defaultValue="personal" value={activeTab} onValueChange={setActiveTab} className={`w-full ${isMobile ? "flex flex-col flex-grow overflow-hidden" : ""}`}>
+              <TabsList className={`grid grid-cols-3 ${isMobile ? "p-2 mx-4 sticky top-0 z-10" : "mb-4"}`}>
                 <TabsTrigger value="personal" className="text-sm">
                   <User className="mr-1 h-3.5 w-3.5" />
                   <span className={isMobile ? "hidden" : "inline"}>Personal Info</span>
@@ -93,16 +94,28 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 </TabsTrigger>
               </TabsList>
               
-              <EmployeeFormFields 
-                form={form} 
-                departments={departments} 
-                sites={sites}
-                activeTab={activeTab}
-                isMobile={isMobile}
-              />
+              {isMobile ? (
+                <ScrollArea className="flex-grow px-4 pb-4 overflow-y-auto">
+                  <EmployeeFormFields 
+                    form={form} 
+                    departments={departments} 
+                    sites={sites}
+                    activeTab={activeTab}
+                    isMobile={isMobile}
+                  />
+                </ScrollArea>
+              ) : (
+                <EmployeeFormFields 
+                  form={form} 
+                  departments={departments} 
+                  sites={sites}
+                  activeTab={activeTab}
+                  isMobile={isMobile}
+                />
+              )}
             </Tabs>
             
-            <DialogFooter className={`pt-4 ${isMobile ? "flex flex-col gap-2" : ""}`}>
+            <DialogFooter className={`pt-4 ${isMobile ? "flex flex-col gap-2 px-4 pb-4 mt-auto" : ""}`}>
               <Button 
                 type="button" 
                 variant="outline" 
