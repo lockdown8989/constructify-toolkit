@@ -16,7 +16,7 @@ export const formatDate = (dateString: string): string => {
 };
 
 /**
- * Format currency
+ * Format currency with proper symbol and formatting
  */
 export const formatCurrency = (amount: number | string, currency: string = 'GBP'): string => {
   if (typeof amount === 'string') {
@@ -28,15 +28,52 @@ export const formatCurrency = (amount: number | string, currency: string = 'GBP'
   const formatter = new Intl.NumberFormat('en-GB', {
     style: 'currency',
     currency: currency || 'GBP',
-    minimumFractionDigits: 2
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
   });
   
   return formatter.format(amount);
 };
 
 /**
- * Format number with commas
+ * Format number with commas for thousands
  */
 export const formatNumber = (num: number): string => {
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return new Intl.NumberFormat('en-GB').format(num);
+};
+
+/**
+ * Format percentage
+ */
+export const formatPercent = (value: number, decimals: number = 1): string => {
+  return new Intl.NumberFormat('en-GB', {
+    style: 'percent',
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  }).format(value / 100);
+};
+
+/**
+ * Format date range as a string
+ */
+export const formatDateRange = (startDate: string, endDate: string): string => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    return '-';
+  }
+  
+  const startStr = start.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short'
+  });
+  
+  const endStr = end.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+  
+  return `${startStr} - ${endStr}`;
 };

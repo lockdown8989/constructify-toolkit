@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { format, subMonths } from 'date-fns';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, Calendar, ArrowUpRight, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { formatCurrency, formatNumber } from '@/utils/format';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { DollarSign, Users, CheckCircle, Clock, UserMinus } from 'lucide-react';
 
 interface PayrollStatsGridProps {
   totalPayroll: number;
@@ -19,66 +20,59 @@ export const PayrollStatsGrid: React.FC<PayrollStatsGridProps> = ({
   pendingEmployees,
   absentEmployees,
 }) => {
-  const currentMonth = format(new Date(), 'MMMM yyyy');
-  const previousMonth = format(subMonths(new Date(), 1), 'MMMM yyyy');
+  const isMobile = useIsMobile();
+
+  const stats = [
+    {
+      title: "Total Payroll",
+      value: formatCurrency(totalPayroll),
+      icon: DollarSign,
+      color: "bg-green-50 text-green-600",
+      iconColor: "bg-green-100"
+    },
+    {
+      title: "Total Employees",
+      value: formatNumber(totalEmployees),
+      icon: Users,
+      color: "bg-blue-50 text-blue-600",
+      iconColor: "bg-blue-100"
+    },
+    {
+      title: "Paid",
+      value: formatNumber(paidEmployees),
+      icon: CheckCircle,
+      color: "bg-emerald-50 text-emerald-600",
+      iconColor: "bg-emerald-100"
+    },
+    {
+      title: "Pending",
+      value: formatNumber(pendingEmployees),
+      icon: Clock,
+      color: "bg-amber-50 text-amber-600",
+      iconColor: "bg-amber-100"
+    },
+    {
+      title: "Absent",
+      value: formatNumber(absentEmployees),
+      icon: UserMinus,
+      color: "bg-gray-50 text-gray-600",
+      iconColor: "bg-gray-200"
+    },
+  ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardDescription>Total Payslips</CardDescription>
-          <CardTitle className="text-2xl flex items-center">
-            <DollarSign className="h-5 w-5 mr-1 text-gray-500" />
-            ${totalPayroll.toLocaleString()}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-sm text-gray-500">
-            For {totalEmployees} employees
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="pb-2">
-          <CardDescription>Current Period</CardDescription>
-          <CardTitle className="text-2xl flex items-center">
-            <Calendar className="h-5 w-5 mr-1 text-gray-500" />
-            {currentMonth}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-sm text-gray-500 flex items-center">
-            <ArrowUpRight className="h-4 w-4 mr-1 text-green-500" />
-            5% increase from {previousMonth}
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="pb-2">
-          <CardDescription>Payment Status</CardDescription>
-          <CardTitle className="text-2xl flex items-center gap-2">
-            <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 mr-1 text-green-500" />
-              {paidEmployees}
+    <div className={`grid grid-cols-2 ${isMobile ? '' : 'md:grid-cols-5'} gap-4`}>
+      {stats.map((stat, index) => (
+        <Card key={index} className={`border shadow-sm ${stat.color} border-opacity-50`}>
+          <CardContent className="p-4 flex flex-col">
+            <div className={`w-10 h-10 rounded-lg ${stat.iconColor} flex items-center justify-center mb-3`}>
+              <stat.icon className="h-5 w-5" />
             </div>
-            <div className="text-sm text-gray-500">paid</div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 mr-1 text-yellow-500" />
-              <span className="text-sm">{pendingEmployees} pending</span>
-            </div>
-            <div className="flex items-center">
-              <XCircle className="h-4 w-4 mr-1 text-gray-500" />
-              <span className="text-sm">{absentEmployees} absent</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            <p className="text-sm font-medium mb-1">{stat.title}</p>
+            <p className="text-xl font-bold">{stat.value}</p>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 };

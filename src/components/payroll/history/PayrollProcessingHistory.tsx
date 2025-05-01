@@ -51,15 +51,15 @@ export const PayrollProcessingHistory = () => {
   
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Processing History</CardTitle>
+      <Card className="shadow-sm border-gray-200">
+        <CardHeader className="border-b bg-gray-50/50">
+          <CardTitle className="text-lg font-medium">Processing History</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-full" />
+        <CardContent className="p-4">
+          <div className="space-y-3">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
           </div>
         </CardContent>
       </Card>
@@ -68,74 +68,84 @@ export const PayrollProcessingHistory = () => {
   
   if (!history || history.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Processing History</CardTitle>
+      <Card className="shadow-sm border-gray-200">
+        <CardHeader className="border-b bg-gray-50/50">
+          <CardTitle className="text-lg font-medium">Processing History</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-center text-muted-foreground py-4">No payroll processing history found</p>
+        <CardContent className="p-4">
+          <p className="text-center text-muted-foreground py-8">No payroll processing history found</p>
         </CardContent>
       </Card>
     );
   }
   
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Recent Payroll Processing</CardTitle>
+    <Card className="shadow-sm border-gray-200">
+      <CardHeader className="border-b bg-gray-50/50">
+        <CardTitle className="text-lg font-medium">Recent Payroll Processing</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         {isMobile ? (
-          <div className="space-y-4">
+          <div className="divide-y">
             {history.map(item => (
               <div 
                 key={item.id}
-                className="border rounded-lg p-3 space-y-2"
+                className="p-4 hover:bg-gray-50/50 transition-colors"
               >
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center mb-1">
                   <span className="text-sm font-medium">
                     {formatDate(item.processing_date)}
                   </span>
-                  <Badge variant={item.fail_count > 0 ? "outline" : "default"}>
+                  <Badge variant={item.fail_count > 0 ? "outline" : "default"} className="ml-2">
                     {item.fail_count > 0 
-                      ? `${item.success_count}/${item.employee_count} Completed` 
-                      : 'Completed'}
+                      ? `${item.success_count}/${item.employee_count}` 
+                      : 'Complete'}
                   </Badge>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  <p>Processed by: {item.profiles?.first_name} {item.profiles?.last_name}</p>
-                  <p>Employees: {item.employee_count}</p>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div>
+                    <span className="font-medium text-foreground">
+                      {item.profiles?.first_name} {item.profiles?.last_name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs px-2 py-1 bg-gray-100 rounded-full">
+                      {item.employee_count} employees
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Processed By</TableHead>
-                <TableHead>Employees</TableHead>
-                <TableHead>Success</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {history.map(item => (
-                <TableRow key={item.id}>
-                  <TableCell>{formatDate(item.processing_date)}</TableCell>
-                  <TableCell>{item.profiles?.first_name} {item.profiles?.last_name}</TableCell>
-                  <TableCell>{item.employee_count}</TableCell>
-                  <TableCell>{item.success_count}/{item.employee_count}</TableCell>
-                  <TableCell>
-                    <Badge variant={item.fail_count > 0 ? "outline" : "default"}>
-                      {item.fail_count > 0 ? 'Partial' : 'Complete'}
-                    </Badge>
-                  </TableCell>
+          <div className="overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50/70 hover:bg-gray-50/70">
+                  <TableHead>Date</TableHead>
+                  <TableHead>Processed By</TableHead>
+                  <TableHead>Employees</TableHead>
+                  <TableHead>Success</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {history.map(item => (
+                  <TableRow key={item.id} className="hover:bg-gray-50/50">
+                    <TableCell className="font-medium">{formatDate(item.processing_date)}</TableCell>
+                    <TableCell>{item.profiles?.first_name} {item.profiles?.last_name}</TableCell>
+                    <TableCell>{item.employee_count}</TableCell>
+                    <TableCell>{item.success_count}/{item.employee_count}</TableCell>
+                    <TableCell>
+                      <Badge variant={item.fail_count > 0 ? "outline" : "default"}>
+                        {item.fail_count > 0 ? 'Partial' : 'Complete'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </CardContent>
     </Card>

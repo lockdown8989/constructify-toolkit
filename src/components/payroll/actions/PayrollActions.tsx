@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { Download, Loader2, FileCheck, FileText } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Loader2, FileDown, CreditCard, AlertCircle } from 'lucide-react';
 
 interface PayrollActionsProps {
   selectedCount: number;
@@ -20,57 +19,63 @@ export const PayrollActions: React.FC<PayrollActionsProps> = ({
   onProcessPayroll,
   onExportPayroll,
 }) => {
-  const isMobile = useIsMobile();
-  
   return (
-    <Card className="bg-gradient-to-br from-black to-gray-800 text-white">
-      <CardHeader className="pb-2">
-        <CardDescription className="text-gray-300">Quick Actions</CardDescription>
-        <CardTitle className="text-xl">Process Payslips</CardTitle>
+    <Card className="bg-white border shadow-sm">
+      <CardHeader className="border-b bg-gray-50/50 pb-4">
+        <CardTitle className="text-lg font-medium">Payroll Actions</CardTitle>
+        <CardDescription>Process payslips and export data</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="pt-6 space-y-4">
+        {selectedCount > 0 ? (
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium">Selected Employees:</span>
+            <span className="bg-black text-white text-sm font-medium px-2.5 py-1 rounded-full">
+              {selectedCount}
+            </span>
+          </div>
+        ) : (
+          <div className="bg-amber-50 text-amber-800 p-3 rounded-lg mb-4 flex items-start">
+            <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+            <p className="text-sm">Select employees to process their payslips.</p>
+          </div>
+        )}
+      </CardContent>
+      <CardFooter className="flex flex-col gap-3 border-t bg-gray-50/30 pt-4">
         <Button 
-          className="w-full bg-white text-black hover:bg-gray-100 font-medium flex items-center gap-2"
+          className="w-full flex items-center gap-2 bg-black hover:bg-black/90 text-white" 
+          disabled={selectedCount === 0 || isProcessing}
           onClick={onProcessPayroll}
-          disabled={isProcessing || selectedCount === 0}
         >
           {isProcessing ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Processing...
+              <span>Processing...</span>
             </>
           ) : (
             <>
-              <FileCheck className="h-4 w-4" />
-              Process Selected ({selectedCount})
+              <CreditCard className="h-4 w-4" />
+              <span>Process Payslips</span>
             </>
           )}
         </Button>
         <Button 
-          variant="outline" 
-          className="w-full border-white text-white hover:bg-white/10 flex items-center gap-2"
-          onClick={onExportPayroll}
+          variant="outline"
+          className="w-full flex items-center gap-2" 
           disabled={isExporting}
+          onClick={onExportPayroll}
         >
           {isExporting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Exporting...
+              <span>Exporting...</span>
             </>
           ) : (
             <>
-              <Download className="h-4 w-4" />
-              Export Payslips CSV
+              <FileDown className="h-4 w-4" />
+              <span>Export Payroll</span>
             </>
           )}
         </Button>
-      </CardContent>
-      <CardFooter className="pt-0">
-        <p className="text-xs text-gray-400">
-          {selectedCount === 0 
-            ? "Please select employees to process payslips" 
-            : `${selectedCount} employee${selectedCount !== 1 ? 's' : ''} selected for processing`}
-        </p>
       </CardFooter>
     </Card>
   );

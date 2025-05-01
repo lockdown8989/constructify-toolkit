@@ -11,6 +11,7 @@ import ErrorDisplay from '@/components/people/ErrorDisplay';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { FileText } from 'lucide-react';
 
 const PayrollPage = () => {
   const isMobile = useIsMobile();
@@ -51,10 +52,17 @@ const PayrollPage = () => {
 
   if (isLoading) {
     return (
-      <div className="container py-6">
-        <h1 className="text-2xl font-bold mb-6">Payslip Management</h1>
+      <div className="container py-6 animate-fade-in">
+        <header className="mb-6">
+          <div className="flex items-center gap-3 mb-2">
+            <FileText className="h-6 w-6" />
+            <h1 className="text-2xl font-bold">Payslip Management</h1>
+          </div>
+          <p className="text-muted-foreground">Process and manage employee payslips</p>
+        </header>
+        
         <Card className="p-6 mb-6">
-          <div className="space-y-4">
+          <div className="space-y-6">
             <Skeleton className="h-8 w-1/3" />
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Skeleton className="h-24 w-full" />
@@ -70,8 +78,13 @@ const PayrollPage = () => {
 
   if (error) {
     return (
-      <div className="container py-6">
-        <h1 className="text-2xl font-bold mb-6">Payslip Management</h1>
+      <div className="container py-6 animate-fade-in">
+        <header className="mb-6">
+          <div className="flex items-center gap-3 mb-2">
+            <FileText className="h-6 w-6" />
+            <h1 className="text-2xl font-bold">Payslip Management</h1>
+          </div>
+        </header>
         <ErrorDisplay 
           title="Error loading payroll data" 
           error={error as Error}
@@ -82,10 +95,16 @@ const PayrollPage = () => {
   }
 
   return (
-    <div className="container py-6">
-      <h1 className="text-2xl font-bold mb-6">Payslip Management</h1>
+    <div className="container py-6 animate-fade-in">
+      <header className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <FileText className="h-6 w-6" />
+          <h1 className="text-2xl font-bold">Payslip Management</h1>
+        </div>
+        <p className="text-muted-foreground">Process and manage employee payslips</p>
+      </header>
       
-      <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-4'} gap-6 mb-6`}>
+      <div className={`grid grid-cols-1 ${!isMobile ? 'md:grid-cols-4' : ''} gap-6 mb-6`}>
         <div className={isMobile ? '' : 'md:col-span-3'}>
           <PayrollStatsGrid
             totalPayroll={totalPayroll}
@@ -96,23 +115,27 @@ const PayrollPage = () => {
           />
         </div>
         
-        <PayrollActions
-          selectedCount={selectedEmployees.size}
-          isProcessing={isProcessing}
-          isExporting={isExporting}
-          onProcessPayroll={handleProcessPayroll}
-          onExportPayroll={handleExportPayroll}
-        />
+        <div>
+          <PayrollActions
+            selectedCount={selectedEmployees.size}
+            isProcessing={isProcessing}
+            isExporting={isExporting}
+            onProcessPayroll={handleProcessPayroll}
+            onExportPayroll={handleExportPayroll}
+          />
+        </div>
       </div>
       
-      <PayrollHistoryTabs
-        currentMonthEmployees={initialEmployees}
-        onSelectEmployee={handleSelectEmployee}
-        onUpdateStatus={(id, status) => {
-          // Update employee status logic would go here
-          console.log('Update status:', id, status);
-        }}
-      />
+      <div className="mt-8">
+        <PayrollHistoryTabs
+          currentMonthEmployees={initialEmployees}
+          onSelectEmployee={handleSelectEmployee}
+          onUpdateStatus={(id, status) => {
+            // Update employee status logic would go here
+            console.log('Update status:', id, status);
+          }}
+        />
+      </div>
     </div>
   );
 };
