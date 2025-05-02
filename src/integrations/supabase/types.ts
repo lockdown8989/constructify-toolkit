@@ -548,6 +548,7 @@ export type Database = {
           created_platform: string | null
           drag_disabled: boolean | null
           end_time: string
+          expiration_date: string | null
           id: string
           last_dragged_at: string | null
           last_dragged_by: string | null
@@ -568,6 +569,7 @@ export type Database = {
           created_platform?: string | null
           drag_disabled?: boolean | null
           end_time: string
+          expiration_date?: string | null
           id?: string
           last_dragged_at?: string | null
           last_dragged_by?: string | null
@@ -588,6 +590,7 @@ export type Database = {
           created_platform?: string | null
           drag_disabled?: boolean | null
           end_time?: string
+          expiration_date?: string | null
           id?: string
           last_dragged_at?: string | null
           last_dragged_by?: string | null

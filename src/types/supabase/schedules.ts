@@ -22,6 +22,7 @@ export interface OpenShiftType {
   drag_disabled?: boolean | null;
   last_dragged_at?: string | null;
   last_dragged_by?: string | null;
+  expiration_date?: string | null;
   
   // Virtual property aliases for compatibility with restaurant-schedule types
   startTime?: string;

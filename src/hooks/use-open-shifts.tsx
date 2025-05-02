@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { OpenShiftType } from '@/types/supabase/schedules';
 import { useShiftCancellation } from './use-shift-cancellation';
+import { isAfter, parseISO } from 'date-fns';
 
 export function useOpenShifts() {
   const { user } = useAuth();
@@ -17,7 +18,9 @@ export function useOpenShifts() {
       const { data, error } = await supabase
         .from('open_shifts')
         .select('*')
-        .order('position_order', { ascending: true, nullsFirst: false }) // Changed nullsLast to nullsFirst: false
+        // Only fetch non-expired shifts or shifts without expiration date
+        .or(`expiration_date.gt.${new Date().toISOString()},expiration_date.is.null`)
+        .order('position_order', { ascending: true, nullsFirst: false })
         .order('start_time', { ascending: true });
 
       if (error) throw error;
@@ -36,6 +39,20 @@ export function useOpenShifts() {
 
   const assignShift = useMutation({
     mutationFn: async ({ openShiftId, employeeId }: { openShiftId: string, employeeId: string }) => {
+      // Get the open shift details first to check expiration
+      const { data: openShift, error: shiftError } = await supabase
+        .from('open_shifts')
+        .select('*')
+        .eq('id', openShiftId)
+        .single();
+
+      if (shiftError) throw shiftError;
+      
+      // Check if the shift has expired
+      if (openShift.expiration_date && isAfter(new Date(), parseISO(openShift.expiration_date))) {
+        throw new Error("This shift has expired and is no longer available.");
+      }
+
       // First, create the assignment record
       const { data: assignmentData, error: assignmentError } = await supabase
         .from('open_shift_assignments')
@@ -49,15 +66,6 @@ export function useOpenShifts() {
         .single();
 
       if (assignmentError) throw assignmentError;
-
-      // Get the open shift details
-      const { data: openShift, error: shiftError } = await supabase
-        .from('open_shifts')
-        .select('*')
-        .eq('id', openShiftId)
-        .single();
-
-      if (shiftError) throw shiftError;
 
       // Create a schedule entry for the assigned shift
       const { data: scheduleData, error: scheduleError } = await supabase
@@ -109,7 +117,7 @@ export function useOpenShifts() {
     },
     onError: (error) => {
       console.error('Error assigning shift:', error);
-      toast.error('Failed to assign shift');
+      toast.error('Failed to assign shift: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   });
 
