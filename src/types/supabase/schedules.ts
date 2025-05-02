@@ -1,4 +1,3 @@
-
 export interface OpenShiftType {
   id: string;
   title: string;

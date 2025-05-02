@@ -27,6 +27,15 @@ export const usePayroll = (employees: Employee[]) => {
       return newSet;
     });
   };
+  
+  const handleSelectAll = () => {
+    const allIds = employees.map(emp => emp.id);
+    setSelectedEmployees(new Set(allIds));
+  };
+  
+  const handleClearAll = () => {
+    setSelectedEmployees(new Set());
+  };
 
   const handleProcessPayroll = async () => {
     if (selectedEmployees.size === 0) {
@@ -113,6 +122,8 @@ export const usePayroll = (employees: Employee[]) => {
     isProcessing,
     isExporting,
     handleSelectEmployee,
+    handleSelectAll,
+    handleClearAll,
     handleProcessPayroll,
     handleExportPayroll,
   };

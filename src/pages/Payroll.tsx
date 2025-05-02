@@ -37,6 +37,8 @@ const PayrollPage = () => {
     isProcessing,
     isExporting,
     handleSelectEmployee,
+    handleSelectAll,
+    handleClearAll,
     handleProcessPayroll,
     handleExportPayroll,
   } = usePayroll(initialEmployees);
@@ -122,6 +124,11 @@ const PayrollPage = () => {
             isExporting={isExporting}
             onProcessPayroll={handleProcessPayroll}
             onExportPayroll={handleExportPayroll}
+            employees={initialEmployees}
+            selectedEmployees={selectedEmployees}
+            onSelectEmployee={handleSelectEmployee}
+            onSelectAll={handleSelectAll}
+            onClearAll={handleClearAll}
           />
         </div>
       </div>

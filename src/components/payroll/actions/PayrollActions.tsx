@@ -2,7 +2,9 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, FileDown, CreditCard, AlertCircle } from 'lucide-react';
+import { Loader2, FileDown, CreditCard, AlertCircle, Check } from 'lucide-react';
+import { Employee } from '@/components/dashboard/salary-table/types';
+import { EmployeeSelector } from './EmployeeSelector';
 
 interface PayrollActionsProps {
   selectedCount: number;
@@ -10,6 +12,11 @@ interface PayrollActionsProps {
   isExporting: boolean;
   onProcessPayroll: () => void;
   onExportPayroll: () => void;
+  employees: Employee[];
+  selectedEmployees: Set<string>;
+  onSelectEmployee: (id: string) => void;
+  onSelectAll: () => void;
+  onClearAll: () => void;
 }
 
 export const PayrollActions: React.FC<PayrollActionsProps> = ({
@@ -18,6 +25,11 @@ export const PayrollActions: React.FC<PayrollActionsProps> = ({
   isExporting,
   onProcessPayroll,
   onExportPayroll,
+  employees,
+  selectedEmployees,
+  onSelectEmployee,
+  onSelectAll,
+  onClearAll,
 }) => {
   return (
     <Card className="bg-white border shadow-sm">
@@ -39,6 +51,14 @@ export const PayrollActions: React.FC<PayrollActionsProps> = ({
             <p className="text-sm">Select employees to process their payslips.</p>
           </div>
         )}
+        
+        <EmployeeSelector 
+          employees={employees}
+          selectedEmployees={selectedEmployees}
+          onSelectEmployee={onSelectEmployee}
+          onSelectAll={onSelectAll}
+          onClearAll={onClearAll}
+        />
       </CardContent>
       <CardFooter className="flex flex-col gap-3 border-t bg-gray-50/30 pt-4">
         <Button 
