@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Check, FileDown, AlertCircle } from 'lucide-react';
 import { Employee } from '@/components/dashboard/salary-table/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -57,15 +56,19 @@ export const EmployeeSelector: React.FC<EmployeeSelectorProps> = ({
                   className="text-sm flex items-center cursor-pointer"
                 >
                   <div className="w-6 h-6 rounded-full overflow-hidden mr-2">
-                    {employee.avatar && (
+                    {employee.avatar ? (
                       <img 
                         src={employee.avatar} 
                         alt={employee.name}
                         className="w-full h-full object-cover"
                       />
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center text-xs">
+                        {employee.name.charAt(0)}
+                      </div>
                     )}
                   </div>
-                  {employee.name}
+                  <span>{employee.name}</span>
                 </label>
               </div>
             ))}

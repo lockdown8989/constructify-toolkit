@@ -24,15 +24,15 @@ export const exportPayrollData = async (currency: string = 'GBP'): Promise<void>
         "Employee Name": employee?.name || 'Unknown',
         "Job Title": employee?.job_title || 'Unknown',
         "Department": employee?.department || 'Unknown',
-        "Base Pay": formatCurrency(record.base_pay, currency),
-        "Working Hours": record.working_hours,
-        "Overtime Hours": record.overtime_hours,
-        "Overtime Pay": formatCurrency(record.overtime_pay, currency),
-        "Deductions": formatCurrency(record.deductions, currency),
+        "Base Pay": formatCurrency(record.base_pay || 0, currency),
+        "Working Hours": record.working_hours || 0,
+        "Overtime Hours": record.overtime_hours || 0,
+        "Overtime Pay": formatCurrency(record.overtime_pay || 0, currency),
+        "Deductions": formatCurrency(record.deductions || 0, currency),
         "Bonus": formatCurrency(record.bonus || 0, currency),
-        "Net Salary": formatCurrency(record.salary_paid, currency),
-        "Payment Date": record.payment_date,
-        "Status": record.payment_status
+        "Net Salary": formatCurrency(record.salary_paid || 0, currency),
+        "Payment Date": record.payment_date || new Date().toISOString().split('T')[0],
+        "Status": record.payment_status || 'Unknown'
       };
     });
     
@@ -61,6 +61,7 @@ export const exportPayrollData = async (currency: string = 'GBP'): Promise<void>
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url); // Clean up by revoking the object URL
     }
     
     return;

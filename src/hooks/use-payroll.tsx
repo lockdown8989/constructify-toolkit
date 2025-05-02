@@ -54,10 +54,14 @@ export const usePayroll = (employees: Employee[]) => {
       let failCount = 0;
       const processedEmployeeIds = Array.from(selectedEmployees);
       
-      for (const employeeId of selectedEmployees) {
+      for (const employeeId of processedEmployeeIds) {
         try {
           const employee = employees.find(emp => emp.id === employeeId);
-          if (!employee) continue;
+          if (!employee) {
+            failCount++;
+            console.error(`Employee with ID ${employeeId} not found`);
+            continue;
+          }
 
           await processEmployeePayroll(employeeId, employee, currency);
           successCount++;
@@ -77,8 +81,6 @@ export const usePayroll = (employees: Employee[]) => {
         );
       }
       
-      setSelectedEmployees(new Set());
-      
       if (successCount > 0) {
         toast({
           title: failCount === 0 ? "Payslips processed successfully" : "Payslips partially processed",
@@ -92,8 +94,17 @@ export const usePayroll = (employees: Employee[]) => {
           variant: "destructive"
         });
       }
+    } catch (error) {
+      console.error("Unexpected error during payroll processing:", error);
+      toast({
+        title: "Processing failed",
+        description: "An unexpected error occurred. Please try again later.",
+        variant: "destructive"
+      });
     } finally {
       setIsProcessing(false);
+      // Clear selection after processing regardless of success/failure
+      setSelectedEmployees(new Set());
     }
   };
 
