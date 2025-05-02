@@ -56,6 +56,7 @@ export interface OpenShift {
   drag_disabled?: boolean | null;
   last_dragged_at?: string | null;
   last_dragged_by?: string | null;
+  expiration_date?: string | null;
 }
 
 export interface EmployeeShiftStats {
