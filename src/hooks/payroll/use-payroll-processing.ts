@@ -38,6 +38,7 @@ export const processEmployeePayroll = async (
     const insuranceDeduction = baseSalary * insuranceRate;
     
     const paymentDate = new Date().toISOString().split('T')[0];
+    const processingDate = new Date().toISOString();
     
     // Add record to payroll table
     const { data: payrollData, error: payrollError } = await supabase
@@ -51,8 +52,8 @@ export const processEmployeePayroll = async (
         deductions: taxDeduction + insuranceDeduction,
         overtime_pay: overtimeHours * (baseSalary / 160) * 1.5, // Overtime rate of 1.5x
         payment_status: 'Paid',
-        payment_date: paymentDate,
-        processing_date: new Date().toISOString()
+        payment_date: paymentDate
+        // Removed processing_date since it doesn't exist in the table
       })
       .select()
       .single();
