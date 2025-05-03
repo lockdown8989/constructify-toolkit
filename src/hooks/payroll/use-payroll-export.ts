@@ -13,8 +13,14 @@ export const exportPayrollData = async (currency: string = 'GBP'): Promise<void>
       .select('*, employees(name, title, department)')
       .order('payment_date', { ascending: false });
       
-    if (error) throw error;
-    if (!data || data.length === 0) throw new Error('No payroll data available to export');
+    if (error) {
+      console.error('Error fetching payroll data:', error);
+      throw new Error(`Failed to fetch payroll data: ${error.message}`);
+    }
+    
+    if (!data || data.length === 0) {
+      throw new Error('No payroll data available to export');
+    }
     
     // Format data for CSV
     const csvData = data.map(record => {
@@ -57,6 +63,7 @@ export const exportPayrollData = async (currency: string = 'GBP'): Promise<void>
     const date = new Date().toISOString().split('T')[0];
     const filename = `payroll_export_${date}.csv`;
     
+    // Create download link
     const link = document.createElement('a');
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
