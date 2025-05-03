@@ -10,7 +10,15 @@ export const exportPayrollData = async (currency: string = 'GBP'): Promise<void>
     // Fetch payroll data joined with employee data
     const { data, error } = await supabase
       .from('payroll')
-      .select('*, employees(name, title, department)')
+      .select(`
+        *, 
+        employees(
+          id,
+          name,
+          job_title,
+          department
+        )
+      `)
       .order('payment_date', { ascending: false });
       
     if (error) {
@@ -27,13 +35,13 @@ export const exportPayrollData = async (currency: string = 'GBP'): Promise<void>
       // Use safe type assertion for employees data
       const employee = record.employees as { 
         name?: string, 
-        title?: string, 
+        job_title?: string, 
         department?: string 
       } | null;
       
       return {
         "Employee Name": employee?.name || 'Unknown',
-        "Job Title": employee?.title || 'Unknown',
+        "Job Title": employee?.job_title || 'Unknown',
         "Department": employee?.department || 'Unknown',
         "Base Pay": formatCurrency(record.base_pay || 0, currency),
         "Working Hours": record.working_hours || 0,

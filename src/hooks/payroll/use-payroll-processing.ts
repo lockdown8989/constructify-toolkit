@@ -12,7 +12,7 @@ export const processEmployeePayroll = async (
 ) => {
   try {
     // Get employee attendance data for accurate calculation
-    const { workingHours, overtimeHours, totalPay } = await getEmployeeAttendance(employeeId);
+    const { workingHours, overtimeHours } = await getEmployeeAttendance(employeeId);
     
     // Extract numeric salary value
     let baseSalary: number;
@@ -67,7 +67,7 @@ export const processEmployeePayroll = async (
         employeeId, 
         {
           name: employee.name,
-          title: employee.title || 'Employee', // Use title property from Employee type
+          title: employee.title || 'Employee',
           salary: baseSalary.toString(),
           department: employee.department || 'General',
           paymentDate,

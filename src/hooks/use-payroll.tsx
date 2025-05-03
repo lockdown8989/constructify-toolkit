@@ -124,6 +124,8 @@ export const usePayroll = (employees: Employee[]) => {
       if (err instanceof Error) {
         if (err.message === 'No payroll data available to export') {
           errorMessage = "No payroll data is available to export. Process some payrolls first.";
+        } else if (err.message.includes('42703')) {
+          errorMessage = "Database column error. Please contact system administrator.";
         } else if (err.message.includes('permission denied')) {
           errorMessage = "You don't have permission to export payroll data.";
         } else if (err.message.includes('network')) {
