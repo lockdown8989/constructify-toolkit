@@ -10,7 +10,7 @@ export const exportPayrollData = async (currency: string = 'GBP'): Promise<void>
     // Fetch payroll data joined with employee data
     const { data, error } = await supabase
       .from('payroll')
-      .select('*, employees(name, job_title, department)')
+      .select('*, employees(name, title, department)')
       .order('payment_date', { ascending: false });
       
     if (error) throw error;
@@ -18,11 +18,16 @@ export const exportPayrollData = async (currency: string = 'GBP'): Promise<void>
     
     // Format data for CSV
     const csvData = data.map(record => {
-      const employee = record.employees as { name: string, job_title: string, department: string } | null;
+      // Use safe type assertion for employees data
+      const employee = record.employees as { 
+        name?: string, 
+        title?: string, 
+        department?: string 
+      } | null;
       
       return {
         "Employee Name": employee?.name || 'Unknown',
-        "Job Title": employee?.job_title || 'Unknown',
+        "Job Title": employee?.title || 'Unknown',
         "Department": employee?.department || 'Unknown',
         "Base Pay": formatCurrency(record.base_pay || 0, currency),
         "Working Hours": record.working_hours || 0,
@@ -62,6 +67,8 @@ export const exportPayrollData = async (currency: string = 'GBP'): Promise<void>
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url); // Clean up by revoking the object URL
+    } else {
+      throw new Error('Browser does not support downloading files programmatically');
     }
     
     return;

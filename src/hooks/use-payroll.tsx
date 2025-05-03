@@ -114,13 +114,29 @@ export const usePayroll = (employees: Employee[]) => {
       await exportPayrollData(currency);
       toast({
         title: "Export successful",
-        description: `Payslip data has been exported to CSV in ${currency}.`,
+        description: `Payroll data has been exported to CSV in ${currency}.`,
       });
     } catch (err) {
-      console.error("Error exporting payslips:", err);
+      console.error("Error exporting payrolls:", err);
+      // Provide more specific error message based on the error
+      let errorMessage = "An unexpected error occurred while exporting payroll data.";
+      
+      if (err instanceof Error) {
+        if (err.message === 'No payroll data available to export') {
+          errorMessage = "No payroll data is available to export. Process some payrolls first.";
+        } else if (err.message.includes('permission denied')) {
+          errorMessage = "You don't have permission to export payroll data.";
+        } else if (err.message.includes('network')) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else if (err.message) {
+          // Use the actual error message if it's informative
+          errorMessage = `Export failed: ${err.message}`;
+        }
+      }
+      
       toast({
         title: "Export failed",
-        description: "An unexpected error occurred while exporting payslip data.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
