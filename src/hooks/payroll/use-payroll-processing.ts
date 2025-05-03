@@ -67,9 +67,9 @@ export const processEmployeePayroll = async (
         employeeId, 
         {
           name: employee.name,
-          title: employee.title || employee.job_title || 'Employee', // Support both title and job_title
+          title: employee.title || 'Employee', // Use title property from Employee type
           salary: baseSalary.toString(),
-          department: employee.department,
+          department: employee.department || 'General',
           paymentDate,
           currency
         },
