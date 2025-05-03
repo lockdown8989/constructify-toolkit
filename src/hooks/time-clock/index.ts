@@ -39,7 +39,7 @@ export const useTimeClock = () => {
     handleBreakEnd
   } = useTimeClockActions(setStatus, setCurrentRecord);
 
-  // Handle real-time sync of attendance data
+  // Define refresh function for attendance sync
   const refreshAttendanceData = async () => {
     try {
       if (!currentRecord) return;
@@ -79,6 +79,7 @@ export const useTimeClock = () => {
     }
   };
 
+  // Handle real-time sync of attendance data
   useAttendanceSync(refreshAttendanceData);
 
   // Update elapsed time based on current status

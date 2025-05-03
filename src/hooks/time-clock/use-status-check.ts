@@ -31,7 +31,7 @@ export const useStatusCheck = (
           .eq('employee_id', employeeId)
           .eq('date', today)
           .eq('active_session', true)
-          .order('created_at', { ascending: false })
+          .order('updated_at', { ascending: false })
           .limit(1);
 
         if (error) {
@@ -55,6 +55,8 @@ export const useStatusCheck = (
           // Determine status from record
           if (!record.check_out) {
             setStatus(record.break_start ? 'on-break' : 'clocked-in');
+            
+            console.log('Setting status to:', record.break_start ? 'on-break' : 'clocked-in');
             
             // Notify user that their clock session was restored
             toast({

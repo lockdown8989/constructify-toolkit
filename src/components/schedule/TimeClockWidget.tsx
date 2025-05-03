@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Clock, Coffee, StopCircle, PauseCircle, Timer } from 'lucide-react';
@@ -17,7 +17,9 @@ const TimeClockWidget = () => {
     breakTime
   } = useTimeClock();
 
-  console.log('TimeClockWidget rendering. Status:', status);
+  useEffect(() => {
+    console.log('TimeClockWidget rendered with status:', status);
+  }, [status]);
 
   return (
     <Card>
@@ -89,9 +91,21 @@ const TimeClockWidget = () => {
         </div>
         
         <div className="text-sm text-center text-gray-500">
-          {status === 'clocked-in' && 'You are currently clocked in'}
-          {status === 'on-break' && 'You are currently on break'}
-          {status === 'clocked-out' && 'You are currently clocked out'}
+          {status === 'clocked-in' && (
+            <div className="p-2 bg-green-50 text-green-700 rounded-full font-medium">
+              Currently Clocked In
+            </div>
+          )}
+          {status === 'on-break' && (
+            <div className="p-2 bg-blue-50 text-blue-700 rounded-full font-medium">
+              Currently On Break
+            </div>
+          )}
+          {status === 'clocked-out' && (
+            <div className="p-2 bg-gray-100 text-gray-600 rounded-full">
+              Clocked Out
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -29,22 +29,21 @@ export const useAttendanceSync = (onSync: SyncCallback) => {
         (payload) => {
           console.log('Attendance record changed:', payload);
           
-          // If a new record was inserted or a record was updated
-          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-            // Perform sync callback to refresh attendance data
-            onSync();
-            
-            // Show toast for certain updates
-            if (payload.eventType === 'UPDATE' && payload.new?.status === 'Auto-logout') {
-              toast({
-                title: "Auto Clock-Out Detected",
-                description: "You were automatically clocked out from another device or session.",
-              });
-            }
+          // Call the sync callback whenever an attendance record changes
+          onSync();
+          
+          // Show toast for certain updates
+          if (payload.eventType === 'UPDATE' && payload.new?.status === 'Auto-logout') {
+            toast({
+              title: "Auto Clock-Out Detected",
+              description: "You were automatically clocked out from another device or session.",
+            });
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Attendance channel subscription status:', status);
+      });
     
     // Set online presence for the employee
     const presenceChannel = supabase.channel('online_employees');
