@@ -20,6 +20,7 @@ import AttendanceReport from '@/components/dashboard/AttendanceReport';
 import HiringStatistics from '@/components/dashboard/HiringStatistics';
 import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
+import CurrentDateTime from '@/components/dashboard/CurrentDateTime';
 
 const Dashboard = () => {
   const { isManager, user } = useAuth();
@@ -110,11 +111,18 @@ const Dashboard = () => {
   return (
     <div className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
       <div className="max-w-[1800px] mx-auto">
-        <h1 className="text-2xl md:text-4xl font-bold mb-2">Hello {firstName}</h1>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+          <h1 className="text-2xl md:text-4xl font-bold">Hello {firstName}</h1>
+          
+          {/* Add current date/time for managers */}
+          {isManager && (
+            <CurrentDateTime className="md:w-auto w-full mt-4 md:mt-0" />
+          )}
+        </div>
         
         {/* Progress Bars - Only show for managers */}
         {isManager && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6">
             <ProgressBar label="Interviews" value={Math.round(interviewStats.interviews) || 0} color="black" />
             <ProgressBar label="Hired" value={Math.round(interviewStats.hired) || 0} color="yellow" />
             <ProgressBar label="Project time" value={interviewStats.projectTime} color="gray" />
