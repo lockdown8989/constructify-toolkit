@@ -1,52 +1,84 @@
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { MapPin } from "lucide-react";
+import { MapPin, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/hooks/use-language";
-import { useToast } from "@/hooks/use-toast";
+import { getCountryOptions } from "@/utils/country-utils";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 interface CountryInputProps {
   country: string;
   isLocating: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onDetect: () => void;
+  onDetect: () => Promise<void>;
 }
 
-export const CountryInput = ({ country, isLocating, onChange, onDetect }: CountryInputProps) => {
+export const CountryInput = ({
+  country,
+  isLocating,
+  onChange,
+  onDetect
+}: CountryInputProps) => {
   const { t } = useLanguage();
-  const { toast } = useToast();
+  const { user } = useAuth();
+  const countryOptions = getCountryOptions();
   
-  const handleDetect = () => {
-    toast({
-      title: "Detecting location",
-      description: "Attempting to detect your location...",
-    });
-    onDetect();
+  const handleCountryChange = (value: string) => {
+    const event = {
+      target: {
+        name: 'country',
+        value
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    onChange(event);
   };
   
   return (
-    <div className="space-y-2">
-      <div className="flex gap-2">
-        <Input 
-          id="country"
-          name="country"
-          value={country}
-          onChange={onChange}
-          placeholder="Enter your country"
-          className="flex-1 rounded-xl border-input bg-background h-12"
-        />
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={handleDetect}
-          disabled={isLocating}
-          className="whitespace-nowrap rounded-xl border-input h-12"
-          size="sm"
-        >
-          <MapPin className="w-4 h-4 mr-2" />
-          {isLocating ? t('detecting') : t('autoDetect')}
-        </Button>
+    <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex-1">
+        <Select value={country} onValueChange={handleCountryChange}>
+          <SelectTrigger className="h-12 rounded-xl bg-background">
+            <SelectValue placeholder="Select country" />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl border shadow-lg">
+            {countryOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value} className="cursor-pointer">
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+      
+      {user && (
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isLocating}
+          className="h-12 shrink-0 rounded-xl bg-background"
+          onClick={onDetect}
+        >
+          {isLocating ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {t('detecting')}
+            </>
+          ) : (
+            <>
+              <MapPin className="mr-2 h-4 w-4" />
+              {t('autoDetect')}
+            </>
+          )}
+        </Button>
+      )}
     </div>
   );
 };

@@ -1,115 +1,105 @@
 
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.14.0';
-import { corsHeaders } from '../_shared/cors.ts';
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { corsHeaders } from "../_shared/cors.ts";
 
-console.log("Document upload notification function started");
+console.log("Hello from notify-on-document-upload!");
 
 serve(async (req) => {
-  // Handle CORS
+  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    console.log('CORS preflight request');
+    return new Response(null, {
+      headers: corsHeaders,
+      status: 204,
+    });
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    );
-
-    // Get the request body
     const { document_id, employee_id } = await req.json();
+    console.log(`Received notification request for document: ${document_id} and employee: ${employee_id}`);
 
-    if (!document_id || !employee_id) {
-      throw new Error('Missing document_id or employee_id');
+    const supabaseAdminUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    
+    if (!supabaseAdminUrl || !supabaseServiceKey) {
+      throw new Error('Supabase admin URL or service key not found');
     }
 
-    // Get document details
-    const { data: document, error: documentError } = await supabaseClient
-      .from('documents')
-      .select('*')
-      .eq('id', document_id)
-      .single();
-
-    if (documentError) {
-      throw documentError;
-    }
-
-    // Get employee details including the uploader's information
-    const { data: employee, error: employeeError } = await supabaseClient
-      .from('employees')
-      .select('user_id, name, manager_id')
-      .eq('id', employee_id)
-      .single();
-
-    if (employeeError) {
-      throw employeeError;
-    }
-
-    if (!employee.user_id) {
-      throw new Error('Employee has no user_id');
-    }
-
-    // Format document type for display
-    const documentType = document.document_type;
-    const formattedDocType = documentType.charAt(0).toUpperCase() + documentType.slice(1);
-
-    // Get uploader's name if available
-    let uploaderName = "A manager";
-    if (document.uploaded_by) {
-      const { data: uploader } = await supabaseClient
-        .from('employees')
-        .select('name')
-        .eq('user_id', document.uploaded_by)
-        .single();
-      
-      if (uploader) {
-        uploaderName = uploader.name;
+    // Get employee information to retrieve user_id
+    const employeeResponse = await fetch(`${supabaseAdminUrl}/rest/v1/employees?id=eq.${employee_id}&select=user_id`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseServiceKey}`,
+        "apikey": supabaseServiceKey
       }
+    });
+
+    const employeeData = await employeeResponse.json();
+    
+    if (!employeeData || employeeData.length === 0) {
+      throw new Error(`Employee with ID ${employee_id} not found`);
     }
-
-    // Send notification to the employee
-    const { error: notificationError } = await supabaseClient
-      .from('notifications')
-      .insert({
-        user_id: employee.user_id,
-        title: `New ${formattedDocType} Available`,
-        message: `${uploaderName} has uploaded a new ${documentType.toLowerCase()} document (${document.name}) to your profile.`,
-        type: 'info',
-        related_entity: 'documents',
-        related_id: document.id
-      });
-
-    if (notificationError) {
-      throw notificationError;
+    
+    const user_id = employeeData[0].user_id;
+    
+    if (!user_id) {
+      throw new Error(`No user_id found for employee ${employee_id}`);
     }
-
-    return new Response(
-      JSON.stringify({ success: true }),
-      {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-        status: 200,
+    
+    // Get document information
+    const documentResponse = await fetch(`${supabaseAdminUrl}/rest/v1/documents?id=eq.${document_id}&select=name,document_type`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseServiceKey}`,
+        "apikey": supabaseServiceKey
       }
-    );
+    });
+    
+    const documentData = await documentResponse.json();
+    
+    if (!documentData || documentData.length === 0) {
+      throw new Error(`Document with ID ${document_id} not found`);
+    }
+    
+    const docName = documentData[0].name;
+    const docType = documentData[0].document_type;
+    
+    // Create notification
+    const notificationData = {
+      user_id,
+      title: 'New Document Uploaded',
+      message: `A new ${docType} document named "${docName}" has been uploaded to your profile.`,
+      type: 'info',
+      related_entity: 'documents',
+      related_id: document_id
+    };
+    
+    const notificationResponse = await fetch(`${supabaseAdminUrl}/rest/v1/notifications`, {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseServiceKey}`,
+        "apikey": supabaseServiceKey
+      },
+      body: JSON.stringify(notificationData)
+    });
+    
+    if (!notificationResponse.ok) {
+      const error = await notificationResponse.json();
+      throw new Error(`Failed to create notification: ${JSON.stringify(error)}`);
+    }
+    
+    console.log('Document notification sent successfully');
+    
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
   } catch (error) {
-    console.error('Error in document notification function:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-        status: 500,
-      }
-    );
+    console.error('Error in notification webhook:', error.message);
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
   }
 });
