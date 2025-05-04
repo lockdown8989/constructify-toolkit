@@ -1,9 +1,7 @@
 
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { formatFileSize } from '@/utils/file-utils';
+import { useEmployeeDocuments, useUploadDocument, useDeleteDocument } from '@/hooks/use-documents';
 import { Plus, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,16 +42,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-interface Document {
-  id: string;
-  employee_id: string;
-  document_type: string;
-  name: string;
-  path: string;
-  url: string;
-  size: string;
-}
-
 interface DocumentsSectionProps {
   employeeId: string;
 }
@@ -62,132 +50,23 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState('resume');
-  const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  const { data: documents, refetch } = useQuery({
-    queryKey: ['employee-documents', employeeId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('employee_id', employeeId);
-        
-      if (error) throw error;
-      return data as Document[];
-    }
-  });
-  
-  const deleteMutation = useMutation({
-    mutationFn: async (documentId: string) => {
-      const { data: document, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('id', documentId)
-        .single();
-        
-      if (error) throw error;
-      
-      if (!document) {
-        throw new Error('Document not found');
-      }
-      
-      // Delete from storage bucket
-      const { error: storageError } = await supabase.storage
-        .from('documents')
-        .remove([document.path]);
-        
-      if (storageError) throw storageError;
-      
-      // Delete from database
-      const { error: dbError } = await supabase
-        .from('documents')
-        .delete()
-        .eq('id', documentId);
-        
-      if (dbError) throw dbError;
-    },
-    onSuccess: () => {
-      refetch();
-      toast({
-        title: "Document deleted",
-        description: "The document has been successfully deleted.",
-      });
-    },
-    onError: (error: any) => {
-      console.error('Error deleting document:', error);
-      toast({
-        title: "Delete failed",
-        description: `Failed to delete document: ${error instanceof Error ? error.message : String(error)}`,
-        variant: "destructive"
-      });
-    },
-  });
+  // Use the custom hooks
+  const { data: documents, isLoading } = useEmployeeDocuments(employeeId);
+  const uploadDocument = useUploadDocument();
+  const deleteDocument = useDeleteDocument();
   
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     setSelectedFile(file || null);
-  };
-  
-  const uploadDocument = async (data: { file: File; employeeId: string; documentType: string }) => {
-    if (!data.file) return;
-
-    setIsUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', data.file);
-      
-      // Upload to storage bucket
-      const filePath = `employees/${data.employeeId}/${data.documentType}/${data.file.name}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, data.file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-        
-      if (uploadError) throw uploadError;
-      
-      // Get the public URL
-      const { data: urlData } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-        
-      // Add record to documents table
-      const { error: dbError } = await supabase
-        .from('documents')
-        .insert({
-          employee_id: data.employeeId,
-          document_type: data.documentType,
-          name: data.file.name,
-          path: filePath,
-          url: urlData.publicUrl,
-          size: formatFileSize(data.file.size)
-        });
-        
-      if (dbError) throw dbError;
-      
-      refetch();
-      toast({
-        title: "Document uploaded successfully",
-        description: `${data.file.name} has been uploaded.`,
-      });
-      
-    } catch (error) {
-      console.error('Error uploading document:', error);
-      toast({
-        title: "Upload failed",
-        description: `Failed to upload document: ${error instanceof Error ? error.message : String(error)}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsUploading(false);
-    }
+    console.log("File selected:", file?.name);
   };
   
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    console.log("Submit clicked", { selectedFile, documentType, employeeId });
+    
     if (!selectedFile) {
       toast({
         title: "No file selected",
@@ -197,16 +76,43 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
       return;
     }
     
-    await uploadDocument({
-      file: selectedFile,
-      employeeId: employeeId,
-      documentType: documentType
-    });
-    
-    setSelectedFile(null);
-    const input = document.getElementById('document-upload') as HTMLInputElement;
-    if (input) {
-      input.value = '';
+    try {
+      console.log("Starting upload...");
+      setIsUploading(true);
+      
+      await uploadDocument.mutateAsync({
+        file: selectedFile,
+        employeeId,
+        documentType
+      });
+      
+      setSelectedFile(null);
+      // Clear file input
+      const input = document.getElementById('document-upload') as HTMLInputElement;
+      if (input) {
+        input.value = '';
+      }
+    } catch (error) {
+      console.error("Error during upload:", error);
+      toast({
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  const handleDeleteDocument = async (documentId: string, path?: string) => {
+    try {
+      await deleteDocument.mutateAsync({ 
+        id: documentId, 
+        path, 
+        employeeId 
+      });
+    } catch (error) {
+      console.error("Error deleting document:", error);
     }
   };
   
@@ -220,7 +126,10 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="document-type">Document Type</Label>
-            <Select onValueChange={setDocumentType}>
+            <Select 
+              value={documentType} 
+              onValueChange={setDocumentType}
+            >
               <SelectTrigger id="document-type">
                 <SelectValue placeholder="Select a document type" />
               </SelectTrigger>
@@ -254,7 +163,11 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
           </Button>
         </form>
         
-        {documents && documents.length > 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          </div>
+        ) : documents && documents.length > 0 ? (
           <div className="mt-6">
             <h4 className="text-sm font-medium text-gray-500">Uploaded Documents</h4>
             <Table>
@@ -280,7 +193,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
                     <TableCell className="text-right">
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" disabled={deleteMutation.isPending}>
+                          <Button variant="ghost" size="sm" disabled={deleteDocument.isPending}>
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
                           </Button>
@@ -296,10 +209,10 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction 
-                              onClick={() => deleteMutation.mutate(document.id)}
-                              disabled={deleteMutation.isPending}
+                              onClick={() => handleDeleteDocument(document.id, document.path)}
+                              disabled={deleteDocument.isPending}
                             >
-                              {deleteMutation.isPending ? (
+                              {deleteDocument.isPending ? (
                                 <>
                                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                   Deleting...
