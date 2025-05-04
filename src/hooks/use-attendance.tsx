@@ -1,9 +1,10 @@
+
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { AttendanceRecord } from '@/types/supabase';
 import { useEffect } from 'react';
-import { startOfMonth, endOfMonth, format } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfDay, endOfDay } from 'date-fns';
 
 export type AttendanceData = {
   present: number;
@@ -19,6 +20,7 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  // Set up real-time subscription for attendance changes
   useEffect(() => {
     const channel = supabase
       .channel('attendance-changes')
@@ -30,7 +32,7 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
           table: 'attendance'
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ['attendance', employeeId, format(selectedDate, 'yyyy-MM')] });
+          queryClient.invalidateQueries({ queryKey: ['attendance', employeeId, format(selectedDate, 'yyyy-MM-dd')] });
         }
       )
       .subscribe();
@@ -42,8 +44,11 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
   
   const fetchAttendanceData = async (): Promise<AttendanceData> => {
     try {
-      const start = startOfMonth(selectedDate);
-      const end = endOfMonth(selectedDate);
+      // For time range queries, use the selectedDate as end date
+      const endDate = new Date();
+      const startDate = selectedDate;
+      
+      console.log(`Fetching attendance data from ${format(startDate, 'yyyy-MM-dd')} to ${format(endDate, 'yyyy-MM-dd')}`);
       
       const query = supabase
         .from('attendance')
@@ -53,8 +58,8 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
             name
           )
         `)
-        .gte('date', format(start, 'yyyy-MM-dd'))
-        .lte('date', format(end, 'yyyy-MM-dd'));
+        .gte('date', format(startDate, 'yyyy-MM-dd'))
+        .lte('date', format(endDate, 'yyyy-MM-dd'));
       
       if (employeeId) {
         query.eq('employee_id', employeeId);
@@ -111,7 +116,7 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
   };
 
   return useQuery({
-    queryKey: ['attendance', employeeId, format(selectedDate, 'yyyy-MM')],
+    queryKey: ['attendance', employeeId, format(selectedDate, 'yyyy-MM-dd')],
     queryFn: fetchAttendanceData,
     refetchOnWindowFocus: true,
   });
