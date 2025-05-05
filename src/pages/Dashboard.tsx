@@ -13,7 +13,6 @@ import { Users, FolderOpen } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ProgressBar from '@/components/dashboard/ProgressBar';
 import StatCard from '@/components/dashboard/StatCard';
-import LeaveCalendarView from '@/components/leave/LeaveCalendarView';
 import DashboardTimeClock from '@/components/dashboard/DashboardTimeClock';
 import SalaryTable from '@/components/salary/table/SalaryTable';
 import AttendanceReport from '@/components/dashboard/AttendanceReport';
@@ -21,6 +20,8 @@ import HiringStatistics from '@/components/dashboard/HiringStatistics';
 import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
 import CurrentDateTime from '@/components/dashboard/CurrentDateTime';
+import LeaveCalendarView from '@/components/leave/LeaveCalendarView';
+import ManagerTab from '@/components/leave/tabs/ManagerTab';
 
 const Dashboard = () => {
   const { isManager, user } = useAuth();
@@ -162,7 +163,7 @@ const Dashboard = () => {
             {isEmployee ? (
               <DashboardTimeClock />
             ) : (
-              <LeaveCalendarView />
+              <ManagerTab />
             )}
           </div>
           
