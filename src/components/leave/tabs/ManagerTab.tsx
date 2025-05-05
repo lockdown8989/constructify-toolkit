@@ -1,7 +1,7 @@
 
 import React from "react";
 import LeaveApprovalDashboard from "@/components/leave/LeaveApprovalDashboard";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/auth";
 
 const ManagerTab: React.FC = () => {
   const { isManager, isAdmin, isHR } = useAuth();

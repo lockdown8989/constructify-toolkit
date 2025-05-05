@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { addMonths, subMonths, isSameDay } from "date-fns";
 import type { DateRange } from "react-day-picker";
-import { useLeaveCalendar } from "@/hooks/use-leave-calendar";
+import { useLeaveCalendar } from "@/hooks/leave/use-leave-requests";
 import { useEmployees } from "@/hooks/use-employees";
 import { useQueryClient } from "@tanstack/react-query";
 

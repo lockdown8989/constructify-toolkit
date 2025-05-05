@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { addMonths, subMonths } from "date-fns";
-import { useLeaveCalendar } from "@/hooks/use-leave-calendar";
+import { useLeaveCalendar } from "@/hooks/leave/use-leave-requests";
 import { useEmployees } from "@/hooks/use-employees";
 
 export function useLeaveCalendarState() {

@@ -2,10 +2,15 @@
 import React from "react";
 
 const DayNames: React.FC = () => {
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
   return (
     <>
-      {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
-        <div key={day} className="text-center font-medium py-2 text-sm">
+      {days.map((day) => (
+        <div 
+          key={day} 
+          className="text-center font-medium text-sm py-2 text-gray-600"
+        >
           {day}
         </div>
       ))}

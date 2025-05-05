@@ -13,7 +13,7 @@ import { Users, FolderOpen } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ProgressBar from '@/components/dashboard/ProgressBar';
 import StatCard from '@/components/dashboard/StatCard';
-import Calendar from '@/components/dashboard/Calendar';
+import LeaveCalendarView from '@/components/leave/LeaveCalendarView';
 import DashboardTimeClock from '@/components/dashboard/DashboardTimeClock';
 import SalaryTable from '@/components/salary/table/SalaryTable';
 import AttendanceReport from '@/components/dashboard/AttendanceReport';
@@ -66,13 +66,6 @@ const Dashboard = () => {
   const employeeCount = isManager 
     ? employees.filter(emp => emp.user_id !== user?.id).length 
     : 1;
-  
-  // Sample data for meetings (would come from another table in a real app)
-  const sampleMeetings = [
-    { id: '1', title: 'Daily Sync', time: '09:30', date: new Date(), dotColor: 'yellow' as const },
-    { id: '2', title: 'Task Review With Team', time: '11:00', date: new Date(), dotColor: 'black' as const },
-    { id: '3', title: 'Daily Meeting', time: '12:00', date: new Date(), dotColor: 'yellow' as const },
-  ];
   
   // Transform employees data for the SalaryTable
   const salaryEmployees = employees.slice(0, 3).map(emp => ({
@@ -169,7 +162,7 @@ const Dashboard = () => {
             {isEmployee ? (
               <DashboardTimeClock />
             ) : (
-              <Calendar meetings={sampleMeetings} />
+              <LeaveCalendarView />
             )}
           </div>
           
