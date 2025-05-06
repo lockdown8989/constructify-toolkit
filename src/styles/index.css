@@ -1,12 +1,6 @@
 
-/* Import base styles */
 @import './base.css';
-
-/* Import component styles */
-@import './components.css';
-
-/* Import utility styles */
 @import './utilities.css';
-
-/* Import mobile-specific styles */
+@import './components.css';
 @import './mobile.css';
+@import './shift-calendar.css';
