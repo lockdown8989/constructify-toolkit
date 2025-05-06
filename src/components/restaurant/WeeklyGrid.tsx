@@ -102,12 +102,12 @@ const WeeklyGrid = ({
             variant="outline" 
             size="sm" 
             onClick={previousDayGroup}
-            className="mr-2"
+            className="mr-2 h-8 w-8 p-0 active-touch-state"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center gap-3">
             {[0, 1, 2, 3].map((index) => (
               <button 
                 key={index}
@@ -122,7 +122,7 @@ const WeeklyGrid = ({
             variant="outline" 
             size="sm" 
             onClick={nextDayGroup}
-            className="ml-2"
+            className="ml-2 h-8 w-8 p-0 active-touch-state"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

@@ -4,6 +4,7 @@ import type { LeaveCalendar } from "@/hooks/use-leave-calendar";
 import { generateCalendarGrid, getLeavesForDay, getMeetingsForDay, Meeting } from "./utils/calendar-utils";
 import DayNames from "./DayNames";
 import DayCell from "./components/DayCell";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CalendarGridProps {
   currentDate: Date;
@@ -19,9 +20,10 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   meetings = []
 }) => {
   const calendarWeeks = generateCalendarGrid(currentDate);
+  const isMobile = useIsMobile();
   
   return (
-    <div className="grid grid-cols-7 gap-1">
+    <div className={`grid grid-cols-7 ${isMobile ? 'gap-0.5 calendar-grid-mobile' : 'gap-1'}`}>
       {/* Day Names */}
       <DayNames />
       

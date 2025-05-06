@@ -33,6 +33,19 @@
   .dropdown-content {
     @apply z-50 max-h-[50vh] overflow-y-auto;
   }
+  
+  /* Calendar view adjustments */
+  .shift-calendar-mobile {
+    @apply px-1;
+  }
+  
+  .shift-calendar-mobile .calendar-day {
+    @apply min-h-[60px] text-xs;
+  }
+  
+  .shift-calendar-mobile .calendar-day-header {
+    @apply text-xs py-1;
+  }
 }
 
 /* Touch-friendly interactive elements */
@@ -134,4 +147,45 @@
   input:focus, button:focus, a:focus, [role="button"]:focus {
     @apply ring-2 ring-primary/70 outline-none;
   }
+  
+  /* Calendar improvements */
+  .calendar-grid-mobile {
+    @apply grid-cols-7 gap-0;
+  }
+  
+  .calendar-day-mobile {
+    @apply aspect-square p-0.5 text-[10px];
+  }
+  
+  .calendar-event-mobile {
+    @apply text-xs py-0.5 px-1 rounded-sm;
+  }
+  
+  /* Shift schedule cards */
+  .shift-card-mobile {
+    @apply rounded-lg p-2 mb-2;
+  }
+  
+  .shift-time-mobile {
+    @apply text-xs font-medium;
+  }
+  
+  .shift-employee-mobile {
+    @apply text-xs;
+  }
 }
+
+/* Shift calendar day chip for mobile */
+.shift-day-chip {
+  @apply text-xs py-0.5 px-1.5 rounded-full bg-gray-100 inline-flex items-center justify-center;
+}
+
+.shift-day-chip.active {
+  @apply bg-primary text-white;
+}
+
+/* Week date navigation for mobile */
+.week-nav-mobile {
+  @apply flex items-center justify-between py-1 px-2 bg-gray-50 rounded-lg text-sm mb-2;
+}
+

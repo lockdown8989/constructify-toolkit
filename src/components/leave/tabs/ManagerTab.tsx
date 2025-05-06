@@ -8,12 +8,14 @@ import LeaveCalendarView from "@/components/leave/LeaveCalendarView";
 import EmployeeScheduleView from "@/components/schedule/EmployeeScheduleView";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useLeaveCalendarState } from "@/hooks/leave/useLeaveCalendarState";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ManagerTab: React.FC = () => {
   const { isManager, isAdmin, isHR } = useAuth();
   const hasManagerAccess = isManager || isAdmin || isHR;
   const [activeView, setActiveView] = useState<string>("leave-calendar");
   const calendarState = useLeaveCalendarState();
+  const isMobile = useIsMobile();
 
   if (!hasManagerAccess) {
     return (
@@ -27,21 +29,21 @@ const ManagerTab: React.FC = () => {
     <Card className="border shadow-sm">
       <CardHeader className="pb-3 border-b">
         <Tabs defaultValue={activeView} onValueChange={setActiveView} className="w-full">
-          <TabsList className="grid grid-cols-3 w-full">
-            <TabsTrigger value="leave-calendar" className="flex items-center gap-2">
-              <CalendarDays className="h-4 w-4" />
-              <span className="hidden sm:inline">Leave Calendar</span>
-              <span className="sm:hidden">Leaves</span>
+          <TabsList className={`grid ${isMobile ? 'grid-cols-3 gap-0.5' : 'grid-cols-3'} w-full`}>
+            <TabsTrigger value="leave-calendar" className={`flex items-center gap-2 ${isMobile ? 'px-1.5 py-1.5 text-xs' : ''}`}>
+              <CalendarDays className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
+              <span className={`${isMobile ? 'hidden' : 'hidden sm:inline'}`}>Leave Calendar</span>
+              <span className={`${isMobile ? 'text-[10px]' : 'sm:hidden'}`}>Leaves</span>
             </TabsTrigger>
-            <TabsTrigger value="shift-schedule" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Shift Schedule</span>
-              <span className="sm:hidden">Shifts</span>
+            <TabsTrigger value="shift-schedule" className={`flex items-center gap-2 ${isMobile ? 'px-1.5 py-1.5 text-xs' : ''}`}>
+              <Calendar className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
+              <span className={`${isMobile ? 'hidden' : 'hidden sm:inline'}`}>Shift Schedule</span>
+              <span className={`${isMobile ? 'text-[10px]' : 'sm:hidden'}`}>Shifts</span>
             </TabsTrigger>
-            <TabsTrigger value="approvals" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Approval Dashboard</span>
-              <span className="sm:hidden">Approvals</span>
+            <TabsTrigger value="approvals" className={`flex items-center gap-2 ${isMobile ? 'px-1.5 py-1.5 text-xs' : ''}`}>
+              <Users className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
+              <span className={`${isMobile ? 'hidden' : 'hidden sm:inline'}`}>Approval Dashboard</span>
+              <span className={`${isMobile ? 'text-[10px]' : 'sm:hidden'}`}>Approvals</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -49,19 +51,19 @@ const ManagerTab: React.FC = () => {
       
       <CardContent className="p-0">
         <TabsContent value="leave-calendar" className="m-0">
-          <div className="p-4">
+          <div className={`${isMobile ? 'p-2' : 'p-4'}`}>
             <LeaveCalendarView />
           </div>
         </TabsContent>
         
         <TabsContent value="shift-schedule" className="m-0">
-          <div className="p-4">
+          <div className={`${isMobile ? 'p-2' : 'p-4'}`}>
             <EmployeeScheduleView />
           </div>
         </TabsContent>
         
         <TabsContent value="approvals" className="m-0">
-          <div className="p-4">
+          <div className={`${isMobile ? 'p-2' : 'p-4'}`}>
             <LeaveApprovalDashboard />
           </div>
         </TabsContent>
