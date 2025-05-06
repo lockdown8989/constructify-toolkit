@@ -9,7 +9,7 @@ export interface Employee {
   department?: string;
   avatar?: string;
   selected?: boolean;
-  user_id?: string; // Add this field to fix the error
+  user_id?: string;
 }
 
 export interface SalaryTableProps {
