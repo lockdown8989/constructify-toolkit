@@ -2,7 +2,7 @@
 import React from "react";
 import type { LeaveCalendar } from "@/hooks/use-leave-calendar";
 import { generateCalendarGrid, getLeavesForDay, getMeetingsForDay, Meeting } from "./utils/calendar-utils";
-import CalendarDayNames from "./components/CalendarDayNames";
+import DayNames from "./DayNames";
 import DayCell from "./components/DayCell";
 
 interface CalendarGridProps {
@@ -23,7 +23,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   return (
     <div className="grid grid-cols-7 gap-1">
       {/* Day Names */}
-      <CalendarDayNames />
+      <DayNames />
       
       {/* Calendar Days */}
       {calendarWeeks.map((week, weekIndex) => (
