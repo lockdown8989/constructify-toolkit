@@ -14,6 +14,19 @@ export interface PayrollRecord {
   document_url?: string;
   document_name?: string;
   bonus?: number;
+  tax_code?: string;
+  ni_number?: string;
+  payment_method?: string;
+  pay_period?: string;
+  tax_paid?: number;
+  ni_contribution?: number;
+  other_deductions?: number;
+  pension_contribution?: number;
+  ytd_gross?: number;
+  ytd_tax?: number;
+  ytd_ni?: number;
+  ytd_other?: number;
+  ytd_net?: number;
 }
 
 export interface PayrollHistoryRecord {

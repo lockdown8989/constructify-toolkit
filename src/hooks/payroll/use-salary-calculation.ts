@@ -65,6 +65,37 @@ export const calculateSalaryWithGPT = async (
     // Get employee's attendance data
     const attendance = await getEmployeeAttendance(employeeId);
     
+    // Call the Supabase Edge Function that uses OpenAI API
+    const { data: response, error } = await supabase.functions.invoke('calculate-salary', {
+      body: {
+        employeeId,
+        baseSalary,
+        currency,
+        workingHours: attendance.workingHours,
+        overtimeHours: attendance.overtimeHours
+      }
+    });
+    
+    if (error) {
+      console.error('Error calling calculate-salary function:', error);
+      throw new Error(`Failed to calculate salary: ${error.message}`);
+    }
+    
+    if (!response || !response.finalSalary) {
+      console.error('Invalid response from calculate-salary function:', response);
+      throw new Error('Failed to get a valid salary calculation');
+    }
+    
+    console.log(`Calculated salary for employee ${employeeId}: ${response.finalSalary} ${currency}`);
+    
+    return response.finalSalary;
+    
+  } catch (error) {
+    console.error('Error calculating salary with GPT:', error);
+    
+    // Fallback to basic calculation if API call fails
+    const attendance = await getEmployeeAttendance(employeeId);
+    
     // Calculate standard working hours per month (assuming 40 hour work week, 4 weeks)
     const standardMonthlyHours = 160;
     
@@ -83,17 +114,15 @@ export const calculateSalaryWithGPT = async (
     // Calculate estimated tax and insurance (simplified)
     const taxRate = 0.2; // 20% tax
     const insuranceRate = 0.05; // 5% insurance
+    const otherRate = 0.08; // 8% other deductions
     
     const taxDeduction = totalSalary * taxRate;
     const insuranceDeduction = totalSalary * insuranceRate;
+    const otherDeduction = totalSalary * otherRate;
     
     // Calculate final salary after deductions
-    const finalSalary = totalSalary - (taxDeduction + insuranceDeduction);
+    const finalSalary = totalSalary - (taxDeduction + insuranceDeduction + otherDeduction);
     
     return parseFloat(finalSalary.toFixed(2));
-    
-  } catch (error) {
-    console.error('Error calculating salary with GPT:', error);
-    return baseSalary; // Return the base salary as fallback
   }
 };

@@ -16,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { baseSalary, employeeId, currency = 'GBP' } = await req.json();
+    const { baseSalary, employeeId, currency = 'GBP', workingHours = 160, overtimeHours = 0 } = await req.json();
 
     if (!baseSalary) {
       return new Response(
@@ -25,8 +25,46 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Calculating salary for employee ${employeeId} with base salary ${baseSalary} in ${currency}`);
+    console.log(`Calculating salary for employee ${employeeId} with base salary ${baseSalary} ${currency}`);
+    console.log(`Working hours: ${workingHours}, Overtime hours: ${overtimeHours}`);
 
+    if (!openAIApiKey) {
+      console.log('OpenAI API key not found, using standard calculation');
+      
+      // Standard calculation without API
+      const hourlyRate = baseSalary / 160; // Assuming 160 hours per month standard
+      const regularPay = hourlyRate * workingHours;
+      const overtimePay = hourlyRate * 1.5 * overtimeHours;
+      const grossSalary = regularPay + overtimePay;
+      
+      // Standard deductions
+      const taxRate = 0.2;
+      const insuranceRate = 0.05;
+      const otherRate = 0.08;
+      
+      const taxDeduction = grossSalary * taxRate;
+      const insuranceDeduction = grossSalary * insuranceRate;
+      const otherDeduction = grossSalary * otherRate;
+      
+      const finalSalary = grossSalary - (taxDeduction + insuranceDeduction + otherDeduction);
+      
+      return new Response(
+        JSON.stringify({ 
+          finalSalary: parseFloat(finalSalary.toFixed(2)), 
+          currency,
+          method: 'standard',
+          details: {
+            grossSalary,
+            taxDeduction,
+            insuranceDeduction,
+            otherDeduction
+          }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Calculate using OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -38,13 +76,21 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'You are a helpful assistant that calculates final salary amounts. Return only a number with no formatting or additional text.' 
+            content: 'You are a helpful payroll calculation assistant. Calculate the final salary amount after all deductions.' 
           },
           { 
             role: 'user', 
-            content: `Calculate the final salary for an employee with a base salary of ${baseSalary} ${currency}. 
-                     Apply standard tax deductions (assume 20%) and insurance (assume 5%).
-                     Return ONLY the final numeric value, without any text, currency symbols or formatting.` 
+            content: `Calculate the final net salary for an employee with:
+                     - Base salary: ${baseSalary} ${currency}
+                     - Working hours: ${workingHours}
+                     - Overtime hours: ${overtimeHours} (paid at 1.5x hourly rate)
+                     
+                     Apply the following deductions:
+                     - Tax: 20% of gross salary
+                     - National Insurance: 5% of gross salary
+                     - Other deductions: 8% of gross salary
+                     
+                     Return ONLY the final numeric value representing net salary after all deductions, without any text, currency symbols or formatting.` 
           }
         ],
         temperature: 0.1, // Low temperature for more deterministic results
@@ -70,8 +116,24 @@ serve(async (req) => {
 
     console.log(`Calculated final salary: ${finalSalary} ${currency}`);
 
+    // Calculate estimated components for informational purposes
+    const hourlyRate = baseSalary / 160;
+    const regularPay = hourlyRate * workingHours;
+    const overtimePay = hourlyRate * 1.5 * overtimeHours;
+    const grossSalary = regularPay + overtimePay;
+    
     return new Response(
-      JSON.stringify({ finalSalary: finalSalary, currency }),
+      JSON.stringify({ 
+        finalSalary: finalSalary, 
+        currency,
+        method: 'openai',
+        details: {
+          grossSalary,
+          regularPay,
+          overtimePay,
+          estimatedDeductions: grossSalary - finalSalary
+        }
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {

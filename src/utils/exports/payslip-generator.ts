@@ -1,8 +1,8 @@
-
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/utils/format';
+import { format } from 'date-fns';
 
 interface PayslipData {
   name: string;
@@ -11,6 +11,17 @@ interface PayslipData {
   department?: string;
   paymentDate?: string;
   currency?: string;
+  employeeId?: string;
+  taxCode?: string;
+  niNumber?: string;
+  address?: string;
+  payPeriod?: string;
+  employer?: string;
+  employerAddress?: string;
+  payGroup?: string;
+  payFrequency?: string;
+  overtimeHours?: number;
+  contractualHours?: number;
 }
 
 export interface PayslipResult {
@@ -26,105 +37,261 @@ export async function generatePayslipPDF(
   employeeData: PayslipData,
   uploadToStorage: boolean = false
 ): Promise<PayslipResult> {
-  const { name, title, salary, department, paymentDate, currency = 'GBP' } = employeeData;
-  
-  // Clean the salary string (removing $ and commas)
-  const salaryNumeric = parseFloat(salary.replace(/\$|£|,/g, ''));
-  
-  // Calculate deductions
-  const taxDeduction = salaryNumeric * 0.2;
-  const insuranceDeduction = salaryNumeric * 0.05;
-  const netSalary = salaryNumeric - taxDeduction - insuranceDeduction;
-  
-  // Format date
-  const formattedDate = paymentDate || new Date().toLocaleDateString('en-GB', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-  
-  // Create PDF
-  const doc = new jsPDF();
-  
-  // Add company logo/header
-  doc.setFontSize(20);
-  doc.setTextColor(40, 40, 40);
-  doc.text("PAYSLIP", 105, 20, { align: 'center' });
-  
-  // Add date
-  doc.setFontSize(10);
-  doc.text(`Payment Date: ${formattedDate}`, 20, 30);
-  
-  // Add employee info
-  doc.setFontSize(12);
-  doc.text("Employee Information", 20, 40);
-  
-  const employeeInfo = [
-    ["Employee Name:", name],
-    ["Employee ID:", employeeId],
-    ["Position:", title],
-    ["Department:", department || "N/A"],
-  ];
-  
-  // First table - Employee Info
-  autoTable(doc, {
-    startY: 45,
-    head: [],
-    body: employeeInfo,
-    theme: 'plain',
-    styles: { fontSize: 10, cellPadding: 1 },
-    columnStyles: { 0: { cellWidth: 40 } }
-  });
-  
-  // Get the final Y position from jsPDF's internal state
-  const finalY = (doc as any).lastAutoTable.finalY;
-  
-  // Add salary details - Using the finalY from the previous table
-  const salaryStartY = finalY + 10;
-  doc.text("Salary Details", 20, salaryStartY);
-  
-  // Currency symbol for display
-  const currencySymbol = currency === 'GBP' ? '£' : 
-                         currency === 'EUR' ? '€' : '$';
-  
-  const formatAmount = (amount: number) => {
-    return `${currencySymbol}${amount.toLocaleString('en-GB', { maximumFractionDigits: 2 })}`;
-  };
-  
-  const salaryDetails = [
-    ["Gross Salary:", formatAmount(salaryNumeric)],
-    ["Tax Deduction (20%):", formatAmount(taxDeduction)],
-    ["Insurance (5%):", formatAmount(insuranceDeduction)],
-    ["Net Salary:", formatAmount(netSalary)],
-  ];
-  
-  autoTable(doc, {
-    startY: salaryStartY + 5,
-    head: [],
-    body: salaryDetails,
-    theme: 'striped',
-    styles: { fontSize: 10, cellPadding: 1 },
-    columnStyles: { 0: { cellWidth: 40 } }
-  });
-  
-  // Add footer
-  const pageHeight = doc.internal.pageSize.height;
-  doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
-  doc.text("This is an electronically generated document and does not require a signature.", 105, pageHeight - 10, { align: 'center' });
-  
-  // Generate filename
-  const sanitizedName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-  const period = paymentDate ? paymentDate.replace(/[^a-z0-9]/gi, '_').toLowerCase() : new Date().toISOString().split('T')[0];
-  const filename = `payslip_${sanitizedName}_${period}`;
-  
-  if (uploadToStorage) {
-    return await uploadPayslipToStorage(doc, filename, employeeId, formattedDate, currency);
+  try {
+    const { 
+      name, 
+      title, 
+      salary, 
+      department, 
+      paymentDate, 
+      currency = 'GBP',
+      taxCode = '1257L',
+      niNumber = '',
+      address = '',
+      payPeriod = '',
+      employer = 'COMPANY LTD',
+      employerAddress = '',
+      payGroup = '001M',
+      payFrequency = 'Monthly',
+      overtimeHours = 0,
+      contractualHours = 0
+    } = employeeData;
+    
+    // Clean the salary string (removing $ and commas)
+    const salaryNumeric = parseFloat(salary.replace(/\$|£|,/g, ''));
+    
+    // Calculate deductions
+    const taxRate = 0.2;
+    const niRate = 0.12;
+    const otherRate = 0.08;
+    
+    const taxDeduction = salaryNumeric * taxRate;
+    const niContribution = salaryNumeric * niRate;
+    const otherDeductions = salaryNumeric * otherRate;
+    const totalDeductions = taxDeduction + niContribution + otherDeductions;
+    const netSalary = salaryNumeric - totalDeductions;
+    
+    // Calculate overtime
+    const hourlyRate = salaryNumeric / 160; // Assuming 160 working hours per month
+    const overtimeRate = hourlyRate * 1.5;
+    const overtimePay = overtimeHours * overtimeRate;
+    
+    // Format date
+    const currentDate = new Date();
+    const formattedPayDate = paymentDate || format(currentDate, 'dd/MM/yyyy');
+    const periodStart = format(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1), 'dd/MM/yyyy');
+    const periodEnd = format(new Date(currentDate.getFullYear(), currentDate.getMonth(), 0), 'dd/MM/yyyy');
+    const formattedPayPeriod = payPeriod || `${periodStart} - ${periodEnd}`;
+    
+    // Currency symbol for display
+    const currencySymbol = currency === 'GBP' ? '£' : 
+                          currency === 'EUR' ? '€' : '$';
+    
+    const formatAmount = (amount: number) => {
+      return `${currencySymbol}${amount.toFixed(2)}`;
+    };
+    
+    // Create PDF
+    const doc = new jsPDF();
+    
+    // Set background to white
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
+    
+    // Add header bar
+    doc.setFillColor(0, 0, 0);
+    doc.rect(0, 0, doc.internal.pageSize.width, 15, 'F');
+    
+    // Add employee name and pay period
+    doc.setFontSize(18);
+    doc.setTextColor(40, 40, 40);
+    doc.text(name.toUpperCase(), 20, 30);
+    
+    doc.setFontSize(12);
+    doc.text(`Pay Period: ${formattedPayPeriod}`, 20, 40);
+    
+    // Employee details - left column
+    doc.setFontSize(10);
+    doc.text(`Employee Number: ${employeeId}`, 20, 55);
+    doc.text(`Tax Code: ${taxCode}`, 20, 65);
+    doc.text(`Payment Method: BACS/FPAY`, 20, 75);
+    doc.text(`NI Number: ${niNumber}`, 20, 85);
+    
+    // Middle column
+    doc.text(`NI Code: A`, 110, 55);
+    doc.text(`Pay Group: ${payGroup}`, 110, 65);
+    doc.text(`Tax Period: ${currentDate.getFullYear()}/${String(currentDate.getMonth() + 1).padStart(2, '0')}`, 110, 75);
+    doc.text(`Employee Address: ${address}`, 110, 85);
+    
+    // Right column
+    doc.text(`Employer: ${employer}`, 170, 55);
+    doc.text(`Pay Date: ${formattedPayDate}`, 170, 65);
+    doc.text(`Pay Frequency: ${payFrequency}`, 170, 75);
+    doc.text(`Employer Address: ${employerAddress}`, 170, 85);
+    
+    // Payment summary boxes
+    const boxY = 105;
+    const boxHeight = 35;
+    
+    // Gross Pay Box
+    doc.setDrawColor(0);
+    doc.setLineWidth(0.5);
+    doc.rect(20, boxY, 50, boxHeight);
+    doc.text("Gross Pay", 30, boxY + 10);
+    doc.setFontSize(14);
+    doc.text(formatAmount(salaryNumeric), 30, boxY + 20);
+    doc.setFontSize(8);
+    doc.text(`YTD ${formatAmount(salaryNumeric)}`, 30, boxY + 30);
+    
+    // Tax Box
+    doc.rect(71, boxY, 50, boxHeight);
+    doc.setFontSize(10);
+    doc.text("PAYE Tax", 81, boxY + 10);
+    doc.setFontSize(14);
+    doc.text(formatAmount(taxDeduction), 81, boxY + 20);
+    doc.setFontSize(8);
+    doc.text(`YTD ${formatAmount(taxDeduction)}`, 81, boxY + 30);
+    
+    // NI Box
+    doc.rect(122, boxY, 50, boxHeight);
+    doc.setFontSize(10);
+    doc.text("NIC", 132, boxY + 10);
+    doc.setFontSize(14);
+    doc.text(formatAmount(niContribution), 132, boxY + 20);
+    doc.setFontSize(8);
+    doc.text(`YTD ${formatAmount(niContribution)}`, 132, boxY + 30);
+    
+    // Others Box
+    doc.rect(173, boxY, 50, boxHeight);
+    doc.setFontSize(10);
+    doc.text("Others", 183, boxY + 10);
+    doc.setFontSize(14);
+    doc.text(formatAmount(otherDeductions), 183, boxY + 20);
+    doc.setFontSize(8);
+    doc.text(`YTD ${formatAmount(otherDeductions)}`, 183, boxY + 30);
+    
+    // Net Pay Box
+    doc.setLineWidth(1);
+    doc.rect(224, boxY, 50, boxHeight);
+    doc.setFontSize(10);
+    doc.text("Net Pay", 234, boxY + 10);
+    doc.setFontSize(14);
+    doc.text(formatAmount(netSalary), 234, boxY + 20);
+    doc.setFontSize(8);
+    doc.text(`YTD ${formatAmount(netSalary)}`, 234, boxY + 30);
+    
+    // Payments and Deductions tables
+    const tableY = boxY + boxHeight + 20;
+    
+    // Add section title
+    doc.setLineWidth(0.5);
+    doc.setFontSize(11);
+    doc.text("PAYMENTS - ", 20, tableY - 10);
+    doc.text(`Employee ID: ${employeeId}`, 80, tableY - 10);
+    
+    // Payments table
+    const paymentsData = [
+      ['Description', 'Units', 'Rate', 'Amount'],
+      ['Salary', '-', '-', formatAmount(salaryNumeric - overtimePay)],
+      ['Overtime @ 1.5', `${overtimeHours}`, `${formatAmount(overtimeRate)}`, formatAmount(overtimePay)]
+    ];
+    
+    autoTable(doc, {
+      startY: tableY,
+      head: [paymentsData[0]],
+      body: paymentsData.slice(1),
+      theme: 'grid',
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0] },
+      margin: { left: 20, right: 20 },
+      columnStyles: {
+        0: { cellWidth: 100 },
+        1: { cellWidth: 30, halign: 'center' },
+        2: { cellWidth: 30, halign: 'center' },
+        3: { cellWidth: 30, halign: 'right' }
+      }
+    });
+    
+    // Add total row
+    const firstTableEndY = (doc as any).lastAutoTable.finalY;
+    doc.text('Total', 150, firstTableEndY + 10);
+    doc.text(formatAmount(salaryNumeric), 180, firstTableEndY + 10, { align: 'right' });
+    
+    // Deductions table
+    doc.text("DEDUCTIONS - ", 20, firstTableEndY + 25);
+    doc.text(`Employee ID: ${employeeId}`, 80, firstTableEndY + 25);
+    
+    const deductionsData = [
+      ['Description', 'Amount'],
+      ['Tax Paid', formatAmount(taxDeduction)],
+      ['NI Contribution', formatAmount(niContribution)],
+      ['Other Deductions', formatAmount(otherDeductions)]
+    ];
+    
+    autoTable(doc, {
+      startY: firstTableEndY + 30,
+      head: [deductionsData[0]],
+      body: deductionsData.slice(1),
+      theme: 'grid',
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0] },
+      margin: { left: 20, right: 20 },
+      columnStyles: {
+        0: { cellWidth: 130 },
+        1: { cellWidth: 30, halign: 'right' }
+      }
+    });
+    
+    const secondTableEndY = (doc as any).lastAutoTable.finalY;
+    doc.text('Total', 150, secondTableEndY + 10);
+    doc.text(formatAmount(totalDeductions), 180, secondTableEndY + 10, { align: 'right' });
+    
+    // Year-to-date section
+    doc.text("CUMULATIVE YEAR TO DATE", 20, secondTableEndY + 30);
+    
+    const ytdData = [
+      ['Description', 'Amount'],
+      ['Total Gross Payments', formatAmount(salaryNumeric)],
+      ['Taxable Gross', formatAmount(salaryNumeric)],
+      ['Tax Paid', formatAmount(taxDeduction)],
+      ['NI Contribution', formatAmount(niContribution)],
+      ['Net Pay', formatAmount(netSalary)]
+    ];
+    
+    autoTable(doc, {
+      startY: secondTableEndY + 35,
+      body: ytdData,
+      theme: 'plain',
+      styles: { fontSize: 9 },
+      margin: { left: 20, right: 20 },
+      columnStyles: {
+        0: { cellWidth: 130 },
+        1: { cellWidth: 30, halign: 'right' }
+      }
+    });
+    
+    // Add footer
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text("This is an electronically generated document and does not require a signature.", 105, pageHeight - 10, { align: 'center' });
+    
+    // Generate filename
+    const sanitizedName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const period = formattedPayPeriod.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const filename = `payslip_${sanitizedName}_${period}`;
+    
+    if (uploadToStorage) {
+      return await uploadPayslipToStorage(doc, filename, employeeId, formattedPayDate, currency);
+    }
+    
+    // Save PDF locally
+    doc.save(`${filename}.pdf`);
+    return { success: true, localFile: filename };
+  } catch (error) {
+    console.error('Error in generatePayslipPDF:', error);
+    return { success: false, error: String(error) };
   }
-  
-  // Save PDF locally
-  doc.save(`${filename}.pdf`);
-  return { success: true, localFile: filename };
 }
 
 async function uploadPayslipToStorage(
