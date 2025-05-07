@@ -13,7 +13,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const ManagerTab: React.FC = () => {
   const { isManager, isAdmin, isHR } = useAuth();
   const hasManagerAccess = isManager || isAdmin || isHR;
-  const [activeView, setActiveView] = useState<string>("leave-calendar");
+  const [activeTab, setActiveTab] = useState<string>("leave-calendar");
   const calendarState = useLeaveCalendarState();
   const isMobile = useIsMobile();
 
@@ -28,7 +28,7 @@ const ManagerTab: React.FC = () => {
   return (
     <Card className="border shadow-sm">
       <CardHeader className="pb-3 border-b">
-        <Tabs defaultValue={activeView} onValueChange={setActiveView} className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className={`grid ${isMobile ? 'grid-cols-3 gap-0.5' : 'grid-cols-3'} w-full`}>
             <TabsTrigger value="leave-calendar" className={`flex items-center gap-2 ${isMobile ? 'px-1.5 py-1.5 text-xs' : ''}`}>
               <CalendarDays className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
@@ -46,28 +46,26 @@ const ManagerTab: React.FC = () => {
               <span className={`${isMobile ? 'text-[10px]' : 'sm:hidden'}`}>Approvals</span>
             </TabsTrigger>
           </TabsList>
+        
+          <TabsContent value="leave-calendar" className="m-0">
+            <div className={`${isMobile ? 'p-2' : 'p-4'}`}>
+              <LeaveCalendarView />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="shift-schedule" className="m-0">
+            <div className={`${isMobile ? 'p-2' : 'p-4'}`}>
+              <EmployeeScheduleView />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="approvals" className="m-0">
+            <div className={`${isMobile ? 'p-2' : 'p-4'}`}>
+              <LeaveApprovalDashboard />
+            </div>
+          </TabsContent>
         </Tabs>
       </CardHeader>
-      
-      <CardContent className="p-0">
-        <TabsContent value="leave-calendar" className="m-0">
-          <div className={`${isMobile ? 'p-2' : 'p-4'}`}>
-            <LeaveCalendarView />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="shift-schedule" className="m-0">
-          <div className={`${isMobile ? 'p-2' : 'p-4'}`}>
-            <EmployeeScheduleView />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="approvals" className="m-0">
-          <div className={`${isMobile ? 'p-2' : 'p-4'}`}>
-            <LeaveApprovalDashboard />
-          </div>
-        </TabsContent>
-      </CardContent>
     </Card>
   );
 };
