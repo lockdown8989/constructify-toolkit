@@ -5,6 +5,7 @@ import ShiftDetailCard from '../ShiftDetailCard';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addDays, isSameMonth } from 'date-fns';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 
 interface ScheduleTabsProps {
   activeTab: string;
@@ -168,24 +169,26 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
       </div>
 
       {/* Shift Cards */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {filteredSchedules.length > 0 ? (
-          filteredSchedules.map(schedule => (
-            <ShiftDetailCard
-              key={schedule.id}
-              schedule={schedule}
-              onInfoClick={() => onInfoClick(schedule.id)}
-              onEmailClick={() => onEmailClick(schedule)}
-              onCancelClick={() => onCancelClick(schedule.id)}
-              onResponseComplete={onResponseComplete}
-            />
-          ))
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            No {activeTab.replace('-', ' ')} found
-          </div>
-        )}
-      </div>
+      <Tabs value={activeTab}>
+        <TabsContent value={activeTab} className="flex-1 overflow-y-auto p-4 space-y-3">
+          {filteredSchedules.length > 0 ? (
+            filteredSchedules.map(schedule => (
+              <ShiftDetailCard
+                key={schedule.id}
+                schedule={schedule}
+                onInfoClick={() => onInfoClick(schedule.id)}
+                onEmailClick={() => onEmailClick(schedule)}
+                onCancelClick={() => onCancelClick(schedule.id)}
+                onResponseComplete={onResponseComplete}
+              />
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              No {activeTab.replace('-', ' ')} found
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
