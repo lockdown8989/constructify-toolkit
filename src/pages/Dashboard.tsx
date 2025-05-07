@@ -3,66 +3,23 @@ import React from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useEmployees } from '@/hooks/use-employees';
 import { useInterviews } from '@/hooks/use-interviews';
-import EmployeeStatistics from '@/components/people/EmployeeStatistics';
-import DocumentList from '@/components/salary/components/DocumentList';
-import { Card } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import EmployeeAttendanceSummary from '@/components/dashboard/EmployeeAttendanceSummary';
 import { useAttendanceSync } from '@/hooks/use-attendance-sync';
-import { Users, FolderOpen } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import ProgressBar from '@/components/dashboard/ProgressBar';
-import StatCard from '@/components/dashboard/StatCard';
-import DashboardTimeClock from '@/components/dashboard/DashboardTimeClock';
-import SalaryTable from '@/components/salary/table/SalaryTable';
-import AttendanceReport from '@/components/dashboard/AttendanceReport';
-import HiringStatistics from '@/components/dashboard/HiringStatistics';
-import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
-import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
-import CurrentDateTime from '@/components/dashboard/CurrentDateTime';
-import LeaveCalendarView from '@/components/leave/LeaveCalendarView';
-import ManagerTab from '@/components/leave/tabs/ManagerTab';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
+import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard';
+import ManagerDashboard from '@/components/dashboard/ManagerDashboard';
 
 const Dashboard = () => {
   const { isManager, user } = useAuth();
-  const isMobile = useIsMobile();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
-  const { employeeId: currentEmployeeId } = useEmployeeDataManagement();
   
-  useAttendanceSync(); // Enable real-time sync at the dashboard level
+  // Enable real-time sync at the dashboard level
+  useAttendanceSync();
 
   // Get user's first name for greeting
   const firstName = user?.user_metadata?.first_name || 
                    user?.email?.split('@')[0] || 
                    'User';
-
-  // For employee users
-  if (!isManager) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <h1 className="text-2xl font-bold mb-6">Hello {firstName}</h1>
-        <div className="grid gap-6">
-          <EmployeeAttendanceSummary />
-          
-          <Card className="p-6">
-            <h3 className="text-xs font-semibold text-gray-500 mb-5 uppercase tracking-wider">
-              Statistics
-            </h3>
-            <EmployeeStatistics employeeId={currentEmployeeId} />
-          </Card>
-          
-          <Card className="p-6">
-            <h3 className="text-xs font-semibold text-gray-500 mb-5 uppercase tracking-wider">
-              Documents
-            </h3>
-            <DocumentList employeeId={currentEmployeeId} />
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   // Count employees excluding the manager themselves
   const employeeCount = isManager 
@@ -93,111 +50,21 @@ const Dashboard = () => {
     projectTime: 0,
     output: 0
   };
-  
-  const [selectedEmployee, setSelectedEmployee] = React.useState<string | null>(null);
-  
-  const handleSelectEmployee = (id: string) => {
-    setSelectedEmployee(id === selectedEmployee ? null : id);
-  };
-
-  // Determine if the user is a regular employee (not a manager)
-  const isEmployee = user && !isManager;
 
   return (
     <Tabs defaultValue="dashboard">
       <TabsContent value="dashboard" className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
-        <div className="max-w-[1800px] mx-auto">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <h1 className="text-2xl md:text-4xl font-bold">Hello {firstName}</h1>
-            
-            {/* Add current date/time for managers */}
-            {isManager && (
-              <CurrentDateTime className="md:w-auto w-full mt-4 md:mt-0" />
-            )}
-          </div>
-          
-          {/* Progress Bars - Only show for managers */}
-          {isManager && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6">
-              <ProgressBar label="Interviews" value={Math.round(interviewStats.interviews) || 0} color="black" />
-              <ProgressBar label="Hired" value={Math.round(interviewStats.hired) || 0} color="yellow" />
-              <ProgressBar label="Project time" value={interviewStats.projectTime} color="gray" />
-              <ProgressBar label="Output" value={interviewStats.output} color="black" />
-            </div>
-          )}
-          
-          {/* Stats */}
-          <div className="flex flex-wrap -mx-2 mb-6">
-            <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
-              <StatCard 
-                title={isManager ? "Team Members" : "Employee"} 
-                value={employeeCount.toString()} 
-                icon={<Users className="w-5 h-5" />}
-                className="h-full"
-              />
-            </div>
-            {isManager && (
-              <>
-                <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
-                  <StatCard 
-                    title="Hirings" 
-                    value={interviews.filter(i => i.stage === 'Hired').length.toString()} 
-                    icon={<Users className="w-5 h-5" />}
-                    className="h-full"
-                  />
-                </div>
-                <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
-                  <StatCard 
-                    title="Projects" 
-                    value="185" 
-                    icon={<FolderOpen className="w-5 h-5" />}
-                    className="h-full"
-                  />
-                </div>
-              </>
-            )}
-          </div>
-          
-          {/* Main Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Column */}
-            <div className="lg:col-span-3">
-              {isEmployee ? (
-                <DashboardTimeClock />
-              ) : (
-                <ManagerTab />
-              )}
-            </div>
-            
-            {/* Middle Column */}
-            <div className="lg:col-span-5">
-              <SalaryTable 
-                employees={salaryEmployees.map(emp => ({
-                  ...emp,
-                  selected: emp.id === selectedEmployee
-                }))} 
-                onSelectEmployee={handleSelectEmployee}
-              />
-            </div>
-            
-            {/* Right Column */}
-            <div className="lg:col-span-4">
-              {/* Updated to use the enhanced AttendanceReport */}
-              <AttendanceReport 
-                employeeId={selectedEmployee ?? undefined}
-                className="mb-6" 
-              />
-              
-              {/* Only show stats for managers */}
-              {isManager && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <HiringStatistics className="col-span-1" />
-                  <EmployeeComposition className="col-span-1" />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        {isManager ? (
+          <ManagerDashboard 
+            firstName={firstName}
+            employeeCount={employeeCount}
+            hiredCount={interviews.filter(i => i.stage === 'Hired').length}
+            interviewStats={interviewStats}
+            salaryEmployees={salaryEmployees}
+          />
+        ) : (
+          <EmployeeDashboard firstName={firstName} />
+        )}
       </TabsContent>
     </Tabs>
   );
