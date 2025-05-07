@@ -169,7 +169,7 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
       </div>
 
       {/* Shift Cards */}
-      <Tabs value={activeTab}>
+      <Tabs value={activeTab} defaultValue={activeTab}>
         <TabsContent value={activeTab} className="flex-1 overflow-y-auto p-4 space-y-3">
           {filteredSchedules.length > 0 ? (
             filteredSchedules.map(schedule => (
