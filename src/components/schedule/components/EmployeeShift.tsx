@@ -29,9 +29,9 @@ const EmployeeShift: React.FC<EmployeeShiftProps> = ({ shift, colorClass, onClic
     }
   }
   
-  // If no role found, try to use shift type
-  if (!role && shift.shift_type) {
-    role = shift.shift_type;
+  // If no role found, try to use shift type if available
+  if (!role && shift.status) {
+    role = shift.status;
   }
   
   const isConfirmed = shift.status === 'confirmed';
