@@ -22,6 +22,7 @@ import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management'
 import CurrentDateTime from '@/components/dashboard/CurrentDateTime';
 import LeaveCalendarView from '@/components/leave/LeaveCalendarView';
 import ManagerTab from '@/components/leave/tabs/ManagerTab';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 
 const Dashboard = () => {
   const { isManager, user } = useAuth();
@@ -103,100 +104,102 @@ const Dashboard = () => {
   const isEmployee = user && !isManager;
 
   return (
-    <div className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
-      <div className="max-w-[1800px] mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <h1 className="text-2xl md:text-4xl font-bold">Hello {firstName}</h1>
-          
-          {/* Add current date/time for managers */}
-          {isManager && (
-            <CurrentDateTime className="md:w-auto w-full mt-4 md:mt-0" />
-          )}
-        </div>
-        
-        {/* Progress Bars - Only show for managers */}
-        {isManager && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6">
-            <ProgressBar label="Interviews" value={Math.round(interviewStats.interviews) || 0} color="black" />
-            <ProgressBar label="Hired" value={Math.round(interviewStats.hired) || 0} color="yellow" />
-            <ProgressBar label="Project time" value={interviewStats.projectTime} color="gray" />
-            <ProgressBar label="Output" value={interviewStats.output} color="black" />
-          </div>
-        )}
-        
-        {/* Stats */}
-        <div className="flex flex-wrap -mx-2 mb-6">
-          <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
-            <StatCard 
-              title={isManager ? "Team Members" : "Employee"} 
-              value={employeeCount.toString()} 
-              icon={<Users className="w-5 h-5" />}
-              className="h-full"
-            />
-          </div>
-          {isManager && (
-            <>
-              <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
-                <StatCard 
-                  title="Hirings" 
-                  value={interviews.filter(i => i.stage === 'Hired').length.toString()} 
-                  icon={<Users className="w-5 h-5" />}
-                  className="h-full"
-                />
-              </div>
-              <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
-                <StatCard 
-                  title="Projects" 
-                  value="185" 
-                  icon={<FolderOpen className="w-5 h-5" />}
-                  className="h-full"
-                />
-              </div>
-            </>
-          )}
-        </div>
-        
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column */}
-          <div className="lg:col-span-3">
-            {isEmployee ? (
-              <DashboardTimeClock />
-            ) : (
-              <ManagerTab />
-            )}
-          </div>
-          
-          {/* Middle Column */}
-          <div className="lg:col-span-5">
-            <SalaryTable 
-              employees={salaryEmployees.map(emp => ({
-                ...emp,
-                selected: emp.id === selectedEmployee
-              }))} 
-              onSelectEmployee={handleSelectEmployee}
-            />
-          </div>
-          
-          {/* Right Column */}
-          <div className="lg:col-span-4">
-            {/* Updated to use the enhanced AttendanceReport */}
-            <AttendanceReport 
-              employeeId={selectedEmployee ?? undefined}
-              className="mb-6" 
-            />
+    <Tabs defaultValue="dashboard">
+      <TabsContent value="dashboard" className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
+        <div className="max-w-[1800px] mx-auto">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <h1 className="text-2xl md:text-4xl font-bold">Hello {firstName}</h1>
             
-            {/* Only show stats for managers */}
+            {/* Add current date/time for managers */}
             {isManager && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <HiringStatistics className="col-span-1" />
-                <EmployeeComposition className="col-span-1" />
-              </div>
+              <CurrentDateTime className="md:w-auto w-full mt-4 md:mt-0" />
             )}
           </div>
+          
+          {/* Progress Bars - Only show for managers */}
+          {isManager && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6">
+              <ProgressBar label="Interviews" value={Math.round(interviewStats.interviews) || 0} color="black" />
+              <ProgressBar label="Hired" value={Math.round(interviewStats.hired) || 0} color="yellow" />
+              <ProgressBar label="Project time" value={interviewStats.projectTime} color="gray" />
+              <ProgressBar label="Output" value={interviewStats.output} color="black" />
+            </div>
+          )}
+          
+          {/* Stats */}
+          <div className="flex flex-wrap -mx-2 mb-6">
+            <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
+              <StatCard 
+                title={isManager ? "Team Members" : "Employee"} 
+                value={employeeCount.toString()} 
+                icon={<Users className="w-5 h-5" />}
+                className="h-full"
+              />
+            </div>
+            {isManager && (
+              <>
+                <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
+                  <StatCard 
+                    title="Hirings" 
+                    value={interviews.filter(i => i.stage === 'Hired').length.toString()} 
+                    icon={<Users className="w-5 h-5" />}
+                    className="h-full"
+                  />
+                </div>
+                <div className="w-full sm:w-1/2 lg:w-1/3 px-2 mb-4 sm:mb-0">
+                  <StatCard 
+                    title="Projects" 
+                    value="185" 
+                    icon={<FolderOpen className="w-5 h-5" />}
+                    className="h-full"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+          
+          {/* Main Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Column */}
+            <div className="lg:col-span-3">
+              {isEmployee ? (
+                <DashboardTimeClock />
+              ) : (
+                <ManagerTab />
+              )}
+            </div>
+            
+            {/* Middle Column */}
+            <div className="lg:col-span-5">
+              <SalaryTable 
+                employees={salaryEmployees.map(emp => ({
+                  ...emp,
+                  selected: emp.id === selectedEmployee
+                }))} 
+                onSelectEmployee={handleSelectEmployee}
+              />
+            </div>
+            
+            {/* Right Column */}
+            <div className="lg:col-span-4">
+              {/* Updated to use the enhanced AttendanceReport */}
+              <AttendanceReport 
+                employeeId={selectedEmployee ?? undefined}
+                className="mb-6" 
+              />
+              
+              {/* Only show stats for managers */}
+              {isManager && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <HiringStatistics className="col-span-1" />
+                  <EmployeeComposition className="col-span-1" />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </TabsContent>
+    </Tabs>
   );
 };
 
