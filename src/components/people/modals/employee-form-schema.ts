@@ -20,6 +20,7 @@ export const employeeFormSchema = z.object({
   department: z.string().min(1, { message: 'Department is required' }),
   site: z.string().min(1, { message: 'Site is required' }),
   salary: z.coerce.number().min(1, { message: 'Salary must be greater than 0' }),
+  hourly_rate: z.coerce.number().min(0, { message: 'Hourly rate cannot be negative' }).optional(),
   lifecycle: z.enum(validLifecycleValues, {
     errorMap: () => ({ message: 'Please select a valid lifecycle stage' }),
   }).default('Employed'),

@@ -1,8 +1,8 @@
 
-import React from 'react';
-import { UseFormReturn } from 'react-hook-form';
+import React, { useEffect } from 'react';
+import { UseFormReturn, useWatch } from 'react-hook-form';
 import { EmployeeFormValues } from '../employee-form-schema';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Info } from 'lucide-react';
@@ -14,28 +14,115 @@ interface CompensationFieldsProps {
 
 const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
   const salary = form.watch('salary') || 0;
+  const hourlyRate = form.watch('hourly_rate') || 0;
+  const department = form.watch('department');
+  
   const netSalary = salary * 0.75;
+  
+  // Calculate annual salary from hourly rate for information purposes
+  const estimatedAnnualFromHourly = hourlyRate > 0 ? hourlyRate * 40 * 52 : 0; // 40h/week, 52 weeks
+  
+  // Update annual salary when hourly rate changes (if user has entered hourly rate)
+  useEffect(() => {
+    if (hourlyRate > 0 && form.getValues('salary') === 0) {
+      form.setValue('salary', estimatedAnnualFromHourly);
+    }
+  }, [hourlyRate, form]);
+  
+  // Common departments for UK and USA that typically use hourly rates
+  const hourlyRateDepartments = ['Hospital', 'Healthcare', 'Waste Services', 'Council', 'Retail', 'Hospitality', 'Cleaning'];
+  const showHourlyRateProminent = hourlyRateDepartments.some(dept => 
+    department?.toLowerCase().includes(dept.toLowerCase())
+  );
   
   return (
     <div className="space-y-4">
-      <FormField
-        control={form.control}
-        name="salary"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Annual Salary (USD)</FormLabel>
-            <FormControl>
-              <Input 
-                type="number" 
-                placeholder="65000" 
-                {...field} 
-                onChange={(e) => field.onChange(e.target.valueAsNumber)}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {showHourlyRateProminent ? (
+        <>
+          <FormField
+            control={form.control}
+            name="hourly_rate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Hourly Rate (£/$ per hour)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="15.00" 
+                    step="0.01"
+                    {...field} 
+                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                  />
+                </FormControl>
+                <FormDescription className="text-xs">
+                  Estimated annual: {formatCurrency(estimatedAnnualFromHourly)}
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="salary"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Annual Salary</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="65000" 
+                    {...field} 
+                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </>
+      ) : (
+        <>
+          <FormField
+            control={form.control}
+            name="salary"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Annual Salary</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="65000" 
+                    {...field} 
+                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="hourly_rate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Hourly Rate (£/$ per hour)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="15.00"
+                    step="0.01"
+                    {...field} 
+                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </>
+      )}
       
       <Separator className="my-4" />
       
@@ -59,8 +146,8 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
             <p className="font-medium">{salary ? formatCurrency(netSalary) : '-'}</p>
           </div>
           <div>
-            <p className="text-gray-500">Pay Period:</p>
-            <p className="font-medium">Monthly</p>
+            <p className="text-gray-500">Hourly Equivalent:</p>
+            <p className="font-medium">{salary > 0 ? `${formatCurrency(salary / (40 * 52))}/hour` : '-'}</p>
           </div>
         </div>
       </div>

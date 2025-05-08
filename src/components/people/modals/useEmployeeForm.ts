@@ -26,6 +26,7 @@ export const useEmployeeForm = ({ onSuccess, employeeToEdit }: UseEmployeeFormPr
           department: employeeToEdit.department,
           site: employeeToEdit.site,
           salary: employeeToEdit.salary,
+          hourly_rate: employeeToEdit.hourly_rate || 0,
           lifecycle: employeeToEdit.lifecycle as any,
           status: employeeToEdit.status as any,
         }
@@ -35,6 +36,7 @@ export const useEmployeeForm = ({ onSuccess, employeeToEdit }: UseEmployeeFormPr
           department: '',
           site: '',
           salary: 0,
+          hourly_rate: 0,
           lifecycle: 'Employed',
           status: 'Present',
         },
@@ -61,6 +63,7 @@ export const useEmployeeForm = ({ onSuccess, employeeToEdit }: UseEmployeeFormPr
         department: values.department,
         site: values.site,
         salary: Number(values.salary),
+        hourly_rate: values.hourly_rate ? Number(values.hourly_rate) : undefined,
         lifecycle: values.lifecycle,
         status: values.status,
       };

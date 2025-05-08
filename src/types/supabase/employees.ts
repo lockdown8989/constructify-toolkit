@@ -6,6 +6,7 @@ export interface Employee {
   department: string;
   site: string;
   salary: number;
+  hourly_rate?: number;
   start_date: string;
   lifecycle: string;
   status: string;
