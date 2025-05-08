@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { format, addDays, subDays, isSameDay } from 'date-fns';
-import { Search, ChevronLeft, ChevronRight, Calendar, Send } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Calendar, Send, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useIsMobile } from '@/hooks/use-mobile';
 import EmployeeScheduleTimeline from './components/EmployeeScheduleTimeline';
 import ScheduleViewSelector from './components/ScheduleViewSelector';
 import { useEmployees } from '@/hooks/use-employees';
@@ -19,6 +20,7 @@ const ManagerScheduleView: React.FC = () => {
   const { data: employeeList = [], isLoading: isLoadingEmployees } = useEmployees({});
   const { data: schedules = [], isLoading: isLoadingSchedules } = useSchedules();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   // Filter employees based on search query
   const filteredEmployees = employeeList.filter(employee => 
@@ -62,13 +64,14 @@ const ManagerScheduleView: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto bg-white overflow-hidden rounded-xl shadow-sm border">
-      <div className="p-4 flex flex-col sm:flex-row justify-between items-center border-b">
-        <div className="flex items-center mb-4 sm:mb-0">
-          <h1 className="text-2xl font-bold">Schedule</h1>
+      {/* Header section */}
+      <div className={`p-3 sm:p-4 flex flex-col sm:flex-row justify-between ${isMobile ? 'gap-2' : 'items-center'} border-b`}>
+        <div className="flex items-center">
+          <h1 className="text-xl sm:text-2xl font-bold">Schedule</h1>
         </div>
         
-        <div className="flex w-full sm:w-auto items-center gap-2">
-          <div className="relative w-full sm:w-64">
+        <div className={`flex ${isMobile ? 'w-full' : 'w-auto'} items-center gap-2`}>
+          <div className={`relative ${isMobile ? 'w-full' : 'w-64'}`}>
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
             <Input
               placeholder="Search employees..."
@@ -80,22 +83,23 @@ const ManagerScheduleView: React.FC = () => {
         </div>
       </div>
       
-      <div className="p-4 flex flex-wrap justify-between items-center border-b">
+      {/* Controls section */}
+      <div className={`${isMobile ? 'p-3' : 'p-4'} flex flex-wrap justify-between items-center border-b`}>
         <div className="flex items-center mb-2 sm:mb-0">
           <Calendar className="h-5 w-5 mr-2 text-gray-600" />
           <span className="font-medium">{format(currentDate, 'MMMM d, yyyy')}</span>
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className={`flex ${isMobile ? 'flex-col w-full gap-2' : 'items-center gap-4'}`}>
           <ScheduleViewSelector 
             viewType={viewType} 
             onViewChange={setViewType}
           />
           
-          <div className="flex items-center gap-2">
+          <div className={`flex items-center ${isMobile ? 'justify-between w-full' : 'gap-2'}`}>
             <Button 
               variant="outline"
-              size="sm"
+              size={isMobile ? "sm" : "default"}
               onClick={() => setIsNewScheduleDialogOpen(true)}
               className="bg-blue-600 text-white hover:bg-blue-700"
             >
@@ -104,20 +108,21 @@ const ManagerScheduleView: React.FC = () => {
             
             <Button 
               variant="outline"
-              size="sm"
+              size={isMobile ? "sm" : "default"}
               onClick={handlePublish}
-              className="flex items-center gap-1"
+              className={`flex items-center ${isMobile ? '' : 'gap-1'}`}
             >
-              <Send className="h-4 w-4" />
+              <Send className={`${isMobile ? 'h-3.5 w-3.5 mr-1' : 'h-4 w-4'}`} />
               Publish
             </Button>
           </div>
         </div>
       </div>
       
+      {/* Navigation section */}
       <div className="overflow-x-auto">
         <div className="flex items-center justify-between p-2 border-b bg-gray-50">
-          <Button variant="ghost" size="sm" onClick={handlePreviousDay}>
+          <Button variant="ghost" size="sm" onClick={handlePreviousDay} className="h-8 w-8 p-0">
             <ChevronLeft className="h-4 w-4" />
           </Button>
           
@@ -125,17 +130,20 @@ const ManagerScheduleView: React.FC = () => {
             Today
           </Button>
           
-          <Button variant="ghost" size="sm" onClick={handleNextDay}>
+          <Button variant="ghost" size="sm" onClick={handleNextDay} className="h-8 w-8 p-0">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
         
-        <EmployeeScheduleTimeline 
-          employees={employeeSchedules}
-          currentDate={currentDate}
-          viewType={viewType}
-          isLoading={isLoadingEmployees || isLoadingSchedules}
-        />
+        {/* Timeline component */}
+        <div className={isMobile ? "momentum-scroll" : ""}>
+          <EmployeeScheduleTimeline 
+            employees={employeeSchedules}
+            currentDate={currentDate}
+            viewType={viewType}
+            isLoading={isLoadingEmployees || isLoadingSchedules}
+          />
+        </div>
       </div>
       
       <NewScheduleDialog 
