@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Employee } from '@/components/salary/table/types';  // Changed to use the same Employee type as the SalaryTable component
 import SalaryTable from '@/components/salary/table/SalaryTable';
-import AttendanceReport from '@/components/dashboard/attendance-report';
+import AttendanceReport from '@/components/dashboard/AttendanceReport';
 import HiringStatistics from '@/components/dashboard/HiringStatistics';
 import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
 import ManagerTab from '@/components/leave/tabs/ManagerTab';
