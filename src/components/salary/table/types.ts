@@ -2,7 +2,7 @@
 export interface Employee {
   id: string;
   name: string;
-  avatar: string;
+  avatar?: string;  // Changed from required to optional with ?
   title: string;
   salary: string;
   status: 'Paid' | 'Absent' | 'Pending';

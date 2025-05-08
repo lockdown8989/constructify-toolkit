@@ -7,7 +7,7 @@ export interface Employee {
   status: 'Paid' | 'Absent' | 'Pending';
   paymentDate: string;
   department?: string;
-  avatar?: string;
+  avatar?: string;  // Make sure avatar is optional here as well
   selected?: boolean;
   user_id?: string;
 }
