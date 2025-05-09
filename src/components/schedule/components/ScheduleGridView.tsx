@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format, addDays, startOfWeek, isSameDay, isToday } from 'date-fns';
 import { ChevronLeft, ChevronRight, Plus, Filter, Printer, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { useShiftManagement } from '@/hooks/use-shift-management';
+import { useToast } from '@/hooks/use-toast';
 
 interface ScheduleGridViewProps {
   currentDate: Date;
@@ -30,12 +31,16 @@ const ScheduleGridView: React.FC<ScheduleGridViewProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const { isManager, user } = useAuth();
+  const { toast } = useToast();
   const { 
     shiftsByDepartment, 
     toggleDepartment,
     getRoleColorClass,
     formatShiftTime
   } = useShiftManagement(schedules);
+  
+  console.log("Current schedules in grid view:", schedules);
+  console.log("Shifts by department:", shiftsByDepartment);
   
   // Generate the days for the week view
   const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start from Monday
@@ -97,6 +102,16 @@ const ScheduleGridView: React.FC<ScheduleGridViewProps> = ({
     
     return statusMarkers[employeeId]?.[dateStr];
   };
+
+  // Show a toast when there's no data
+  useEffect(() => {
+    if (schedules.length === 0) {
+      toast({
+        title: "No schedule data",
+        description: "There are currently no shifts scheduled. Data will appear here when shifts are assigned.",
+      });
+    }
+  }, [schedules, toast]);
 
   return (
     <div className="bg-white shadow-sm border rounded-lg overflow-hidden">

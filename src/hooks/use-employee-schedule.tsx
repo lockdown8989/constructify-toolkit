@@ -19,6 +19,8 @@ export const useEmployeeSchedule = () => {
   // Fetch schedules with the refresh trigger
   const { data: schedules = [], isLoading, refetch } = useSchedules();
   
+  console.log("Current schedules data:", schedules);
+  
   // Function to manually refresh schedules
   const refreshSchedules = () => {
     setRefreshTrigger(prev => prev + 1);

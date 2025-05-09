@@ -8,12 +8,11 @@ import { ScheduleDialogs } from './components/ScheduleDialogs';
 import { ScheduleTabs } from './components/ScheduleTabs';
 import { Schedule } from '@/hooks/use-schedules';
 import { Button } from '@/components/ui/button';
-import { useLocation } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 const EmployeeScheduleView: React.FC = () => {
-  const location = useLocation();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const {
@@ -54,6 +53,14 @@ const EmployeeScheduleView: React.FC = () => {
     ? schedules.find(s => s.id === selectedScheduleId) 
     : null;
 
+  const handleRefresh = () => {
+    refreshSchedules();
+    toast({
+      title: "Refreshing schedule",
+      description: "Your schedule is being updated with the latest information."
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="p-4 text-center">
@@ -82,7 +89,7 @@ const EmployeeScheduleView: React.FC = () => {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={refreshSchedules}
+            onClick={handleRefresh}
             className="flex items-center gap-1"
           >
             <RefreshCw className="h-3.5 w-3.5" />
@@ -114,11 +121,6 @@ const EmployeeScheduleView: React.FC = () => {
       </div>
     </div>
   );
-};
-
-// Helper function for class names
-const cn = (...classes: (string | boolean | undefined)[]) => {
-  return classes.filter(Boolean).join(' ');
 };
 
 export default EmployeeScheduleView;

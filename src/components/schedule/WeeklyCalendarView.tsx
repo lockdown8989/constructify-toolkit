@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ScheduleGridView from './components/ScheduleGridView';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface WeeklyCalendarViewProps {
   currentDate: Date;
@@ -30,12 +31,26 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
   const [isOpen, setIsOpen] = useState(true);
   const startDate = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start from Monday
   const [view, setView] = useState<'calendar' | 'grid'>('grid');
+  const isMobile = useIsMobile();
+  
+  // Process the schedules to make sure they're using the correct format
+  const processedSchedules = schedules.map(schedule => {
+    if (typeof schedule.start_time === 'string') {
+      return {
+        ...schedule,
+        start_time: schedule.start_time,
+        end_time: schedule.end_time
+      };
+    }
+    return schedule;
+  });
   
   const weekDays = Array.from({ length: 7 }).map((_, index) => {
     const date = addDays(startDate, index);
-    const daySchedules = schedules.filter(schedule => 
-      isSameDay(new Date(schedule.start_time), date)
-    );
+    const daySchedules = processedSchedules.filter(schedule => {
+      const scheduleDate = new Date(schedule.start_time);
+      return isSameDay(scheduleDate, date);
+    });
     
     const hasShift = daySchedules.length > 0;
     
@@ -181,11 +196,14 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
               </div>
             </TabsContent>
             
-            <TabsContent value="grid" className="pt-0">
+            <TabsContent value="grid" className={cn(
+              "pt-0", 
+              isMobile ? "px-0" : ""
+            )}>
               <ScheduleGridView 
                 currentDate={currentDate}
                 onDateChange={onDateChange}
-                schedules={schedules}
+                schedules={processedSchedules}
               />
             </TabsContent>
           </Tabs>
