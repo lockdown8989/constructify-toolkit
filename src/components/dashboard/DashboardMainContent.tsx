@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Employee } from '@/components/dashboard/salary-table/types';
 import SalaryTable from '@/components/salary/table/SalaryTable';
-import AttendanceReport from '@/components/dashboard/AttendanceReport';
+import AttendanceReport from '@/components/dashboard/attendance-report';
 import HiringStatistics from '@/components/dashboard/HiringStatistics';
 import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
 import ManagerTab from '@/components/leave/tabs/ManagerTab';
