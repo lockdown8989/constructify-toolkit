@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { format, addDays, startOfWeek } from 'date-fns';
+import { format } from 'date-fns';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
-import { Check, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import WeeklyCalendarView from '@/components/schedule/WeeklyCalendarView';
 import { ScheduleDialogs } from './components/ScheduleDialogs';
 import { ScheduleTabs } from './components/ScheduleTabs';
@@ -38,24 +38,14 @@ const EmployeeScheduleView: React.FC = () => {
   };
 
   const handleResponseComplete = () => {
-    // Refresh schedules data after a response
     refreshSchedules();
     
-    // If we were in the pending tab and there are no more pending shifts,
-    // switch to the my-shifts tab
     if (activeTab === 'pending') {
       const pendingShifts = schedules.filter(s => s.status === 'pending');
-      if (pendingShifts.length <= 1) { // Using <= 1 because the current item is still in the array
+      if (pendingShifts.length <= 1) {
         setActiveTab('my-shifts');
       }
     }
-  };
-
-  // Function to handle previous/next month navigation
-  const handleMonthChange = (increment: number) => {
-    const newDate = new Date(currentDate);
-    newDate.setMonth(newDate.getMonth() + increment);
-    setCurrentDate(newDate);
   };
 
   const selectedSchedule = selectedScheduleId 
@@ -67,49 +57,50 @@ const EmployeeScheduleView: React.FC = () => {
   }
 
   return (
-    <div className="pb-6 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center px-4 pt-2 pb-4">
-        <h2 className="text-xl font-semibold">Your Schedule</h2>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={refreshSchedules}
-          className="flex items-center gap-1"
-        >
-          <RefreshCw className="h-3.5 w-3.5" />
-          <span>Refresh</span>
-        </Button>
-      </div>
-      
+    <div className="pb-6 max-w-full mx-auto">
+      {/* Calendar view at the top */}
       <WeeklyCalendarView
         currentDate={currentDate}
         onDateChange={setCurrentDate}
         schedules={schedules}
       />
       
-      <div className="border-t border-gray-200 my-2" />
+      <div className="mt-4 border-t border-gray-200 pt-4">
+        <div className="flex justify-between items-center px-4 pb-4">
+          <h2 className="text-xl font-semibold">Your Shifts</h2>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={refreshSchedules}
+            className="flex items-center gap-1"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            <span>Refresh</span>
+          </Button>
+        </div>
 
-      <ScheduleTabs
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        schedules={schedules}
-        newSchedules={newSchedules}
-        onInfoClick={setSelectedScheduleId}
-        onEmailClick={handleEmailClick}
-        onCancelClick={(id) => {
-          setSelectedScheduleId(id);
-          setIsCancelDialogOpen(true);
-        }}
-        onResponseComplete={handleResponseComplete}
-      />
+        <ScheduleTabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          schedules={schedules}
+          newSchedules={newSchedules}
+          onInfoClick={setSelectedScheduleId}
+          onEmailClick={handleEmailClick}
+          onCancelClick={(id) => {
+            setSelectedScheduleId(id);
+            setIsCancelDialogOpen(true);
+          }}
+          onResponseComplete={handleResponseComplete}
+        />
 
-      <ScheduleDialogs
-        selectedSchedule={selectedSchedule}
-        isInfoDialogOpen={isInfoDialogOpen}
-        setIsInfoDialogOpen={setIsInfoDialogOpen}
-        isCancelDialogOpen={isCancelDialogOpen}
-        setIsCancelDialogOpen={setIsCancelDialogOpen}
-      />
+        <ScheduleDialogs
+          selectedSchedule={selectedSchedule}
+          isInfoDialogOpen={isInfoDialogOpen}
+          setIsInfoDialogOpen={setIsInfoDialogOpen}
+          isCancelDialogOpen={isCancelDialogOpen}
+          setIsCancelDialogOpen={setIsCancelDialogOpen}
+        />
+      </div>
     </div>
   );
 };

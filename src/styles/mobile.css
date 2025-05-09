@@ -46,6 +46,19 @@
   .shift-calendar-mobile .calendar-day-header {
     @apply text-xs py-1;
   }
+
+  /* Schedule grid adjustments for mobile */
+  .schedule-grid-mobile {
+    @apply overflow-x-auto;
+  }
+  
+  .schedule-grid-mobile .day-cell {
+    @apply min-w-[100px];
+  }
+  
+  .schedule-grid-mobile .employee-cell {
+    @apply sticky left-0 bg-white z-10;
+  }
 }
 
 /* Touch-friendly interactive elements */
@@ -173,6 +186,20 @@
   .shift-employee-mobile {
     @apply text-xs;
   }
+
+  /* Schedule grid view for mobile */
+  .schedule-grid-container {
+    @apply overflow-x-auto -mx-4;
+  }
+  
+  .schedule-grid-container table {
+    @apply min-w-[800px];
+  }
+  
+  .schedule-grid-container th:first-child,
+  .schedule-grid-container td:first-child {
+    @apply sticky left-0 bg-white z-10 shadow-sm;
+  }
 }
 
 /* Shift calendar day chip for mobile */
@@ -189,3 +216,32 @@
   @apply flex items-center justify-between py-1 px-2 bg-gray-50 rounded-lg text-sm mb-2;
 }
 
+/* Schedule grid styles */
+.schedule-grid {
+  @apply overflow-x-auto;
+}
+
+.schedule-grid-table {
+  @apply w-full table-fixed;
+}
+
+.schedule-grid-sticky-col {
+  @apply sticky left-0 bg-white z-10;
+}
+
+/* Shift color styles */
+.shift-kitchen {
+  @apply bg-green-100 text-green-800 border-l-green-500;
+}
+
+.shift-service {
+  @apply bg-blue-100 text-blue-800 border-l-blue-500;
+}
+
+.shift-admin {
+  @apply bg-purple-100 text-purple-800 border-l-purple-500;
+}
+
+.shift-other {
+  @apply bg-gray-100 text-gray-800 border-l-gray-500;
+}
