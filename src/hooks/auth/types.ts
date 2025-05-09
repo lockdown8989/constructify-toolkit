@@ -46,13 +46,14 @@ export function isAuthenticated(session: Session | null): boolean {
 
 // Map UI role names to database role names
 export function mapUIRoleToDBRole(role: string): Database["public"]["Enums"]["app_role"] {
+  // Make sure to return values that match the Database["public"]["Enums"]["app_role"] type
   switch (role) {
     case 'admin':
       return 'admin';
     case 'hr':
-      return 'hr';
+      return 'hr' as Database["public"]["Enums"]["app_role"]; // Cast to ensure type compatibility
     case 'manager':
-      return 'employer'; // In the UI we call it 'manager', in the DB it's 'employer'
+      return 'employer' as Database["public"]["Enums"]["app_role"]; // In the UI we call it 'manager', in the DB it's 'employer'
     default:
       return 'employee';
   }
