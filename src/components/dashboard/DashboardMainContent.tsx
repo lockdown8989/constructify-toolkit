@@ -23,6 +23,14 @@ const DashboardMainContent: React.FC<DashboardMainContentProps> = ({
     setSelectedEmployee(id === selectedEmployee ? null : id);
   };
 
+  // Convert employee data to ensure salary is a string for SalaryTable
+  const formattedEmployees = salaryEmployees.map(emp => ({
+    ...emp,
+    // Ensure salary is always a string
+    salary: typeof emp.salary === 'number' ? String(emp.salary) : emp.salary,
+    selected: emp.id === selectedEmployee
+  }));
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Left Column */}
@@ -37,10 +45,7 @@ const DashboardMainContent: React.FC<DashboardMainContentProps> = ({
       {/* Middle Column */}
       <div className="lg:col-span-5">
         <SalaryTable 
-          employees={salaryEmployees.map(emp => ({
-            ...emp,
-            selected: emp.id === selectedEmployee
-          }))} 
+          employees={formattedEmployees}
           onSelectEmployee={handleSelectEmployee}
         />
       </div>
