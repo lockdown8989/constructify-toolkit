@@ -1,6 +1,6 @@
 
 import React, { useEffect } from "react";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthPage } from "@/hooks/auth/useAuthPage";
 import { AuthHeader } from "@/components/auth/AuthHeader";
@@ -8,10 +8,11 @@ import { AuthTabs } from "@/components/auth/AuthTabs";
 import { ResetPasswordMode } from "@/components/auth/ResetPasswordMode";
 
 const Auth = () => {
-  const { signIn, signUp } = useAuth();
+  const { user, isAuthenticated, signIn, signUp } = useAuth();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  
   const {
-    user,
     from,
     activeTab,
     setActiveTab,
@@ -27,19 +28,22 @@ const Auth = () => {
   useEffect(() => {
     // Log authentication state for debugging
     console.log("Auth page state:", { 
-      isAuthenticated: !!user,
+      isAuthenticated,
+      currentPath: location.pathname,
+      user: user?.email,
       isResetMode, 
       isRecoveryMode, 
       hasRecoveryToken,
-      from
+      redirectTo: from
     });
-  }, [user, isResetMode, isRecoveryMode, hasRecoveryToken, from]);
+  }, [user, isAuthenticated, isResetMode, isRecoveryMode, hasRecoveryToken, from, location]);
 
   // If we have a token in the URL but not in reset mode, force reset mode
   const shouldShowReset = isResetMode || isRecoveryMode || hasRecoveryToken;
 
   // Redirect authenticated users to dashboard if not in reset mode
   if (user && !shouldShowReset) {
+    console.log("Auth page - User is authenticated, redirecting to:", from);
     return <Navigate to={from} replace />;
   }
 

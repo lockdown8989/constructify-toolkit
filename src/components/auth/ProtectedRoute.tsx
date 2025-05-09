@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const { user, isLoading, isAdmin, isHR, isManager } = useAuth();
+  const { user, session, isLoading, isAdmin, isHR, isManager } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -23,9 +23,17 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     );
   }
 
-  if (!user) {
-    // Redirect to the login page if not authenticated
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+  // Add more detailed logging to help diagnose auth issues
+  console.log("Auth state in ProtectedRoute:", { 
+    isAuthenticated: !!user, 
+    hasSession: !!session,
+    userId: user?.id,
+    path: location.pathname
+  });
+
+  if (!user || !session) {
+    // Redirect to the login page if not authenticated, preserving the intended destination
+    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
   // Check for required role

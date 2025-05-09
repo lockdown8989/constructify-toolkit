@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   // Calculate if user is authenticated
-  const isAuthenticated = !!user;
+  const isAuthenticated = !!user && !!session;
 
   const value = {
     user,

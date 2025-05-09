@@ -1,19 +1,27 @@
 
-import { User, Session } from '@supabase/supabase-js';
+import { User, Session } from "@supabase/supabase-js";
+import { Database } from "@/types/supabase/database";
 
-// Define the user role types - IMPORTANT: Database uses 'employer' while UI uses 'manager'
-export type UserRole = 'admin' | 'hr' | 'employee' | 'manager';
-export type DatabaseRole = 'admin' | 'hr' | 'employee' | 'employer';
+export interface Profile {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  department: string | null;
+  position: string | null;
+  preferred_currency: string | null;
+  preferred_language: string | null;
+  theme: string | null;
+  country: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
 
-// Map UI roles to database roles
-export const mapUIRoleToDBRole = (role: UserRole): DatabaseRole => {
-  return role === 'manager' ? 'employer' : role as DatabaseRole;
-};
-
-// Map database roles to UI roles
-export const mapDBRoleToUIRole = (role: DatabaseRole): UserRole => {
-  return role === 'employer' ? 'manager' : role as UserRole;
-};
+export interface UserRole {
+  id: string;
+  user_id: string;
+  role: Database["public"]["Enums"]["app_role"];
+  created_at: string | null;
+}
 
 export interface AuthContextType {
   user: User | null;
@@ -22,15 +30,14 @@ export interface AuthContextType {
   isAdmin: boolean;
   isHR: boolean;
   isManager: boolean;
-  isAuthenticated?: boolean;
-  signIn?: (email: string, password: string) => Promise<any>;
-  signUp?: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;
-  resetPassword?: (email: string) => Promise<any>;
-  updatePassword?: (password: string) => Promise<any>;
-  signOut?: () => Promise<void>;
+  isAuthenticated: boolean;
+  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string, metadata?: any) => Promise<any>;
+  resetPassword: (email: string) => Promise<any>;
+  updatePassword: (newPassword: string) => Promise<any>;
+  signOut: () => Promise<void>;
 }
 
-// Function to check if user is authenticated
-export const isAuthenticated = (session: Session | null): boolean => {
+export function isAuthenticated(session: Session | null): boolean {
   return !!session?.user;
-};
+}
