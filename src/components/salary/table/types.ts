@@ -5,6 +5,7 @@ export interface Employee {
   avatar?: string;  // Changed from required to optional with ?
   title: string;
   salary: string;
+  hourly_rate?: number;  // Added hourly rate field
   status: 'Paid' | 'Absent' | 'Pending';
   selected?: boolean;
   paymentDate?: string;

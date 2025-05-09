@@ -36,6 +36,7 @@ const DocumentUploadCard: React.FC<DocumentUploadCardProps> = ({
   };
 
   const displayName = fileName || `${type.charAt(0).toUpperCase() + type.slice(1)}`;
+  const acceptTypes = type === 'payslip' ? '.pdf,.xls,.xlsx,.doc,.docx' : '.pdf,.doc,.docx';
 
   return (
     <div 
@@ -78,7 +79,7 @@ const DocumentUploadCard: React.FC<DocumentUploadCardProps> = ({
           type="file"
           className="hidden"
           onChange={onUpload}
-          accept=".pdf,.doc,.docx"
+          accept={acceptTypes}
           disabled={disabled || isUploading}
         />
       </label>

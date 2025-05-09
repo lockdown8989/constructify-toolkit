@@ -26,8 +26,12 @@ const DashboardMainContent: React.FC<DashboardMainContentProps> = ({
   // Convert employee data to ensure salary is a string for SalaryTable
   const formattedEmployees = salaryEmployees.map(emp => ({
     ...emp,
-    // Ensure salary is always a string
-    salary: typeof emp.salary === 'number' ? String(emp.salary) : emp.salary,
+    // Ensure salary is always a string with £ currency format
+    salary: typeof emp.salary === 'number' 
+      ? `£${emp.salary.toLocaleString('en-GB')}` 
+      : emp.salary.startsWith('$') 
+        ? emp.salary.replace('$', '£') 
+        : emp.salary,
     selected: emp.id === selectedEmployee
   }));
 
