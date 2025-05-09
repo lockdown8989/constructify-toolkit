@@ -1,7 +1,8 @@
+
 import { useEmployeeCreator } from './useEmployeeCreator';
 import { useEmployeeUpdater } from './useEmployeeUpdater';
 import { useManagerNotifier } from './useManagerNotifier';
-import { UserRole } from '../useUserRole';
+import { UserRole } from '@/hooks/auth/types';
 import { supabase } from "@/integrations/supabase/client";
 
 export const useEmployeeRecord = () => {

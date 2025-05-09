@@ -18,7 +18,7 @@ export interface Profile {
   updated_at: string | null;
 }
 
-export interface UserRole {
+export interface UserRoleRecord {
   id: string;
   user_id: string;
   role: Database["public"]["Enums"]["app_role"];
@@ -49,6 +49,8 @@ export function mapUIRoleToDBRole(role: string): Database["public"]["Enums"]["ap
   switch (role) {
     case 'admin':
       return 'admin';
+    case 'hr':
+      return 'hr';
     case 'manager':
       return 'employer'; // In the UI we call it 'manager', in the DB it's 'employer'
     default:

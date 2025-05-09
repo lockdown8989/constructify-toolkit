@@ -1,10 +1,10 @@
 
 import React from "react";
 import { Label } from "@/components/ui/label";
-import { UserRole } from "../hooks/useUserRole";
+import { UserRole } from "@/hooks/auth/types";
 
 type AccountTypeSelectorProps = {
-  userRole: UserRole;
+  userRole: string;
   onRoleChange: (value: string) => void;
 };
 
