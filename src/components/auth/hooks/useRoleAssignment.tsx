@@ -1,12 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserRole, mapUIRoleToDBRole } from "@/hooks/auth/types";
+import { mapUIRoleToDBRole } from "@/hooks/auth/types";
 
 export const useRoleAssignment = () => {
   const { toast } = useToast();
 
-  const assignUserRole = async (userId: string, userRole: UserRole) => {
+  const assignUserRole = async (userId: string, userRole: string) => {
     try {
       // First check if user already has any roles
       const { data: existingRoles, error: roleCheckError } = await supabase

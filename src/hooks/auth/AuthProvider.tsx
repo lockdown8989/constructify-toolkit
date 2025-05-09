@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -13,7 +12,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { isAdmin, isHR, isManager, fetchUserRoles, resetRoles } = useRoles(user);
-  const { signIn, signUp, resetPassword, updatePassword, signOut } = useAuthActions();
+  const { signIn, signUp: originalSignUp, resetPassword, updatePassword, signOut } = useAuthActions();
+
+  // Create a wrapper around signUp that matches the expected signature
+  const signUp = async (email: string, password: string, metadata?: any) => {
+    // If metadata contains firstName and lastName, use them
+    if (metadata?.firstName && metadata?.lastName) {
+      return originalSignUp(email, password, metadata.firstName, metadata.lastName);
+    }
+    
+    // Otherwise, use empty strings to satisfy the function signature
+    return originalSignUp(email, password, metadata?.firstName || "", metadata?.lastName || "");
+  };
 
   useEffect(() => {
     const setupAuth = async () => {
@@ -65,7 +75,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Calculate if user is authenticated
   const isAuthenticated = !!user && !!session;
 
-  const value = {
+  const value: AuthContextType = {
     user,
     session,
     isLoading,

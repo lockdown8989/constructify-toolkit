@@ -2,6 +2,8 @@
 import { User, Session } from "@supabase/supabase-js";
 import { Database } from "@/types/supabase/database";
 
+export type UserRole = 'admin' | 'hr' | 'manager' | 'employee';
+
 export interface Profile {
   id: string;
   first_name: string | null;
@@ -32,7 +34,7 @@ export interface AuthContextType {
   isManager: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<any>;
-  signUp: (email: string, password: string, metadata?: any) => Promise<any>;
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;
   resetPassword: (email: string) => Promise<any>;
   updatePassword: (newPassword: string) => Promise<any>;
   signOut: () => Promise<void>;
@@ -40,4 +42,16 @@ export interface AuthContextType {
 
 export function isAuthenticated(session: Session | null): boolean {
   return !!session?.user;
+}
+
+// Map UI role names to database role names
+export function mapUIRoleToDBRole(role: string): Database["public"]["Enums"]["app_role"] {
+  switch (role) {
+    case 'admin':
+      return 'admin';
+    case 'manager':
+      return 'employer'; // In the UI we call it 'manager', in the DB it's 'employer'
+    default:
+      return 'employee';
+  }
 }
