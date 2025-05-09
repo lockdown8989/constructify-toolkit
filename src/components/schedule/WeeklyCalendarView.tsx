@@ -93,7 +93,7 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
-      <div className="bg-blue-500 text-white p-4 flex justify-between items-center">
+      <div className="bg-blue-600 text-white p-4 flex justify-between items-center">
         <h1 className="text-xl font-bold">MY SCHEDULE</h1>
         <div className="text-sm">{format(currentDate, 'EEE dd, MMMM yyyy').toUpperCase()}</div>
       </div>

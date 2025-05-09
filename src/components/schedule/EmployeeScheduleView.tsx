@@ -10,10 +10,12 @@ import { Schedule } from '@/hooks/use-schedules';
 import { Button } from '@/components/ui/button';
 import { useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const EmployeeScheduleView: React.FC = () => {
   const location = useLocation();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const {
     currentDate,
     setCurrentDate,
@@ -53,11 +55,20 @@ const EmployeeScheduleView: React.FC = () => {
     : null;
 
   if (isLoading) {
-    return <div className="p-4 text-center">Loading schedule...</div>;
+    return (
+      <div className="p-4 text-center">
+        <div className="animate-pulse flex flex-col items-center justify-center">
+          <div className="w-full h-40 bg-gray-200 rounded-md mb-4"></div>
+          <div className="w-3/4 h-6 bg-gray-200 rounded-md mb-2"></div>
+          <div className="w-1/2 h-6 bg-gray-200 rounded-md"></div>
+        </div>
+        <p className="mt-4 text-gray-500">Loading your schedule...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="pb-6 max-w-full mx-auto">
+    <div className={cn("pb-6 max-w-full mx-auto", isMobile ? "px-0" : "")}>
       {/* Calendar view at the top */}
       <WeeklyCalendarView
         currentDate={currentDate}
@@ -103,6 +114,11 @@ const EmployeeScheduleView: React.FC = () => {
       </div>
     </div>
   );
+};
+
+// Helper function for class names
+const cn = (...classes: (string | boolean | undefined)[]) => {
+  return classes.filter(Boolean).join(' ');
 };
 
 export default EmployeeScheduleView;

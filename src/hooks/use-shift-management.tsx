@@ -45,7 +45,7 @@ export function useShiftManagement(schedules: Schedule[]) {
     const result: ShiftsByDepartment = {
       kitchen: { name: 'KITCHEN STAFF', isOpen: true, employees: {} },
       service: { name: 'SERVICE STAFF', isOpen: true, employees: {} },
-      admin: { name: 'ADMIN STAFF', isOpen: true, employees: {} },
+      admin: { name: 'ADMIN STAFF', isOpen: false, employees: {} },
     };
     
     schedules.forEach(schedule => {
@@ -118,17 +118,17 @@ export function useShiftManagement(schedules: Schedule[]) {
   const getRoleColorClass = (role: string): string => {
     const roleLower = role.toLowerCase();
     if (roleLower.includes('chef') || roleLower.includes('cook')) {
-      return 'shift-kitchen border-l-4';
+      return 'bg-green-100 text-green-800 border-l-4 border-l-green-500';
     } else if (roleLower.includes('waiter') || roleLower.includes('server')) {
-      return 'shift-service border-l-4';
+      return 'bg-emerald-100 text-emerald-800 border-l-4 border-l-emerald-500';
     } else if (roleLower.includes('bartender')) {
       return 'bg-blue-100 text-blue-800 border-l-4 border-l-blue-500';
     } else if (roleLower.includes('host')) {
       return 'bg-orange-100 text-orange-800 border-l-4 border-l-orange-500';
     } else if (roleLower.includes('admin') || roleLower.includes('manager')) {
-      return 'shift-admin border-l-4';
+      return 'bg-purple-100 text-purple-800 border-l-4 border-l-purple-500';
     }
-    return 'shift-other border-l-4';
+    return 'bg-gray-100 text-gray-800 border-l-4 border-l-gray-500';
   };
 
   // Toggle department open/closed state
