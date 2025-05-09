@@ -34,3 +34,26 @@ export const formatDate = (dateString: string): string => {
     year: 'numeric'
   });
 };
+
+/**
+ * Formats a time string from a date
+ * @param dateTimeString The date-time string to format
+ * @returns Formatted time string (HH:MM AM/PM)
+ */
+export const formatTime = (dateTimeString: string): string => {
+  const date = new Date(dateTimeString);
+  return date.toLocaleTimeString('en-GB', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+};
+
+/**
+ * Formats a number with thousands separators
+ * @param value The number to format
+ * @returns Formatted number string
+ */
+export const formatNumber = (value: number): string => {
+  return new Intl.NumberFormat('en-GB').format(value);
+};
