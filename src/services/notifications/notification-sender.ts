@@ -33,6 +33,33 @@ export const sendNotification = async (payload: NotificationPayload) => {
   }
 };
 
+// Send notifications to multiple users
+export const sendNotificationsToMany = async (userIds: string[], payload: Omit<NotificationPayload, 'user_id'>) => {
+  try {
+    // Create notifications for each user
+    const notifications = userIds.map(userId => ({
+      user_id: userId,
+      title: payload.title,
+      message: payload.message,
+      type: payload.type,
+      related_entity: payload.related_entity,
+      related_id: payload.related_id
+    }));
+    
+    const { data, error } = await supabase
+      .from('notifications')
+      .insert(notifications);
+      
+    if (error) throw error;
+    
+    console.log(`Notifications sent to ${userIds.length} users: ${payload.title}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending notifications to multiple users:', error);
+    return { success: false, error: String(error) };
+  }
+};
+
 // Utility function to get all manager user IDs
 export const getManagerUserIds = async () => {
   try {

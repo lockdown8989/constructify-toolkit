@@ -1,44 +1,44 @@
 
-import { sendNotification } from './notification-sender';
 import { supabase } from '@/integrations/supabase/client';
+import { sendNotification } from './notification-sender';
 
 /**
- * Sends a notification to an employee about a document upload
+ * Notify an employee when a document is uploaded for them
+ * @param employeeId - The employee ID that the document is for
+ * @param documentType - The type of document that was uploaded
+ * @param documentName - The name of the uploaded document
  */
-export const sendDocumentUploadNotification = async (
+export const notifyEmployeeOfDocumentUpload = async (
   employeeId: string,
   documentType: string,
   documentName: string
-): Promise<boolean> => {
+) => {
   try {
-    // Get employee user_id from employee record
+    // Get the user ID for this employee
     const { data: employee, error: employeeError } = await supabase
       .from('employees')
       .select('user_id, name')
       .eq('id', employeeId)
       .single();
-    
-    if (employeeError || !employee?.user_id) {
-      console.error('Error getting employee user_id:', employeeError);
+      
+    if (employeeError || !employee.user_id) {
+      console.error('Could not find user ID for employee:', employeeError);
       return false;
     }
-
-    // Format document type for display
-    const formattedDocType = documentType.charAt(0).toUpperCase() + documentType.slice(1);
     
-    // Send the notification
-    const success = await sendNotification({
+    // Send notification to the employee
+    const result = await sendNotification({
       user_id: employee.user_id,
-      title: `New ${formattedDocType} Uploaded`,
-      message: `A new ${documentType.toLowerCase()} document (${documentName}) has been uploaded to your profile.`,
+      title: `New ${documentType} Document`,
+      message: `A new ${documentType} document (${documentName}) has been uploaded to your profile.`,
       type: 'info',
       related_entity: 'documents',
-      related_id: employeeId
+      related_id: documentName
     });
     
-    return success;
+    return result.success;
   } catch (error) {
-    console.error('Error sending document notification:', error);
+    console.error('Error notifying employee of document upload:', error);
     return false;
   }
 };

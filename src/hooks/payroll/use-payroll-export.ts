@@ -1,92 +1,98 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { getManagerUserIds } from '@/services/notifications/role-utils';
+import { sendNotificationsToMany } from '@/services/notifications/notification-sender';
 import { formatCurrency } from '@/utils/format';
 
-/**
- * Export payroll data to CSV
- */
-export const exportPayrollData = async (currency: string = 'GBP'): Promise<void> => {
+export const exportPayrollData = async (currency: string = 'GBP') => {
   try {
-    // Fetch payroll data joined with employee data
-    const { data, error } = await supabase
+    // Fetch all payroll data for the current month
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+    
+    const { data: payrollData, error } = await supabase
       .from('payroll')
       .select(`
-        *, 
-        employees(
-          id,
+        id,
+        employee_id,
+        base_pay,
+        salary_paid,
+        deductions,
+        working_hours,
+        overtime_hours,
+        overtime_pay,
+        payment_status,
+        payment_date,
+        employees:employee_id (
           name,
           job_title,
           department
         )
       `)
+      .gte('payment_date', firstDayOfMonth)
+      .lte('payment_date', lastDayOfMonth)
       .order('payment_date', { ascending: false });
       
-    if (error) {
-      console.error('Error fetching payroll data:', error);
-      throw new Error(`Failed to fetch payroll data: ${error.message}`);
-    }
+    if (error) throw error;
     
-    if (!data || data.length === 0) {
+    if (!payrollData || payrollData.length === 0) {
       throw new Error('No payroll data available to export');
     }
     
-    // Format data for CSV
-    const csvData = data.map(record => {
-      // Use safe type assertion for employees data
-      const employee = record.employees as { 
-        name?: string, 
-        job_title?: string, 
-        department?: string 
-      } | null;
-      
-      return {
-        "Employee Name": employee?.name || 'Unknown',
-        "Job Title": employee?.job_title || 'Unknown',
-        "Department": employee?.department || 'Unknown',
-        "Base Pay": formatCurrency(record.base_pay || 0, currency),
-        "Working Hours": record.working_hours || 0,
-        "Overtime Hours": record.overtime_hours || 0,
-        "Overtime Pay": formatCurrency(record.overtime_pay || 0, currency),
-        "Deductions": formatCurrency(record.deductions || 0, currency),
-        "Bonus": formatCurrency(record.bonus || 0, currency),
-        "Net Salary": formatCurrency(record.salary_paid || 0, currency),
-        "Payment Date": record.payment_date || new Date().toISOString().split('T')[0],
-        "Status": record.payment_status || 'Unknown'
-      };
-    });
+    // Transform data for CSV export
+    const csvData = payrollData.map(record => ({
+      'Employee Name': record.employees?.name || 'Unknown',
+      'Job Title': record.employees?.job_title || 'N/A',
+      'Department': record.employees?.department || 'N/A',
+      'Base Salary': formatCurrency(record.base_pay || 0, currency),
+      'Net Pay': formatCurrency(record.salary_paid || 0, currency),
+      'Working Hours': record.working_hours || 0,
+      'Overtime Hours': record.overtime_hours || 0,
+      'Overtime Pay': formatCurrency(record.overtime_pay || 0, currency),
+      'Deductions': formatCurrency(record.deductions || 0, currency),
+      'Payment Status': record.payment_status || 'Pending',
+      'Payment Date': record.payment_date || 'Not set'
+    }));
     
-    // Convert to CSV string
+    // Create CSV content
     const headers = Object.keys(csvData[0]);
-    const csvString = [
+    const csvContent = [
       headers.join(','),
-      ...csvData.map(row => headers.map(header => {
-        const value = row[header as keyof typeof row];
-        // Escape commas and quotes in values
-        return `"${String(value).replace(/"/g, '""')}"`;
-      }).join(','))
+      ...csvData.map(row => 
+        headers.map(header => {
+          const value = row[header as keyof typeof row];
+          // Wrap values in quotes if they contain commas
+          return typeof value === 'string' && value.includes(',') ? 
+            `"${value}"` : value;
+        }).join(',')
+      )
     ].join('\n');
     
-    // Create and download CSV file
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const date = new Date().toISOString().split('T')[0];
-    const filename = `payroll_export_${date}.csv`;
-    
-    // Create download link
+    // Create download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', filename);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url); // Clean up by revoking the object URL
-    } else {
-      throw new Error('Browser does not support downloading files programmatically');
-    }
+    link.setAttribute('href', url);
+    link.setAttribute('download', `payroll_export_${today.toISOString().slice(0, 10)}.csv`);
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     
-    return;
+    // Notify managers about the export
+    const managerIds = await getManagerUserIds();
+    await sendNotificationsToMany(managerIds, {
+      title: 'Payroll Data Exported',
+      message: `Payroll data has been exported for ${payrollData.length} employees.`,
+      type: 'info',
+      related_entity: 'payroll'
+    });
+    
+    return { 
+      success: true, 
+      count: payrollData.length 
+    };
   } catch (error) {
     console.error('Error exporting payroll data:', error);
     throw error;

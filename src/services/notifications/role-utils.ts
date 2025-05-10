@@ -1,52 +1,36 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Retrieves user IDs of all users with manager role
- */
-export const getManagerUserIds = async (): Promise<string[]> => {
+// Utility function to get all manager user IDs
+export const getManagerUserIds = async () => {
   try {
-    // Query user_roles table for users with management roles
-    // Using the correct enum values that match the database
     const { data, error } = await supabase
       .from('user_roles')
       .select('user_id')
       .in('role', ['employer', 'admin', 'hr']);
+      
+    if (error) throw error;
     
-    if (error) {
-      console.error('Error fetching manager user IDs:', error);
-      return [];
-    }
-    
-    return data.map(item => item.user_id);
+    return data.map(role => role.user_id);
   } catch (error) {
-    console.error('Exception in getManagerUserIds:', error);
+    console.error('Error fetching manager user IDs:', error);
     return [];
   }
 };
 
-/**
- * Checks if a user has a manager role
- */
-export const userHasManagerRole = async (userId: string): Promise<boolean> => {
-  if (!userId) return false;
-  
+// Utility function to get all employees user IDs
+export const getEmployeeUserIds = async () => {
   try {
     const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .in('role', ['employer', 'admin', 'hr'])
-      .maybeSingle();
+      .from('employees')
+      .select('user_id')
+      .not('user_id', 'is', null);
+      
+    if (error) throw error;
     
-    if (error) {
-      console.error('Error checking user role:', error);
-      return false;
-    }
-    
-    return !!data;
+    return data.map(employee => employee.user_id);
   } catch (error) {
-    console.error('Exception in userHasManagerRole:', error);
-    return false;
+    console.error('Error fetching employee user IDs:', error);
+    return [];
   }
 };

@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-interface PayslipData {
+export interface PayslipData {
   name: string;
   title: string;
   department: string;
