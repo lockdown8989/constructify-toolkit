@@ -1,4 +1,5 @@
-import { createBrowserRouter } from "react-router-dom";
+
+import { useRoutes } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import Auth from "@/pages/Auth";
@@ -21,101 +22,105 @@ import EmployeeDetailsPage from "@/components/people/EmployeeDetailsPage";
 import Attendance from "@/pages/Attendance";
 import TimeClock from "@/pages/TimeClock";
 
-const router = createBrowserRouter([
-  {
-    path: "/auth",
-    element: <Auth />,
-  },
-  {
-    path: "/",
-    element: (
-      <ProtectedRoute>
-        <AppLayout />
-      </ProtectedRoute>
-    ),
-    children: [
-      {
-        index: true,
-        element: <Index />,
-      },
-      {
-        path: "dashboard",
-        element: <Dashboard />,
-      },
-      {
-        path: "people",
-        element: <People />,
-      },
-      {
-        path: "people/:id",
-        element: <EmployeeDetailsPage />,
-      },
-      {
-        path: "leave",
-        element: <LeaveManagement />,
-      },
-      {
-        path: "leave-management",
-        element: <LeaveManagement />,
-      },
-      {
-        path: "schedule",
-        element: <Schedule />,
-      },
-      {
-        path: "schedule-requests",
-        element: <ScheduleRequests />,
-      },
-      {
-        path: "employee-workflow",
-        element: <EmployeeWorkflow />,
-      },
-      {
-        path: "hiring",
-        element: <Hiring />,
-      },
-      {
-        path: "payroll",
-        element: <Payroll />,
-      },
-      {
-        path: "salary",
-        element: <Salary />,
-      },
-      {
-        path: "shift-calendar",
-        element: <RestaurantSchedule />,
-      },
-      {
-        path: "restaurant-schedule",
-        element: <RestaurantSchedule />,
-      },
-      {
-        path: "settings",
-        element: <Settings />,
-      },
-      {
-        path: "profile",
-        element: <Profile />,
-      },
-      {
-        path: "attendance",
-        element: <Attendance />,
-      },
-      {
-        path: "time-clock",
-        element: <TimeClock />,
-      },
-    ],
-  },
-  {
-    path: "/landing",
-    element: <LandingPage />,
-  },
-  {
-    path: "*",
-    element: <NotFound />,
-  },
-]);
+const RouterComponent = () => {
+  const routes = useRoutes([
+    {
+      path: "/auth",
+      element: <Auth />,
+    },
+    {
+      path: "/",
+      element: (
+        <ProtectedRoute>
+          <AppLayout />
+        </ProtectedRoute>
+      ),
+      children: [
+        {
+          index: true,
+          element: <Index />,
+        },
+        {
+          path: "dashboard",
+          element: <Dashboard />,
+        },
+        {
+          path: "people",
+          element: <People />,
+        },
+        {
+          path: "people/:id",
+          element: <EmployeeDetailsPage />,
+        },
+        {
+          path: "leave",
+          element: <LeaveManagement />,
+        },
+        {
+          path: "leave-management",
+          element: <LeaveManagement />,
+        },
+        {
+          path: "schedule",
+          element: <Schedule />,
+        },
+        {
+          path: "schedule-requests",
+          element: <ScheduleRequests />,
+        },
+        {
+          path: "employee-workflow",
+          element: <EmployeeWorkflow />,
+        },
+        {
+          path: "hiring",
+          element: <Hiring />,
+        },
+        {
+          path: "payroll",
+          element: <Payroll />,
+        },
+        {
+          path: "salary",
+          element: <Salary />,
+        },
+        {
+          path: "shift-calendar",
+          element: <RestaurantSchedule />,
+        },
+        {
+          path: "restaurant-schedule",
+          element: <RestaurantSchedule />,
+        },
+        {
+          path: "settings",
+          element: <Settings />,
+        },
+        {
+          path: "profile",
+          element: <Profile />,
+        },
+        {
+          path: "attendance",
+          element: <Attendance />,
+        },
+        {
+          path: "time-clock",
+          element: <TimeClock />,
+        },
+      ],
+    },
+    {
+      path: "/landing",
+      element: <LandingPage />,
+    },
+    {
+      path: "*",
+      element: <NotFound />,
+    },
+  ]);
 
-export default router;
+  return routes;
+};
+
+export default RouterComponent;
