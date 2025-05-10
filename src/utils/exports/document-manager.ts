@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { generatePayslipPDF } from './payslip-generator'; 
+import { generatePayslipPDF, PayslipResult } from './payslip-generator'; 
 
 export async function uploadEmployeeDocument(
   employeeId: string,
@@ -112,21 +112,8 @@ export async function attachPayslipToResume(
     
     console.log("Resume documents found:", documents?.length || 0);
     
-    // Generate the payslip with required fields based on PayslipData interface
-    const payPeriod = employeeData.paymentDate ? 
-      new Date(employeeData.paymentDate).toLocaleDateString('en-GB', {month: 'long', year: 'numeric'}) :
-      new Date().toLocaleDateString('en-GB', {month: 'long', year: 'numeric'});
-    
-    const payslipResult = await generatePayslipPDF(employeeId, {
-      name: employeeData.name,
-      title: employeeData.title,
-      salary: employeeData.salary,
-      department: employeeData.department || 'General',
-      paymentDate: employeeData.paymentDate || new Date().toISOString().split('T')[0],
-      payPeriod: payPeriod,
-      overtimeHours: 0,
-      contractualHours: 160
-    });
+    // Generate the payslip
+    const payslipResult = await generatePayslipPDF(employeeId, employeeData, true);
     
     if (!payslipResult.success) {
       return {
@@ -135,12 +122,12 @@ export async function attachPayslipToResume(
       };
     }
     
-    console.log("Payslip generated successfully, URL:", payslipResult.url);
+    console.log("Payslip generated successfully, path:", payslipResult.path);
     
-    if (!payslipResult.url) {
+    if (!payslipResult.path) {
       return {
         success: false,
-        message: "Payslip generated but URL is missing"
+        message: "Payslip generated but path is missing"
       };
     }
     
@@ -150,8 +137,8 @@ export async function attachPayslipToResume(
       .insert({
         employee_id: employeeId,
         document_type: 'payslip',
-        name: payslipResult.name || `Payslip_${new Date().toISOString().split('T')[0]}`,
-        url: payslipResult.url,
+        name: payslipResult.filename || `Payslip_${new Date().toISOString().split('T')[0]}`,
+        path: payslipResult.path,
         size: 'auto-generated'
       });
       

@@ -1,75 +1,86 @@
-import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
-
-export type AvailabilityRequest = {
-  id: string;
-  employee_id: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  is_available: boolean;
-  notes?: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
-};
-
-export type NewAvailabilityRequest = Omit<AvailabilityRequest, 'id' | 'status'>;
+import { useToast } from '@/hooks/use-toast';
+import { NewAvailabilityRequest } from '@/types/availability';
+import { getManagerUserIds } from '@/services/notifications/role-utils';
+import { sendNotificationToMany } from '@/services/notifications/notification-sender';
 
 export function useCreateAvailabilityRequest() {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  const createRequest = async (requestData: NewAvailabilityRequest) => {
-    setIsLoading(true);
-    try {
-      // Validate required fields
-      if (!requestData.employee_id || !requestData.date || 
-          !requestData.start_time || !requestData.end_time) {
-        throw new Error('Missing required fields for availability request');
+  const { toast } = useToast();
+  
+  return useMutation({
+    mutationFn: async (newRequest: NewAvailabilityRequest) => {
+      console.log('Creating availability request:', newRequest);
+      
+      // Validate input
+      if (!newRequest.employee_id) {
+        throw new Error('Employee ID is required');
       }
-
-      // Insert the availability request
+      
+      if (!newRequest.date) {
+        throw new Error('Date is required');
+      }
+      
+      if (!newRequest.start_time || !newRequest.end_time) {
+        throw new Error('Start and end times are required');
+      }
+      
+      // Set default status if not provided
+      const requestToCreate = {
+        ...newRequest,
+        status: newRequest.status || 'Pending'
+      };
+      
       const { data, error } = await supabase
         .from('availability_requests')
-        .insert({
-          employee_id: requestData.employee_id,
-          date: requestData.date,
-          start_time: requestData.start_time,
-          end_time: requestData.end_time,
-          is_available: requestData.is_available,
-          notes: requestData.notes,
-          status: 'Pending'
-        })
+        .insert([requestToCreate])
         .select()
         .single();
-
-      if (error) throw error;
-
-      // Update cached data
-      queryClient.invalidateQueries({ queryKey: ['availability-requests'] });
-
-      toast({
-        title: "Availability Request Submitted",
-        description: "Your availability request has been submitted for approval."
-      });
-
-      return { success: true, data };
-    } catch (error) {
-      console.error('Error creating availability request:', error);
+      
+      if (error) {
+        console.error('Error creating availability request:', error);
+        throw error;
+      }
+      
+      console.log('Availability request created:', data);
+      return data;
+    },
+    onSuccess: async (data) => {
+      // Invalidate queries to update UI
+      queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
+      
+      // Notify managers
+      try {
+        const managerIds = await getManagerUserIds();
+        console.log('Notifying managers about new availability request:', managerIds);
+        
+        if (managerIds.length > 0) {
+          await sendNotificationToMany(managerIds, {
+            title: 'New Availability Request',
+            message: 'An employee has submitted a new availability request.',
+            type: 'info',
+            related_entity: 'availability_requests',
+            related_id: data.id
+          });
+        }
+      } catch (notifyError) {
+        console.error('Error notifying managers:', notifyError);
+      }
       
       toast({
-        title: "Request Failed",
-        description: error instanceof Error ? error.message : "Failed to submit availability request",
-        variant: "destructive"
+        title: 'Availability request submitted',
+        description: 'Your availability request has been submitted successfully.',
       });
-
-      return { success: false, error };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return { createRequest, isLoading };
+    },
+    onError: (error: Error) => {
+      console.error('Error in useCreateAvailabilityRequest:', error);
+      toast({
+        title: 'Error',
+        description: `Failed to submit availability request: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
 }

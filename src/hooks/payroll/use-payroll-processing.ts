@@ -94,13 +94,17 @@ export const processEmployeePayroll = async (
         {
           name: employeeName,
           title: employee.title || 'Employee',
-          department: employee.department || 'General',
           salary: baseSalary.toString(),
+          department: employee.department || 'General',
           paymentDate: format(new Date(), 'dd/MM/yyyy'),
+          currency,
+          employeeId,
+          address: employee.department || '', // Fixed: Using department instead of location
           payPeriod,
           overtimeHours,
           contractualHours: workingHours
-        }
+        },
+        true // Upload to storage
       );
       
       // Send notification to the employee

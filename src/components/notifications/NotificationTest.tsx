@@ -1,119 +1,107 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { CheckCircle, AlertCircle } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 import { sendTestNotification, verifyNotificationsTable } from '@/services/notifications';
 
-const NotificationTest: React.FC = () => {
-  const [userId, setUserId] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
-  const [tableStatus, setTableStatus] = useState<any | null>(null);
-  const [testStatus, setTestStatus] = useState<any | null>(null);
+const NotificationTest = () => {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const [isTesting, setIsTesting] = useState(false);
+  const [databaseStatus, setDatabaseStatus] = useState<{
+    verified: boolean;
+    message: string;
+  }>({ verified: false, message: 'Not verified yet' });
 
-  const handleVerifyTable = async () => {
-    setLoading(true);
-    try {
-      const status = await verifyNotificationsTable();
-      setTableStatus(status);
-    } catch (error) {
-      console.error('Error verifying table:', error);
-      setTableStatus({ success: false, error: String(error) });
-    } finally {
-      setLoading(false);
+  const handleTest = async () => {
+    if (!user) {
+      toast({
+        title: 'Authentication required',
+        description: 'You need to be logged in to test notifications',
+        variant: 'destructive',
+      });
+      return;
     }
-  };
 
-  const handleSendTest = async () => {
-    if (!userId) return;
+    setIsTesting(true);
     
-    setLoading(true);
     try {
-      const result = await sendTestNotification(userId);
-      setTestStatus(result);
+      // First verify the notifications table exists
+      const verifyResult = await verifyNotificationsTable();
+      setDatabaseStatus({
+        verified: verifyResult.success,
+        message: verifyResult.message
+      });
+      
+      if (!verifyResult.success) {
+        toast({
+          title: 'Database verification failed',
+          description: verifyResult.message,
+          variant: 'destructive',
+        });
+        setIsTesting(false);
+        return;
+      }
+      
+      // Send a test notification
+      const testResult = await sendTestNotification(user.id);
+      
+      if (testResult.success) {
+        toast({
+          title: 'Test notification sent',
+          description: 'Check the notification bell to see the test notification',
+        });
+      } else {
+        toast({
+          title: 'Test failed',
+          description: testResult.message,
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
-      console.error('Error sending test notification:', error);
-      setTestStatus({ success: false, error: String(error) });
+      console.error('Error in notification test:', error);
+      toast({
+        title: 'Test error',
+        description: `An unexpected error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: 'destructive',
+      });
     } finally {
-      setLoading(false);
+      setIsTesting(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Notification System Test</h3>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleVerifyTable}
-          disabled={loading}
-        >
-          Verify Database
-        </Button>
-      </div>
-      
-      {tableStatus && (
-        <div className={`p-3 rounded-md ${tableStatus.success ? 'bg-green-50' : 'bg-red-50'}`}>
-          <div className="flex items-start">
-            {tableStatus.success ? (
-              <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-            ) : (
-              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-            )}
-            <div>
-              <p className="font-medium">
-                {tableStatus.success ? 'Database verified!' : 'Database check failed!'}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {tableStatus.success 
-                  ? tableStatus.tableExists 
-                    ? `Table exists with ${tableStatus.recordCount} records.` 
-                    : 'Table structure exists but no records found.'
-                  : tableStatus.error || 'Unknown error occurred.'}
-              </p>
-            </div>
-          </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Notification Test</CardTitle>
+        <CardDescription>
+          Test if notifications are working correctly for this user
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Database status: <span className={databaseStatus.verified ? "text-green-500" : "text-amber-500"}>{databaseStatus.message}</span>
+          </p>
+          
+          <p className="text-sm text-muted-foreground">
+            {user 
+              ? `Sending test notification to user: ${user.email || user.id}`
+              : 'You need to be logged in to test notifications'}
+          </p>
         </div>
-      )}
-      
-      <div className="flex gap-2">
-        <Input
-          placeholder="Enter user ID to test"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          className="flex-1"
-        />
+        
         <Button 
-          onClick={handleSendTest} 
-          disabled={!userId || loading}
+          onClick={handleTest} 
+          disabled={isTesting || !user}
+          className="w-full"
         >
-          Send Test
+          {isTesting ? 'Sending...' : 'Send Test Notification'}
         </Button>
-      </div>
-      
-      {testStatus && (
-        <div className={`p-3 rounded-md ${testStatus.success ? 'bg-green-50' : 'bg-red-50'}`}>
-          <div className="flex items-start">
-            {testStatus.success ? (
-              <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-            ) : (
-              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-            )}
-            <div>
-              <p className="font-medium">
-                {testStatus.success ? 'Test notification sent!' : 'Failed to send test notification!'}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {testStatus.success 
-                  ? 'The notification was successfully sent to the specified user.'
-                  : testStatus.error || 'Unknown error occurred.'}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
