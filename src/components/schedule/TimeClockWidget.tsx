@@ -20,6 +20,7 @@ const TimeClockWidget = () => {
   } = useTimeClock();
   
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
     console.log('TimeClockWidget rendered with status:', status);
@@ -33,6 +34,16 @@ const TimeClockWidget = () => {
   }, [status]);
 
   const getButtonConfig = () => {
+    if (isLoading) {
+      return {
+        onClick: () => {},
+        variant: "outline",
+        icon: <Clock className="h-5 w-5 mr-2" />,
+        label: "Loading...",
+        color: ""
+      };
+    }
+
     switch (status) {
       case 'clocked-out':
         return {
@@ -105,7 +116,7 @@ const TimeClockWidget = () => {
           <Button 
             onClick={buttonConfig.onClick} 
             className={cn("py-6 text-lg", buttonConfig.color)}
-            disabled={status === 'loading'}
+            disabled={isLoading}
           >
             {buttonConfig.icon}
             {buttonConfig.label}
