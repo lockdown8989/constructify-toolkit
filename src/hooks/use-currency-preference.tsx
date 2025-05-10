@@ -1,72 +1,67 @@
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 
-type CurrencyCode = 'USD' | 'GBP' | 'EUR';
+type Currency = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'CAD' | 'AUD';
 
-interface CurrencyContextType {
-  currency: CurrencyCode;
-  setCurrency: (currency: CurrencyCode) => Promise<void>;
+interface CurrencyContextProps {
+  currency: Currency;
+  setCurrency: (currency: Currency) => Promise<void>;
   isLoading: boolean;
 }
 
-const CurrencyContext = createContext<CurrencyContextType>({
-  currency: 'USD',
-  setCurrency: async () => {},
-  isLoading: true,
-});
+const CurrencyContext = createContext<CurrencyContextProps | undefined>(undefined);
 
-export const CurrencyProvider = ({ children }: { children: React.ReactNode }) => {
+export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [currency, setCurrencyState] = useState<Currency>('USD');
+  const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
-  const [currency, setCurrencyState] = useState<CurrencyCode>('USD');
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchCurrencyPreference = async () => {
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
+      if (!user) return;
+      
       try {
+        setIsLoading(true);
         const { data, error } = await supabase
           .from('profiles')
           .select('preferred_currency')
           .eq('id', user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error fetching currency preference:', error);
-        } else if (data && data.preferred_currency) {
-          setCurrencyState(data.preferred_currency as CurrencyCode);
+          .single();
+          
+        if (error) throw error;
+        
+        if (data?.preferred_currency) {
+          setCurrencyState(data.preferred_currency as Currency);
         }
-      } catch (error) {
-        console.error('Error:', error);
+      } catch (err) {
+        console.error('Error fetching currency preference:', err);
       } finally {
         setIsLoading(false);
       }
     };
-
+    
     fetchCurrencyPreference();
   }, [user]);
 
-  const setCurrency = async (newCurrency: CurrencyCode) => {
+  const setCurrency = async (newCurrency: Currency) => {
     if (!user) return;
-
+    
     try {
+      setIsLoading(true);
+      setCurrencyState(newCurrency);
+      
       const { error } = await supabase
         .from('profiles')
         .update({ preferred_currency: newCurrency })
         .eq('id', user.id);
-
-      if (error) {
-        console.error('Error updating currency preference:', error);
-      } else {
-        setCurrencyState(newCurrency);
-      }
-    } catch (error) {
-      console.error('Error:', error);
+        
+      if (error) throw error;
+    } catch (err) {
+      console.error('Error setting currency preference:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -77,6 +72,14 @@ export const CurrencyProvider = ({ children }: { children: React.ReactNode }) =>
   );
 };
 
-export const useCurrencyPreference = () => useContext(CurrencyContext);
+export const useCurrencyPreference = () => {
+  const context = useContext(CurrencyContext);
+  
+  if (context === undefined) {
+    throw new Error('useCurrencyPreference must be used within a CurrencyProvider');
+  }
+  
+  return context;
+};
 
 export default useCurrencyPreference;
