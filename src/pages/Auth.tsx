@@ -22,27 +22,26 @@ const Auth = () => {
     handleBackToSignIn
   } = useAuthPage();
 
-  // Check for recovery token in URL
-  const hasRecoveryToken = searchParams.has("token") || window.location.hash.includes("access_token=");
-  
+  // Log authentication state for debugging
   useEffect(() => {
-    // Log authentication state for debugging
     console.log("Auth page state:", { 
       isAuthenticated,
       currentPath: location.pathname,
       user: user?.email,
       isResetMode, 
-      isRecoveryMode, 
-      hasRecoveryToken,
+      isRecoveryMode,
       redirectTo: from
     });
-  }, [user, isAuthenticated, isResetMode, isRecoveryMode, hasRecoveryToken, from, location]);
+  }, [user, isAuthenticated, isResetMode, isRecoveryMode, from, location]);
 
+  // Check for recovery token in URL
+  const hasRecoveryToken = searchParams.has("token") || window.location.hash.includes("access_token=");
+  
   // If we have a token in the URL but not in reset mode, force reset mode
   const shouldShowReset = isResetMode || isRecoveryMode || hasRecoveryToken;
 
   // Redirect authenticated users to dashboard if not in reset mode
-  if (user && !shouldShowReset) {
+  if (isAuthenticated && !shouldShowReset) {
     console.log("Auth page - User is authenticated, redirecting to:", from);
     return <Navigate to={from} replace />;
   }

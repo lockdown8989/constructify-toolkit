@@ -17,22 +17,24 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">Loading authentication...</p>
         </div>
       </div>
     );
   }
 
-  // Add more detailed logging to help diagnose auth issues
+  // Improved authentication check
+  const isAuthenticated = !!user && !!session;
+
   console.log("Auth state in ProtectedRoute:", { 
-    isAuthenticated: !!user, 
+    isAuthenticated, 
     hasSession: !!session,
     userId: user?.id,
     path: location.pathname
   });
 
-  if (!user || !session) {
-    // Redirect to the login page if not authenticated, preserving the intended destination
+  if (!isAuthenticated) {
+    // Redirect to the login page, but save the current path to redirect back after login
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 

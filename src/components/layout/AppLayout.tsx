@@ -15,7 +15,6 @@ const AppLayout = () => {
     // Set up realtime subscriptions when the app loads and user is authenticated
     if (isAuthenticated) {
       setupRealtimeSubscriptions();
-      console.log("Setting up realtime subscriptions for authenticated user");
     }
   }, [isAuthenticated]);
 
