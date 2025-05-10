@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -28,7 +29,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const setupAuth = async () => {
       try {
-        // First check current session
+        setIsLoading(true);
+        
+        // First set up auth state listener to prevent race conditions
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, updatedSession) => {
+            console.log("Auth state changed:", event, updatedSession?.user?.email);
+            
+            if (updatedSession?.user) {
+              setUser(updatedSession.user);
+              setSession(updatedSession);
+              // Use setTimeout to prevent potential auth deadlocks
+              setTimeout(() => {
+                fetchUserRoles(updatedSession.user.id);
+              }, 0);
+            } else {
+              setUser(null);
+              setSession(null);
+              resetRoles();
+            }
+            
+            setIsLoading(false);
+          }
+        );
+
+        // After setting up listener, check current session
         const { data: sessionData } = await supabase.auth.getSession();
         console.log("Initial session check:", sessionData?.session?.user?.email);
         
@@ -42,23 +67,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
         
         setIsLoading(false);
-        
-        // Then set up auth state listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log("Auth state changed:", event, session?.user?.email);
-            setSession(session);
-            setUser(session?.user ?? null);
-            
-            if (session?.user) {
-              await fetchUserRoles(session.user.id);
-            } else {
-              resetRoles();
-            }
-            
-            setIsLoading(false);
-          }
-        );
 
         return () => {
           subscription.unsubscribe();

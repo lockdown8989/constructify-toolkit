@@ -1,6 +1,6 @@
 
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/auth";
 import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
@@ -17,7 +17,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">Verifying access...</p>
         </div>
       </div>
     );
@@ -25,26 +25,30 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
 
   // Add more detailed logging to help diagnose auth issues
   console.log("Auth state in ProtectedRoute:", { 
-    isAuthenticated: !!user, 
+    isAuthenticated: !!user && !!session, 
     hasSession: !!session,
     userId: user?.id,
     path: location.pathname
   });
 
   if (!user || !session) {
-    // Redirect to the login page if not authenticated, preserving the intended destination
+    // Store the current location so we can redirect back after login
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
   // Check for required role
   if (requiredRole) {
-    if (requiredRole === 'admin' && !isAdmin) {
-      return <Navigate to="/dashboard" replace />;
+    let hasRequiredRole = false;
+    
+    if (requiredRole === 'admin' && isAdmin) {
+      hasRequiredRole = true;
+    } else if (requiredRole === 'hr' && (isHR || isAdmin)) {
+      hasRequiredRole = true;
+    } else if (requiredRole === 'manager' && (isManager || isAdmin || isHR)) {
+      hasRequiredRole = true;
     }
-    if (requiredRole === 'hr' && !isHR && !isAdmin) {
-      return <Navigate to="/dashboard" replace />;
-    }
-    if (requiredRole === 'manager' && !isManager && !isAdmin && !isHR) {
+    
+    if (!hasRequiredRole) {
       return <Navigate to="/dashboard" replace />;
     }
   }

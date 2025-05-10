@@ -9,6 +9,7 @@ import EmployeeInfoSection from './employee-details/EmployeeInfoSection';
 import DeleteConfirmationDialog from './employee-details/DeleteConfirmationDialog';
 import AddEmployeeModal from './AddEmployeeModal';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/hooks/auth';
 
 interface EmployeeDetailsModalProps {
   employee: Employee | null;
@@ -30,10 +31,17 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   const deleteEmployee = useDeleteEmployee();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { isAuthenticated } = useAuth();
 
   if (!employee) return null;
+  if (!isAuthenticated) {
+    console.error("User is not authenticated in EmployeeDetailsModal");
+    return null;
+  }
 
   const handleEdit = () => {
+    console.log("Edit button clicked for employee:", employee.id);
+    
     if (onEdit) {
       onEdit(employee);
       onClose();

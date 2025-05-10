@@ -1,7 +1,7 @@
 
 import React, { useEffect } from "react";
 import { Navigate, useSearchParams, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/auth";
 import { useAuthPage } from "@/hooks/auth/useAuthPage";
 import { AuthHeader } from "@/components/auth/AuthHeader";
 import { AuthTabs } from "@/components/auth/AuthTabs";
@@ -42,9 +42,9 @@ const Auth = () => {
   const shouldShowReset = isResetMode || isRecoveryMode || hasRecoveryToken;
 
   // Redirect authenticated users to dashboard if not in reset mode
-  if (user && !shouldShowReset) {
-    console.log("Auth page - User is authenticated, redirecting to:", from);
-    return <Navigate to={from} replace />;
+  if (isAuthenticated && !shouldShowReset) {
+    console.log("Auth page - User is authenticated, redirecting to:", from || "/dashboard");
+    return <Navigate to={from || "/dashboard"} replace />;
   }
 
   // Show password reset form if in reset or recovery mode

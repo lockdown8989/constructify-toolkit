@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 type SignInFormProps = {
@@ -13,7 +13,11 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  
+  // Get redirect path from location state, defaulting to dashboard
+  const from = location.state?.from || "/dashboard";
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -34,6 +38,7 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
     
     try {
       console.log("Attempting to sign in with:", email);
+      console.log("Will redirect to:", from);
       
       if (!email || !password) {
         setErrorMessage("Email and password are required");
@@ -47,7 +52,7 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
       
       console.log("Sign in result:", result);
       
-      if (result.error) {
+      if (result?.error) {
         console.error("Authentication error:", result.error.message);
         
         // Provide more specific error messages based on error code
@@ -61,8 +66,10 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
         return;
       }
       
-      if (result.data?.user) {
+      if (result?.data?.user) {
         console.log("Sign in successful, user:", result.data.user.email);
+        console.log("Redirecting to:", from);
+        
         toast({
           title: "Success",
           description: "Signed in successfully",
@@ -70,7 +77,7 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
         
         // Add a slight delay before redirecting to ensure toast is shown
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate(from);
         }, 500);
       } else {
         setErrorMessage("Something went wrong during sign in");
