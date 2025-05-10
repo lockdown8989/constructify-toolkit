@@ -144,3 +144,38 @@ export const calculateSalary = async (employeeId: string, month: string) => {
     throw error;
   }
 };
+
+// Recalculate salary after employee role or level change
+export const recalculateSalary = async (employeeId: string) => {
+  try {
+    // Get current month
+    const currentMonth = new Date().toISOString().slice(0, 7) + '-01';
+    
+    // Calculate salary for current month
+    const result = await calculateSalary(employeeId, currentMonth);
+    
+    // Get employee details for notification
+    const { data: employee } = await supabase
+      .from('employees')
+      .select('user_id')
+      .eq('id', employeeId)
+      .single();
+    
+    if (employee?.user_id) {
+      await import('../notifications/notification-sender').then(module => 
+        module.sendNotification({
+          user_id: employee.user_id,
+          title: 'Salary Recalculated',
+          message: `Your salary has been recalculated based on your updated information. New salary: ${result.netSalary.toFixed(2)}`,
+          type: 'info',
+          related_entity: 'salary'
+        })
+      );
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error recalculating salary:', error);
+    throw error;
+  }
+};

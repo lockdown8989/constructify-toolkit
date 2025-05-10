@@ -1,11 +1,9 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { format, addDays, startOfWeek, isSameDay, getDay } from 'date-fns';
-import { useIsMobile } from '@/hooks/use-mobile';
+import React from 'react';
+import { format, addDays, isToday, isSameDay } from 'date-fns';
 import { Schedule } from '@/hooks/use-schedules';
-import { cn } from '@/lib/utils';
-import WeekNavigation from './components/WeekNavigation';
-import { getColorByDepartment } from '@/utils/color-utils';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface WeeklyCalendarViewProps {
   currentDate: Date;
@@ -18,107 +16,112 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
   onDateChange,
   schedules
 }) => {
-  const isMobile = useIsMobile();
-  const [weekDays, setWeekDays] = useState<Date[]>([]);
-  
-  // Generate the array of week days based on current date
-  useEffect(() => {
-    const monday = startOfWeek(currentDate, { weekStartsOn: 1 });
-    const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
-    setWeekDays(days);
-  }, [currentDate]);
-  
-  // Navigate to previous/next week
-  const handlePreviousWeek = useCallback(() => {
-    const newDate = addDays(currentDate, -7);
-    onDateChange(newDate);
-  }, [currentDate, onDateChange]);
-  
-  const handleNextWeek = useCallback(() => {
-    const newDate = addDays(currentDate, 7);
-    onDateChange(newDate);
-  }, [currentDate, onDateChange]);
-  
-  const handleSelectToday = useCallback(() => {
-    onDateChange(new Date());
-  }, [onDateChange]);
-  
-  // Get schedules for a specific day
-  const getSchedulesForDay = useCallback((day: Date) => {
-    return schedules.filter(schedule => 
-      isSameDay(new Date(schedule.start_time), day)
-    );
-  }, [schedules]);
-  
-  // Select a specific date
-  const handleDateClick = (day: Date) => {
-    onDateChange(day);
+  // Get start of week (Sunday)
+  const getStartOfWeek = (date: Date) => {
+    const day = date.getDay();
+    return new Date(date.setDate(date.getDate() - day));
   };
 
-  // Find today's index in the week array
-  const todayIndex = weekDays.findIndex(day => isSameDay(day, new Date()));
-  
+  // Function to handle previous/next week navigation
+  const handleWeekChange = (increment: boolean) => {
+    const daysToAdd = increment ? 7 : -7;
+    const newDate = new Date(currentDate);
+    newDate.setDate(currentDate.getDate() + daysToAdd);
+    onDateChange(newDate);
+  };
+
+  // Get array of 7 days for the week
+  const getDaysOfWeek = () => {
+    const startOfWeek = getStartOfWeek(new Date(currentDate));
+    const days = [];
+    
+    for (let i = 0; i < 7; i++) {
+      days.push(addDays(startOfWeek, i));
+    }
+    
+    return days;
+  };
+
+  const daysOfWeek = getDaysOfWeek();
+
+  // Get schedules for a specific day
+  const getSchedulesForDay = (day: Date) => {
+    return schedules.filter(schedule => {
+      const scheduleDate = new Date(schedule.start_time);
+      return isSameDay(scheduleDate, day);
+    });
+  };
+
   return (
-    <div className="px-4 py-2">
-      <WeekNavigation 
-        currentDate={currentDate}
-        onPreviousWeek={handlePreviousWeek}
-        onNextWeek={handleNextWeek}
-        onSelectToday={handleSelectToday}
-        isMobile={isMobile}
-      />
+    <div className="border rounded-md overflow-hidden">
+      {/* Week navigation header */}
+      <div className="flex items-center justify-between p-3 bg-gray-50 border-b">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => handleWeekChange(false)}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        
+        <div className="font-medium">
+          {format(daysOfWeek[0], 'MMM d')} - {format(daysOfWeek[6], 'MMM d, yyyy')}
+        </div>
+        
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => handleWeekChange(true)}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
       
-      <div className={`grid grid-cols-7 gap-1 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-        {weekDays.map((day, index) => {
-          const isToday = isSameDay(day, new Date());
-          const isSelected = isSameDay(day, currentDate);
+      {/* Days of week */}
+      <div className="grid grid-cols-7">
+        {daysOfWeek.map((day, index) => (
+          <div 
+            key={index} 
+            className={`p-2 text-center border-b ${isToday(day) ? 'bg-blue-50' : ''}`}
+          >
+            <div className="text-xs text-gray-500">{format(day, 'EEE')}</div>
+            <div className={`text-sm font-medium ${isToday(day) ? 'text-blue-600' : ''}`}>
+              {format(day, 'd')}
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Schedules for each day */}
+      <div className="grid grid-cols-7">
+        {daysOfWeek.map((day, dayIndex) => {
           const daySchedules = getSchedulesForDay(day);
-          const dayName = format(day, isMobile ? 'EEE' : 'EEE');
-          const dayNum = format(day, 'd');
-          
           return (
             <div 
-              key={day.toString()}
-              onClick={() => handleDateClick(day)}
-              className={cn(
-                "flex flex-col items-center py-2 rounded-md cursor-pointer transition-colors",
-                isToday ? "bg-blue-50" : "hover:bg-gray-50",
-                isSelected ? "ring-2 ring-blue-500 ring-opacity-70" : "",
-              )}
+              key={dayIndex} 
+              className={`p-1 min-h-[80px] border-r border-b ${dayIndex === 6 ? 'border-r-0' : ''} ${isToday(day) ? 'bg-blue-50/30' : ''}`}
             >
-              <div className={`text-center ${isMobile ? 'mb-1' : 'mb-1.5'}`}>
-                <div className={`font-medium ${isToday ? 'text-blue-600' : ''}`}>{dayName}</div>
-                <div 
-                  className={cn(
-                    "w-7 h-7 flex items-center justify-center rounded-full",
-                    isToday ? "bg-blue-600 text-white" : ""
-                  )}
-                >
-                  {dayNum}
-                </div>
-              </div>
-              
               {daySchedules.length > 0 ? (
-                <div className="flex flex-col gap-1 w-full px-1">
-                  {daySchedules.slice(0, isMobile ? 2 : 3).map((schedule, idx) => (
+                <div className="space-y-1">
+                  {daySchedules.map((schedule) => (
                     <div 
                       key={schedule.id}
-                      className={cn(
-                        "text-xs rounded-sm px-1 py-0.5 truncate",
-                        getColorByDepartment(schedule.department || "Default")
-                      )}
+                      className="bg-blue-100 border-l-2 border-blue-500 p-1 rounded-sm text-xs"
                     >
-                      {format(new Date(schedule.start_time), 'HH:mm')}
+                      <div className="font-medium truncate">{schedule.title}</div>
+                      <div className="text-gray-600">
+                        {format(new Date(schedule.start_time), 'h:mm a')} - 
+                        {format(new Date(schedule.end_time), 'h:mm a')}
+                      </div>
+                      {/* Removed the department reference that caused the error */}
+                      <div className="text-gray-500">{schedule.location || 'No location'}</div>
                     </div>
                   ))}
-                  {daySchedules.length > (isMobile ? 2 : 3) && (
-                    <div className="text-xs text-center text-blue-600">
-                      +{daySchedules.length - (isMobile ? 2 : 3)} more
-                    </div>
-                  )}
                 </div>
               ) : (
-                <div className="text-gray-400 text-xs">No shifts</div>
+                <div className="h-full flex items-center justify-center text-xs text-gray-400">
+                  No shifts
+                </div>
               )}
             </div>
           );

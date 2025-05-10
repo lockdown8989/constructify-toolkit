@@ -41,6 +41,13 @@ export const initializePayslipTemplate = async (employee: Employee) => {
   }
 };
 
+// Define the expected return type for generatePayslipPDF
+interface PayslipResult {
+  url?: string;
+  name?: string;
+  success: boolean;
+}
+
 // Process payslip for an employee
 export const processPayslip = async (employeeId: string, month: string) => {
   try {
@@ -122,7 +129,7 @@ export const processPayslip = async (employeeId: string, month: string) => {
         overtimeHours: salaryResult.totalOvertimeHours,
         contractualHours: salaryResult.totalWorkingHours,
       }
-    );
+    ) as PayslipResult;
     
     // Update payroll record with the document URL and name
     if (pdfResult && pdfResult.url) {
