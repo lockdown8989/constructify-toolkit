@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 type SignInFormProps = {
@@ -13,6 +13,7 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,9 +69,13 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
           description: "Signed in successfully",
         });
         
+        // Get redirectPath from location state, or default to dashboard
+        const from = location.state?.from || "/dashboard";
+        console.log("Redirecting to:", from);
+        
         // Add a slight delay before redirecting to ensure toast is shown
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate(from, { replace: true });
         }, 500);
       } else {
         setErrorMessage("Something went wrong during sign in");

@@ -7,9 +7,8 @@ import { useEffect } from 'react';
 import { Loader2 } from "lucide-react";
 
 const AppLayout = () => {
-  const { user, session, isLoading } = useAuth();
+  const { user, session, isLoading, isAuthenticated } = useAuth();
   const location = useLocation();
-  const isAuthenticated = !!user && !!session;
 
   useEffect(() => {
     // Set up realtime subscriptions when the app loads and user is authenticated
@@ -39,6 +38,7 @@ const AppLayout = () => {
 
   // If not authenticated and not on auth page, redirect to auth page
   if (!isAuthenticated) {
+    console.log("AppLayout: Not authenticated, redirecting to auth page");
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 

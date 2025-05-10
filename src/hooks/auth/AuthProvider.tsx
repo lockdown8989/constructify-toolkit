@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -28,8 +29,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const setupAuth = async () => {
       try {
-        // First check current session
-        const { data: sessionData } = await supabase.auth.getSession();
+        setIsLoading(true);
+        
+        // CRITICAL: Set up auth listener BEFORE checking session
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log("Auth state changed:", event, session?.user?.email);
+            
+            if (event === 'SIGNED_OUT') {
+              setUser(null);
+              setSession(null);
+              resetRoles();
+            } else if (session) {
+              setSession(session);
+              setUser(session.user);
+              
+              if (session.user) {
+                await fetchUserRoles(session.user.id);
+              }
+            }
+            
+            setIsLoading(false);
+          }
+        );
+
+        // Then check current session
+        const { data: sessionData, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error getting session:", error);
+          setIsLoading(false);
+          return;
+        }
+        
         console.log("Initial session check:", sessionData?.session?.user?.email);
         
         if (sessionData?.session) {
@@ -43,23 +75,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         setIsLoading(false);
         
-        // Then set up auth state listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log("Auth state changed:", event, session?.user?.email);
-            setSession(session);
-            setUser(session?.user ?? null);
-            
-            if (session?.user) {
-              await fetchUserRoles(session.user.id);
-            } else {
-              resetRoles();
-            }
-            
-            setIsLoading(false);
-          }
-        );
-
         return () => {
           subscription.unsubscribe();
         };
@@ -72,7 +87,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setupAuth();
   }, []);
 
-  // Calculate if user is authenticated
+  // Calculate if user is authenticated - ensure both user and session exist
   const isAuthenticated = !!user && !!session;
 
   const value: AuthContextType = {
