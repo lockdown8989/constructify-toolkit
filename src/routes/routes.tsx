@@ -17,7 +17,7 @@ import RestaurantSchedule from "@/pages/RestaurantSchedule";
 import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
 import LandingPage from "@/pages/LandingPage";
-import About from "@/pages/About"; // Import the new About page
+import About from "@/pages/About"; // Import the About page
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import EmployeeDetailsPage from "@/components/people/EmployeeDetailsPage";
 import Attendance from "@/pages/Attendance";
@@ -110,7 +110,7 @@ const RouterComponent = () => {
           element: <TimeClock />,
         },
         {
-          path: "about", // Add About page route
+          path: "about", // Make sure the About route is correctly defined
           element: <About />,
         },
       ],
@@ -120,7 +120,7 @@ const RouterComponent = () => {
       element: <LandingPage />,
     },
     {
-      path: "/about", // Add public About page route
+      path: "/about", // Important: Add public About route at the root level
       element: <About />,
     },
     {

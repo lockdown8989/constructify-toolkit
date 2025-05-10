@@ -82,7 +82,7 @@ const EmployeeScheduleView: React.FC = () => {
       </div>
       
       <WeeklyCalendarView
-        currentDate={currentDate}
+        startDate={currentDate}
         onDateChange={setCurrentDate}
         schedules={schedules}
       />

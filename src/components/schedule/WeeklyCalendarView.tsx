@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format, addDays, parseISO } from 'date-fns';
 import { useEmployees } from '../../hooks/use-employees';
@@ -9,11 +10,21 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 interface WeeklyCalendarViewProps {
   startDate: Date;
   onDateChange: (date: Date) => void;
+  currentDate?: Date; // Added optional currentDate prop
+  schedules?: any[]; // Added optional schedules prop
 }
 
-const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({ startDate, onDateChange }) => {
+const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({ 
+  startDate, 
+  onDateChange,
+  currentDate, // New prop
+  schedules: providedSchedules // New prop
+}) => {
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { data: schedules = [], isLoading: isLoadingSchedules } = useSchedules();
+
+  // Use provided schedules if available, otherwise use fetched schedules
+  const schedulesToDisplay = providedSchedules || schedules;
 
   // Generate an array for the 7 days of the week
   const days = Array.from({ length: 7 }, (_, i) => addDays(startDate, i));
@@ -22,7 +33,7 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({ startDate, onDa
   const schedulesByEmployee = employees.reduce((acc, employee) => {
     acc[employee.id] = {
       employee,
-      schedules: schedules.filter(schedule => schedule.employee_id === employee.id),
+      schedules: schedulesToDisplay.filter(schedule => schedule.employee_id === employee.id),
     };
     return acc;
   }, {} as Record<string, { employee: any; schedules: any[] }>);
@@ -110,7 +121,6 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({ startDate, onDa
                           <div className="text-xs text-gray-500">
                             {schedule.start_time} - {schedule.end_time}
                           </div>
-                          {/* Changed from schedule.department to address TypeScript error */}
                           <div className="text-xs text-gray-500 mt-1">
                             {employee.department || 'General'}
                           </div>
