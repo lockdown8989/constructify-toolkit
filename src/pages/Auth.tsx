@@ -8,7 +8,7 @@ import { AuthTabs } from "@/components/auth/AuthTabs";
 import { ResetPasswordMode } from "@/components/auth/ResetPasswordMode";
 
 const Auth = () => {
-  const { user, session, isAuthenticated, signIn, signUp } = useAuth();
+  const { user, session, isAuthenticated } = useAuth();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   
@@ -28,7 +28,7 @@ const Auth = () => {
   useEffect(() => {
     // Log authentication state for debugging
     console.log("Auth page state:", { 
-      isAuthenticated: !!user && !!session,
+      isAuthenticated,
       hasSession: !!session,
       hasUser: !!user,
       currentPath: location.pathname,
@@ -45,7 +45,7 @@ const Auth = () => {
   const shouldShowReset = isResetMode || isRecoveryMode || hasRecoveryToken;
 
   // Redirect authenticated users to dashboard if not in reset mode
-  if (user && session && !shouldShowReset) {
+  if (isAuthenticated && !shouldShowReset) {
     console.log("Auth page - User is authenticated, redirecting to:", from || "/dashboard");
     return <Navigate to={from || "/dashboard"} replace />;
   }
@@ -64,8 +64,6 @@ const Auth = () => {
           setActiveTab={setActiveTab}
           onForgotPassword={handleShowResetPassword}
           onBackToSignIn={handleBackToSignIn}
-          onSignIn={signIn}
-          onSignUp={signUp}
         />
       </div>
     </div>

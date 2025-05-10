@@ -9,8 +9,19 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const { user, session, isLoading, isAdmin, isHR, isManager } = useAuth();
+  const { user, session, isLoading, isAdmin, isHR, isManager, isAuthenticated } = useAuth();
   const location = useLocation();
+
+  // More detailed logging to help diagnose auth issues
+  console.log("Auth state in ProtectedRoute:", { 
+    isAuthenticated,
+    hasSession: !!session,
+    hasUser: !!user,
+    userId: user?.id,
+    path: location.pathname,
+    redirecting: !isAuthenticated ? true : false,
+    sessionExpiry: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'unknown'
+  });
 
   if (isLoading) {
     return (
@@ -23,19 +34,8 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     );
   }
 
-  // More detailed logging to help diagnose auth issues
-  console.log("Auth state in ProtectedRoute:", { 
-    isAuthenticated: !!user && !!session, 
-    hasSession: !!session,
-    hasUser: !!user,
-    userId: user?.id,
-    path: location.pathname,
-    redirecting: !user || !session ? true : false,
-    sessionExpiry: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'unknown'
-  });
-
-  // Handle authentication check - both user and session must exist
-  if (!user || !session) {
+  // Handle authentication check - using isAuthenticated from context
+  if (!isAuthenticated) {
     // Store the current location so we can redirect back after login
     console.log("ProtectedRoute: User not authenticated, redirecting to /auth");
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;

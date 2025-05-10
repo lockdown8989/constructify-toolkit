@@ -7,9 +7,8 @@ import { useEffect, useState } from 'react';
 import { Loader2 } from "lucide-react";
 
 const AppLayout = () => {
-  const { user, session, isLoading } = useAuth();
+  const { user, session, isLoading, isAuthenticated } = useAuth();
   const location = useLocation();
-  const isAuthenticated = !!user && !!session;
   const [isSettingUp, setIsSettingUp] = useState(false);
 
   useEffect(() => {
@@ -19,6 +18,9 @@ const AppLayout = () => {
       setupRealtimeSubscriptions()
         .then(() => {
           console.log("Setting up realtime subscriptions for authenticated user");
+        })
+        .catch((error) => {
+          console.error("Error setting up realtime subscriptions:", error);
         })
         .finally(() => {
           setIsSettingUp(false);
