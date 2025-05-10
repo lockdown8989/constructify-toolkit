@@ -2,6 +2,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,6 +12,17 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { user, session, isLoading, isAdmin, isHR, isManager, isAuthenticated } = useAuth();
   const location = useLocation();
+
+  // Add a timeout to log potential loading issues
+  useEffect(() => {
+    if (isLoading) {
+      const timeout = setTimeout(() => {
+        console.warn("ProtectedRoute is still loading after 3 seconds, potential issue with auth state");
+      }, 3000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isLoading]);
 
   // Detailed logging for debugging
   console.log("ProtectedRoute checking auth:", { 

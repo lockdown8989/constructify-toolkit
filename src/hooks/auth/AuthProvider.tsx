@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     console.log("AuthProvider: Setting up authentication");
+    
     const setupAuth = async () => {
       try {
         setIsLoading(true);
@@ -42,17 +43,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               setUser(null);
               setSession(null);
               resetRoles();
+              setIsLoading(false);
             } else if (newSession) {
               console.log("New session detected, updating state");
               setSession(newSession);
               setUser(newSession.user);
               
               if (newSession.user) {
-                await fetchUserRoles(newSession.user.id);
+                try {
+                  await fetchUserRoles(newSession.user.id);
+                } catch (error) {
+                  console.error("Error fetching user roles:", error);
+                }
               }
+              
+              setIsLoading(false);
             }
-            
-            setIsLoading(false);
           }
         );
 
@@ -72,10 +78,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(sessionData.session.user);
           
           if (sessionData.session.user) {
-            await fetchUserRoles(sessionData.session.user.id);
+            try {
+              await fetchUserRoles(sessionData.session.user.id);
+            } catch (error) {
+              console.error("Error fetching user roles:", error);
+            }
           }
         }
         
+        // Make sure we exit loading state even if initial session check fails
         setIsLoading(false);
         
         return () => {

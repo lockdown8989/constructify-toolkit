@@ -13,7 +13,11 @@ const AppLayout = () => {
   useEffect(() => {
     // Set up realtime subscriptions when the app loads and user is authenticated
     if (isAuthenticated) {
-      setupRealtimeSubscriptions();
+      try {
+        setupRealtimeSubscriptions();
+      } catch (error) {
+        console.error("Error setting up realtime subscriptions:", error);
+      }
     }
   }, [isAuthenticated]);
 
@@ -25,6 +29,17 @@ const AppLayout = () => {
     user: user?.email,
     hasSession: !!session
   });
+
+  // Add a timeout to log potential loading issues
+  useEffect(() => {
+    if (isLoading) {
+      const timeout = setTimeout(() => {
+        console.warn("AppLayout is still loading after 3 seconds, potential issue with auth state");
+      }, 3000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isLoading]);
 
   if (isLoading) {
     return (

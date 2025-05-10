@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate, useSearchParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
 import { useAuthPage } from "@/hooks/auth/useAuthPage";
@@ -11,6 +11,7 @@ const Auth = () => {
   const { user, isAuthenticated, isLoading, signIn, signUp } = useAuth();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const [authError, setAuthError] = useState<string | null>(null);
   
   const {
     from,
@@ -21,6 +22,17 @@ const Auth = () => {
     handleShowResetPassword,
     handleBackToSignIn
   } = useAuthPage();
+
+  // Add timeout for debugging loading issues
+  useEffect(() => {
+    if (isLoading) {
+      const timeout = setTimeout(() => {
+        console.warn("Auth page still loading after 3 seconds, potential issue with auth state");
+      }, 3000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isLoading]);
 
   // Log authentication state for debugging
   useEffect(() => {
@@ -68,12 +80,20 @@ const Auth = () => {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
       <div className="w-full max-w-md">
         <AuthHeader />
+        {authError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+            {authError}
+          </div>
+        )}
         <AuthTabs
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           onForgotPassword={handleShowResetPassword}
           onBackToSignIn={handleBackToSignIn}
-          onSignIn={signIn}
+          onSignIn={(email, password) => {
+            setAuthError(null);
+            return signIn(email, password);
+          }}
           onSignUp={signUp}
         />
       </div>
