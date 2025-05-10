@@ -36,7 +36,8 @@ const Auth = () => {
       isResetMode, 
       isRecoveryMode, 
       hasRecoveryToken,
-      redirectTo: from
+      redirectTo: from,
+      sessionExpiry: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'unknown'
     });
   }, [user, session, isAuthenticated, isResetMode, isRecoveryMode, hasRecoveryToken, from, location]);
 

@@ -39,10 +39,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (updatedSession?.user) {
               setUser(updatedSession.user);
               setSession(updatedSession);
+              
               // Use setTimeout to prevent potential auth deadlocks
-              setTimeout(() => {
-                fetchUserRoles(updatedSession.user.id);
-              }, 0);
+              if (event !== 'INITIAL_SESSION') {
+                setTimeout(() => {
+                  fetchUserRoles(updatedSession.user.id);
+                }, 0);
+              }
             } else {
               setUser(null);
               setSession(null);

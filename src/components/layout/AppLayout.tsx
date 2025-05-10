@@ -34,7 +34,8 @@ const AppLayout = () => {
     hasUser: !!user,
     currentPath: location.pathname,
     user: user?.email,
-    redirecting: !isAuthenticated && !isLoading ? true : false
+    redirecting: !isAuthenticated && !isLoading ? true : false,
+    sessionExpiry: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'unknown'
   });
 
   if (isLoading || isSettingUp) {

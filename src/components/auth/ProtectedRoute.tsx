@@ -30,7 +30,8 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     hasUser: !!user,
     userId: user?.id,
     path: location.pathname,
-    redirecting: !user || !session ? true : false
+    redirecting: !user || !session ? true : false,
+    sessionExpiry: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'unknown'
   });
 
   // Handle authentication check - both user and session must exist
