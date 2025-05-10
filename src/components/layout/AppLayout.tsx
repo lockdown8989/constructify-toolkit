@@ -7,17 +7,15 @@ import { useEffect } from 'react';
 import { Loader2 } from "lucide-react";
 
 const AppLayout = () => {
-  const { user, session, isLoading, isAuthenticated } = useAuth();
+  const { user, session, isLoading } = useAuth();
   const location = useLocation();
+  const isAuthenticated = !!user && !!session;
 
   useEffect(() => {
     // Set up realtime subscriptions when the app loads and user is authenticated
     if (isAuthenticated) {
-      try {
-        setupRealtimeSubscriptions();
-      } catch (error) {
-        console.error("Error setting up realtime subscriptions:", error);
-      }
+      setupRealtimeSubscriptions();
+      console.log("Setting up realtime subscriptions for authenticated user");
     }
   }, [isAuthenticated]);
 
@@ -26,27 +24,15 @@ const AppLayout = () => {
     isAuthenticated, 
     isLoading,
     currentPath: location.pathname,
-    user: user?.email,
-    hasSession: !!session
+    user: user?.email
   });
-
-  // Add a timeout to log potential loading issues
-  useEffect(() => {
-    if (isLoading) {
-      const timeout = setTimeout(() => {
-        console.warn("AppLayout is still loading after 3 seconds, potential issue with auth state");
-      }, 3000);
-      
-      return () => clearTimeout(timeout);
-    }
-  }, [isLoading]);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
-          <p className="text-gray-600">Loading application...</p>
+          <p className="text-gray-600">Loading authentication...</p>
         </div>
       </div>
     );
@@ -54,7 +40,6 @@ const AppLayout = () => {
 
   // If not authenticated and not on auth page, redirect to auth page
   if (!isAuthenticated) {
-    console.log("AppLayout: Not authenticated, redirecting to auth page");
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 

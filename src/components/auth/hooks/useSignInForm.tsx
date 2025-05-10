@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 type SignInFormProps = {
@@ -13,7 +13,6 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,14 +45,10 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
       const trimmedEmail = email.trim();
       const result = await onSignIn(trimmedEmail, password);
       
-      console.log("Sign in result:", { 
-        error: result.error ? true : false, 
-        user: result.data?.user ? true : false,
-        session: result.data?.session ? true : false
-      });
+      console.log("Sign in result:", result);
       
       if (result.error) {
-        console.error("Authentication error:", result.error);
+        console.error("Authentication error:", result.error.message);
         
         // Provide more specific error messages based on error code
         if (result.error.message === "Invalid login credentials") {
@@ -66,28 +61,19 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
         return;
       }
       
-      if (result.data?.user && result.data?.session) {
+      if (result.data?.user) {
         console.log("Sign in successful, user:", result.data.user.email);
         toast({
           title: "Success",
           description: "Signed in successfully",
         });
         
-        // Get redirectPath from location state, or default to dashboard
-        const from = location.state?.from || "/dashboard";
-        console.log("Redirecting to:", from);
-        
         // Add a slight delay before redirecting to ensure toast is shown
         setTimeout(() => {
-          navigate(from, { replace: true });
-        }, 100);
+          navigate("/dashboard");
+        }, 500);
       } else {
-        if (result.data?.user && !result.data?.session) {
-          setErrorMessage("Your account needs email verification. Please check your email inbox.");
-        } else {
-          setErrorMessage("Something went wrong during sign in");
-          console.error("Unexpected sign in result:", result);
-        }
+        setErrorMessage("Something went wrong during sign in");
       }
     } catch (error) {
       console.error("Sign in error:", error);

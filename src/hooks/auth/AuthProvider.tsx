@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -27,68 +26,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    console.log("AuthProvider: Setting up authentication");
-    
     const setupAuth = async () => {
       try {
-        setIsLoading(true);
-        
-        // CRITICAL: Set up auth listener FIRST
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, newSession) => {
-            console.log("Auth state changed:", event, newSession?.user?.email);
-            
-            if (event === 'SIGNED_OUT') {
-              console.log("User signed out, clearing state");
-              setUser(null);
-              setSession(null);
-              resetRoles();
-              setIsLoading(false);
-            } else if (newSession) {
-              console.log("New session detected, updating state");
-              setSession(newSession);
-              setUser(newSession.user);
-              
-              if (newSession.user) {
-                try {
-                  await fetchUserRoles(newSession.user.id);
-                } catch (error) {
-                  console.error("Error fetching user roles:", error);
-                }
-              }
-              
-              setIsLoading(false);
-            }
-          }
-        );
-
-        // Then check current session
-        const { data: sessionData, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Error getting session:", error);
-          setIsLoading(false);
-          return;
-        }
-        
-        console.log("Initial session check:", sessionData?.session?.user?.email || "No session");
+        // First check current session
+        const { data: sessionData } = await supabase.auth.getSession();
+        console.log("Initial session check:", sessionData?.session?.user?.email);
         
         if (sessionData?.session) {
           setSession(sessionData.session);
           setUser(sessionData.session.user);
           
           if (sessionData.session.user) {
-            try {
-              await fetchUserRoles(sessionData.session.user.id);
-            } catch (error) {
-              console.error("Error fetching user roles:", error);
-            }
+            await fetchUserRoles(sessionData.session.user.id);
           }
         }
         
-        // Make sure we exit loading state even if initial session check fails
         setIsLoading(false);
         
+        // Then set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log("Auth state changed:", event, session?.user?.email);
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            if (session?.user) {
+              await fetchUserRoles(session.user.id);
+            } else {
+              resetRoles();
+            }
+            
+            setIsLoading(false);
+          }
+        );
+
         return () => {
           subscription.unsubscribe();
         };
@@ -101,18 +72,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setupAuth();
   }, []);
 
-  // Calculate if user is authenticated - ensure both user and session exist
+  // Calculate if user is authenticated
   const isAuthenticated = !!user && !!session;
-
-  // Add proper debug logging
-  useEffect(() => {
-    console.log("Auth state updated:", { 
-      isAuthenticated, 
-      userId: user?.id,
-      hasSession: !!session,
-      isLoading
-    });
-  }, [isAuthenticated, user, session, isLoading]);
 
   const value: AuthContextType = {
     user,
