@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
 import { Check, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
@@ -30,6 +30,9 @@ const EmployeeScheduleView: React.FC = () => {
     isLoading,
     refreshSchedules
   } = useEmployeeSchedule();
+  
+  // State to track if a shift was just dropped
+  const [droppedShiftId, setDroppedShiftId] = useState<string | null>(null);
 
   const handleEmailClick = (schedule: Schedule) => {
     const subject = `Regarding shift on ${format(new Date(schedule.start_time), 'MMMM d, yyyy')}`;
@@ -49,6 +52,18 @@ const EmployeeScheduleView: React.FC = () => {
         setActiveTab('my-shifts');
       }
     }
+  };
+  
+  // Function to handle shift drops
+  const handleShiftDrop = (shiftId: string) => {
+    setDroppedShiftId(shiftId);
+    toast({
+      title: "Shift assigned",
+      description: "The shift has been added to your schedule.",
+    });
+    
+    // Refresh schedules to show the new shift
+    refreshSchedules();
   };
 
   // Function to handle previous/next month navigation
@@ -85,6 +100,8 @@ const EmployeeScheduleView: React.FC = () => {
         startDate={currentDate}
         onDateChange={setCurrentDate}
         schedules={schedules}
+        onShiftDrop={handleShiftDrop}
+        highlightedShiftId={droppedShiftId}
       />
       
       <div className="border-t border-gray-200 my-2" />
