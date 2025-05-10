@@ -87,7 +87,7 @@ const TimeClockWidget = () => {
           <div className="flex justify-center items-center">
             <div className="w-28 h-28 rounded-full bg-white shadow-inner border border-gray-100 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-2xl font-bold text-gray-800">{formatDuration(elapsedTime, false)}</p>
+                <p className="text-2xl font-bold text-gray-800">{formatDuration(elapsedTime)}</p>
                 <p className="text-xs text-gray-500">HOURS WORKED</p>
               </div>
             </div>

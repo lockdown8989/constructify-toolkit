@@ -15,7 +15,8 @@ const RotaCloudFeatures = () => {
   const { isAdmin, isHR, isManager } = useAuth();
   const isMobile = useIsMobile();
   
-  const isManager = isAdmin || isHR || isManager;
+  // Determine if user has manager-level access
+  const hasManagerAccess = isAdmin || isHR || isManager;
   
   return (
     <Card className="border-none shadow-md">
@@ -73,10 +74,10 @@ const RotaCloudFeatures = () => {
               />
               <FeatureCard
                 icon={<Users className="h-5 w-5" />}
-                title={isManager ? "Shift Management" : "Shift Requests"}
-                description={isManager ? "Assign shifts and manage staff availability" : "Request time off and view upcoming shifts"}
-                action={() => navigate(isManager ? '/restaurant-schedule' : '/schedule-requests')}
-                actionText={isManager ? "Manage Shifts" : "My Shifts"}
+                title={hasManagerAccess ? "Shift Management" : "Shift Requests"}
+                description={hasManagerAccess ? "Assign shifts and manage staff availability" : "Request time off and view upcoming shifts"}
+                action={() => navigate(hasManagerAccess ? '/restaurant-schedule' : '/schedule-requests')}
+                actionText={hasManagerAccess ? "Manage Shifts" : "My Shifts"}
               />
             </div>
           </TabsContent>
@@ -87,14 +88,14 @@ const RotaCloudFeatures = () => {
                 icon={<PieChart className="h-5 w-5" />}
                 title="Labor Reports"
                 description="Track labor costs and analyze schedule efficiency"
-                action={() => navigate(isManager ? '/payroll' : '/profile')}
-                actionText={isManager ? "View Reports" : "My Hours"}
+                action={() => navigate(hasManagerAccess ? '/payroll' : '/profile')}
+                actionText={hasManagerAccess ? "View Reports" : "My Hours"}
               />
               <FeatureCard
                 icon={<Calendar className="h-5 w-5" />}
                 title="Attendance Analytics"
                 description="Track attendance patterns and time off usage"
-                action={() => navigate(isManager ? '/leave-management' : '/leave')}
+                action={() => navigate(hasManagerAccess ? '/leave-management' : '/leave')}
                 actionText="Attendance Records"
               />
             </div>
