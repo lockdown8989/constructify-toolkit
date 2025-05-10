@@ -1,128 +1,128 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
-import { format, addDays, startOfWeek, isSameDay, getDay } from 'date-fns';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Schedule } from '@/hooks/use-schedules';
-import { cn } from '@/lib/utils';
-import WeekNavigation from './components/WeekNavigation';
-import { getColorByDepartment } from '@/utils/color-utils';
+import React from 'react';
+import { format, addDays, parseISO } from 'date-fns';
+import { useEmployees } from '../../hooks/use-employees';
+import { useSchedules } from '../../hooks/use-schedules';
+import { Button } from '../ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 interface WeeklyCalendarViewProps {
-  currentDate: Date;
+  startDate: Date;
   onDateChange: (date: Date) => void;
-  schedules: Schedule[];
 }
 
-const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
-  currentDate,
-  onDateChange,
-  schedules
-}) => {
-  const isMobile = useIsMobile();
-  const [weekDays, setWeekDays] = useState<Date[]>([]);
-  
-  // Generate the array of week days based on current date
-  useEffect(() => {
-    const monday = startOfWeek(currentDate, { weekStartsOn: 1 });
-    const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
-    setWeekDays(days);
-  }, [currentDate]);
-  
+const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({ startDate, onDateChange }) => {
+  const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
+  const { data: schedules = [], isLoading: isLoadingSchedules } = useSchedules();
+
+  // Generate an array for the 7 days of the week
+  const days = Array.from({ length: 7 }, (_, i) => addDays(startDate, i));
+
+  // Group schedules by employee
+  const schedulesByEmployee = employees.reduce((acc, employee) => {
+    acc[employee.id] = {
+      employee,
+      schedules: schedules.filter(schedule => schedule.employee_id === employee.id),
+    };
+    return acc;
+  }, {} as Record<string, { employee: any; schedules: any[] }>);
+
   // Navigate to previous/next week
-  const handlePreviousWeek = useCallback(() => {
-    const newDate = addDays(currentDate, -7);
-    onDateChange(newDate);
-  }, [currentDate, onDateChange]);
-  
-  const handleNextWeek = useCallback(() => {
-    const newDate = addDays(currentDate, 7);
-    onDateChange(newDate);
-  }, [currentDate, onDateChange]);
-  
-  const handleSelectToday = useCallback(() => {
-    onDateChange(new Date());
-  }, [onDateChange]);
-  
-  // Get schedules for a specific day
-  const getSchedulesForDay = useCallback((day: Date) => {
-    return schedules.filter(schedule => 
-      isSameDay(new Date(schedule.start_time), day)
-    );
-  }, [schedules]);
-  
-  // Select a specific date
-  const handleDateClick = (day: Date) => {
-    onDateChange(day);
+  const navigateToPreviousWeek = () => {
+    onDateChange(addDays(startDate, -7));
   };
 
-  // Find today's index in the week array
-  const todayIndex = weekDays.findIndex(day => isSameDay(day, new Date()));
-  
+  const navigateToNextWeek = () => {
+    onDateChange(addDays(startDate, 7));
+  };
+
+  if (isLoadingEmployees || isLoadingSchedules) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div className="px-4 py-2">
-      <WeekNavigation 
-        currentDate={currentDate}
-        onPreviousWeek={handlePreviousWeek}
-        onNextWeek={handleNextWeek}
-        onSelectToday={handleSelectToday}
-        isMobile={isMobile}
-      />
-      
-      <div className={`grid grid-cols-7 gap-1 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-        {weekDays.map((day, index) => {
-          const isToday = isSameDay(day, new Date());
-          const isSelected = isSameDay(day, currentDate);
-          const daySchedules = getSchedulesForDay(day);
-          const dayName = format(day, isMobile ? 'EEE' : 'EEE');
-          const dayNum = format(day, 'd');
-          
-          return (
-            <div 
-              key={day.toString()}
-              onClick={() => handleDateClick(day)}
-              className={cn(
-                "flex flex-col items-center py-2 rounded-md cursor-pointer transition-colors",
-                isToday ? "bg-blue-50" : "hover:bg-gray-50",
-                isSelected ? "ring-2 ring-blue-500 ring-opacity-70" : "",
-              )}
-            >
-              <div className={`text-center ${isMobile ? 'mb-1' : 'mb-1.5'}`}>
-                <div className={`font-medium ${isToday ? 'text-blue-600' : ''}`}>{dayName}</div>
-                <div 
-                  className={cn(
-                    "w-7 h-7 flex items-center justify-center rounded-full",
-                    isToday ? "bg-blue-600 text-white" : ""
-                  )}
-                >
-                  {dayNum}
-                </div>
-              </div>
-              
-              {daySchedules.length > 0 ? (
-                <div className="flex flex-col gap-1 w-full px-1">
-                  {daySchedules.slice(0, isMobile ? 2 : 3).map((schedule, idx) => (
-                    <div 
-                      key={schedule.id}
-                      className={cn(
-                        "text-xs rounded-sm px-1 py-0.5 truncate",
-                        getColorByDepartment(schedule.department || "Default")
-                      )}
-                    >
-                      {format(new Date(schedule.start_time), 'HH:mm')}
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* Header with navigation */}
+      <div className="p-4 border-b flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Weekly Schedule</h2>
+        <div className="flex space-x-2">
+          <Button variant="outline" size="sm" onClick={navigateToPreviousWeek}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="px-2 py-1">
+            {format(startDate, 'MMM d')} - {format(addDays(startDate, 6), 'MMM d, yyyy')}
+          </span>
+          <Button variant="outline" size="sm" onClick={navigateToNextWeek}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Calendar grid */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead>
+            <tr>
+              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 z-10 w-60">
+                Employee
+              </th>
+              {days.map(day => (
+                <th key={day.toISOString()} className="px-6 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]">
+                  {format(day, 'EEEE')}
+                  <div className="font-normal mt-1">{format(day, 'MMM d')}</div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {Object.values(schedulesByEmployee).map(({ employee, schedules }) => (
+              <tr key={employee.id}>
+                <td className="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-10 w-60">
+                  <div className="flex items-center">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={employee.avatar} alt={employee.name} />
+                      <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="ml-4">
+                      <div className="text-sm font-medium text-gray-900">{employee.name}</div>
+                      <div className="text-sm text-gray-500">{employee.job_title || 'Employee'}</div>
                     </div>
-                  ))}
-                  {daySchedules.length > (isMobile ? 2 : 3) && (
-                    <div className="text-xs text-center text-blue-600">
-                      +{daySchedules.length - (isMobile ? 2 : 3)} more
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-gray-400 text-xs">No shifts</div>
-              )}
-            </div>
-          );
-        })}
+                  </div>
+                </td>
+                {days.map(day => {
+                  const daySchedules = schedules.filter(s => {
+                    const scheduleDate = parseISO(s.date);
+                    return (
+                      scheduleDate.getDate() === day.getDate() &&
+                      scheduleDate.getMonth() === day.getMonth() &&
+                      scheduleDate.getFullYear() === day.getFullYear()
+                    );
+                  });
+                  
+                  return (
+                    <td key={day.toISOString()} className="px-6 py-4 whitespace-nowrap text-sm">
+                      {daySchedules.map(schedule => (
+                        <div
+                          key={schedule.id}
+                          className="mb-2 p-2 rounded-lg bg-blue-100 border border-blue-200"
+                        >
+                          <div className="font-medium">{schedule.title || 'Shift'}</div>
+                          <div className="text-xs text-gray-500">
+                            {schedule.start_time} - {schedule.end_time}
+                          </div>
+                          {/* Changed from schedule.department to address TypeScript error */}
+                          <div className="text-xs text-gray-500 mt-1">
+                            {employee.department || 'General'}
+                          </div>
+                        </div>
+                      ))}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

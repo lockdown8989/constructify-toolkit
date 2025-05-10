@@ -17,6 +17,7 @@ import RestaurantSchedule from "@/pages/RestaurantSchedule";
 import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
 import LandingPage from "@/pages/LandingPage";
+import About from "@/pages/About"; // Import the new About page
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import EmployeeDetailsPage from "@/components/people/EmployeeDetailsPage";
 import Attendance from "@/pages/Attendance";
@@ -108,11 +109,19 @@ const RouterComponent = () => {
           path: "time-clock",
           element: <TimeClock />,
         },
+        {
+          path: "about", // Add About page route
+          element: <About />,
+        },
       ],
     },
     {
       path: "/landing",
       element: <LandingPage />,
+    },
+    {
+      path: "/about", // Add public About page route
+      element: <About />,
     },
     {
       path: "*",
