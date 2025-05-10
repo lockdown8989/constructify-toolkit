@@ -3,12 +3,14 @@ import React, { useEffect } from "react";
 import { Navigate, useSearchParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
 import { useAuthPage } from "@/hooks/auth/useAuthPage";
+import { useAuthActions } from "@/hooks/auth/useAuthActions";
 import { AuthHeader } from "@/components/auth/AuthHeader";
 import { AuthTabs } from "@/components/auth/AuthTabs";
 import { ResetPasswordMode } from "@/components/auth/ResetPasswordMode";
 
 const Auth = () => {
   const { user, session, isAuthenticated } = useAuth();
+  const { signIn, signUp } = useAuthActions();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   
@@ -64,6 +66,8 @@ const Auth = () => {
           setActiveTab={setActiveTab}
           onForgotPassword={handleShowResetPassword}
           onBackToSignIn={handleBackToSignIn}
+          onSignIn={signIn}
+          onSignUp={signUp}
         />
       </div>
     </div>
