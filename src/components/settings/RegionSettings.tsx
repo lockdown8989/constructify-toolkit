@@ -6,10 +6,12 @@ import { LanguageSelector } from './LanguageSelector';
 import { CurrencySelector } from './CurrencySelector';
 import { useRegionSettings } from '@/hooks/use-region-settings';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrencyPreference } from '@/hooks/use-currency-preference';
 
 export const RegionSettings: React.FC = () => {
-  const { country, setCountry, language, setLanguage, currency, isLoading } = useRegionSettings();
+  const { country, setCountry, language, setLanguage, currency, setCurrency, isLoading } = useRegionSettings();
   const { toast } = useToast();
+  const { updateCurrencyPreference } = useCurrencyPreference();
   
   const handleCountryChange = async (value: string) => {
     await setCountry(value);
@@ -20,7 +22,6 @@ export const RegionSettings: React.FC = () => {
   };
   
   const handleCurrencyChange = async (value: string) => {
-    const { updateCurrencyPreference } = useCurrencyPreference();
     await updateCurrencyPreference(value);
   };
   
@@ -61,6 +62,3 @@ export const RegionSettings: React.FC = () => {
     </Card>
   );
 };
-
-// Add missing hook import
-import { useCurrencyPreference } from '@/hooks/use-currency-preference';
