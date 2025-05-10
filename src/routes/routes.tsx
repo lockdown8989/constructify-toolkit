@@ -1,4 +1,3 @@
-
 import { createBrowserRouter } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
@@ -15,12 +14,12 @@ import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
 import RestaurantSchedule from "@/pages/RestaurantSchedule";
 import NotFound from "@/pages/NotFound";
+import Index from "@/pages/Index";
 import LandingPage from "@/pages/LandingPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import EmployeeDetailsPage from "@/components/people/EmployeeDetailsPage";
 import Attendance from "@/pages/Attendance";
 import TimeClock from "@/pages/TimeClock";
-import { useAuth } from "@/hooks/use-auth";
 
 const router = createBrowserRouter([
   {
@@ -29,10 +28,6 @@ const router = createBrowserRouter([
   },
   {
     path: "/",
-    element: <LandingPage />,
-  },
-  {
-    path: "/app",
     element: (
       <ProtectedRoute>
         <AppLayout />
@@ -41,7 +36,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Dashboard />,
+        element: <Index />,
       },
       {
         path: "dashboard",
@@ -112,6 +107,10 @@ const router = createBrowserRouter([
         element: <TimeClock />,
       },
     ],
+  },
+  {
+    path: "/landing",
+    element: <LandingPage />,
   },
   {
     path: "*",
