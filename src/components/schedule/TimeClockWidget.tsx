@@ -1,12 +1,10 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Clock, Coffee, StopCircle, PauseCircle, PlayCircle, Timer } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Clock, Coffee, StopCircle, PauseCircle, Timer } from 'lucide-react';
 import { useTimeClock } from '@/hooks/time-clock';
 import { formatDuration } from '@/utils/time-utils';
-import { format } from 'date-fns';
-import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 
 const TimeClockWidget = () => {
   const {
@@ -18,157 +16,99 @@ const TimeClockWidget = () => {
     elapsedTime,
     breakTime
   } = useTimeClock();
-  
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [isLoading, setIsLoading] = useState(false);
-  
+
   useEffect(() => {
     console.log('TimeClockWidget rendered with status:', status);
-    
-    // Update current time every second
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    
-    return () => clearInterval(timer);
   }, [status]);
 
-  const getButtonConfig = () => {
-    if (isLoading) {
-      return {
-        onClick: () => {},
-        variant: "outline",
-        icon: <Clock className="h-5 w-5 mr-2" />,
-        label: "Loading...",
-        color: ""
-      };
-    }
-
-    switch (status) {
-      case 'clocked-out':
-        return {
-          onClick: handleClockIn,
-          variant: "default",
-          icon: <PlayCircle className="h-5 w-5 mr-2" />,
-          label: "Clock In",
-          color: "bg-green-600 hover:bg-green-700"
-        };
-      case 'clocked-in':
-        return {
-          onClick: handleClockOut,
-          variant: "default",
-          icon: <StopCircle className="h-5 w-5 mr-2" />,
-          label: "Clock Out",
-          color: "bg-red-600 hover:bg-red-700"
-        };
-      case 'on-break':
-        return {
-          onClick: handleBreakEnd,
-          variant: "default",
-          icon: <Timer className="h-5 w-5 mr-2" />,
-          label: "End Break",
-          color: "bg-blue-600 hover:bg-blue-700"
-        };
-      default:
-        return {
-          onClick: () => {},
-          variant: "outline",
-          icon: <Clock className="h-5 w-5 mr-2" />,
-          label: "Loading...",
-          color: ""
-        };
-    }
-  };
-
-  const buttonConfig = getButtonConfig();
-
   return (
-    <div>
-      <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200">
-        <div className="text-center mb-6">
-          <div className="text-4xl font-mono font-bold text-blue-900">
-            {format(currentTime, 'hh:mm:ss')}
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2">
+          <Clock className="h-5 w-5" />
+          Time Clock
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent>
+        <div className="text-center mb-4">
+          <div className="text-3xl font-mono font-bold">
+            {formatDuration(elapsedTime)}
           </div>
-          <div className="text-sm text-blue-700">
-            {format(currentTime, 'EEEE, MMMM do, yyyy')}
-          </div>
-        </div>
-        
-        <div className="mb-6">
-          <div className="flex justify-center items-center">
-            <div className="w-28 h-28 rounded-full bg-white shadow-inner border border-gray-100 flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-gray-800">{formatDuration(elapsedTime)}</p>
-                <p className="text-xs text-gray-500">HOURS WORKED</p>
-              </div>
-            </div>
+          <div className="text-sm text-gray-500">
+            Hours Worked
           </div>
           
           {breakTime > 0 && (
-            <div className="mt-4 text-center">
-              <span className="text-gray-600 text-sm">Break time: </span>
-              <span className="font-mono font-medium">{formatDuration(breakTime)}</span>
+            <div className="mt-2 text-sm">
+              <span className="text-gray-500">Break time: </span>
+              <span className="font-mono">{formatDuration(breakTime)}</span>
             </div>
           )}
         </div>
         
-        <div className="flex flex-col gap-3">
-          <Button 
-            onClick={buttonConfig.onClick} 
-            className={cn("py-6 text-lg", buttonConfig.color)}
-            disabled={isLoading}
-          >
-            {buttonConfig.icon}
-            {buttonConfig.label}
-          </Button>
+        <div className="flex flex-col sm:flex-row justify-center gap-2 mb-4">
+          {status === 'clocked-out' && (
+            <Button 
+              onClick={handleClockIn} 
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              Clock In
+            </Button>
+          )}
           
           {status === 'clocked-in' && (
+            <>
+              <Button 
+                onClick={handleBreakStart} 
+                variant="outline"
+                className="border-blue-400 text-blue-500 hover:bg-blue-50"
+              >
+                <Coffee className="h-4 w-4 mr-2" />
+                Start Break
+              </Button>
+              
+              <Button 
+                onClick={handleClockOut} 
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <StopCircle className="h-4 w-4 mr-2" />
+                Clock Out
+              </Button>
+            </>
+          )}
+          
+          {status === 'on-break' && (
             <Button 
-              onClick={handleBreakStart} 
-              variant="outline"
-              className="py-5 border-blue-400 text-blue-600 hover:bg-blue-50"
+              onClick={handleBreakEnd} 
+              className="bg-blue-600 hover:bg-blue-700"
             >
-              <Coffee className="h-5 w-5 mr-2" />
-              Start Break
+              <Timer className="h-4 w-4 mr-2" />
+              End Break
             </Button>
           )}
         </div>
         
-        <div className="mt-6 text-center">
-          <div
-            className={cn(
-              "py-2 px-4 rounded-full font-medium inline-block",
-              status === 'clocked-in' && "bg-green-100 text-green-700",
-              status === 'on-break' && "bg-blue-100 text-blue-700",
-              status === 'clocked-out' && "bg-gray-100 text-gray-600"
-            )}
-          >
-            {status === 'clocked-in' && "Currently Clocked In"}
-            {status === 'on-break' && "Currently On Break"}
-            {status === 'clocked-out' && "Not Working"}
-          </div>
+        <div className="text-sm text-center text-gray-500">
+          {status === 'clocked-in' && (
+            <div className="p-2 bg-green-50 text-green-700 rounded-full font-medium">
+              Currently Clocked In
+            </div>
+          )}
+          {status === 'on-break' && (
+            <div className="p-2 bg-blue-50 text-blue-700 rounded-full font-medium">
+              Currently On Break
+            </div>
+          )}
+          {status === 'clocked-out' && (
+            <div className="p-2 bg-gray-100 text-gray-600 rounded-full">
+              Clocked Out
+            </div>
+          )}
         </div>
-      </Card>
-      
-      {/* Shift rules information */}
-      <div className="bg-white rounded-lg mt-4 p-4 shadow-sm border border-gray-100">
-        <h3 className="font-medium mb-2 text-gray-800">Shift Information</h3>
-        <ul className="text-sm text-gray-600 space-y-2">
-          <li className="flex items-start gap-2">
-            <div className="h-1.5 w-1.5 rounded-full bg-gray-500 mt-1.5"></div>
-            <span>Standard shift: 8 hours with 1 hour break</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <div className="h-1.5 w-1.5 rounded-full bg-gray-500 mt-1.5"></div>
-            <span>Overtime must be approved by manager</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <div className="h-1.5 w-1.5 rounded-full bg-gray-500 mt-1.5"></div>
-            <span>Timesheets are automatically generated</span>
-          </li>
-        </ul>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
