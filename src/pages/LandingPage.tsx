@@ -34,7 +34,7 @@ const LandingPage: React.FC = () => {
             ) : (
               <>
                 <Button asChild size="lg">
-                  <Link to="/app/schedule">{isManager ? 'Manage Schedule' : 'View My Schedule'}</Link>
+                  <Link to="/app/dashboard">{isManager ? 'Manage Schedule' : 'View My Schedule'}</Link>
                 </Button>
                 <Button variant="outline" size="lg" asChild>
                   <Link to="/app/dashboard">Go to Dashboard</Link>
