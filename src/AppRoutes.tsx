@@ -16,7 +16,7 @@ import RestaurantSchedule from '@/pages/RestaurantSchedule';
 import Hiring from '@/pages/Hiring';
 import Salary from '@/pages/Salary';
 import Payroll from '@/pages/Payroll';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import LandingPage from '@/pages/LandingPage';
 import { useAuth } from '@/hooks/use-auth';
 

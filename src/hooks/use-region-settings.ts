@@ -6,7 +6,7 @@ import { useCurrencyPreference } from '@/hooks/use-currency-preference';
 
 export const useRegionSettings = () => {
   const { user } = useAuth();
-  const { currency, setCurrency } = useCurrencyPreference();
+  const { currency, updateCurrencyPreference, setCurrency } = useCurrencyPreference();
   const [country, setCountryState] = useState<string>('US');
   const [language, setLanguageState] = useState<string>('en');
   const [isLoading, setIsLoading] = useState(false);
