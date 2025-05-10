@@ -1,103 +1,187 @@
 
-import { Button } from "@/components/ui/button";
-import { CardContent, CardFooter } from "@/components/ui/card";
-import { CountryInput } from "./CountryInput";
-import { CurrencySelector } from "./CurrencySelector";
-import { LanguageSelector } from "./LanguageSelector";
-import { useRegionSettings } from "@/hooks/use-region-settings";
-import { useLanguage } from "@/hooks/use-language";
-import { Card } from "@/components/ui/card";
-import { MapPin, Currency, Languages } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
+import React, { useState } from 'react';
+import { useRegionSettings } from '@/hooks/use-region-settings';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MapPin, Globe, Languages, CreditCard } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-export const RegionSettings = () => {
-  const { user } = useAuth();
-  const {
-    regionData,
-    isLocating,
-    isSaving,
-    handleChange,
-    handleCurrencyChange,
-    handleLanguageChange,
-    handleSubmit,
-    autoDetectLocation
-  } = useRegionSettings(user);
-
-  const { t } = useLanguage();
+const RegionSettings = () => {
+  const { 
+    country, 
+    setCountry, 
+    language, 
+    setLanguage, 
+    currency, 
+    setCurrency, 
+    isLoading 
+  } = useRegionSettings();
   const { toast } = useToast();
+  const [isLocating, setIsLocating] = useState(false);
+  const [countryInput, setCountryInput] = useState(country);
+  const [languageInput, setLanguageInput] = useState(language);
+  const [currencyInput, setCurrencyInput] = useState(currency);
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    toast({
-      title: "Saving changes",
-      description: "Updating your region and language settings...",
-    });
+    // Try to update country
+    if (countryInput !== country) {
+      await setCountry(countryInput);
+    }
     
-    await handleSubmit(e);
+    // Try to update language
+    if (languageInput !== language) {
+      await setLanguage(languageInput);
+    }
+    
+    // Try to update currency
+    if (currencyInput !== currency) {
+      await setCurrency(currencyInput as any);
+    }
+    
+    toast({
+      title: "Settings Updated",
+      description: "Your region settings have been saved successfully."
+    });
+  };
+
+  const autoDetectLocation = async () => {
+    setIsLocating(true);
+    try {
+      const response = await fetch('https://ipapi.co/json/');
+      const data = await response.json();
+      
+      if (data.country) {
+        setCountryInput(data.country);
+      }
+      
+      if (data.currency) {
+        setCurrencyInput(data.currency);
+      }
+      
+      if (data.languages) {
+        const primaryLanguage = data.languages.split(',')[0];
+        setLanguageInput(primaryLanguage);
+      }
+      
+      toast({
+        title: "Location Detected",
+        description: `Detected location: ${data.country_name}`
+      });
+    } catch (error) {
+      console.error('Error detecting location:', error);
+      toast({
+        title: "Location Detection Failed",
+        description: "Could not auto-detect your location.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLocating(false);
+    }
   };
 
   return (
-    <form onSubmit={onSubmit}>
-      <CardContent className="space-y-6 pt-2">
-        <Card className="p-4 rounded-xl bg-background/40 border shadow-sm">
-          <div className="flex items-start space-x-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-              <MapPin className="h-5 w-5 text-primary" />
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-xl flex items-center gap-2">
+          <Globe className="h-5 w-5" />
+          Region Settings
+        </CardTitle>
+        <CardDescription>
+          Configure your regional preferences for language, currency, and location.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="country" className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                Country
+              </Label>
+              <div className="flex gap-2">
+                <Input 
+                  id="country" 
+                  value={countryInput} 
+                  onChange={(e) => setCountryInput(e.target.value)} 
+                  className="flex-1"
+                  placeholder="Your country code (e.g., US, GB)" 
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={autoDetectLocation}
+                  disabled={isLocating}
+                >
+                  {isLocating ? "Detecting..." : "Detect"}
+                </Button>
+              </div>
             </div>
-            <div className="flex-1 space-y-1">
-              <div className="text-base font-medium pb-2">Location</div>
-              <CountryInput
-                country={regionData.country}
-                isLocating={isLocating}
-                onChange={handleChange}
-                onDetect={autoDetectLocation}
-              />
+            
+            <div className="space-y-2">
+              <Label htmlFor="language" className="flex items-center gap-1">
+                <Languages className="h-4 w-4" />
+                Language
+              </Label>
+              <Select 
+                value={languageInput} 
+                onValueChange={setLanguageInput}
+              >
+                <SelectTrigger id="language">
+                  <SelectValue placeholder="Select language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="es">Spanish</SelectItem>
+                  <SelectItem value="fr">French</SelectItem>
+                  <SelectItem value="de">German</SelectItem>
+                  <SelectItem value="zh">Chinese</SelectItem>
+                  <SelectItem value="ja">Japanese</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="currency" className="flex items-center gap-1">
+                <CreditCard className="h-4 w-4" />
+                Currency
+              </Label>
+              <Select 
+                value={currencyInput} 
+                onValueChange={setCurrencyInput}
+              >
+                <SelectTrigger id="currency">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">US Dollar ($)</SelectItem>
+                  <SelectItem value="EUR">Euro (€)</SelectItem>
+                  <SelectItem value="GBP">British Pound (£)</SelectItem>
+                  <SelectItem value="JPY">Japanese Yen (¥)</SelectItem>
+                  <SelectItem value="CAD">Canadian Dollar (C$)</SelectItem>
+                  <SelectItem value="AUD">Australian Dollar (A$)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-        </Card>
-        
-        <Card className="p-4 rounded-xl bg-background/40 border shadow-sm">
-          <div className="flex items-start space-x-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-              <Currency className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 space-y-1">
-              <div className="text-base font-medium pb-2">Preferred Currency</div>
-              <CurrencySelector
-                currency={regionData.preferred_currency}
-                onChange={handleCurrencyChange}
-              />
-            </div>
+          
+          <div className="flex justify-end">
+            <Button 
+              type="submit" 
+              disabled={isLoading}
+              className="min-w-[120px]"
+            >
+              {isLoading ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
-        </Card>
-        
-        <Card className="p-4 rounded-xl bg-background/40 border shadow-sm">
-          <div className="flex items-start space-x-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-              <Languages className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 space-y-1">
-              <div className="text-base font-medium pb-2">Preferred Language</div>
-              <LanguageSelector
-                language={regionData.preferred_language}
-                onChange={handleLanguageChange}
-              />
-            </div>
-          </div>
-        </Card>
+        </form>
       </CardContent>
-      
-      <CardFooter className="pb-6">
-        <Button 
-          type="submit" 
-          disabled={isSaving} 
-          className="w-full rounded-xl py-6"
-        >
-          {isSaving ? t('saving') : t('saveChanges')}
-        </Button>
-      </CardFooter>
-    </form>
+    </Card>
   );
 };
+
+export default RegionSettings;
