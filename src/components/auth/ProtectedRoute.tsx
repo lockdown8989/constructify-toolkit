@@ -23,16 +23,20 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     );
   }
 
-  // Add more detailed logging to help diagnose auth issues
+  // More detailed logging to help diagnose auth issues
   console.log("Auth state in ProtectedRoute:", { 
     isAuthenticated: !!user && !!session, 
     hasSession: !!session,
+    hasUser: !!user,
     userId: user?.id,
-    path: location.pathname
+    path: location.pathname,
+    redirecting: !user || !session ? true : false
   });
 
+  // Handle authentication check - both user and session must exist
   if (!user || !session) {
     // Store the current location so we can redirect back after login
+    console.log("ProtectedRoute: User not authenticated, redirecting to /auth");
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
@@ -49,10 +53,13 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     }
     
     if (!hasRequiredRole) {
+      console.log("ProtectedRoute: User doesn't have required role, redirecting to dashboard");
       return <Navigate to="/dashboard" replace />;
     }
   }
 
+  // User is authenticated and has required role if specified
+  console.log("ProtectedRoute: Access granted to:", location.pathname);
   return <>{children}</>;
 };
 

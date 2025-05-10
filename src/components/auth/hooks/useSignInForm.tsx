@@ -75,10 +75,10 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
           description: "Signed in successfully",
         });
         
-        // Add a slight delay before redirecting to ensure toast is shown
+        // Add a slight delay before redirecting to ensure state is updated properly
         setTimeout(() => {
           navigate(from);
-        }, 500);
+        }, 800);
       } else {
         setErrorMessage("Something went wrong during sign in");
       }

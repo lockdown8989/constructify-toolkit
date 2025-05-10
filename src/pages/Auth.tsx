@@ -8,7 +8,7 @@ import { AuthTabs } from "@/components/auth/AuthTabs";
 import { ResetPasswordMode } from "@/components/auth/ResetPasswordMode";
 
 const Auth = () => {
-  const { user, isAuthenticated, signIn, signUp } = useAuth();
+  const { user, session, isAuthenticated, signIn, signUp } = useAuth();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   
@@ -28,7 +28,9 @@ const Auth = () => {
   useEffect(() => {
     // Log authentication state for debugging
     console.log("Auth page state:", { 
-      isAuthenticated,
+      isAuthenticated: !!user && !!session,
+      hasSession: !!session,
+      hasUser: !!user,
       currentPath: location.pathname,
       user: user?.email,
       isResetMode, 
@@ -36,13 +38,13 @@ const Auth = () => {
       hasRecoveryToken,
       redirectTo: from
     });
-  }, [user, isAuthenticated, isResetMode, isRecoveryMode, hasRecoveryToken, from, location]);
+  }, [user, session, isAuthenticated, isResetMode, isRecoveryMode, hasRecoveryToken, from, location]);
 
   // If we have a token in the URL but not in reset mode, force reset mode
   const shouldShowReset = isResetMode || isRecoveryMode || hasRecoveryToken;
 
   // Redirect authenticated users to dashboard if not in reset mode
-  if (isAuthenticated && !shouldShowReset) {
+  if (user && session && !shouldShowReset) {
     console.log("Auth page - User is authenticated, redirecting to:", from || "/dashboard");
     return <Navigate to={from || "/dashboard"} replace />;
   }

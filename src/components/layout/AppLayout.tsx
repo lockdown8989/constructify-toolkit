@@ -30,8 +30,11 @@ const AppLayout = () => {
   console.log("AppLayout auth state:", { 
     isAuthenticated, 
     isLoading,
+    hasSession: !!session,
+    hasUser: !!user,
     currentPath: location.pathname,
-    user: user?.email
+    user: user?.email,
+    redirecting: !isAuthenticated && !isLoading ? true : false
   });
 
   if (isLoading || isSettingUp) {
@@ -50,6 +53,7 @@ const AppLayout = () => {
   // If not authenticated and not on auth page, redirect to auth page
   // Store the current location so we can redirect back after login
   if (!isAuthenticated) {
+    console.log("AppLayout: User not authenticated, redirecting to /auth from", location.pathname);
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 

@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     setupAuth();
-  }, []);
+  }, [fetchUserRoles, resetRoles]);
 
   // Calculate if user is authenticated
   const isAuthenticated = !!user && !!session;
