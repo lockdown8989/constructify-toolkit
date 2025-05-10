@@ -1,7 +1,8 @@
+
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import { useAuth } from "@/hooks/auth";
-import { setupRealtimeSubscriptions } from '@/services/setup-realtime';
+import { setupRealtimeSubscriptions } from '@/services/employee-sync';
 import { useEffect } from 'react';
 
 const AppLayout = ({ children }: React.PropsWithChildren) => {
