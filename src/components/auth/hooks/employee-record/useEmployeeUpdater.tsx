@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useManagerValidator } from './useManagerValidator';
 import { useManagerNotifier } from './useManagerNotifier';
-import { UserRole } from '@/hooks/auth/types';
+import { UserRole } from '../useUserRole';
 
 export const useEmployeeUpdater = () => {
   const { toast } = useToast();

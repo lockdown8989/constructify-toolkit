@@ -46,54 +46,6 @@
   .shift-calendar-mobile .calendar-day-header {
     @apply text-xs py-1;
   }
-
-  /* Schedule grid adjustments for mobile */
-  .schedule-grid-mobile {
-    @apply overflow-x-auto;
-  }
-  
-  .schedule-grid-mobile .day-cell {
-    @apply min-w-[100px];
-  }
-  
-  .schedule-grid-mobile .employee-cell {
-    @apply sticky left-0 bg-white z-10;
-  }
-  
-  /* Enhanced mobile schedule grid */
-  .grid-view-wrapper {
-    @apply overflow-x-auto -mx-4;
-  }
-  
-  .grid-view-container {
-    @apply min-w-[720px] pb-14; /* Add bottom padding for bottom navigation bar */
-  }
-  
-  .grid-view-day-column {
-    @apply min-w-[100px];
-  }
-  
-  .grid-view-employee-column {
-    @apply sticky left-0 z-20 bg-white shadow-sm;
-  }
-  
-  /* Mobile sheet view */
-  .mobile-detail-sheet {
-    @apply rounded-t-2xl pb-safe-area-inset-bottom;
-  }
-  
-  /* Day navigation dots */
-  .day-nav-dots {
-    @apply flex justify-center gap-2 pt-2 pb-4;
-  }
-  
-  .day-nav-dot {
-    @apply w-2 h-2 rounded-full bg-gray-300;
-  }
-  
-  .day-nav-dot.active {
-    @apply bg-primary;
-  }
 }
 
 /* Touch-friendly interactive elements */
@@ -221,20 +173,6 @@
   .shift-employee-mobile {
     @apply text-xs;
   }
-
-  /* Schedule grid view for mobile */
-  .schedule-grid-container {
-    @apply overflow-x-auto -mx-4;
-  }
-  
-  .schedule-grid-container table {
-    @apply min-w-[800px];
-  }
-  
-  .schedule-grid-container th:first-child,
-  .schedule-grid-container td:first-child {
-    @apply sticky left-0 bg-white z-10 shadow-sm;
-  }
 }
 
 /* Shift calendar day chip for mobile */
@@ -250,3 +188,4 @@
 .week-nav-mobile {
   @apply flex items-center justify-between py-1 px-2 bg-gray-50 rounded-lg text-sm mb-2;
 }
+

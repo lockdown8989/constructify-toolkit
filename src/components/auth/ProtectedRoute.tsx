@@ -1,6 +1,6 @@
 
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
@@ -9,58 +9,38 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const { user, session, isLoading, isAdmin, isHR, isManager, isAuthenticated } = useAuth();
+  const { user, isLoading, isAdmin, isHR, isManager } = useAuth();
   const location = useLocation();
-
-  // More detailed logging to help diagnose auth issues
-  console.log("Auth state in ProtectedRoute:", { 
-    isAuthenticated,
-    hasSession: !!session,
-    hasUser: !!user,
-    userId: user?.id,
-    path: location.pathname,
-    redirecting: !isAuthenticated ? true : false,
-    sessionExpiry: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'unknown'
-  });
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
-          <p className="text-gray-600">Verifying access...</p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // Handle authentication check - using isAuthenticated from context
-  if (!isAuthenticated) {
-    // Store the current location so we can redirect back after login
-    console.log("ProtectedRoute: User not authenticated, redirecting to /auth");
-    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
+  if (!user) {
+    // Redirect to the login page if not authenticated
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   // Check for required role
   if (requiredRole) {
-    let hasRequiredRole = false;
-    
-    if (requiredRole === 'admin' && isAdmin) {
-      hasRequiredRole = true;
-    } else if (requiredRole === 'hr' && (isHR || isAdmin)) {
-      hasRequiredRole = true;
-    } else if (requiredRole === 'manager' && (isManager || isAdmin || isHR)) {
-      hasRequiredRole = true;
+    if (requiredRole === 'admin' && !isAdmin) {
+      return <Navigate to="/dashboard" replace />;
     }
-    
-    if (!hasRequiredRole) {
-      console.log("ProtectedRoute: User doesn't have required role, redirecting to dashboard");
+    if (requiredRole === 'hr' && !isHR && !isAdmin) {
+      return <Navigate to="/dashboard" replace />;
+    }
+    if (requiredRole === 'manager' && !isManager && !isAdmin && !isHR) {
       return <Navigate to="/dashboard" replace />;
     }
   }
 
-  // User is authenticated and has required role if specified
-  console.log("ProtectedRoute: Access granted to:", location.pathname);
   return <>{children}</>;
 };
 

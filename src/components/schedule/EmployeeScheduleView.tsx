@@ -1,20 +1,19 @@
 
 import React from 'react';
-import { format } from 'date-fns';
+import { format, addDays, startOfWeek } from 'date-fns';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
-import { RefreshCw } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import WeeklyCalendarView from '@/components/schedule/WeeklyCalendarView';
 import { ScheduleDialogs } from './components/ScheduleDialogs';
 import { ScheduleTabs } from './components/ScheduleTabs';
 import { Schedule } from '@/hooks/use-schedules';
 import { Button } from '@/components/ui/button';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { cn } from '@/lib/utils';
+import { useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
 const EmployeeScheduleView: React.FC = () => {
+  const location = useLocation();
   const { toast } = useToast();
-  const isMobile = useIsMobile();
   const {
     currentDate,
     setCurrentDate,
@@ -39,86 +38,78 @@ const EmployeeScheduleView: React.FC = () => {
   };
 
   const handleResponseComplete = () => {
+    // Refresh schedules data after a response
     refreshSchedules();
     
+    // If we were in the pending tab and there are no more pending shifts,
+    // switch to the my-shifts tab
     if (activeTab === 'pending') {
       const pendingShifts = schedules.filter(s => s.status === 'pending');
-      if (pendingShifts.length <= 1) {
+      if (pendingShifts.length <= 1) { // Using <= 1 because the current item is still in the array
         setActiveTab('my-shifts');
       }
     }
+  };
+
+  // Function to handle previous/next month navigation
+  const handleMonthChange = (increment: number) => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(newDate.getMonth() + increment);
+    setCurrentDate(newDate);
   };
 
   const selectedSchedule = selectedScheduleId 
     ? schedules.find(s => s.id === selectedScheduleId) 
     : null;
 
-  const handleRefresh = () => {
-    refreshSchedules();
-    toast({
-      title: "Refreshing schedule",
-      description: "Your schedule is being updated with the latest information."
-    });
-  };
-
   if (isLoading) {
-    return (
-      <div className="p-4 text-center">
-        <div className="animate-pulse flex flex-col items-center justify-center">
-          <div className="w-full h-40 bg-gray-200 rounded-md mb-4"></div>
-          <div className="w-3/4 h-6 bg-gray-200 rounded-md mb-2"></div>
-          <div className="w-1/2 h-6 bg-gray-200 rounded-md"></div>
-        </div>
-        <p className="mt-4 text-gray-500">Loading your schedule...</p>
-      </div>
-    );
+    return <div className="p-4 text-center">Loading schedule...</div>;
   }
 
   return (
-    <div className={cn("pb-6 max-w-full mx-auto", isMobile ? "px-0" : "")}>
-      {/* Calendar view at the top */}
+    <div className="pb-6 max-w-4xl mx-auto">
+      <div className="flex justify-between items-center px-4 pt-2 pb-4">
+        <h2 className="text-xl font-semibold">Your Schedule</h2>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={refreshSchedules}
+          className="flex items-center gap-1"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          <span>Refresh</span>
+        </Button>
+      </div>
+      
       <WeeklyCalendarView
         currentDate={currentDate}
         onDateChange={setCurrentDate}
         schedules={schedules}
       />
       
-      <div className="mt-4 border-t border-gray-200 pt-4">
-        <div className="flex justify-between items-center px-4 pb-4">
-          <h2 className="text-xl font-semibold">Your Shifts</h2>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleRefresh}
-            className="flex items-center gap-1"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            <span>Refresh</span>
-          </Button>
-        </div>
+      <div className="border-t border-gray-200 my-2" />
 
-        <ScheduleTabs
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          schedules={schedules}
-          newSchedules={newSchedules}
-          onInfoClick={setSelectedScheduleId}
-          onEmailClick={handleEmailClick}
-          onCancelClick={(id) => {
-            setSelectedScheduleId(id);
-            setIsCancelDialogOpen(true);
-          }}
-          onResponseComplete={handleResponseComplete}
-        />
+      <ScheduleTabs
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        schedules={schedules}
+        newSchedules={newSchedules}
+        onInfoClick={setSelectedScheduleId}
+        onEmailClick={handleEmailClick}
+        onCancelClick={(id) => {
+          setSelectedScheduleId(id);
+          setIsCancelDialogOpen(true);
+        }}
+        onResponseComplete={handleResponseComplete}
+      />
 
-        <ScheduleDialogs
-          selectedSchedule={selectedSchedule}
-          isInfoDialogOpen={isInfoDialogOpen}
-          setIsInfoDialogOpen={setIsInfoDialogOpen}
-          isCancelDialogOpen={isCancelDialogOpen}
-          setIsCancelDialogOpen={setIsCancelDialogOpen}
-        />
-      </div>
+      <ScheduleDialogs
+        selectedSchedule={selectedSchedule}
+        isInfoDialogOpen={isInfoDialogOpen}
+        setIsInfoDialogOpen={setIsInfoDialogOpen}
+        isCancelDialogOpen={isCancelDialogOpen}
+        setIsCancelDialogOpen={setIsCancelDialogOpen}
+      />
     </div>
   );
 };

@@ -13,50 +13,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { isAdmin, isHR, isManager, fetchUserRoles, resetRoles } = useRoles(user);
-  const { signIn, signUp: originalSignUp, resetPassword, updatePassword, signOut } = useAuthActions();
-
-  // Create a wrapper around signUp that matches the expected signature
-  const signUp = async (email: string, password: string, metadata?: any) => {
-    // If metadata contains firstName and lastName, use them
-    if (metadata?.firstName && metadata?.lastName) {
-      return originalSignUp(email, password, metadata.firstName, metadata.lastName);
-    }
-    
-    // Otherwise, use empty strings to satisfy the function signature
-    return originalSignUp(email, password, metadata?.firstName || "", metadata?.lastName || "");
-  };
+  const { signIn, signUp, resetPassword, updatePassword, signOut } = useAuthActions();
 
   useEffect(() => {
     const setupAuth = async () => {
       try {
-        setIsLoading(true);
-        
-        // First set up auth state listener to prevent race conditions
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, updatedSession) => {
-            console.log("Auth state changed:", event, updatedSession?.user?.email);
-            
-            if (updatedSession?.user) {
-              setUser(updatedSession.user);
-              setSession(updatedSession);
-              
-              // Use setTimeout to prevent potential auth deadlocks
-              if (event !== 'INITIAL_SESSION') {
-                setTimeout(() => {
-                  fetchUserRoles(updatedSession.user.id);
-                }, 0);
-              }
-            } else {
-              setUser(null);
-              setSession(null);
-              resetRoles();
-            }
-            
-            setIsLoading(false);
-          }
-        );
-
-        // After setting up listener, check current session
+        // First check current session
         const { data: sessionData } = await supabase.auth.getSession();
         console.log("Initial session check:", sessionData?.session?.user?.email);
         
@@ -70,6 +32,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
         
         setIsLoading(false);
+        
+        // Then set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log("Auth state changed:", event, session?.user?.email);
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            if (session?.user) {
+              await fetchUserRoles(session.user.id);
+            } else {
+              resetRoles();
+            }
+            
+            setIsLoading(false);
+          }
+        );
 
         return () => {
           subscription.unsubscribe();
@@ -81,12 +60,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     setupAuth();
-  }, [fetchUserRoles, resetRoles]);
+  }, []);
 
   // Calculate if user is authenticated
-  const isAuthenticated = !!user && !!session;
+  const isAuthenticated = !!user;
 
-  const value: AuthContextType = {
+  const value = {
     user,
     session,
     isLoading,

@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { useManagerValidator } from "./employee-record/useManagerValidator";
-import { UserRole } from "@/hooks/auth/types";
+import { UserRole } from "./useUserRole";
 
-export const useSignUpValidation = (userRole: string, managerId: string | null) => {
+export const useSignUpValidation = (userRole: UserRole, managerId: string | null) => {
   const [isValidatingManagerId, setIsValidatingManagerId] = useState(false);
   const [isManagerIdValid, setIsManagerIdValid] = useState<boolean | undefined>(undefined);
   const [managerName, setManagerName] = useState<string | null>(null);

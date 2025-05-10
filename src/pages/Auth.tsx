@@ -1,20 +1,17 @@
 
 import React, { useEffect } from "react";
-import { Navigate, useSearchParams, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/auth";
+import { Navigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 import { useAuthPage } from "@/hooks/auth/useAuthPage";
-import { useAuthActions } from "@/hooks/auth/useAuthActions";
 import { AuthHeader } from "@/components/auth/AuthHeader";
 import { AuthTabs } from "@/components/auth/AuthTabs";
 import { ResetPasswordMode } from "@/components/auth/ResetPasswordMode";
 
 const Auth = () => {
-  const { user, session, isAuthenticated } = useAuth();
-  const { signIn, signUp } = useAuthActions();
+  const { signIn, signUp } = useAuth();
   const [searchParams] = useSearchParams();
-  const location = useLocation();
-  
   const {
+    user,
     from,
     activeTab,
     setActiveTab,
@@ -30,26 +27,20 @@ const Auth = () => {
   useEffect(() => {
     // Log authentication state for debugging
     console.log("Auth page state:", { 
-      isAuthenticated,
-      hasSession: !!session,
-      hasUser: !!user,
-      currentPath: location.pathname,
-      user: user?.email,
+      isAuthenticated: !!user,
       isResetMode, 
       isRecoveryMode, 
       hasRecoveryToken,
-      redirectTo: from,
-      sessionExpiry: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'unknown'
+      from
     });
-  }, [user, session, isAuthenticated, isResetMode, isRecoveryMode, hasRecoveryToken, from, location]);
+  }, [user, isResetMode, isRecoveryMode, hasRecoveryToken, from]);
 
   // If we have a token in the URL but not in reset mode, force reset mode
   const shouldShowReset = isResetMode || isRecoveryMode || hasRecoveryToken;
 
   // Redirect authenticated users to dashboard if not in reset mode
-  if (isAuthenticated && !shouldShowReset) {
-    console.log("Auth page - User is authenticated, redirecting to:", from || "/dashboard");
-    return <Navigate to={from || "/dashboard"} replace />;
+  if (user && !shouldShowReset) {
+    return <Navigate to={from} replace />;
   }
 
   // Show password reset form if in reset or recovery mode

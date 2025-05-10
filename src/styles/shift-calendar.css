@@ -2,13 +2,11 @@
 /* Shift calendar specific styles */
 .shift-card {
   transition: all 0.15s ease-in-out;
-  opacity: 0.95;
 }
 
 .shift-card:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  opacity: 1;
 }
 
 .shift-card:active {
@@ -28,18 +26,6 @@
     align-items: center;
     justify-content: center;
   }
-
-  .shift-calendar-mobile {
-    @apply px-1;
-  }
-  
-  .shift-calendar-mobile .calendar-day {
-    @apply min-h-[60px] text-xs;
-  }
-  
-  .shift-calendar-mobile .calendar-day-header {
-    @apply text-xs py-1;
-  }
 }
 
 /* Status badges */
@@ -55,11 +41,6 @@
   @apply bg-blue-100 text-blue-700 border border-blue-300;
 }
 
-/* Calendar day hover effect */
-.calendar-day:hover {
-  @apply bg-gray-100;
-}
-
 /* Animation for notifications */
 @keyframes pulse {
   0% { transform: scale(1); }
@@ -69,64 +50,4 @@
 
 .notification-badge {
   animation: pulse 1.5s infinite ease-in-out;
-}
-
-/* Calendar shift block */
-.calendar-shift-block {
-  @apply p-1 rounded-md text-xs cursor-pointer transition-all;
-}
-
-/* Day notes */
-.day-note {
-  @apply text-xs py-0.5 px-1.5 mr-1 rounded-full inline-flex items-center;
-}
-
-/* Department header */
-.department-header {
-  @apply sticky top-0 z-10 bg-gray-50 border-b shadow-sm;
-}
-
-/* Print styles */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-  
-  .print-break-inside-avoid {
-    page-break-inside: avoid;
-  }
-  
-  .print-full-width {
-    width: 100% !important;
-  }
-  
-  body {
-    print-color-adjust: exact !important;
-    -webkit-print-color-adjust: exact !important;
-  }
-}
-
-/* Role color styling */
-.role-chef, .role-cook, .role-kitchen {
-  @apply bg-green-100 text-green-800 border-l-4 border-l-green-500;
-}
-
-.role-waiter, .role-server, .role-service {
-  @apply bg-emerald-100 text-emerald-800 border-l-4 border-l-emerald-500;
-}
-
-.role-bartender {
-  @apply bg-blue-100 text-blue-800 border-l-4 border-l-blue-500;
-}
-
-.role-hostess, .role-host {
-  @apply bg-orange-100 text-orange-800 border-l-4 border-l-orange-500;
-}
-
-.role-admin, .role-manager {
-  @apply bg-purple-100 text-purple-800 border-l-4 border-l-purple-500;
-}
-
-.role-other {
-  @apply bg-gray-100 text-gray-800 border-l-4 border-l-gray-500;
 }

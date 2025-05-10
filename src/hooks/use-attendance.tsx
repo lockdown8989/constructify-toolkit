@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { AttendanceRecord } from '@/types/supabase';
 import { useEffect } from 'react';
-import { format, startOfMonth, endOfMonth, startOfDay, endOfDay } from 'date-fns';
+import { format, addDays } from 'date-fns';
 
 export type AttendanceData = {
   present: number;
@@ -29,7 +29,8 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
         {
           event: '*',
           schema: 'public',
-          table: 'attendance'
+          table: 'attendance',
+          filter: employeeId ? `employee_id=eq.${employeeId}` : undefined
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ['attendance', employeeId, format(selectedDate, 'yyyy-MM-dd')] });
@@ -44,9 +45,9 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
   
   const fetchAttendanceData = async (): Promise<AttendanceData> => {
     try {
-      // For time range queries, use the selectedDate as end date
-      const endDate = new Date();
+      // For time range queries, use the selectedDate as start date and today as end date
       const startDate = selectedDate;
+      const endDate = new Date();
       
       console.log(`Fetching attendance data from ${format(startDate, 'yyyy-MM-dd')} to ${format(endDate, 'yyyy-MM-dd')}`);
       
@@ -82,6 +83,7 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
       const pending = processedRecords.filter(r => r.attendance_status === 'Pending').length;
       const approved = processedRecords.filter(r => r.attendance_status === 'Approved').length;
       
+      // Sort records by date, most recent first
       const sortedRecords = processedRecords.sort((a, b) => 
         new Date(b.date || '') < new Date(a.date || '') ? -1 : 1
       );
@@ -119,5 +121,6 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
     queryKey: ['attendance', employeeId, format(selectedDate, 'yyyy-MM-dd')],
     queryFn: fetchAttendanceData,
     refetchOnWindowFocus: true,
+    staleTime: 1000 * 60, // Data becomes stale after 1 minute
   });
 }

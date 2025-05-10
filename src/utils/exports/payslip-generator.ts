@@ -44,7 +44,7 @@ export async function generatePayslipPDF(
       salary, 
       department, 
       paymentDate, 
-      currency = 'GBP',  // Changed default currency to GBP
+      currency = 'GBP',
       taxCode = '1257L',
       niNumber = '',
       address = '',
@@ -57,7 +57,7 @@ export async function generatePayslipPDF(
       contractualHours = 0
     } = employeeData;
     
-    // Clean the salary string (removing £, $ and commas)
+    // Clean the salary string (removing $ and commas)
     const salaryNumeric = parseFloat(salary.replace(/\$|£|,/g, ''));
     
     // Calculate deductions
@@ -83,7 +83,7 @@ export async function generatePayslipPDF(
     const periodEnd = format(new Date(currentDate.getFullYear(), currentDate.getMonth(), 0), 'dd/MM/yyyy');
     const formattedPayPeriod = payPeriod || `${periodStart} - ${periodEnd}`;
     
-    // Currency symbol for display - default to £ for GBP
+    // Currency symbol for display
     const currencySymbol = currency === 'GBP' ? '£' : 
                           currency === 'EUR' ? '€' : '$';
     

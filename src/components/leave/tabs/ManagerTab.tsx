@@ -3,10 +3,9 @@ import React, { useState } from "react";
 import LeaveApprovalDashboard from "@/components/leave/LeaveApprovalDashboard";
 import { useAuth } from "@/hooks/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarDays, Users, Calendar } from "lucide-react";
+import { CalendarDays, Users } from "lucide-react";
 import LeaveCalendarView from "@/components/leave/LeaveCalendarView";
-import EmployeeScheduleView from "@/components/schedule/EmployeeScheduleView";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLeaveCalendarState } from "@/hooks/leave/useLeaveCalendarState";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -28,41 +27,34 @@ const ManagerTab: React.FC = () => {
   return (
     <Card className="border shadow-sm">
       <CardHeader className="pb-3 border-b">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid ${isMobile ? 'grid-cols-3 gap-0.5' : 'grid-cols-3'} w-full`}>
-            <TabsTrigger value="leave-calendar" className={`flex items-center gap-2 ${isMobile ? 'px-1.5 py-1.5 text-xs' : ''}`}>
-              <CalendarDays className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
-              <span className={`${isMobile ? 'hidden' : 'hidden sm:inline'}`}>Leave Calendar</span>
-              <span className={`${isMobile ? 'text-[10px]' : 'sm:hidden'}`}>Leaves</span>
+        <CardTitle className="flex items-center text-lg">
+          <Users className="h-5 w-5 mr-2 text-primary" />
+          Team Management
+        </CardTitle>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-2">
+          <TabsList className={`grid ${isMobile ? 'grid-cols-2 gap-0.5' : 'grid-cols-2'} w-full`}>
+            <TabsTrigger 
+              value="leave-calendar" 
+              className={`flex items-center gap-2 ${isMobile ? 'px-3 py-1.5' : ''}`}
+            >
+              <CalendarDays className={`${isMobile ? 'h-4 w-4' : 'h-4 w-4'}`} />
+              <span className={`${isMobile ? 'text-sm' : ''}`}>Leave Calendar</span>
             </TabsTrigger>
-            <TabsTrigger value="shift-schedule" className={`flex items-center gap-2 ${isMobile ? 'px-1.5 py-1.5 text-xs' : ''}`}>
-              <Calendar className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
-              <span className={`${isMobile ? 'hidden' : 'hidden sm:inline'}`}>Shift Schedule</span>
-              <span className={`${isMobile ? 'text-[10px]' : 'sm:hidden'}`}>Shifts</span>
-            </TabsTrigger>
-            <TabsTrigger value="approvals" className={`flex items-center gap-2 ${isMobile ? 'px-1.5 py-1.5 text-xs' : ''}`}>
-              <Users className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
-              <span className={`${isMobile ? 'hidden' : 'hidden sm:inline'}`}>Approval Dashboard</span>
-              <span className={`${isMobile ? 'text-[10px]' : 'sm:hidden'}`}>Approvals</span>
+            <TabsTrigger 
+              value="approvals" 
+              className={`flex items-center gap-2 ${isMobile ? 'px-3 py-1.5' : ''}`}
+            >
+              <Users className={`${isMobile ? 'h-4 w-4' : 'h-4 w-4'}`} />
+              <span className={`${isMobile ? 'text-sm' : ''}`}>Approval Dashboard</span>
             </TabsTrigger>
           </TabsList>
         
-          <TabsContent value="leave-calendar" className="m-0">
-            <div className={`${isMobile ? 'p-2' : 'p-4'}`}>
-              <LeaveCalendarView />
-            </div>
+          <TabsContent value="leave-calendar" className="mt-4 pt-2">
+            <LeaveCalendarView />
           </TabsContent>
           
-          <TabsContent value="shift-schedule" className="m-0">
-            <div className={`${isMobile ? 'p-2' : 'p-4'}`}>
-              <EmployeeScheduleView />
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="approvals" className="m-0">
-            <div className={`${isMobile ? 'p-2' : 'p-4'}`}>
-              <LeaveApprovalDashboard />
-            </div>
+          <TabsContent value="approvals" className="mt-4 pt-2">
+            <LeaveApprovalDashboard />
           </TabsContent>
         </Tabs>
       </CardHeader>

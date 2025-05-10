@@ -8,10 +8,7 @@ export const useAuthPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  
-  // Get redirect path from location state, defaulting to dashboard
-  const from = location.state?.from || "/dashboard";
-  
+  const from = location.state?.from?.pathname || "/dashboard";
   const [showResetPassword, setShowResetPassword] = useState(false);
   
   // Get the tab parameter from URL
@@ -28,17 +25,6 @@ export const useAuthPage = () => {
       setActiveTab("signup");
     }
   }, [tabParam]);
-
-  // Log authentication info for debugging
-  useEffect(() => {
-    console.log("useAuthPage state:", { 
-      isAuthenticated: !!user,
-      redirectTo: from,
-      activeTab,
-      isResetMode,
-      isRecoveryMode
-    });
-  }, [user, from, activeTab, isResetMode, isRecoveryMode]);
 
   const handleShowResetPassword = () => {
     setShowResetPassword(true);

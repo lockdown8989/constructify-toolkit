@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { UserRole } from "@/hooks/auth/types";
+import { UserRole } from "./useUserRole";
 
 type UseSignUpSubmitProps = {
   onSignUp: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;
@@ -11,13 +11,13 @@ type UseSignUpSubmitProps = {
   firstName: string;
   lastName: string;
   setIsLoading: (loading: boolean) => void;
-  userRole: string;
+  userRole: UserRole;
   managerId: string;
-  assignUserRole: (userId: string, userRole: string) => Promise<boolean>;
+  assignUserRole: (userId: string, userRole: UserRole) => Promise<boolean>;
   createOrUpdateEmployeeRecord: (
     userId: string, 
     fullName: string, 
-    userRole: string, 
+    userRole: UserRole, 
     managerId: string | null
   ) => Promise<boolean>;
   getFullName: () => string;

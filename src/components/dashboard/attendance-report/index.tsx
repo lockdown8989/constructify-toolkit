@@ -1,15 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
 import { useAttendance } from '@/hooks/use-attendance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { addDays } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 import TimeRangeSelector from './TimeRangeSelector';
 import StatisticCards from './StatisticCards';
 import AttendanceRate from './AttendanceRate';
 import AttendanceGrid from './AttendanceGrid';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AttendanceReportProps {
   employeeId?: string;
@@ -22,9 +23,39 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({
 }) => {
   const [timeRange, setTimeRange] = useState<number>(30);
   const rangeDate = addDays(new Date(), -timeRange);
-  const { data, isLoading } = useAttendance(employeeId, rangeDate);
+  const { data, isLoading, refetch } = useAttendance(employeeId, rangeDate);
+  const { toast } = useToast();
   
   const attendanceRate = data?.total ? Math.round((data.present / data.total) * 100) : 0;
+
+  // Set up real-time subscription for attendance changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('attendance-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'attendance',
+          filter: employeeId ? `employee_id=eq.${employeeId}` : undefined
+        },
+        (payload) => {
+          console.log('Attendance data changed:', payload);
+          refetch();
+          
+          toast({
+            title: "Attendance Updated",
+            description: "Attendance data has been updated.",
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [employeeId, refetch, toast]);
 
   if (isLoading) {
     return (
@@ -52,17 +83,14 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({
         <TimeRangeSelector timeRange={timeRange} onTimeRangeChange={setTimeRange} />
       </div>
       
-      {/* Display attendance statistics in cards */}
       <StatisticCards 
         present={data?.present || 0}
         absent={data?.absent || 0}
         late={data?.late || 0}
       />
       
-      {/* Attendance Rate */}
       <AttendanceRate rate={attendanceRate} />
       
-      {/* Attendance Grid */}
       <AttendanceGrid 
         present={data?.present || 0}
         absent={data?.absent || 0}
