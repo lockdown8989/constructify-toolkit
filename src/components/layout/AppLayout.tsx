@@ -22,7 +22,8 @@ const AppLayout = () => {
     isAuthenticated, 
     isLoading,
     currentPath: location.pathname,
-    user: user?.email
+    user: user?.email,
+    hasSession: !!session
   });
 
   if (isLoading) {
@@ -30,7 +31,7 @@ const AppLayout = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
-          <p className="text-gray-600">Loading authentication...</p>
+          <p className="text-gray-600">Loading application...</p>
         </div>
       </div>
     );

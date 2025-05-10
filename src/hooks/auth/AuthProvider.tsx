@@ -27,25 +27,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
+    console.log("AuthProvider: Setting up authentication");
     const setupAuth = async () => {
       try {
         setIsLoading(true);
         
-        // CRITICAL: Set up auth listener BEFORE checking session
+        // CRITICAL: Set up auth listener FIRST
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log("Auth state changed:", event, session?.user?.email);
+          async (event, newSession) => {
+            console.log("Auth state changed:", event, newSession?.user?.email);
             
             if (event === 'SIGNED_OUT') {
+              console.log("User signed out, clearing state");
               setUser(null);
               setSession(null);
               resetRoles();
-            } else if (session) {
-              setSession(session);
-              setUser(session.user);
+            } else if (newSession) {
+              console.log("New session detected, updating state");
+              setSession(newSession);
+              setUser(newSession.user);
               
-              if (session.user) {
-                await fetchUserRoles(session.user.id);
+              if (newSession.user) {
+                await fetchUserRoles(newSession.user.id);
               }
             }
             
@@ -62,7 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
         
-        console.log("Initial session check:", sessionData?.session?.user?.email);
+        console.log("Initial session check:", sessionData?.session?.user?.email || "No session");
         
         if (sessionData?.session) {
           setSession(sessionData.session);
@@ -89,6 +92,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Calculate if user is authenticated - ensure both user and session exist
   const isAuthenticated = !!user && !!session;
+
+  // Add proper debug logging
+  useEffect(() => {
+    console.log("Auth state updated:", { 
+      isAuthenticated, 
+      userId: user?.id,
+      hasSession: !!session,
+      isLoading
+    });
+  }, [isAuthenticated, user, session, isLoading]);
 
   const value: AuthContextType = {
     user,

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useDeleteEmployee, Employee as DbEmployee } from '@/hooks/use-employees';
 import { useToast } from '@/hooks/use-toast';
@@ -31,13 +31,23 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
+  // Close edit modal when parent modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setIsEditModalOpen(false);
+    }
+  }, [isOpen]);
+
   if (!employee) return null;
 
   const handleEdit = () => {
+    console.log("Edit button clicked for employee:", employee.id);
     if (onEdit) {
+      console.log("Using parent onEdit handler");
       onEdit(employee);
       onClose();
     } else {
+      console.log("Opening edit modal");
       setIsEditModalOpen(true);
     }
   };
@@ -70,7 +80,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       job_title: uiEmployee.jobTitle,
       department: uiEmployee.department,
       site: uiEmployee.site,
-      salary: parseInt(uiEmployee.salary.replace(/[^0-9]/g, '')),
+      salary: parseInt(uiEmployee.salary.replace(/[^0-9]/g, '')) || 0,
       start_date: new Date(uiEmployee.startDate).toISOString().split('T')[0],
       lifecycle: uiEmployee.lifecycle,
       status: uiEmployee.status,
@@ -79,7 +89,8 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       annual_leave_days: uiEmployee.annual_leave_days || 25, 
       sick_leave_days: uiEmployee.sick_leave_days || 10,
       manager_id: uiEmployee.managerId || null,
-      user_id: uiEmployee.userId || null
+      user_id: uiEmployee.userId || null,
+      hourly_rate: uiEmployee.hourlyRate || 0
     };
   };
 

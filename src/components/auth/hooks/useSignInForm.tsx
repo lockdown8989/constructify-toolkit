@@ -46,10 +46,14 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
       const trimmedEmail = email.trim();
       const result = await onSignIn(trimmedEmail, password);
       
-      console.log("Sign in result:", result);
+      console.log("Sign in result:", { 
+        error: result.error ? true : false, 
+        user: result.data?.user ? true : false,
+        session: result.data?.session ? true : false
+      });
       
       if (result.error) {
-        console.error("Authentication error:", result.error.message);
+        console.error("Authentication error:", result.error);
         
         // Provide more specific error messages based on error code
         if (result.error.message === "Invalid login credentials") {
@@ -62,7 +66,7 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
         return;
       }
       
-      if (result.data?.user) {
+      if (result.data?.user && result.data?.session) {
         console.log("Sign in successful, user:", result.data.user.email);
         toast({
           title: "Success",
@@ -76,9 +80,14 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
         // Add a slight delay before redirecting to ensure toast is shown
         setTimeout(() => {
           navigate(from, { replace: true });
-        }, 500);
+        }, 100);
       } else {
-        setErrorMessage("Something went wrong during sign in");
+        if (result.data?.user && !result.data?.session) {
+          setErrorMessage("Your account needs email verification. Please check your email inbox.");
+        } else {
+          setErrorMessage("Something went wrong during sign in");
+          console.error("Unexpected sign in result:", result);
+        }
       }
     } catch (error) {
       console.error("Sign in error:", error);
