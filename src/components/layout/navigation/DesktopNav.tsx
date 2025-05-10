@@ -1,3 +1,4 @@
+
 import { Link, useNavigate } from "react-router-dom"
 import { Calendar, DollarSign, Receipt, Clock, Home, ClipboardCheck, Coffee, Users } from "lucide-react"
 import { useAuth } from "@/hooks/auth"
@@ -22,7 +23,7 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
   const rejectedCount = schedules?.filter(s => s.status === 'rejected').length || 0;
   
   const handleHomeClick = () => {
-    navigate('/dashboard');
+    navigate(isAuthenticated ? '/app/dashboard' : '/');
   };
   
   return (
@@ -52,14 +53,14 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
           {hasManagerialAccess ? (
             <>
               <Link
-                to="/attendance"
+                to="/app/attendance"
                 className="hover:underline underline-offset-4 flex items-center"
               >
                 <ClipboardCheck className="h-4 w-4 mr-1" />
                 Attendance
               </Link>
               <Link
-                to="/employee-workflow"
+                to="/app/employee-workflow"
                 className="hover:underline underline-offset-4 flex items-center group relative"
               >
                 <Clock className="h-4 w-4 mr-1" />
@@ -78,14 +79,14 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
                 </div>
               </Link>
               <Link
-                to="/people"
+                to="/app/people"
                 className="hover:underline underline-offset-4 flex items-center transition-colors hover:text-primary"
               >
                 <Users className="h-4 w-4 mr-1 text-muted-foreground group-hover:text-primary" />
                 <span className="font-medium">Team Members</span>
               </Link>
               <Link
-                to="/shift-calendar"
+                to="/app/shift-calendar"
                 className="hover:underline underline-offset-4"
               >
                 Shift Calendar
@@ -94,14 +95,14 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
           ) : (
             <>
               <Link
-                to="/employee-workflow"
+                to="/app/employee-workflow"
                 className="hover:underline underline-offset-4 flex items-center"
               >
                 <Clock className="h-4 w-4 mr-1" />
                 My Schedule
               </Link>
               <Link
-                to="/salary"
+                to="/app/salary"
                 className="hover:underline underline-offset-4 flex items-center"
               >
                 <DollarSign className="h-4 w-4 mr-1" />
@@ -110,7 +111,7 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
             </>
           )}
           <Link
-            to="/leave"
+            to="/app/leave"
             className="hover:underline underline-offset-4 flex items-center"
           >
             <Calendar className="h-4 w-4 mr-1" />
@@ -119,7 +120,7 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
           {hasManagerialAccess && (
             <>
               <Link
-                to="/payroll"
+                to="/app/payroll"
                 className="hover:underline underline-offset-4 flex items-center"
               >
                 <Receipt className="h-4 w-4 mr-1" />
