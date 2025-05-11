@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployeeDocuments, useUploadDocument, useDeleteDocument } from '@/hooks/use-documents';
@@ -380,7 +379,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
                       <TableCell>
                         <Badge
                           variant={
-                            assignment.status === 'completed' ? 'success' :
+                            assignment.status === 'completed' ? 'default' :
                             assignment.status === 'overdue' ? 'destructive' :
                             assignment.status === 'viewed' ? 'secondary' :
                             'outline'

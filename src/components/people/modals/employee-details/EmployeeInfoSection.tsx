@@ -142,7 +142,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({ employee, onB
                       <span className="text-sm text-gray-500">Base Salary</span>
                       <span className="font-medium">{employee.salary}</span>
                     </div>
-                    {employee.hourly_rate && (
+                    {employee.hourly_rate !== undefined && (
                       <div className="flex justify-between items-center py-1">
                         <span className="text-sm text-gray-500">Hourly Rate</span>
                         <span className="font-medium">${employee.hourly_rate}/hr</span>
