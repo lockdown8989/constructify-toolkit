@@ -86,3 +86,7 @@ gcp_jwt_path = "supabase/gcloud.json"
 # Function that creates storage policies
 [functions.check-storage-bucket]
 verify_jwt = true
+
+# Function that notifies employees when documents are uploaded
+[functions.notify-on-document-upload]
+verify_jwt = true

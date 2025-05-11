@@ -42,3 +42,35 @@ export const sendDocumentUploadNotification = async (
     return false;
   }
 };
+
+/**
+ * Assigns a document to an employee
+ */
+export const assignDocumentToEmployee = async (
+  documentId: string,
+  employeeId: string,
+  isRequired: boolean = false,
+  dueDate?: string
+): Promise<{ success: boolean; message: string; data?: any }> => {
+  try {
+    // Call the edge function to assign the document
+    const { data, error } = await supabase.functions.invoke('notify-on-document-upload', {
+      body: JSON.stringify({
+        documentId,
+        employeeId,
+        isRequired,
+        dueDate
+      })
+    });
+    
+    if (error) {
+      console.error('Error assigning document:', error);
+      return { success: false, message: `Failed to assign document: ${error.message}` };
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error calling document assignment function:', error);
+    return { success: false, message: `Error: ${error.message}` };
+  }
+};
