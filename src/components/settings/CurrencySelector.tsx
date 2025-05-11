@@ -10,9 +10,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 const currencyOptions = [
-  { value: "USD", label: "US Dollar ($)", icon: DollarSign },
   { value: "GBP", label: "British Pound (£)", icon: PoundSterling },
   { value: "EUR", label: "Euro (€)", icon: Euro },
+  { value: "USD", label: "US Dollar ($)", icon: DollarSign },
 ];
 
 interface CurrencySelectorProps {

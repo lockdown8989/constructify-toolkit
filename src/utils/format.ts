@@ -1,4 +1,3 @@
-
 /**
  * Format date to a readable string
  */
@@ -30,12 +29,13 @@ export const formatCurrency = (amount: number | string, currency: string = 'GBP'
     amount = cleanedAmount ? parseFloat(cleanedAmount) : 0;
   }
   
-  if (isNaN(amount)) return '0';
+  if (isNaN(amount)) return '£0';
   
   try {
+    // Always use GBP for consistency
     const formatter = new Intl.NumberFormat('en-GB', {
       style: 'currency',
-      currency: currency || 'GBP',
+      currency: 'GBP',
       minimumFractionDigits: 0,
       maximumFractionDigits: 2
     });
@@ -43,7 +43,7 @@ export const formatCurrency = (amount: number | string, currency: string = 'GBP'
     return formatter.format(amount);
   } catch (error) {
     console.error('Error formatting currency:', error);
-    return `${amount} ${currency}`;
+    return `£${amount}`;
   }
 };
 

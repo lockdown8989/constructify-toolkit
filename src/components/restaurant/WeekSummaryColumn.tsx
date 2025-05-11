@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { WeekStats } from '@/types/restaurant-schedule';
 import { Button } from "@/components/ui/button";
@@ -7,11 +6,12 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { OpenShiftType } from '@/types/supabase/schedules';
 import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/utils/format';
 
 interface WeekSummaryColumnProps {
   weekStats: WeekStats;
   openShifts: OpenShiftType[];
-  formatCurrency: (amount: number, currency?: string, locale?: string) => string;
+  formatCurrency?: (amount: number, currency?: string, locale?: string) => string;
   handleAssignOpenShift: (openShiftId: string, employeeId?: string) => void;
   previousWeek: () => void;
   nextWeek: () => void;
@@ -21,8 +21,8 @@ interface WeekSummaryColumnProps {
 
 const WeekSummaryColumn = ({ 
   weekStats, 
-  openShifts, 
-  formatCurrency,
+  openShifts,
+  formatCurrency: customFormatCurrency,
   handleAssignOpenShift,
   previousWeek,
   nextWeek,
@@ -43,6 +43,9 @@ const WeekSummaryColumn = ({
   
   // Calculate the date range for the current week
   const dateRange = formatDateRange(weekStats.startDate, weekStats.endDate);
+
+  // Use the provided formatCurrency function or the imported one
+  const currencyFormatter = customFormatCurrency || formatCurrency;
   
   return (
     <div className="col-span-1 bg-gray-50 border-r border-gray-200 flex flex-col">
@@ -78,7 +81,7 @@ const WeekSummaryColumn = ({
           <div className="flex flex-col items-end">
             <span className="text-gray-500 text-xs">Cost</span>
             <Badge variant="outline" className="bg-gray-100 hover:bg-gray-100">
-              {formatCurrency(weekStats.totalCost)}
+              {currencyFormatter(weekStats.totalCost, 'GBP')}
             </Badge>
           </div>
         </div>

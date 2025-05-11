@@ -43,13 +43,13 @@ export const exportPayrollData = async (currency: string = 'GBP'): Promise<void>
         "Employee Name": employee?.name || 'Unknown',
         "Job Title": employee?.job_title || 'Unknown',
         "Department": employee?.department || 'Unknown',
-        "Base Pay": formatCurrency(record.base_pay || 0, currency),
+        "Base Pay": formatCurrency(record.base_pay || 0, 'GBP'),
         "Working Hours": record.working_hours || 0,
         "Overtime Hours": record.overtime_hours || 0,
-        "Overtime Pay": formatCurrency(record.overtime_pay || 0, currency),
-        "Deductions": formatCurrency(record.deductions || 0, currency),
-        "Bonus": formatCurrency(record.bonus || 0, currency),
-        "Net Salary": formatCurrency(record.salary_paid || 0, currency),
+        "Overtime Pay": formatCurrency(record.overtime_pay || 0, 'GBP'),
+        "Deductions": formatCurrency(record.deductions || 0, 'GBP'),
+        "Bonus": formatCurrency(record.bonus || 0, 'GBP'),
+        "Net Salary": formatCurrency(record.salary_paid || 0, 'GBP'),
         "Payment Date": record.payment_date || new Date().toISOString().split('T')[0],
         "Status": record.payment_status || 'Unknown'
       };
