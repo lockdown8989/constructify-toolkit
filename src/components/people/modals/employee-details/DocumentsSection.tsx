@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployeeDocuments, useUploadDocument, useDeleteDocument } from '@/hooks/use-documents';
-import { useDocumentAssignments, useAssignDocument, useUpdateDocumentAssignmentStatus } from '@/hooks/use-document-assignments';
+import { useDocumentAssignments, useAssignDocument, useUpdateDocumentAssignment } from '@/hooks/use-document-assignments';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -25,20 +25,10 @@ interface DocumentsSectionProps {
 interface Document {
   id: string;
   name: string;
-  type: string;
-  size: number;
+  document_type: string;
+  size: string;
   created_at: string;
   url?: string;
-}
-
-interface DocumentAssignment {
-  id: string;
-  document_id: string;
-  document_name: string;
-  assigned_at: string;
-  is_required: boolean;
-  due_date?: string;
-  status: 'pending' | 'viewed' | 'completed' | 'overdue';
 }
 
 const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
@@ -51,6 +41,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isRequired, setIsRequired] = useState(false);
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [documentType, setDocumentType] = useState('general');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -70,7 +61,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
   const { mutateAsync: uploadDocument } = useUploadDocument();
   const { mutateAsync: deleteDocument } = useDeleteDocument();
   const { mutateAsync: assignDocument } = useAssignDocument();
-  const { mutateAsync: updateAssignmentStatus } = useUpdateDocumentAssignmentStatus();
+  const { mutateAsync: updateAssignmentStatus } = useUpdateDocumentAssignment();
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -95,6 +86,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
         await uploadDocument({
           employeeId,
           file,
+          documentType: documentType // Adding documentType parameter
         });
       }
       
@@ -120,13 +112,13 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
     }
   };
   
-  const handleDelete = async (documentId: string) => {
-    setDeleting(documentId);
+  const handleDelete = async (id: string) => {
+    setDeleting(id);
     
     try {
       await deleteDocument({
-        employeeId,
-        documentId,
+        id,
+        employeeId
       });
       
       toast({
@@ -189,7 +181,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
   const handleUpdateStatus = async (assignmentId: string, status: 'pending' | 'viewed' | 'completed' | 'overdue') => {
     try {
       await updateAssignmentStatus({
-        assignmentId,
+        id: assignmentId,
         status
       });
       
@@ -209,18 +201,8 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
     }
   };
   
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-  
-  const getDocumentIcon = (type: string) => {
-    const lowercaseType = type.toLowerCase();
+  const getDocumentIcon = (docType: string) => {
+    const lowercaseType = docType.toLowerCase();
     
     if (lowercaseType.includes('pdf')) {
       return <FileText className="h-5 w-5 text-red-500" />;
@@ -285,6 +267,24 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
                   </Button>
                 </div>
               </div>
+
+              {/* Document type selection */}
+              <div className="mb-4">
+                <Label htmlFor="documentType" className="mb-2 block">Document Type</Label>
+                <Select value={documentType} onValueChange={setDocumentType}>
+                  <SelectTrigger id="documentType">
+                    <SelectValue placeholder="Select document type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="resume">Resume</SelectItem>
+                    <SelectItem value="contract">Contract</SelectItem>
+                    <SelectItem value="payslip">Payslip</SelectItem>
+                    <SelectItem value="id">ID Document</SelectItem>
+                    <SelectItem value="certificate">Certificate</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               
               {selectedFiles.length > 0 && (
                 <div className="mb-4 p-3 bg-muted rounded-md">
@@ -331,15 +331,15 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
                         <TableRow key={doc.id}>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              {getDocumentIcon(doc.type)}
+                              {getDocumentIcon(doc.document_type)}
                               <span>{doc.name}</span>
                             </div>
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
-                            {format(new Date(doc.created_at), 'MMM d, yyyy')}
+                            {doc.created_at && format(new Date(doc.created_at), 'MMM d, yyyy')}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
-                            {formatFileSize(doc.size)}
+                            {doc.size || "-"}
                           </TableCell>
                           <TableCell className="flex justify-end gap-2">
                             <Button 
@@ -470,8 +470,8 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
                         <TableRow key={assignment.id}>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              {getDocumentIcon('')}
-                              <span>{assignment.document_name}</span>
+                              {getDocumentIcon(assignment.document?.document_type || '')}
+                              <span>{assignment.document?.name}</span>
                               {assignment.is_required && (
                                 <Badge variant="outline" className="ml-2">Required</Badge>
                               )}
@@ -533,6 +533,17 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
       </Tabs>
     </div>
   );
+};
+
+// Helper function for formatting file sizes
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
 export default DocumentsSection;
