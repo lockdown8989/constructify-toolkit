@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployeeDocuments, useUploadDocument, useDeleteDocument } from '@/hooks/use-documents';
 import { Plus, Loader2, Trash2 } from 'lucide-react';
@@ -50,17 +50,22 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState('resume');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
   // Use the custom hooks
-  const { data: documents, isLoading } = useEmployeeDocuments(employeeId);
+  const { data: documents, isLoading, refetch } = useEmployeeDocuments(employeeId);
   const uploadDocument = useUploadDocument();
   const deleteDocument = useDeleteDocument();
   
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    setSelectedFile(file || null);
-    console.log("File selected:", file?.name);
+    if (file) {
+      setSelectedFile(file);
+      console.log("File selected:", file.name);
+    } else {
+      setSelectedFile(null);
+    }
   };
   
   const handleSubmit = async (event: React.FormEvent) => {
@@ -86,12 +91,15 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
         documentType
       });
       
+      // Clear the file input and selected file
       setSelectedFile(null);
-      // Clear file input
-      const input = document.getElementById('document-upload') as HTMLInputElement;
-      if (input) {
-        input.value = '';
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
+      
+      // Refresh the document list
+      refetch();
+      
     } catch (error) {
       console.error("Error during upload:", error);
       toast({
@@ -111,6 +119,8 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
         path, 
         employeeId 
       });
+      // Refresh the document list
+      refetch();
     } catch (error) {
       console.error("Error deleting document:", error);
     }
@@ -147,18 +157,25 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
             <Input
               type="file"
               id="document-upload"
+              ref={fileInputRef}
               onChange={handleFileChange}
               disabled={isUploading}
+              className="cursor-pointer"
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
             />
           </div>
-          <Button type="submit" disabled={isUploading || !selectedFile}>
+          <Button 
+            type="submit" 
+            disabled={isUploading || !selectedFile}
+            className="w-full sm:w-auto"
+          >
             {isUploading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Uploading...
               </>
             ) : (
-              "Upload"
+              "Upload Document"
             )}
           </Button>
         </form>
@@ -184,9 +201,13 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
                 {documents.map(document => (
                   <TableRow key={document.id}>
                     <TableCell>
-                      <a href={document.url} target="_blank" rel="noopener noreferrer" className="underline">
-                        {document.name}
-                      </a>
+                      {document.url ? (
+                        <a href={document.url} target="_blank" rel="noopener noreferrer" className="underline">
+                          {document.name}
+                        </a>
+                      ) : (
+                        document.name
+                      )}
                     </TableCell>
                     <TableCell>{document.document_type}</TableCell>
                     <TableCell>{document.size}</TableCell>
