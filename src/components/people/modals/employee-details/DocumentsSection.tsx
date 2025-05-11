@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployeeDocuments, useUploadDocument, useDeleteDocument } from '@/hooks/use-documents';
@@ -86,7 +85,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
         await uploadDocument({
           employeeId,
           file,
-          documentType: documentType // Adding documentType parameter
+          documentType: documentType
         });
       }
       
@@ -336,7 +335,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
                             </div>
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
-                            {doc.created_at && format(new Date(doc.created_at), 'MMM d, yyyy')}
+                            {doc.created_at ? format(new Date(doc.created_at), 'MMM d, yyyy') : 'Unknown date'}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {doc.size || "-"}

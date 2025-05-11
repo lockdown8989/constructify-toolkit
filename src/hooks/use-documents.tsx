@@ -12,6 +12,7 @@ export type DocumentModel = {
   path?: string;
   size?: string;
   employee_id?: string;
+  created_at?: string;
 };
 
 export function useEmployeeDocuments(employeeId: string | undefined) {
