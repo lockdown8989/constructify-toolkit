@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import EmployeeAttendanceSummary from '@/components/dashboard/EmployeeAttendanceSummary';
 import EmployeeStatistics from '@/components/people/EmployeeStatistics';
 import DocumentList from '@/components/salary/components/DocumentList';
+import LeaveBalanceCard from '@/components/leave/LeaveBalanceCard';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
 
 const EmployeeDashboard: React.FC<{ firstName: string }> = ({ firstName }) => {
@@ -13,6 +14,8 @@ const EmployeeDashboard: React.FC<{ firstName: string }> = ({ firstName }) => {
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       <h1 className="text-2xl font-bold mb-6">Hello {firstName}</h1>
       <div className="grid gap-6">
+        <LeaveBalanceCard />
+        
         <EmployeeAttendanceSummary />
         
         <Card className="p-6">
