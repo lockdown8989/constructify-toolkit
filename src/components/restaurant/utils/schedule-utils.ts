@@ -4,19 +4,17 @@
 /**
  * Format currency for display
  * @param amount The amount to format
- * @param currency The currency code to use (default: 'USD')
- * @param locale The locale to use for formatting (default: 'en-US')
+ * @param currency The currency code to use (default: 'GBP')
+ * @param locale The locale to use for formatting (default: 'en-GB')
  */
 export const formatCurrency = (
   amount: number, 
-  currency: string = 'USD', 
-  locale: string = 'en-US'
+  currency: string = 'GBP', 
+  locale: string = 'en-GB'
 ) => {
   // Map of currency codes to appropriate locales
   const localeMap: Record<string, string> = {
-    'USD': 'en-US',
     'GBP': 'en-GB',
-    'EUR': 'de-DE',
   };
 
   // Use the appropriate locale for the currency if available

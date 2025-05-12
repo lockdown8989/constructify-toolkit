@@ -41,13 +41,6 @@ export const initializePayslipTemplate = async (employee: Employee) => {
   }
 };
 
-// Define the expected return type for generatePayslipPDF
-interface PayslipResult {
-  url?: string;
-  name?: string;
-  success: boolean;
-}
-
 // Process payslip for an employee
 export const processPayslip = async (employeeId: string, month: string) => {
   try {
@@ -116,7 +109,7 @@ export const processPayslip = async (employeeId: string, month: string) => {
     const paymentDate = new Date(month);
     const paymentMonthYear = paymentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
     
-    // Generate PDF payslip
+    // Generate PDF payslip - Fix for TypeScript error related to url and name properties
     const pdfResult = await generatePayslipPDF(
       employeeId,
       {
@@ -129,18 +122,26 @@ export const processPayslip = async (employeeId: string, month: string) => {
         overtimeHours: salaryResult.totalOvertimeHours,
         contractualHours: salaryResult.totalWorkingHours,
       }
-    ) as PayslipResult;
+    );
     
     // Update payroll record with the document URL and name
-    if (pdfResult && pdfResult.url) {
-      await supabase
-        .from('payroll')
-        .update({
-          document_url: pdfResult.url,
-          document_name: pdfResult.name || `Payslip_${employeeId}_${month.replace('-', '')}.pdf`
-        })
-        .eq('employee_id', employeeId)
-        .eq('payment_date', month.substring(0, 10));
+    // Fix TypeScript errors by checking if properties exist
+    if (pdfResult) {
+      const documentUrl = typeof pdfResult === 'object' && 'url' in pdfResult ? pdfResult.url : null;
+      const documentName = typeof pdfResult === 'object' && 'name' in pdfResult 
+        ? pdfResult.name 
+        : `Payslip_${employeeId}_${month.replace('-', '')}.pdf`;
+        
+      if (documentUrl) {
+        await supabase
+          .from('payroll')
+          .update({
+            document_url: documentUrl,
+            document_name: documentName
+          })
+          .eq('employee_id', employeeId)
+          .eq('payment_date', month.substring(0, 10));
+      }
     }
     
     // Notify the employee about the new payslip

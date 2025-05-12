@@ -25,7 +25,7 @@ export const syncEmployeeData = async (employee: Employee, isNew: boolean = fals
       // Sync with leave module
       assignLeavePolicy(employee),
       
-      // Sync with payslip template
+      // Sync with payslip module
       initializePayslipTemplate(employee)
     ]);
     
@@ -59,35 +59,12 @@ export const setupRealtimeSubscriptions = () => {
       },
       async (payload) => {
         const employee = payload.new as Employee;
-        const oldEmployee = payload.old as Employee;
         
         // Determine if this is a new employee or an update
         const isNew = payload.eventType === 'INSERT';
         
         // Sync the employee data
         await syncEmployeeData(employee, isNew);
-        
-        // If this is an update and role or department has changed, perform additional actions
-        if (!isNew && oldEmployee) {
-          if (oldEmployee.job_title !== employee.job_title || 
-              oldEmployee.department !== employee.department || 
-              oldEmployee.salary !== employee.salary) {
-            
-            console.log('Employee role, department or salary changed. Recalculating...');
-            
-            // Recalculate salary if role/department/salary changed
-            await import('./salary-sync').then(module => 
-              module.recalculateSalary(employee.id)
-            );
-            
-            // Update shift rules if role changed
-            if (oldEmployee.job_title !== employee.job_title) {
-              await import('./shift-sync').then(module => 
-                module.updateShiftRules(employee.id, employee.job_title)
-              );
-            }
-          }
-        }
         
         console.log(`Employee ${isNew ? 'creation' : 'update'} synchronized:`, employee.name);
       }
@@ -99,41 +76,4 @@ export const setupRealtimeSubscriptions = () => {
   return () => {
     supabase.removeChannel(channel);
   };
-};
-
-// Function to handle employee batch operations
-export const batchSyncEmployees = async (employeeIds: string[]) => {
-  try {
-    let successCount = 0;
-    let failCount = 0;
-    
-    for (const id of employeeIds) {
-      try {
-        // Get employee data
-        const { data: employee, error } = await supabase
-          .from('employees')
-          .select('*')
-          .eq('id', id)
-          .single();
-        
-        if (error) throw error;
-        
-        // Sync employee data
-        await syncEmployeeData(employee, false);
-        successCount++;
-      } catch (error) {
-        console.error(`Error syncing employee ${id}:`, error);
-        failCount++;
-      }
-    }
-    
-    return {
-      success: failCount === 0,
-      successCount,
-      failCount
-    };
-  } catch (error) {
-    console.error('Error in batch sync operation:', error);
-    throw error;
-  }
 };

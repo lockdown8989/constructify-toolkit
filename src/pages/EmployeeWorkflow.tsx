@@ -10,7 +10,7 @@ import { useEmployeeLeave } from '@/hooks/use-employee-leave';
 import { checkLeaveBalance, processLeaveRequest } from '@/services/employee-sync/leave-sync';
 import { useAttendance } from '@/hooks/use-attendance';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
-import { Loader2, CheckCircle, Clock, CalendarDays, DollarSign, ClipboardList } from "lucide-react";
+import { Loader2, CheckCircle, CalendarDays, DollarSign, ClipboardList } from "lucide-react";
 
 const EmployeeWorkflow: React.FC = () => {
   const { toast } = useToast();
@@ -139,46 +139,6 @@ const EmployeeWorkflow: React.FC = () => {
                     {leaveData ? (leaveData.totalAnnualLeave - leaveData.annual_leave_days) : 0}
                   </p>
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-medium text-sm">Today's Status</h4>
-                {hasActiveSession ? (
-                  <div className="flex items-center gap-2 text-green-600">
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Currently clocked in</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    <span>Not clocked in</span>
-                  </div>
-                )}
-              </div>
-              
-              {/* Clock In/Out Actions */}
-              <div className="mt-6">
-                <h4 className="font-medium text-sm mb-2">Time Tracking</h4>
-                {hasActiveSession ? (
-                  <Button 
-                    onClick={handleClockOut} 
-                    className="w-full" 
-                    variant="destructive"
-                    disabled={isProcessing}
-                  >
-                    {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                    Clock Out
-                  </Button>
-                ) : (
-                  <Button 
-                    onClick={handleClockIn} 
-                    className="w-full"
-                    disabled={isProcessing}
-                  >
-                    {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                    Clock In
-                  </Button>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -399,7 +359,7 @@ const EmployeeWorkflow: React.FC = () => {
                       <div>
                         <h3 className="text-lg font-medium">Current Monthly Salary</h3>
                         <p className="text-xl font-bold">
-                          ${employeeData ? employeeData.salary.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '0.00'}
+                          £{employeeData ? employeeData.salary.toLocaleString('en-GB', { minimumFractionDigits: 2 }) : '0.00'}
                         </p>
                       </div>
                     </div>

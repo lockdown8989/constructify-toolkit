@@ -1,136 +1,193 @@
-import { Link, useNavigate } from "react-router-dom"
-import { Calendar, DollarSign, Receipt, Clock, Home, ClipboardCheck, Coffee, Users } from "lucide-react"
+
+import { Link, useLocation } from "react-router-dom"
 import { useAuth } from "@/hooks/auth"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { useTimeClock } from "@/hooks/time-clock"
-import { useEmployeeSchedule } from "@/hooks/use-employee-schedule"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { 
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle
+} from "@/components/ui/navigation-menu"
+import { ChevronDown, Home, User, Users, Calendar, FileText, Workflow, DollarSign, Receipt, Utensils, Clock, ClipboardCheck, Coffee } from "lucide-react"
 
 interface DesktopNavProps {
-  isAuthenticated: boolean;
+  isAuthenticated: boolean
 }
 
 const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
-  const navigate = useNavigate();
-  const { isManager, isAdmin, isHR, user } = useAuth();
-  const hasManagerialAccess = isManager || isAdmin || isHR;
-  const isEmployee = isAuthenticated && !hasManagerialAccess;
-  const { schedules = [] } = useEmployeeSchedule();
+  const { isAdmin, isHR, isManager } = useAuth()
+  const hasManagerialAccess = isManager || isAdmin || isHR
+  const location = useLocation()
+  
+  if (!isAuthenticated) {
+    // For unauthenticated users, show landing page navigation
+    return (
+      <div className="hidden md:flex gap-6 ml-6">
+        <Link to="/landing" className="text-sm font-medium transition-colors hover:text-primary">
+          Home
+        </Link>
+        <Link to="/about" className="text-sm font-medium transition-colors hover:text-primary">
+          About
+        </Link>
+      </div>
+    )
+  }
 
-  const pendingCount = schedules?.filter(s => s.status === 'pending').length || 0;
-  const acceptedCount = schedules?.filter(s => s.status === 'confirmed').length || 0;
-  const rejectedCount = schedules?.filter(s => s.status === 'rejected').length || 0;
-  
-  const handleHomeClick = () => {
-    navigate('/dashboard');
-  };
-  
+  // For authenticated users - use navigation menu with dropdowns
   return (
-    <div className="mx-auto flex items-center space-x-6">
-      <button 
-        onClick={handleHomeClick} 
-        className="hover:underline underline-offset-4 flex items-center"
-      >
-        <Home className="h-4 w-4 mr-1" />
-        Home
-      </button>
-      
-      <Link
-        to="/about"
-        className="hover:underline underline-offset-4"
-      >
-        About
-      </Link>
-      <Link
-        to="/contact"
-        className="hover:underline underline-offset-4"
-      >
-        Contact
-      </Link>
-      {isAuthenticated && (
-        <>
-          {hasManagerialAccess ? (
-            <>
-              <Link
-                to="/attendance"
-                className="hover:underline underline-offset-4 flex items-center"
-              >
-                <ClipboardCheck className="h-4 w-4 mr-1" />
-                Attendance
-              </Link>
-              <Link
-                to="/employee-workflow"
-                className="hover:underline underline-offset-4 flex items-center group relative"
-              >
-                <Clock className="h-4 w-4 mr-1" />
-                My Employee Shifts
-                <div className="flex gap-1 ml-2">
-                  {acceptedCount > 0 && (
-                    <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 flex items-center">
-                      {acceptedCount}
-                    </Badge>
-                  )}
-                  {pendingCount > 0 && (
-                    <Badge variant="outline" className="flex items-center">
-                      {pendingCount} pending
-                    </Badge>
-                  )}
-                </div>
-              </Link>
-              <Link
-                to="/people"
-                className="hover:underline underline-offset-4 flex items-center transition-colors hover:text-primary"
-              >
-                <Users className="h-4 w-4 mr-1 text-muted-foreground group-hover:text-primary" />
-                <span className="font-medium">Team Members</span>
-              </Link>
-              <Link
-                to="/shift-calendar"
-                className="hover:underline underline-offset-4"
-              >
-                Shift Calendar
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/employee-workflow"
-                className="hover:underline underline-offset-4 flex items-center"
-              >
-                <Clock className="h-4 w-4 mr-1" />
-                My Schedule
-              </Link>
-              <Link
-                to="/salary"
-                className="hover:underline underline-offset-4 flex items-center"
-              >
-                <DollarSign className="h-4 w-4 mr-1" />
-                Salary
-              </Link>
-            </>
-          )}
-          <Link
-            to="/leave"
-            className="hover:underline underline-offset-4 flex items-center"
-          >
-            <Calendar className="h-4 w-4 mr-1" />
-            Leave & Schedule
+    <NavigationMenu className="hidden md:flex">
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <Link to="/dashboard" className={navigationMenuTriggerStyle()}>
+            <Home className="h-4 w-4 mr-2" />
+            Dashboard
           </Link>
-          {hasManagerialAccess && (
-            <>
-              <Link
-                to="/payroll"
-                className="hover:underline underline-offset-4 flex items-center"
+        </NavigationMenuItem>
+        
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>
+            <Calendar className="h-4 w-4 mr-2" />
+            Schedule
+          </NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <div className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2">
+              <Link 
+                to="/schedule" 
+                className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
               >
-                <Receipt className="h-4 w-4 mr-1" />
-                Payslip
+                <div className="mb-2 mt-4 text-lg font-medium">
+                  Schedule Overview
+                </div>
+                <p className="text-sm leading-tight text-muted-foreground">
+                  View and manage the main schedule calendar
+                </p>
               </Link>
-            </>
-          )}
-        </>
-      )}
-    </div>
-  );
-};
+              
+              {hasManagerialAccess && (
+                <Link 
+                  to="/shift-calendar" 
+                  className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                >
+                  <div className="mb-2 mt-4 text-lg font-medium">
+                    Shift Calendar
+                  </div>
+                  <p className="text-sm leading-tight text-muted-foreground">
+                    Manage employee shifts and assignments
+                  </p>
+                </Link>
+              )}
+              
+              <Link 
+                to="/employee-workflow" 
+                className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+              >
+                <div className="mb-2 mt-4 text-lg font-medium">
+                  {hasManagerialAccess ? "My Employee Shifts" : "My Schedule"}
+                </div>
+                <p className="text-sm leading-tight text-muted-foreground">
+                  {hasManagerialAccess ? "Manage your team's shifts" : "View your upcoming shifts"}
+                </p>
+              </Link>
+              
+              <Link 
+                to="/leave-management" 
+                className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+              >
+                <div className="mb-2 mt-4 text-lg font-medium">
+                  Leave Management
+                </div>
+                <p className="text-sm leading-tight text-muted-foreground">
+                  Request and manage time off and leave
+                </p>
+              </Link>
+            </div>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
 
-export default DesktopNav;
+        {hasManagerialAccess && (
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>
+              <Users className="h-4 w-4 mr-2" />
+              Team
+            </NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <div className="grid w-[400px] gap-3 p-4">
+                <Link 
+                  to="/people" 
+                  className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                >
+                  <div className="mb-2 mt-4 text-lg font-medium">
+                    Team Members
+                  </div>
+                  <p className="text-sm leading-tight text-muted-foreground">
+                    View and manage employee profiles
+                  </p>
+                </Link>
+                
+                <Link 
+                  to="/attendance" 
+                  className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                >
+                  <div className="mb-2 mt-4 text-lg font-medium">
+                    Attendance
+                  </div>
+                  <p className="text-sm leading-tight text-muted-foreground">
+                    Track employee attendance and time records
+                  </p>
+                </Link>
+              </div>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        )}
+        
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>
+            <DollarSign className="h-4 w-4 mr-2" />
+            Finance
+          </NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <div className="grid w-[400px] gap-3 p-4">
+              <Link 
+                to="/salary" 
+                className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+              >
+                <div className="mb-2 mt-4 text-lg font-medium">
+                  Salary
+                </div>
+                <p className="text-sm leading-tight text-muted-foreground">
+                  View salary information and history
+                </p>
+              </Link>
+              
+              {hasManagerialAccess && (
+                <Link 
+                  to="/payroll" 
+                  className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                >
+                  <div className="mb-2 mt-4 text-lg font-medium">
+                    Payslip Management
+                  </div>
+                  <p className="text-sm leading-tight text-muted-foreground">
+                    Generate and manage employee payslips
+                  </p>
+                </Link>
+              )}
+            </div>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+        
+        <NavigationMenuItem>
+          <Link to="/about" className={navigationMenuTriggerStyle()}>
+            <FileText className="h-4 w-4 mr-2" />
+            About
+          </Link>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
+  )
+}
+
+export default DesktopNav

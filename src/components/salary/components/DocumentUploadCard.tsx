@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Upload, FileText, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +20,8 @@ const DocumentUploadCard: React.FC<DocumentUploadCardProps> = ({
   disabled = false,
   fileName
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const backgroundColors = {
     contract: 'bg-blue-50',
     payslip: 'bg-green-50'
@@ -36,6 +38,12 @@ const DocumentUploadCard: React.FC<DocumentUploadCardProps> = ({
   };
 
   const displayName = fileName || `${type.charAt(0).toUpperCase() + type.slice(1)}`;
+  
+  const handleClick = () => {
+    if (!isUploading && !disabled && fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
 
   return (
     <div 
@@ -44,7 +52,8 @@ const DocumentUploadCard: React.FC<DocumentUploadCardProps> = ({
         backgroundColors[type],
         borderColors[type],
         "hover:shadow-md",
-        disabled && "opacity-50 cursor-not-allowed"
+        disabled && "opacity-50 cursor-not-allowed",
+        isUploading && "animate-pulse"
       )}
     >
       <div className="flex items-center space-x-4">
@@ -60,12 +69,15 @@ const DocumentUploadCard: React.FC<DocumentUploadCardProps> = ({
         </div>
       </div>
       
-      <label 
+      <button
+        type="button"
+        onClick={handleClick}
         className={cn(
           "cursor-pointer rounded-full p-2 hover:bg-white/50 transition-colors",
           isUploading && "pointer-events-none",
           disabled && "cursor-not-allowed"
         )}
+        disabled={disabled || isUploading}
       >
         {isUploading ? (
           <div className="animate-spin">
@@ -75,13 +87,14 @@ const DocumentUploadCard: React.FC<DocumentUploadCardProps> = ({
           <Upload className={cn("w-6 h-6", iconColors[type])} />
         )}
         <input
+          ref={fileInputRef}
           type="file"
           className="hidden"
           onChange={onUpload}
-          accept=".pdf,.doc,.docx"
+          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
           disabled={disabled || isUploading}
         />
-      </label>
+      </button>
     </div>
   );
 };

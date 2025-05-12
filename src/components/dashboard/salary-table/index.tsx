@@ -5,8 +5,7 @@ import { cn } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
 import { useToast } from '@/hooks/use-toast';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
-import { generatePayslipPDF } from '@/utils/exports/payslip-generator'; 
-import { attachPayslipToResume } from '@/utils/exports/document-manager';
+import { generatePayslipPDF, attachPayslipToResume } from '@/utils/exports'; 
 import { SalaryTableProps, Employee } from './types';
 import { SearchBar } from './SearchBar';
 import { StatusFilter } from './StatusFilter';
@@ -43,21 +42,12 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
     setIsProcessing(prev => ({ ...prev, [employee.id]: true }));
     
     try {
-      // Generate current month's pay period for the payslip
-      const today = new Date();
-      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      const payPeriod = `${firstDayOfMonth.toLocaleDateString()} - ${lastDayOfMonth.toLocaleDateString()}`;
-      
       await generatePayslipPDF(employee.id, {
         name: employee.name,
         title: employee.title,
         salary: typeof employee.salary === 'number' ? employee.salary.toString() : employee.salary,
         department: employee.department,
-        paymentDate: employee.paymentDate || new Date().toISOString().split('T')[0],
-        payPeriod: payPeriod,
-        overtimeHours: 0,
-        contractualHours: 160
+        paymentDate: employee.paymentDate
       });
       
       toast({

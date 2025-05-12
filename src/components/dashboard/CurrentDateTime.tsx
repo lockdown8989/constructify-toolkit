@@ -20,8 +20,18 @@ const CurrentDateTime: React.FC<CurrentDateTimeProps> = ({ className }) => {
     return () => clearInterval(timer);
   }, []);
   
-  const formattedDate = format(currentTime, 'EEEE, MMMM d, yyyy');
-  const formattedTime = format(currentTime, 'h:mm:ss a');
+  // Safely format the date
+  const formatSafeDate = (date: Date, formatString: string) => {
+    try {
+      return format(date, formatString);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid Date';
+    }
+  };
+  
+  const formattedDate = formatSafeDate(currentTime, 'EEEE, MMMM d, yyyy');
+  const formattedTime = formatSafeDate(currentTime, 'h:mm:ss a');
   
   return (
     <Card className={`p-4 ${className}`}>

@@ -1,10 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { DayStats, Employee } from '@/types/restaurant-schedule';
-import ShiftBlock from './ShiftBlock';
-import OpenShiftBlock from './OpenShiftBlock';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Badge } from "@/components/ui/badge";
 import { OpenShiftType } from '@/types/supabase/schedules';
+import { cn } from '@/lib/utils';
 
 interface DayColumnProps {
   day: string;
@@ -13,99 +12,106 @@ interface DayColumnProps {
   employees: Employee[];
   openShifts: OpenShiftType[];
   handleAssignOpenShift: (openShiftId: string, employeeId?: string) => void;
+  onShiftDragStart?: (e: React.DragEvent, shift: OpenShiftType) => void;
+  onShiftDragEnd?: () => void;
+  onShiftDrop?: (e: React.DragEvent, employeeId: string, day: string) => void;
 }
 
-const DayColumn = ({
-  day,
-  dayLabel,
-  dayStats,
-  employees,
+const DayColumn = ({ 
+  day, 
+  dayLabel, 
+  dayStats, 
+  employees, 
   openShifts,
-  handleAssignOpenShift
+  handleAssignOpenShift,
+  onShiftDragStart,
+  onShiftDragEnd,
+  onShiftDrop
 }: DayColumnProps) => {
-  const isMobile = useIsMobile();
+  const [activeDropTarget, setActiveDropTarget] = useState<string | null>(null);
   
-  // Get all shifts for this day
-  const shifts = dayStats.shifts;
-
-  // Sort shifts by start time
-  const sortedShifts = [...shifts].sort((a, b) => {
-    return a.startTime.localeCompare(b.startTime);
-  });
-  
-  // Format hours for display
-  const formatHours = (totalHours: number) => {
-    const hours = Math.floor(totalHours);
-    const minutes = Math.round((totalHours - hours) * 60);
-    
-    if (minutes === 0) {
-      return `${hours}h`;
-    } else {
-      return `${hours}h ${minutes}m`;
-    }
+  // Handle drag over
+  const handleDragOver = (e: React.DragEvent, employeeId: string) => {
+    e.preventDefault();
+    setActiveDropTarget(employeeId);
   };
-
-  // Map our supabase OpenShiftType to the format expected by the OpenShiftBlock component
-  const processedOpenShifts = openShifts.map((openShift, index) => {
-    // Add day property if not present (required for restaurant-schedule format)
-    if (!openShift.day) {
-      openShift.day = day;
+  
+  // Handle drag leave
+  const handleDragLeave = () => {
+    setActiveDropTarget(null);
+  };
+  
+  // Handle drop
+  const handleDrop = (e: React.DragEvent, employeeId: string) => {
+    e.preventDefault();
+    if (onShiftDrop) {
+      onShiftDrop(e, employeeId, day);
     }
-    
-    // Add startTime/endTime aliases if using start_time/end_time
-    if (openShift.start_time && !openShift.startTime) {
-      openShift.startTime = new Date(openShift.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-    
-    if (openShift.end_time && !openShift.endTime) {
-      openShift.endTime = new Date(openShift.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-    
-    return openShift;
-  });
-
+    setActiveDropTarget(null);
+  };
+  
   return (
-    <div className="col-span-1 border-r border-gray-200">
-      {/* Header */}
-      <div className="p-2 sm:p-4 border-b border-gray-200 bg-gray-50">
-        <div className="text-center">
-          <div className="text-gray-600 font-medium text-sm sm:text-base">{dayLabel}</div>
-          <div className="text-xs text-gray-500">{formatHours(dayStats.totalHours)}</div>
+    <div className="col-span-1 bg-white border-r border-gray-200 flex flex-col">
+      {/* Day header with stats */}
+      <div className="p-3 sm:p-4 border-b border-gray-200 flex flex-col">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col">
+            <span className="font-medium text-gray-800 text-sm sm:text-base">{dayLabel}</span>
+            <span className="text-xs text-gray-500">
+              {dayStats.totalHours.toFixed(1)} hrs
+            </span>
+          </div>
+          <Badge variant="outline" className="bg-gray-100 hover:bg-gray-100">
+            ${dayStats.totalCost.toFixed(0)}
+          </Badge>
         </div>
       </div>
       
-      {/* Shifts */}
-      <div className="p-1 sm:p-2 flex flex-col gap-1 sm:gap-2 min-h-[100px]">
-        {/* Employee shifts */}
-        {sortedShifts.map(shift => {
-          const employee = employees.find(e => e.id === shift.employeeId);
-          if (!employee) return null;
-          
-          return (
-            <ShiftBlock
+      {/* Open shifts section */}
+      {openShifts.length > 0 && (
+        <div className="py-2 px-2 border-b border-gray-100">
+          <div className="text-xs font-medium text-gray-500 mb-2">Open Shifts</div>
+          {openShifts.map(shift => (
+            <div 
               key={shift.id}
-              shift={shift}
-              employee={employee}
-              compact={isMobile}
-            />
-          );
-        })}
-        
-        {/* Open shifts */}
-        {processedOpenShifts.map((openShift, index) => (
-          <OpenShiftBlock
-            key={openShift.id}
-            openShift={openShift}
-            handleAssignOpenShift={handleAssignOpenShift}
-            compact={isMobile}
-            position={index}
-          />
-        ))}
-        
-        {/* Empty state */}
-        {sortedShifts.length === 0 && openShifts.length === 0 && (
-          <div className="p-2 text-center text-xs text-gray-400">
-            No shifts
+              draggable={true}
+              onDragStart={(e) => onShiftDragStart?.(e, shift)}
+              onDragEnd={onShiftDragEnd}
+              className="bg-orange-50 border border-orange-200 rounded-md p-2 mb-2 cursor-move hover:bg-orange-100 transition-colors"
+            >
+              <div className="font-medium text-xs">{shift.title}</div>
+              <div className="text-xs text-gray-500">
+                {shift.start_time && new Date(shift.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                {shift.end_time && ` - ${new Date(shift.end_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      
+      {/* Employees section - where shifts can be dropped */}
+      <div className="flex-1 overflow-y-auto">
+        {employees.length === 0 ? (
+          <div className="p-4 text-center text-sm text-gray-500">
+            No employees available
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {employees.map(employee => (
+              <div 
+                key={employee.id}
+                className={cn(
+                  "p-2 hover:bg-gray-50 transition-colors",
+                  activeDropTarget === employee.id ? "bg-blue-50" : ""
+                )}
+                onDragOver={(e) => handleDragOver(e, employee.id)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, employee.id)}
+              >
+                <div className="font-medium text-xs truncate">{employee.name}</div>
+                <div className="text-xs text-gray-500 truncate">{employee.role}</div>
+              </div>
+            ))}
           </div>
         )}
       </div>

@@ -17,6 +17,9 @@ export interface Employee {
   userId?: string;
   annual_leave_days?: number;
   sick_leave_days?: number;
+  email?: string;
+  phone?: string;
+  hourly_rate?: number;
 }
 
 export interface PeopleTableProps {
@@ -62,6 +65,9 @@ export const mapDbEmployeeToUiEmployee = (dbEmployee: any): Employee => {
     managerId: dbEmployee.manager_id,
     userId: dbEmployee.user_id,
     annual_leave_days: dbEmployee.annual_leave_days,
-    sick_leave_days: dbEmployee.sick_leave_days
+    sick_leave_days: dbEmployee.sick_leave_days,
+    email: dbEmployee.email,
+    phone: dbEmployee.phone,
+    hourly_rate: dbEmployee.hourly_rate
   };
 };

@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { Schedule } from '@/hooks/use-schedules';
 import ShiftDetailCard from '../ShiftDetailCard';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addDays, isSameMonth } from 'date-fns';
+import { ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addDays, isSameMonth, isToday } from 'date-fns';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 
 interface ScheduleTabsProps {
   activeTab: string;
@@ -70,6 +71,9 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
     setCalendarDays(grid);
   }, [currentDate]);
 
+  // Count pending shifts for the badge
+  const pendingShiftsCount = schedules.filter(s => s.status === 'pending').length;
+
   const handlePreviousMonth = () => {
     const newDate = new Date(currentDate);
     newDate.setMonth(newDate.getMonth() - 1);
@@ -95,6 +99,9 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
     }
   });
 
+  // Debug log filtered schedules
+  console.log(`Filtered schedules for tab ${activeTab}:`, filteredSchedules.length);
+
   // Function to check if a day has a scheduled shift
   const hasScheduledShift = (day: Date | null) => {
     if (!day) return false;
@@ -102,6 +109,19 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
     return schedules.some(schedule => {
       const scheduleDate = new Date(schedule.start_time);
       return scheduleDate.getDate() === day.getDate() && 
+             scheduleDate.getMonth() === day.getMonth() && 
+             scheduleDate.getFullYear() === day.getFullYear();
+    });
+  };
+
+  // Function to check if a day has a pending shift
+  const hasPendingShift = (day: Date | null) => {
+    if (!day) return false;
+    
+    return schedules.some(schedule => {
+      const scheduleDate = new Date(schedule.start_time);
+      return schedule.status === 'pending' && 
+             scheduleDate.getDate() === day.getDate() && 
              scheduleDate.getMonth() === day.getMonth() && 
              scheduleDate.getFullYear() === day.getFullYear();
     });
@@ -136,13 +156,19 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
             <div
               key={i}
               className={cn(
-                "aspect-square flex items-center justify-center text-sm border rounded-lg",
+                "aspect-square flex flex-col items-center justify-center text-sm border rounded-lg relative",
+                day ? (isToday(day) ? "border-blue-500 border-2" : "border-gray-200") : "border-transparent",
                 day && isSameMonth(day, currentDate) ? "bg-white" : "bg-gray-50 text-gray-400",
-                day && hasScheduledShift(day) && "text-blue-500 font-bold",
-                day && format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') && "border-blue-500 border-2"
+                day && hasScheduledShift(day) && "font-bold"
               )}
             >
               {day ? format(day, 'd') : ''}
+              {day && hasScheduledShift(day) && (
+                <span className={cn(
+                  "h-2 w-2 rounded-full mt-1",
+                  hasPendingShift(day) ? "bg-amber-400" : "bg-blue-500"
+                )}></span>
+              )}
             </div>
           ))}
         </div>
@@ -156,13 +182,18 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex-1 py-2 text-sm font-medium border-b-2 transition-colors",
+                "flex-1 py-2 text-sm font-medium border-b-2 transition-colors relative",
                 activeTab === tab.id
                   ? "border-blue-500 text-blue-600"
                   : "border-transparent text-gray-500 hover:text-gray-700"
               )}
             >
               {tab.label}
+              {tab.id === 'pending' && pendingShiftsCount > 0 && (
+                <Badge className="absolute -top-2 -right-2 bg-amber-500 text-white text-xs">
+                  {pendingShiftsCount}
+                </Badge>
+              )}
             </button>
           ))}
         </div>
@@ -183,8 +214,12 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
               />
             ))
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              No {activeTab.replace('-', ' ')} found
+            <div className="text-center py-8 text-gray-500 flex flex-col items-center">
+              <AlertCircle className="h-6 w-6 mb-2 text-gray-400" />
+              <p>No {activeTab.replace('-', ' ')} found</p>
+              {activeTab === 'pending' && (
+                <p className="text-sm mt-2">When managers assign you shifts that need confirmation, they'll appear here</p>
+              )}
             </div>
           )}
         </TabsContent>

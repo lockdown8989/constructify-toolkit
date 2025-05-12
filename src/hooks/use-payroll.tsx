@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Employee } from '@/components/dashboard/salary-table/types';
@@ -63,7 +62,7 @@ export const usePayroll = (employees: Employee[]) => {
             continue;
           }
 
-          await processEmployeePayroll(employeeId, employee, currency);
+          await processEmployeePayroll(employeeId, employee, 'GBP');
           successCount++;
         } catch (err) {
           console.error('Error processing payroll:', err);
@@ -111,10 +110,10 @@ export const usePayroll = (employees: Employee[]) => {
   const handleExportPayroll = async () => {
     setIsExporting(true);
     try {
-      await exportPayrollData(currency);
+      await exportPayrollData('GBP');
       toast({
         title: "Export successful",
-        description: `Payroll data has been exported to CSV in ${currency}.`,
+        description: `Payroll data has been exported to CSV in £.`,
       });
     } catch (err) {
       console.error("Error exporting payrolls:", err);

@@ -1,51 +1,75 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { sendNotification, sendNotificationsToMany } from './notification-sender';
-import { getManagerUserIds } from './role-utils';
+import { sendNotification } from './notification-sender';
+import type { NotificationResult } from '@/models/notification';
 
 /**
- * Test function to send a notification to a specific user
- * @param userId - The user ID to send notification to
- * @returns Object indicating success or failure
+ * Creates a test notification for the current user
  */
-export const sendTestNotification = async (userId: string) => {
+export const sendTestNotification = async (userId: string): Promise<NotificationResult> => {
   try {
-    const result = await sendNotification({
+    console.log('NotificationTest: Sending test notification to user:', userId);
+    
+    if (!userId) {
+      console.error('NotificationTest: Cannot send test notification - no user ID provided');
+      return {
+        success: false,
+        message: 'No user ID provided'
+      };
+    }
+    
+    const success = await sendNotification({
       user_id: userId,
       title: 'Test Notification',
-      message: 'This is a test notification sent at ' + new Date().toLocaleTimeString(),
-      type: 'info'
+      message: 'This is a test notification. If you can see this, notifications are working correctly!',
+      type: 'info',
+      related_entity: 'test',
+      related_id: 'test-notification'
     });
     
-    return result.success;
+    return {
+      success,
+      message: success ? 'Test notification sent successfully' : 'Failed to send test notification'
+    };
   } catch (error) {
-    console.error('Error sending test notification:', error);
-    return false;
+    console.error('Exception in sendTestNotification:', error);
+    return {
+      success: false,
+      message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+    };
   }
 };
 
 /**
- * Test function to send a notification to all managers
- * @returns Object indicating success or failure
+ * Verifies that the notifications table exists and is accessible
  */
-export const sendTestNotificationToAllManagers = async () => {
+export const verifyNotificationsTable = async (): Promise<NotificationResult> => {
   try {
-    const managerIds = await getManagerUserIds();
+    console.log('NotificationTest: Verifying notifications table');
     
-    if (managerIds.length === 0) {
-      console.warn('No managers found to send notification to');
-      return false;
+    // Try to query the notifications table
+    const { count, error } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true });
+    
+    if (error) {
+      console.error('NotificationTest: Error verifying notifications table:', error);
+      return {
+        success: false,
+        message: `Database error: ${error.message}`
+      };
     }
     
-    const result = await sendNotificationsToMany(managerIds, {
-      title: 'Test Manager Notification',
-      message: 'This test notification was sent to all managers at ' + new Date().toLocaleTimeString(),
-      type: 'info'
-    });
-    
-    return result.success;
+    return {
+      success: true,
+      message: `Notifications table verified successfully. Table has ${count} notifications.`,
+      data: { count }
+    };
   } catch (error) {
-    console.error('Error sending test notification to managers:', error);
-    return false;
+    console.error('Exception in verifyNotificationsTable:', error);
+    return {
+      success: false,
+      message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+    };
   }
 };
