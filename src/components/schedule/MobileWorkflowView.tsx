@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -11,6 +12,7 @@ import AvailabilityManagement from './AvailabilityManagement';
 import LeaveBalanceCard from './LeaveBalanceCard';
 import { useOpenShifts } from '@/hooks/schedule/use-open-shifts';
 import OpenShiftsList from './components/OpenShiftsList';
+import ScheduleCalendar from './ScheduleCalendar';
 
 interface MobileWorkflowViewProps {
   schedules: any[];
@@ -35,11 +37,17 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
   
   return (
     <Tabs defaultValue="shifts" className="w-full">
-      <TabsList className="grid w-full grid-cols-4 mb-2 rounded-xl">
+      <TabsList className="grid w-full grid-cols-5 mb-2 rounded-xl">
         <TabsTrigger value="shifts" className="text-xs py-2.5">
           <span className="flex flex-col items-center gap-1">
             <CalendarClock className="h-4 w-4" />
             <span>Shifts</span>
+          </span>
+        </TabsTrigger>
+        <TabsTrigger value="calendar" className="text-xs py-2.5">
+          <span className="flex flex-col items-center gap-1">
+            <CalendarDays className="h-4 w-4" />
+            <span>Calendar</span>
           </span>
         </TabsTrigger>
         <TabsTrigger value="timeclock" className="text-xs py-2.5">
@@ -93,6 +101,22 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
         
         <ShiftSwapList />
         <ShiftSwapForm />
+      </TabsContent>
+      
+      <TabsContent value="calendar" className="mt-4 no-scrollbar">
+        <Card className="border rounded-xl shadow-sm overflow-hidden">
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="text-base flex items-center">
+              <CalendarDays className="h-4 w-4 mr-2 text-primary" />
+              Schedule Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 pb-3 pt-0">
+            <div className="schedule-calendar-mobile">
+              <ScheduleCalendar />
+            </div>
+          </CardContent>
+        </Card>
       </TabsContent>
       
       <TabsContent value="timeclock" className="space-y-4 mt-4 no-scrollbar">
