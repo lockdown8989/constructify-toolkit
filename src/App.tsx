@@ -6,6 +6,7 @@ import { LanguageProvider } from "@/hooks/use-language";
 import { NotificationProvider } from "@/hooks/use-notification-settings";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { BrowserRouter } from "react-router-dom";
 import RouterComponent from "./routes/routes";
 import "./App.css";
 
@@ -19,7 +20,9 @@ function App() {
         <CurrencyProvider>
           <LanguageProvider>
             <NotificationProvider>
-              <RouterComponent />
+              <BrowserRouter>
+                <RouterComponent />
+              </BrowserRouter>
               <Toaster />
               <SonnerToaster />
             </NotificationProvider>
