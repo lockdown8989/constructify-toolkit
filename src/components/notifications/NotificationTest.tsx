@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { sendTestNotification, verifyNotificationsTable } from '@/services/notifications';
+import { sendTestNotification, verifyNotificationsTable } from '@/services/notifications/notification-testing';
 
 const NotificationTest = () => {
   const { toast } = useToast();
