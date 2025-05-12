@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { UseFormReturn, useWatch } from 'react-hook-form';
-import { EmployeeFormValues } from '../employee-form-schema';
+import { EmployeeFormValues } from '@/components/people/modals/employee-form-schema';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
