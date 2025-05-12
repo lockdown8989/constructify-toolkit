@@ -1,88 +1,67 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { sendNotification } from './notification-sender';
 import { formatCurrency } from '@/utils/format';
 
 /**
- * Sends a notification to an employee about their payslip
+ * Notify employee about a generated payslip
  */
 export const notifyEmployeeAboutPayslip = async (
   employeeId: string,
   userId: string,
-  amount: number,
+  salaryAmount: number,
   currency: string = 'GBP',
   paymentDate: string
 ) => {
   try {
-    const formattedAmount = formatCurrency(amount, currency);
-    const displayDate = new Date(paymentDate).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
+    const formattedAmount = formatCurrency(salaryAmount, currency);
+    const formattedDate = new Date(paymentDate).toLocaleDateString('en-GB', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
     });
     
-    const { error } = await supabase.from('notifications').insert({
+    const result = await sendNotification({
       user_id: userId,
-      title: `Payslip Ready: ${formattedAmount}`,
-      message: `Your salary payment of ${formattedAmount} for ${displayDate} has been processed and the payslip is now available.`,
+      title: 'Payslip Generated',
+      message: `Your payslip for ${formattedDate} has been generated. Amount: ${formattedAmount}`,
       type: 'success',
       related_entity: 'payroll',
       related_id: employeeId
     });
     
-    if (error) {
-      console.error('Error sending payslip notification:', error);
-      return false;
-    }
-    
-    return true;
+    return result.success;
   } catch (error) {
-    console.error('Exception sending payslip notification:', error);
+    console.error('Error sending payslip notification:', error);
     return false;
   }
 };
 
 /**
- * Sends notifications to multiple employees about their payslips
+ * Notify managers about completed payroll processing
  */
-export const batchNotifyEmployeesAboutPayslips = async (
-  employeeData: Array<{
-    employeeId: string,
-    userId: string,
-    amount: number
-  }>,
-  currency: string = 'GBP',
-  paymentDate: string
+export const notifyManagersAboutPayrollProcessing = async (
+  managerIds: string[],
+  successCount: number,
+  failCount: number,
+  totalAmount: number,
+  currency: string = 'GBP'
 ) => {
-  if (!employeeData || employeeData.length === 0) return;
-  
   try {
-    const displayDate = new Date(paymentDate).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
+    const formattedAmount = formatCurrency(totalAmount, currency);
     
-    const notifications = employeeData.map(employee => ({
-      user_id: employee.userId,
-      title: `Payslip Ready: ${formatCurrency(employee.amount, currency)}`,
-      message: `Your salary payment of ${formatCurrency(employee.amount, currency)} for ${displayDate} has been processed and the payslip is now available.`,
-      type: 'success',
-      related_entity: 'payroll',
-      related_id: employee.employeeId
-    }));
-    
-    const { error } = await supabase
-      .from('notifications')
-      .insert(notifications);
-      
-    if (error) {
-      console.error('Error sending batch payslip notifications:', error);
-      return false;
+    for (const managerId of managerIds) {
+      await sendNotification({
+        user_id: managerId,
+        title: 'Payroll Processing Complete',
+        message: `Processed ${successCount} payslips (${formattedAmount} total). Failed: ${failCount}.`,
+        type: failCount > 0 ? 'warning' : 'success',
+        related_entity: 'payroll'
+      });
     }
     
     return true;
   } catch (error) {
-    console.error('Exception sending batch payslip notifications:', error);
+    console.error('Error sending payroll processing notification to managers:', error);
     return false;
   }
 };

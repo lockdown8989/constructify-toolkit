@@ -1,48 +1,56 @@
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
-
-type CurrencyCode = 'USD' | 'GBP' | 'EUR';
+import { useToast } from '@/hooks/use-toast';
 
 interface CurrencyContextType {
-  currency: CurrencyCode;
-  setCurrency: (currency: CurrencyCode) => Promise<void>;
+  currency: string;
+  updateCurrencyPreference: (newCurrency: string) => Promise<boolean>;
   isLoading: boolean;
+  setCurrency: (currency: string) => void;
 }
 
 const CurrencyContext = createContext<CurrencyContextType>({
-  currency: 'USD',
-  setCurrency: async () => {},
-  isLoading: true,
+  currency: 'GBP',
+  updateCurrencyPreference: async () => false,
+  isLoading: false,
+  setCurrency: () => {},
 });
 
-export const CurrencyProvider = ({ children }: { children: React.ReactNode }) => {
+export const useCurrencyPreference = () => useContext(CurrencyContext);
+
+interface CurrencyProviderProps {
+  children: React.ReactNode;
+}
+
+export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) => {
+  const [currency, setCurrency] = useState<string>('GBP');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const { user } = useAuth();
-  const [currency, setCurrencyState] = useState<CurrencyCode>('USD');
-  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchCurrencyPreference = async () => {
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
 
+    const fetchCurrencyPreference = async () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
           .select('preferred_currency')
           .eq('id', user.id)
-          .maybeSingle();
+          .single();
 
-        if (error) {
-          console.error('Error fetching currency preference:', error);
-        } else if (data && data.preferred_currency) {
-          setCurrencyState(data.preferred_currency as CurrencyCode);
+        if (error) throw error;
+
+        if (data && data.preferred_currency) {
+          setCurrency(data.preferred_currency);
         }
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Error fetching currency preference:', error);
       } finally {
         setIsLoading(false);
       }
@@ -51,32 +59,41 @@ export const CurrencyProvider = ({ children }: { children: React.ReactNode }) =>
     fetchCurrencyPreference();
   }, [user]);
 
-  const setCurrency = async (newCurrency: CurrencyCode) => {
-    if (!user) return;
-
+  const updateCurrencyPreference = async (newCurrency: string): Promise<boolean> => {
+    if (!user) return false;
+    
     try {
       const { error } = await supabase
         .from('profiles')
         .update({ preferred_currency: newCurrency })
         .eq('id', user.id);
 
-      if (error) {
-        console.error('Error updating currency preference:', error);
-      } else {
-        setCurrencyState(newCurrency);
-      }
+      if (error) throw error;
+      
+      setCurrency(newCurrency);
+      
+      toast({
+        title: "Currency Updated",
+        description: `Your preferred currency has been set to ${newCurrency}`,
+      });
+      
+      return true;
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error updating currency preference:', error);
+      
+      toast({
+        title: "Update Failed",
+        description: "Failed to update your currency preference",
+        variant: "destructive",
+      });
+      
+      return false;
     }
   };
 
   return (
-    <CurrencyContext.Provider value={{ currency, setCurrency, isLoading }}>
+    <CurrencyContext.Provider value={{ currency, updateCurrencyPreference, isLoading, setCurrency }}>
       {children}
     </CurrencyContext.Provider>
   );
 };
-
-export const useCurrencyPreference = () => useContext(CurrencyContext);
-
-export default useCurrencyPreference;

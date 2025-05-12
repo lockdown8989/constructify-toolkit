@@ -1,94 +1,102 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { formatCurrency } from '@/utils/format';
+import { getManagerUserIds } from '@/services/notifications/role-utils';
+import { sendNotificationsToMany } from '@/services/notifications/notification-sender';
+import { formatCurrency, formatDate } from '@/utils/format';
 
-/**
- * Export payroll data to CSV
- */
-export const exportPayrollData = async (currency: string = 'GBP'): Promise<void> => {
+export const exportPayrollData = async (currency: string) => {
   try {
-    // Fetch payroll data joined with employee data
-    const { data, error } = await supabase
+    // Get all payroll records
+    const { data: payrollData, error: payrollError } = await supabase
       .from('payroll')
       .select(`
-        *, 
-        employees(
-          id,
+        id,
+        employee_id,
+        base_pay,
+        salary_paid,
+        deductions,
+        working_hours,
+        overtime_hours,
+        overtime_pay,
+        payment_status,
+        payment_date,
+        employees:employee_id (
           name,
           job_title,
           department
         )
       `)
-      .order('payment_date', { ascending: false });
+      .eq('payment_status', 'Paid');
       
-    if (error) {
-      console.error('Error fetching payroll data:', error);
-      throw new Error(`Failed to fetch payroll data: ${error.message}`);
-    }
+    if (payrollError) throw payrollError;
     
-    if (!data || data.length === 0) {
+    if (!payrollData || payrollData.length === 0) {
       throw new Error('No payroll data available to export');
     }
     
-    // Format data for CSV
-    const csvData = data.map(record => {
-      // Use safe type assertion for employees data
-      const employee = record.employees as { 
-        name?: string, 
-        job_title?: string, 
-        department?: string 
-      } | null;
+    // Format data for CSV export
+    const csvData = payrollData.map(record => {
+      // Fix the issue with accessing nested properties
+      const employee = record.employees as any; // Type assertion to access nested fields
       
       return {
-        "Employee Name": employee?.name || 'Unknown',
-        "Job Title": employee?.job_title || 'Unknown',
-        "Department": employee?.department || 'Unknown',
-        "Base Pay": formatCurrency(record.base_pay || 0, currency),
-        "Working Hours": record.working_hours || 0,
-        "Overtime Hours": record.overtime_hours || 0,
-        "Overtime Pay": formatCurrency(record.overtime_pay || 0, currency),
-        "Deductions": formatCurrency(record.deductions || 0, currency),
-        "Bonus": formatCurrency(record.bonus || 0, currency),
-        "Net Salary": formatCurrency(record.salary_paid || 0, currency),
-        "Payment Date": record.payment_date || new Date().toISOString().split('T')[0],
-        "Status": record.payment_status || 'Unknown'
+        'Employee Name': employee ? employee.name : 'Unknown',
+        'Position': employee ? employee.job_title : 'Unknown',
+        'Department': employee ? employee.department : 'Unknown',
+        'Base Pay': formatCurrency(record.base_pay || 0, currency),
+        'Net Salary': formatCurrency(record.salary_paid || 0, currency),
+        'Deductions': formatCurrency(record.deductions || 0, currency),
+        'Overtime Pay': formatCurrency(record.overtime_pay || 0, currency),
+        'Working Hours': record.working_hours || 0,
+        'Overtime Hours': record.overtime_hours || 0,
+        'Payment Date': formatDate(record.payment_date),
+        'Status': record.payment_status
       };
     });
     
-    // Convert to CSV string
-    const headers = Object.keys(csvData[0]);
-    const csvString = [
-      headers.join(','),
-      ...csvData.map(row => headers.map(header => {
-        const value = row[header as keyof typeof row];
-        // Escape commas and quotes in values
-        return `"${String(value).replace(/"/g, '""')}"`;
-      }).join(','))
-    ].join('\n');
+    // Generate and download CSV file
+    const csv = await generateCSV(csvData);
+    downloadCSV(csv, `payroll_export_${new Date().toISOString().slice(0, 10)}.csv`);
     
-    // Create and download CSV file
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const date = new Date().toISOString().split('T')[0];
-    const filename = `payroll_export_${date}.csv`;
+    // Notify managers about the export
+    const managerIds = await getManagerUserIds();
+    await sendNotificationsToMany(managerIds, {
+      title: 'Payroll Data Exported',
+      message: `Payroll data has been exported for ${payrollData.length} employees.`,
+      type: 'info',
+      related_entity: 'payroll'
+    });
     
-    // Create download link
-    const link = document.createElement('a');
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', filename);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url); // Clean up by revoking the object URL
-    } else {
-      throw new Error('Browser does not support downloading files programmatically');
-    }
-    
-    return;
+    return true;
   } catch (error) {
     console.error('Error exporting payroll data:', error);
     throw error;
   }
 };
+
+async function generateCSV(data: any[]): Promise<string> {
+  const headers = Object.keys(data[0]);
+  const csvContent = [
+    headers.join(','),
+    ...data.map(row => 
+      headers.map(header => {
+        const value = row[header as keyof typeof row];
+        // Wrap values in quotes if they contain commas
+        return typeof value === 'string' && value.includes(',') ? 
+          `"${value}"` : value;
+      }).join(',')
+    )
+  ].join('\n');
+  return csvContent;
+}
+
+function downloadCSV(csv: string, filename: string) {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}

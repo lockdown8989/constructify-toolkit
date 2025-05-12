@@ -1,15 +1,9 @@
 
-import React, { useEffect, useState } from 'react';
-import { format, addDays, startOfWeek, isSameDay, isSameMonth } from 'date-fns';
-import { ChevronLeft, ChevronRight, ArrowLeftRight } from 'lucide-react';
+import React from 'react';
+import { format, addDays, isToday, isSameDay } from 'date-fns';
+import { Schedule } from '@/hooks/use-schedules';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { cn } from '@/lib/utils';
-import { type Schedule } from '@/hooks/use-schedules';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/use-auth';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface WeeklyCalendarViewProps {
   currentDate: Date;
@@ -22,156 +16,118 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
   onDateChange,
   schedules
 }) => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [isOpen, setIsOpen] = useState(true);
-  const startDate = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start from Monday
-  
-  const weekDays = Array.from({ length: 7 }).map((_, index) => {
-    const date = addDays(startDate, index);
-    const daySchedules = schedules.filter(schedule => 
-      isSameDay(new Date(schedule.start_time), date)
-    );
-    
-    const hasShift = daySchedules.length > 0;
-    
-    return {
-      date,
-      dayName: format(date, 'EEE'),
-      dayNumber: format(date, 'd'),
-      hasShift,
-      schedules: daySchedules,
-      isToday: isSameDay(date, new Date()),
-      isCurrentMonth: isSameMonth(date, currentDate)
-    };
-  });
-
-  const handlePreviousWeek = () => {
-    onDateChange(addDays(startDate, -7));
+  // Get start of week (Sunday)
+  const getStartOfWeek = (date: Date) => {
+    const day = date.getDay();
+    return new Date(date.setDate(date.getDate() - day));
   };
 
-  const handleNextWeek = () => {
-    onDateChange(addDays(startDate, 7));
+  // Function to handle previous/next week navigation
+  const handleWeekChange = (increment: boolean) => {
+    const daysToAdd = increment ? 7 : -7;
+    const newDate = new Date(currentDate);
+    newDate.setDate(currentDate.getDate() + daysToAdd);
+    onDateChange(newDate);
   };
 
-  const handleShiftSwapRequest = (schedule: Schedule) => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to request shift swaps.",
-        variant: "destructive"
-      });
-      return;
+  // Get array of 7 days for the week
+  const getDaysOfWeek = () => {
+    const startOfWeek = getStartOfWeek(new Date(currentDate));
+    const days = [];
+    
+    for (let i = 0; i < 7; i++) {
+      days.push(addDays(startOfWeek, i));
     }
     
-    try {
-      // Navigate to the schedule requests page with state information
-      navigate('/schedule-requests', { 
-        state: { 
-          activeTab: 'shift-swaps',
-          initialSchedule: {
-            id: schedule.id,
-            start_time: schedule.start_time,
-            end_time: schedule.end_time,
-            title: schedule.title
-          }
-        } 
-      });
-    } catch (error) {
-      console.error("Navigation error:", error);
-      toast({
-        title: "Navigation error",
-        description: "There was a problem navigating to the schedule requests page.",
-        variant: "destructive"
-      });
-    }
+    return days;
+  };
+
+  const daysOfWeek = getDaysOfWeek();
+
+  // Get schedules for a specific day
+  const getSchedulesForDay = (day: Date) => {
+    return schedules.filter(schedule => {
+      const scheduleDate = new Date(schedule.start_time);
+      return isSameDay(scheduleDate, day);
+    });
   };
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
-      <div className="bg-blue-500 text-white p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">MY SCHEDULE</h1>
-        <div className="text-sm">{format(currentDate, 'EEE dd, MMMM yyyy').toUpperCase()}</div>
-      </div>
-
-      <CollapsibleContent>
-        <div className="bg-white p-4 border-b">
-          <div className="flex justify-between items-center mb-4">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={handlePreviousWeek}
-              className="text-gray-600"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </Button>
-            
-            <div className="font-medium">
-              {format(startDate, 'MMMM yyyy')}
-            </div>
-            
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={handleNextWeek}
-              className="text-gray-600"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-7 gap-2 text-center">
-            {weekDays.map(({ date, dayName, dayNumber, hasShift, schedules: daySchedules, isToday, isCurrentMonth }) => (
-              <div 
-                key={date.toString()} 
-                className={cn(
-                  "p-2 relative cursor-pointer rounded-lg transition-colors",
-                  isToday && "bg-blue-50",
-                  !isCurrentMonth && "text-gray-400",
-                  "hover:bg-gray-50"
-                )}
-                onClick={() => onDateChange(date)}
-              >
-                <div className="text-sm text-gray-600">{dayName}</div>
-                <div className={cn(
-                  "text-lg font-semibold",
-                  isToday && "text-blue-600",
-                  !isCurrentMonth && "text-gray-400"
-                )}>
-                  {dayNumber}
-                </div>
-                {hasShift && daySchedules.map((schedule) => (
-                  <TooltipProvider key={schedule.id}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="mt-1 flex justify-center">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            className="p-1 h-6 flex items-center gap-1 text-xs bg-green-100 hover:bg-green-200 text-green-800"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleShiftSwapRequest(schedule);
-                            }}
-                          >
-                            <ArrowLeftRight className="h-3 w-3" />
-                            <span>Swap</span>
-                          </Button>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Request shift swap for {format(new Date(schedule.start_time), 'h:mm a')}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ))}
-              </div>
-            ))}
-          </div>
+    <div className="border rounded-md overflow-hidden">
+      {/* Week navigation header */}
+      <div className="flex items-center justify-between p-3 bg-gray-50 border-b">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => handleWeekChange(false)}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        
+        <div className="font-medium">
+          {format(daysOfWeek[0], 'MMM d')} - {format(daysOfWeek[6], 'MMM d, yyyy')}
         </div>
-      </CollapsibleContent>
-    </Collapsible>
+        
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => handleWeekChange(true)}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      {/* Days of week */}
+      <div className="grid grid-cols-7">
+        {daysOfWeek.map((day, index) => (
+          <div 
+            key={index} 
+            className={`p-2 text-center border-b ${isToday(day) ? 'bg-blue-50' : ''}`}
+          >
+            <div className="text-xs text-gray-500">{format(day, 'EEE')}</div>
+            <div className={`text-sm font-medium ${isToday(day) ? 'text-blue-600' : ''}`}>
+              {format(day, 'd')}
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Schedules for each day */}
+      <div className="grid grid-cols-7">
+        {daysOfWeek.map((day, dayIndex) => {
+          const daySchedules = getSchedulesForDay(day);
+          return (
+            <div 
+              key={dayIndex} 
+              className={`p-1 min-h-[80px] border-r border-b ${dayIndex === 6 ? 'border-r-0' : ''} ${isToday(day) ? 'bg-blue-50/30' : ''}`}
+            >
+              {daySchedules.length > 0 ? (
+                <div className="space-y-1">
+                  {daySchedules.map((schedule) => (
+                    <div 
+                      key={schedule.id}
+                      className="bg-blue-100 border-l-2 border-blue-500 p-1 rounded-sm text-xs"
+                    >
+                      <div className="font-medium truncate">{schedule.title}</div>
+                      <div className="text-gray-600">
+                        {format(new Date(schedule.start_time), 'h:mm a')} - 
+                        {format(new Date(schedule.end_time), 'h:mm a')}
+                      </div>
+                      {/* Removed the department reference that caused the error */}
+                      <div className="text-gray-500">{schedule.location || 'No location'}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center text-xs text-gray-400">
+                  No shifts
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 

@@ -1,36 +1,54 @@
 
 /**
- * Formats a number as currency with the specified currency symbol
- * @param amount The amount to format
- * @param currency The currency code (default: 'GBP')
+ * Format a number as currency
+ * @param amount - The amount to format
+ * @param currency - The currency code (default: USD)
  * @returns Formatted currency string
  */
-export const formatCurrency = (amount: number | string, currency = 'GBP'): string => {
-  // Convert string to number if needed
-  const numericAmount = typeof amount === 'string' ? parseFloat(amount.replace(/[^\d.-]/g, '')) : amount;
-  
-  if (isNaN(numericAmount)) {
-    return '£0';
-  }
-  
-  return new Intl.NumberFormat('en-GB', {
+export const formatCurrency = (amount: number, currency = 'USD'): string => {
+  const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency,
-    minimumFractionDigits: 0,
+    currency: currency,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2
-  }).format(numericAmount);
+  });
+  
+  return formatter.format(amount);
 };
 
 /**
- * Formats a date string in the UK format (DD/MM/YYYY)
- * @param dateString The date string to format
+ * Format a date to a readable string
+ * @param date - The date to format
  * @returns Formatted date string
  */
-export const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
+export const formatDate = (date: string | Date): string => {
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
+/**
+ * Format a number with specified decimal places
+ * @param value - The number to format
+ * @param decimals - Number of decimal places (default: 2)
+ * @returns Formatted number string
+ */
+export const formatNumber = (value: number, decimals = 2): string => {
+  return Number(value).toFixed(decimals);
+};
+
+/**
+ * Format time to HH:MM format
+ * @param time - Time string or Date object
+ * @returns Formatted time string in HH:MM format
+ */
+export const formatTime = (time: string | Date): string => {
+  const date = time instanceof Date ? time : new Date(time);
+  return date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
   });
 };

@@ -4,7 +4,6 @@ export interface Employee {
   name: string;
   title: string;
   salary: string | number;
-  hourly_rate?: number;  // Added hourly rate field
   status: 'Paid' | 'Absent' | 'Pending';
   paymentDate: string;
   department?: string;
