@@ -1,135 +1,130 @@
 
-import { sendNotification } from './notification-sender';
 import { supabase } from '@/integrations/supabase/client';
-import { Schedule } from '@/types/supabase/schedules';
+import { getUsersWithRole } from './role-utils';
 
 /**
- * Send notification when a schedule is assigned to an employee
+ * Sends leave request notifications to managers
  */
-export const sendShiftAssignmentNotification = async (
+export const notifyManagersAboutLeaveRequest = async (
+  requestId: string,
   employeeId: string,
-  schedule: Schedule,
-  assignedById: string
-) => {
+  startDate: string,
+  endDate: string
+): Promise<boolean> => {
   try {
-    // Get employee user_id from employees table
-    const { data: employee, error: employeeError } = await supabase
+    // Get the employee details
+    const { data: employee } = await supabase
+      .from('employees')
+      .select('name, department')
+      .eq('id', employeeId)
+      .single();
+
+    if (!employee) {
+      console.error('Employee not found');
+      return false;
+    }
+
+    // Get all users with manager role
+    const managers = await getUsersWithRole('manager');
+    
+    if (!managers || managers.length === 0) {
+      console.warn('No managers found to notify');
+      return false;
+    }
+
+    // Create notifications for all managers
+    const notifications = managers.map(manager => ({
+      user_id: manager.id,
+      title: 'New Leave Request',
+      content: `${employee.name} has requested leave from ${startDate} to ${endDate}`,
+      type: 'leave_request',
+      metadata: {
+        request_id: requestId,
+        employee_id: employeeId,
+        employee_name: employee.name,
+        department: employee.department,
+        start_date: startDate,
+        end_date: endDate,
+        status: 'pending'
+      },
+      is_read: false
+    }));
+
+    // Insert notifications
+    const { error } = await supabase
+      .from('notifications')
+      .insert(notifications);
+
+    if (error) {
+      console.error('Error sending manager notifications:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in notifyManagersAboutLeaveRequest:', error);
+    return false;
+  }
+};
+
+/**
+ * Notify employee about leave request status update
+ */
+export const notifyEmployeeAboutLeaveStatus = async (
+  employeeId: string,
+  requestId: string,
+  status: 'approved' | 'rejected',
+  startDate: string,
+  endDate: string,
+  managerNotes?: string
+): Promise<boolean> => {
+  try {
+    // Get employee user ID
+    const { data: employee } = await supabase
       .from('employees')
       .select('user_id, name')
       .eq('id', employeeId)
       .single();
-    
-    if (employeeError || !employee?.user_id) {
-      console.error('Error fetching employee details:', employeeError);
-      return { success: false, message: 'Unable to find employee' };
+
+    if (!employee || !employee.user_id) {
+      console.error('Employee user account not found');
+      return false;
     }
-    
-    // Get assigner name (manager who assigned the shift)
-    const { data: assigner } = await supabase
-      .from('employees')
-      .select('name')
-      .eq('user_id', assignedById)
-      .single();
-      
-    const assignerName = assigner?.name || 'Manager';
-    
-    // Format dates for display
-    const startDate = new Date(schedule.start_time);
-    const endDate = new Date(schedule.end_time);
-    
-    const formattedStart = startDate.toLocaleString('en-US', {
-      weekday: 'short',
-      month: 'short', 
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit'
-    });
-    
-    const formattedEnd = endDate.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit'
-    });
-    
-    // Send notification to employee
-    await sendNotification({
-      user_id: employee.user_id,
-      title: 'New Shift Assignment',
-      message: `${assignerName} has assigned you a new shift: ${schedule.title || 'Work Shift'}\n${formattedStart} - ${formattedEnd}${schedule.location ? '\nLocation: ' + schedule.location : ''}`,
-      type: 'info',
-      related_entity: 'schedules',
-      related_id: schedule.id
-    });
-    
-    return { success: true };
-  } catch (error) {
-    console.error('Error sending shift assignment notification:', error);
-    return { success: false, message: 'Failed to send notification' };
-  }
-};
 
-/**
- * Send notification when a schedule is updated
- */
-export const sendShiftUpdateNotification = async (
-  employeeId: string,
-  schedule: Schedule,
-  updatedById: string
-) => {
-  try {
-    // Similar implementation to sendShiftAssignmentNotification
-    const { data: employee } = await supabase
-      .from('employees')
-      .select('user_id')
-      .eq('id', employeeId)
-      .single();
-      
-    if (!employee?.user_id) return { success: false };
+    const title = status === 'approved' 
+      ? 'Leave Request Approved' 
+      : 'Leave Request Rejected';
     
-    await sendNotification({
-      user_id: employee.user_id,
-      title: 'Shift Updated',
-      message: `Your shift (${schedule.title || 'Work Shift'}) has been updated. Please check your schedule for the latest details.`,
-      type: 'info',
-      related_entity: 'schedules',
-      related_id: schedule.id
-    });
-    
-    return { success: true };
-  } catch (error) {
-    console.error('Error sending shift update notification:', error);
-    return { success: false, message: 'Failed to send notification' };
-  }
-};
+    const content = status === 'approved'
+      ? `Your leave request from ${startDate} to ${endDate} has been approved.`
+      : `Your leave request from ${startDate} to ${endDate} has been rejected.${managerNotes ? ' See notes for details.' : ''}`;
 
-/**
- * Send notification when a schedule is cancelled
- */
-export const sendShiftCancellationNotification = async (
-  employeeId: string,
-  scheduleTitle: string,
-  scheduleId: string
-) => {
-  try {
-    const { data: employee } = await supabase
-      .from('employees')
-      .select('user_id')
-      .eq('id', employeeId)
-      .single();
-      
-    if (!employee?.user_id) return { success: false };
-    
-    await sendNotification({
-      user_id: employee.user_id,
-      title: 'Shift Cancelled',
-      message: `Your shift (${scheduleTitle || 'Work Shift'}) has been cancelled.`,
-      type: 'info',
-      related_entity: 'schedules',
-      related_id: scheduleId
-    });
-    
-    return { success: true };
+    // Create notification
+    const { error } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: employee.user_id,
+        title,
+        content,
+        type: 'leave_status',
+        metadata: {
+          request_id: requestId,
+          status,
+          start_date: startDate,
+          end_date: endDate,
+          manager_notes: managerNotes || null
+        },
+        is_read: false
+      });
+
+    if (error) {
+      console.error('Error sending employee notification:', error);
+      return false;
+    }
+
+    return true;
   } catch (error) {
-    console.error('Error sending shift cancellation notification:', error);
-    return { success: false, message: 'Failed to send notification' };
+    console.error('Error in notifyEmployeeAboutLeaveStatus:', error);
+    return false;
   }
 };

@@ -6,17 +6,21 @@ import { CalendarPlus, ChevronRight } from "lucide-react";
 import LeaveRequestForm from "@/components/leave/LeaveRequestForm";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileNavigation from "@/components/schedule/components/MobileNavigation";
+import LeaveBalanceCard from "@/components/schedule/LeaveBalanceCard";
+import { useEmployeeLeave } from "@/hooks/use-employee-leave";
 
 const EmployeeTab = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState<'requests' | 'form'>('requests');
+  const { data: leaveData, isLoading } = useEmployeeLeave();
 
   const handleRequestLeave = () => {
     if (isMobile) {
       setActiveSection('form');
     } else {
-      navigate("/leave-management", { state: { initialView: "calendar" } });
+      // Ensure proper navigation with state
+      navigate("/leave-management", { state: { initialView: "form" } });
     }
   };
 
@@ -32,6 +36,19 @@ const EmployeeTab = () => {
 
       {(!isMobile || activeSection === 'requests') && (
         <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {!isLoading && leaveData && (
+              <LeaveBalanceCard 
+                leaveBalance={{
+                  annual: leaveData.annual_leave_days,
+                  sick: leaveData.sick_leave_days,
+                  used: 0,
+                  remaining: leaveData.annual_leave_days,
+                }} 
+              />
+            )}
+          </div>
+
           <div className="flex flex-col sm:flex-row justify-between mb-4 items-start sm:items-center gap-4">
             <h2 className="text-xl font-semibold">My Leave Requests</h2>
             <Button 
