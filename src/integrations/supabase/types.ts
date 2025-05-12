@@ -289,7 +289,6 @@ export type Database = {
           annual_leave_days: number | null
           avatar: string | null
           department: string
-          hourly_rate: number | null
           id: string
           job_title: string
           lifecycle: string
@@ -307,7 +306,6 @@ export type Database = {
           annual_leave_days?: number | null
           avatar?: string | null
           department: string
-          hourly_rate?: number | null
           id?: string
           job_title: string
           lifecycle?: string
@@ -325,7 +323,6 @@ export type Database = {
           annual_leave_days?: number | null
           avatar?: string | null
           department?: string
-          hourly_rate?: number | null
           id?: string
           job_title?: string
           lifecycle?: string

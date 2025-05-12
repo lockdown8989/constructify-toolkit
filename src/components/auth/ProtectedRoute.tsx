@@ -23,9 +23,9 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     );
   }
 
-  // If no user is found, redirect to landing page
   if (!user) {
-    return <Navigate to="/landing" state={{ from: location }} replace />;
+    // Redirect to the login page if not authenticated
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   // Check for required role

@@ -6,7 +6,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescripti
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Info } from 'lucide-react';
-import { formatCurrency } from '@/utils/format';
+import { formatCurrency } from '@/components/restaurant/utils/schedule-utils';
 
 interface CompensationFieldsProps {
   form: UseFormReturn<EmployeeFormValues>;
@@ -44,7 +44,7 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
             name="hourly_rate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Hourly Rate (£ per hour)</FormLabel>
+                <FormLabel>Hourly Rate (£/$ per hour)</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
@@ -107,7 +107,7 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
             name="hourly_rate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Hourly Rate (£ per hour)</FormLabel>
+                <FormLabel>Hourly Rate (£/$ per hour)</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 

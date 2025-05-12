@@ -40,7 +40,7 @@ const Auth = () => {
 
   // Redirect authenticated users to dashboard if not in reset mode
   if (user && !shouldShowReset) {
-    return <Navigate to={from || "/dashboard"} replace />;
+    return <Navigate to={from} replace />;
   }
 
   // Show password reset form if in reset or recovery mode

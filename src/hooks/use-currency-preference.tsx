@@ -3,7 +3,7 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 
-type CurrencyCode = 'GBP' | 'EUR' | 'USD';
+type CurrencyCode = 'USD' | 'GBP' | 'EUR';
 
 interface CurrencyContextType {
   currency: CurrencyCode;
@@ -12,14 +12,14 @@ interface CurrencyContextType {
 }
 
 const CurrencyContext = createContext<CurrencyContextType>({
-  currency: 'GBP',
+  currency: 'USD',
   setCurrency: async () => {},
   isLoading: true,
 });
 
 export const CurrencyProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
-  const [currency, setCurrencyState] = useState<CurrencyCode>('GBP');
+  const [currency, setCurrencyState] = useState<CurrencyCode>('USD');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

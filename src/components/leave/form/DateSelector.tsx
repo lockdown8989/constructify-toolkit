@@ -1,6 +1,6 @@
 
 import React from "react";
-import { format, isValid } from "date-fns";
+import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -16,20 +16,6 @@ interface DateSelectorProps {
 }
 
 const DateSelector: React.FC<DateSelectorProps> = ({ id, label, date, onSelect }) => {
-  // Format date safely
-  const formatSafeDate = (date: Date | undefined, formatString: string) => {
-    if (!date || !isValid(date)) return null;
-    
-    try {
-      return format(date, formatString);
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return null;
-    }
-  };
-  
-  const formattedDate = date ? formatSafeDate(date, "PPP") : null;
-  
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
@@ -40,11 +26,11 @@ const DateSelector: React.FC<DateSelectorProps> = ({ id, label, date, onSelect }
             variant="outline"
             className={cn(
               "w-full justify-start text-left font-normal",
-              !formattedDate && "text-muted-foreground"
+              !date && "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {formattedDate || "Select date"}
+            {date ? format(date, "PPP") : "Select date"}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0">
@@ -53,7 +39,6 @@ const DateSelector: React.FC<DateSelectorProps> = ({ id, label, date, onSelect }
             selected={date}
             onSelect={onSelect}
             initialFocus
-            className="pointer-events-auto"
           />
         </PopoverContent>
       </Popover>

@@ -21,7 +21,6 @@ export const useEmployeeSchedule = () => {
   
   // Function to manually refresh schedules
   const refreshSchedules = () => {
-    console.log('Manually refreshing schedules...');
     setRefreshTrigger(prev => prev + 1);
     refetch();
     toast({
@@ -32,13 +31,6 @@ export const useEmployeeSchedule = () => {
   
   // Track new schedules (created in the last 24 hours) and set initial tab
   useEffect(() => {
-    console.log('Processing schedules for tabs, count:', schedules.length);
-    
-    // Debug schedules data
-    schedules.forEach(schedule => {
-      console.log(`Schedule ${schedule.id}: status=${schedule.status}, start_time=${schedule.start_time}`);
-    });
-    
     const now = new Date();
     const newScheduleIds: Record<string, boolean> = {};
     
@@ -52,27 +44,25 @@ export const useEmployeeSchedule = () => {
     
     setNewSchedules(newScheduleIds);
     
-    // Check for pending shifts
+    // Check for pending shifts and set the active tab to 'pending' if there are any
+    // but only on initial load or when a new pending shift appears
     const pendingShifts = schedules.filter(schedule => schedule.status === 'pending');
-    console.log('Found pending shifts:', pendingShifts.length);
-    
-    // Show pending tab if there are pending shifts
-    if (pendingShifts.length > 0) {
+    if (pendingShifts.length > 0 && activeTab === 'my-shifts') {
       setActiveTab('pending');
       
       // Show a toast notification if there are pending shifts
-      toast({
-        title: `${pendingShifts.length} pending shift${pendingShifts.length > 1 ? 's' : ''} waiting`,
-        description: "You have shifts that require your response.",
-      });
+      if (pendingShifts.length > 0) {
+        toast({
+          title: `${pendingShifts.length} pending shift${pendingShifts.length > 1 ? 's' : ''} waiting`,
+          description: "You have shifts that require your response.",
+        });
+      }
     }
   }, [schedules, toast]);
 
   // Subscribe to realtime updates for new schedules
   useEffect(() => {
     if (!user) return;
-    
-    console.log('Setting up realtime subscription for user:', user.id);
     
     // Get employee ID for the current user
     const getEmployeeId = async () => {
@@ -84,8 +74,6 @@ export const useEmployeeSchedule = () => {
           .single();
           
         if (employee) {
-          console.log('Found employee ID for subscription:', employee.id);
-          
           // Set up realtime subscription for this employee's schedules
           const channel = supabase
             .channel('schedule_updates')
@@ -129,8 +117,6 @@ export const useEmployeeSchedule = () => {
             
           console.log('Subscribed to schedule updates for employee:', employee.id);
           return () => { supabase.removeChannel(channel); };
-        } else {
-          console.log('No employee record found for current user');
         }
       } catch (error) {
         console.error('Error setting up realtime subscription:', error);

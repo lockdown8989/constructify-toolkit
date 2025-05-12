@@ -1,5 +1,5 @@
 
-import { PoundSterling } from "lucide-react";
+import { DollarSign, Euro, PoundSterling } from "lucide-react";
 import { 
   Select,
   SelectContent,
@@ -9,9 +9,10 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
-// Updated to only show GBP 
 const currencyOptions = [
+  { value: "USD", label: "US Dollar ($)", icon: DollarSign },
   { value: "GBP", label: "British Pound (£)", icon: PoundSterling },
+  { value: "EUR", label: "Euro (€)", icon: Euro },
 ];
 
 interface CurrencySelectorProps {
@@ -39,7 +40,6 @@ export const CurrencySelector = ({ currency, onChange }: CurrencySelectorProps) 
       <Select 
         value={currency} 
         onValueChange={handleCurrencyChange}
-        disabled={currencyOptions.length <= 1}
       >
         <SelectTrigger className="w-full rounded-xl border-input bg-background h-12">
           <SelectValue placeholder="Select currency" />

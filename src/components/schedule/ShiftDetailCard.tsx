@@ -1,14 +1,10 @@
 
-import React, { useState } from 'react';
-import { format } from 'date-fns';
-import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Info, Mail, X, Check } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import React from 'react';
+import { format, parseISO } from 'date-fns';
+import { Clock, User, MapPin, Mail, X, CheckCircle } from 'lucide-react';
 import { Schedule } from '@/hooks/use-schedules';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import ShiftResponseActions from './ShiftResponseActions';
 
 interface ShiftDetailCardProps {
   schedule: Schedule;
@@ -25,156 +21,88 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
   onCancelClick,
   onResponseComplete
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
-  // Format dates
-  const startDate = new Date(schedule.start_time);
-  const endDate = new Date(schedule.end_time);
+  const startTime = parseISO(schedule.start_time);
+  const endTime = parseISO(schedule.end_time);
+  const duration = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60));
+  const isPending = schedule.status === 'pending';
   
-  // Calculate shift duration
-  const durationHours = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
-  
-  const handleResponse = async (accept: boolean) => {
-    try {
-      setIsSubmitting(true);
-      
-      const { data, error } = await supabase
-        .from('schedules')
-        .update({
-          status: accept ? 'confirmed' : 'rejected',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', schedule.id)
-        .select();
-        
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: accept ? "Shift Accepted" : "Shift Declined",
-        description: accept ? 
-          "You have successfully accepted the shift." : 
-          "You have declined the shift.",
-        variant: accept ? "default" : "destructive",
-      });
-      
-      if (onResponseComplete) {
-        onResponseComplete();
-      }
-      
-    } catch (error) {
-      console.error('Error responding to shift:', error);
-      toast({
-        title: "Error",
-        description: "Failed to respond to shift request. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
-    <Card className={cn(
-      "overflow-hidden",
-      schedule.status === 'pending' ? "border-amber-300" : "",
-      schedule.status === 'confirmed' ? "border-green-300" : "",
-      schedule.status === 'rejected' ? "border-red-300" : ""
-    )}>
-      <div className="p-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-medium text-lg">{schedule.title}</h3>
-            <div className="flex items-center text-gray-600 mt-1">
-              <Calendar className="h-4 w-4 mr-1" />
-              <span>{format(startDate, 'EEEE, MMMM d, yyyy')}</span>
+    <div className="bg-white rounded-lg shadow-sm border p-4">
+      <div className="flex items-center gap-4">
+        {/* Date Box */}
+        <div className="flex-shrink-0 w-16 bg-blue-500 text-white rounded-lg py-2 text-center">
+          <div className="text-lg font-bold">{format(startTime, 'EEE').toUpperCase()}</div>
+          <div className="text-2xl font-bold">{format(startTime, 'd')}</div>
+          <div className="text-sm">{format(startTime, 'MMM').toUpperCase()}</div>
+        </div>
+        
+        {/* Content */}
+        <div className="flex-1">
+          <div className={`text-sm font-medium mb-1 ${
+            schedule.status === 'confirmed' ? 'text-green-500' :
+            schedule.status === 'pending' ? 'text-amber-500' :
+            'text-gray-500'
+          }`}>
+            {schedule.status?.toUpperCase()}
+          </div>
+          
+          <div className="text-2xl font-bold mb-2">
+            {format(startTime, 'HH:mm')} → {format(endTime, 'HH:mm')}
+          </div>
+          
+          <div className="space-y-1 text-gray-600 text-sm">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <span>{duration} hours</span>
             </div>
-            <div className="flex items-center text-gray-600 mt-1">
-              <Clock className="h-4 w-4 mr-1" />
-              <span>
-                {format(startDate, 'h:mm a')} - {format(endDate, 'h:mm a')}
-                <span className="text-gray-500 ml-1">({durationHours.toFixed(1)} hrs)</span>
-              </span>
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <span>{schedule.title || 'Waitress'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              <span>{schedule.location || 'Dalston, Kings Cross'}</span>
             </div>
           </div>
           
-          <Badge className={cn(
-            "text-xs",
-            schedule.status === 'pending' ? "bg-amber-100 text-amber-800 border-amber-200" : 
-            schedule.status === 'confirmed' ? "bg-green-100 text-green-800 border-green-200" : 
-            schedule.status === 'rejected' ? "bg-red-100 text-red-800 border-red-200" : 
-            "bg-gray-100 text-gray-800 border-gray-200"
-          )}>
-            {schedule.status === 'pending' ? 'Needs Response' : 
-             schedule.status === 'confirmed' ? 'Confirmed' :
-             schedule.status === 'rejected' ? 'Rejected' :
-             schedule.status}
-          </Badge>
-        </div>
-        
-        {schedule.location && (
-          <div className="mt-2 text-sm text-gray-600">
-            Location: {schedule.location}
-          </div>
-        )}
-        
-        {schedule.notes && (
-          <div className="mt-2 text-sm text-gray-600">
-            Notes: {schedule.notes}
-          </div>
-        )}
-        
-        {/* Response buttons for pending shifts */}
-        {schedule.status === 'pending' && (
-          <div className="mt-4 flex justify-end space-x-2">
+          <div className="flex justify-end items-center gap-2 mt-3">
+            {isPending && (
+              <ShiftResponseActions 
+                schedule={schedule}
+                onResponseComplete={onResponseComplete}
+              />
+            )}
             <Button 
-              size="sm" 
-              variant="outline" 
-              className="border-green-500 text-green-600 hover:bg-green-50"
-              onClick={() => handleResponse(true)}
-              disabled={isSubmitting}
-            >
-              <Check className="h-4 w-4 mr-1" />
-              Accept
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="border-red-500 text-red-600 hover:bg-red-50"
-              onClick={() => handleResponse(false)}
-              disabled={isSubmitting}
-            >
-              <X className="h-4 w-4 mr-1" />
-              Decline
-            </Button>
-          </div>
-        )}
-        
-        {/* Action buttons for confirmed shifts */}
-        {schedule.status === 'confirmed' && (
-          <div className="mt-4 flex justify-end space-x-2">
-            <Button 
-              size="sm" 
-              variant="ghost" 
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
               onClick={onInfoClick}
             >
-              <Info className="h-4 w-4 mr-1" />
-              Details
+              <Clock className="h-4 w-4" />
             </Button>
             <Button 
-              size="sm" 
-              variant="ghost"
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
               onClick={onEmailClick}
             >
-              <Mail className="h-4 w-4 mr-1" />
-              Contact
+              <Mail className="h-4 w-4" />
             </Button>
+            {!isPending && (
+              <Button 
+                variant="outline"
+                size="sm"
+                className="text-red-600 border-red-200 hover:bg-red-50"
+                onClick={onCancelClick}
+              >
+                <X className="h-4 w-4 mr-1" />
+                Cancel
+              </Button>
+            )}
           </div>
-        )}
+        </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

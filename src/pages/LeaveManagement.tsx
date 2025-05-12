@@ -7,20 +7,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Calendar, Users, Bell, RefreshCw, Clock, History, CalendarPlus } from "lucide-react";
+import { ChevronDown, Calendar, Users, Bell, RefreshCw, Clock, History } from "lucide-react";
 import LeaveRealtimeUpdates from "@/components/leave/LeaveRealtimeUpdates";
 import EmployeeTab from "@/components/leave/tabs/EmployeeTab";
 import ManagerTab from "@/components/leave/tabs/ManagerTab";
 import CalendarTab from "@/components/leave/tabs/CalendarTab";
 import NotificationsTab from "@/components/leave/tabs/NotificationsTab";
 import ScheduleRequestsTab from "@/components/leave/tabs/ScheduleRequestsTab"; 
-import ShiftHistoryTab from "@/components/leave/tabs/ShiftHistoryTab";
+import ShiftHistoryTab from "@/components/leave/tabs/ShiftHistoryTab"; // Added this import
 import { useAccessControl } from "@/hooks/leave/useAccessControl";
 import { useLocation } from "react-router-dom";
-import LeaveRequestForm from "@/components/leave/LeaveRequestForm";
 
 // Define the view types
-type ViewType = "employee" | "manager" | "calendar" | "notifications" | "schedule-requests" | "shift-history" | "form";
+type ViewType = "employee" | "manager" | "calendar" | "notifications" | "schedule-requests" | "shift-history";
 
 // Define the view option type
 type ViewOption = {
@@ -52,8 +51,7 @@ const LeaveManagement = () => {
       employee: { label: "Employee View", icon: <Users className="h-4 w-4 mr-2" /> },
       "shift-history": { label: "Shift History", icon: <History className="h-4 w-4 mr-2" /> },
       calendar: { label: "Calendar View", icon: <Calendar className="h-4 w-4 mr-2" /> },
-      "schedule-requests": { label: "Schedule Requests", icon: <Clock className="h-4 w-4 mr-2" /> },
-      form: { label: "Request Leave", icon: <CalendarPlus className="h-4 w-4 mr-2" /> }
+      "schedule-requests": { label: "Schedule Requests", icon: <Clock className="h-4 w-4 mr-2" /> }
     };
 
     // Only add manager and notifications options if user has manager access
@@ -117,14 +115,6 @@ const LeaveManagement = () => {
               <Clock className="h-4 w-4 mr-2" />
               Schedule Requests
             </DropdownMenuItem>
-            
-            <DropdownMenuItem 
-              onClick={() => setCurrentView("form")}
-              className="cursor-pointer flex items-center"
-            >
-              <CalendarPlus className="h-4 w-4 mr-2" />
-              Request Leave
-            </DropdownMenuItem>
 
             {hasManagerAccess && (
               <>
@@ -156,11 +146,6 @@ const LeaveManagement = () => {
         {currentView === "calendar" && <CalendarTab />}
         {currentView === "notifications" && hasManagerAccess && <NotificationsTab />}
         {currentView === "schedule-requests" && <ScheduleRequestsTab />}
-        {currentView === "form" && (
-          <div className="max-w-2xl mx-auto">
-            <LeaveRequestForm />
-          </div>
-        )}
       </div>
     </div>
   );

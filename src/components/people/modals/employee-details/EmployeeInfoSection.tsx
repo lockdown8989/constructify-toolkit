@@ -1,178 +1,115 @@
 
-import React, { useState } from 'react';
-import { format } from 'date-fns';
-import { ChevronLeft, Briefcase, MapPin, Clock, Mail, Phone, ArrowRight, CalendarDays } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from 'react';
+import { Briefcase, MapPin, DollarSign, Calendar, Users, Mail, Phone, ChevronLeft } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { Employee } from '../../types';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Employee } from '@/components/people/types';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import DocumentsSection from './DocumentsSection';
-import { Card, CardContent, CardDescription } from '@/components/ui/card';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
+import EmployeeStatistics from '../../EmployeeStatistics';
 
 interface EmployeeInfoSectionProps {
   employee: Employee;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
-const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({ employee, onBack }) => {
-  const [activeTab, setActiveTab] = useState("overview");
+const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
+  employee,
+  onBack
+}) => {
+  const { isManager, user } = useAuth();
   const isMobile = useIsMobile();
   
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'PPP');
-    } catch (error) {
-      return 'Invalid date';
-    }
-  };
-  
   return (
-    <div className="p-6">
-      <div className="flex items-center mb-4">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="p-0 mr-2 hover:bg-transparent" 
-          onClick={onBack}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <h2 className="text-lg font-medium">Employee Details</h2>
+    <ScrollArea className={`${isMobile ? 'max-h-[75vh]' : 'max-h-[calc(100vh-180px)]'} overflow-y-auto momentum-scroll pb-6`}>
+      <div className="p-4 sm:p-6 bg-white">
+        {onBack && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="mb-4 text-apple-gray-600 hover:text-apple-gray-900 hover:bg-apple-gray-100 touch-target flex items-center"
+            onClick={onBack}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1.5" />
+            <span>Back</span>
+          </Button>
+        )}
+        
+        <h3 className="text-xs font-semibold text-apple-gray-500 mb-5 uppercase tracking-wider">Employee Information</h3>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+          <InfoItem icon={<Briefcase className="h-4 w-4 text-apple-blue" />} 
+                   label="Department" 
+                   value={employee.department} />
+          
+          <InfoItem icon={<MapPin className="h-4 w-4 text-apple-blue" />} 
+                   label="Site" 
+                   value={`${employee.siteIcon} ${employee.site}`} />
+          
+          <InfoItem icon={<DollarSign className="h-4 w-4 text-apple-blue" />} 
+                   label="Salary" 
+                   value={employee.salary} />
+          
+          <InfoItem icon={<Calendar className="h-4 w-4 text-apple-blue" />} 
+                   label="Start Date" 
+                   value={employee.startDate} />
+          
+          <InfoItem icon={<Users className="h-4 w-4 text-apple-blue" />} 
+                   label="Lifecycle" 
+                   value={employee.lifecycle} />
+        </div>
+
+        <Separator className="my-6" />
+
+        <h3 className="text-xs font-semibold text-apple-gray-500 mb-5 uppercase tracking-wider">Contact Information</h3>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+          <InfoItem icon={<Mail className="h-4 w-4 text-apple-blue" />} 
+                   label="Email" 
+                   value={employee.userId === user?.id ? user.email : `${employee.name.toLowerCase().replace(/\s/g, '.')}@company.com`} />
+          
+          <InfoItem icon={<Phone className="h-4 w-4 text-apple-blue" />} 
+                   label="Phone" 
+                   value={`+1 (555) ${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000 + Math.random() * 9000)}`} />
+        </div>
+        
+        <Separator className="my-6" />
+        
+        <h3 className="text-xs font-semibold text-apple-gray-500 mb-5 uppercase tracking-wider">Statistics</h3>
+        
+        <EmployeeStatistics 
+          annual_leave_days={employee.annual_leave_days} 
+          sick_leave_days={employee.sick_leave_days}
+        />
+        
+        <Separator className="my-6" />
+        
+        <DocumentsSection employeeId={employee.id} />
       </div>
-      
-      <Tabs 
-        defaultValue="overview" 
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="w-full"
-      >
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 gap-6">
-            <div className="space-y-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <h3 className="text-sm font-medium mb-2">Employee Information</h3>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center">
-                      <Briefcase className="h-4 w-4 text-gray-500 mr-2" />
-                      <span className="text-sm">{employee.jobTitle}</span>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <MapPin className="h-4 w-4 text-gray-500 mr-2" />
-                      <span className="text-sm">{employee.site}</span>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <Clock className="h-4 w-4 text-gray-500 mr-2" />
-                      <span className="text-sm">Start date: {formatDate(employee.startDate)}</span>
-                    </div>
-                    
-                    {employee.email && (
-                      <div className="flex items-center">
-                        <Mail className="h-4 w-4 text-gray-500 mr-2" />
-                        <span className="text-sm">{employee.email}</span>
-                      </div>
-                    )}
-                    
-                    {employee.phone && (
-                      <div className="flex items-center">
-                        <Phone className="h-4 w-4 text-gray-500 mr-2" />
-                        <span className="text-sm">{employee.phone}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <Separator className="my-4" />
-                  
-                  <h3 className="text-sm font-medium mb-2">Department</h3>
-                  <div className="flex items-center text-sm">
-                    {employee.department}
-                  </div>
-                  
-                  <Separator className="my-4" />
-                  
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-sm font-medium">Time Off Balance</h3>
-                    <Button variant="link" size="sm" className="p-0">
-                      <span className="text-xs">View history</span>
-                      <ArrowRight className="h-3 w-3 ml-1" />
-                    </Button>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3 mt-2">
-                    <div className="flex items-center justify-between rounded-lg border p-3">
-                      <div className="flex items-center">
-                        <CalendarDays className="h-4 w-4 text-blue-500 mr-1" />
-                        <span className="text-xs">Annual Leave</span>
-                      </div>
-                      <span className="font-medium text-sm">{employee.annual_leave_days || 25} days</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-lg border p-3">
-                      <div className="flex items-center">
-                        <CalendarDays className="h-4 w-4 text-red-500 mr-1" />
-                        <span className="text-xs">Sick Leave</span>
-                      </div>
-                      <span className="font-medium text-sm">{employee.sick_leave_days || 10} days</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-medium">Compensation</h3>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center py-1">
-                      <span className="text-sm text-gray-500">Base Salary</span>
-                      <span className="font-medium">{employee.salary}</span>
-                    </div>
-                    {employee.hourly_rate !== undefined && (
-                      <div className="flex justify-between items-center py-1">
-                        <span className="text-sm text-gray-500">Hourly Rate</span>
-                        <span className="font-medium">${employee.hourly_rate}/hr</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center py-1">
-                      <span className="text-sm text-gray-500">Payment Schedule</span>
-                      <span className="text-sm">Monthly</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="documents">
-          <DocumentsSection employeeId={employee.id} />
-        </TabsContent>
-        
-        <TabsContent value="attendance">
-          <Card>
-            <CardContent className="pt-6">
-              <CardDescription>
-                Attendance records will be shown here.
-              </CardDescription>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+    </ScrollArea>
+  );
+};
+
+interface InfoItemProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}
+
+const InfoItem: React.FC<InfoItemProps> = ({ icon, label, value }) => {
+  return (
+    <div className="p-3.5 rounded-xl bg-apple-gray-50 hover:bg-apple-gray-100/80 transition-colors active-touch-state">
+      <div className="flex items-start gap-3.5">
+        <div className="mt-0.5 p-2 bg-white rounded-lg shadow-sm">
+          {icon}
+        </div>
+        <div>
+          <p className="text-xs text-apple-gray-500 mb-1">{label}</p>
+          <p className="font-medium break-words text-apple-gray-900">{value}</p>
+        </div>
+      </div>
     </div>
   );
 };

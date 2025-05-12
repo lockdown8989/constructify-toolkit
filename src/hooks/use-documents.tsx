@@ -12,7 +12,6 @@ export type DocumentModel = {
   path?: string;
   size?: string;
   employee_id?: string;
-  created_at?: string;
 };
 
 export function useEmployeeDocuments(employeeId: string | undefined) {
@@ -31,22 +30,7 @@ export function useEmployeeDocuments(employeeId: string | undefined) {
         return [];
       }
       
-      // Add public URLs for documents
-      const docsWithUrls = await Promise.all(docs.map(async (doc) => {
-        if (doc.path) {
-          const { data } = supabase.storage
-            .from('documents')
-            .getPublicUrl(doc.path);
-            
-          return {
-            ...doc,
-            url: data.publicUrl
-          };
-        }
-        return doc;
-      }));
-      
-      return docsWithUrls as DocumentModel[];
+      return docs as DocumentModel[];
     },
     enabled: !!employeeId
   });
@@ -70,19 +54,37 @@ export function useUploadDocument() {
       try {
         console.log("Starting document upload:", { documentType, employeeId, fileName: file.name });
         
-        // First check if documents bucket exists
-        await checkStorageBucket();
+        // Check if the 'documents' bucket exists
+        const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+        
+        if (bucketsError) {
+          console.error('Error checking buckets:', bucketsError);
+          throw bucketsError;
+        }
+        
+        const documentsBucket = buckets.find(b => b.name === 'documents');
+        
+        if (!documentsBucket) {
+          console.log('Documents bucket not found. Creating it now...');
+          const { error: createError } = await supabase.storage.createBucket('documents', {
+            public: true,
+            fileSizeLimit: 5242880 // 5MB
+          });
+          
+          if (createError) {
+            console.error('Error creating documents bucket:', createError);
+            throw createError;
+          }
+        }
         
         // Format file path
         const fileExt = file.name.split('.').pop();
-        const timestamp = new Date().getTime();
-        const fileName = `${documentType}_${timestamp}.${fileExt}`;
-        const filePath = `${employeeId}/${fileName}`;
+        const filePath = `${employeeId}/${documentType}_${Date.now()}.${fileExt}`;
         
         console.log("Uploading file to path:", filePath);
         
         // Upload file
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError, data: uploadData } = await supabase.storage
           .from('documents')
           .upload(filePath, file, {
             cacheControl: '3600',
@@ -93,6 +95,8 @@ export function useUploadDocument() {
           console.error('Upload error:', uploadError);
           throw uploadError;
         }
+        
+        console.log("File uploaded successfully:", uploadData);
         
         // Get file size in KB or MB
         const sizeInBytes = file.size;
@@ -117,7 +121,7 @@ export function useUploadDocument() {
             path: filePath,
             url: urlData.publicUrl,
             size: sizeString,
-            uploaded_by: user?.id || null
+            uploaded_by: user?.id
           })
           .select()
           .single();
@@ -128,6 +132,17 @@ export function useUploadDocument() {
         }
         
         console.log("Document metadata saved successfully:", data);
+        
+        // Trigger webhook to notify employee
+        try {
+          const response = await supabase.functions.invoke('notify-on-document-upload', {
+            body: { document_id: data.id, employee_id: employeeId }
+          });
+          console.log("Notification webhook response:", response);
+        } catch (webhookError) {
+          console.error("Failed to trigger notification webhook:", webhookError);
+          // Continue even if the notification fails
+        }
         
         return data;
       } catch (error) {
@@ -151,22 +166,6 @@ export function useUploadDocument() {
       });
     }
   });
-}
-
-// Helper function to check if documents bucket exists
-async function checkStorageBucket() {
-  try {
-    // First check if the bucket exists using the edge function
-    const { error } = await supabase.functions.invoke('check-storage-bucket');
-    
-    if (error) {
-      console.error('Error checking storage bucket:', error);
-      throw new Error('Failed to check storage bucket');
-    }
-  } catch (error) {
-    console.error('Failed to check storage bucket:', error);
-    throw error;
-  }
 }
 
 export function useDeleteDocument() {

@@ -8,7 +8,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { OpenShiftType } from '@/types/supabase/schedules';
-import { useToast } from '@/hooks/use-toast';
 
 interface WeeklyGridProps {
   weekStats: WeekStats;
@@ -34,8 +33,6 @@ const WeeklyGrid = ({
   isMobile
 }: WeeklyGridProps) => {
   const [currentDayGroup, setCurrentDayGroup] = useState(0);
-  const [draggedShift, setDraggedShift] = useState<OpenShiftType | null>(null);
-  const { toast } = useToast();
   
   // Get visible days based on current group (for mobile pagination)
   const getVisibleDays = () => {
@@ -63,48 +60,6 @@ const WeeklyGrid = ({
   const nextDayGroup = () => {
     setCurrentDayGroup(prev => (prev === 3 ? 0 : prev + 1));
   };
-  
-  // Handle shift drag start
-  const handleShiftDragStart = (e: React.DragEvent, shift: OpenShiftType) => {
-    setDraggedShift(shift);
-    e.dataTransfer.setData('text/plain', JSON.stringify(shift));
-    e.dataTransfer.effectAllowed = 'move';
-    
-    // Create a custom drag image
-    const dragImage = document.createElement('div');
-    dragImage.className = 'bg-white shadow-lg p-2 rounded border border-blue-300 text-sm';
-    dragImage.textContent = shift.title || 'Shift';
-    dragImage.style.position = 'absolute';
-    dragImage.style.top = '-1000px';
-    document.body.appendChild(dragImage);
-    
-    e.dataTransfer.setDragImage(dragImage, 20, 20);
-    
-    // Clean up the element after drag starts
-    setTimeout(() => {
-      document.body.removeChild(dragImage);
-    }, 0);
-  };
-  
-  // Handle shift drag end
-  const handleShiftDragEnd = () => {
-    setDraggedShift(null);
-  };
-  
-  // Handle shift drop on employee
-  const handleShiftDrop = (e: React.DragEvent, employeeId: string, day: string) => {
-    e.preventDefault();
-    
-    if (draggedShift) {
-      console.log(`Dropped shift ${draggedShift.id} on employee ${employeeId} for day ${day}`);
-      handleAssignOpenShift(draggedShift.id, employeeId);
-      
-      toast({
-        title: "Shift assigned",
-        description: "The shift has been assigned to the employee.",
-      });
-    }
-  };
 
   const visibleDays = getVisibleDays();
 
@@ -119,8 +74,6 @@ const WeeklyGrid = ({
           handleAssignOpenShift={handleAssignOpenShift}
           previousWeek={previousWeek}
           nextWeek={nextWeek}
-          onShiftDragStart={handleShiftDragStart}
-          onShiftDragEnd={handleShiftDragEnd}
         />
         
         {/* Only show 2 days at a time on mobile */}
@@ -137,9 +90,6 @@ const WeeklyGrid = ({
               employees={employees}
               openShifts={getOpenShiftsByDay(day)}
               handleAssignOpenShift={handleAssignOpenShift}
-              onShiftDragStart={handleShiftDragStart}
-              onShiftDragEnd={handleShiftDragEnd}
-              onShiftDrop={handleShiftDrop}
             />
           );
         })}

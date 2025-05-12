@@ -9,55 +9,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// UK Tax Rates for 2024/2025
-const UK_TAX_RATES = {
-  personalAllowance: 12570,
-  basicRateUpper: 50270,
-  higherRateUpper: 125140,
-  basicRate: 0.2,      // 20%
-  higherRate: 0.4,     // 40%
-  additionalRate: 0.45 // 45%
-};
-
-// Calculate UK income tax based on annual salary
-function calculateUKIncomeTax(annualSalary) {
-  // Convert to annual equivalent if needed
-  const yearlyEquivalent = annualSalary;
-  let taxDue = 0;
-  
-  // No personal allowance for very high earners
-  const personalAllowance = yearlyEquivalent > 125140 ? 0 : 
-                           yearlyEquivalent > 100000 ? Math.max(0, UK_TAX_RATES.personalAllowance - (yearlyEquivalent - 100000) / 2) : 
-                           UK_TAX_RATES.personalAllowance;
-  
-  // Calculate tax for each band
-  if (yearlyEquivalent > personalAllowance) {
-    // Basic rate (20%)
-    const basicRateTaxable = Math.min(UK_TAX_RATES.basicRateUpper - personalAllowance, yearlyEquivalent - personalAllowance);
-    if (basicRateTaxable > 0) {
-      taxDue += basicRateTaxable * UK_TAX_RATES.basicRate;
-    }
-    
-    // Higher rate (40%)
-    if (yearlyEquivalent > UK_TAX_RATES.basicRateUpper) {
-      const higherRateTaxable = Math.min(UK_TAX_RATES.higherRateUpper - UK_TAX_RATES.basicRateUpper, 
-                                       yearlyEquivalent - UK_TAX_RATES.basicRateUpper);
-      if (higherRateTaxable > 0) {
-        taxDue += higherRateTaxable * UK_TAX_RATES.higherRate;
-      }
-      
-      // Additional rate (45%)
-      if (yearlyEquivalent > UK_TAX_RATES.higherRateUpper) {
-        const additionalRateTaxable = yearlyEquivalent - UK_TAX_RATES.higherRateUpper;
-        taxDue += additionalRateTaxable * UK_TAX_RATES.additionalRate;
-      }
-    }
-  }
-  
-  // Return monthly tax (dividing by 12)
-  return taxDue / 12;
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -78,34 +29,33 @@ serve(async (req) => {
     console.log(`Working hours: ${workingHours}, Overtime hours: ${overtimeHours}`);
 
     if (!openAIApiKey) {
-      console.log('OpenAI API key not found, using standard calculation with UK tax rates');
+      console.log('OpenAI API key not found, using standard calculation');
       
-      // Standard calculation with UK tax rates
+      // Standard calculation without API
       const hourlyRate = baseSalary / 160; // Assuming 160 hours per month standard
       const regularPay = hourlyRate * workingHours;
       const overtimePay = hourlyRate * 1.5 * overtimeHours;
       const grossSalary = regularPay + overtimePay;
       
-      // Calculate monthly UK income tax
-      const monthlyTaxDue = calculateUKIncomeTax(baseSalary * 12) * (grossSalary / baseSalary);
-      
-      // Standard NI and other deductions
+      // Standard deductions
+      const taxRate = 0.2;
       const insuranceRate = 0.05;
       const otherRate = 0.08;
       
+      const taxDeduction = grossSalary * taxRate;
       const insuranceDeduction = grossSalary * insuranceRate;
       const otherDeduction = grossSalary * otherRate;
       
-      const finalSalary = grossSalary - (monthlyTaxDue + insuranceDeduction + otherDeduction);
+      const finalSalary = grossSalary - (taxDeduction + insuranceDeduction + otherDeduction);
       
       return new Response(
         JSON.stringify({ 
           finalSalary: parseFloat(finalSalary.toFixed(2)), 
           currency,
-          method: 'uk-tax-rates',
+          method: 'standard',
           details: {
             grossSalary,
-            taxDeduction: monthlyTaxDue,
+            taxDeduction,
             insuranceDeduction,
             otherDeduction
           }
@@ -114,7 +64,7 @@ serve(async (req) => {
       );
     }
 
-    // Calculate using OpenAI with UK tax rate information
+    // Calculate using OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -126,27 +76,21 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'You are a helpful UK payroll calculation assistant. Calculate the final salary amount after all deductions using the UK tax rates.' 
+            content: 'You are a helpful payroll calculation assistant. Calculate the final salary amount after all deductions.' 
           },
           { 
             role: 'user', 
             content: `Calculate the final net salary for an employee with:
-                     - Annual base salary: ${baseSalary * 12} ${currency}
-                     - Monthly base salary: ${baseSalary} ${currency}
+                     - Base salary: ${baseSalary} ${currency}
                      - Working hours: ${workingHours}
                      - Overtime hours: ${overtimeHours} (paid at 1.5x hourly rate)
                      
-                     Apply the UK tax rates and bands:
-                     - Personal Allowance: Up to £12,570 - 0%
-                     - Basic rate: £12,571 to £50,270 - 20%
-                     - Higher rate: £50,271 to £125,140 - 40%
-                     - Additional rate: over £125,140 - 45%
-                     
-                     Additionally apply:
+                     Apply the following deductions:
+                     - Tax: 20% of gross salary
                      - National Insurance: 5% of gross salary
                      - Other deductions: 8% of gross salary
                      
-                     Return ONLY the final numeric value representing monthly net salary after all deductions, without any text, currency symbols or formatting.` 
+                     Return ONLY the final numeric value representing net salary after all deductions, without any text, currency symbols or formatting.` 
           }
         ],
         temperature: 0.1, // Low temperature for more deterministic results
@@ -182,7 +126,7 @@ serve(async (req) => {
       JSON.stringify({ 
         finalSalary: finalSalary, 
         currency,
-        method: 'openai-uk-tax',
+        method: 'openai',
         details: {
           grossSalary,
           regularPay,

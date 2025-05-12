@@ -1,3 +1,4 @@
+
 import { Employee as DbEmployee } from '@/hooks/use-employees';
 
 export interface Employee {
@@ -8,6 +9,7 @@ export interface Employee {
   site: string;
   siteIcon: string;
   salary: string;
+  hourlyRate?: number;  // Added hourly rate field
   startDate: string;
   lifecycle: string;
   status: string;
@@ -17,9 +19,6 @@ export interface Employee {
   userId?: string;
   annual_leave_days?: number;
   sick_leave_days?: number;
-  email?: string;
-  phone?: string;
-  hourly_rate?: number;
 }
 
 export interface PeopleTableProps {
@@ -34,16 +33,16 @@ export const mapDbEmployeeToUiEmployee = (dbEmployee: any): Employee => {
   const siteIcon = dbEmployee.location === 'Remote' ? '🌐' : '🏢';
   const statusColor = dbEmployee.status === 'Active' ? 'green' : 'gray';
   
-  // Format salary with appropriate currency symbol
-  const formattedSalary = new Intl.NumberFormat('en-US', {
+  // Format salary with British Pound currency symbol
+  const formattedSalary = new Intl.NumberFormat('en-GB', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'GBP',
     maximumFractionDigits: 0,
     minimumFractionDigits: 0,
   }).format(dbEmployee.salary);
   
   // Format date in readable format
-  const formattedDate = new Date(dbEmployee.start_date).toLocaleDateString('en-US', {
+  const formattedDate = new Date(dbEmployee.start_date).toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
@@ -57,6 +56,7 @@ export const mapDbEmployeeToUiEmployee = (dbEmployee: any): Employee => {
     site: dbEmployee.site,
     siteIcon,
     salary: formattedSalary,
+    hourlyRate: dbEmployee.hourly_rate,
     startDate: formattedDate,
     lifecycle: dbEmployee.lifecycle,
     status: dbEmployee.status,
@@ -65,9 +65,6 @@ export const mapDbEmployeeToUiEmployee = (dbEmployee: any): Employee => {
     managerId: dbEmployee.manager_id,
     userId: dbEmployee.user_id,
     annual_leave_days: dbEmployee.annual_leave_days,
-    sick_leave_days: dbEmployee.sick_leave_days,
-    email: dbEmployee.email,
-    phone: dbEmployee.phone,
-    hourly_rate: dbEmployee.hourly_rate
+    sick_leave_days: dbEmployee.sick_leave_days
   };
 };
