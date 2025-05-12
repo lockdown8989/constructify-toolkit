@@ -1,41 +1,40 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Card } from '@/components/ui/card';
 
 interface SalaryStatCardProps {
   title: string;
   value: string;
   secondaryValue?: string;
   bgColor?: string;
-  valueClassName?: string;
   titleClassName?: string;
+  valueClassName?: string;
 }
 
-export const SalaryStatCard: React.FC<SalaryStatCardProps> = ({
+const SalaryStatCard: React.FC<SalaryStatCardProps> = ({
   title,
   value,
   secondaryValue,
-  bgColor = 'bg-white',
-  valueClassName,
+  bgColor = "bg-gray-100",
   titleClassName,
+  valueClassName
 }) => {
   return (
-    <Card className={cn("p-4 rounded-xl", bgColor)}>
-      <h3 className={cn("text-sm font-medium mb-2", titleClassName)}>
-        {title}
-      </h3>
-      <div className="space-y-1">
-        <p className={cn("text-2xl font-bold", valueClassName)}>
+    <div className={cn("rounded-xl overflow-hidden", bgColor)}>
+      <div className="p-4">
+        <p className={cn("text-sm font-medium text-gray-500 mb-1", titleClassName)}>
+          {title}
+        </p>
+        <p className={cn("text-xl font-bold", valueClassName)}>
           {value}
         </p>
         {secondaryValue && (
-          <p className="text-sm text-gray-500">
+          <p className={cn("text-xs mt-1", titleClassName || "text-gray-500")}>
             {secondaryValue}
           </p>
         )}
       </div>
-    </Card>
+    </div>
   );
 };
 

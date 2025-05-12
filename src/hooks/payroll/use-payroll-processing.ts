@@ -99,7 +99,7 @@ export const processEmployeePayroll = async (
           paymentDate: format(new Date(), 'dd/MM/yyyy'),
           currency,
           employeeId,
-          address: employee.department || '', // Fixed: Using department instead of location
+          address: employee.department || '',
           payPeriod,
           overtimeHours,
           contractualHours: workingHours

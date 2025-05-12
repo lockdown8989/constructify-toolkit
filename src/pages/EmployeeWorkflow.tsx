@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -358,7 +359,7 @@ const EmployeeWorkflow: React.FC = () => {
                       <div>
                         <h3 className="text-lg font-medium">Current Monthly Salary</h3>
                         <p className="text-xl font-bold">
-                          ${employeeData ? employeeData.salary.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '0.00'}
+                          £{employeeData ? employeeData.salary.toLocaleString('en-GB', { minimumFractionDigits: 2 }) : '0.00'}
                         </p>
                       </div>
                     </div>

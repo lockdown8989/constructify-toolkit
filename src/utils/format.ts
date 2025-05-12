@@ -1,3 +1,4 @@
+
 /**
  * Format date to a readable string
  */
