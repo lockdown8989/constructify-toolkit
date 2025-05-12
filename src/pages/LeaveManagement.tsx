@@ -14,7 +14,7 @@ import ManagerTab from "@/components/leave/tabs/ManagerTab";
 import CalendarTab from "@/components/leave/tabs/CalendarTab";
 import NotificationsTab from "@/components/leave/tabs/NotificationsTab";
 import ScheduleRequestsTab from "@/components/leave/tabs/ScheduleRequestsTab"; 
-import ShiftHistoryTab from "@/components/leave/tabs/ShiftHistoryTab"; // Added this import
+import ShiftHistoryTab from "@/components/leave/tabs/ShiftHistoryTab";
 import { useAccessControl } from "@/hooks/leave/useAccessControl";
 import { useLocation } from "react-router-dom";
 

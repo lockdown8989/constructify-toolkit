@@ -1,316 +1,69 @@
 
-import React, { useEffect, useState } from "react";
-import LeaveRequestForm from "@/components/leave/LeaveRequestForm";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
-import { Clock, AlertCircle, CheckCircle, XCircle, RefreshCw } from "lucide-react";
-import { format } from "date-fns";
-import { LeaveEvent } from "@/hooks/leave/leave-types";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CalendarPlus, ChevronRight } from "lucide-react";
+import LeaveRequestForm from "@/components/leave/LeaveRequestForm";
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileNavigation from "@/components/schedule/components/MobileNavigation";
 
-const EmployeeTab: React.FC = () => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const [showNewRequestForm, setShowNewRequestForm] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+const EmployeeTab = () => {
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const [activeSection, setActiveSection] = useState<'requests' | 'form'>('requests');
 
-  // Fetch ALL leave requests for the current user, not just pending ones
-  const { data: leaveRequests, isLoading, error } = useQuery({
-    queryKey: ['employee-leave-requests', user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      
-      // First get the employee ID for the current user
-      const { data: employeeData } = await supabase
-        .from('employees')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (!employeeData) return [];
-      
-      // Then fetch ALL leave requests for that employee, not just pending ones
-      const { data, error } = await supabase
-        .from('leave_calendar')
-        .select('*')
-        .eq('employee_id', employeeData.id)
-        .order('start_date', { ascending: true });
-      
-      if (error) {
-        console.error("Error fetching leave requests:", error);
-        throw error;
-      }
-      
-      console.log("Fetched leave requests:", data);
-      return data as LeaveEvent[];
-    },
-    enabled: !!user,
-  });
-
-  const refreshLeaveRequests = () => {
-    setIsRefreshing(true);
-    queryClient.invalidateQueries({ queryKey: ['employee-leave-requests'] })
-      .then(() => {
-        setTimeout(() => setIsRefreshing(false), 500); // Add slight delay for feedback
-      });
-  };
-
-  // Setup realtime subscription to leave_calendar changes
-  useEffect(() => {
-    if (!user) return;
-    
-    console.log("Setting up realtime subscription for leave requests updates");
-    
-    const channel = supabase
-      .channel('employee-leave-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'leave_calendar'
-        },
-        (payload) => {
-          console.log("Realtime update for leave request:", payload);
-          queryClient.invalidateQueries({ queryKey: ['employee-leave-requests'] });
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      console.log("Cleaning up realtime subscription for leave requests");
-      supabase.removeChannel(channel);
-    };
-  }, [user, queryClient]);
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Pending': return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'Approved': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'Rejected': return <XCircle className="h-4 w-4 text-red-500" />;
-      default: return <AlertCircle className="h-4 w-4 text-gray-500" />;
+  const handleRequestLeave = () => {
+    if (isMobile) {
+      setActiveSection('form');
+    } else {
+      navigate("/leave-management", { state: { initialView: "calendar" } });
     }
   };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Pending': return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
-      case 'Approved': return 'bg-green-100 text-green-800 hover:bg-green-200';
-      case 'Rejected': return 'bg-red-100 text-red-800 hover:bg-red-200';
-      default: return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
-    }
-  };
-  
-  // Group leave requests by status
-  const pendingRequests = leaveRequests?.filter(req => req.status === 'Pending') || [];
-  const approvedRequests = leaveRequests?.filter(req => req.status === 'Approved') || [];
-  const rejectedRequests = leaveRequests?.filter(req => req.status === 'Rejected') || [];
 
   return (
     <div className="space-y-6">
-      {!showNewRequestForm && (
-        <div className="flex justify-between items-center">
-          <Button 
-            variant="default" 
-            onClick={() => setShowNewRequestForm(true)}
-          >
-            + New Leave Request
-          </Button>
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={refreshLeaveRequests}
-            disabled={isRefreshing}
-            className="transition-all duration-200"
-            title="Refresh leave requests"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
+      {isMobile && (
+        <MobileNavigation 
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+          isMobile={isMobile}
+        />
       )}
-      
-      {showNewRequestForm ? (
-        <div className="space-y-4">
-          <Button 
-            variant="outline" 
-            onClick={() => setShowNewRequestForm(false)}
-            className="mb-4"
-          >
-            ← Back to Requests
-          </Button>
-          <div className="max-w-md mx-auto">
-            <LeaveRequestForm />
+
+      {(!isMobile || activeSection === 'requests') && (
+        <>
+          <div className="flex flex-col sm:flex-row justify-between mb-4 items-start sm:items-center gap-4">
+            <h2 className="text-xl font-semibold">My Leave Requests</h2>
+            <Button 
+              onClick={handleRequestLeave}
+              className="w-full sm:w-auto flex items-center gap-2"
+            >
+              <CalendarPlus className="h-4 w-4" />
+              Request Leave
+            </Button>
           </div>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <h2 className="text-xl font-medium">Your Leave Requests</h2>
           
-          {isLoading && (
-            <p className="text-center text-muted-foreground py-4">Loading your requests...</p>
-          )}
-          
-          {error && (
-            <Card className="border-red-200">
-              <CardContent className="pt-4">
-                <div className="flex items-center text-red-600">
-                  <AlertCircle className="h-4 w-4 mr-2" />
-                  <p>Error loading requests. Please try again.</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {!isLoading && !error && leaveRequests?.length === 0 && (
-            <Card className="border-dashed border-gray-300 bg-gray-50">
-              <CardContent className="py-6">
-                <div className="text-center text-muted-foreground">
-                  <p>You don't have any leave requests.</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Pending Requests Section */}
-          {pendingRequests.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-yellow-700 flex items-center">
-                <Clock className="h-4 w-4 mr-2" />
-                Pending Requests
-              </h3>
-              <div className="grid gap-4 md:grid-cols-2">
-                {pendingRequests.map((request) => (
-                  <Card key={request.id} className="overflow-hidden">
-                    <div className="h-2 bg-yellow-400"></div>
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg">{request.type} Leave</CardTitle>
-                        <Badge className={getStatusColor(request.status)} variant="outline">
-                          <span className="flex items-center">
-                            {getStatusIcon(request.status)}
-                            <span className="ml-1">{request.status}</span>
-                          </span>
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">From:</span>
-                          <span className="font-medium">{format(new Date(request.start_date), 'PPP')}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">To:</span>
-                          <span className="font-medium">{format(new Date(request.end_date), 'PPP')}</span>
-                        </div>
-                        {request.notes && (
-                          <div className="mt-3 pt-3 border-t border-gray-100">
-                            <p className="text-sm text-muted-foreground mb-1">Notes:</p>
-                            <p className="text-sm">{request.notes}</p>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Approved Requests Section */}
-          {approvedRequests.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-green-700 flex items-center">
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Approved Requests
-              </h3>
-              <div className="grid gap-4 md:grid-cols-2">
-                {approvedRequests.map((request) => (
-                  <Card key={request.id} className="overflow-hidden">
-                    <div className="h-2 bg-green-500"></div>
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg">{request.type} Leave</CardTitle>
-                        <Badge className={getStatusColor(request.status)} variant="outline">
-                          <span className="flex items-center">
-                            {getStatusIcon(request.status)}
-                            <span className="ml-1">{request.status}</span>
-                          </span>
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">From:</span>
-                          <span className="font-medium">{format(new Date(request.start_date), 'PPP')}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">To:</span>
-                          <span className="font-medium">{format(new Date(request.end_date), 'PPP')}</span>
-                        </div>
-                        {request.notes && (
-                          <div className="mt-3 pt-3 border-t border-gray-100">
-                            <p className="text-sm text-muted-foreground mb-1">Notes:</p>
-                            <p className="text-sm">{request.notes}</p>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Rejected Requests Section */}
-          {rejectedRequests.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-red-700 flex items-center">
-                <XCircle className="h-4 w-4 mr-2" />
-                Rejected Requests
-              </h3>
-              <div className="grid gap-4 md:grid-cols-2">
-                {rejectedRequests.map((request) => (
-                  <Card key={request.id} className="overflow-hidden">
-                    <div className="h-2 bg-red-500"></div>
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg">{request.type} Leave</CardTitle>
-                        <Badge className={getStatusColor(request.status)} variant="outline">
-                          <span className="flex items-center">
-                            {getStatusIcon(request.status)}
-                            <span className="ml-1">{request.status}</span>
-                          </span>
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">From:</span>
-                          <span className="font-medium">{format(new Date(request.start_date), 'PPP')}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">To:</span>
-                          <span className="font-medium">{format(new Date(request.end_date), 'PPP')}</span>
-                        </div>
-                        {request.notes && (
-                          <div className="mt-3 pt-3 border-t border-gray-100">
-                            <p className="text-sm text-muted-foreground mb-1">Notes:</p>
-                            <p className="text-sm">{request.notes}</p>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="bg-muted/40 p-8 rounded-lg text-center">
+            <h3 className="text-lg font-medium mb-2">No Leave Requests</h3>
+            <p className="text-muted-foreground mb-4">
+              You haven't submitted any leave requests yet.
+            </p>
+            <Button 
+              onClick={handleRequestLeave}
+              variant="outline" 
+              className="flex items-center gap-2"
+            >
+              <CalendarPlus className="h-4 w-4" />
+              Request Leave
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </>
+      )}
+
+      {(isMobile && activeSection === 'form') && (
+        <div className="pt-2">
+          <LeaveRequestForm />
         </div>
       )}
     </div>
