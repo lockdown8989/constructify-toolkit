@@ -1,8 +1,7 @@
-
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/auth';
 import { useToast } from '@/hooks/use-toast';
 import { createAttendanceFromShift, updateAttendanceForLeave } from '@/services/notifications/attendance-sync';
 
