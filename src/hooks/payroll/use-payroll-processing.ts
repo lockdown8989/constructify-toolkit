@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Employee } from '@/components/dashboard/salary-table/types';
-import { calculateSalaryWithGPT, getEmployeeAttendance } from './use-salary-calculation';
+import { calculateSalaryWithGPT, getEmployeeAttendance, calculateUKIncomeTax } from './use-salary-calculation';
 import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
 import { sendNotification } from '@/services/notifications/notification-sender';
 import { notifyEmployeeAboutPayslip } from '@/services/notifications/payroll-notifications';
@@ -40,21 +40,23 @@ export const processEmployeePayroll = async (
     // Calculate final salary using AI function with currency
     const finalSalary = await calculateSalaryWithGPT(employeeId, baseSalary, currency);
     
-    // Determine tax, insurance and other deductions
-    const taxRate = 0.2;
+    // Calculate with UK tax rates for accurate breakdown in the payslip
+    const annualSalary = baseSalary * 12;
+    const annualTax = calculateUKIncomeTax(annualSalary);
+    const monthlyTax = annualTax / 12;
+    
+    // Determine insurance and other deductions using standard rates
     const insuranceRate = 0.05;
     const otherRate = 0.08;
-    const taxDeduction = baseSalary * taxRate;
     const insuranceDeduction = baseSalary * insuranceRate;
     const otherDeduction = baseSalary * otherRate;
-    const totalDeductions = taxDeduction + insuranceDeduction + otherDeduction;
+    const totalDeductions = monthlyTax + insuranceDeduction + otherDeduction;
     
     // Calculate overtime pay
     const hourlyRate = baseSalary / 160; // Assuming 160 hours per month
     const overtimePay = overtimeHours * hourlyRate * 1.5; // Overtime rate of 1.5x
     
     const paymentDate = new Date().toISOString().split('T')[0];
-    const processingDate = new Date().toISOString();
     
     // Generate pay period
     const today = new Date();

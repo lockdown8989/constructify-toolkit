@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Info } from 'lucide-react';
 import { formatCurrency } from '@/utils/format';
+import { calculateUKIncomeTax } from '@/hooks/payroll/use-salary-calculation';
 
 interface CompensationFieldsProps {
   form: UseFormReturn<EmployeeFormValues>;
@@ -17,7 +18,15 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
   const hourlyRate = form.watch('hourly_rate') || 0;
   const department = form.watch('department');
   
-  const netSalary = salary * 0.75;
+  // Calculate net salary with UK tax bands
+  const annualSalary = salary * 12; // Convert to annual for tax calculation
+  const annualTax = calculateUKIncomeTax(annualSalary);
+  const effectiveTaxRate = annualSalary > 0 ? (annualTax / annualSalary) * 100 : 0;
+  
+  const niContribution = salary * 0.05; // 5% for NI
+  const otherDeductions = salary * 0.08; // 8% other deductions
+  const totalDeductions = (annualTax / 12) + niContribution + otherDeductions;
+  const netSalary = salary - totalDeductions;
   
   // Calculate annual salary from hourly rate for information purposes
   const estimatedAnnualFromHourly = hourlyRate > 0 ? hourlyRate * 40 * 52 : 0; // 40h/week, 52 weeks
@@ -34,6 +43,14 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
   const showHourlyRateProminent = hourlyRateDepartments.some(dept => 
     department?.toLowerCase().includes(dept.toLowerCase())
   );
+  
+  // Determine tax band
+  const getTaxBand = (annual: number): string => {
+    if (annual <= 12570) return 'Personal Allowance (0%)';
+    if (annual <= 50270) return 'Basic Rate (20%)';
+    if (annual <= 125140) return 'Higher Rate (40%)';
+    return 'Additional Rate (45%)';
+  };
   
   return (
     <div className="space-y-4">
@@ -129,28 +146,52 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
       <div className="bg-gray-50 p-3 rounded-md">
         <div className="flex items-center mb-2">
           <Info className="h-4 w-4 text-gray-500 mr-2" />
-          <p className="text-sm font-medium text-gray-700">Compensation Breakdown</p>
+          <p className="text-sm font-medium text-gray-700">UK Tax Breakdown</p>
         </div>
         
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <p className="text-gray-500">Tax Rate:</p>
-            <p className="font-medium">20%</p>
+            <p className="text-gray-500">Tax Band:</p>
+            <p className="font-medium">{getTaxBand(annualSalary)}</p>
           </div>
           <div>
-            <p className="text-gray-500">Insurance:</p>
-            <p className="font-medium">5%</p>
+            <p className="text-gray-500">Effective Tax Rate:</p>
+            <p className="font-medium">{effectiveTaxRate.toFixed(1)}%</p>
           </div>
           <div>
-            <p className="text-gray-500">Net Salary:</p>
+            <p className="text-gray-500">Monthly Net Salary:</p>
             <p className="font-medium">{salary ? formatCurrency(netSalary) : '-'}</p>
           </div>
           <div>
             <p className="text-gray-500">Hourly Equivalent:</p>
-            <p className="font-medium">{salary > 0 ? `${formatCurrency(salary / (40 * 52))}/hour` : '-'}</p>
+            <p className="font-medium">{salary > 0 ? `${formatCurrency(netSalary / (40 * 4))}/hour` : '-'}</p>
           </div>
         </div>
       </div>
+      
+      {salary > 0 && (
+        <div className="bg-blue-50 p-3 rounded-md mt-2">
+          <p className="text-xs text-blue-700 font-medium mb-1">UK Tax Bands (2024/2025)</p>
+          <div className="space-y-1 text-xs">
+            <div className="flex justify-between">
+              <span>Personal Allowance (0%):</span>
+              <span>Up to £12,570</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Basic Rate (20%):</span>
+              <span>£12,571 to £50,270</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Higher Rate (40%):</span>
+              <span>£50,271 to £125,140</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Additional Rate (45%):</span>
+              <span>Over £125,140</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
