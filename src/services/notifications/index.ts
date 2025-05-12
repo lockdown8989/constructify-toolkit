@@ -5,4 +5,5 @@ export * from './payroll-notifications';
 export * from './notification-testing';
 export * from './document-notifications';
 export * from './leave-notifications';
+export * from './schedule-notifications';
 export * from './role-utils';
