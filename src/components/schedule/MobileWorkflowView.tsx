@@ -1,15 +1,16 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, Clock, CalendarClock } from 'lucide-react';
+import { CalendarDays, Clock, CalendarClock, Calendar } from 'lucide-react';
 import ShiftAcknowledgment from './ShiftAcknowledgment';
 import TimeClockWidget from './TimeClockWidget';
 import ShiftSwapForm from './ShiftSwapForm';
 import ShiftSwapList from './ShiftSwapList';
 import AvailabilityManagement from './AvailabilityManagement';
 import LeaveBalanceCard from './LeaveBalanceCard';
+import { useOpenShifts } from '@/hooks/schedule/use-open-shifts';
+import OpenShiftsList from './components/OpenShiftsList';
 
 interface MobileWorkflowViewProps {
   schedules: any[];
@@ -21,6 +22,17 @@ interface MobileWorkflowViewProps {
 }
 
 const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWorkflowViewProps) => {
+  const { openShifts, isLoading: isOpenShiftsLoading, refetchOpenShifts } = useOpenShifts();
+  
+  const handleShiftDragStart = (e: React.DragEvent, shift: any) => {
+    // Mobile doesn't support drag and drop well, but keeping function for consistency
+    e.dataTransfer.setData('text/plain', JSON.stringify(shift));
+  };
+  
+  const handleShiftDragEnd = () => {
+    // Placeholder for drag end event
+  };
+  
   return (
     <Tabs defaultValue="shifts" className="w-full">
       <TabsList className="grid w-full grid-cols-4 mb-2 rounded-xl">
@@ -38,7 +50,7 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
         </TabsTrigger>
         <TabsTrigger value="availability" className="text-xs py-2.5">
           <span className="flex flex-col items-center gap-1">
-            <CalendarDays className="h-4 w-4" />
+            <Calendar className="h-4 w-4" />
             <span>Availability</span>
           </span>
         </TabsTrigger>
@@ -55,13 +67,30 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
           <CardHeader className="pb-2 pt-4 px-4">
             <CardTitle className="text-base flex items-center">
               <CalendarClock className="h-4 w-4 mr-2 text-primary" />
-              Current Shifts
+              Your Schedule
             </CardTitle>
           </CardHeader>
           <CardContent className="px-3 pb-3 pt-0">
             <ShiftAcknowledgment schedules={schedules} employeeNames={employeeNames} />
           </CardContent>
         </Card>
+
+        <Card className="border rounded-xl shadow-sm overflow-hidden">
+          <CardHeader className="pb-2 pt-4 px-4">
+            <CardTitle className="text-base flex items-center">
+              <CalendarClock className="h-4 w-4 mr-2 text-primary" />
+              Open Shifts
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 pb-3 pt-0">
+            <OpenShiftsList 
+              openShifts={openShifts} 
+              onShiftDragStart={handleShiftDragStart} 
+              onShiftDragEnd={handleShiftDragEnd}
+            />
+          </CardContent>
+        </Card>
+        
         <ShiftSwapList />
         <ShiftSwapForm />
       </TabsContent>
