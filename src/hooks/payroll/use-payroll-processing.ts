@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Employee } from '@/components/dashboard/salary-table/types';
 import { calculateSalaryWithGPT, getEmployeeAttendance, calculateUKIncomeTax } from './use-salary-calculation';
 import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
-import { sendNotification } from '@/services/notifications/notification-sender';
 import { notifyEmployeeAboutPayslip } from '@/services/notifications/payroll-notifications';
 import { format } from 'date-fns';
 

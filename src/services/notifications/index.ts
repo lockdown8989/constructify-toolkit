@@ -1,6 +1,4 @@
 
-// Re-export everything for backward compatibility
+// Re-export all notification functionality for easy imports
 export * from './notification-sender';
-export * from './notification-testing';
-export * from './leave-notifications';
-export * from './role-utils';
+export * from './payroll-notifications';
