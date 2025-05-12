@@ -1,5 +1,5 @@
 
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/auth";
 import LandingPage from "./LandingPage";
 import Dashboard from "./Dashboard";
 
