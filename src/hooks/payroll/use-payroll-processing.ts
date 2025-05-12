@@ -62,7 +62,7 @@ export const processEmployeePayroll = async (
     const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     const payPeriod = `${format(firstDayOfMonth, 'dd/MM/yyyy')} - ${format(lastDayOfMonth, 'dd/MM/yyyy')}`;
     
-    // Add record to payroll table
+    // Add record to payroll table - MODIFIED to use only available columns
     const { data: payrollData, error: payrollError } = await supabase
       .from('payroll')
       .insert({
@@ -73,12 +73,8 @@ export const processEmployeePayroll = async (
         overtime_pay: overtimePay,
         salary_paid: finalSalary,
         deductions: totalDeductions,
-        tax_paid: taxDeduction,
-        ni_contribution: insuranceDeduction,
-        other_deductions: otherDeduction,
         payment_status: 'Paid',
-        payment_date: paymentDate,
-        processing_date: processingDate
+        payment_date: paymentDate
       })
       .select()
       .single();
