@@ -2,7 +2,7 @@
 import { User, Session } from '@supabase/supabase-js';
 
 // Define the user role types - IMPORTANT: Database uses 'employer' while UI uses 'manager'
-export type UserRole = 'admin' | 'hr' | 'employee' | 'manager';
+export type UserRole = 'admin' | 'hr' | 'employee' | 'manager' | 'employer';
 export type DatabaseRole = 'admin' | 'hr' | 'employee' | 'employer';
 
 // Map UI roles to database roles

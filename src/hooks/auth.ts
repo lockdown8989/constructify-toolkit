@@ -1,16 +1,16 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
+import { User, AuthError } from '@supabase/supabase-js';
 import { UserRole } from './auth/types';
 import { useToast } from './use-toast';
 
-export interface AuthUser {
-  id: string;
-  email?: string;
+export interface AuthUser extends User {
+  // Adding any additional properties needed
   user_metadata?: {
     name?: string;
     avatar_url?: string;
+    full_name?: string;
   };
 }
 
@@ -58,7 +58,7 @@ export const useAuth = () => {
           return;
         }
         
-        const user = session.user;
+        const user = session.user as AuthUser;
         
         // Fetch user profile
         const { data: profile } = await supabase
@@ -159,6 +159,29 @@ export const useAuth = () => {
     return authState.roles.includes(role);
   };
 
+  // Sign in handler
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    
+    return { data, error };
+  };
+
+  // Sign up handler
+  const signUp = async (email: string, password: string, userData?: any) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: userData
+      }
+    });
+    
+    return { data, error };
+  };
+
   // Adding missing auth functionality
   const resetPassword = async (email: string) => {
     const origin = window.location.origin;
@@ -185,6 +208,8 @@ export const useAuth = () => {
     hasRole,
     resetPassword,
     updatePassword,
+    signIn,
+    signUp
   };
 };
 
