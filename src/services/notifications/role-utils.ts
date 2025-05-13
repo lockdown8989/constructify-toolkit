@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Retrieves user IDs of all users with manager role
+ * Uses direct query approach to avoid RLS recursion issues
  */
 export const getManagerUserIds = async (): Promise<string[]> => {
   try {
@@ -11,7 +12,7 @@ export const getManagerUserIds = async (): Promise<string[]> => {
     const { data, error } = await supabase
       .from('user_roles')
       .select('user_id')
-      .in('role', ['employer', 'admin', 'hr']);
+      .eq('role', 'employer');
     
     if (error) {
       console.error('Error fetching manager user IDs:', error);
@@ -27,6 +28,7 @@ export const getManagerUserIds = async (): Promise<string[]> => {
 
 /**
  * Checks if a user has a manager role
+ * Uses direct query approach to avoid RLS recursion issues
  */
 export const userHasManagerRole = async (userId: string): Promise<boolean> => {
   if (!userId) return false;
@@ -36,7 +38,7 @@ export const userHasManagerRole = async (userId: string): Promise<boolean> => {
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .in('role', ['employer', 'admin', 'hr'])
+      .eq('role', 'employer')
       .maybeSingle();
     
     if (error) {

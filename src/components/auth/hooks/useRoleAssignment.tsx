@@ -19,31 +19,31 @@ export const useRoleAssignment = () => {
 
   const assignUserRole = async (userId: string, userRole: UserRole) => {
     try {
-      // First check if user already has any roles
-      const { data: existingRoles, error: roleCheckError } = await supabase
+      // First check if user already has the specific role we want to assign
+      // This avoids recursion by querying for the exact role directly
+      const dbRole = mapUIRoleToDBRole(userRole);
+      console.log(`Checking if user ${userId} already has DB role ${dbRole}`);
+      
+      const { data: existingRole, error: roleCheckError } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .eq('role', dbRole)
+        .maybeSingle();
         
       if (roleCheckError) {
-        console.error("Error checking existing roles:", roleCheckError);
+        console.error("Error checking existing role:", roleCheckError);
         toast({
           title: "Error",
-          description: "Could not check user roles: " + roleCheckError.message,
+          description: "Could not check user role: " + roleCheckError.message,
           variant: "destructive",
         });
         return false;
       }
       
-      // Map the UI role to the database role
-      const dbRole = mapUIRoleToDBRole(userRole);
-      console.log(`Mapping UI role ${userRole} to DB role ${dbRole}`);
-      
-      // Check specifically for the role we're trying to add
-      const hasRequestedRole = existingRoles?.some(r => r.role === dbRole);
-      
-      if (!hasRequestedRole) {
-        // Insert the new role (without removing existing roles)
+      // Only add the role if the user doesn't already have it
+      if (!existingRole) {
+        console.log(`Inserting new role ${dbRole} for user ${userId}`);
         const { error: insertError } = await supabase
           .from('user_roles')
           .insert({ 
@@ -59,7 +59,7 @@ export const useRoleAssignment = () => {
             variant: "destructive",
           });
           return false;
-        } 
+        }
         
         console.log(`Role ${dbRole} inserted successfully`);
       } else {

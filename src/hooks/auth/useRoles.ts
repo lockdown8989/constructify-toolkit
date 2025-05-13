@@ -11,57 +11,66 @@ export const useRoles = (user: User | null) => {
   const fetchUserRoles = async (userId: string) => {
     try {
       console.log("Fetching roles for user:", userId);
-      const { data: roles, error } = await supabase
+      
+      // Query directly for specific roles rather than getting all roles first
+      const { data: adminRole, error: adminError } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId);
-
-      if (error) {
-        console.error('Error fetching user roles:', error);
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .maybeSingle();
+      
+      const { data: hrRole, error: hrError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'hr')
+        .maybeSingle();
+      
+      const { data: managerRole, error: managerError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'employer')
+        .maybeSingle();
+      
+      if (adminError || hrError || managerError) {
+        console.error('Error fetching user roles:', { adminError, hrError, managerError });
         return;
       }
+      
+      // Update role states based on query results
+      setIsAdmin(!!adminRole);
+      setIsHR(!!hrRole);
+      setIsManager(!!managerRole);
+      
+      console.log("Roles found:", {
+        admin: !!adminRole,
+        hr: !!hrRole,
+        manager: !!managerRole
+      });
 
-      if (roles && roles.length > 0) {
-        const userRoles = roles.map(r => r.role);
-        console.log("User roles found:", userRoles);
+      // If no manager role but has manager_id that starts with MGR-, they're a manager
+      if (!managerRole && userId) {
+        const { data: empData } = await supabase
+          .from('employees')
+          .select('manager_id')
+          .eq('user_id', userId)
+          .maybeSingle();
         
-        // Check each role
-        setIsAdmin(userRoles.includes('admin'));
-        setIsHR(userRoles.includes('hr'));
-        
-        // Check for 'employer' role which corresponds to manager in the UI
-        const hasEmployerRole = userRoles.includes('employer');
-        console.log("Has employer/manager role:", hasEmployerRole);
-        setIsManager(hasEmployerRole);
-      } else {
-        console.log("No roles found for user");
-        setIsAdmin(false);
-        setIsHR(false);
-        setIsManager(false);
-        
-        // Fetch employee record to check if user has a manager_id
-        if (userId) {
-          const { data: empData } = await supabase
-            .from('employees')
-            .select('manager_id')
-            .eq('user_id', userId)
-            .maybeSingle();
+        if (empData?.manager_id && empData.manager_id.startsWith('MGR-')) {
+          console.log("User has a manager_id, setting isManager=true:", empData.manager_id);
+          setIsManager(true);
           
-          // If the employee record has a manager_id that starts with MGR-, they're a manager
-          if (empData?.manager_id && empData.manager_id.startsWith('MGR-')) {
-            console.log("User has a manager_id, setting isManager=true:", empData.manager_id);
-            setIsManager(true);
+          // Add the employer role to ensure consistency
+          const { error: addRoleError } = await supabase
+            .from('user_roles')
+            .insert({ user_id: userId, role: 'employer' });
             
-            // Add the employer role to ensure consistency
-            const { error: addRoleError } = await supabase
-              .from('user_roles')
-              .insert({ user_id: userId, role: 'employer' });
-              
-            if (addRoleError) {
-              console.error("Error adding employer role:", addRoleError);
-            } else {
-              console.log("Added employer role to user");
-            }
+          if (addRoleError) {
+            console.error("Error adding employer role:", addRoleError);
+          } else {
+            console.log("Added employer role to user");
           }
         }
       }

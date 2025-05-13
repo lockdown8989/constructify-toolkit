@@ -18,22 +18,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const setupAuth = async () => {
       try {
-        // First check current session
-        const { data: sessionData } = await supabase.auth.getSession();
-        console.log("Initial session check:", sessionData?.session?.user?.email);
-        
-        if (sessionData?.session) {
-          setSession(sessionData.session);
-          setUser(sessionData.session.user);
-          
-          if (sessionData.session.user) {
-            await fetchUserRoles(sessionData.session.user.id);
-          }
-        }
-        
-        setIsLoading(false);
-        
-        // Then set up auth state listener
+        // Set up auth state listener first to prevent race conditions
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             console.log("Auth state changed:", event, session?.user?.email);
@@ -49,6 +34,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setIsLoading(false);
           }
         );
+        
+        // Then check current session
+        const { data: sessionData } = await supabase.auth.getSession();
+        console.log("Initial session check:", sessionData?.session?.user?.email);
+        
+        if (sessionData?.session) {
+          setSession(sessionData.session);
+          setUser(sessionData.session.user);
+          
+          if (sessionData.session.user) {
+            await fetchUserRoles(sessionData.session.user.id);
+          }
+        }
+        
+        setIsLoading(false);
 
         return () => {
           subscription.unsubscribe();
