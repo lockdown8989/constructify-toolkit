@@ -19,6 +19,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const setupAuth = async () => {
       try {
+        console.log("Setting up authentication...");
+        setIsLoading(true);
+        
         // Set up auth state listener first to prevent race conditions
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {

@@ -5,14 +5,16 @@ import { useAuth } from "@/hooks/auth";
 import { setupRealtimeSubscriptions } from '@/services/employee-sync';
 import { useEffect } from 'react';
 
-const AppLayout = ({ children }: React.PropsWithChildren) => {
+const AppLayout = () => {
   const { user } = useAuth();
   const isAuthenticated = !!user;
 
   useEffect(() => {
     // Set up realtime subscriptions when the app loads and user is authenticated
-    setupRealtimeSubscriptions();
-  }, []);
+    if (isAuthenticated) {
+      setupRealtimeSubscriptions();
+    }
+  }, [isAuthenticated]);
 
   return (
     <>
