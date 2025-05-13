@@ -41,7 +41,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setUser(session?.user ?? null);
             
             if (session?.user) {
-              await fetchUserRoles(session.user.id);
+              // Defer fetching roles with setTimeout to avoid potential deadlocks
+              setTimeout(() => {
+                fetchUserRoles(session.user.id);
+              }, 0);
             } else {
               resetRoles();
             }

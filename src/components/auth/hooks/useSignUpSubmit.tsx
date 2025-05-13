@@ -177,10 +177,31 @@ export const useSignUpSubmit = ({
           });
         }
         
-        // Redirect to sign in after a slight delay to ensure toasts are visible
-        setTimeout(() => {
-          window.location.href = '/auth';
-        }, 3000);
+        // Sign in automatically after successful registration
+        if (userRole === 'manager') {
+          // For manager accounts, sign in automatically and redirect to dashboard
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          });
+          
+          if (!signInError) {
+            // Short delay to allow roles to be properly assigned
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 1500);
+          } else {
+            // If auto-login fails, redirect to auth page
+            setTimeout(() => {
+              window.location.href = '/auth';
+            }, 3000);
+          }
+        } else {
+          // For non-manager accounts, redirect to sign in after a slight delay
+          setTimeout(() => {
+            window.location.href = '/auth';
+          }, 3000);
+        }
       } else {
         setSignUpError("User created but session not established. Please try signing in.");
         setIsLoading(false);

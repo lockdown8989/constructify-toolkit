@@ -1,13 +1,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserRole, mapUIRoleToDBRole } from "@/hooks/auth/types";
+import { UserRole } from "@/hooks/auth/types";
 
 export const useRoleAssignment = () => {
   const { toast } = useToast();
 
   const assignUserRole = async (userId: string, userRole: UserRole) => {
     try {
+      console.log(`Assigning role ${userRole} to user ${userId}`);
+      
       // First check if user already has any roles
       const { data: existingRoles, error: roleCheckError } = await supabase
         .from('user_roles')
@@ -25,7 +27,23 @@ export const useRoleAssignment = () => {
       }
       
       // Map the UI role to the database role
-      const dbRole = mapUIRoleToDBRole(userRole);
+      let dbRole: string;
+      
+      switch (userRole) {
+        case "manager":
+          dbRole = "employer"; // "employer" is the database representation of "manager"
+          break;
+        case "admin":
+          dbRole = "admin";
+          break;
+        case "hr":
+          dbRole = "hr";
+          break;
+        default:
+          dbRole = "employee";
+      }
+      
+      console.log(`Mapped UI role ${userRole} to DB role ${dbRole}`);
       
       // Check specifically for the role we're trying to add
       const hasRequestedRole = existingRoles?.some(r => r.role === dbRole);

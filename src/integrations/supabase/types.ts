@@ -204,6 +204,57 @@ export type Database = {
           },
         ]
       }
+      document_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          completed_at: string | null
+          document_id: string
+          due_date: string | null
+          employee_id: string
+          id: string
+          is_required: boolean | null
+          status: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          completed_at?: string | null
+          document_id: string
+          due_date?: string | null
+          employee_id: string
+          id?: string
+          is_required?: boolean | null
+          status?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          completed_at?: string | null
+          document_id?: string
+          due_date?: string | null
+          employee_id?: string
+          id?: string
+          is_required?: boolean | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_assignments_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_assignments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           access_level: string
@@ -623,6 +674,7 @@ export type Database = {
           overtime_pay: number | null
           payment_date: string | null
           payment_status: string | null
+          processing_date: string | null
           salary_paid: number
           working_hours: number | null
         }
@@ -638,6 +690,7 @@ export type Database = {
           overtime_pay?: number | null
           payment_date?: string | null
           payment_status?: string | null
+          processing_date?: string | null
           salary_paid: number
           working_hours?: number | null
         }
@@ -653,6 +706,7 @@ export type Database = {
           overtime_pay?: number | null
           payment_date?: string | null
           payment_status?: string | null
+          processing_date?: string | null
           salary_paid?: number
           working_hours?: number | null
         }
@@ -665,6 +719,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payroll_history: {
+        Row: {
+          created_at: string | null
+          employee_count: number
+          employee_ids: string[]
+          fail_count: number
+          id: string
+          processed_by: string | null
+          processing_date: string | null
+          success_count: number
+        }
+        Insert: {
+          created_at?: string | null
+          employee_count: number
+          employee_ids: string[]
+          fail_count: number
+          id?: string
+          processed_by?: string | null
+          processing_date?: string | null
+          success_count: number
+        }
+        Update: {
+          created_at?: string | null
+          employee_count?: number
+          employee_ids?: string[]
+          fail_count?: number
+          id?: string
+          processed_by?: string | null
+          processing_date?: string | null
+          success_count?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

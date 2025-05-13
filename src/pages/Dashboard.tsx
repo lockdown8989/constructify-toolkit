@@ -9,7 +9,7 @@ import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard';
 import ManagerDashboard from '@/components/dashboard/ManagerDashboard';
 
 const Dashboard = () => {
-  const { isManager, user } = useAuth();
+  const { isManager, isAdmin, isHR, user } = useAuth();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
   
@@ -21,8 +21,11 @@ const Dashboard = () => {
                    user?.email?.split('@')[0] || 
                    'User';
 
+  // Determine if the user has manager-level access (manager, admin, or HR)
+  const hasManagerAccess = isManager || isAdmin || isHR;
+                   
   // Count employees excluding the manager themselves
-  const employeeCount = isManager 
+  const employeeCount = hasManagerAccess 
     ? employees.filter(emp => emp.user_id !== user?.id).length 
     : 1;
   
@@ -38,7 +41,7 @@ const Dashboard = () => {
   }));
   
   // Get interview statistics - only show for managers
-  const interviewStats = isManager ? {
+  const interviewStats = hasManagerAccess ? {
     interviews: interviews.filter(i => i.stage === 'Interview').reduce((acc, i) => acc + i.progress, 0) / 
                 Math.max(interviews.filter(i => i.stage === 'Interview').length, 1),
     hired: interviews.filter(i => i.stage === 'Hired').reduce((acc, i) => acc + i.progress, 0) / 
@@ -52,10 +55,12 @@ const Dashboard = () => {
     output: 0
   };
 
+  console.log("User roles:", { isManager, isAdmin, isHR, hasManagerAccess });
+
   return (
     <Tabs defaultValue="dashboard">
       <TabsContent value="dashboard" className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
-        {isManager ? (
+        {hasManagerAccess ? (
           <ManagerDashboard 
             firstName={firstName}
             employeeCount={employeeCount}
