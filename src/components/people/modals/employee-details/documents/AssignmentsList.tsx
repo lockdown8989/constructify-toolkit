@@ -7,7 +7,7 @@ import { File, FileText } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { DocumentAssignment, useUpdateDocumentAssignment } from '@/hooks/use-document-assignments';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 interface AssignmentsListProps {
   assignments: DocumentAssignment[];
@@ -15,7 +15,29 @@ interface AssignmentsListProps {
   onStatusUpdate: () => void;
 }
 
-const AssignmentsList: React.FC<AssignmentsListProps> = ({ 
+// Define the Skeleton loader component for assignment list
+const AssignmentsListSkeleton = () => {
+  return (
+    <div className="space-y-2">
+      {Array(3).fill(0).map((_, i) => (
+        <div key={i} className="flex items-center justify-between p-2">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-10 w-10 rounded-md" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[150px]" />
+              <Skeleton className="h-3 w-[100px]" />
+            </div>
+          </div>
+          <Skeleton className="h-8 w-24" />
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const AssignmentsList: React.FC<AssignmentsListProps> & {
+  Skeleton: React.FC
+} = ({ 
   assignments, 
   employeeId, 
   onStatusUpdate 
@@ -135,24 +157,7 @@ const AssignmentsList: React.FC<AssignmentsListProps> = ({
   );
 };
 
-// Create a skeleton loader component for the assignment list
-AssignmentsList.Skeleton = function AssignmentsListSkeleton() {
-  return (
-    <div className="space-y-2">
-      {Array(3).fill(0).map((_, i) => (
-        <div key={i} className="flex items-center justify-between p-2">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-10 w-10 rounded-md" />
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-[150px]" />
-              <Skeleton className="h-3 w-[100px]" />
-            </div>
-          </div>
-          <Skeleton className="h-8 w-24" />
-        </div>
-      ))}
-    </div>
-  );
-};
+// Attach Skeleton component as a static property
+AssignmentsList.Skeleton = AssignmentsListSkeleton;
 
 export default AssignmentsList;
