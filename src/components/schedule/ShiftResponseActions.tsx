@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useShiftResponse } from "@/hooks/use-shift-response";
@@ -10,12 +11,12 @@ interface ShiftResponseActionsProps {
 
 export const ShiftResponseActions = ({ shift, onComplete }: ShiftResponseActionsProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { acceptShift, declineShift } = useShiftResponse();
+  const { respondToShift } = useShiftResponse();
 
   const handleAccept = async () => {
     setIsLoading(true);
     try {
-      await acceptShift(shift.id);
+      await respondToShift(shift.id, 'employee_accepted');
       onComplete?.();
     } catch (error) {
       console.error("Failed to accept shift:", error);
@@ -27,7 +28,7 @@ export const ShiftResponseActions = ({ shift, onComplete }: ShiftResponseActions
   const handleDecline = async () => {
     setIsLoading(true);
     try {
-      await declineShift(shift.id);
+      await respondToShift(shift.id, 'employee_rejected');
       onComplete?.();
     } catch (error) {
       console.error("Failed to decline shift:", error);
@@ -48,9 +49,8 @@ export const ShiftResponseActions = ({ shift, onComplete }: ShiftResponseActions
       <Button
         onClick={handleAccept}
         disabled={isLoading}
-        isLoading={isLoading}
       >
-        Accept
+        {isLoading ? "Processing..." : "Accept"}
       </Button>
     </div>
   );
