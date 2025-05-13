@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { generatePayslipPDF, PayslipResult } from './payslip-generator'; 
 import { notifyEmployeeAboutDocument } from '@/services/notifications/payroll-notifications';
@@ -17,34 +16,15 @@ export async function uploadEmployeeDocument(
     const fileExtension = file.name.split('.').pop();
     const filename = `${documentType}_${timestamp}.${fileExtension}`;
     
-    // Check if documents bucket exists
-    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-    
-    if (bucketsError) {
-      console.error('Error checking buckets:', bucketsError);
-      return {
-        success: false,
-        error: `Failed to check storage buckets: ${bucketsError.message}`
-      };
-    }
-    
-    const documentsBucket = buckets.find(b => b.name === 'documents');
-    
-    if (!documentsBucket) {
-      console.log('Documents bucket not found. Creating it now...');
-      const { error: createError } = await supabase.storage.createBucket('documents', {
-        public: true,
-        fileSizeLimit: 5242880 // 5MB
-      });
+    // Check if documents bucket exists via edge function
+    try {
+      const { error: checkBucketError } = await supabase.functions.invoke('check-storage-bucket');
       
-      if (createError) {
-        console.error('Error creating documents bucket:', createError);
-        return {
-          success: false,
-          error: `Failed to create storage bucket: ${createError.message}`
-        };
+      if (checkBucketError) {
+        console.error('Error checking bucket:', checkBucketError);
       }
-      console.log('Documents bucket created successfully');
+    } catch (bucketError) {
+      console.warn('Could not check bucket via edge function, continuing with direct upload:', bucketError);
     }
     
     // Upload file to Supabase storage

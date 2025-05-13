@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -27,17 +26,28 @@ export function useEmployeeDocuments(employeeId: string | undefined) {
       console.log('Fetching documents for employee:', employeeId);
       
       try {
+        // First check if the documents bucket exists via edge function
+        try {
+          await supabase.functions.invoke('check-storage-bucket');
+        } catch (bucketError) {
+          console.warn('Could not check bucket via edge function, continuing with direct query:', bucketError);
+        }
+        
         // Attempt to call the edge function first for better document retrieval
-        const { data: functionData, error: functionError } = await supabase.functions
-          .invoke('get-employee-documents', {
-            body: { employeeId, documentType: 'all' }
-          });
-          
-        if (!functionError && functionData?.success && Array.isArray(functionData.data)) {
-          console.log(`Found ${functionData.data.length} documents via edge function`);
-          return functionData.data as DocumentModel[];
-        } else if (functionError) {
-          console.error('Edge function error:', functionError);
+        try {
+          const { data: functionData, error: functionError } = await supabase.functions
+            .invoke('get-employee-documents', {
+              body: { employeeId, documentType: 'all' }
+            });
+            
+          if (!functionError && functionData?.success && Array.isArray(functionData.data)) {
+            console.log(`Found ${functionData.data.length} documents via edge function`);
+            return functionData.data as DocumentModel[];
+          } else if (functionError) {
+            console.error('Edge function error:', functionError);
+          }
+        } catch (funcError) {
+          console.warn('Edge function call failed, falling back to direct query:', funcError);
         }
         
         // Fallback to direct query
@@ -48,10 +58,14 @@ export function useEmployeeDocuments(employeeId: string | undefined) {
           
         if (error) {
           console.error('Error fetching documents:', error);
-          return [];
+          throw error;
         }
         
-        console.log(`Found ${docs.length} documents for employee via direct query`);
+        console.log(`Found ${docs?.length || 0} documents for employee via direct query`);
+        
+        if (!docs || docs.length === 0) {
+          return [];
+        }
         
         // Add public URLs for documents
         const docsWithUrls = await Promise.all(docs.map(async (doc) => {
@@ -77,11 +91,12 @@ export function useEmployeeDocuments(employeeId: string | undefined) {
         return docsWithUrls as DocumentModel[];
       } catch (error) {
         console.error("Error in useEmployeeDocuments:", error);
-        return [];
+        throw error;
       }
     },
     enabled: !!employeeId,
     refetchInterval: 10000, // Refetch every 10 seconds to check for new documents
+    retry: 3,
   });
 }
 

@@ -13,7 +13,7 @@ interface DocumentListProps {
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
-  const { data: documents = [], isLoading, refetch, isError } = useEmployeeDocuments(employeeId);
+  const { data: documents = [], isLoading, refetch, isError, error } = useEmployeeDocuments(employeeId);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
@@ -34,9 +34,24 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
     }
   }, [documents]);
 
+  useEffect(() => {
+    // Log document details for debugging
+    if (documents?.length) {
+      console.log('Documents loaded:', documents.map(doc => ({
+        id: doc.id,
+        name: doc.name,
+        type: doc.document_type,
+        url: doc.url ? 'Has URL' : 'No URL',
+        path: doc.path ? 'Has path' : 'No path',
+      })));
+    }
+  }, [documents]);
+
   // Set up real-time subscription
   useEffect(() => {
     if (!employeeId) return;
+
+    console.log('Setting up document subscription for employee:', employeeId);
 
     // Subscribe to changes in the documents table for this employee
     const channel = supabase
@@ -82,9 +97,25 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
       )
       .subscribe();
 
+    // Force initial document fetch
+    const initialFetch = async () => {
+      await refetch();
+      console.log('Initial document fetch completed');
+    };
+    
+    initialFetch();
+      
+    // Set up interval to periodically check for document updates
+    const checkInterval = setInterval(() => {
+      console.log('Periodic document check');
+      refetch();
+    }, 15000); // Check every 15 seconds
+
     return () => {
+      console.log('Cleaning up document subscriptions');
       supabase.removeChannel(channel);
       supabase.removeChannel(assignmentChannel);
+      clearInterval(checkInterval);
     };
   }, [employeeId, refetch, toast, queryClient]);
   
@@ -102,9 +133,11 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
     
     try {
       setIsDownloading(path || url || fileName);
+      console.log('Downloading document:', { url, path, fileName });
 
       // If we have a direct URL, use it
       if (url) {
+        console.log('Using direct URL for download:', url);
         // Create an anchor element to trigger the download
         const a = document.createElement('a');
         a.href = url;
@@ -121,11 +154,15 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
       
       // Otherwise download from storage
       if (path) {
+        console.log('Downloading from storage path:', path);
         const { data, error } = await supabase.storage
           .from('documents')
           .download(path);
           
-        if (error) throw error;
+        if (error) {
+          console.error('Storage download error:', error);
+          throw error;
+        }
         
         // Create blob URL and trigger download
         const url = window.URL.createObjectURL(data);
@@ -139,6 +176,8 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
           title: "Download successful",
           description: `${fileName} has been downloaded`
         });
+      } else {
+        throw new Error('No URL or path available for download');
       }
     } catch (error) {
       console.error('Download error:', error);
@@ -152,23 +191,26 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
     }
   };
 
+  // Display error details for debugging
+  if (isError) {
+    console.error('Document loading error:', error);
+    return (
+      <div className="flex flex-col items-center justify-center py-8">
+        <AlertCircle className="h-8 w-8 text-destructive mb-2" />
+        <p className="text-sm text-red-500">Error loading documents. Please try again.</p>
+        <p className="text-xs text-gray-500 mb-2">{error instanceof Error ? error.message : 'Unknown error'}</p>
+        <Button variant="outline" size="sm" onClick={handleRefresh} className="mt-2">
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
         <p className="text-sm text-gray-500">Loading documents...</p>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex flex-col items-center justify-center py-8">
-        <AlertCircle className="h-8 w-8 text-destructive mb-2" />
-        <p className="text-sm text-red-500">Error loading documents. Please try again.</p>
-        <Button variant="outline" size="sm" onClick={handleRefresh} className="mt-2">
-          Try Again
-        </Button>
       </div>
     );
   }

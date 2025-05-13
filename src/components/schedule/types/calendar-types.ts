@@ -1,2 +1,2 @@
 
-export type ViewType = 'day' | 'week';
+export type ViewType = 'day' | 'week' | 'documents';
