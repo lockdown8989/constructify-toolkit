@@ -46,7 +46,7 @@ export function useDocumentAssignments(employeeId: string | undefined) {
         throw error;
       }
       
-      return data || [];
+      return data as DocumentAssignment[];
     },
     enabled: !!employeeId,
   });

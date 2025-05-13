@@ -3,66 +3,53 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
+import { useDocuments } from '@/hooks/use-documents';
 import { useAssignDocument } from '@/hooks/use-document-assignments';
-import { DocumentModel } from '@/hooks/use-documents';
 import { format } from 'date-fns';
-import { useToast } from '@/hooks/use-toast';
 
 interface AssignDocumentDialogProps {
+  employeeId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  documents: DocumentModel[];
-  employeeId: string;
   onSuccess: () => void;
 }
 
 const AssignDocumentDialog: React.FC<AssignDocumentDialogProps> = ({
+  employeeId,
   open,
   onOpenChange,
-  documents,
-  employeeId,
   onSuccess
 }) => {
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
   const [isRequired, setIsRequired] = useState(false);
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   
-  const { toast } = useToast();
-  const { mutateAsync: assignDocument } = useAssignDocument();
+  const { data: documents, isLoading } = useDocuments(employeeId);
+  const { mutateAsync: assignDocument, isPending } = useAssignDocument();
   
-  const handleAssignDocument = async () => {
-    if (!selectedDocument) {
-      toast({
-        title: "No document selected",
-        description: "Please select a document to assign.",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleSubmit = async () => {
+    if (!selectedDocument) return;
     
     try {
       await assignDocument({
-        employeeId,
         documentId: selectedDocument,
+        employeeId,
         isRequired,
         dueDate: dueDate ? format(dueDate, 'yyyy-MM-dd') : undefined
       });
       
+      onSuccess();
       onOpenChange(false);
+      
+      // Reset form
       setSelectedDocument(null);
       setIsRequired(false);
       setDueDate(undefined);
-      onSuccess();
     } catch (error) {
-      console.error('Assignment error:', error);
-      toast({
-        title: "Assignment failed",
-        description: "There was an error assigning the document.",
-        variant: "destructive"
-      });
+      console.error('Error assigning document:', error);
     }
   };
   
@@ -75,13 +62,15 @@ const AssignDocumentDialog: React.FC<AssignDocumentDialogProps> = ({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="document">Document</Label>
-            <Select onValueChange={setSelectedDocument}>
+            <Select onValueChange={setSelectedDocument} value={selectedDocument || undefined}>
               <SelectTrigger id="document">
                 <SelectValue placeholder="Select document" />
               </SelectTrigger>
               <SelectContent>
-                {documents.map((doc) => (
-                  <SelectItem key={doc.id} value={doc.id}>{doc.name}</SelectItem>
+                {documents?.map((doc) => (
+                  <SelectItem key={doc.id} value={doc.id}>
+                    {doc.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -93,7 +82,10 @@ const AssignDocumentDialog: React.FC<AssignDocumentDialogProps> = ({
               checked={isRequired} 
               onCheckedChange={(checked) => setIsRequired(!!checked)} 
             />
-            <label htmlFor="required" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label 
+              htmlFor="required" 
+              className="text-sm font-medium leading-none cursor-pointer"
+            >
               Required document
             </label>
           </div>
@@ -109,7 +101,9 @@ const AssignDocumentDialog: React.FC<AssignDocumentDialogProps> = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleAssignDocument}>Assign</Button>
+          <Button onClick={handleSubmit} disabled={!selectedDocument || isPending}>
+            {isPending ? 'Assigning...' : 'Assign'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

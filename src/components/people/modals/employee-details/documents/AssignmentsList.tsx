@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { FileText, FileClock, CheckCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { DocumentAssignment, useUpdateDocumentAssignment } from '@/hooks/use-document-assignments';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface AssignmentsListProps {
   assignments: DocumentAssignment[];
@@ -44,14 +45,18 @@ const AssignmentsList: React.FC<AssignmentsListProps> & {
   onStatusUpdate 
 }) => {
   const { toast } = useToast();
-  const { updateAssignment, isLoading } = useUpdateDocumentAssignment();
+  const updateAssignmentMutation = useUpdateDocumentAssignment();
 
   const handleStatusChange = async (
     assignmentId: string,
-    newStatus: 'pending' | 'in progress' | 'completed'
+    newStatus: 'pending' | 'viewed' | 'completed' | 'overdue'
   ) => {
     try {
-      await updateAssignment(assignmentId, { status: newStatus });
+      await updateAssignmentMutation.mutateAsync({
+        id: assignmentId,
+        status: newStatus
+      });
+      
       toast({
         title: "Assignment status updated",
         description: `Assignment status updated to ${newStatus}`,
@@ -71,17 +76,17 @@ const AssignmentsList: React.FC<AssignmentsListProps> & {
       {assignments.map((assignment) => (
         <div key={assignment.id} className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
-            {assignment.file_url ? (
-              <a href={assignment.file_url} target="_blank" rel="noopener noreferrer">
+            {assignment.document?.url ? (
+              <a href={assignment.document.url} target="_blank" rel="noopener noreferrer">
                 <FileText className="h-10 w-10 text-blue-500" />
               </a>
             ) : (
               <FileText className="h-10 w-10 text-gray-400" />
             )}
             <div>
-              <h4 className="font-semibold">{assignment.document_name}</h4>
+              <h4 className="font-semibold">{assignment.document?.name || 'Unknown document'}</h4>
               <p className="text-sm text-muted-foreground">
-                Assigned: {format(new Date(assignment.created_at), 'MMM dd, yyyy')}
+                Assigned: {format(new Date(assignment.assigned_at), 'MMM dd, yyyy')}
               </p>
             </div>
           </div>
@@ -91,29 +96,30 @@ const AssignmentsList: React.FC<AssignmentsListProps> & {
                 <CheckCircle className="h-4 w-4" />
                 Completed
               </Badge>
-            ) : assignment.status === 'in progress' ? (
+            ) : assignment.status === 'viewed' ? (
               <Badge variant="secondary" className="gap-1.5">
                 <FileClock className="h-4 w-4" />
-                In Progress
+                Viewed
               </Badge>
             ) : (
-              <Badge variant="ghost" className="gap-1.5">
+              <Badge variant="outline" className="gap-1.5">
                 <FileClock className="h-4 w-4" />
                 Pending
               </Badge>
             )}
             <Select
               value={assignment.status}
-              onValueChange={(value) => handleStatusChange(assignment.id, value as 'pending' | 'in progress' | 'completed')}
-              disabled={isLoading}
+              onValueChange={(value) => handleStatusChange(assignment.id, value as 'pending' | 'viewed' | 'completed' | 'overdue')}
+              disabled={updateAssignmentMutation.isPending}
             >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in progress">In Progress</SelectItem>
+                <SelectItem value="viewed">Viewed</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
               </SelectContent>
             </Select>
           </div>

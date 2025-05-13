@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import DocumentsTab from './DocumentsTab';
 import AssignmentsTab from './AssignmentsTab';
-import { useDocumentAssignments } from '@/hooks/use-document-assignments';
 
 interface DocumentsSectionProps {
   employeeId: string;
@@ -11,12 +10,6 @@ interface DocumentsSectionProps {
 
 const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
   const [activeTab, setActiveTab] = useState('documents');
-  
-  const {
-    data: assignmentsData,
-    isLoading: isLoadingAssignments,
-    refetch: refetchAssignments
-  } = useDocumentAssignments(employeeId);
   
   return (
     <div className="space-y-4">
@@ -29,16 +22,12 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
         <TabsContent value="documents" className="space-y-4">
           <DocumentsTab 
             employeeId={employeeId} 
-            onAssignmentComplete={refetchAssignments} 
           />
         </TabsContent>
         
         <TabsContent value="assignments" className="space-y-4">
           <AssignmentsTab 
             employeeId={employeeId}
-            assignmentsData={assignmentsData}
-            isLoading={isLoadingAssignments}
-            refetchAssignments={refetchAssignments}
           />
         </TabsContent>
       </Tabs>

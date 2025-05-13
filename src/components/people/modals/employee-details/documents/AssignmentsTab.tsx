@@ -5,7 +5,7 @@ import AssignmentsList from './AssignmentsList';
 import AssignDocumentDialog from './AssignDocumentDialog';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface AssignmentsTabProps {
   employeeId: string;
@@ -15,11 +15,13 @@ const AssignmentsTab: React.FC<AssignmentsTabProps> = ({ employeeId }) => {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const { toast } = useToast();
   const { 
-    assignments, 
+    data, 
     isLoading, 
     error, 
     refetch 
   } = useDocumentAssignments(employeeId);
+  
+  const assignments = data || [];
 
   const handleAssignDocument = () => {
     refetch();
@@ -27,6 +29,7 @@ const AssignmentsTab: React.FC<AssignmentsTabProps> = ({ employeeId }) => {
       title: "Document assigned successfully",
       description: "The document has been assigned to the employee.",
     });
+    setDialogOpen(false);
   };
 
   if (error) {
@@ -68,7 +71,7 @@ const AssignmentsTab: React.FC<AssignmentsTabProps> = ({ employeeId }) => {
       <AssignDocumentDialog
         employeeId={employeeId}
         open={dialogOpen}
-        setOpen={setDialogOpen}
+        onOpenChange={setDialogOpen}
         onSuccess={handleAssignDocument}
       />
     </div>
