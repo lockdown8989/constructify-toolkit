@@ -19,11 +19,11 @@ export const useRoleAssignment = () => {
 
   const assignUserRole = async (userId: string, userRole: UserRole) => {
     try {
-      // First check if user already has the specific role we want to assign
-      // This avoids recursion by querying for the exact role directly
+      // Convert UI role to DB role
       const dbRole = mapUIRoleToDBRole(userRole);
-      console.log(`Checking if user ${userId} already has DB role ${dbRole}`);
+      console.log(`Assigning DB role ${dbRole} to user ${userId}`);
       
+      // Check if user already has this specific role
       const { data: existingRole, error: roleCheckError } = await supabase
         .from('user_roles')
         .select('role')
@@ -33,17 +33,11 @@ export const useRoleAssignment = () => {
         
       if (roleCheckError) {
         console.error("Error checking existing role:", roleCheckError);
-        toast({
-          title: "Error",
-          description: "Could not check user role: " + roleCheckError.message,
-          variant: "destructive",
-        });
         return false;
       }
       
-      // Only add the role if the user doesn't already have it
+      // Only add role if user doesn't already have it
       if (!existingRole) {
-        console.log(`Inserting new role ${dbRole} for user ${userId}`);
         const { error: insertError } = await supabase
           .from('user_roles')
           .insert({ 
@@ -53,17 +47,12 @@ export const useRoleAssignment = () => {
             
         if (insertError) {
           console.error("Role insertion error:", insertError);
-          toast({
-            title: "Error",
-            description: "Could not assign user role: " + insertError.message,
-            variant: "destructive",
-          });
           return false;
         }
         
-        console.log(`Role ${dbRole} inserted successfully`);
+        console.log(`Role ${dbRole} assigned successfully`);
       } else {
-        console.log(`User already has role: ${dbRole}, not adding again`);
+        console.log(`User already has role ${dbRole}`);
       }
       
       return true;

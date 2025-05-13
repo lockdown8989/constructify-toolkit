@@ -8,46 +8,39 @@ export const useRoles = (user: User | null) => {
   const [isHR, setIsHR] = useState(false);
   const [isManager, setIsManager] = useState(false);
 
-  // Fetch user roles directly - this way avoids the RLS recursion issue
+  // Fetch user roles directly with separate targeted queries to avoid recursion 
   const fetchUserRoles = async (userId: string) => {
     try {
       console.log("Fetching roles for user:", userId);
       
-      // Use direct queries without reusing the same query pattern
-      const adminQuery = supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .eq('role', 'admin')
-        .maybeSingle();
-      
-      const hrQuery = supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .eq('role', 'hr')
-        .maybeSingle();
-      
-      const managerQuery = supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .eq('role', 'employer')
-        .maybeSingle();
-      
-      // Execute queries in parallel for better performance
-      const [{ data: adminRole, error: adminError }, 
-             { data: hrRole, error: hrError }, 
-             { data: managerRole, error: managerError }] = await Promise.all([
-        adminQuery, hrQuery, managerQuery
+      // Use direct, separate queries to avoid recursion
+      const [{ data: adminRole }, { data: hrRole }, { data: managerRole }] = await Promise.all([
+        // Query for admin role
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .eq('role', 'admin')
+          .maybeSingle(),
+          
+        // Query for HR role
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .eq('role', 'hr')
+          .maybeSingle(),
+          
+        // Query for manager/employer role 
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .eq('role', 'employer')
+          .maybeSingle()
       ]);
       
-      if (adminError || hrError || managerError) {
-        console.error('Error fetching user roles:', { adminError, hrError, managerError });
-        return;
-      }
-      
-      // Update role states based on query results
+      // Update role states based on direct query results
       setIsAdmin(!!adminRole);
       setIsHR(!!hrRole);
       setIsManager(!!managerRole);
@@ -58,7 +51,7 @@ export const useRoles = (user: User | null) => {
         manager: !!managerRole
       });
 
-      // If no manager role but we need to check manager_id
+      // If no manager role found but user exists, check employee record
       if (!managerRole && userId) {
         const { data: empData, error: empError } = await supabase
           .from('employees')
@@ -71,11 +64,12 @@ export const useRoles = (user: User | null) => {
           return;
         }
         
+        // If employee has a manager_id with MGR- prefix, they are a manager
         if (empData?.manager_id && empData.manager_id.startsWith('MGR-')) {
           console.log("User has a manager_id, setting isManager=true:", empData.manager_id);
           setIsManager(true);
           
-          // Add the employer role to ensure consistency - only if needed
+          // Ensure consistency in the database by adding the employer role
           if (!managerRole) {
             const { error: addRoleError } = await supabase
               .from('user_roles')

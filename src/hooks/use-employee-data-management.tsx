@@ -9,9 +9,10 @@ export function useEmployeeDataManagement() {
 
   useEffect(() => {
     if (error) {
+      console.error("Employee data loading error:", error);
       toast({
         title: "Error",
-        description: "Could not load your employee information",
+        description: "Could not load your employee information. Please try again later.",
         variant: "destructive"
       });
     }
