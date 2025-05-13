@@ -11,9 +11,11 @@ export const processEmployeePayroll = async (
 ): Promise<void> => {
   try {
     // Base calculations
-    const basePay = employee.salary;
+    const basePay = Number(employee.salary);
+    // Default hourly rate calculation if not available
+    const hourlyRate = employee.hourly_rate !== undefined ? Number(employee.hourly_rate) : 15;
     const overtimeHours = Math.floor(Math.random() * 10); // Simulated overtime hours
-    const overtimePay = overtimeHours * (employee.hourly_rate || 15);
+    const overtimePay = overtimeHours * hourlyRate;
     const workingHours = 160 + overtimeHours; // Standard monthly hours + overtime
     
     // Create payroll record
@@ -100,7 +102,7 @@ const generatePayslipDocument = async (
     doc.setFontSize(12);
     doc.text(`Employee Name: ${employee.name}`, 20, 30);
     doc.text(`Department: ${employee.department}`, 20, 40);
-    doc.text(`Job Title: ${employee.job_title}`, 20, 50);
+    doc.text(`Position: ${employee.job_title || 'Not specified'}`, 20, 50);
     doc.text(`Pay Period: ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`, 20, 60);
     
     // Add payment details table
