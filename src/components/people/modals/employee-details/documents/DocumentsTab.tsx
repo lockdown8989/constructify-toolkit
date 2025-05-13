@@ -149,7 +149,6 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employeeId, onAssignmentCom
           <AssignDocumentDialog 
             open={assignDialogOpen}
             onOpenChange={setAssignDialogOpen}
-            documents={documents || []}
             employeeId={employeeId}
             onSuccess={onAssignmentComplete}
           />

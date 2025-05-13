@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
-import { useDocuments } from '@/hooks/use-documents';
+import { useEmployeeDocuments } from '@/hooks/use-documents';
 import { useAssignDocument } from '@/hooks/use-document-assignments';
 import { format } from 'date-fns';
 
@@ -27,7 +27,7 @@ const AssignDocumentDialog: React.FC<AssignDocumentDialogProps> = ({
   const [isRequired, setIsRequired] = useState(false);
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   
-  const { data: documents, isLoading } = useDocuments(employeeId);
+  const { data: documents, isLoading } = useEmployeeDocuments(employeeId);
   const { mutateAsync: assignDocument, isPending } = useAssignDocument();
   
   const handleSubmit = async () => {

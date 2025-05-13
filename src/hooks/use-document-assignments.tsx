@@ -46,7 +46,8 @@ export function useDocumentAssignments(employeeId: string | undefined) {
         throw error;
       }
       
-      return data as DocumentAssignment[];
+      // Handle the type casting safely
+      return (data || []) as unknown as DocumentAssignment[];
     },
     enabled: !!employeeId,
   });

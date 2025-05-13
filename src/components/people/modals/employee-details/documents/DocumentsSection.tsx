@@ -11,6 +11,12 @@ interface DocumentsSectionProps {
 const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
   const [activeTab, setActiveTab] = useState('documents');
   
+  // Handle document assignment completion (will refresh both tabs)
+  const handleAssignmentComplete = () => {
+    console.log("Document assignment completed, refreshing data");
+    // This will be passed to both tabs to trigger data refresh
+  };
+  
   return (
     <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -22,6 +28,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
         <TabsContent value="documents" className="space-y-4">
           <DocumentsTab 
             employeeId={employeeId} 
+            onAssignmentComplete={handleAssignmentComplete}
           />
         </TabsContent>
         
