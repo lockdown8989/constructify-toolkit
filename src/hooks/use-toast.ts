@@ -1,5 +1,5 @@
 
-import { toast as sonnerToast } from "sonner";
+import { toast as sonnerToast, type ExternalToast } from "sonner";
 
 export type ToastProps = {
   title: string;
@@ -24,12 +24,19 @@ export const toast = ({
     (variant === "destructive" ? "error" : variant) : 
     (type === "default" ? undefined : type);
 
-  return sonnerToast(title, {
+  // Convert our toast props to match sonner's expected format
+  const sonnerOptions: ExternalToast = {
     description,
     duration,
-    // Map our types to sonner's variant
-    variant: toastType as "success" | "info" | "warning" | "error" | undefined,
-  });
+  };
+  
+  // Only add the variant if it's defined and valid
+  if (toastType) {
+    // TypeScript type assertion to handle the mapping
+    sonnerOptions.variant = toastType as "success" | "info" | "warning" | "error" | undefined;
+  }
+
+  return sonnerToast(title, sonnerOptions);
 };
 
 export const useToast = () => {
