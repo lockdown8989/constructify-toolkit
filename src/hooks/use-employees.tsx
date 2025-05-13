@@ -229,16 +229,20 @@ export function useOwnEmployeeData() {
 
       if (error) {
         console.error("Error fetching own employee data:", error);
-        toast({
-          title: "Error",
-          description: "Could not fetch your employee information",
-          variant: "destructive"
-        });
         throw error;
       }
 
       return data as Employee;
     },
-    enabled: !!user
+    enabled: !!user,
+    meta: {
+      onError: (error: Error) => {
+        toast({
+          title: "Error",
+          description: "Could not fetch your employee information",
+          type: "destructive"
+        });
+      }
+    }
   });
 }
