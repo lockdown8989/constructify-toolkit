@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
 import { UserRole } from './auth/types';
 import { useToast } from './use-toast';
 
@@ -19,6 +20,9 @@ export interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   roles: UserRole[];
+  isAdmin: boolean;
+  isHR: boolean;
+  isManager: boolean;
 }
 
 export const useAuth = () => {
@@ -28,6 +32,9 @@ export const useAuth = () => {
     isLoading: true,
     isAuthenticated: false,
     roles: [],
+    isAdmin: false,
+    isHR: false,
+    isManager: false
   });
   const { toast } = useToast();
 
@@ -44,6 +51,9 @@ export const useAuth = () => {
             isLoading: false,
             isAuthenticated: false,
             roles: [],
+            isAdmin: false,
+            isHR: false,
+            isManager: false
           });
           return;
         }
@@ -64,6 +74,12 @@ export const useAuth = () => {
           .eq('user_id', user.id);
         
         const roles = userRoles?.map(r => r.role as UserRole) || [];
+        
+        // Check specific roles
+        const isAdmin = roles.includes('admin');
+        const isHR = roles.includes('hr');
+        // Map 'employer' role from DB to 'manager' in UI
+        const hasManagerRole = roles.includes('manager') || roles.includes('employer');
           
         setAuthState({
           user,
@@ -71,6 +87,9 @@ export const useAuth = () => {
           isLoading: false,
           isAuthenticated: true,
           roles,
+          isAdmin,
+          isHR,
+          isManager: hasManagerRole
         });
       } catch (error) {
         console.error('Error fetching auth data:', error);
@@ -80,6 +99,9 @@ export const useAuth = () => {
           isLoading: false,
           isAuthenticated: false,
           roles: [],
+          isAdmin: false,
+          isHR: false,
+          isManager: false
         });
       }
     };
@@ -96,6 +118,9 @@ export const useAuth = () => {
           isLoading: false,
           isAuthenticated: false,
           roles: [],
+          isAdmin: false,
+          isHR: false,
+          isManager: false
         });
       }
     });
@@ -134,15 +159,34 @@ export const useAuth = () => {
     return authState.roles.includes(role);
   };
 
-  // Check if user is manager (employer, admin, or hr)
-  const isManager = (): boolean => {
-    return hasRole(['employer', 'admin', 'hr']);
+  // Adding missing auth functionality
+  const resetPassword = async (email: string) => {
+    const origin = window.location.origin;
+    const resetRedirectUrl = `${origin}/auth?reset=true`;
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: resetRedirectUrl,
+    });
+    
+    return { error };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({
+      password,
+    });
+    
+    return { error };
   };
 
   return {
     ...authState,
     signOut,
     hasRole,
-    isManager,
+    resetPassword,
+    updatePassword,
   };
 };
+
+// Re-export the AuthProvider for backward compatibility
+export { AuthProvider } from './auth/AuthProvider';

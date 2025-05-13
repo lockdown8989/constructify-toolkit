@@ -1,265 +1,136 @@
 
-import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Clock, Plus, Filter, ArrowLeftRight } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import ShiftSwapList from '@/components/schedule/ShiftSwapList';
-import ShiftSwapForm from '@/components/schedule/ShiftSwapForm';
-import AvailabilityRequestList from '@/components/schedule/AvailabilityRequestList';
-import AvailabilityRequestForm from '@/components/schedule/AvailabilityRequestForm';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import ScheduleHeader from '@/components/schedule/components/ScheduleHeader';
-import MobileNavigation from '@/components/schedule/components/MobileNavigation';
-import { useScheduleRealtime } from '@/hooks/leave/use-schedule-realtime';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar, Clock, ChevronRight, Users } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
-const ScheduleRequestsTab: React.FC = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const isMobile = useIsMobile();
-  const { user, isManager } = useAuth();
-  const [activeSection, setActiveSection] = useState<'requests' | 'form'>('requests');
-  const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
-  const [lastRefreshed, setLastRefreshed] = useState(new Date());
-  const [pendingCount, setPendingCount] = useState({ shifts: 0, availability: 0 });
+// Mock data for the component
+const mockRequests = [
+  {
+    id: '1',
+    employeeName: 'John Doe',
+    type: 'Shift Swap',
+    date: '2023-05-15',
+    status: 'Pending',
+  },
+  {
+    id: '2',
+    employeeName: 'Jane Smith',
+    type: 'Time Off',
+    date: '2023-05-18',
+    status: 'Approved',
+  },
+  {
+    id: '3',
+    employeeName: 'Mike Johnson',
+    type: 'Schedule Change',
+    date: '2023-05-20',
+    status: 'Rejected',
+  },
+];
 
-  // Use the real-time hook
-  useScheduleRealtime();
-
-  useEffect(() => {
-    if (!user) return;
-    
-    const fetchPendingCounts = async () => {
-      try {
-        const { data: pendingShifts, error: shiftError } = await supabase
-          .from('shift_swaps')
-          .select('id', { count: 'exact' })
-          .eq('status', 'Pending');
-        
-        const { data: pendingAvailability, error: availError } = await supabase
-          .from('availability_requests')
-          .select('id', { count: 'exact' })
-          .eq('status', 'Pending');
-        
-        if (shiftError || availError) {
-          console.error("Error fetching pending counts:", shiftError || availError);
-          return;
-        }
-        
-        setPendingCount({
-          shifts: pendingShifts?.length || 0,
-          availability: pendingAvailability?.length || 0
-        });
-      } catch (error) {
-        console.error("Error in fetchPendingCounts:", error);
-      }
-    };
-    
-    fetchPendingCounts();
-  }, [user, queryClient]);
+const ScheduleRequestsTab = () => {
+  const [activeTab, setActiveTab] = useState('pending');
+  const { isAdmin, isHR, isManager } = useAuth();
   
-  const handleRefreshData = () => {
-    queryClient.invalidateQueries({ queryKey: ['shift_swaps'] });
-    queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
-    setLastRefreshed(new Date());
-    toast({
-      title: "Data refreshed",
-      description: "Schedule request data has been refreshed."
-    });
+  // Convert isManager from function to boolean if needed
+  const hasManagerAccess = isAdmin || isHR || isManager;
+  
+  // Filter requests based on active tab
+  const filteredRequests = mockRequests.filter(request => {
+    switch (activeTab) {
+      case 'pending':
+        return request.status === 'Pending';
+      case 'approved':
+        return request.status === 'Approved';
+      case 'rejected':
+        return request.status === 'Rejected';
+      default:
+        return true;
+    }
+  });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Pending':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'Approved':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'Rejected':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
   };
 
   return (
-    <>
-      <ScheduleHeader 
-        pendingCount={pendingCount}
-        lastRefreshed={lastRefreshed}
-        isManager={isManager}
-        onRefresh={handleRefreshData}
-      />
-      
-      <CardContent className="p-0">
-        <MobileNavigation 
-          activeSection={activeSection}
-          onSectionChange={setActiveSection}
-          isMobile={isMobile}
-        />
+    <div className="space-y-4">
+      <Tabs defaultValue="pending" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="pending">Pending</TabsTrigger>
+          <TabsTrigger value="approved">Approved</TabsTrigger>
+          <TabsTrigger value="rejected">Rejected</TabsTrigger>
+        </TabsList>
         
-        <div className="px-4 sm:px-6">
-          <Tabs defaultValue="shift-swaps" className="mt-2">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="shift-swaps" className="text-xs sm:text-sm flex items-center justify-center px-3 py-2.5">
-                <ArrowLeftRight className="h-3.5 w-3.5 mr-1.5" />
-                Shift Swaps
-                {pendingCount.shifts > 0 && (
-                  <Badge className="ml-1.5 bg-amber-100 text-amber-800 border border-amber-300">
-                    {pendingCount.shifts}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="availability" className="text-xs sm:text-sm flex items-center justify-center px-3 py-2.5">
-                <Clock className="h-3.5 w-3.5 mr-1.5" />
-                Availability
-                {pendingCount.availability > 0 && (
-                  <Badge className="ml-1.5 bg-amber-100 text-amber-800 border border-amber-300">
-                    {pendingCount.availability}
-                  </Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="shift-swaps" className="space-y-6 pb-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-                {(!isMobile || activeSection === 'form') && (
-                  <div className="md:col-span-1 order-2 md:order-1">
-                    <Card className="bg-white border shadow-sm rounded-xl h-full">
-                      <CardHeader className="pb-3 border-b">
-                        <h3 className="text-sm font-semibold flex items-center">
-                          <Plus className="h-4 w-4 mr-2 text-primary" />
-                          Create Shift Swap
-                        </h3>
-                      </CardHeader>
-                      <CardContent className="pt-4">
-                        <ShiftSwapForm />
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-                
-                {(!isMobile || activeSection === 'requests') && (
-                  <div className="md:col-span-2 order-1 md:order-2">
-                    <Card className="bg-white border shadow-sm rounded-xl">
-                      <CardHeader className="pb-3 border-b">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-semibold flex items-center">
-                            <Filter className="h-4 w-4 mr-2 text-primary" />
-                            Shift Swap Requests
-                          </h3>
-                          
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm" className="h-8">
-                                Quick Actions
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem 
-                                className="flex items-center cursor-pointer"
-                                onClick={() => setActiveSection('form')}
-                              >
-                                <Plus className="h-4 w-4 mr-2" />
-                                New Swap Request
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                className="flex items-center cursor-pointer"
-                                onClick={handleRefreshData}
-                              >
-                                <Filter className="h-4 w-4 mr-2" />
-                                Refresh Data
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="p-4">
-                        <ShiftSwapList />
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="availability" className="space-y-6 pb-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-                {(!isMobile || activeSection === 'form') && (
-                  <div className="md:col-span-1 order-2 md:order-1">
-                    {showAvailabilityForm ? (
-                      <Card className="bg-white border shadow-sm rounded-xl">
-                        <CardHeader className="pb-3 border-b">
-                          <h3 className="text-sm font-semibold flex items-center">
-                            <Clock className="h-4 w-4 mr-2 text-primary" />
-                            Set Availability
-                          </h3>
-                        </CardHeader>
-                        <CardContent className="pt-4">
-                          <AvailabilityRequestForm onClose={() => setShowAvailabilityForm(false)} />
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <div className="flex justify-center py-6 bg-white border shadow-sm rounded-xl">
-                        <Button 
-                          onClick={() => setShowAvailabilityForm(true)}
-                          className="bg-primary text-primary-foreground shadow flex items-center rounded-lg"
-                        >
-                          <Plus className="h-4 w-4 mr-1.5" />
-                          Set Availability
-                        </Button>
+        <TabsContent value={activeTab} className="pt-4">
+          {filteredRequests.length > 0 ? (
+            <div className="space-y-4">
+              {filteredRequests.map((request) => (
+                <Card key={request.id} className="overflow-hidden">
+                  <CardHeader className="p-4 pb-2">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <CardTitle className="text-lg">{request.employeeName}</CardTitle>
+                        <CardDescription className="flex items-center mt-1">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          {new Date(request.date).toLocaleDateString()}
+                        </CardDescription>
                       </div>
-                    )}
-                  </div>
-                )}
-                
-                {(!isMobile || activeSection === 'requests') && (
-                  <div className="md:col-span-2 order-1 md:order-2">
-                    <Card className="bg-white border shadow-sm rounded-xl">
-                      <CardHeader className="pb-3 border-b">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-semibold flex items-center">
-                            <Filter className="h-4 w-4 mr-2 text-primary" />
-                            Availability Requests
-                          </h3>
-                          
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm" className="h-8">
-                                Quick Actions
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem 
-                                className="flex items-center cursor-pointer"
-                                onClick={() => {
-                                  setActiveSection('form');
-                                  setShowAvailabilityForm(true);
-                                }}
-                              >
-                                <Plus className="h-4 w-4 mr-2" />
-                                New Availability Request
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                className="flex items-center cursor-pointer"
-                                onClick={handleRefreshData}
-                              >
-                                <Filter className="h-4 w-4 mr-2" />
-                                Refresh Data
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                      <Badge className={`${getStatusColor(request.status)} border`}>
+                        {request.status}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="p-4 pt-2">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Clock className="h-4 w-4 mr-1" />
+                        <span>{request.type}</span>
+                      </div>
+                      
+                      {hasManagerAccess && request.status === 'Pending' && (
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline">Reject</Button>
+                          <Button size="sm">Approve</Button>
                         </div>
-                      </CardHeader>
-                      <CardContent className="p-4">
-                        <AvailabilityRequestList />
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </CardContent>
-    </>
+                      )}
+                      
+                      {request.status !== 'Pending' && (
+                        <Button variant="ghost" size="sm" className="text-gray-500">
+                          Details <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-gray-50 rounded-lg">
+              <Users className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+              <h3 className="text-lg font-medium text-gray-900">No requests found</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                There are no {activeTab} schedule requests at this time.
+              </p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

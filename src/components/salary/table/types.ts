@@ -2,13 +2,15 @@
 export interface Employee {
   id: string;
   name: string;
-  avatar?: string;  // Changed from required to optional with ?
+  avatar?: string;
   title: string;
-  salary: string | number;  // Updated to accept both string and number like the dashboard interface
+  salary: string | number;
   status: 'Paid' | 'Absent' | 'Pending';
   selected?: boolean;
   paymentDate?: string;
   department?: string;
+  job_title?: string;
+  hourly_rate?: number;
 }
 
 export interface SalaryTableProps {

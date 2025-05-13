@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Employee } from '@/components/dashboard/salary-table/types';
+import { Employee } from '@/components/salary/table/types';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
@@ -10,11 +10,15 @@ export const processEmployeePayroll = async (
   currencyCode: string
 ): Promise<void> => {
   try {
-    // Base calculations
-    const basePay = employee.salary;
+    // Ensure salary is a number
+    const basePay = typeof employee.salary === 'string' ? parseFloat(employee.salary) : employee.salary;
+    
+    // Use hourly_rate if available, otherwise default to 15
+    const hourlyRate = employee.hourly_rate || 15;
     const overtimeHours = Math.floor(Math.random() * 10); // Simulated overtime hours
-    const overtimePay = overtimeHours * (employee.hourly_rate || 15);
+    const overtimePay = overtimeHours * hourlyRate;
     const workingHours = 160 + overtimeHours; // Standard monthly hours + overtime
+    const totalPay = basePay + overtimePay;
     
     // Create payroll record
     const { error } = await supabase
@@ -25,7 +29,7 @@ export const processEmployeePayroll = async (
         overtime_hours: overtimeHours,
         overtime_pay: overtimePay,
         working_hours: workingHours,
-        salary_paid: basePay + overtimePay,
+        salary_paid: totalPay,
         payment_status: 'Processed',
         processing_date: new Date().toISOString()
       });
@@ -39,7 +43,7 @@ export const processEmployeePayroll = async (
       basePay,
       overtimeHours,
       overtimePay,
-      totalPay: basePay + overtimePay,
+      totalPay,
       currencyCode
     });
 
@@ -99,8 +103,8 @@ const generatePayslipDocument = async (
     // Add employee info
     doc.setFontSize(12);
     doc.text(`Employee Name: ${employee.name}`, 20, 30);
-    doc.text(`Department: ${employee.department}`, 20, 40);
-    doc.text(`Job Title: ${employee.job_title}`, 20, 50);
+    doc.text(`Department: ${employee.department || 'N/A'}`, 20, 40);
+    doc.text(`Job Title: ${employee.job_title || employee.title || 'N/A'}`, 20, 50);
     doc.text(`Pay Period: ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`, 20, 60);
     
     // Add payment details table
