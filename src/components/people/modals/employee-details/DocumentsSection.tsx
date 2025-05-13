@@ -64,10 +64,20 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
   } = useEmployeeDocuments(employeeId);
   
   const {
-    data: assignments,
+    data: assignmentsData,
     isLoading: isLoadingAssignments,
     refetch: refetchAssignments
   } = useDocumentAssignments(employeeId);
+  
+  // Properly type the assignments data
+  const assignments: DocumentAssignment[] = Array.isArray(assignmentsData) 
+    ? assignmentsData.map(item => ({
+        ...item,
+        document: item.document && typeof item.document === 'object' && !Array.isArray(item.document) 
+          ? item.document as Document 
+          : null
+      }))
+    : [];
   
   const { mutateAsync: uploadDocument } = useUploadDocument();
   const { mutateAsync: deleteDocument } = useDeleteDocument();
