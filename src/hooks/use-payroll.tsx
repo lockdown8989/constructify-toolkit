@@ -6,7 +6,6 @@ import { processEmployeePayroll, savePayrollHistory } from './payroll/use-payrol
 import { exportPayrollData } from './payroll/use-payroll-export';
 import { useCurrencyPreference } from '@/hooks/use-currency-preference';
 import { useAuth } from '@/hooks/use-auth';
-import { notifyEmployeeAboutPayslip } from '@/services/notifications/payroll-notifications';
 import { batchNotifyEmployeesAboutPayslips } from '@/services/notifications/payroll-notifications';
 
 export const usePayroll = (employees: Employee[]) => {
@@ -73,7 +72,8 @@ export const usePayroll = (employees: Employee[]) => {
             successfulPayrolls.push({
               employeeId,
               userId: employee.user_id,
-              amount: result.finalSalary || 0
+              amount: result.finalSalary || 0,
+              documentUrl: result.documentUrl
             });
             successCount++;
           } else {
