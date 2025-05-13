@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { ChevronLeft, Briefcase, MapPin, Clock, Mail, Phone, ArrowRight, CalendarDays } from 'lucide-react';
@@ -12,7 +11,7 @@ import {
 } from "@/components/ui/tabs";
 import { Employee } from '../../types';
 import { useIsMobile } from '@/hooks/use-mobile';
-import DocumentsSection from './DocumentsSection';
+import DocumentsSection from './documents';
 import { Card, CardContent, CardDescription } from '@/components/ui/card';
 
 interface EmployeeInfoSectionProps {
