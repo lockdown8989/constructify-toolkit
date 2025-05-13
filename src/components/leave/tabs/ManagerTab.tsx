@@ -3,38 +3,23 @@ import React, { useState } from "react";
 import LeaveApprovalDashboard from "@/components/leave/LeaveApprovalDashboard";
 import { useAuth } from "@/hooks/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, CalendarDays, Shield, Users } from "lucide-react";
+import { CalendarDays, Users } from "lucide-react";
 import LeaveCalendarView from "@/components/leave/LeaveCalendarView";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLeaveCalendarState } from "@/hooks/leave/useLeaveCalendarState";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { toast } from "@/components/ui/use-toast";
 
 const ManagerTab: React.FC = () => {
-  const { isManager, isAdmin, isHR, user } = useAuth();
+  const { isManager, isAdmin, isHR } = useAuth();
   const hasManagerAccess = isManager || isAdmin || isHR;
   const [activeTab, setActiveTab] = useState<string>("leave-calendar");
   const calendarState = useLeaveCalendarState();
   const isMobile = useIsMobile();
 
-  // If user tries to access this but doesn't have manager access, show message and notify
   if (!hasManagerAccess) {
-    React.useEffect(() => {
-      toast({
-        title: "Access Restricted",
-        description: "You don't have manager-level permissions to view this page.",
-        variant: "destructive",
-      });
-    }, []);
-    
     return (
-      <div className="p-8 text-center">
-        <AlertCircle className="mx-auto h-12 w-12 text-amber-500 mb-4" />
-        <h3 className="text-lg font-medium mb-2">Manager Access Required</h3>
-        <p className="text-muted-foreground mb-4">
-          You don't have permission to access this view. Please contact your administrator if you believe this is an error.
-        </p>
-        <Shield className="mx-auto h-8 w-8 text-muted-foreground opacity-50" />
+      <div className="text-center p-8 text-muted-foreground">
+        You don't have permission to access this view.
       </div>
     );
   }

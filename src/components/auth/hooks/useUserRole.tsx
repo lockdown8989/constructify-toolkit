@@ -1,8 +1,8 @@
 
 import { useState } from "react";
+import { UserRole } from "@/hooks/auth/types";
 
-// Define the UserRole type
-export type UserRole = 'manager' | 'employee' | 'admin' | 'hr';
+export { type UserRole };
 
 export const useUserRole = (initialRole: UserRole = "employee") => {
   const [userRole, setUserRole] = useState<UserRole>(initialRole);

@@ -25,17 +25,12 @@ export function useEmployees(filters?: Partial<{
       
       if (!isManager && user) {
         console.log("Non-manager user, fetching own data only");
-        const { data: currentEmployeeData, error: empError } = await supabase
+        const { data: currentEmployeeData } = await supabase
           .from('employees')
           .select('*')
           .eq('user_id', user.id)
-          .maybeSingle();
+          .single();
           
-        if (empError) {
-          console.error("Error fetching current employee:", empError);
-          return [];
-        }
-        
         if (currentEmployeeData) {
           query = query.eq('id', currentEmployeeData.id);
         } else {
@@ -43,16 +38,11 @@ export function useEmployees(filters?: Partial<{
           return [];
         }
       } else if (isManager && user) {
-        const { data: managerData, error: mgrError } = await supabase
+        const { data: managerData } = await supabase
           .from('employees')
           .select('manager_id')
           .eq('user_id', user.id)
-          .maybeSingle();
-        
-        if (mgrError) {
-          console.error("Error fetching manager data:", mgrError);
-          return [];
-        }
+          .single();
         
         if (managerData && managerData.manager_id) {
           query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
@@ -70,14 +60,12 @@ export function useEmployees(filters?: Partial<{
       
       if (error) {
         console.error("Error fetching employees:", error);
-        return [];
+        throw error;
       }
       
       console.log("Fetched employees data:", data);
       return data as Employee[];
-    },
-    retry: 1,
-    retryDelay: 1000
+    }
   });
 }
 
@@ -229,28 +217,28 @@ export function useOwnEmployeeData() {
   return useQuery({
     queryKey: ['own-employee-data', user?.id],
     queryFn: async () => {
-      if (!user?.id) {
-        console.log("No user ID available for employee data fetch");
-        return null;
+      if (!user) {
+        throw new Error('No authenticated user');
       }
 
-      // Try to find the employee record by user ID
       const { data, error } = await supabase
         .from('employees')
         .select('*')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .single();
 
       if (error) {
         console.error("Error fetching own employee data:", error);
-        return null;
+        toast({
+          title: "Error",
+          description: "Could not fetch your employee information",
+          variant: "destructive"
+        });
+        throw error;
       }
 
-      console.log("Fetched own employee data:", data);
-      return data as Employee | null;
+      return data as Employee;
     },
-    enabled: !!user?.id,
-    retry: 1,
-    retryDelay: 1000
+    enabled: !!user
   });
 }

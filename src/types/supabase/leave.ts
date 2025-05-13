@@ -13,11 +13,6 @@ export interface AvailabilityRequest {
   created_at: string;
   updated_at: string;
   audit_log: any[] | null;
-  employees?: {
-    name: string;
-    department?: string;
-    job_title?: string;
-  };
 }
 
 export interface LeaveCalendar {

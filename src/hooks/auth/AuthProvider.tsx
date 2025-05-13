@@ -5,7 +5,6 @@ import { Session, User } from "@supabase/supabase-js";
 import { useRoles } from "./useRoles";
 import { useAuthActions } from "./useAuthActions";
 import { AuthContextType } from "./types";
-import { toast } from "@/components/ui/use-toast";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -19,58 +18,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const setupAuth = async () => {
       try {
-        console.log("Setting up authentication...");
-        setIsLoading(true);
-        
-        // Set up auth state listener first to prevent race conditions
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log("Auth state changed:", event, session?.user?.email);
-            setSession(session);
-            setUser(session?.user ?? null);
-            
-            // Refresh roles when auth state changes to ensure roles are up-to-date
-            if (session?.user) {
-              await fetchUserRoles(session.user.id);
-              
-              // Show welcome toast for sign in and sign up events
-              // Fix: Use explicit string comparison since event is a string enum
-              if (event === 'SIGNED_IN') {
-                toast({
-                  title: "Welcome back!",
-                  description: "You have successfully signed in.",
-                });
-              } else if (event === 'USER_UPDATED' && !user) {
-                // This would indicate a new user was created (effectively a sign up)
-                toast({
-                  title: "Welcome!",
-                  description: "Your account has been created successfully.",
-                });
-              }
-            } else if (event === 'SIGNED_OUT') {
-              resetRoles();
-              toast({
-                title: "Signed out",
-                description: "You have been signed out successfully.",
-              });
-            }
-            
-            // Set loading to false immediately to prevent blank screens
-            setIsLoading(false);
-          }
-        );
-        
-        // Then check current session
+        // First check current session
         const { data: sessionData } = await supabase.auth.getSession();
         console.log("Initial session check:", sessionData?.session?.user?.email);
         
         if (sessionData?.session) {
           setSession(sessionData.session);
           setUser(sessionData.session.user);
-          await fetchUserRoles(sessionData.session.user.id);
+          
+          if (sessionData.session.user) {
+            await fetchUserRoles(sessionData.session.user.id);
+          }
         }
         
         setIsLoading(false);
+        
+        // Then set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log("Auth state changed:", event, session?.user?.email);
+            setSession(session);
+            setUser(session?.user ?? null);
+            
+            if (session?.user) {
+              await fetchUserRoles(session.user.id);
+            } else {
+              resetRoles();
+            }
+            
+            setIsLoading(false);
+          }
+        );
 
         return () => {
           subscription.unsubscribe();
@@ -82,7 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     setupAuth();
-  }, [fetchUserRoles, resetRoles, user]);
+  }, []);
 
   // Calculate if user is authenticated
   const isAuthenticated = !!user;

@@ -1,7 +1,19 @@
 
-import { User, Session } from "@supabase/supabase-js";
+import { User, Session } from '@supabase/supabase-js';
 
-export type UserRole = 'admin' | 'hr' | 'manager' | 'employee';
+// Define the user role types - IMPORTANT: Database uses 'employer' while UI uses 'manager'
+export type UserRole = 'admin' | 'hr' | 'employee' | 'manager';
+export type DatabaseRole = 'admin' | 'hr' | 'employee' | 'employer';
+
+// Map UI roles to database roles
+export const mapUIRoleToDBRole = (role: UserRole): DatabaseRole => {
+  return role === 'manager' ? 'employer' : role as DatabaseRole;
+};
+
+// Map database roles to UI roles
+export const mapDBRoleToUIRole = (role: DatabaseRole): UserRole => {
+  return role === 'employer' ? 'manager' : role as UserRole;
+};
 
 export interface AuthContextType {
   user: User | null;
@@ -10,48 +22,15 @@ export interface AuthContextType {
   isAdmin: boolean;
   isHR: boolean;
   isManager: boolean;
-  isAuthenticated: boolean;
-  signIn: (email: string, password: string) => Promise<{
-    error: Error | null;
-    data: any;
-  }>;
-  signUp: (
-    email: string,
-    password: string,
-    firstName: string,
-    lastName: string
-  ) => Promise<{
-    error: any;
-    data?: any;
-    requiresConfirmation?: boolean;
-  }>;
-  resetPassword: (email: string) => Promise<{
-    error: Error | null;
-  }>;
-  updatePassword: (password: string) => Promise<{
-    error: Error | null;
-  }>;
-  signOut: () => Promise<void>;
+  isAuthenticated?: boolean;
+  signIn?: (email: string, password: string) => Promise<any>;
+  signUp?: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;
+  resetPassword?: (email: string) => Promise<any>;
+  updatePassword?: (password: string) => Promise<any>;
+  signOut?: () => Promise<void>;
 }
 
-// Map UI role names to database role names
-export const mapUIRoleToDBRole = (uiRole: UserRole): string => {
-  switch (uiRole) {
-    case 'manager': return 'employer';
-    case 'admin': return 'admin';
-    case 'hr': return 'hr';
-    case 'employee': 
-    default: return 'employee';
-  }
-};
-
-// Map database role names to UI role names
-export const mapDBRoleToUIRole = (dbRole: string): UserRole => {
-  switch (dbRole) {
-    case 'employer': return 'manager';
-    case 'admin': return 'admin';
-    case 'hr': return 'hr';
-    case 'employee':
-    default: return 'employee';
-  }
+// Function to check if user is authenticated
+export const isAuthenticated = (session: Session | null): boolean => {
+  return !!session?.user;
 };

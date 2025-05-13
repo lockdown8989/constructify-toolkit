@@ -5,7 +5,7 @@ import { AuthProvider } from './hooks/auth';
 import App from './App.tsx';
 import './index.css';
 
-// Render the app with proper provider nesting
+// Make sure AuthProvider wraps everything to fix the "useAuth must be used within an AuthProvider" error
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <AuthProvider>

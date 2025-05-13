@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './auth';
@@ -23,12 +22,7 @@ export function useEmployeeLeave(employeeId?: string) {
       const id = employeeId || user?.id;
       
       if (!id) {
-        return {
-          annual_leave_days: 20,
-          sick_leave_days: 10,
-          totalAnnualLeave: 30,
-          totalSickLeave: 15
-        };
+        throw new Error('No employee ID or authenticated user');
       }
       
       let query = supabase
@@ -43,7 +37,7 @@ export function useEmployeeLeave(employeeId?: string) {
         query = query.eq('user_id', id);
       }
       
-      const { data, error } = await query.maybeSingle();
+      const { data, error } = await query.single();
       
       if (error) {
         console.error("Error fetching leave data:", error);
@@ -52,24 +46,7 @@ export function useEmployeeLeave(employeeId?: string) {
           description: "Could not fetch leave data",
           variant: "destructive"
         });
-        
-        // Return default values instead of throwing error
-        return {
-          annual_leave_days: 20,
-          sick_leave_days: 10,
-          totalAnnualLeave: 30,
-          totalSickLeave: 15
-        };
-      }
-      
-      // If no data found, return default values
-      if (!data) {
-        return {
-          annual_leave_days: 20,
-          sick_leave_days: 10,
-          totalAnnualLeave: 30,
-          totalSickLeave: 15
-        };
+        throw error;
       }
       
       return {
@@ -79,8 +56,6 @@ export function useEmployeeLeave(employeeId?: string) {
         totalSickLeave: 15
       };
     },
-    enabled: !!employeeId || !!user?.id,
-    retry: 1,
-    retryDelay: 1000
+    enabled: !!employeeId || !!user?.id
   });
 }

@@ -9,20 +9,18 @@ export function useEmployeeDataManagement() {
 
   useEffect(() => {
     if (error) {
-      console.error("Employee data loading error:", error);
       toast({
         title: "Error",
-        description: "Could not load your employee information. Please try again later.",
+        description: "Could not load your employee information",
         variant: "destructive"
       });
     }
   }, [error, toast]);
 
-  // Return a consistent object structure even if data is missing
   return {
-    employeeData: employeeData || null,
+    employeeData,
     isLoading,
     error,
-    employeeId: employeeData?.id || null
+    employeeId: employeeData?.id
   };
 }

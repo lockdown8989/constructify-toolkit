@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useEmployees } from '@/hooks/use-employees';
 import { useInterviews } from '@/hooks/use-interviews';
@@ -7,29 +7,14 @@ import { useAttendanceSync } from '@/hooks/use-attendance-sync';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard';
 import ManagerDashboard from '@/components/dashboard/ManagerDashboard';
-import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const { isManager, user } = useAuth();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
-  const { toast } = useToast();
   
   // Enable real-time sync at the dashboard level
   useAttendanceSync();
-
-  useEffect(() => {
-    console.log("Dashboard rendered with isManager:", isManager);
-    console.log("User data:", user);
-    console.log("Employees count:", employees.length);
-
-    // For debugging - show role-based dashboard access
-    if (isManager) {
-      console.log("User has manager privileges - showing manager dashboard");
-    } else {
-      console.log("User does not have manager privileges - showing employee dashboard");
-    }
-  }, [isManager, user, employees]);
 
   // Get user's first name for greeting
   const firstName = user?.user_metadata?.first_name || 
@@ -47,7 +32,7 @@ const Dashboard = () => {
     name: emp.name,
     avatar: emp.avatar || `https://randomuser.me/api/portraits//${Math.random() > 0.5 ? 'women' : 'men'}/${Math.floor(Math.random() * 99)}.jpg`,
     title: emp.job_title,
-    salary: `$${emp.salary ? emp.salary.toLocaleString() : '0'}`,
+    salary: `$${emp.salary.toLocaleString()}`,
     status: emp.status === 'Active' ? 'Paid' as const : emp.status === 'Leave' ? 'Absent' as const : 'Pending' as const,
     paymentDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
   }));
@@ -66,14 +51,6 @@ const Dashboard = () => {
     projectTime: 0,
     output: 0
   };
-
-  if (isLoadingEmployees || isLoadingInterviews) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   return (
     <Tabs defaultValue="dashboard">

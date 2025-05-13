@@ -17,7 +17,7 @@ import RestaurantSchedule from "@/pages/RestaurantSchedule";
 import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
 import LandingPage from "@/pages/LandingPage";
-import About from "@/pages/About"; 
+import About from "@/pages/About"; // Import the About page
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import EmployeeDetailsPage from "@/components/people/EmployeeDetailsPage";
 import Attendance from "@/pages/Attendance";
@@ -26,23 +26,11 @@ import TimeClock from "@/pages/TimeClock";
 const RouterComponent = () => {
   const routes = useRoutes([
     {
-      path: "/",
-      element: <Index />,
-    },
-    {
-      path: "/landing",
-      element: <LandingPage />,
-    },
-    {
       path: "/auth",
       element: <Auth />,
     },
     {
-      path: "/about",
-      element: <About />,
-    },
-    {
-      path: "/dashboard",
+      path: "/",
       element: (
         <ProtectedRoute>
           <AppLayout />
@@ -51,6 +39,10 @@ const RouterComponent = () => {
       children: [
         {
           index: true,
+          element: <Index />,
+        },
+        {
+          path: "dashboard",
           element: <Dashboard />,
         },
         {
@@ -118,10 +110,18 @@ const RouterComponent = () => {
           element: <TimeClock />,
         },
         {
-          path: "about",
+          path: "about", // Make sure the About route is correctly defined
           element: <About />,
         },
       ],
+    },
+    {
+      path: "/landing",
+      element: <LandingPage />,
+    },
+    {
+      path: "/about", // Important: Add public About route at the root level
+      element: <About />,
     },
     {
       path: "*",

@@ -1,44 +1,37 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserRole } from "./useUserRole";
-
-// Map UI role names to database role names
-const mapUIRoleToDBRole = (uiRole: UserRole): string => {
-  switch (uiRole) {
-    case 'manager': return 'employer';
-    case 'admin': return 'admin';
-    case 'hr': return 'hr';
-    case 'employee': 
-    default: return 'employee';
-  }
-};
+import { UserRole, mapUIRoleToDBRole } from "@/hooks/auth/types";
 
 export const useRoleAssignment = () => {
   const { toast } = useToast();
 
   const assignUserRole = async (userId: string, userRole: UserRole) => {
     try {
-      // Convert UI role to DB role
-      const dbRole = mapUIRoleToDBRole(userRole);
-      console.log(`Assigning DB role ${dbRole} to user ${userId}`);
-      
-      // Check if user already has this specific role using a direct query
-      // This avoids infinite recursion by not using RLS policies
-      const { data: existingRole, error: roleCheckError } = await supabase
+      // First check if user already has any roles
+      const { data: existingRoles, error: roleCheckError } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId)
-        .eq('role', dbRole)
-        .maybeSingle();
+        .eq('user_id', userId);
         
       if (roleCheckError) {
-        console.error("Error checking existing role:", roleCheckError);
+        console.error("Error checking existing roles:", roleCheckError);
+        toast({
+          title: "Error",
+          description: "Could not check user roles: " + roleCheckError.message,
+          variant: "destructive",
+        });
         return false;
       }
       
-      // Only add role if user doesn't already have it
-      if (!existingRole) {
+      // Map the UI role to the database role
+      const dbRole = mapUIRoleToDBRole(userRole);
+      
+      // Check specifically for the role we're trying to add
+      const hasRequestedRole = existingRoles?.some(r => r.role === dbRole);
+      
+      if (!hasRequestedRole) {
+        // Insert the new role (without removing existing roles)
         const { error: insertError } = await supabase
           .from('user_roles')
           .insert({ 
@@ -48,12 +41,17 @@ export const useRoleAssignment = () => {
             
         if (insertError) {
           console.error("Role insertion error:", insertError);
+          toast({
+            title: "Error",
+            description: "Could not assign user role: " + insertError.message,
+            variant: "destructive",
+          });
           return false;
-        }
+        } 
         
-        console.log(`Role ${dbRole} assigned successfully`);
+        console.log(`Role ${dbRole} inserted successfully`);
       } else {
-        console.log(`User already has role ${dbRole}`);
+        console.log(`User already has role: ${dbRole}, not adding again`);
       }
       
       return true;
@@ -63,7 +61,5 @@ export const useRoleAssignment = () => {
     }
   };
 
-  return { assignUserRole, mapUIRoleToDBRole };
+  return { assignUserRole };
 };
-
-export { mapUIRoleToDBRole };

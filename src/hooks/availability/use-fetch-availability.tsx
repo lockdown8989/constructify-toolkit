@@ -67,9 +67,7 @@ export function useAvailabilityRequests(employeeId?: string) {
       console.log('Fetched availability requests:', data?.length || 0, data);
       return data as AvailabilityRequest[] || [];
     },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2
+    enabled: !!user
   });
 }
 

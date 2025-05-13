@@ -1,8 +1,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Employee } from '@/components/dashboard/salary-table/types';
-import { calculateSalaryWithGPT, getEmployeeAttendance, calculateUKIncomeTax } from './use-salary-calculation';
+import { calculateSalaryWithGPT, getEmployeeAttendance } from './use-salary-calculation';
 import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
+import { sendNotification } from '@/services/notifications/notification-sender';
 import { notifyEmployeeAboutPayslip } from '@/services/notifications/payroll-notifications';
 import { format } from 'date-fns';
 
@@ -39,23 +40,21 @@ export const processEmployeePayroll = async (
     // Calculate final salary using AI function with currency
     const finalSalary = await calculateSalaryWithGPT(employeeId, baseSalary, currency);
     
-    // Calculate with UK tax rates for accurate breakdown in the payslip
-    const annualSalary = baseSalary * 12;
-    const annualTax = calculateUKIncomeTax(annualSalary);
-    const monthlyTax = annualTax / 12;
-    
-    // Determine insurance and other deductions using standard rates
+    // Determine tax, insurance and other deductions
+    const taxRate = 0.2;
     const insuranceRate = 0.05;
     const otherRate = 0.08;
+    const taxDeduction = baseSalary * taxRate;
     const insuranceDeduction = baseSalary * insuranceRate;
     const otherDeduction = baseSalary * otherRate;
-    const totalDeductions = monthlyTax + insuranceDeduction + otherDeduction;
+    const totalDeductions = taxDeduction + insuranceDeduction + otherDeduction;
     
     // Calculate overtime pay
     const hourlyRate = baseSalary / 160; // Assuming 160 hours per month
     const overtimePay = overtimeHours * hourlyRate * 1.5; // Overtime rate of 1.5x
     
     const paymentDate = new Date().toISOString().split('T')[0];
+    const processingDate = new Date().toISOString();
     
     // Generate pay period
     const today = new Date();
@@ -63,7 +62,7 @@ export const processEmployeePayroll = async (
     const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     const payPeriod = `${format(firstDayOfMonth, 'dd/MM/yyyy')} - ${format(lastDayOfMonth, 'dd/MM/yyyy')}`;
     
-    // Add record to payroll table - MODIFIED to use only available columns
+    // Add record to payroll table
     const { data: payrollData, error: payrollError } = await supabase
       .from('payroll')
       .insert({
@@ -74,8 +73,12 @@ export const processEmployeePayroll = async (
         overtime_pay: overtimePay,
         salary_paid: finalSalary,
         deductions: totalDeductions,
+        tax_paid: taxDeduction,
+        ni_contribution: insuranceDeduction,
+        other_deductions: otherDeduction,
         payment_status: 'Paid',
-        payment_date: paymentDate
+        payment_date: paymentDate,
+        processing_date: processingDate
       })
       .select()
       .single();

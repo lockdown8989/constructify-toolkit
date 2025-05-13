@@ -27,7 +27,7 @@ const HistoryHoverCard = ({ request }: HistoryHoverCardProps) => {
       <HoverCardContent className="w-80">
         <div className="space-y-2">
           <h4 className="text-sm font-semibold">Request History</h4>
-          {request.audit_log?.map((log, index) => (
+          {request.audit_log.map((log, index) => (
             <div key={index} className="text-xs border-l-2 border-gray-200 pl-2">
               <p className="text-gray-600">
                 Status changed from {log.old_status} to {log.new_status}

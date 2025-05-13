@@ -74,14 +74,6 @@ export const useSignUpSubmit = ({
         return;
       }
       
-      // Generate a unique manager ID for managers if not provided
-      let effectiveManagerId = managerId;
-      if (userRole === 'manager' && !effectiveManagerId) {
-        const randomId = Math.floor(10000 + Math.random() * 90000);
-        effectiveManagerId = `MGR-${randomId}`;
-        console.log("Generated manager ID:", effectiveManagerId);
-      }
-      
       // Call the sign up function provided via props
       const { error, data, requiresConfirmation } = await onSignUp(
         email, 
@@ -139,13 +131,7 @@ export const useSignUpSubmit = ({
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        console.log(`Got user with ID: ${user.id}, assigning role: ${userRole}, manager ID: ${effectiveManagerId || 'none'}`);
-        
-        // CRITICAL: For managers, ALWAYS set their own manager_id to their generated ID
-        // This ensures they're recognized as managers throughout the system
-        if (userRole === 'manager') {
-          console.log(`Setting manager's own manager_id to: ${effectiveManagerId}`);
-        }
+        console.log(`Got user with ID: ${user.id}, assigning role: ${userRole}, manager ID: ${managerId || 'none'}`);
         
         // Try role assignment and employee record creation in parallel
         const [roleSuccess, employeeSuccess] = await Promise.allSettled([
@@ -154,41 +140,24 @@ export const useSignUpSubmit = ({
             user.id,
             getFullName(),
             userRole,
-            effectiveManagerId  // This is important - managers get their own manager_id
+            managerId
           )
         ]);
 
         console.log("Role assignment result:", roleSuccess);
         console.log("Employee record creation result:", employeeSuccess);
         
-        // For managers, ensure they have the employer role
-        if (userRole === 'manager') {
-          const dbRole = 'employer'; // This matches what's expected in the database
-          const { error: roleError } = await supabase
-            .from('user_roles')
-            .upsert({ 
-              user_id: user.id, 
-              role: dbRole 
-            });
-            
-          if (roleError) {
-            console.error("Error ensuring employer role:", roleError);
-          } else {
-            console.log("Ensured user has employer role in database");
-          }
-        }
-        
         // Show appropriate success message
         if (userRole === 'manager') {
           toast({
             title: "Success",
-            description: `Account created with manager role. Your Manager ID is ${effectiveManagerId}. Share this with your employees to connect them to your account.`,
+            description: `Account created with manager role. Your Manager ID is ${managerId}. Share this with your employees to connect them to your account.`,
             duration: 6000,
           });
-        } else if (userRole === 'employee' && effectiveManagerId) {
+        } else if (userRole === 'employee' && managerId) {
           toast({
             title: "Success", 
-            description: `Account created and linked to your manager with ID ${effectiveManagerId}.`,
+            description: `Account created and linked to your manager with ID ${managerId}.`,
           });
         } else {
           toast({
