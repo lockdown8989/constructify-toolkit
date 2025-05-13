@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -128,6 +127,7 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
       </TabsContent>
       
       <TabsContent value="leave" className="space-y-4 mt-4 no-scrollbar">
+        {/* Leave Balance Card is only shown in leave tab, not in other tabs */}
         <LeaveBalanceCard leaveBalance={leaveBalance} />
         <Card className="border rounded-xl shadow-sm overflow-hidden">
           <CardHeader className="pb-2 pt-4 px-4">

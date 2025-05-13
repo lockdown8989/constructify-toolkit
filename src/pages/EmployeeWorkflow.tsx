@@ -10,6 +10,7 @@ import { useEmployeeLeave } from '@/hooks/use-employee-leave';
 import { checkLeaveBalance, processLeaveRequest } from '@/services/employee-sync/leave-sync';
 import { useAttendance } from '@/hooks/use-attendance';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Loader2, CheckCircle, CalendarDays, DollarSign, ClipboardList } from "lucide-react";
 
 const EmployeeWorkflow: React.FC = () => {
@@ -18,6 +19,7 @@ const EmployeeWorkflow: React.FC = () => {
   const [activeTab, setActiveTab] = useState("attendance");
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
+  const isMobile = useIsMobile();
   
   // Get employee attendance data
   const { data: attendanceData, isLoading: isLoadingAttendance } = 
@@ -143,51 +145,54 @@ const EmployeeWorkflow: React.FC = () => {
             </CardContent>
           </Card>
           
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarDays className="h-5 w-5" />
-                My Leave Balance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm">Annual Leave</span>
-                    <span className="text-sm font-medium">
-                      {leaveData?.annual_leave_days || 0} / {leaveData?.totalAnnualLeave || 30} days
-                    </span>
+          {/* Only show the leave balance card on desktop view, not on mobile */}
+          {!isMobile && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarDays className="h-5 w-5" />
+                  My Leave Balance
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm">Annual Leave</span>
+                      <span className="text-sm font-medium">
+                        {leaveData?.annual_leave_days || 0} / {leaveData?.totalAnnualLeave || 30} days
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div 
+                        className="bg-blue-500 h-2.5 rounded-full" 
+                        style={{ width: `${leaveData ? (leaveData.annual_leave_days / leaveData.totalAnnualLeave) * 100 : 0}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div 
-                      className="bg-blue-500 h-2.5 rounded-full" 
-                      style={{ width: `${leaveData ? (leaveData.annual_leave_days / leaveData.totalAnnualLeave) * 100 : 0}%` }}
-                    ></div>
+                  
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm">Sick Leave</span>
+                      <span className="text-sm font-medium">
+                        {leaveData?.sick_leave_days || 0} / {leaveData?.totalSickLeave || 15} days
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div 
+                        className="bg-green-500 h-2.5 rounded-full" 
+                        style={{ width: `${leaveData ? (leaveData.sick_leave_days / leaveData.totalSickLeave) * 100 : 0}%` }}
+                      ></div>
+                    </div>
                   </div>
+                  
+                  <Button variant="outline" className="w-full">
+                    Request Leave
+                  </Button>
                 </div>
-                
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm">Sick Leave</span>
-                    <span className="text-sm font-medium">
-                      {leaveData?.sick_leave_days || 0} / {leaveData?.totalSickLeave || 15} days
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div 
-                      className="bg-green-500 h-2.5 rounded-full" 
-                      style={{ width: `${leaveData ? (leaveData.sick_leave_days / leaveData.totalSickLeave) * 100 : 0}%` }}
-                    ></div>
-                  </div>
-                </div>
-                
-                <Button variant="outline" className="w-full">
-                  Request Leave
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
         
         {/* Right Column - Workflow Tabs */}
