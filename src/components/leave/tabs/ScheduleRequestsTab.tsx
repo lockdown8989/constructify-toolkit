@@ -3,10 +3,10 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from '@/hooks/auth';
 import { format } from 'date-fns';
-import { useShiftSwaps } from '@/hooks/useShiftSwaps';
+import { useShiftSwaps } from '@/hooks/use-shift-swaps';
 import { ShiftSwapTabContent } from '../ShiftSwapTabContent';
 import { AvailabilityRequestList } from '../AvailabilityRequestList';
-import { useAvailability } from '@/hooks/availability';
+import { useAvailability } from '@/hooks/use-availability';
 import { Card, CardContent } from '@/components/ui/card';
 
 const ScheduleRequestsTab = () => {

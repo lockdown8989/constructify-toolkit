@@ -1,10 +1,8 @@
 
 import React from 'react';
-import { ShiftSwap } from '@/hooks/use-shift-swaps';
 import { Button } from '@/components/ui/button';
-import { Check, X, Clock } from 'lucide-react';
-import ShiftSwapStatusBadge from '@/components/schedule/ShiftSwapStatusBadge';
-import ShiftSwapEmptyState from '@/components/schedule/ShiftSwapEmptyState';
+import { Check, X } from 'lucide-react';
+import { ShiftSwap } from '@/hooks/use-shift-swaps';
 
 interface ShiftSwapTabContentProps {
   swapRequests: ShiftSwap[] | undefined;
@@ -27,7 +25,14 @@ export const ShiftSwapTabContent: React.FC<ShiftSwapTabContentProps> = ({
   const completedSwaps = swapRequests.filter(swap => swap.status === 'Completed');
   
   if (swapRequests.length === 0) {
-    return <ShiftSwapEmptyState statusType="all" />;
+    return (
+      <div className="text-center py-6 text-gray-500">
+        <p>No shift swap requests found.</p>
+        <p className="text-sm mt-2">
+          Shift swap requests will appear here when employees request to swap shifts.
+        </p>
+      </div>
+    );
   }
   
   return (
@@ -43,7 +48,9 @@ export const ShiftSwapTabContent: React.FC<ShiftSwapTabContentProps> = ({
                     <p className="font-medium">{swap.requester_id}</p>
                     <p className="text-sm text-gray-500">Requested: {formatDate(swap.created_at)}</p>
                   </div>
-                  <ShiftSwapStatusBadge status={swap.status} />
+                  <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
+                    Pending
+                  </span>
                 </div>
                 
                 {swap.notes && (
@@ -89,7 +96,9 @@ export const ShiftSwapTabContent: React.FC<ShiftSwapTabContentProps> = ({
                     <p className="font-medium">{swap.requester_id}</p>
                     <p className="text-sm text-gray-500">Updated: {formatDate(swap.updated_at)}</p>
                   </div>
-                  <ShiftSwapStatusBadge status={swap.status} />
+                  <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                    Approved
+                  </span>
                 </div>
               </div>
             ))}
@@ -108,7 +117,9 @@ export const ShiftSwapTabContent: React.FC<ShiftSwapTabContentProps> = ({
                     <p className="font-medium">{swap.requester_id}</p>
                     <p className="text-sm text-gray-500">Updated: {formatDate(swap.updated_at)}</p>
                   </div>
-                  <ShiftSwapStatusBadge status={swap.status} />
+                  <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
+                    Rejected
+                  </span>
                 </div>
               </div>
             ))}
@@ -127,7 +138,9 @@ export const ShiftSwapTabContent: React.FC<ShiftSwapTabContentProps> = ({
                     <p className="font-medium">{swap.requester_id}</p>
                     <p className="text-sm text-gray-500">Completed: {formatDate(swap.updated_at)}</p>
                   </div>
-                  <ShiftSwapStatusBadge status={swap.status} />
+                  <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                    Completed
+                  </span>
                 </div>
               </div>
             ))}
