@@ -30,6 +30,18 @@ interface Document {
   url?: string;
 }
 
+// Define a proper type for document assignments
+interface DocumentAssignment {
+  id: string;
+  employee_id: string;
+  document_id: string;
+  assigned_at: string;
+  is_required: boolean;
+  due_date?: string;
+  status: 'pending' | 'viewed' | 'completed' | 'overdue';
+  document?: Document | null;
+}
+
 const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
   const [activeTab, setActiveTab] = useState('documents');
   const [uploadingFile, setUploadingFile] = useState(false);
@@ -208,7 +220,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
     }
   };
   
-  const getDocumentIcon = (docType: string) => {
+  const getDocumentIcon = (docType: string | undefined) => {
     if (!docType) return <File className="h-5 w-5 text-gray-500" />;
     
     const lowercaseType = docType.toLowerCase();
@@ -475,13 +487,17 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {assignments.map((assignment) => (
+                      {assignments.map((assignment: DocumentAssignment) => (
                         <TableRow key={assignment.id}>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               {assignment.document && 
-                                getDocumentIcon(assignment.document.document_type || '')}
-                              <span>{assignment.document ? assignment.document.name : 'Unknown document'}</span>
+                                getDocumentIcon(assignment.document.document_type)}
+                              <span>
+                                {assignment.document 
+                                  ? assignment.document.name 
+                                  : 'Unknown document'}
+                              </span>
                               {assignment.is_required && (
                                 <Badge variant="outline" className="ml-2">Required</Badge>
                               )}
