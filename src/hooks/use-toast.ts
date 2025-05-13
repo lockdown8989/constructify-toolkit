@@ -1,5 +1,5 @@
 
-import { toast as sonnerToast, type ToastT as SonnerToast, useToaster } from "sonner";
+import { toast as sonnerToast, type ToastT as SonnerToast, useToast as useSonnerToast } from "sonner";
 
 export interface ToastProps {
   title?: string;
@@ -47,10 +47,10 @@ export const toast = ({
 
 export const useToast = () => {
   // Get the toaster instance from sonner
-  const { toasts: sonnerToasts } = useToaster();
+  const { toasts: sonnerToasts } = useSonnerToast();
   
   // Map sonner toasts to our format expected by the Toaster component
-  const toasts = sonnerToasts.map(sonnerToast => ({
+  const toasts = sonnerToasts && sonnerToasts.map(sonnerToast => ({
     id: sonnerToast.id,
     title: sonnerToast.title,
     description: sonnerToast.description,
