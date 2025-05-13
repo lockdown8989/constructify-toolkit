@@ -6,4 +6,10 @@ export interface Project {
   deadline: string;
   priority: string;
   created_at: string | null;
+  status?: 'pending' | 'in-progress' | 'completed' | 'on-hold';
+  description?: string;
+  manager_id?: string;
+  estimated_hours?: number;
+  budget?: number;
+  completion_percentage?: number;
 }
