@@ -1,82 +1,56 @@
-
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Schedule } from '@/types/schedule';
-import { useShiftResponse } from '@/hooks/use-shift-response';
-import { useToast } from '@/hooks/use-toast';
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useShiftResponse } from "@/hooks/use-shift-response";
+import { Schedule } from "@/types/schedule"; // We'll ensure this type exists
 
 interface ShiftResponseActionsProps {
   shift: Schedule;
-  onStatusChange?: () => void;
+  onComplete?: () => void;
 }
 
-export const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
-  shift,
-  onStatusChange
-}) => {
-  const { respondToShift, isLoading } = useShiftResponse();
-  const { toast } = useToast();
-  
+export const ShiftResponseActions = ({ shift, onComplete }: ShiftResponseActionsProps) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const { acceptShift, declineShift } = useShiftResponse();
+
   const handleAccept = async () => {
-    if (!shift.id) return;
-    
-    const result = await respondToShift(shift.id, 'employee_accepted');
-    
-    if (result) {
-      toast({
-        title: "Shift Accepted", 
-        description: "You have successfully accepted this shift",
-        variant: "success"
-      });
-      
-      if (onStatusChange) {
-        onStatusChange();
-      }
-    }
-  };
-  
-  const handleDecline = async () => {
-    if (!shift.id) return;
-    
-    const result = await respondToShift(shift.id, 'employee_rejected');
-    
-    if (result) {
-      toast({
-        title: "Shift Declined", 
-        description: "You have successfully declined this shift",
-        variant: "warning"
-      });
-      
-      if (onStatusChange) {
-        onStatusChange();
-      }
+    setIsLoading(true);
+    try {
+      await acceptShift(shift.id);
+      onComplete?.();
+    } catch (error) {
+      console.error("Failed to accept shift:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Only show response buttons for pending shifts
-  if (shift.status !== 'pending') {
-    return null;
-  }
-  
+  const handleDecline = async () => {
+    setIsLoading(true);
+    try {
+      await declineShift(shift.id);
+      onComplete?.();
+    } catch (error) {
+      console.error("Failed to decline shift:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="flex space-x-2 mt-2">
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={handleAccept}
-        disabled={isLoading}
-        className="bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
-      >
-        Accept
-      </Button>
-      <Button 
-        variant="outline" 
-        size="sm" 
+    <div className="flex justify-end space-x-2">
+      <Button
+        variant="outline"
         onClick={handleDecline}
         disabled={isLoading}
-        className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
       >
         Decline
+      </Button>
+      <Button
+        onClick={handleAccept}
+        disabled={isLoading}
+        isLoading={isLoading}
+      >
+        Accept
       </Button>
     </div>
   );

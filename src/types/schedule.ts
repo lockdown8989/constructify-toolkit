@@ -1,10 +1,16 @@
 
-import { Schedule as BaseSchedule } from "@/hooks/use-schedules";
-
-export interface EnhancedSchedule extends BaseSchedule {
-  status?: 'confirmed' | 'pending' | 'completed';
+export interface Schedule {
+  id: string;
+  title: string;
+  start_time: string | Date;
+  end_time: string | Date;
+  employee_id?: string;
+  notes?: string;
   location?: string;
-  manager_id?: string;
-  break_duration?: number;
-  coworkers?: string[];
+  color?: string;
+  status?: string;
+  shift_type?: string;
+  created_at?: string;
+  updated_at?: string;
+  calendar_id?: string;
 }
