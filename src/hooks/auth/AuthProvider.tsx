@@ -4,12 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useRoles } from "./useRoles";
 import { useAuthActions } from "./useAuthActions";
-import { AuthContextType } from "./types";
+import { AuthContextType, AuthUser } from "./types";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { isAdmin, isHR, isManager, fetchUserRoles, resetRoles } = useRoles(user);
@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (sessionData?.session) {
           setSession(sessionData.session);
-          setUser(sessionData.session.user);
+          setUser(sessionData.session.user as AuthUser);
           
           if (sessionData.session.user) {
             await fetchUserRoles(sessionData.session.user.id);
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           async (event, session) => {
             console.log("Auth state changed:", event, session?.user?.email);
             setSession(session);
-            setUser(session?.user ?? null);
+            setUser(session?.user as AuthUser ?? null);
             
             if (session?.user) {
               await fetchUserRoles(session.user.id);

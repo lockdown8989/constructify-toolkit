@@ -2,17 +2,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, AuthError } from '@supabase/supabase-js';
-import { UserRole } from './auth/types';
+import { UserRole, AuthUser } from './auth/types';
 import { useToast } from './use-toast';
-
-export interface AuthUser extends User {
-  // Adding any additional properties needed
-  user_metadata?: {
-    name?: string;
-    avatar_url?: string;
-    full_name?: string;
-  };
-}
 
 export interface AuthState {
   user: AuthUser | null;
@@ -79,7 +70,7 @@ export const useAuth = () => {
         const isAdmin = roles.includes('admin');
         const isHR = roles.includes('hr');
         // Map 'employer' role from DB to 'manager' in UI
-        const hasManagerRole = roles.includes('manager') || roles.includes('employer');
+        const hasManagerRole = roles.includes('manager') || roles.some(r => r === 'employer');
           
         setAuthState({
           user,

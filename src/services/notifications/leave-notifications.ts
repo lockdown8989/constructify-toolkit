@@ -1,6 +1,6 @@
-
-import { supabase } from '@/integrations/supabase/client';
-import { mapUIRoleToDBRole } from '@/hooks/auth/types';
+import { supabase } from "@/integrations/supabase/client";
+import { getRecipientsByRole } from "./role-utils";
+import { mapUIRoleToDBRole } from "@/hooks/auth/types";
 
 /**
  * Notifies managers about a new leave request

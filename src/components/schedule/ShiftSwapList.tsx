@@ -1,9 +1,13 @@
-
 import React, { useState } from 'react';
 import { useEmployees } from '@/hooks/use-employees';
 import { useSchedules } from '@/hooks/use-schedules';
-import { useShiftSwaps, useUpdateShiftSwap, useDeleteShiftSwap, ShiftSwap } from '@/hooks/use-shift-swaps';
-import { useAuth } from '@/hooks/use-auth';
+import { 
+  useShiftSwaps, 
+  useUpdateShiftSwap, 
+  useDeleteShiftSwap, 
+  ShiftSwap 
+} from '@/hooks/use-shift-swaps';
+import { useAuth } from '@/hooks/auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeftRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -11,7 +15,7 @@ import ShiftSwapItem from './ShiftSwapItem';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const ShiftSwapList = () => {
-  const { data: swaps = [], isLoading: isLoadingSwaps } = useShiftSwaps();
+  const { swapRequests, isLoading: isLoadingSwaps } = useShiftSwaps();
   const { data: schedules = [] } = useSchedules();
   const { data: employees = [] } = useEmployees();
   const { user, isAdmin, isHR, isManager } = useAuth();
@@ -30,7 +34,7 @@ const ShiftSwapList = () => {
   
   const canApproveSwaps = isAdmin || isHR || isManager;
   
-  const filteredSwaps = swaps.filter(swap => {
+  const filteredSwaps = swapRequests.filter(swap => {
     switch (activeTab) {
       case 'pending':
         return swap.status === 'Pending';
@@ -47,7 +51,7 @@ const ShiftSwapList = () => {
     if (canApproveSwaps) {
       return true;
     } else {
-      return swap.requester_id === user.id || swap.recipient_id === user.id;
+      return swap.requester_id === user?.id || swap.recipient_id === user?.id;
     }
   });
   
