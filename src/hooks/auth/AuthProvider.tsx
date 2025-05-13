@@ -31,12 +31,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               await fetchUserRoles(session.user.id);
               
               // Show welcome toast for sign in and sign up events
+              // Fix: Use explicit string comparison since event is a string enum
               if (event === 'SIGNED_IN') {
                 toast({
                   title: "Welcome back!",
                   description: "You have successfully signed in.",
                 });
-              } else if (event === 'SIGNED_UP') {
+              } else if (event === 'USER_UPDATED' && !user) {
+                // This would indicate a new user was created (effectively a sign up)
                 toast({
                   title: "Welcome!",
                   description: "Your account has been created successfully.",
@@ -77,7 +79,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     setupAuth();
-  }, [fetchUserRoles, resetRoles]);
+  }, [fetchUserRoles, resetRoles, user]);
 
   // Calculate if user is authenticated
   const isAuthenticated = !!user;
