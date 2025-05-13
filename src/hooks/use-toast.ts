@@ -1,4 +1,5 @@
 
+
 import { toast as sonnerToast, type ExternalToast } from "sonner";
 
 export type ToastProps = {
@@ -30,10 +31,10 @@ export const toast = ({
     duration,
   };
   
-  // Only add the variant if it's defined and valid
+  // Only add the type if it's defined and valid
   if (toastType) {
-    // TypeScript type assertion to handle the mapping
-    sonnerOptions.variant = toastType as "success" | "info" | "warning" | "error" | undefined;
+    // TypeScript cast - the ExternalToast interface in sonner uses 'type' not 'variant'
+    sonnerOptions.type = toastType as any;
   }
 
   return sonnerToast(title, sonnerOptions);
@@ -44,3 +45,4 @@ export const useToast = () => {
     toast,
   };
 };
+
