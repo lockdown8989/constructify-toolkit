@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -167,16 +166,14 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                     <span>Attendance</span>
                   </Link>
                 )}
-                
                 {hasManagerialAccess ? (
                   <Link
                     to="/employee-workflow"
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium bg-blue-50 border border-blue-100 text-blue-700 hover:bg-blue-100 active:bg-blue-200 transition-all touch-target"
+                    className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
                   >
-                    <Clock className="mr-3 h-5 w-5 text-blue-600" />
+                    <Clock className="mr-3 h-5 w-5 text-neutral-600" />
                     <span>My Employee Shifts</span>
-                    <Badge className="ml-2 bg-blue-100 text-blue-700 hover:bg-blue-200">Manager</Badge>
                   </Link>
                 ) : (
                   <Link

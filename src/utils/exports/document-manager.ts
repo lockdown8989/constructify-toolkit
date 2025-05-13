@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { generatePayslipPDF, PayslipResult } from './payslip-generator'; 
+import { notifyEmployeeAboutDocument } from '@/services/notifications/payroll-notifications';
 
 export async function uploadEmployeeDocument(
   employeeId: string,
@@ -32,7 +33,7 @@ export async function uploadEmployeeDocument(
       .getPublicUrl(`employees/${employeeId}/${documentType}/${filename}`);
     
     // Update documents table with document reference
-    const { error: insertError } = await supabase
+    const { data: insertData, error: insertError } = await supabase
       .from('documents')
       .insert({
         employee_id: employeeId,
@@ -40,10 +41,29 @@ export async function uploadEmployeeDocument(
         name: file.name,
         path: data.path,
         size: `${Math.round(file.size / 1024)} kb`
-      });
+      })
+      .select()
+      .single();
       
     if (insertError) {
       console.error(`Error updating document record:`, insertError);
+      return { success: false, error: insertError.message };
+    }
+
+    // Get employee user_id for notification
+    const { data: employee } = await supabase
+      .from('employees')
+      .select('user_id')
+      .eq('id', employeeId)
+      .single();
+      
+    // Send notification to employee about new document
+    if (employee?.user_id && (documentType === 'contract' || documentType === 'payslip')) {
+      await notifyEmployeeAboutDocument(
+        employee.user_id,
+        documentType,
+        file.name
+      );
     }
     
     return { success: true, path: urlData.publicUrl };
@@ -95,6 +115,13 @@ export async function attachPayslipToResume(
       }
     }
     
+    // Get employee user_id for notification
+    const { data: employee } = await supabase
+      .from('employees')
+      .select('user_id, name')
+      .eq('id', employeeId)
+      .single();
+    
     // First check if the employee has a resume in the documents bucket
     const { data: documents, error: documentsError } = await supabase
       .from('documents')
@@ -132,7 +159,7 @@ export async function attachPayslipToResume(
     }
     
     // Add the payslip as a document in the documents table
-    const { error: insertError } = await supabase
+    const { data: insertData, error: insertError } = await supabase
       .from('documents')
       .insert({
         employee_id: employeeId,
@@ -140,7 +167,9 @@ export async function attachPayslipToResume(
         name: payslipResult.filename || `Payslip_${new Date().toISOString().split('T')[0]}`,
         path: payslipResult.path,
         size: 'auto-generated'
-      });
+      })
+      .select()
+      .single();
       
     if (insertError) {
       console.error('Error inserting payslip document record:', insertError);
@@ -150,10 +179,19 @@ export async function attachPayslipToResume(
       };
     }
     
+    // Send notification to employee about new payslip document
+    if (employee?.user_id) {
+      await notifyEmployeeAboutDocument(
+        employee.user_id,
+        'payslip',
+        payslipResult.filename || `Payslip_${new Date().toISOString().split('T')[0]}`
+      );
+    }
+    
     // Determine message based on whether there was a resume
     const successMessage = documents && documents.length > 0
-      ? 'Payslip generated and attached to employee resume'
-      : 'Payslip generated and added to employee documents';
+      ? 'Payslip generated, attached to employee records, and employee notified'
+      : 'Payslip generated, added to employee documents, and employee notified';
     
     return {
       success: true,

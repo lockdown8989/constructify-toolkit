@@ -12,7 +12,6 @@ import {
   navigationMenuTriggerStyle
 } from "@/components/ui/navigation-menu"
 import { ChevronDown, Home, User, Users, Calendar, FileText, Workflow, DollarSign, Receipt, Utensils, Clock, ClipboardCheck, Coffee } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 
 interface DesktopNavProps {
   isAuthenticated: boolean
@@ -81,32 +80,17 @@ const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
                 </Link>
               )}
               
-              {hasManagerialAccess ? (
-                <Link 
-                  to="/employee-workflow" 
-                  className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-200 p-6 no-underline outline-none focus:shadow-md"
-                >
-                  <div className="flex items-center gap-2 mb-1 mt-4">
-                    <span className="text-lg font-medium text-blue-700">My Employee Shifts</span>
-                    <Badge className="bg-blue-200 text-blue-700 hover:bg-blue-300">Manager</Badge>
-                  </div>
-                  <p className="text-sm leading-tight text-blue-600">
-                    Manage your team's shifts and scheduling
-                  </p>
-                </Link>
-              ) : (
-                <Link 
-                  to="/employee-workflow" 
-                  className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
-                >
-                  <div className="mb-2 mt-4 text-lg font-medium">
-                    My Schedule
-                  </div>
-                  <p className="text-sm leading-tight text-muted-foreground">
-                    View your upcoming shifts
-                  </p>
-                </Link>
-              )}
+              <Link 
+                to="/employee-workflow" 
+                className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+              >
+                <div className="mb-2 mt-4 text-lg font-medium">
+                  {hasManagerialAccess ? "My Employee Shifts" : "My Schedule"}
+                </div>
+                <p className="text-sm leading-tight text-muted-foreground">
+                  {hasManagerialAccess ? "Manage your team's shifts" : "View your upcoming shifts"}
+                </p>
+              </Link>
               
               <Link 
                 to="/leave-management" 

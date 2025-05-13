@@ -1,5 +1,5 @@
 
-import { useRoutes } from "react-router-dom";
+import { useRoutes, BrowserRouter } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import Auth from "@/pages/Auth";
@@ -17,13 +17,13 @@ import RestaurantSchedule from "@/pages/RestaurantSchedule";
 import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
 import LandingPage from "@/pages/LandingPage";
-import About from "@/pages/About"; // Import the About page
+import About from "@/pages/About"; 
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import EmployeeDetailsPage from "@/components/people/EmployeeDetailsPage";
 import Attendance from "@/pages/Attendance";
 import TimeClock from "@/pages/TimeClock";
 
-const RouterComponent = () => {
+const Routes = () => {
   const routes = useRoutes([
     {
       path: "/auth",
@@ -110,7 +110,7 @@ const RouterComponent = () => {
           element: <TimeClock />,
         },
         {
-          path: "about", // Make sure the About route is correctly defined
+          path: "about",
           element: <About />,
         },
       ],
@@ -120,7 +120,7 @@ const RouterComponent = () => {
       element: <LandingPage />,
     },
     {
-      path: "/about", // Important: Add public About route at the root level
+      path: "/about",
       element: <About />,
     },
     {
@@ -130,6 +130,14 @@ const RouterComponent = () => {
   ]);
 
   return routes;
+};
+
+const RouterComponent = () => {
+  return (
+    <BrowserRouter>
+      <Routes />
+    </BrowserRouter>
+  );
 };
 
 export default RouterComponent;
