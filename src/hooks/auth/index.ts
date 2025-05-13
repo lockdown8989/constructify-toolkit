@@ -5,5 +5,11 @@ export { AuthProvider, useAuth } from './AuthProvider';
 export { useAuthActions } from './useAuthActions';
 export { useAuthPage } from './useAuthPage';
 export { useRoles } from './useRoles';
-export { isAuthenticated } from './types';
-export type { UserRole } from './types';
+
+// Export from types
+export type { UserRole, AuthContextType } from './types';
+
+// Add this function to fix the missing export
+export const isAuthenticated = (user: any): boolean => {
+  return !!user;
+};
