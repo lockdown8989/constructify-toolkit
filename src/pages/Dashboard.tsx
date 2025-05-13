@@ -7,9 +7,10 @@ import { useAttendanceSync } from '@/hooks/use-attendance-sync';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard';
 import ManagerDashboard from '@/components/dashboard/ManagerDashboard';
+import { Loader2 } from 'lucide-react';
 
 const Dashboard = () => {
-  const { isManager, isAdmin, isHR, user } = useAuth();
+  const { isManager, isAdmin, isHR, isLoading: authLoading, user } = useAuth();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
   
@@ -56,6 +57,18 @@ const Dashboard = () => {
   };
 
   console.log("User roles:", { isManager, isAdmin, isHR, hasManagerAccess });
+  
+  // Show loading state while auth is loading
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Tabs defaultValue="dashboard">

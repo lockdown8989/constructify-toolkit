@@ -221,24 +221,27 @@ export function useOwnEmployeeData() {
         throw new Error('No authenticated user');
       }
 
+      console.log("Fetching employee data for user:", user.id);
       const { data, error } = await supabase
         .from('employees')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching own employee data:", error);
-        toast({
-          title: "Error",
-          description: "Could not fetch your employee information",
-          variant: "destructive"
-        });
-        throw error;
+        return null; // Return null instead of throwing error
+      }
+
+      if (!data) {
+        console.log("No employee record found for user:", user.id);
+        return null; // Return null if no data found
       }
 
       return data as Employee;
     },
-    enabled: !!user
+    enabled: !!user,
+    retry: 3, // Retry up to 3 times
+    retryDelay: attempt => Math.min(attempt > 1 ? 2000 : 1000, 30 * 1000),
   });
 }
