@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { memo } from "react";
 import type { LeaveCalendar } from "@/hooks/use-leave-calendar";
 import { generateCalendarGrid, getLeavesForDay, getMeetingsForDay, Meeting } from "./utils/calendar-utils";
 import DayNames from "./DayNames";
@@ -12,6 +12,9 @@ interface CalendarGridProps {
   getEmployeeName: (employeeId: string) => string;
   meetings?: Meeting[];
 }
+
+// Create memoized cell component to prevent unnecessary rerenders
+const MemoizedDayCell = memo(DayCell);
 
 const CalendarGrid: React.FC<CalendarGridProps> = ({ 
   currentDate, 
@@ -31,11 +34,11 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
       {calendarWeeks.map((week, weekIndex) => (
         <React.Fragment key={weekIndex}>
           {week.map((day, dayIndex) => {
-            const dayLeaves = getLeavesForDay(day, leaves);
-            const dayMeetings = getMeetingsForDay(day, meetings);
+            const dayLeaves = day ? getLeavesForDay(day, leaves) : [];
+            const dayMeetings = day ? getMeetingsForDay(day, meetings) : [];
             
             return (
-              <DayCell 
+              <MemoizedDayCell 
                 key={day ? day.toISOString() : `empty-${weekIndex}-${dayIndex}`}
                 day={day}
                 currentDate={currentDate}
@@ -51,4 +54,4 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   );
 };
 
-export default CalendarGrid;
+export default memo(CalendarGrid);
