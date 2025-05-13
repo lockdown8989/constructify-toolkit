@@ -10,24 +10,11 @@ const LeaveRealtimeUpdates: React.FC = () => {
   // The hook handles all the real-time updates subscription logic for leave requests
   useLeaveRealtime();
   
-  // Set up realtime subscriptions for shifts and schedules once when user loads
+  // Set up realtime subscriptions for shifts and schedules
   useEffect(() => {
-    if (!user) return;
-    
-    let isSetupComplete = false;
-    
-    const setupSubscriptions = async () => {
-      if (isSetupComplete) return;
-      
-      await setupRealtimeSubscriptions();
-      isSetupComplete = true;
-    };
-    
-    setupSubscriptions();
-    
-    return () => {
-      isSetupComplete = true; // Prevent multiple setups
-    };
+    if (user) {
+      setupRealtimeSubscriptions();
+    }
   }, [user]);
   
   // Component doesn't render anything, it just sets up the subscription

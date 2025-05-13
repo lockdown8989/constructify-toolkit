@@ -63,11 +63,7 @@ export const useAuth = () => {
           .select('role')
           .eq('user_id', user.id);
         
-        const roles = userRoles?.map(r => {
-          // Convert database roles to UI roles if needed
-          if (r.role === 'employer') return 'manager' as UserRole;
-          return r.role as UserRole;
-        }) || [];
+        const roles = userRoles?.map(r => r.role as UserRole) || [];
           
         setAuthState({
           user,
@@ -138,36 +134,9 @@ export const useAuth = () => {
     return authState.roles.includes(role);
   };
 
-  // Check if user is manager (manager, admin, or hr)
+  // Check if user is manager (employer, admin, or hr)
   const isManager = (): boolean => {
-    return hasRole(['manager', 'admin', 'hr']);
-  };
-
-  // Properties for compatibility with AuthProvider
-  const isAdmin = hasRole('admin');
-  const isHR = hasRole('hr');
-
-  // Add missing methods from AuthProvider.tsx to ensure backward compatibility
-  const resetPassword = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?reset=true`,
-      });
-      return { error };
-    } catch (error) {
-      console.error('Error resetting password:', error);
-      return { error };
-    }
-  };
-
-  const updatePassword = async (password: string) => {
-    try {
-      const { error } = await supabase.auth.updateUser({ password });
-      return { error };
-    } catch (error) {
-      console.error('Error updating password:', error);
-      return { error };
-    }
+    return hasRole(['employer', 'admin', 'hr']);
   };
 
   return {
@@ -175,9 +144,5 @@ export const useAuth = () => {
     signOut,
     hasRole,
     isManager,
-    resetPassword,
-    updatePassword,
-    isAdmin,
-    isHR
   };
 };

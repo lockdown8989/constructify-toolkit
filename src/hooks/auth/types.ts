@@ -28,8 +28,6 @@ export interface AuthContextType {
   resetPassword?: (email: string) => Promise<any>;
   updatePassword?: (password: string) => Promise<any>;
   signOut?: () => Promise<void>;
-  // Add hasRole method for compatibility
-  hasRole?: (role: UserRole | UserRole[]) => boolean;
 }
 
 // Function to check if user is authenticated

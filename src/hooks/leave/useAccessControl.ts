@@ -2,10 +2,10 @@
 import { useAuth } from "@/hooks/use-auth";
 
 export const useAccessControl = () => {
-  const auth = useAuth();
+  const { isManager, isAdmin, isHR } = useAuth();
   
   // Determine if the current user has manager-level access
-  const hasManagerAccess = auth.isManager || auth.isAdmin || auth.isHR;
+  const hasManagerAccess = isManager || isAdmin || isHR;
   
   return {
     hasManagerAccess
