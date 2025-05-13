@@ -39,11 +39,12 @@ const Settings = () => {
     navigate(`/settings?${searchParams.toString()}`, { replace: true });
   }, [activeSection, navigate, location.search]);
   
+  // Simple loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-lg">{t('loading')}</span>
+        <span className="ml-2 text-lg">Loading...</span>
       </div>
     );
   }

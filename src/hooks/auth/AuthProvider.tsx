@@ -25,16 +25,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setSession(session);
             setUser(session?.user ?? null);
             
-            // Handle role fetching outside the auth state change callback
-            // to prevent potential deadlocks
-            if (session?.user) {
-              setTimeout(() => {
-                fetchUserRoles(session.user.id);
-              }, 0);
-            } else {
-              resetRoles();
-            }
-            
+            // Set loading to false immediately to prevent blank screens
             setIsLoading(false);
           }
         );
@@ -46,13 +37,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (sessionData?.session) {
           setSession(sessionData.session);
           setUser(sessionData.session.user);
-          
-          if (sessionData.session.user) {
-            // Use setTimeout to prevent potential deadlocks
-            setTimeout(() => {
-              fetchUserRoles(sessionData.session.user.id);
-            }, 0);
-          }
         }
         
         setIsLoading(false);

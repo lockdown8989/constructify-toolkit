@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -8,63 +8,34 @@ export const useRoles = (user: User | null) => {
   const [isHR, setIsHR] = useState(false);
   const [isManager, setIsManager] = useState(false);
 
-  // Fetch user roles directly with separate targeted queries to avoid recursion 
-  const fetchUserRoles = async (userId: string) => {
+  // Use a callback to prevent dependency issues
+  const fetchUserRoles = useCallback(async (userId: string) => {
     try {
       console.log("Fetching roles for user:", userId);
       
-      // Use direct SQL query via RPC instead of table access to avoid RLS recursion
-      const { data: roles, error } = await supabase.rpc('get_user_roles', {
-        p_user_id: userId
-      });
+      // Direct query to get user roles - skip the RPC call that's causing issues
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
       
       if (error) {
-        console.error("Error fetching roles via RPC:", error);
-        
-        // Fallback to direct queries with bypassed RLS
-        const [{ data: adminRole }, { data: hrRole }, { data: managerRole }] = await Promise.all([
-          // Query for admin role with bypass RLS
-          supabase.from('user_roles')
-            .select('role')
-            .eq('user_id', userId)
-            .eq('role', 'admin')
-            .limit(1),
-            
-          // Query for HR role with bypass RLS
-          supabase.from('user_roles')
-            .select('role')
-            .eq('user_id', userId)
-            .eq('role', 'hr')
-            .limit(1),
-            
-          // Query for manager/employer role with bypass RLS
-          supabase.from('user_roles')
-            .select('role')
-            .eq('user_id', userId)
-            .eq('role', 'employer')
-            .limit(1)
-        ]);
-        
-        // Update role states based on direct query results
-        setIsAdmin(!!adminRole && adminRole.length > 0);
-        setIsHR(!!hrRole && hrRole.length > 0);
-        setIsManager(!!managerRole && managerRole.length > 0);
-      } else if (roles) {
-        // Process roles from RPC function
-        const roleArray = roles || [];
-        setIsAdmin(roleArray.includes('admin'));
-        setIsHR(roleArray.includes('hr'));
-        setIsManager(roleArray.includes('employer'));
+        console.error("Error fetching roles:", error);
+        return;
       }
       
-      console.log("Roles found:", {
-        admin: isAdmin,
-        hr: isHR,
-        manager: isManager
-      });
+      // Process roles data
+      const roles = data || [];
+      const roleValues = roles.map(r => r.role);
+      
+      console.log("Roles found:", roleValues);
+      
+      setIsAdmin(roleValues.includes('admin'));
+      setIsHR(roleValues.includes('hr'));
+      setIsManager(roleValues.includes('employer'));
 
       // If no manager role found but user exists, check employee record
-      if (!isManager && userId) {
+      if (!roleValues.includes('employer') && userId) {
         const { data: empData, error: empError } = await supabase
           .from('employees')
           .select('manager_id')
@@ -85,13 +56,13 @@ export const useRoles = (user: User | null) => {
     } catch (error) {
       console.error('Error in fetchUserRoles:', error);
     }
-  };
+  }, []);
 
-  const resetRoles = () => {
+  const resetRoles = useCallback(() => {
     setIsAdmin(false);
     setIsHR(false);
     setIsManager(false);
-  };
+  }, []);
 
   useEffect(() => {
     if (user?.id) {
@@ -99,7 +70,7 @@ export const useRoles = (user: User | null) => {
     } else {
       resetRoles();
     }
-  }, [user?.id]); // Only depend on user.id to prevent infinite loops
+  }, [user?.id, fetchUserRoles, resetRoles]);
 
   return {
     isAdmin,
