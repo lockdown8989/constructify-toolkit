@@ -20,13 +20,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         // Set up auth state listener first to prevent race conditions
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
+          (event, session) => {
             console.log("Auth state changed:", event, session?.user?.email);
             setSession(session);
             setUser(session?.user ?? null);
             
+            // Handle role fetching outside the auth state change callback
+            // to prevent potential deadlocks
             if (session?.user) {
-              await fetchUserRoles(session.user.id);
+              setTimeout(() => {
+                fetchUserRoles(session.user.id);
+              }, 0);
             } else {
               resetRoles();
             }
@@ -44,7 +48,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(sessionData.session.user);
           
           if (sessionData.session.user) {
-            await fetchUserRoles(sessionData.session.user.id);
+            // Use setTimeout to prevent potential deadlocks
+            setTimeout(() => {
+              fetchUserRoles(sessionData.session.user.id);
+            }, 0);
           }
         }
         
