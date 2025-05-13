@@ -4,7 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AvailabilityRequest } from '@/types/availability';
 
-type NewAvailability = Omit<AvailabilityRequest, 'id' | 'created_at' | 'updated_at' | 'status'>;
+// Update the type definition to match what's expected in the form
+type NewAvailability = Pick<AvailabilityRequest, 'employee_id' | 'date' | 'start_time' | 'end_time' | 'is_available' | 'notes'>;
 
 export const useCreateAvailabilityRequest = () => {
   const queryClient = useQueryClient();
@@ -16,7 +17,9 @@ export const useCreateAvailabilityRequest = () => {
         .from('availability_requests')
         .insert([{
           ...newRequest,
-          status: 'Pending'
+          status: 'Pending',
+          manager_notes: null,
+          reviewer_id: null
         }])
         .select()
         .single();
