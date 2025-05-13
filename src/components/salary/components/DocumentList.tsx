@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useEmployeeDocuments } from '@/hooks/use-documents';
 import { Card } from '@/components/ui/card';
 import { FileText, RefreshCw } from 'lucide-react';
@@ -13,9 +13,10 @@ interface DocumentListProps {
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
-  const { data: documents = [], isLoading, refetch } = useEmployeeDocuments(employeeId);
+  const { data: documents = [], isLoading, refetch, isError } = useEmployeeDocuments(employeeId);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
   // Refresh documents when the component mounts or when employeeId changes
   useEffect(() => {
@@ -33,7 +34,11 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
   };
   
   const handleDownload = async (path: string, fileName: string) => {
+    if (isDownloading) return; // Prevent multiple simultaneous downloads
+    
     try {
+      setIsDownloading(path);
+      
       const { data, error } = await supabase.storage
         .from('documents')
         .download(path);
@@ -49,8 +54,8 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
       window.URL.revokeObjectURL(url);
       
       toast({
-        title: "Download started",
-        description: `Downloading ${fileName}...`
+        title: "Download successful",
+        description: `${fileName} has been downloaded`
       });
     } catch (error) {
       console.error('Download error:', error);
@@ -59,6 +64,8 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
         description: "Could not download the document",
         variant: "destructive"
       });
+    } finally {
+      setIsDownloading(null);
     }
   };
 
@@ -67,6 +74,17 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
       <div className="flex flex-col items-center justify-center py-8">
         <RefreshCw className="h-8 w-8 animate-spin text-primary mb-2" />
         <p className="text-sm text-gray-500">Loading documents...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8">
+        <p className="text-sm text-red-500">Error loading documents. Please try again.</p>
+        <Button variant="outline" size="sm" onClick={handleRefresh} className="mt-2">
+          Try Again
+        </Button>
       </div>
     );
   }
@@ -99,8 +117,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
             <Button 
               variant="outline"
               onClick={() => handleDownload(contractDoc.path!, contractDoc.name)}
+              disabled={isDownloading === contractDoc.path}
             >
-              Download
+              {isDownloading === contractDoc.path ? 'Downloading...' : 'Download'}
             </Button>
           )}
         </div>
@@ -121,8 +140,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
             <Button 
               variant="outline"
               onClick={() => handleDownload(payslipDoc.path!, payslipDoc.name)}
+              disabled={isDownloading === payslipDoc.path}
             >
-              Download
+              {isDownloading === payslipDoc.path ? 'Downloading...' : 'Download'}
             </Button>
           )}
         </div>
