@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { generatePayslipPDF, PayslipResult } from './payslip-generator'; 
+import { generatePayslipPDF } from './payslip-generator'; 
 import { notifyEmployeeAboutDocument } from '@/services/notifications/payroll-notifications';
 import { sendDocumentUploadNotification } from '@/services/notifications/document-notifications';
 
@@ -17,15 +17,20 @@ export async function uploadEmployeeDocument(
     const fileExtension = file.name.split('.').pop();
     const filename = `${documentType}_${timestamp}.${fileExtension}`;
     
-    // Check if documents bucket exists via edge function
+    // Check if storage bucket "documents" exists, create it if it doesn't
     try {
-      const { error: checkBucketError } = await supabase.functions.invoke('check-storage-bucket');
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const documentsBucket = buckets?.find(b => b.name === 'documents');
       
-      if (checkBucketError) {
-        console.error('Error checking bucket:', checkBucketError);
+      if (!documentsBucket) {
+        console.log('Creating documents bucket');
+        await supabase.storage.createBucket('documents', {
+          public: true,
+          fileSizeLimit: 10485760 // 10MB
+        });
       }
     } catch (bucketError) {
-      console.warn('Could not check bucket via edge function, continuing with direct upload:', bucketError);
+      console.warn('Storage bucket check/creation failed, attempting upload anyway:', bucketError);
     }
     
     // Upload file to Supabase storage
@@ -54,6 +59,9 @@ export async function uploadEmployeeDocument(
     const publicUrl = urlData.publicUrl;
     console.log('Public URL:', publicUrl);
     
+    // Get current user for uploaded_by field
+    const { data: { user } } = await supabase.auth.getUser();
+    
     // Update documents table with document reference
     console.log('Inserting document record into database');
     const { data: insertData, error: insertError } = await supabase
@@ -66,7 +74,7 @@ export async function uploadEmployeeDocument(
         url: publicUrl,
         size: `${Math.round(file.size / 1024)} KB`,
         file_type: file.type,
-        uploaded_by: supabase.auth.getUser().then(res => res.data.user?.id) // Add uploaded_by field
+        uploaded_by: user?.id
       })
       .select()
       .single();

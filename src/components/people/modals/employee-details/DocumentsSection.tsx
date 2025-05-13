@@ -1,7 +1,8 @@
+
 import React, { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useEmployeeDocuments, useUploadDocument, useDeleteDocument } from '@/hooks/use-documents';
-import { useDocumentAssignments, useAssignDocument, useUpdateDocumentAssignment } from '@/hooks/use-document-assignments';
+import { useEmployeeDocuments, useUploadDocument, useDeleteDocument, DocumentModel } from '@/hooks/use-documents';
+import { useDocumentAssignments, useAssignDocument, useUpdateDocumentAssignment, DocumentAssignment } from '@/hooks/use-document-assignments';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -28,18 +29,6 @@ interface Document {
   size: string;
   created_at: string;
   url?: string;
-}
-
-// Define a proper type for document assignments
-interface DocumentAssignment {
-  id: string;
-  employee_id: string;
-  document_id: string;
-  assigned_at: string;
-  is_required: boolean;
-  due_date?: string;
-  status: 'pending' | 'viewed' | 'completed' | 'overdue';
-  document?: Document | null;
 }
 
 const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
@@ -497,7 +486,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {assignments.map((assignment: DocumentAssignment) => (
+                      {assignments.map((assignment) => (
                         <TableRow key={assignment.id}>
                           <TableCell>
                             <div className="flex items-center gap-2">

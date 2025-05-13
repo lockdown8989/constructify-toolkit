@@ -17,7 +17,7 @@ export type DocumentAssignment = {
     document_type: string;
     url?: string;
     path?: string;
-  };
+  } | null;
 };
 
 export function useDocumentAssignments(employeeId: string | undefined) {

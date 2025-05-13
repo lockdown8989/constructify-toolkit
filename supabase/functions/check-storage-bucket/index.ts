@@ -10,10 +10,7 @@ const corsHeaders = {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: corsHeaders,
-      status: 204,
-    });
+    return new Response(null, { headers: corsHeaders, status: 204 });
   }
 
   try {
@@ -24,61 +21,64 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     );
     
-    console.log("Checking for documents bucket...");
+    // Check for the documents bucket
+    const { data: buckets, error: bucketError } = await supabaseClient.storage.listBuckets();
     
-    // Get all buckets
-    const { data: buckets, error: bucketsError } = await supabaseClient.storage.listBuckets();
-    
-    if (bucketsError) {
-      throw bucketsError;
+    if (bucketError) {
+      throw bucketError;
     }
     
-    // Check if documents bucket exists
     const documentsBucket = buckets.find(b => b.name === 'documents');
     
+    // Create the bucket if it doesn't exist
     if (!documentsBucket) {
-      console.log("Documents bucket not found. Creating it now...");
+      console.log('Documents bucket not found. Creating it now...');
       const { error: createError } = await supabaseClient.storage.createBucket('documents', {
         public: true,
-        fileSizeLimit: 10485760 // 10MB
+        fileSizeLimit: 10485760 // 10MB limit
       });
       
       if (createError) {
         throw createError;
       }
       
-      console.log("Documents bucket created successfully.");
-      
-      // Create RLS policies for the documents bucket
-      const { error: policyError } = await supabaseClient.rpc('create_storage_policies');
-      
-      if (policyError) {
-        console.error("Error creating policies:", policyError);
-      }
-      
-      return new Response(JSON.stringify({ 
-        message: "Documents bucket created successfully", 
-        created: true 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      });
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Documents bucket created successfully',
+          created: true
+        }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 201
+        }
+      );
     }
     
-    return new Response(JSON.stringify({ 
-      message: "Documents bucket already exists", 
-      created: false 
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
-
-  } catch (error) {
-    console.error("Error in check-storage-bucket function:", error.message);
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'Documents bucket exists',
+        created: false
+      }),
+      { 
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200
+      }
+    );
     
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    });
+  } catch (error) {
+    console.error('Error checking/creating storage bucket:', error);
+    
+    return new Response(
+      JSON.stringify({ 
+        success: false,
+        message: error.message
+      }),
+      { 
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500
+      }
+    );
   }
 });
