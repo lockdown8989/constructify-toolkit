@@ -53,8 +53,9 @@ export const ShiftSwapList = () => {
           <ShiftSwapItem 
             key={swap.id}
             swap={swap}
-            onAccept={() => handleAcceptSwap(swap.id)}
+            onApprove={() => handleAcceptSwap(swap.id)}
             onReject={() => handleRejectSwap(swap.id)}
+            onDelete={() => console.log('Delete not implemented')}
           />
         ))}
       </CardContent>

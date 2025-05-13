@@ -25,7 +25,7 @@ import {
   User
 } from 'lucide-react';
 
-interface ShiftSwapItemProps {
+export interface ShiftSwapItemProps {
   swap: ShiftSwap;
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
