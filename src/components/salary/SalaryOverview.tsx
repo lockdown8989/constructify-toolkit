@@ -5,7 +5,7 @@ import { useSalaryStatistics } from '@/hooks/use-salary-statistics';
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Download, FileText, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Download, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/utils/format';
 import { format } from 'date-fns';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';

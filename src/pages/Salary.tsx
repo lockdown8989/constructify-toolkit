@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import SalaryOverview from '@/components/salary/SalaryOverview';
 import { useNavigate } from 'react-router-dom';
@@ -31,18 +31,18 @@ const SalaryPage = () => {
   const isTablet = useIsTablet();
 
   const { data: employees = [], isLoading } = useEmployees();
-  const { user, isManager, isAdmin, isHR } = useAuth();
+  const { user } = useAuth();
+
+  // Safely access isManager, isAdmin, isHR properties
+  const { isManager = false, isAdmin = false, isHR = false } = useAuth() || {};
 
   // If user is a regular employee, show the simplified salary overview
   const isEmployee = user && !isManager && !isAdmin && !isHR;
   
-  if (isEmployee) {
-    return <SalaryOverview />;
-  }
-
-  React.useEffect(() => {
-    if (isEmployee && employees.length > 0) {
-      const ownEmployee = employees.find(emp => emp.user_id === user?.id);
+  // Only run this effect when employees and user are both available
+  useEffect(() => {
+    if (isEmployee && employees.length > 0 && user?.id) {
+      const ownEmployee = employees.find(emp => emp.user_id === user.id);
       if (ownEmployee) {
         setSelectedEmployee(ownEmployee.id);
       }
@@ -58,10 +58,15 @@ const SalaryPage = () => {
   };
 
   const filteredEmployees = employees.filter(emp => 
-    emp.name.toLowerCase().includes(searchQuery.toLowerCase())
+    emp.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const selectedEmployeeData = employees.find(emp => emp.id === selectedEmployee);
+
+  // If it's an employee, only return the overview component
+  if (isEmployee) {
+    return <SalaryOverview />;
+  }
 
   return (
     <div className="container py-6 animate-fade-in">
@@ -71,8 +76,7 @@ const SalaryPage = () => {
         {/* Left sidebar - Employee list */}
         <div className={cn(
           "lg:col-span-3",
-          selectedEmployee && (isMobile || isTablet) && "hidden",
-          isEmployee && "hidden lg:block" // Hide the list for regular employees on mobile, show on desktop
+          selectedEmployee && (isMobile || isTablet) ? "hidden" : ""
         )}>
           <Card className="rounded-3xl overflow-hidden">
             <div className="p-4">
@@ -133,8 +137,7 @@ const SalaryPage = () => {
         {/* Main content - Calendar and Stats */}
         <div className={cn(
           "lg:col-span-6",
-          selectedEmployee && (isMobile || isTablet) && "hidden",
-          isEmployee && !selectedEmployeeData && "hidden" // Hide for regular employees if no selection
+          selectedEmployee && (isMobile || isTablet) ? "hidden" : ""
         )}>
           <SalaryStatsSection />
           
@@ -167,7 +170,7 @@ const SalaryPage = () => {
             
             <SalaryCalendarView
               month={selectedMonth}
-              employees={isEmployee ? employees.filter(emp => emp.user_id === user?.id) : employees}
+              employees={employees.filter(emp => isEmployee ? emp.user_id === user?.id : true)}
             />
           </Card>
         </div>
@@ -175,7 +178,7 @@ const SalaryPage = () => {
         {/* Right panel - Employee details */}
         <div className={cn(
           "lg:col-span-3",
-          !selectedEmployee && (isMobile || isTablet) && "hidden"
+          !selectedEmployee && (isMobile || isTablet) ? "hidden" : ""
         )}>
           {selectedEmployeeData && (
             <EmployeeDetailsPanel 

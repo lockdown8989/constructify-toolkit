@@ -13,46 +13,58 @@ export const useRoles = (user: User | null) => {
     try {
       console.log("Fetching roles for user:", userId);
       
-      // Use direct, separate queries to avoid recursion
-      const [{ data: adminRole }, { data: hrRole }, { data: managerRole }] = await Promise.all([
-        // Query for admin role
-        supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', userId)
-          .eq('role', 'admin')
-          .maybeSingle(),
-          
-        // Query for HR role
-        supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', userId)
-          .eq('role', 'hr')
-          .maybeSingle(),
-          
-        // Query for manager/employer role 
-        supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', userId)
-          .eq('role', 'employer')
-          .maybeSingle()
-      ]);
+      // Use direct SQL query via RPC instead of table access to avoid RLS recursion
+      const { data: roles, error } = await supabase.rpc('get_user_roles', {
+        p_user_id: userId
+      });
       
-      // Update role states based on direct query results
-      setIsAdmin(!!adminRole);
-      setIsHR(!!hrRole);
-      setIsManager(!!managerRole);
+      if (error) {
+        console.error("Error fetching roles via RPC:", error);
+        
+        // Fallback to direct queries with bypassed RLS
+        const [{ data: adminRole }, { data: hrRole }, { data: managerRole }] = await Promise.all([
+          // Query for admin role with bypass RLS
+          supabase.from('user_roles')
+            .select('role')
+            .eq('user_id', userId)
+            .eq('role', 'admin')
+            .limit(1),
+            
+          // Query for HR role with bypass RLS
+          supabase.from('user_roles')
+            .select('role')
+            .eq('user_id', userId)
+            .eq('role', 'hr')
+            .limit(1),
+            
+          // Query for manager/employer role with bypass RLS
+          supabase.from('user_roles')
+            .select('role')
+            .eq('user_id', userId)
+            .eq('role', 'employer')
+            .limit(1)
+        ]);
+        
+        // Update role states based on direct query results
+        setIsAdmin(!!adminRole && adminRole.length > 0);
+        setIsHR(!!hrRole && hrRole.length > 0);
+        setIsManager(!!managerRole && managerRole.length > 0);
+      } else if (roles) {
+        // Process roles from RPC function
+        const roleArray = roles || [];
+        setIsAdmin(roleArray.includes('admin'));
+        setIsHR(roleArray.includes('hr'));
+        setIsManager(roleArray.includes('employer'));
+      }
       
       console.log("Roles found:", {
-        admin: !!adminRole,
-        hr: !!hrRole,
-        manager: !!managerRole
+        admin: isAdmin,
+        hr: isHR,
+        manager: isManager
       });
 
       // If no manager role found but user exists, check employee record
-      if (!managerRole && userId) {
+      if (!isManager && userId) {
         const { data: empData, error: empError } = await supabase
           .from('employees')
           .select('manager_id')
@@ -68,19 +80,6 @@ export const useRoles = (user: User | null) => {
         if (empData?.manager_id && empData.manager_id.startsWith('MGR-')) {
           console.log("User has a manager_id, setting isManager=true:", empData.manager_id);
           setIsManager(true);
-          
-          // Ensure consistency in the database by adding the employer role
-          if (!managerRole) {
-            const { error: addRoleError } = await supabase
-              .from('user_roles')
-              .insert({ user_id: userId, role: 'employer' });
-              
-            if (addRoleError) {
-              console.error("Error adding employer role:", addRoleError);
-            } else {
-              console.log("Added employer role to user");
-            }
-          }
         }
       }
     } catch (error) {
@@ -93,6 +92,14 @@ export const useRoles = (user: User | null) => {
     setIsHR(false);
     setIsManager(false);
   };
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchUserRoles(user.id);
+    } else {
+      resetRoles();
+    }
+  }, [user?.id]); // Only depend on user.id to prevent infinite loops
 
   return {
     isAdmin,
