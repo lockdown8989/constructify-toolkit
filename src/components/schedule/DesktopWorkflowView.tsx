@@ -9,6 +9,7 @@ import TimeClockWidget from './TimeClockWidget';
 import ShiftSwapForm from './ShiftSwapForm';
 import ShiftSwapList from './ShiftSwapList';
 import AvailabilityManagement from './AvailabilityManagement';
+import LeaveBalanceCard from './LeaveBalanceCard';
 
 interface DesktopWorkflowViewProps {
   schedules: any[];
@@ -24,6 +25,7 @@ const DesktopWorkflowView = ({ schedules, employeeNames, leaveBalance }: Desktop
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-1 space-y-6">
         <TimeClockWidget />
+        <LeaveBalanceCard leaveBalance={leaveBalance} />
         <AvailabilityManagement />
       </div>
       

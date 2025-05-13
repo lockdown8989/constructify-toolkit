@@ -4,7 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { CurrencyProvider } from "@/hooks/use-currency-preference";
 import { LanguageProvider } from "@/hooks/use-language";
 import { NotificationProvider } from "@/hooks/use-notification-settings";
-import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import RouterComponent from "./routes/routes";
 import "./App.css";
@@ -20,7 +20,7 @@ function App() {
           <LanguageProvider>
             <NotificationProvider>
               <RouterComponent />
-              {/* Use only the Sonner toaster since it manages toast state internally */}
+              <Toaster />
               <SonnerToaster />
             </NotificationProvider>
           </LanguageProvider>

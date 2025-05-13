@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { FileText, Plus } from 'lucide-react';
+import { ListFilter, Plus } from 'lucide-react';
 
 interface MobileNavigationProps {
   activeSection: 'requests' | 'form';
@@ -14,28 +14,27 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({
   onSectionChange,
   isMobile
 }) => {
-  // Only show navigation controls on mobile
   if (!isMobile) return null;
   
   return (
-    <div className="flex items-center justify-between bg-gray-100 p-2 rounded-lg mb-4">
+    <div className="flex gap-2 mb-4 bg-gray-50/80 p-2 rounded-lg shadow-sm">
       <Button
         variant={activeSection === 'requests' ? 'default' : 'outline'}
         size="sm"
-        className="h-8 flex-1 mr-2"
         onClick={() => onSectionChange('requests')}
+        className="flex-1 flex items-center justify-center active-touch-state text-xs py-2"
       >
-        <FileText className="h-3.5 w-3.5 mr-1.5" />
-        <span className="text-xs">Requests</span>
+        <ListFilter className="h-3.5 w-3.5 mr-1.5" />
+        View Requests
       </Button>
       <Button
         variant={activeSection === 'form' ? 'default' : 'outline'}
         size="sm"
-        className="h-8 flex-1"
         onClick={() => onSectionChange('form')}
+        className="flex-1 flex items-center justify-center active-touch-state text-xs py-2"
       >
         <Plus className="h-3.5 w-3.5 mr-1.5" />
-        <span className="text-xs">New Request</span>
+        New Request
       </Button>
     </div>
   );

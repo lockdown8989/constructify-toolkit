@@ -1,18 +1,21 @@
 
-import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { format, addDays, startOfWeek } from 'date-fns';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
+import { Check, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import WeeklyCalendarView from '@/components/schedule/WeeklyCalendarView';
 import { ScheduleDialogs } from './components/ScheduleDialogs';
 import { ScheduleTabs } from './components/ScheduleTabs';
-import { useShiftDragDrop } from '@/hooks/schedule/use-shift-drag-drop';
-import { useOpenShifts } from '@/hooks/schedule/use-open-shifts';
-import OpenShiftsList from './components/OpenShiftsList';
-import ScheduleHeader from './components/ScheduleHeader';
-import { format } from 'date-fns';
+import { Schedule } from '@/hooks/use-schedules';
+import { Button } from '@/components/ui/button';
+import { useLocation } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import { OpenShiftType } from '@/types/supabase/schedules';
+import { supabase } from '@/integrations/supabase/client';
 
 const EmployeeScheduleView: React.FC = () => {
   const location = useLocation();
+  const { toast } = useToast();
   const {
     currentDate,
     setCurrentDate,
@@ -30,10 +33,35 @@ const EmployeeScheduleView: React.FC = () => {
     refreshSchedules
   } = useEmployeeSchedule();
   
-  const { openShifts, refetchOpenShifts } = useOpenShifts();
-  const { droppedShiftId, handleShiftDragStart, handleShiftDragEnd, handleShiftDrop } = useShiftDragDrop(refreshSchedules);
+  // State to track if a shift was just dropped
+  const [droppedShiftId, setDroppedShiftId] = useState<string | null>(null);
+  const [openShifts, setOpenShifts] = useState<OpenShiftType[]>([]);
 
-  const handleEmailClick = (schedule: any) => {
+  // Fetch open shifts that can be dropped
+  useEffect(() => {
+    const fetchOpenShifts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('open_shifts')
+          .select('*')
+          .eq('status', 'open')
+          .order('start_time', { ascending: true });
+          
+        if (error) {
+          console.error('Error fetching open shifts:', error);
+          return;
+        }
+        
+        setOpenShifts(data || []);
+      } catch (error) {
+        console.error('Error in open shifts fetch:', error);
+      }
+    };
+    
+    fetchOpenShifts();
+  }, []);
+
+  const handleEmailClick = (schedule: Schedule) => {
     const subject = `Regarding shift on ${format(new Date(schedule.start_time), 'MMMM d, yyyy')}`;
     const body = `Hello,\n\nI would like to discuss my shift scheduled for ${format(new Date(schedule.start_time), 'MMMM d, yyyy')} from ${format(new Date(schedule.start_time), 'h:mm a')} to ${format(new Date(schedule.end_time), 'h:mm a')}.`;
     window.location.href = `mailto:manager@workplace.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -52,18 +80,137 @@ const EmployeeScheduleView: React.FC = () => {
       }
     }
   };
+  
+  // Function to handle shift drag start
+  const handleShiftDragStart = (e: React.DragEvent, shift: OpenShiftType) => {
+    // Set the data to be transferred
+    e.dataTransfer.setData('shiftId', shift.id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  
+  // Function to handle shift drag end
+  const handleShiftDragEnd = () => {
+    // Reset any drag-related UI states if needed
+  };
 
-  if (isLoading) {
-    return <div className="p-4 text-center">Loading schedule...</div>;
-  }
+  // Function to handle shift drops
+  const handleShiftDrop = async (shiftId: string) => {
+    try {
+      // Get employee ID for the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Authentication error",
+          description: "Please log in to claim shifts.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const { data: employeeData } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (!employeeData) {
+        toast({
+          title: "Employee record not found",
+          description: "Could not find your employee record.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Create an assignment record
+      const { data, error } = await supabase
+        .from('open_shift_assignments')
+        .insert([{
+          open_shift_id: shiftId,
+          employee_id: employeeData.id,
+          status: 'confirmed'
+        }])
+        .select()
+        .single();
+        
+      if (error) {
+        console.error('Error assigning shift:', error);
+        toast({
+          title: "Error",
+          description: "Failed to assign the shift. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Update the open shift status
+      await supabase
+        .from('open_shifts')
+        .update({ status: 'assigned' })
+        .eq('id', shiftId);
+        
+      // Set the dropped shift ID to highlight it
+      setDroppedShiftId(shiftId);
+      
+      toast({
+        title: "Shift assigned",
+        description: "The shift has been added to your schedule.",
+      });
+      
+      // Refresh schedules to show the new shift
+      refreshSchedules();
+      
+      // Also refresh open shifts
+      const { data: updatedOpenShifts } = await supabase
+        .from('open_shifts')
+        .select('*')
+        .eq('status', 'open')
+        .order('start_time', { ascending: true });
+        
+      if (updatedOpenShifts) {
+        setOpenShifts(updatedOpenShifts);
+      }
+      
+    } catch (error) {
+      console.error('Error in shift assignment:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Function to handle previous/next month navigation
+  const handleMonthChange = (increment: number) => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(newDate.getMonth() + increment);
+    setCurrentDate(newDate);
+  };
 
   const selectedSchedule = selectedScheduleId 
     ? schedules.find(s => s.id === selectedScheduleId) 
     : null;
 
+  if (isLoading) {
+    return <div className="p-4 text-center">Loading schedule...</div>;
+  }
+
   return (
     <div className="pb-6 max-w-4xl mx-auto">
-      <ScheduleHeader onRefresh={refreshSchedules} />
+      <div className="flex justify-between items-center px-4 pt-2 pb-4">
+        <h2 className="text-xl font-semibold">Your Schedule</h2>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={refreshSchedules}
+          className="flex items-center gap-1"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          <span>Refresh</span>
+        </Button>
+      </div>
       
       <WeeklyCalendarView
         startDate={currentDate}
@@ -88,17 +235,6 @@ const EmployeeScheduleView: React.FC = () => {
         }}
         onResponseComplete={handleResponseComplete}
       />
-
-      {openShifts.length > 0 && (
-        <div className="mt-6 border-t border-gray-200 pt-4">
-          <h3 className="font-medium text-lg mb-2 px-4">Available Open Shifts</h3>
-          <OpenShiftsList 
-            openShifts={openShifts} 
-            onShiftDragStart={handleShiftDragStart}
-            onShiftDragEnd={handleShiftDragEnd}
-          />
-        </div>
-      )}
 
       <ScheduleDialogs
         selectedSchedule={selectedSchedule}

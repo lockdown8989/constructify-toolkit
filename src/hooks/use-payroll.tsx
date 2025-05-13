@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Employee } from '@/components/dashboard/salary-table/types';
@@ -6,8 +5,6 @@ import { processEmployeePayroll, savePayrollHistory } from './payroll/use-payrol
 import { exportPayrollData } from './payroll/use-payroll-export';
 import { useCurrencyPreference } from '@/hooks/use-currency-preference';
 import { useAuth } from '@/hooks/use-auth';
-import { notifyEmployeeAboutPayslip } from '@/services/notifications/payroll-notifications';
-import { batchNotifyEmployeesAboutPayslips } from '@/services/notifications/payroll-notifications';
 
 export const usePayroll = (employees: Employee[]) => {
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
@@ -55,7 +52,6 @@ export const usePayroll = (employees: Employee[]) => {
       let successCount = 0;
       let failCount = 0;
       const processedEmployeeIds = Array.from(selectedEmployees);
-      const successfulPayrolls = [];
       
       for (const employeeId of processedEmployeeIds) {
         try {
@@ -66,19 +62,8 @@ export const usePayroll = (employees: Employee[]) => {
             continue;
           }
 
-          const result = await processEmployeePayroll(employeeId, employee, currency || 'GBP');
-          
-          if (result.success) {
-            // Store successful payroll data for batch notification
-            successfulPayrolls.push({
-              employeeId,
-              userId: employee.user_id,
-              amount: result.finalSalary || 0
-            });
-            successCount++;
-          } else {
-            failCount++;
-          }
+          await processEmployeePayroll(employeeId, employee, 'GBP');
+          successCount++;
         } catch (err) {
           console.error('Error processing payroll:', err);
           failCount++;
@@ -95,19 +80,10 @@ export const usePayroll = (employees: Employee[]) => {
         );
       }
       
-      // Send batch notifications to employees about their payslips
-      if (successfulPayrolls.length > 0) {
-        await batchNotifyEmployeesAboutPayslips(
-          successfulPayrolls,
-          currency || 'GBP',
-          new Date().toISOString()
-        );
-      }
-      
       if (successCount > 0) {
         toast({
           title: failCount === 0 ? "Payslips processed successfully" : "Payslips partially processed",
-          description: `Processed: ${successCount} employees. Failed: ${failCount} employees. All employees have been notified.`,
+          description: `Processed: ${successCount} employees. Failed: ${failCount} employees.`,
           variant: failCount === 0 ? "default" : "destructive"
         });
       } else {

@@ -60,16 +60,6 @@ export const useSignUpSubmit = ({
         return;
       }
       
-      // For manager registration, ensure we have a manager ID
-      if (userRole === 'manager' && !managerId) {
-        console.log("Generating new manager ID for manager registration");
-        // This should not normally happen as manager ID is generated automatically
-        // but we'll handle this case just in case
-        const randomId = Math.floor(10000 + Math.random() * 90000);
-        const newManagerId = `MGR-${randomId}`;
-        console.log(`Generated new manager ID: ${newManagerId}`);
-      }
-      
       // Require manager ID for employees - this validation is now stricter
       if (userRole === 'employee' && !managerId) {
         setSignUpError("Manager ID is required for employee accounts");
@@ -106,7 +96,7 @@ export const useSignUpSubmit = ({
           toast({
             title: "Account created with limited setup",
             description: "Your account was created, but some profile information couldn't be saved. You can update it later.",
-            type: "default",
+            variant: "default",
           });
           
           // Redirect to sign in after a delay
@@ -150,7 +140,7 @@ export const useSignUpSubmit = ({
             user.id,
             getFullName(),
             userRole,
-            userRole === 'manager' ? managerId : managerId || null
+            managerId
           )
         ]);
 
@@ -183,7 +173,7 @@ export const useSignUpSubmit = ({
           toast({
             title: "Warning",
             description: "Your account was created, but some settings couldn't be saved. You can update them later in your profile.",
-            type: "default",
+            variant: "default",
           });
         }
         

@@ -1,4 +1,3 @@
+import { useToast, toast } from "@/hooks/use-toast";
 
-import { useToast, toast, type ToastProps, type ToastActionElement } from "@/hooks/use-toast";
-
-export { useToast, toast, type ToastProps, type ToastActionElement };
+export { useToast, toast };

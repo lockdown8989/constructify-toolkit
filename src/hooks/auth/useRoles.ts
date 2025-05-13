@@ -11,8 +11,6 @@ export const useRoles = (user: User | null) => {
   const fetchUserRoles = async (userId: string) => {
     try {
       console.log("Fetching roles for user:", userId);
-      
-      // Use a direct query with the user ID to avoid triggering RLS recursion issues
       const { data: roles, error } = await supabase
         .from('user_roles')
         .select('role')
