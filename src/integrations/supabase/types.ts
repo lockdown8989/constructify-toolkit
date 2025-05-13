@@ -1174,6 +1174,18 @@ export type Database = {
           | { _user_id: string; _role: string }
         Returns: boolean
       }
+      is_manager: {
+        Args: { user_uuid: string }
+        Returns: boolean
+      }
+      is_user_owner: {
+        Args: { target_user_id: string; auth_user_id: string }
+        Returns: boolean
+      }
+      user_exists: {
+        Args: { user_uuid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "hr" | "employee" | "employer"
