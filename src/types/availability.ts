@@ -1,7 +1,12 @@
 
-import { Employee } from './employee';
+/**
+ * Defines the possible status values for an availability request
+ */
+export type AvailabilityStatus = 'Pending' | 'Approved' | 'Rejected';
 
-// Define the base availability request type
+/**
+ * Represents an availability request in the system
+ */
 export interface AvailabilityRequest {
   id: string;
   employee_id: string;
@@ -9,37 +14,9 @@ export interface AvailabilityRequest {
   start_time: string;
   end_time: string;
   is_available: boolean;
-  status: string;
-  notes?: string | null;
+  status: AvailabilityStatus;
+  notes?: string;
+  manager_notes?: string;
   created_at: string;
   updated_at: string;
-  audit_log?: any[];
-  reviewer_id?: string | null;
-  manager_notes?: string | null;
-  // Include the joined employee data
-  employees?: {
-    name: string;
-    department: string;
-    job_title: string;
-  };
-}
-
-// Define a type for creating a new availability request
-export interface NewAvailabilityRequest {
-  employee_id: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  is_available?: boolean;
-  notes?: string | null;
-  status?: string;
-}
-
-// Define a type for updating an availability request
-export interface UpdateAvailabilityRequest {
-  id: string;
-  status?: string;
-  notes?: string | null;
-  manager_notes?: string | null;
-  reviewer_id?: string | null;
 }

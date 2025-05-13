@@ -20,10 +20,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         // Set up auth state listener first to prevent race conditions
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, session) => {
+          async (event, session) => {
             console.log("Auth state changed:", event, session?.user?.email);
             setSession(session);
             setUser(session?.user ?? null);
+            
+            // Refresh roles when auth state changes to ensure roles are up-to-date
+            if (session?.user) {
+              await fetchUserRoles(session.user.id);
+            } else {
+              resetRoles();
+            }
             
             // Set loading to false immediately to prevent blank screens
             setIsLoading(false);
@@ -37,6 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (sessionData?.session) {
           setSession(sessionData.session);
           setUser(sessionData.session.user);
+          await fetchUserRoles(sessionData.session.user.id);
         }
         
         setIsLoading(false);
@@ -51,7 +59,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     setupAuth();
-  }, []);
+  }, [fetchUserRoles, resetRoles]);
 
   // Calculate if user is authenticated
   const isAuthenticated = !!user;
