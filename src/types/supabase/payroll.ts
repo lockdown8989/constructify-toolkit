@@ -1,44 +1,39 @@
 
+export interface PayrollDocument {
+  id: string;
+  employee_id: string;
+  name: string;
+  path?: string;
+  url?: string;
+  size?: string;
+  created_at?: string;
+  document_type: 'payslip' | 'tax' | 'benefit' | 'other';
+}
+
 export interface PayrollRecord {
   id: string;
   employee_id: string;
   base_pay: number;
-  salary_paid: number;
-  deductions: number;
-  working_hours: number;
-  overtime_hours: number;
   overtime_pay: number;
-  payment_status: string;
+  bonus: number;
+  deductions: number;
+  salary_paid: number;
+  payment_status: 'pending' | 'processed' | 'failed';
   payment_date: string;
   processing_date: string;
-  document_url?: string;
   document_name?: string;
-  bonus?: number;
-  tax_code?: string;
-  ni_number?: string;
-  payment_method?: string;
-  pay_period?: string;
-  tax_paid?: number;
-  ni_contribution?: number;
-  other_deductions?: number;
-  pension_contribution?: number;
-  ytd_gross?: number;
-  ytd_tax?: number;
-  ytd_ni?: number;
-  ytd_other?: number;
-  ytd_net?: number;
+  document_url?: string;
+  working_hours: number;
+  overtime_hours: number;
 }
 
-export interface PayrollHistoryRecord {
+export interface PayrollProcessingHistory {
   id: string;
+  processed_by: string;
+  processing_date: string;
   employee_count: number;
   success_count: number;
   fail_count: number;
-  processed_by: string;
-  processing_date: string;
   employee_ids: string[];
-  profiles?: {
-    first_name: string;
-    last_name: string;
-  };
+  created_at: string;
 }
