@@ -5,6 +5,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { useRoles } from "./useRoles";
 import { useAuthActions } from "./useAuthActions";
 import { AuthContextType } from "./types";
+import { toast } from "@/components/ui/use-toast";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -28,8 +29,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             // Refresh roles when auth state changes to ensure roles are up-to-date
             if (session?.user) {
               await fetchUserRoles(session.user.id);
-            } else {
+              
+              // Show welcome toast for sign in and sign up events
+              if (event === 'SIGNED_IN') {
+                toast({
+                  title: "Welcome back!",
+                  description: "You have successfully signed in.",
+                });
+              } else if (event === 'SIGNED_UP') {
+                toast({
+                  title: "Welcome!",
+                  description: "Your account has been created successfully.",
+                });
+              }
+            } else if (event === 'SIGNED_OUT') {
               resetRoles();
+              toast({
+                title: "Signed out",
+                description: "You have been signed out successfully.",
+              });
             }
             
             // Set loading to false immediately to prevent blank screens

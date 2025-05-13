@@ -13,7 +13,7 @@ export const useRoles = (user: User | null) => {
     try {
       console.log("Fetching roles for user:", userId);
       
-      // Direct query to get user roles - skip the RPC call that's causing issues
+      // Direct query to get user roles
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
@@ -32,13 +32,16 @@ export const useRoles = (user: User | null) => {
       
       setIsAdmin(roleValues.includes('admin'));
       setIsHR(roleValues.includes('hr'));
-      setIsManager(roleValues.includes('employer'));
+      
+      // Check for employer role (manager)
+      const hasEmployerRole = roleValues.includes('employer');
+      setIsManager(hasEmployerRole);
 
       // If no manager role found but user exists, check employee record
-      if (!roleValues.includes('employer') && userId) {
+      if (!hasEmployerRole && userId) {
         const { data: empData, error: empError } = await supabase
           .from('employees')
-          .select('manager_id')
+          .select('manager_id, job_title')
           .eq('user_id', userId)
           .maybeSingle();
         
@@ -47,10 +50,24 @@ export const useRoles = (user: User | null) => {
           return;
         }
         
-        // If employee has a manager_id with MGR- prefix, they are a manager
-        if (empData?.manager_id && empData.manager_id.startsWith('MGR-')) {
-          console.log("User has a manager_id, setting isManager=true:", empData.manager_id);
-          setIsManager(true);
+        // Check for manager indicators in the employee record
+        if (empData) {
+          // If employee has a manager_id with MGR- prefix, they are a manager
+          const hasManagerId = empData.manager_id && empData.manager_id.startsWith('MGR-');
+          
+          // If job_title contains "Manager" or "Director", they are a manager
+          const hasManagerTitle = empData.job_title && 
+            (empData.job_title.toLowerCase().includes('manager') || 
+             empData.job_title.toLowerCase().includes('director') ||
+             empData.job_title.toLowerCase().includes('supervisor') ||
+             empData.job_title.toLowerCase().includes('lead'));
+          
+          if (hasManagerId || hasManagerTitle) {
+            console.log("User has manager indicators:", 
+                       hasManagerId ? "manager_id" : "", 
+                       hasManagerTitle ? "job_title" : "");
+            setIsManager(true);
+          }
         }
       }
     } catch (error) {
