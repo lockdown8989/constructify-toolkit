@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { generatePayslipPDF, PayslipResult } from './payslip-generator'; 
 import { notifyEmployeeAboutDocument } from '@/services/notifications/payroll-notifications';
@@ -6,7 +7,7 @@ import { sendDocumentUploadNotification } from '@/services/notifications/documen
 export async function uploadEmployeeDocument(
   employeeId: string,
   file: File,
-  documentType: 'resume' | 'contract' | 'payslip'
+  documentType: 'resume' | 'contract' | 'payslip' | string
 ): Promise<{ success: boolean; path?: string; url?: string; error?: string }> {
   try {
     console.log(`Starting upload for ${documentType} document:`, file.name);
@@ -64,7 +65,8 @@ export async function uploadEmployeeDocument(
         path: filePath,
         url: publicUrl,
         size: `${Math.round(file.size / 1024)} KB`,
-        file_type: file.type
+        file_type: file.type,
+        uploaded_by: supabase.auth.getUser().then(res => res.data.user?.id) // Add uploaded_by field
       })
       .select()
       .single();

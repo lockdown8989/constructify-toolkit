@@ -1,7 +1,8 @@
+
 import React, { useEffect, useState } from 'react';
 import { useEmployeeDocuments } from '@/hooks/use-documents';
 import { Card } from '@/components/ui/card';
-import { FileText, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
+import { FileText, RefreshCw, Loader2, AlertCircle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -277,7 +278,10 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
                   Downloading...
                 </>
               ) : (
-                'Download'
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </>
               )}
             </Button>
           )}
@@ -316,7 +320,10 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
                   Downloading...
                 </>
               ) : (
-                'Download'
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </>
               )}
             </Button>
           )}

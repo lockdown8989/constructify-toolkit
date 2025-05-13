@@ -33,7 +33,7 @@ export const sendDocumentUploadNotification = async (
     const success = await sendNotification({
       user_id: employee.user_id,
       title: `New ${formattedDocType} Document Available`,
-      message: `A new ${documentType.toLowerCase()} document (${documentName}) is now available in your documents section.${documentUrl ? ' Click to download.' : ''}`,
+      message: `A new ${documentType.toLowerCase()} document (${documentName}) is now available in your documents section.${documentUrl ? ' Click to view or download.' : ''}`,
       type: 'info',
       related_entity: 'documents',
       related_id: employeeId,
