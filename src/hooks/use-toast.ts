@@ -1,5 +1,5 @@
 
-import { toast as sonnerToast, type ToastT as SonnerToast, useToast as useSonnerToast } from "sonner";
+import { toast as sonnerToast, type ToastT as SonnerToast } from "sonner";
 
 export interface ToastProps {
   title?: string;
@@ -46,23 +46,10 @@ export const toast = ({
 };
 
 export const useToast = () => {
-  // Get the toaster instance from sonner
-  const { toasts: sonnerToasts } = useSonnerToast();
-  
-  // Map sonner toasts to our format expected by the Toaster component
-  const toasts = sonnerToasts && sonnerToasts.map(sonnerToast => ({
-    id: sonnerToast.id,
-    title: sonnerToast.title,
-    description: sonnerToast.description,
-    action: sonnerToast.action ? {
-      label: sonnerToast.action.label,
-      onClick: sonnerToast.action.onClick,
-    } : undefined,
-    variant: (sonnerToast as any).type || "default"
-  }));
-
+  // For compatibility with our UI, create a simulated toast state
+  // Since sonner manages its own state internally
   return {
     toast,
-    toasts,
+    toasts: [], // Return an empty array to prevent mapping errors
   };
 };

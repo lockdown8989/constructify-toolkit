@@ -20,7 +20,7 @@ function App() {
           <LanguageProvider>
             <NotificationProvider>
               <RouterComponent />
-              {/* Use only one toaster */}
+              {/* Use only the Sonner toaster since it manages toast state internally */}
               <SonnerToaster />
             </NotificationProvider>
           </LanguageProvider>

@@ -14,7 +14,8 @@ export function Toaster() {
 
   return (
     <ToastProvider>
-      {toasts && toasts.map(function ({ id, title, description, action, ...props }) {
+      {/* Use optional chaining and nullish coalescing to handle potential undefined */}
+      {(toasts || []).map(function ({ id, title, description, action, ...props }) {
         return (
           <Toast key={id} {...props}>
             <div className="grid gap-1">
