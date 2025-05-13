@@ -1,94 +1,83 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Schedule } from '@/types/schedule';
 import { useShiftResponse } from '@/hooks/use-shift-response';
-import { Schedule } from '@/hooks/use-schedules';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface ShiftResponseActionsProps {
-  schedule: Schedule;
-  onResponseComplete?: () => void;
-  size?: 'sm' | 'default';
-  variant?: 'outline' | 'default';
-  className?: string;
+  shift: Schedule;
+  onStatusChange?: () => void;
 }
 
-const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({ 
-  schedule, 
-  onResponseComplete,
-  size = 'sm',
-  variant = 'outline', 
-  className = ''
+export const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
+  shift,
+  onStatusChange
 }) => {
-  const { respondToShift } = useShiftResponse();
-  const [loading, setLoading] = useState<'accepted' | 'rejected' | null>(null);
+  const { respondToShift, isLoading } = useShiftResponse();
+  const { toast } = useToast();
   
-  const handleResponse = async (response: 'accepted' | 'rejected') => {
-    try {
-      setLoading(response);
-      console.log(`Responding to shift ${schedule.id} with: ${response}`);
-      
-      await respondToShift.mutateAsync({
-        scheduleId: schedule.id,
-        response
-      });
-      
+  const handleAccept = async () => {
+    if (!shift.id) return;
+    
+    const result = await respondToShift(shift.id, 'employee_accepted');
+    
+    if (result) {
       toast({
-        title: response === 'accepted' ? 'Shift accepted' : 'Shift rejected',
-        description: response === 'accepted' 
-          ? 'You have successfully accepted this shift. Managers have been notified.' 
-          : 'You have successfully rejected this shift. Managers have been notified.',
+        title: "Shift Accepted", 
+        description: "You have successfully accepted this shift",
+        variant: "success"
       });
       
-      // Call the callback after successful response
-      if (onResponseComplete) {
-        onResponseComplete();
+      if (onStatusChange) {
+        onStatusChange();
       }
-    } catch (error) {
-      console.error(`Error ${response === 'accepted' ? 'accepting' : 'rejecting'} shift:`, error);
+    }
+  };
+  
+  const handleDecline = async () => {
+    if (!shift.id) return;
+    
+    const result = await respondToShift(shift.id, 'employee_rejected');
+    
+    if (result) {
       toast({
-        title: `Failed to ${response === 'accepted' ? 'accept' : 'reject'} shift`,
-        description: "Please try again later.",
-        variant: "destructive",
+        title: "Shift Declined", 
+        description: "You have successfully declined this shift",
+        variant: "warning"
       });
-    } finally {
-      setLoading(null);
+      
+      if (onStatusChange) {
+        onStatusChange();
+      }
     }
   };
 
+  // Only show response buttons for pending shifts
+  if (shift.status !== 'pending') {
+    return null;
+  }
+  
   return (
-    <div className={`flex space-x-2 ${className}`}>
+    <div className="flex space-x-2 mt-2">
       <Button 
-        variant={variant}
-        size={size}
-        className="flex items-center text-green-600 border-green-200 hover:bg-green-50"
-        onClick={() => handleResponse('accepted')}
-        disabled={respondToShift.isPending || loading !== null}
+        variant="outline" 
+        size="sm" 
+        onClick={handleAccept}
+        disabled={isLoading}
+        className="bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
       >
-        {loading === 'accepted' ? (
-          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-        ) : (
-          <CheckCircle className="h-4 w-4 mr-1" />
-        )}
         Accept
       </Button>
       <Button 
-        variant={variant}
-        size={size}
-        className="flex items-center text-red-600 border-red-200 hover:bg-red-50"
-        onClick={() => handleResponse('rejected')}
-        disabled={respondToShift.isPending || loading !== null}
+        variant="outline" 
+        size="sm" 
+        onClick={handleDecline}
+        disabled={isLoading}
+        className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
       >
-        {loading === 'rejected' ? (
-          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-        ) : (
-          <XCircle className="h-4 w-4 mr-1" />
-        )}
-        Reject
+        Decline
       </Button>
     </div>
   );
 };
-
-export default ShiftResponseActions;

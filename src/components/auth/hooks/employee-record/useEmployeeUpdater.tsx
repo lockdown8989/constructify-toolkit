@@ -46,7 +46,7 @@ export const useEmployeeUpdater = () => {
       toast({
         title: "Warning",
         description: "Account role updated but failed to update employee record: " + error.message,
-        variant: "default",
+        variant: "warning",
       });
       return false;
     }
@@ -75,7 +75,7 @@ export const useEmployeeUpdater = () => {
         toast({
           title: "Warning",
           description: "Account created but failed to link to manager: " + error.message,
-          variant: "default",
+          variant: "warning",
         });
         return false;
       }
@@ -89,7 +89,7 @@ export const useEmployeeUpdater = () => {
       toast({
         title: "Warning",
         description: "The manager ID you entered could not be verified. You can update it later.",
-        variant: "default",
+        variant: "warning",
       });
       
       // Still update with unverified manager ID

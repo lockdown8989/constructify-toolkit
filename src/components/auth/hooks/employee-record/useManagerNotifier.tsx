@@ -2,7 +2,7 @@
 import { toast as toastFunction } from "@/hooks/use-toast";
 
 // Define ToastAPI type based on the actual structure of the toast function
-type ToastAPI = typeof toastFunction;
+type ToastAPI = ReturnType<typeof useToast>["toast"];
 
 export const useManagerNotifier = () => {
   const notifyManager = async (managerInfo: { user_id: string, name: string } | null, toast: ToastAPI) => {

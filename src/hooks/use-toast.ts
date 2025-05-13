@@ -1,5 +1,6 @@
 
-import { toast as sonnerToast } from "sonner"
+import { toast as sonnerToast, type ToastT, type ExternalToast } from "sonner"
+import { ReactNode } from "react"
 
 export type ToastProps = {
   title?: string;
@@ -17,17 +18,31 @@ export function useToast() {
       destructive: "error",
       success: "success",
       warning: "warning",
+    } as const
+    
+    // Convert our toast props to sonner's format
+    const sonnerOptions: ExternalToast = {
+      description: props.description,
+      duration: props.duration,
+    }
+    
+    if (props.action) {
+      sonnerOptions.action = props.action
     }
 
-    return sonnerToast(props.title, {
-      description: props.description,
-      action: props.action,
-      type: variant ? variantToType[variant] : undefined,
-      duration: props.duration,
-    })
+    // Use the appropriate toast type based on variant
+    if (variant && variantToType[variant]) {
+      return sonnerToast[variantToType[variant] as keyof typeof sonnerToast](
+        props.title || "", 
+        sonnerOptions
+      )
+    } else {
+      return sonnerToast(props.title || "", sonnerOptions)
+    }
   }
 
   return { toast }
 }
 
+// Re-export the original toast function for direct use
 export { sonnerToast as toast }

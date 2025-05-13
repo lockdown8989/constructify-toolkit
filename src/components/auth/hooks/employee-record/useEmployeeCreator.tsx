@@ -37,7 +37,7 @@ export const useEmployeeCreator = () => {
         toast({
           title: "Warning",
           description: "The manager ID you entered could not be verified. You can update it later in your profile.",
-          variant: "default",
+          variant: "warning",
         });
       }
     }
@@ -61,6 +61,7 @@ export const useEmployeeCreator = () => {
         toast({
           title: "Account created",
           description: `Your account has been connected to manager: ${managerName}`,
+          variant: "success",
         });
       }
       
@@ -104,7 +105,7 @@ export const useEmployeeCreator = () => {
           toast({
             title: "Warning",
             description: "Account created but failed to update employee record: " + updateError.message,
-            variant: "default",
+            variant: "warning",
           });
           return false;
         }
@@ -132,7 +133,7 @@ export const useEmployeeCreator = () => {
         toast({
           title: "Warning",
           description: "Account created but failed to create employee record: " + error.message,
-          variant: "default",
+          variant: "warning",
         });
         return false;
       }
