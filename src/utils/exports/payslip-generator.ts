@@ -30,6 +30,7 @@ export interface PayslipResult {
   localFile?: string;
   path?: string;
   filename?: string;
+  url?: string; // Adding the url property that's being used
 }
 
 export async function generatePayslipPDF(
@@ -374,7 +375,7 @@ async function uploadPayslipToStorage(
       console.error('Error adding document record:', docError);
     }
     
-    return { success: true, path: filePath, filename: `${filename}.pdf` };
+    return { success: true, path: filePath, filename: `${filename}.pdf`, url: filePath };
   } catch (error) {
     console.error('Exception during payslip upload:', error);
     return { success: false, error: String(error), localFile: filename };
