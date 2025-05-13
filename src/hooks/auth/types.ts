@@ -1,12 +1,10 @@
 
 import { User } from '@supabase/supabase-js';
 
-// Extend AuthUser with all properties from User, making some of them optional
-export interface AuthUser extends Omit<User, 'user_metadata' | 'app_metadata' | 'aud' | 'created_at'> {
+// Extend AuthUser with all properties from User, making some of them required to match User type
+export interface AuthUser extends Omit<User, 'user_metadata' | 'app_metadata'> {
   user_metadata: User['user_metadata'];
-  app_metadata?: User['app_metadata'];
-  aud?: User['aud'];
-  created_at?: User['created_at'];
+  app_metadata: User['app_metadata'];
 }
 
 export type UserRole = 'admin' | 'hr' | 'manager' | 'employee';
@@ -30,7 +28,7 @@ export interface AuthContextType {
   isHR: boolean;
   isManager: boolean;
   signIn: (email: string, password: string) => Promise<any>;
-  signUp: (email: string, password: string, userData?: any) => Promise<any>;
+  signUp: (email: string, password: string, firstName?: string, lastName?: string) => Promise<any>;
   signOut: () => Promise<void>;
   resetPassword?: (email: string) => Promise<void>;
   updatePassword?: (password: string) => Promise<void>;

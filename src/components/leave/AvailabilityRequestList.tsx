@@ -1,166 +1,114 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Check, X, Clock } from 'lucide-react';
-import { AvailabilityRequest } from '@/types/supabase/leave';
+import { Button } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Check, X } from "lucide-react";
+import { AvailabilityRequest } from '@/types/availability';
 
 interface AvailabilityRequestListProps {
   requests: AvailabilityRequest[] | undefined;
-  onApprove: (id: string, notes?: string) => void;
-  onReject: (id: string, notes?: string) => void;
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
   canManage: boolean;
   formatDate: (date: string) => string;
 }
 
 export const AvailabilityRequestList: React.FC<AvailabilityRequestListProps> = ({
-  requests = [],
+  requests,
   onApprove,
   onReject,
   canManage,
   formatDate
 }) => {
-  const pendingRequests = requests.filter(req => req.status === 'Pending');
-  const approvedRequests = requests.filter(req => req.status === 'Approved');
-  const rejectedRequests = requests.filter(req => req.status === 'Rejected');
-  
-  if (requests.length === 0) {
+  if (!requests || requests.length === 0) {
     return (
-      <div className="text-center py-6 text-gray-500">
-        <p>No availability requests found.</p>
-        <p className="text-sm mt-2">
-          Availability requests will appear here when employees submit their preferred working hours.
-        </p>
+      <div className="py-10 text-center">
+        <p className="text-muted-foreground">No availability requests found</p>
       </div>
     );
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Pending':
-        return <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Pending</span>;
-      case 'Approved':
-        return <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Approved</span>;
-      case 'Rejected':
-        return <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Rejected</span>;
-      default:
-        return null;
+  const formatTime = (time: string) => {
+    if (!time) return '';
+    
+    try {
+      const [hours, minutes] = time.split(':');
+      const hour = parseInt(hours, 10);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = hour % 12 || 12;
+      return `${hour12}:${minutes} ${ampm}`;
+    } catch {
+      return time;
     }
   };
-  
+
   return (
-    <div className="space-y-4">
-      {pendingRequests.length > 0 && (
-        <div>
-          <h3 className="text-sm font-medium mb-2">Pending Requests</h3>
-          <div className="space-y-3">
-            {pendingRequests.map(request => (
-              <div key={request.id} className="p-4 border rounded-lg bg-white shadow-sm">
-                <div className="flex justify-between">
-                  <div>
-                    <p className="font-medium">
-                      {request.employee_id}
-                    </p>
-                    <div className="flex items-center mt-1">
-                      <Clock className="h-3 w-3 mr-1 text-gray-500" />
-                      <p className="text-sm text-gray-500">
-                        {formatDate(request.date)}: {request.start_time} - {request.end_time}
-                      </p>
-                    </div>
-                  </div>
-                  {getStatusBadge(request.status)}
-                </div>
+    <div className="space-y-4 p-4">
+      {requests.map((request) => (
+        <Card key={request.id} className="overflow-hidden">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="font-medium">
+                  <span className="font-semibold">{request.employees?.name || "Employee"}</span>
+                  {' '}is {request.is_available ? 'available' : 'unavailable'}
+                </p>
+                
+                <p className="text-sm text-muted-foreground mt-1">
+                  Date: {formatDate(request.date)} 
+                </p>
+                
+                <p className="text-sm text-muted-foreground">
+                  Time: {formatTime(request.start_time)} - {formatTime(request.end_time)}
+                </p>
                 
                 {request.notes && (
-                  <div className="mt-2 text-sm bg-gray-50 p-2 rounded">
-                    <span className="font-medium">Notes:</span> {request.notes}
-                  </div>
+                  <p className="text-sm mt-2 border-l-2 border-gray-200 pl-2 italic">
+                    {request.notes}
+                  </p>
                 )}
+              </div>
+              
+              <div className="flex flex-col items-end gap-2">
+                <div className={`
+                  px-2 py-1 rounded text-xs font-medium
+                  ${request.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
+                    request.status === 'Approved' ? 'bg-green-100 text-green-800' : 
+                    'bg-red-100 text-red-800'}
+                `}>
+                  {request.status}
+                </div>
                 
-                {canManage && (
-                  <div className="flex gap-2 mt-3">
+                {canManage && request.status === 'Pending' && (
+                  <div className="flex gap-2 mt-2">
                     <Button 
-                      variant="outline" 
                       size="sm" 
-                      className="border-green-500 text-green-600 hover:bg-green-50"
+                      variant="outline"
+                      className="h-8 border-green-500 text-green-600 hover:bg-green-50"
                       onClick={() => onApprove(request.id)}
                     >
-                      <Check className="h-4 w-4 mr-1" /> Approve
+                      <Check className="h-4 w-4 mr-1" />
+                      Approve
                     </Button>
+                    
                     <Button 
-                      variant="outline" 
                       size="sm" 
-                      className="border-red-500 text-red-600 hover:bg-red-50"
+                      variant="outline"
+                      className="h-8 border-red-500 text-red-600 hover:bg-red-50"
                       onClick={() => onReject(request.id)}
                     >
-                      <X className="h-4 w-4 mr-1" /> Reject
+                      <X className="h-4 w-4 mr-1" />
+                      Reject
                     </Button>
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {approvedRequests.length > 0 && (
-        <div>
-          <h3 className="text-sm font-medium mb-2">Approved Requests</h3>
-          <div className="space-y-3">
-            {approvedRequests.map(request => (
-              <div key={request.id} className="p-4 border rounded-lg bg-white shadow-sm">
-                <div className="flex justify-between">
-                  <div>
-                    <p className="font-medium">{request.employee_id}</p>
-                    <div className="flex items-center mt-1">
-                      <Clock className="h-3 w-3 mr-1 text-gray-500" />
-                      <p className="text-sm text-gray-500">
-                        {formatDate(request.date)}: {request.start_time} - {request.end_time}
-                      </p>
-                    </div>
-                  </div>
-                  {getStatusBadge(request.status)}
-                </div>
-                
-                {request.manager_notes && (
-                  <div className="mt-2 text-sm bg-gray-50 p-2 rounded">
-                    <span className="font-medium">Manager Notes:</span> {request.manager_notes}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {rejectedRequests.length > 0 && (
-        <div>
-          <h3 className="text-sm font-medium mb-2">Rejected Requests</h3>
-          <div className="space-y-3">
-            {rejectedRequests.map(request => (
-              <div key={request.id} className="p-4 border rounded-lg bg-white shadow-sm">
-                <div className="flex justify-between">
-                  <div>
-                    <p className="font-medium">{request.employee_id}</p>
-                    <div className="flex items-center mt-1">
-                      <Clock className="h-3 w-3 mr-1 text-gray-500" />
-                      <p className="text-sm text-gray-500">
-                        {formatDate(request.date)}: {request.start_time} - {request.end_time}
-                      </p>
-                    </div>
-                  </div>
-                  {getStatusBadge(request.status)}
-                </div>
-                
-                {request.manager_notes && (
-                  <div className="mt-2 text-sm bg-gray-50 p-2 rounded">
-                    <span className="font-medium">Reason for rejection:</span> {request.manager_notes}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 };
+
+export default AvailabilityRequestList;

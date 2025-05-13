@@ -2,83 +2,49 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { UpdateAvailabilityRequest, AvailabilityRequest } from '@/types/availability';
-import { sendNotification } from '@/services/notifications';
+import { AvailabilityRequest } from '@/types/availability';
 
-export function useUpdateAvailabilityRequest() {
+type UpdateRequest = {
+  id: string;
+  status: string;
+  manager_notes?: string;
+  reviewer_id?: string;
+};
+
+export const useUpdateAvailabilityRequest = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
   return useMutation({
-    mutationFn: async (update: UpdateAvailabilityRequest) => {
-      const { id, ...updateData } = update;
-      
-      if (!id) throw new Error('ID is required for update');
-      
+    mutationFn: async (request: UpdateRequest) => {
       const { data, error } = await supabase
         .from('availability_requests')
         .update({
-          ...updateData,
+          status: request.status,
+          manager_notes: request.manager_notes,
+          reviewer_id: request.reviewer_id || supabase.auth.getUser().then(({ data }) => data.user?.id),
           updated_at: new Date().toISOString()
         })
-        .eq('id', id)
-        .select(`
-          *,
-          employees:employee_id (
-            name,
-            department,
-            job_title
-          )
-        `)
+        .eq('id', request.id)
+        .select()
         .single();
-      
-      if (error) {
-        console.error('Error updating availability request:', error);
-        throw error;
-      }
-      
-      return data as AvailabilityRequest;
+        
+      if (error) throw error;
+      return data;
     },
-    onSuccess: async (data, update) => {
-      queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
-      queryClient.invalidateQueries({ queryKey: ['availability_request', data.id] });
-      
-      // Get employee details for notification
-      const { data: employeeData } = await supabase
-        .from('employees')
-        .select('name, user_id')
-        .eq('id', data.employee_id)
-        .single();
-      
-      if (employeeData) {
-        // If status was updated, notify the employee
-        if (update.status === 'Approved' || update.status === 'Rejected') {
-          try {
-            await sendNotification({
-              user_id: employeeData.user_id,
-              title: `Availability Request ${update.status}`,
-              message: `Your availability request for ${data.date} has been ${update.status.toLowerCase()}.`,
-              type: update.status === 'Approved' ? "success" : "warning",
-              related_entity: "availability_requests",
-              related_id: data.id
-            });
-          } catch (notifyError) {
-            console.error('Error notifying employee:', notifyError);
-          }
-        }
-      }
-      
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['availability-requests'] });
       toast({
         title: "Success",
-        description: "Availability request updated successfully",
+        description: `Request ${data.status.toLowerCase()}`
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: `Failed to update availability request: ${error.message}`,
-        variant: "destructive",
+        description: `Failed to update request: ${error.message}`,
+        variant: "destructive"
       });
     }
   });
-}
+};

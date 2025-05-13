@@ -4,9 +4,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from '@/hooks/auth';
 import { format } from 'date-fns';
 import { useShiftSwaps } from '@/hooks/use-shift-swaps';
-import { ShiftSwapTabContent } from '../ShiftSwapTabContent';
-import { AvailabilityRequestList } from '../AvailabilityRequestList';
-import { useAvailability } from '@/hooks/use-availability';
+import { ShiftSwapTabContent } from '@/components/leave/ShiftSwapTabContent';
+import { AvailabilityRequestList } from '@/components/leave/AvailabilityRequestList';
+import { useAvailability } from '@/hooks/availability';
 import { Card, CardContent } from '@/components/ui/card';
 
 const ScheduleRequestsTab = () => {

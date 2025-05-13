@@ -50,3 +50,25 @@ export const userHasManagerRole = async (userId: string): Promise<boolean> => {
     return false;
   }
 };
+
+/**
+ * Get recipient user IDs by role
+ */
+export const getRecipientsByRole = async (roles: string[]): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .in('role', roles);
+      
+    if (error) {
+      console.error('Error fetching recipients by role:', error);
+      return [];
+    }
+    
+    return data.map(item => item.user_id);
+  } catch (error) {
+    console.error('Exception in getRecipientsByRole:', error);
+    return [];
+  }
+};

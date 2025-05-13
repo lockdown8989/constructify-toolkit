@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Session, User } from "@supabase/supabase-js";
+import { Session } from "@supabase/supabase-js";
 import { useRoles } from "./useRoles";
 import { useAuthActions } from "./useAuthActions";
 import { AuthContextType, AuthUser } from "./types";
@@ -65,7 +65,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Calculate if user is authenticated
   const isAuthenticated = !!user;
 
-  const value = {
+  // Create the auth context value object with the proper signature
+  const value: AuthContextType = {
     user,
     session,
     isLoading,

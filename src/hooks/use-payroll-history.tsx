@@ -1,95 +1,64 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { PayrollHistoryRecord } from '@/types/supabase/payroll';
-import { useState } from 'react';
+import { useToast } from './use-toast';
+import { useAuth } from './auth';
 
+// Fix the payroll history hook by properly handling first_name and last_name
 export const usePayrollHistory = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
+  const { user } = useAuth();
   
-  const fetchPayrollHistory = async (): Promise<PayrollHistoryRecord[]> => {
-    const { data: payrollHistory, error } = await supabase
-      .from('payroll_history')
-      .select(`
-        id,
-        employee_count,
-        success_count,
-        fail_count,
-        processed_by,
-        processing_date,
-        employee_ids,
-        profiles:processed_by (
-          first_name,
-          last_name
-        )
-      `)
-      .order('processing_date', { ascending: false });
-    
-    if (error) {
-      throw new Error(`Error fetching payroll history: ${error.message}`);
+  const { data: history, isLoading } = useQuery({
+    queryKey: ['payroll-history'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('payroll_history')
+        .select('*')
+        .order('processing_date', { ascending: false });
+        
+      if (error) throw error;
+      return data;
     }
-    
-    // Process the data to match PayrollHistoryRecord type
-    const processedData: PayrollHistoryRecord[] = payrollHistory.map(record => ({
-      id: record.id,
-      employee_count: record.employee_count,
-      success_count: record.success_count,
-      fail_count: record.fail_count,
-      processed_by: record.processed_by,
-      processing_date: record.processing_date,
-      employee_ids: record.employee_ids,
-      profiles: record.profiles ? {
-        first_name: record.profiles.first_name,
-        last_name: record.profiles.last_name
-      } : undefined
-    }));
-    
-    return processedData;
-  };
-  
-  const { data: payrollHistory, isLoading, error, refetch } = useQuery({
-    queryKey: ['payrollHistory'],
-    queryFn: fetchPayrollHistory
   });
   
-  // Pagination calculations
-  const totalPages = payrollHistory ? Math.ceil(payrollHistory.length / pageSize) : 0;
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const currentPageData = payrollHistory ? payrollHistory.slice(startIndex, endIndex) : [];
+  // Get the most recent processor's name
+  const { data: processorName, isLoading: isLoadingProcessor } = useQuery({
+    queryKey: ['payroll-processor-name'],
+    queryFn: async () => {
+      if (!history || history.length === 0) return '';
+      
+      const mostRecent = history[0];
+      if (!mostRecent.processed_by) return 'System';
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', mostRecent.processed_by)
+          .single();
+        
+        if (error || !data) return 'Unknown';
+        
+        return `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Unknown';
+      } catch (error) {
+        console.error("Error fetching processor name:", error);
+        return 'Unknown';
+      }
+    },
+    enabled: !!history && history.length > 0
+  });
   
-  const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-  
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-  
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+  // Calculate totals from history
+  const totals = {
+    processed: history?.reduce((sum, item) => sum + item.employee_count, 0) || 0,
+    success: history?.reduce((sum, item) => sum + item.success_count, 0) || 0,
+    failed: history?.reduce((sum, item) => sum + item.fail_count, 0) || 0
   };
   
   return {
-    payrollHistory: currentPageData,
-    isLoading,
-    error,
-    refetch,
-    pagination: {
-      currentPage,
-      totalPages,
-      goToPage,
-      goToNextPage,
-      goToPreviousPage,
-      hasNext: currentPage < totalPages,
-      hasPrevious: currentPage > 1
-    }
+    history,
+    isLoading: isLoading || isLoadingProcessor,
+    processorName,
+    totals
   };
 };
