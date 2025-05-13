@@ -31,7 +31,7 @@ export function useDeleteAvailabilityRequest() {
       return { id, employeeId };
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ['availability-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['availability_requests'] });
       if (result.employeeId) {
         queryClient.invalidateQueries({ queryKey: ['availability_requests', result.employeeId] });
       }
