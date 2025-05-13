@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -115,16 +116,15 @@ type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
 type ToastActionElement = React.ReactElement<typeof ToastAction>
 
 // Add the useToast hook and toast function implementation
-import {
-  ToastActionType,
-  ToastProps as ShadcnToastProps,
-} from "@radix-ui/react-toast";
-
-type ToastType = Omit<ShadcnToastProps, "type"> & {
+// Replacing the incorrect import with our own type definition
+type ToastType = {
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: ToastActionElement;
   variant?: "default" | "destructive";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  [key: string]: any;
 };
 
 const TOAST_LIMIT = 5;
