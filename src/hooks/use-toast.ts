@@ -1,41 +1,33 @@
 
-import { toast as sonnerToast, type ToastOptions as SonnerToastOptions } from 'sonner';
+import { toast as sonnerToast } from "sonner"
 
-export interface ToastOptions extends SonnerToastOptions {
+export type ToastProps = {
   title?: string;
   description?: string;
-  variant?: 'default' | 'destructive' | 'success' | 'warning' | 'info';
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
+  variant?: "default" | "destructive" | "success" | "warning";
+  action?: React.ReactNode;
+  duration?: number;
 }
 
 export function useToast() {
-  const toast = ({
-    title,
-    description,
-    variant = 'default',
-    action,
-    ...props
-  }: ToastOptions) => {
-    return sonnerToast[variant === 'destructive' ? 'error' : 
-           variant === 'success' ? 'success' : 
-           variant === 'warning' ? 'warning' : 
-           variant === 'info' ? 'info' : 'default']
-    (title, {
-      description,
-      action: action ? {
-        label: action.label,
-        onClick: action.onClick
-      } : undefined,
-      ...props
-    });
-  };
+  const toast = (props: ToastProps) => {
+    const { variant, ...rest } = props
+    const variantToType = {
+      default: undefined,
+      destructive: "error",
+      success: "success",
+      warning: "warning",
+    }
 
-  return {
-    toast
-  };
+    return sonnerToast(props.title, {
+      description: props.description,
+      action: props.action,
+      type: variant ? variantToType[variant] : undefined,
+      duration: props.duration,
+    })
+  }
+
+  return { toast }
 }
 
-export { toast } from 'sonner';
+export { sonnerToast as toast }

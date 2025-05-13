@@ -1,39 +1,29 @@
 
-export interface PayrollDocument {
+// Define types for payroll and payroll history
+export interface Payroll {
   id: string;
   employee_id: string;
-  name: string;
-  path?: string;
-  url?: string;
-  size?: string;
-  created_at?: string;
-  document_type: 'payslip' | 'tax' | 'benefit' | 'other';
-}
-
-export interface PayrollRecord {
-  id: string;
-  employee_id: string;
-  base_pay: number;
-  overtime_pay: number;
-  bonus: number;
-  deductions: number;
   salary_paid: number;
-  payment_status: 'pending' | 'processed' | 'failed';
-  payment_date: string;
-  processing_date: string;
-  document_name?: string;
+  base_pay?: number;
+  overtime_hours?: number;
+  overtime_pay?: number;
+  working_hours?: number;
+  payment_date?: string;
   document_url?: string;
-  working_hours: number;
-  overtime_hours: number;
+  document_name?: string;
+  payment_status?: string;
+  processing_date?: string;
+  bonus?: number;
+  deductions?: number;
 }
 
-export interface PayrollProcessingHistory {
+export interface PayrollHistory {
   id: string;
-  processed_by: string;
-  processing_date: string;
   employee_count: number;
   success_count: number;
   fail_count: number;
+  processed_by?: string;
   employee_ids: string[];
-  created_at: string;
+  processing_date?: string;
+  created_at?: string;
 }
