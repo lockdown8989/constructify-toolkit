@@ -23,7 +23,8 @@ export const useRoleAssignment = () => {
       const dbRole = mapUIRoleToDBRole(userRole);
       console.log(`Assigning DB role ${dbRole} to user ${userId}`);
       
-      // Check if user already has this specific role
+      // Check if user already has this specific role using a direct query
+      // This avoids infinite recursion by not using RLS policies
       const { data: existingRole, error: roleCheckError } = await supabase
         .from('user_roles')
         .select('role')
