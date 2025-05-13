@@ -50,3 +50,18 @@ export const userHasManagerRole = async (userId: string): Promise<boolean> => {
     return false;
   }
 };
+
+/**
+ * Check if current authenticated user has manager access
+ */
+export const currentUserHasManagerAccess = async (): Promise<boolean> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    
+    return await userHasManagerRole(user.id);
+  } catch (error) {
+    console.error('Error checking current user manager access:', error);
+    return false;
+  }
+};

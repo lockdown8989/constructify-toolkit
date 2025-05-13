@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -7,6 +7,16 @@ export const useRoles = (user: User | null) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isHR, setIsHR] = useState(false);
   const [isManager, setIsManager] = useState(false);
+  const [rolesLoaded, setRolesLoaded] = useState(false);
+
+  // Automatically fetch roles when user changes
+  useEffect(() => {
+    if (user) {
+      fetchUserRoles(user.id);
+    } else {
+      resetRoles();
+    }
+  }, [user?.id]);
 
   const fetchUserRoles = async (userId: string) => {
     try {
@@ -39,9 +49,19 @@ export const useRoles = (user: User | null) => {
         setIsHR(false);
         setIsManager(false);
       }
+      
+      setRolesLoaded(true);
     } catch (error) {
       console.error('Error in fetchUserRoles:', error);
+      setRolesLoaded(true);
     }
+  };
+
+  const resetRoles = () => {
+    setIsAdmin(false);
+    setIsHR(false);
+    setIsManager(false);
+    setRolesLoaded(false);
   };
 
   return {
@@ -49,10 +69,7 @@ export const useRoles = (user: User | null) => {
     isHR,
     isManager,
     fetchUserRoles,
-    resetRoles: () => {
-      setIsAdmin(false);
-      setIsHR(false);
-      setIsManager(false);
-    }
+    resetRoles,
+    rolesLoaded
   };
 };

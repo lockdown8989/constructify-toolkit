@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useEmployees } from '@/hooks/use-employees';
 import { useInterviews } from '@/hooks/use-interviews';
@@ -8,6 +8,7 @@ import { Tabs, TabsContent } from '@/components/ui/tabs';
 import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard';
 import ManagerDashboard from '@/components/dashboard/ManagerDashboard';
 import { Loader2 } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
 const Dashboard = () => {
   const { isManager, isAdmin, isHR, isLoading: authLoading, user } = useAuth();
@@ -25,6 +26,16 @@ const Dashboard = () => {
   // Determine if the user has manager-level access (manager, admin, or HR)
   const hasManagerAccess = isManager || isAdmin || isHR;
                    
+  useEffect(() => {
+    console.log("Dashboard user roles:", { isManager, isAdmin, isHR, hasManagerAccess });
+    
+    if (user && !authLoading) {
+      // Log the current user information for debugging
+      console.log("Current user:", user.id, user.email);
+      console.log("User metadata:", user.user_metadata);
+    }
+  }, [user, isManager, isAdmin, isHR, authLoading, hasManagerAccess]);
+  
   // Count employees excluding the manager themselves
   const employeeCount = hasManagerAccess 
     ? employees.filter(emp => emp.user_id !== user?.id).length 
@@ -55,8 +66,6 @@ const Dashboard = () => {
     projectTime: 0,
     output: 0
   };
-
-  console.log("User roles:", { isManager, isAdmin, isHR, hasManagerAccess });
   
   // Show loading state while auth is loading
   if (authLoading) {

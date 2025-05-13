@@ -2,6 +2,8 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+import { useEffect } from "react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,6 +13,30 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const { user, isLoading, isAdmin, isHR, isManager } = useAuth();
   const location = useLocation();
+
+  useEffect(() => {
+    // Log for debugging
+    if (requiredRole && user) {
+      console.log("Protected route check:", { 
+        requiredRole, 
+        isAdmin, 
+        isHR, 
+        isManager, 
+        hasAccess: checkAccess() 
+      });
+    }
+  }, [user, isAdmin, isHR, isManager, requiredRole]);
+
+  // Function to check if user has required role
+  const checkAccess = () => {
+    if (!requiredRole) return true;
+    
+    if (requiredRole === 'admin' && isAdmin) return true;
+    if (requiredRole === 'hr' && (isHR || isAdmin)) return true;
+    if (requiredRole === 'manager' && (isManager || isAdmin || isHR)) return true;
+    
+    return false;
+  };
 
   if (isLoading) {
     return (
@@ -29,16 +55,13 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
 
   // Check for required role
-  if (requiredRole) {
-    if (requiredRole === 'admin' && !isAdmin) {
-      return <Navigate to="/dashboard" replace />;
-    }
-    if (requiredRole === 'hr' && !isHR && !isAdmin) {
-      return <Navigate to="/dashboard" replace />;
-    }
-    if (requiredRole === 'manager' && !isManager && !isAdmin && !isHR) {
-      return <Navigate to="/dashboard" replace />;
-    }
+  if (requiredRole && !checkAccess()) {
+    toast({
+      title: "Access Restricted",
+      description: `You need ${requiredRole} permissions to access this page.`,
+      variant: "destructive",
+    });
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;

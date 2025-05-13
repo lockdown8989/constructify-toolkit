@@ -5,6 +5,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { useRoles } from "./useRoles";
 import { useAuthActions } from "./useAuthActions";
 import { AuthContextType } from "./types";
+import { toast } from "@/components/ui/use-toast";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -45,6 +46,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               setTimeout(() => {
                 fetchUserRoles(session.user.id);
               }, 0);
+              
+              // Ensure employee record exists for this user
+              setTimeout(() => {
+                ensureEmployeeRecord(session.user);
+              }, 100);
             } else {
               resetRoles();
             }
@@ -64,6 +70,105 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     setupAuth();
   }, []);
+
+  // Create employee record if not exists
+  const ensureEmployeeRecord = async (user: User) => {
+    try {
+      // Check if employee record exists
+      const { data: existingEmployee, error: checkError } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Error checking employee record:", checkError);
+        return;
+      }
+
+      // If employee record doesn't exist, create it
+      if (!existingEmployee) {
+        console.log("Creating employee record for user:", user.id);
+        
+        // Get user profile for name
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', user.id)
+          .single();
+          
+        const fullName = profile ? 
+          `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : 
+          user.email?.split('@')[0] || 'New Employee';
+          
+        // Check user roles directly
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+            
+        if (roleError) {
+          console.error("Error checking user roles:", roleError);
+          return;
+        }
+            
+        // Determine role and department
+        const roles = roleData?.map(r => r.role) || [];
+        const isManagerRole = roles.includes('employer');
+        const isAdminRole = roles.includes('admin');
+        const isHRRole = roles.includes('hr');
+        
+        // Determine department based on role
+        let department = 'General';
+        let jobTitle = 'Employee';
+        
+        if (isAdminRole) {
+          department = 'Administration';
+          jobTitle = 'Administrator';
+        }
+        else if (isHRRole) {
+          department = 'HR';
+          jobTitle = 'HR Specialist';
+        }
+        else if (isManagerRole) {
+          department = 'Management';
+          jobTitle = 'Manager';
+        }
+        
+        // Create employee record
+        const { error: insertError } = await supabase
+          .from('employees')
+          .insert({
+            user_id: user.id,
+            name: fullName,
+            job_title: jobTitle,
+            department: department,
+            site: 'Main Office',
+            salary: 50000,
+            status: 'Active',
+            annual_leave_days: 20,
+            sick_leave_days: 10
+          });
+          
+        if (insertError) {
+          console.error("Error creating employee record:", insertError);
+          toast({
+            title: "Error",
+            description: "Could not create your employee profile. Please contact support.",
+            variant: "destructive",
+          });
+        } else {
+          console.log("Successfully created employee record");
+          toast({
+            title: "Profile Created",
+            description: "Your employee profile has been set up successfully.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error in ensureEmployeeRecord:", error);
+    }
+  };
 
   // Calculate if user is authenticated
   const isAuthenticated = !!user;
