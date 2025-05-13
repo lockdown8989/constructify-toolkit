@@ -209,6 +209,8 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
   };
   
   const getDocumentIcon = (docType: string) => {
+    if (!docType) return <File className="h-5 w-5 text-gray-500" />;
+    
     const lowercaseType = docType.toLowerCase();
     
     if (lowercaseType.includes('pdf')) {
@@ -477,8 +479,9 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
                         <TableRow key={assignment.id}>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              {getDocumentIcon(assignment.document?.document_type || '')}
-                              <span>{assignment.document?.name}</span>
+                              {assignment.document && 
+                                getDocumentIcon(assignment.document.document_type || '')}
+                              <span>{assignment.document ? assignment.document.name : 'Unknown document'}</span>
                               {assignment.is_required && (
                                 <Badge variant="outline" className="ml-2">Required</Badge>
                               )}
