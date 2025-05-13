@@ -1,8 +1,7 @@
-
 import React, { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useEmployeeDocuments, useUploadDocument, useDeleteDocument, DocumentModel } from '@/hooks/use-documents';
-import { useDocumentAssignments, useAssignDocument, useUpdateDocumentAssignment, DocumentAssignment } from '@/hooks/use-document-assignments';
+import { useEmployeeDocuments, useUploadDocument, useDeleteDocument } from '@/hooks/use-documents';
+import { useDocumentAssignments, useAssignDocument, useUpdateDocumentAssignment } from '@/hooks/use-document-assignments';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -53,20 +52,10 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
   } = useEmployeeDocuments(employeeId);
   
   const {
-    data: assignmentsData,
+    data: assignments,
     isLoading: isLoadingAssignments,
     refetch: refetchAssignments
   } = useDocumentAssignments(employeeId);
-  
-  // Properly type the assignments data
-  const assignments: DocumentAssignment[] = Array.isArray(assignmentsData) 
-    ? assignmentsData.map(item => ({
-        ...item,
-        document: item.document && typeof item.document === 'object' && !Array.isArray(item.document) 
-          ? item.document as Document 
-          : null
-      }))
-    : [];
   
   const { mutateAsync: uploadDocument } = useUploadDocument();
   const { mutateAsync: deleteDocument } = useDeleteDocument();
@@ -92,19 +81,12 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
     setUploadingFile(true);
     
     try {
-      console.log(`Starting upload for ${selectedFiles.length} files, document type: ${documentType}`);
-      
       for (const file of selectedFiles) {
-        console.log(`Uploading file: ${file.name}`);
-        const result = await uploadDocument({
+        await uploadDocument({
           employeeId,
           file,
           documentType: documentType
         });
-        
-        if (!result) {
-          throw new Error(`Failed to upload ${file.name}`);
-        }
       }
       
       toast({
@@ -117,12 +99,11 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-      
     } catch (error) {
       console.error('Upload error:', error);
       toast({
         title: "Upload failed",
-        description: "There was an error uploading the file(s). Please try again.",
+        description: "There was an error uploading the file(s).",
         variant: "destructive"
       });
     } finally {
@@ -219,9 +200,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
     }
   };
   
-  const getDocumentIcon = (docType: string | undefined) => {
-    if (!docType) return <File className="h-5 w-5 text-gray-500" />;
-    
+  const getDocumentIcon = (docType: string) => {
     const lowercaseType = docType.toLowerCase();
     
     if (lowercaseType.includes('pdf')) {
@@ -490,13 +469,8 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
                         <TableRow key={assignment.id}>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              {assignment.document && 
-                                getDocumentIcon(assignment.document.document_type)}
-                              <span>
-                                {assignment.document 
-                                  ? assignment.document.name 
-                                  : 'Unknown document'}
-                              </span>
+                              {getDocumentIcon(assignment.document?.document_type || '')}
+                              <span>{assignment.document?.name}</span>
                               {assignment.is_required && (
                                 <Badge variant="outline" className="ml-2">Required</Badge>
                               )}

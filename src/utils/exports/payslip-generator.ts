@@ -30,7 +30,6 @@ export interface PayslipResult {
   localFile?: string;
   path?: string;
   filename?: string;
-  url?: string; // URL property for public access
 }
 
 export async function generatePayslipPDF(
@@ -346,13 +345,6 @@ async function uploadPayslipToStorage(
       return { success: false, error: error.message, localFile: filename };
     }
     
-    // Get the public URL for the uploaded file
-    const { data: urlData } = supabase.storage
-      .from('documents')
-      .getPublicUrl(filePath);
-    
-    const publicUrl = urlData.publicUrl;
-    
     // Update payroll record in Supabase database
     const { error: updateError } = await supabase
       .from('payroll')
@@ -375,7 +367,6 @@ async function uploadPayslipToStorage(
         document_type: 'payslip',
         name: `Payslip - ${formattedDate} (${currency})`,
         path: filePath,
-        url: publicUrl,
         size: 'auto-generated'
       });
     
@@ -383,7 +374,7 @@ async function uploadPayslipToStorage(
       console.error('Error adding document record:', docError);
     }
     
-    return { success: true, path: filePath, filename: `${filename}.pdf`, url: publicUrl };
+    return { success: true, path: filePath, filename: `${filename}.pdf` };
   } catch (error) {
     console.error('Exception during payslip upload:', error);
     return { success: false, error: String(error), localFile: filename };

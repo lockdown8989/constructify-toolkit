@@ -9,7 +9,6 @@ export interface NotificationData {
   type: 'info' | 'success' | 'warning' | 'error';
   related_entity?: string;
   related_id?: string;
-  action_url?: string; // URL for document downloads or actions
 }
 
 /**

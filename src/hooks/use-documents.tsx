@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { uploadEmployeeDocument } from '@/utils/exports/document-manager';
 
 export type DocumentModel = {
   id: string;
@@ -17,100 +16,39 @@ export type DocumentModel = {
 };
 
 export function useEmployeeDocuments(employeeId: string | undefined) {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
   return useQuery({
     queryKey: ['employee-documents', employeeId],
     queryFn: async () => {
       if (!employeeId) return [];
       
-      console.log('Fetching documents for employee:', employeeId);
-      
-      try {
-        // First check if the documents bucket exists via edge function
-        try {
-          await supabase.functions.invoke('check-storage-bucket');
-        } catch (bucketError) {
-          console.warn('Could not check bucket via edge function, continuing with direct query:', bucketError);
-        }
+      const { data: docs, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('employee_id', employeeId);
         
-        // Attempt to call the edge function first for better document retrieval
-        try {
-          const { data: functionData, error: functionError } = await supabase.functions
-            .invoke('get-employee-documents', {
-              body: { employeeId, documentType: 'all' }
-            });
-            
-          if (!functionError && functionData?.success && Array.isArray(functionData.data)) {
-            console.log(`Found ${functionData.data.length} documents via edge function`);
-            return functionData.data as DocumentModel[];
-          } else if (functionError) {
-            console.error('Edge function error:', functionError);
-          }
-        } catch (funcError) {
-          console.warn('Edge function call failed, falling back to direct query:', funcError);
-        }
-        
-        // Fallback to direct query with improved selection
-        const { data: docs, error } = await supabase
-          .from('documents')
-          .select('*')
-          .eq('employee_id', employeeId);
-          
-        if (error) {
-          console.error('Error fetching documents:', error);
-          throw error;
-        }
-        
-        console.log(`Found ${docs?.length || 0} documents for employee via direct query`);
-        
-        if (!docs || docs.length === 0) {
-          return [];
-        }
-        
-        // Add public URLs for documents if they're missing
-        const docsWithUrls = await Promise.all(docs.map(async (doc) => {
-          if (doc.path && !doc.url) {
-            try {
-              const { data } = supabase.storage
-                .from('documents')
-                .getPublicUrl(doc.path);
-                
-              // Update the document with the URL in the database
-              if (data.publicUrl) {
-                await supabase
-                  .from('documents')
-                  .update({ url: data.publicUrl })
-                  .eq('id', doc.id);
-                  
-                return {
-                  ...doc,
-                  url: data.publicUrl
-                };
-              }
-            } catch (urlError) {
-              console.error(`Error getting URL for document ${doc.id}:`, urlError);
-            }
-          }
-          return doc;
-        }));
-        
-        console.log('Documents after URL processing:', docsWithUrls);
-        return docsWithUrls as DocumentModel[];
-      } catch (error) {
-        console.error("Error in useEmployeeDocuments:", error);
-        toast({
-          title: "Error loading documents",
-          description: "Failed to retrieve your documents. Please try again later.",
-          variant: "destructive"
-        });
-        throw error;
+      if (error) {
+        console.error('Error fetching documents:', error);
+        return [];
       }
+      
+      // Add public URLs for documents
+      const docsWithUrls = await Promise.all(docs.map(async (doc) => {
+        if (doc.path) {
+          const { data } = supabase.storage
+            .from('documents')
+            .getPublicUrl(doc.path);
+            
+          return {
+            ...doc,
+            url: data.publicUrl
+          };
+        }
+        return doc;
+      }));
+      
+      return docsWithUrls as DocumentModel[];
     },
-    enabled: !!employeeId,
-    refetchInterval: 10000, // Refetch every 10 seconds to check for new documents
-    retry: 3,
+    enabled: !!employeeId
   });
 }
 
@@ -132,32 +70,72 @@ export function useUploadDocument() {
       try {
         console.log("Starting document upload:", { documentType, employeeId, fileName: file.name });
         
-        // First ensure the storage bucket exists
-        try {
-          await supabase.functions.invoke('check-storage-bucket');
-        } catch (bucketError) {
-          console.warn('Storage bucket check failed, attempting upload anyway:', bucketError);
+        // First check if documents bucket exists
+        await checkStorageBucket();
+        
+        // Format file path
+        const fileExt = file.name.split('.').pop();
+        const timestamp = new Date().getTime();
+        const fileName = `${documentType}_${timestamp}.${fileExt}`;
+        const filePath = `${employeeId}/${fileName}`;
+        
+        console.log("Uploading file to path:", filePath);
+        
+        // Upload file
+        const { error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true
+          });
+        
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          throw uploadError;
         }
         
-        const result = await uploadEmployeeDocument(
-          employeeId,
-          file,
-          documentType as any
-        );
+        // Get file size in KB or MB
+        const sizeInBytes = file.size;
+        const sizeString = sizeInBytes < 1024 * 1024
+          ? `${Math.round(sizeInBytes / 1024)} KB`
+          : `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
         
-        if (!result.success) {
-          console.error("Upload failed:", result.error);
-          throw new Error(result.error);
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('documents')
+          .getPublicUrl(filePath);
+          
+        console.log("File public URL:", urlData.publicUrl);
+        
+        // Save document metadata
+        const { data, error: dbError } = await supabase
+          .from('documents')
+          .insert({
+            employee_id: employeeId,
+            name: file.name,
+            document_type: documentType,
+            path: filePath,
+            url: urlData.publicUrl,
+            size: sizeString,
+            uploaded_by: user?.id || null
+          })
+          .select()
+          .single();
+        
+        if (dbError) {
+          console.error('Database error:', dbError);
+          throw dbError;
         }
         
-        return result;
+        console.log("Document metadata saved successfully:", data);
+        
+        return data;
       } catch (error) {
         console.error("Error in upload document mutation:", error);
         throw error;
       }
     },
     onSuccess: (_, variables) => {
-      console.log("Document upload successful, invalidating queries");
       queryClient.invalidateQueries({ queryKey: ['employee-documents', variables.employeeId] });
       toast({
         title: "Document uploaded",
@@ -173,6 +151,22 @@ export function useUploadDocument() {
       });
     }
   });
+}
+
+// Helper function to check if documents bucket exists
+async function checkStorageBucket() {
+  try {
+    // First check if the bucket exists using the edge function
+    const { error } = await supabase.functions.invoke('check-storage-bucket');
+    
+    if (error) {
+      console.error('Error checking storage bucket:', error);
+      throw new Error('Failed to check storage bucket');
+    }
+  } catch (error) {
+    console.error('Failed to check storage bucket:', error);
+    throw error;
+  }
 }
 
 export function useDeleteDocument() {
@@ -209,127 +203,6 @@ export function useDeleteDocument() {
       toast({
         title: "Delete failed",
         description: error instanceof Error ? error.message : "Failed to delete document",
-        variant: "destructive"
-      });
-    }
-  });
-}
-
-// Create a new hook to handle document assignments
-export function useDocumentAssignments(employeeId: string | undefined) {
-  return useQuery({
-    queryKey: ['document-assignments', employeeId],
-    queryFn: async () => {
-      if (!employeeId) return [];
-      
-      const { data, error } = await supabase
-        .from('document_assignments')
-        .select(`
-          id, 
-          employee_id, 
-          document_id, 
-          assigned_at, 
-          is_required,
-          due_date,
-          status,
-          document:documents(*)
-        `)
-        .eq('employee_id', employeeId)
-        .order('assigned_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching document assignments:', error);
-        throw error;
-      }
-      
-      return data || [];
-    },
-    enabled: !!employeeId,
-  });
-}
-
-export function useAssignDocument() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  
-  return useMutation({
-    mutationFn: async ({ 
-      documentId, 
-      employeeId, 
-      isRequired = false, 
-      dueDate 
-    }: { 
-      documentId: string; 
-      employeeId: string; 
-      isRequired?: boolean; 
-      dueDate?: string;
-    }) => {
-      try {
-        // Use the edge function to handle the document assignment
-        const { data, error } = await supabase.functions.invoke('notify-on-document-upload', {
-          body: {
-            documentId,
-            employeeId,
-            isRequired,
-            dueDate
-          }
-        });
-        
-        if (error || !data?.success) {
-          throw new Error(error?.message || data?.message || 'Failed to assign document');
-        }
-        
-        return data;
-      } catch (error) {
-        console.error('Error assigning document:', error);
-        throw error;
-      }
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['document-assignments', variables.employeeId] });
-      toast({
-        title: "Document assigned",
-        description: "Document has been assigned successfully.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Assignment failed",
-        description: error instanceof Error ? error.message : "Failed to assign document",
-        variant: "destructive"
-      });
-    }
-  });
-}
-
-export function useUpdateDocumentAssignment() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  
-  return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { data, error } = await supabase
-        .from('document_assignments')
-        .update({ status })
-        .eq('id', id)
-        .select('employee_id')
-        .single();
-        
-      if (error) throw error;
-      
-      return data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['document-assignments', data.employee_id] });
-      toast({
-        title: "Status updated",
-        description: "Document assignment status has been updated.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Status update failed",
-        description: error instanceof Error ? error.message : "Failed to update status",
         variant: "destructive"
       });
     }
