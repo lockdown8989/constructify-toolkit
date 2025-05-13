@@ -1,140 +1,184 @@
-import React, { useState } from 'react';
-import { useEmployees } from '@/hooks/use-employees';
-import { useSchedules } from '@/hooks/use-schedules';
-import { 
-  useShiftSwaps, 
-  useUpdateShiftSwap, 
-  useDeleteShiftSwap, 
-  ShiftSwap 
-} from '@/hooks/use-shift-swaps';
-import { useAuth } from '@/hooks/auth';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeftRight } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import ShiftSwapItem from './ShiftSwapItem';
-import { Skeleton } from '@/components/ui/skeleton';
 
-const ShiftSwapList = () => {
-  const { swapRequests, isLoading: isLoadingSwaps } = useShiftSwaps();
-  const { data: schedules = [] } = useSchedules();
-  const { data: employees = [] } = useEmployees();
-  const { user, isAdmin, isHR, isManager } = useAuth();
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Check, X, Edit } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { ShiftSwap, useUpdateShiftSwap, useDeleteShiftSwap } from '@/hooks/use-shift-swaps';
+
+export function ShiftSwapList({ swapRequests, isLoading }) {
+  const [selectedSwap, setSelectedSwap] = useState(null);
+  const [responseNotes, setResponseNotes] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  
   const { mutate: updateSwap } = useUpdateShiftSwap();
   const { mutate: deleteSwap } = useDeleteShiftSwap();
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'completed'>('pending');
   
-  if (!user) {
+  if (isLoading) {
     return (
-      <div className="text-center p-6 text-gray-500">
-        Please sign in to view shift swaps
+      <div className="py-6 text-center">
+        <p className="text-muted-foreground">Loading shift swap requests...</p>
       </div>
     );
   }
   
-  const canApproveSwaps = isAdmin || isHR || isManager;
+  if (!swapRequests || swapRequests.length === 0) {
+    return (
+      <div className="py-10 text-center">
+        <p className="text-muted-foreground">No shift swap requests found</p>
+      </div>
+    );
+  }
   
-  const filteredSwaps = swapRequests.filter(swap => {
-    switch (activeTab) {
-      case 'pending':
-        return swap.status === 'Pending';
-      case 'approved':
-        return swap.status === 'Approved';
-      case 'rejected':
-        return swap.status === 'Rejected';
-      case 'completed':
-        return swap.status === 'Completed';
-      default:
-        return true;
+  const handleOpenDialog = (swap) => {
+    setSelectedSwap(swap);
+    setResponseNotes(swap.notes || '');
+    setDialogOpen(true);
+  };
+  
+  const handleCloseDialog = () => {
+    setSelectedSwap(null);
+    setResponseNotes('');
+    setDialogOpen(false);
+  };
+  
+  const handleApprove = () => {
+    if (selectedSwap) {
+      updateSwap({
+        id: selectedSwap.id,
+        updates: {
+          status: 'Approved',
+          notes: responseNotes
+        }
+      });
+      handleCloseDialog();
     }
-  }).filter(swap => {
-    if (canApproveSwaps) {
-      return true;
-    } else {
-      return swap.requester_id === user?.id || swap.recipient_id === user?.id;
+  };
+  
+  const handleReject = () => {
+    if (selectedSwap) {
+      updateSwap({
+        id: selectedSwap.id,
+        updates: {
+          status: 'Rejected',
+          notes: responseNotes
+        }
+      });
+      handleCloseDialog();
     }
-  });
-  
-  const handleApprove = (swapId: string) => {
-    updateSwap({
-      id: swapId,
-      status: 'Approved',
-      updated_at: new Date().toISOString()
-    });
   };
   
-  const handleReject = (swapId: string) => {
-    updateSwap({
-      id: swapId,
-      status: 'Rejected',
-      updated_at: new Date().toISOString()
-    });
-  };
-  
-  const handleComplete = (swap: ShiftSwap) => {
-    updateSwap({
-      id: swap.id,
-      status: 'Completed',
-      updated_at: new Date().toISOString()
-    });
-  };
-  
-  const handleDelete = (swapId: string) => {
-    if (confirm('Are you sure you want to delete this shift swap request?')) {
-      deleteSwap(swapId, {
-        onSuccess: () => {
-          toast({
-            title: "Shift swap deleted",
-            description: "The shift swap request has been deleted successfully.",
-          });
+  const handleCancel = (id) => {
+    if (window.confirm('Are you sure you want to cancel this shift swap request?')) {
+      updateSwap({
+        id: id,
+        updates: {
+          status: 'Cancelled',
+          updated_at: new Date().toISOString()
         }
       });
     }
   };
   
-  if (isLoadingSwaps) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-24 w-full rounded-lg" />
-        <Skeleton className="h-24 w-full rounded-lg" />
-        <Skeleton className="h-24 w-full rounded-lg" />
-      </div>
-    );
-  }
-  
   return (
     <div className="space-y-4">
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
-        <TabsList className="grid grid-cols-4 mb-4">
-          <TabsTrigger value="pending" className="text-xs h-8">Pending</TabsTrigger>
-          <TabsTrigger value="approved" className="text-xs h-8">Approved</TabsTrigger>
-          <TabsTrigger value="rejected" className="text-xs h-8">Rejected</TabsTrigger>
-          <TabsTrigger value="completed" className="text-xs h-8">Completed</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value={activeTab} className="pt-2">
-          {filteredSwaps.length === 0 ? (
-            <div className="text-center py-6 text-gray-500 bg-gray-50 rounded-lg">
-              <ArrowLeftRight className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-              <p className="text-sm">No shift swaps found in this category</p>
+      {swapRequests.map((swap) => (
+        <Card key={swap.id} className="overflow-hidden">
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+              <div>
+                <div className="font-medium">Shift Swap Request</div>
+                <div className="text-sm text-muted-foreground">
+                  {new Date(swap.created_at).toLocaleDateString()}
+                </div>
+                
+                {swap.notes && (
+                  <p className="text-sm mt-2 text-muted-foreground">
+                    {swap.notes}
+                  </p>
+                )}
+              </div>
+              
+              <div className="flex flex-col items-end gap-2">
+                <div className={`
+                  px-2 py-1 rounded text-xs font-medium
+                  ${swap.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
+                    swap.status === 'Approved' ? 'bg-green-100 text-green-800' : 
+                    'bg-red-100 text-red-800'}
+                `}>
+                  {swap.status}
+                </div>
+                
+                <div className="flex gap-2 mt-2">
+                  {swap.status === 'Pending' && (
+                    <>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="text-green-600 border-green-500 hover:bg-green-50"
+                        onClick={() => handleOpenDialog(swap)}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Respond
+                      </Button>
+                      
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="text-red-600 border-red-500 hover:bg-red-50"
+                        onClick={() => handleCancel(swap.id)}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Cancel
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredSwaps.map(swap => (
-                <ShiftSwapItem
-                  key={swap.id}
-                  swap={swap}
-                  onApprove={handleApprove}
-                  onReject={handleReject}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+          </CardContent>
+        </Card>
+      ))}
+      
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Respond to Shift Swap Request</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <label className="block text-sm font-medium mb-2">
+              Response Notes
+            </label>
+            <Textarea
+              value={responseNotes}
+              onChange={(e) => setResponseNotes(e.target.value)}
+              rows={4}
+              placeholder="Enter any notes for this response..."
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              className="border-red-500 text-red-600 hover:bg-red-50"
+              onClick={handleReject}
+            >
+              <X className="h-4 w-4 mr-1" />
+              Reject
+            </Button>
+            
+            <Button
+              className="bg-green-600 text-white hover:bg-green-700"
+              onClick={handleApprove}
+            >
+              <Check className="h-4 w-4 mr-1" />
+              Approve
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
-
-export default ShiftSwapList;
+}

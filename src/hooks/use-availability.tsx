@@ -3,8 +3,7 @@
 // It re-exports everything from the refactored modules
 
 import { 
-  useAvailabilityRequests, 
-  useAvailabilityRequest 
+  useAvailabilityRequests
 } from './availability/use-fetch-availability';
 import { useUpdateAvailabilityRequest } from './availability/use-update-availability';
 import { useDeleteAvailabilityRequest } from './availability/use-delete-availability';

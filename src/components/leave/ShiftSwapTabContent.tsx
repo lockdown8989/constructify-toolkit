@@ -1,10 +1,10 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { format } from 'date-fns';
 import { Card, CardContent } from "@/components/ui/card";
-import { Check, X } from "lucide-react";
-import { ShiftSwap } from "@/types/supabase/schedules";
-import { useAuth } from "@/hooks/auth";
+import { ShiftSwap } from '@/hooks/use-shift-swaps';
+import { Button } from '@/components/ui/button';
+import { Check, X } from 'lucide-react';
 
 interface ShiftSwapTabContentProps {
   swapRequests: ShiftSwap[] | undefined;
@@ -21,8 +21,6 @@ export const ShiftSwapTabContent: React.FC<ShiftSwapTabContentProps> = ({
   canManage,
   formatDate
 }) => {
-  const { user } = useAuth();
-  
   if (!swapRequests || swapRequests.length === 0) {
     return (
       <div className="py-10 text-center">
@@ -39,17 +37,13 @@ export const ShiftSwapTabContent: React.FC<ShiftSwapTabContentProps> = ({
             <div className="flex justify-between items-start">
               <div>
                 <p className="font-medium">
-                  <span className="font-semibold">{swap.requester?.name || "Employee"}</span> requested a shift swap
+                  <span className="font-semibold">{swap.requester?.name || "Employee"}</span>
+                  {' requests to swap shift with '}
+                  <span className="font-semibold">{swap.recipient?.name || "Another employee"}</span>
                 </p>
                 
-                {swap.recipient_id && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    With: {swap.recipient?.name || "Another employee"}
-                  </p>
-                )}
-                
                 <p className="text-sm text-muted-foreground mt-1">
-                  Requested: {formatDate(swap.created_at)}
+                  Date: {formatDate(swap.created_at)}
                 </p>
                 
                 {swap.notes && (
@@ -100,5 +94,3 @@ export const ShiftSwapTabContent: React.FC<ShiftSwapTabContentProps> = ({
     </div>
   );
 };
-
-export default ShiftSwapTabContent;

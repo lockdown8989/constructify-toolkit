@@ -2,7 +2,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ShiftSwap } from '@/types/supabase/schedules';
+
+export interface ShiftSwap {
+  id: string;
+  requester_id: string;
+  recipient_id?: string | null;
+  requester_schedule_id: string;
+  recipient_schedule_id?: string | null;
+  status: string;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+  requester?: { name: string };
+  recipient?: { name: string };
+}
 
 export interface ShiftSwapRequest {
   id: string;
