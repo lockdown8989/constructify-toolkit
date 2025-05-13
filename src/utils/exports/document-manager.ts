@@ -192,6 +192,16 @@ export async function attachPayslipToResume(
       };
     }
     
+    // Get the public URL if it wasn't returned directly
+    let publicUrl = payslipResult.url;
+    if (!publicUrl && payslipResult.path) {
+      const { data: urlData } = supabase.storage
+        .from('documents')
+        .getPublicUrl(payslipResult.path);
+        
+      publicUrl = urlData.publicUrl;
+    }
+    
     // Add the payslip as a document in the documents table
     const { data: insertData, error: insertError } = await supabase
       .from('documents')
@@ -200,7 +210,7 @@ export async function attachPayslipToResume(
         document_type: 'payslip',
         name: payslipResult.filename || `Payslip_${new Date().toISOString().split('T')[0]}`,
         path: payslipResult.path,
-        url: payslipResult.url,
+        url: publicUrl,
         size: 'auto-generated'
       })
       .select()
@@ -220,7 +230,7 @@ export async function attachPayslipToResume(
         employeeId,
         'payslip',
         payslipResult.filename || `Payslip_${new Date().toISOString().split('T')[0]}`,
-        payslipResult.url
+        publicUrl
       );
     }
     
@@ -232,7 +242,7 @@ export async function attachPayslipToResume(
     return {
       success: true,
       message: successMessage,
-      documentUrl: payslipResult.url
+      documentUrl: publicUrl
     };
   } catch (error) {
     console.error('Error attaching payslip to resume:', error);
