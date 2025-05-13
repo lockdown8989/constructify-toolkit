@@ -1,57 +1,77 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { FileText } from 'lucide-react';
-import { DocumentAssignment } from '@/hooks/use-document-assignments';
+import { useDocumentAssignments } from '@/hooks/use-document-assignments';
 import AssignmentsList from './AssignmentsList';
+import AssignDocumentDialog from './AssignDocumentDialog';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 interface AssignmentsTabProps {
   employeeId: string;
-  assignmentsData: any;
-  isLoading: boolean;
-  refetchAssignments: () => void;
 }
 
-const AssignmentsTab: React.FC<AssignmentsTabProps> = ({ 
-  employeeId, 
-  assignmentsData, 
-  isLoading, 
-  refetchAssignments 
-}) => {
-  // Properly type the assignments data
-  const assignments: DocumentAssignment[] = Array.isArray(assignmentsData) 
-    ? assignmentsData.map(item => ({
-        ...item,
-        document: item.document && typeof item.document === 'object' && !Array.isArray(item.document) 
-          ? item.document 
-          : null
-      }))
-    : [];
-  
+const AssignmentsTab: React.FC<AssignmentsTabProps> = ({ employeeId }) => {
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const { toast } = useToast();
+  const { 
+    assignments, 
+    isLoading, 
+    error, 
+    refetch 
+  } = useDocumentAssignments(employeeId);
+
+  const handleAssignDocument = () => {
+    refetch();
+    toast({
+      title: "Document assigned successfully",
+      description: "The document has been assigned to the employee.",
+    });
+  };
+
+  if (error) {
+    return (
+      <div className="text-center py-4 text-red-500">
+        Failed to load document assignments
+      </div>
+    );
+  }
+
   return (
-    <Card className="border-none">
-      <CardContent className="p-0">
-        <h3 className="text-sm font-medium mb-4">Document Assignments</h3>
-        
-        {isLoading ? (
-          <AssignmentsList.Skeleton />
-        ) : assignments.length > 0 ? (
-          <AssignmentsList 
-            assignments={assignments} 
-            employeeId={employeeId} 
-            onStatusUpdate={refetchAssignments}
-          />
-        ) : (
-          <div className="text-center py-6">
-            <FileText className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-            <p className="text-muted-foreground">No document assignments</p>
-            <p className="text-sm text-muted-foreground">
-              Assign documents to this employee from the Documents tab
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Document Assignments</h3>
+        <Button 
+          size="sm" 
+          onClick={() => setDialogOpen(true)}
+          className="flex items-center gap-1"
+        >
+          <PlusCircle className="h-4 w-4" />
+          <span>Assign Document</span>
+        </Button>
+      </div>
+      
+      {isLoading ? (
+        <AssignmentsList.Skeleton />
+      ) : assignments && assignments.length > 0 ? (
+        <AssignmentsList 
+          assignments={assignments} 
+          employeeId={employeeId}
+          onStatusUpdate={refetch}
+        />
+      ) : (
+        <p className="text-center py-4 text-muted-foreground">
+          No documents assigned to this employee
+        </p>
+      )}
+
+      <AssignDocumentDialog
+        employeeId={employeeId}
+        open={dialogOpen}
+        setOpen={setDialogOpen}
+        onSuccess={handleAssignDocument}
+      />
+    </div>
   );
 };
 
