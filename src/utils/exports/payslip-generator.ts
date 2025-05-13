@@ -30,7 +30,7 @@ export interface PayslipResult {
   localFile?: string;
   path?: string;
   filename?: string;
-  url?: string; // Adding the url property that's being used
+  url?: string; // URL property for public access
 }
 
 export async function generatePayslipPDF(

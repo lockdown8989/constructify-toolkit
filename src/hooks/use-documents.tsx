@@ -1,8 +1,8 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
+import { uploadEmployeeDocument } from '@/utils/exports/document-manager';
 
 export type DocumentModel = {
   id: string;
@@ -21,6 +21,8 @@ export function useEmployeeDocuments(employeeId: string | undefined) {
     queryFn: async () => {
       if (!employeeId) return [];
       
+      console.log('Fetching documents for employee:', employeeId);
+      
       const { data: docs, error } = await supabase
         .from('documents')
         .select('*')
@@ -31,9 +33,11 @@ export function useEmployeeDocuments(employeeId: string | undefined) {
         return [];
       }
       
+      console.log(`Found ${docs.length} documents for employee`);
+      
       // Add public URLs for documents
       const docsWithUrls = await Promise.all(docs.map(async (doc) => {
-        if (doc.path) {
+        if (doc.path && !doc.url) {
           const { data } = supabase.storage
             .from('documents')
             .getPublicUrl(doc.path);
@@ -70,72 +74,25 @@ export function useUploadDocument() {
       try {
         console.log("Starting document upload:", { documentType, employeeId, fileName: file.name });
         
-        // First check if documents bucket exists
-        await checkStorageBucket();
+        const result = await uploadEmployeeDocument(
+          employeeId,
+          file,
+          documentType as any // Cast to the required type
+        );
         
-        // Format file path
-        const fileExt = file.name.split('.').pop();
-        const timestamp = new Date().getTime();
-        const fileName = `${documentType}_${timestamp}.${fileExt}`;
-        const filePath = `${employeeId}/${fileName}`;
-        
-        console.log("Uploading file to path:", filePath);
-        
-        // Upload file
-        const { error: uploadError } = await supabase.storage
-          .from('documents')
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: true
-          });
-        
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
-          throw uploadError;
+        if (!result.success) {
+          console.error("Upload failed:", result.error);
+          throw new Error(result.error);
         }
         
-        // Get file size in KB or MB
-        const sizeInBytes = file.size;
-        const sizeString = sizeInBytes < 1024 * 1024
-          ? `${Math.round(sizeInBytes / 1024)} KB`
-          : `${(sizeInBytes / (1024 * 1024)).toFixed(2)} MB`;
-        
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from('documents')
-          .getPublicUrl(filePath);
-          
-        console.log("File public URL:", urlData.publicUrl);
-        
-        // Save document metadata
-        const { data, error: dbError } = await supabase
-          .from('documents')
-          .insert({
-            employee_id: employeeId,
-            name: file.name,
-            document_type: documentType,
-            path: filePath,
-            url: urlData.publicUrl,
-            size: sizeString,
-            uploaded_by: user?.id || null
-          })
-          .select()
-          .single();
-        
-        if (dbError) {
-          console.error('Database error:', dbError);
-          throw dbError;
-        }
-        
-        console.log("Document metadata saved successfully:", data);
-        
-        return data;
+        return result;
       } catch (error) {
         console.error("Error in upload document mutation:", error);
         throw error;
       }
     },
     onSuccess: (_, variables) => {
+      console.log("Document upload successful, invalidating queries");
       queryClient.invalidateQueries({ queryKey: ['employee-documents', variables.employeeId] });
       toast({
         title: "Document uploaded",

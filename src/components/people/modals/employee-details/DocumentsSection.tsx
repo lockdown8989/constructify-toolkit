@@ -81,12 +81,19 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
     setUploadingFile(true);
     
     try {
+      console.log(`Starting upload for ${selectedFiles.length} files, document type: ${documentType}`);
+      
       for (const file of selectedFiles) {
-        await uploadDocument({
+        console.log(`Uploading file: ${file.name}`);
+        const result = await uploadDocument({
           employeeId,
           file,
           documentType: documentType
         });
+        
+        if (!result) {
+          throw new Error(`Failed to upload ${file.name}`);
+        }
       }
       
       toast({
@@ -99,11 +106,12 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({ employeeId }) => {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+      
     } catch (error) {
       console.error('Upload error:', error);
       toast({
         title: "Upload failed",
-        description: "There was an error uploading the file(s).",
+        description: "There was an error uploading the file(s). Please try again.",
         variant: "destructive"
       });
     } finally {

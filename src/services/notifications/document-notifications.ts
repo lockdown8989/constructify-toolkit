@@ -12,6 +12,8 @@ export const sendDocumentUploadNotification = async (
   documentUrl?: string
 ): Promise<boolean> => {
   try {
+    console.log(`Sending document notification to employee ${employeeId} for ${documentType}`);
+    
     // Get employee user_id from employee record
     const { data: employee, error: employeeError } = await supabase
       .from('employees')
@@ -38,6 +40,7 @@ export const sendDocumentUploadNotification = async (
       action_url: documentUrl
     });
     
+    console.log(`Notification ${success ? 'sent successfully' : 'failed'} to employee ${employee.name}`);
     return success;
   } catch (error) {
     console.error('Error sending document notification:', error);

@@ -10,6 +10,8 @@ export async function uploadEmployeeDocument(
   documentType: 'resume' | 'contract' | 'payslip'
 ): Promise<{ success: boolean; path?: string; url?: string; error?: string }> {
   try {
+    console.log(`Starting upload for ${documentType} document:`, file.name);
+    
     // Generate a unique filename
     const timestamp = new Date().getTime();
     const fileExtension = file.name.split('.').pop();
@@ -42,10 +44,13 @@ export async function uploadEmployeeDocument(
           error: `Failed to create storage bucket: ${createError.message}`
         };
       }
+      console.log('Documents bucket created successfully');
     }
     
     // Upload file to Supabase storage
     const filePath = `employees/${employeeId}/${documentType}/${filename}`;
+    console.log(`Uploading to path: ${filePath}`);
+    
     const { data, error } = await supabase.storage
       .from('documents')
       .upload(filePath, file, {
@@ -58,12 +63,18 @@ export async function uploadEmployeeDocument(
       return { success: false, error: error.message };
     }
     
+    console.log('File uploaded successfully, getting public URL');
+    
     // Get the public URL
     const { data: urlData } = supabase.storage
       .from('documents')
       .getPublicUrl(filePath);
     
+    const publicUrl = urlData.publicUrl;
+    console.log('Public URL:', publicUrl);
+    
     // Update documents table with document reference
+    console.log('Inserting document record into database');
     const { data: insertData, error: insertError } = await supabase
       .from('documents')
       .insert({
@@ -71,7 +82,7 @@ export async function uploadEmployeeDocument(
         document_type: documentType,
         name: file.name,
         path: filePath,
-        url: urlData.publicUrl,
+        url: publicUrl,
         size: `${Math.round(file.size / 1024)} KB`,
         file_type: file.type
       })
@@ -83,24 +94,28 @@ export async function uploadEmployeeDocument(
       return { success: false, error: insertError.message };
     }
 
+    console.log('Document record inserted successfully:', insertData);
+
     // Get employee user_id for notification
     const { data: employee } = await supabase
       .from('employees')
-      .select('user_id')
+      .select('user_id, name')
       .eq('id', employeeId)
       .single();
       
     // Send notification to employee about new document
     if (employee?.user_id && (documentType === 'contract' || documentType === 'payslip')) {
+      console.log(`Sending notification to employee (${employee.name}) about new ${documentType}`);
       await sendDocumentUploadNotification(
         employeeId,
         documentType,
         file.name,
-        urlData.publicUrl
+        publicUrl
       );
     }
     
-    return { success: true, path: filePath, url: urlData.publicUrl };
+    console.log('Document upload process completed successfully');
+    return { success: true, path: filePath, url: publicUrl };
   } catch (error) {
     console.error(`Exception during ${documentType} upload:`, error);
     return { success: false, error: String(error) };
