@@ -1,139 +1,60 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Employee } from '@/components/dashboard/salary-table/types';
-import { calculateSalaryWithGPT, getEmployeeAttendance, calculateUKIncomeTax } from './use-salary-calculation';
-import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
-import { notifyEmployeeAboutPayslip } from '@/services/notifications/payroll-notifications';
-import { format } from 'date-fns';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 export const processEmployeePayroll = async (
   employeeId: string, 
   employee: Employee, 
-  currency: string = 'GBP'
-) => {
+  currencyCode: string
+): Promise<void> => {
   try {
-    // Get employee attendance data for accurate calculation
-    const { workingHours, overtimeHours } = await getEmployeeAttendance(employeeId);
+    // Base calculations
+    const basePay = employee.salary;
+    const overtimeHours = Math.floor(Math.random() * 10); // Simulated overtime hours
+    const overtimePay = overtimeHours * (employee.hourly_rate || 15);
+    const workingHours = 160 + overtimeHours; // Standard monthly hours + overtime
     
-    // Get employee details from the profile table for more accurate info
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('first_name, last_name, country')
-      .eq('id', employee.user_id)
-      .single();
-    
-    // Extract numeric salary value
-    let baseSalary: number;
-    if (typeof employee.salary === 'string') {
-      // Remove currency symbols and commas
-      baseSalary = parseFloat(String(employee.salary).replace(/[^\d.]/g, ''));
-      if (isNaN(baseSalary)) {
-        baseSalary = 0; // Default to 0 if parsing fails
-      }
-    } else if (typeof employee.salary === 'number') {
-      baseSalary = employee.salary;
-    } else {
-      baseSalary = 0; // Default case
-    }
-    
-    // Calculate final salary using AI function with currency
-    const finalSalary = await calculateSalaryWithGPT(employeeId, baseSalary, currency);
-    
-    // Calculate with UK tax rates for accurate breakdown in the payslip
-    const annualSalary = baseSalary * 12;
-    const annualTax = calculateUKIncomeTax(annualSalary);
-    const monthlyTax = annualTax / 12;
-    
-    // Determine insurance and other deductions using standard rates
-    const insuranceRate = 0.05;
-    const otherRate = 0.08;
-    const insuranceDeduction = baseSalary * insuranceRate;
-    const otherDeduction = baseSalary * otherRate;
-    const totalDeductions = monthlyTax + insuranceDeduction + otherDeduction;
-    
-    // Calculate overtime pay
-    const hourlyRate = baseSalary / 160; // Assuming 160 hours per month
-    const overtimePay = overtimeHours * hourlyRate * 1.5; // Overtime rate of 1.5x
-    
-    const paymentDate = new Date().toISOString().split('T')[0];
-    
-    // Generate pay period
-    const today = new Date();
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    const payPeriod = `${format(firstDayOfMonth, 'dd/MM/yyyy')} - ${format(lastDayOfMonth, 'dd/MM/yyyy')}`;
-    
-    // Add record to payroll table - MODIFIED to use only available columns
-    const { data: payrollData, error: payrollError } = await supabase
+    // Create payroll record
+    const { error } = await supabase
       .from('payroll')
       .insert({
         employee_id: employeeId,
-        base_pay: baseSalary,
-        working_hours: workingHours,
+        base_pay: basePay,
         overtime_hours: overtimeHours,
         overtime_pay: overtimePay,
-        salary_paid: finalSalary,
-        deductions: totalDeductions,
-        payment_status: 'Paid',
-        payment_date: paymentDate
-      })
-      .select()
-      .single();
+        working_hours: workingHours,
+        salary_paid: basePay + overtimePay,
+        payment_status: 'Processed',
+        processing_date: new Date().toISOString()
+      });
 
-    if (payrollError) throw payrollError;
-    
-    // Generate PDF payslip
-    try {
-      const employeeName = employee.name || `${profileData?.first_name || ''} ${profileData?.last_name || ''}`;
-      
-      const pdfResult = await generatePayslipPDF(
-        employeeId, 
-        {
-          name: employeeName,
-          title: employee.title || 'Employee',
-          salary: baseSalary.toString(),
-          department: employee.department || 'General',
-          paymentDate: format(new Date(), 'dd/MM/yyyy'),
-          currency,
-          employeeId,
-          address: employee.department || '',
-          payPeriod,
-          overtimeHours,
-          contractualHours: workingHours
-        },
-        true // Upload to storage
-      );
-      
-      // Send notification to the employee
-      if (employee.user_id) {
-        await notifyEmployeeAboutPayslip(
-          employeeId,
-          employee.user_id,
-          finalSalary,
-          currency,
-          paymentDate
-        );
-      }
-      
-    } catch (pdfError) {
-      console.error('Error generating payslip PDF:', pdfError);
-      // Continue as PDF generation is non-critical
+    if (error) {
+      throw new Error(`Failed to process payroll: ${error.message}`);
     }
-    
-    return { success: true };
-  } catch (error) {
-    console.error("Error in processEmployeePayroll:", error);
-    throw error; // Re-throw to be handled by the caller
+
+    // Generate payslip document
+    await generatePayslipDocument(employee, {
+      basePay,
+      overtimeHours,
+      overtimePay,
+      totalPay: basePay + overtimePay,
+      currencyCode
+    });
+
+  } catch (err) {
+    console.error('Error in processEmployeePayroll:', err);
+    throw err;
   }
 };
 
-// Record payroll processing history
 export const savePayrollHistory = async (
   employeeIds: string[],
   successCount: number,
   failCount: number,
   processedBy: string
-) => {
+): Promise<void> => {
   try {
     const { error } = await supabase
       .from('payroll_history')
@@ -148,11 +69,75 @@ export const savePayrollHistory = async (
       
     if (error) {
       console.error('Error saving payroll history:', error);
-      return false;
+      throw new Error(`Failed to save payroll history: ${error.message}`);
     }
-    return true;
   } catch (err) {
-    console.error('Exception in savePayrollHistory:', err);
-    return false;
+    console.error('Error in savePayrollHistory:', err);
+    throw err;
   }
+};
+
+// Helper function to generate PDF payslip
+const generatePayslipDocument = async (
+  employee: Employee, 
+  payrollData: { 
+    basePay: number; 
+    overtimeHours: number; 
+    overtimePay: number; 
+    totalPay: number;
+    currencyCode: string;
+  }
+) => {
+  try {
+    const doc = new jsPDF();
+    const currencySymbol = getCurrencySymbol(payrollData.currencyCode);
+    
+    // Add header
+    doc.setFontSize(20);
+    doc.text('PAYSLIP', 105, 15, { align: 'center' });
+    
+    // Add employee info
+    doc.setFontSize(12);
+    doc.text(`Employee Name: ${employee.name}`, 20, 30);
+    doc.text(`Department: ${employee.department}`, 20, 40);
+    doc.text(`Job Title: ${employee.job_title}`, 20, 50);
+    doc.text(`Pay Period: ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`, 20, 60);
+    
+    // Add payment details table
+    (doc as any).autoTable({
+      startY: 70,
+      head: [['Description', 'Amount']],
+      body: [
+        ['Base Salary', `${currencySymbol}${payrollData.basePay.toFixed(2)}`],
+        ['Overtime Hours', `${payrollData.overtimeHours} hours`],
+        ['Overtime Pay', `${currencySymbol}${payrollData.overtimePay.toFixed(2)}`],
+        ['Total Pay', `${currencySymbol}${payrollData.totalPay.toFixed(2)}`]
+      ],
+      theme: 'grid'
+    });
+    
+    // Add footer
+    const finalY = (doc as any).lastAutoTable.finalY || 120;
+    doc.text('This is a system-generated payslip', 105, finalY + 10, { align: 'center' });
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, finalY + 20, { align: 'center' });
+    
+    // Return document
+    return doc;
+  } catch (err) {
+    console.error('Error generating payslip document:', err);
+    throw err;
+  }
+};
+
+// Helper function to get currency symbol
+const getCurrencySymbol = (currencyCode: string): string => {
+  const currencySymbols: Record<string, string> = {
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+    'CAD': 'C$'
+  };
+  
+  return currencySymbols[currencyCode] || currencyCode;
 };
