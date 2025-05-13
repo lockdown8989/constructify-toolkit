@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/hooks/use-auth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ManagerScheduleView from '@/components/schedule/ManagerScheduleView';
-import EmployeeScheduleView from '@/components/schedule/EmployeeScheduleView';
+import EmployeeWorkflow from '@/pages/EmployeeWorkflow';
 
 const Schedule: React.FC = () => {
   const { isAdmin, isManager, isHR } = useAuth();
@@ -15,7 +15,7 @@ const Schedule: React.FC = () => {
       {hasManagerAccess ? (
         <ManagerScheduleView />
       ) : (
-        <EmployeeScheduleView />
+        <EmployeeWorkflow />
       )}
     </div>
   );

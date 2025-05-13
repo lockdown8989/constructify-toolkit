@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useEmployees } from '@/hooks/use-employees';
@@ -17,7 +18,6 @@ const Dashboard = () => {
 
   // Get user's first name for greeting
   const firstName = user?.user_metadata?.first_name || 
-                   user?.user_metadata?.full_name?.split(' ')[0] ||
                    user?.email?.split('@')[0] || 
                    'User';
 
@@ -60,14 +60,7 @@ const Dashboard = () => {
             firstName={firstName}
             employeeCount={employeeCount}
             hiredCount={interviews.filter(i => i.stage === 'Hired').length}
-            interviewStats={{
-              interviews: interviews.filter(i => i.stage === 'Interview').reduce((acc, i) => acc + i.progress, 0) / 
-                Math.max(interviews.filter(i => i.stage === 'Interview').length, 1),
-              hired: interviews.filter(i => i.stage === 'Hired').reduce((acc, i) => acc + i.progress, 0) / 
-                Math.max(interviews.filter(i => i.stage === 'Hired').length, 1),
-              projectTime: 15,
-              output: 5
-            }}
+            interviewStats={interviewStats}
             salaryEmployees={salaryEmployees}
           />
         ) : (

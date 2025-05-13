@@ -1,20 +1,27 @@
-
 import React from "react";
 import { 
   Card, 
   CardHeader, 
   CardTitle, 
-  CardDescription 
+  CardDescription, 
+  CardContent, 
+  CardFooter 
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import LeaveTypeSelector from "./form/LeaveTypeSelector";
+import DateSelector from "./form/DateSelector";
+import NotesField from "./form/NotesField";
+import ProjectConflicts from "./ProjectConflicts";
 import { useLeaveRequestForm } from "./form/useLeaveRequestForm";
 import { useQueryClient } from "@tanstack/react-query";
-import FormContent from "./form/FormContent";
-import SuccessState from "./form/FormStates/SuccessState";
-import ErrorState from "./form/FormStates/ErrorState";
-import LoadingState from "./form/FormStates/LoadingState";
-import NoEmployeeState from "./form/FormStates/NoEmployeeState";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
-const LeaveRequestForm: React.FC = () => {
+interface LeaveRequestFormProps {
+  // Optional props still allowed, but we'll handle auth inside the component
+}
+
+const LeaveRequestForm: React.FC<LeaveRequestFormProps> = () => {
   const queryClient = useQueryClient();
   
   const {
@@ -36,12 +43,29 @@ const LeaveRequestForm: React.FC = () => {
   
   // Display loading state while employee data is being fetched
   if (isLoadingEmployees) {
-    return <LoadingState />;
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex justify-center">
+            <p>Loading employee data...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
   
   // Show message if no employee record found
   if (!currentEmployee) {
-    return <NoEmployeeState />;
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center p-4">
+            <p className="text-destructive font-medium mb-2">Employee Record Not Found</p>
+            <p className="text-muted-foreground">Your user account is not linked to an employee record.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
   
   // Handle form submission with query invalidation
@@ -55,12 +79,60 @@ const LeaveRequestForm: React.FC = () => {
   
   // If the form was submitted successfully, show the success message
   if (formStatus === 'success') {
-    return <SuccessState />;
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center p-6 space-y-4">
+            <div className="flex justify-center">
+              <CheckCircle className="h-16 w-16 text-green-500" />
+            </div>
+            <h3 className="text-xl font-medium">Leave Request Submitted</h3>
+            <p className="text-muted-foreground">
+              Your leave request has been submitted successfully and is pending approval.
+            </p>
+            <Alert className="mt-4">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              <AlertTitle>Waiting for confirmation</AlertTitle>
+              <AlertDescription>
+                Your request has been sent to your manager for review. 
+                You'll receive a notification when it's approved or rejected.
+              </AlertDescription>
+            </Alert>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-4"
+            >
+              Submit Another Request
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
   
   // If there's an error with the form, show error state
   if (formStatus === 'error') {
-    return <ErrorState />;
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center p-6 space-y-4">
+            <div className="flex justify-center">
+              <AlertCircle className="h-16 w-16 text-red-500" />
+            </div>
+            <h3 className="text-xl font-medium">Request Failed</h3>
+            <p className="text-muted-foreground">
+              There was a problem submitting your leave request.
+            </p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="mt-4"
+            >
+              Try Again
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
   
   return (
@@ -73,20 +145,68 @@ const LeaveRequestForm: React.FC = () => {
       </CardHeader>
       
       <form onSubmit={handleFormSubmit}>
-        <FormContent
-          leaveType={leaveType}
-          setLeaveType={setLeaveType}
-          startDate={startDate}
-          setStartDate={setStartDate}
-          endDate={endDate}
-          setEndDate={setEndDate}
-          notes={notes}
-          setNotes={setNotes}
-          isSubmitting={isSubmitting}
-          conflicts={conflicts}
-          formStatus={formStatus}
-          handleSubmit={handleSubmit}
-        />
+        <CardContent className="space-y-4">
+          <LeaveTypeSelector 
+            value={leaveType} 
+            onChange={setLeaveType} 
+          />
+          
+          <div className="grid grid-cols-2 gap-4">
+            <DateSelector
+              id="startDate"
+              label="Start Date"
+              date={startDate}
+              onSelect={setStartDate}
+            />
+            
+            <DateSelector
+              id="endDate"
+              label="End Date"
+              date={endDate}
+              onSelect={setEndDate}
+            />
+          </div>
+          
+          <NotesField 
+            value={notes} 
+            onChange={(e) => setNotes(e.target.value)} 
+          />
+          
+          {conflicts.length > 0 && (
+            <div className="space-y-2">
+              <ProjectConflicts conflicts={conflicts} />
+            </div>
+          )}
+
+          {formStatus === 'submitting' && (
+            <Alert className="mt-4 animate-pulse">
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <AlertTitle>Processing your request</AlertTitle>
+              <AlertDescription>
+                Please wait while we submit your leave request.
+                Do not close this page.
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+        
+        <CardFooter>
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={isSubmitting || conflicts.some(c => c.conflictSeverity === 'High')}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : conflicts.some(c => c.conflictSeverity === 'High') ? 
+              "High Priority Conflict Detected" : 
+              "Submit Request"
+            }
+          </Button>
+        </CardFooter>
       </form>
     </Card>
   );

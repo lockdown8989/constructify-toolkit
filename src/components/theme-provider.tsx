@@ -1,6 +1,7 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
 type Theme = "dark" | "light" | "system";

@@ -8,10 +8,10 @@ import { AuthTabs } from "@/components/auth/AuthTabs";
 import { ResetPasswordMode } from "@/components/auth/ResetPasswordMode";
 
 const Auth = () => {
-  const { user, signIn, signUp, resetPassword, updatePassword } = useAuth();
+  const { signIn, signUp } = useAuth();
   const [searchParams] = useSearchParams();
   const {
-    user: pageUser,
+    user,
     from,
     activeTab,
     setActiveTab,

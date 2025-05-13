@@ -1,81 +1,80 @@
 
 import React from 'react';
 import { format } from 'date-fns';
+import { Clock, User, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Check, X, FileEdit } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { AvailabilityRequest } from '@/types/availability';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/hooks/use-auth';
 import StatusBadge from './StatusBadge';
+import HistoryHoverCard from './HistoryHoverCard';
 
-type AvailabilityRequestItemProps = {
+interface AvailabilityRequestItemProps {
   request: AvailabilityRequest;
-  onReview: (id: string) => void;
-};
+  onReview: (requestId: string) => void;
+}
 
 const AvailabilityRequestItem = ({ request, onReview }: AvailabilityRequestItemProps) => {
-  const { isManager, isAdmin, isHR } = useAuth();
-  const canReview = isManager || isAdmin || isHR;
-  
-  // Format date
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'MMM d, yyyy');
-    } catch (error) {
-      return dateString;
-    }
-  };
-  
-  // Format time (expects "HH:MM:SS" format)
-  const formatTime = (timeString: string) => {
-    if (!timeString) return '';
-    
-    try {
-      const [hours, minutes] = timeString.split(':');
-      const hour = parseInt(hours, 10);
-      const ampm = hour >= 12 ? 'PM' : 'AM';
-      const hour12 = hour % 12 || 12;
-      return `${hour12}:${minutes} ${ampm}`;
-    } catch (error) {
-      return timeString;
-    }
-  };
+  const { isManager } = useAuth();
+  const employee = request.employees;
 
   return (
-    <Card className="overflow-hidden border-l-4 border-l-blue-500">
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start">
+    <div className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-gray-300 transition-all">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+        <div className="space-y-2 flex-grow">
+          {isManager && employee && (
+            <div className="flex flex-wrap gap-2 mb-1">
+              <div className="flex items-center gap-2 text-gray-600 bg-gray-50 px-2 py-1 rounded-md">
+                <User className="h-3.5 w-3.5" />
+                <span className="text-sm font-medium">{employee.name}</span>
+              </div>
+              {employee.department && (
+                <div className="flex items-center gap-2 text-gray-600 bg-gray-50 px-2 py-1 rounded-md">
+                  <Building className="h-3.5 w-3.5" />
+                  <span className="text-sm">{employee.department}</span>
+                </div>
+              )}
+            </div>
+          )}
           <div>
-            <div className="font-semibold flex items-center gap-2">
-              {request.employees?.name || 'Employee'}
+            <div className="font-medium text-gray-900">
+              {format(new Date(request.date), 'EEEE, MMMM d, yyyy')}
             </div>
-            <div className="text-sm text-muted-foreground mt-1">
-              {formatDate(request.date)} • {formatTime(request.start_time)} - {formatTime(request.end_time)}
+            <div className="flex items-center text-sm text-gray-600 mt-1">
+              <Clock className="h-3.5 w-3.5 mr-1.5" />
+              {request.start_time} - {request.end_time}
             </div>
-            {request.notes && (
-              <p className="text-sm mt-2 text-muted-foreground">
-                Note: {request.notes}
-              </p>
-            )}
           </div>
-          
-          <div className="flex flex-col items-end gap-2">
-            <StatusBadge status={request.status} />
-            
-            {canReview && request.status === 'Pending' && (
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => onReview(request.id)}
-              >
-                <FileEdit className="h-4 w-4 mr-1" />
-                Review
-              </Button>
-            )}
-          </div>
+          {request.notes && (
+            <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded-md">
+              {request.notes}
+            </div>
+          )}
+          {request.manager_notes && (
+            <div className="text-sm text-gray-600 bg-blue-50 p-2 rounded-md">
+              <span className="font-medium">Manager Note: </span>
+              {request.manager_notes}
+            </div>
+          )}
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex flex-col items-start sm:items-end space-y-2">
+          <StatusBadge status={request.status} />
+          <span className="text-sm text-gray-600">
+            {request.is_available ? 'Available' : 'Unavailable'}
+          </span>
+          <HistoryHoverCard request={request} />
+          {isManager && request.status === 'Pending' && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="mt-2"
+              onClick={() => onReview(request.id)}
+            >
+              Review Request
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 

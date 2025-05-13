@@ -1,73 +1,68 @@
 
-import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-
-type ShiftStatus = 'employee_accepted' | 'employee_rejected' | 'pending' | 'confirmed' | 'rejected' | 'completed';
+import { useAuth } from '@/hooks/use-auth';
+import { toast } from '@/hooks/use-toast';
+import { ScheduleStatus } from '@/types/supabase/schedules';
 
 export const useShiftResponse = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  const respondToShift = async (shiftId: string, status: ShiftStatus) => {
-    setIsLoading(true);
-    
-    try {
-      // Update the shift status
-      const { error } = await supabase
-        .from('schedules')
-        .update({ status })
-        .eq('id', shiftId);
-      
-      if (error) {
-        console.error('Error responding to shift:', error);
-        toast({
-          title: 'Error',
-          description: 'There was a problem updating your response. Please try again later.',
-          variant: 'destructive',
-        });
-        return false;
-      }
-      
-      // If accepted, we fetch the shift details to include in notifications
-      if (status === 'employee_accepted') {
-        // Fetch the shift details
-        const { data: shift } = await supabase
-          .from('schedules')
-          .select('title, start_time, end_time')
-          .eq('id', shiftId)
-          .single();
-        
-        if (shift) {
-          // Format the dates for display
-          const startDate = new Date(shift.start_time);
-          const formattedDate = startDate.toLocaleDateString(undefined, {
-            weekday: 'long',
-            month: 'long',
-            day: 'numeric'
-          });
-          
-          toast({
-            title: 'Shift Accepted',
-            description: `You've accepted the shift "${shift.title}" on ${formattedDate}`,
-            variant: 'success',
-          });
+  const respondToShift = useMutation({
+    mutationFn: async ({ 
+      scheduleId, 
+      response 
+    }: { 
+      scheduleId: string, 
+      response: 'accepted' | 'rejected'
+    }) => {
+      try {
+        if (!user) {
+          throw new Error('User not authenticated');
         }
+
+        console.log(`Processing shift response: ${response} for schedule ID: ${scheduleId}`);
+
+        // Map the response to the correct status enum value
+        const statusValue: ScheduleStatus = response === 'accepted' ? 'employee_accepted' : 'employee_rejected';
+
+        // Update the shift status in Supabase
+        const { data: scheduleData, error: updateError } = await supabase
+          .from('schedules')
+          .update({
+            status: statusValue,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', scheduleId)
+          .select('*')
+          .single();
+
+        if (updateError) {
+          console.error('Error updating shift status:', updateError);
+          throw new Error(`Failed to update shift status: ${updateError.message}`);
+        }
+
+        console.log('Schedule data after update:', scheduleData);
+        return scheduleData;
+      } catch (error) {
+        console.error('Error responding to shift:', error);
+        throw error;
       }
-      
-      return true;
-    } catch (error) {
-      console.error('Exception in respondToShift:', error);
+    },
+    onSuccess: () => {
+      // Refresh the schedules data after successful response
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
+    },
+    onError: (error) => {
+      // Add a user-friendly error toast
       toast({
-        title: 'Error',
-        description: 'An unexpected error occurred. Please try again later.',
+        title: 'Shift Response Failed',
+        description: error instanceof Error ? error.message : 'Unable to process your shift response.',
         variant: 'destructive',
       });
-      return false;
-    } finally {
-      setIsLoading(false);
     }
-  };
-  
-  return { respondToShift, isLoading };
+  });
+
+  return { respondToShift };
 };

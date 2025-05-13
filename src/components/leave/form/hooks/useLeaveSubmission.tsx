@@ -30,7 +30,7 @@ export const useLeaveSubmission = (
       toast({
         title: "Missing fields",
         description: "Please fill in all required fields.",
-        type: "error", // Changed from variant to type
+        variant: "destructive",
       });
       setFormStatus('error');
       return false;
@@ -40,7 +40,7 @@ export const useLeaveSubmission = (
       toast({
         title: "Invalid date range",
         description: "End date cannot be before start date.",
-        type: "error", // Changed from variant to type
+        variant: "destructive",
       });
       setFormStatus('error');
       return false;
@@ -83,7 +83,6 @@ export const useLeaveSubmission = (
             toast({
               title: "Leave request submitted",
               description: "Your leave request has been submitted successfully and is pending approval.",
-              type: "success", // Changed from variant to type
             });
             
             // Invalidate queries to refresh the calendar data
@@ -100,7 +99,7 @@ export const useLeaveSubmission = (
             toast({
               title: "Error",
               description: `Failed to submit leave request: ${error.message || 'Please try again'}`,
-              type: "error", // Changed from variant to type
+              variant: "destructive",
             });
             setFormStatus('error');
             setIsSubmitting(false);
@@ -116,7 +115,7 @@ export const useLeaveSubmission = (
       toast({
         title: "Error",
         description: `Failed to submit leave request: ${error.message || 'Please try again'}`,
-        type: "error", // Changed from variant to type
+        variant: "destructive",
       });
       setFormStatus('error');
       setIsSubmitting(false);

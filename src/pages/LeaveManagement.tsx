@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -6,14 +7,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Calendar, Users, Bell, History, Clock } from "lucide-react";
+import { ChevronDown, Calendar, Users, Bell, RefreshCw, Clock, History } from "lucide-react";
 import LeaveRealtimeUpdates from "@/components/leave/LeaveRealtimeUpdates";
 import EmployeeTab from "@/components/leave/tabs/EmployeeTab";
 import ManagerTab from "@/components/leave/tabs/ManagerTab";
 import CalendarTab from "@/components/leave/tabs/CalendarTab";
 import NotificationsTab from "@/components/leave/tabs/NotificationsTab";
 import ScheduleRequestsTab from "@/components/leave/tabs/ScheduleRequestsTab"; 
-import ShiftHistoryTab from "@/components/leave/tabs/ShiftHistoryTab";
+import ShiftHistoryTab from "@/components/leave/tabs/ShiftHistoryTab"; // Added this import
 import { useAccessControl } from "@/hooks/leave/useAccessControl";
 import { useLocation } from "react-router-dom";
 

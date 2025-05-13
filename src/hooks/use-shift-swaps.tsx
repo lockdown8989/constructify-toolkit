@@ -2,225 +2,222 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 
-export interface ShiftSwap {
+export type ShiftSwap = {
   id: string;
   requester_id: string;
-  recipient_id?: string | null;
+  recipient_id: string;
   requester_schedule_id: string;
-  recipient_schedule_id?: string | null;
-  status: string;
-  notes?: string | null;
+  recipient_schedule_id: string | null;
+  status: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
+  notes: string | null;
   created_at: string;
   updated_at: string;
-  requester?: { name: string };
-  recipient?: { name: string };
-}
+};
 
-export interface ShiftSwapRequest {
-  id: string;
+export type NewShiftSwap = {
   requester_id: string;
-  recipient_id?: string | null;
+  recipient_id: string;
   requester_schedule_id: string;
   recipient_schedule_id?: string | null;
-  status: string;
   notes?: string | null;
-  created_at: string;
-  updated_at: string;
-  requester?: { name: string };
-  recipient?: { name: string };
-}
+  status?: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
+};
 
-export const useShiftSwaps = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+export type ShiftSwapUpdate = Partial<ShiftSwap> & { id: string };
+
+// Get all shift swaps
+export function useShiftSwaps() {
+  const { user, isManager } = useAuth();
   
-  const { data: swapRequests, isLoading, error } = useQuery({
-    queryKey: ['shift-swaps'],
+  return useQuery({
+    queryKey: ['shift-swaps', isManager, user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('shift_swaps')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let query = supabase.from('shift_swaps').select('*');
       
+      // If not a manager, only fetch the user's own shift swaps
+      if (!isManager && user) {
+        // First get the employee ID for the current user
+        const { data: employeeData } = await supabase
+          .from('employees')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (employeeData) {
+          // Filter to show only shift swaps where this employee is either the requester or recipient
+          query = query.or(`requester_id.eq.${employeeData.id},recipient_id.eq.${employeeData.id}`);
+        } else {
+          // If no employee record found, return empty array
+          return [];
+        }
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
       return data as ShiftSwap[];
     }
   });
-  
-  const acceptSwapMutation = useMutation({
-    mutationFn: async (swapId: string) => {
-      const { data, error } = await supabase
-        .from('shift_swaps')
-        .update({ 
-          status: 'Approved',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', swapId)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['shift-swaps'] });
-      toast({
-        title: "Success",
-        description: "Shift swap approved"
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: `Failed to approve shift swap: ${error.message}`,
-        variant: "destructive"
-      });
-    }
-  });
-  
-  const rejectSwapMutation = useMutation({
-    mutationFn: async (swapId: string) => {
-      const { data, error } = await supabase
-        .from('shift_swaps')
-        .update({ 
-          status: 'Rejected',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', swapId)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['shift-swaps'] });
-      toast({
-        title: "Success",
-        description: "Shift swap rejected"
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: `Failed to reject shift swap: ${error.message}`,
-        variant: "destructive"
-      });
-    }
-  });
-  
-  const handleAcceptSwap = (swapId: string) => {
-    acceptSwapMutation.mutate(swapId);
-  };
-  
-  const handleRejectSwap = (swapId: string) => {
-    rejectSwapMutation.mutate(swapId);
-  };
-  
-  return {
-    swapRequests,
-    isLoading,
-    error,
-    handleAcceptSwap,
-    handleRejectSwap
-  };
-};
+}
 
-// Create a hook for creating shift swaps
-export const useCreateShiftSwap = () => {
+// Get shift swaps for a specific employee (either requester or recipient)
+export function useEmployeeShiftSwaps(employeeId: string) {
+  return useQuery({
+    queryKey: ['shift_swaps', employeeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('shift_swaps')
+        .select('*')
+        .or(`requester_id.eq.${employeeId},recipient_id.eq.${employeeId}`)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching employee shift swaps:', error);
+        throw error;
+      }
+      return data as ShiftSwap[];
+    },
+    enabled: !!employeeId
+  });
+}
+
+// Create a new shift swap
+export function useCreateShiftSwap() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
   return useMutation({
-    mutationFn: async (newSwap: Partial<ShiftSwap>) => {
+    mutationFn: async (newSwap: NewShiftSwap) => {
       const { data, error } = await supabase
         .from('shift_swaps')
-        .insert([newSwap])
+        .insert({
+          ...newSwap,
+          status: newSwap.status || 'Pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
         .select()
         .single();
-        
-      if (error) throw error;
-      return data;
+      
+      if (error) {
+        console.error('Error creating shift swap:', error);
+        throw error;
+      }
+      return data as ShiftSwap;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['shift-swaps'] });
+      queryClient.invalidateQueries({ queryKey: ['shift_swaps', data.requester_id] });
+      queryClient.invalidateQueries({ queryKey: ['shift_swaps', data.recipient_id] });
       toast({
         title: "Success",
-        description: "Shift swap request created"
+        description: "Shift swap request submitted successfully",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: `Failed to create shift swap: ${error.message}`,
-        variant: "destructive"
+        description: `Failed to submit shift swap request: ${error.message}`,
+        variant: "destructive",
       });
     }
   });
-};
+}
 
-// Create hooks for updating and deleting shift swaps
-export const useUpdateShiftSwap = () => {
+// Update a shift swap
+export function useUpdateShiftSwap() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: string, updates: Partial<ShiftSwap> }) => {
+    mutationFn: async (update: ShiftSwapUpdate) => {
+      const { id, ...updateData } = update;
+      
+      if (!id) throw new Error('ID is required for update');
+      
       const { data, error } = await supabase
         .from('shift_swaps')
-        .update(updates)
+        .update({
+          ...updateData,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
         .select()
         .single();
-        
-      if (error) throw error;
-      return data;
+      
+      if (error) {
+        console.error('Error updating shift swap:', error);
+        throw error;
+      }
+      return data as ShiftSwap;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['shift-swaps'] });
+      queryClient.invalidateQueries({ queryKey: ['shift_swaps', data.requester_id] });
+      queryClient.invalidateQueries({ queryKey: ['shift_swaps', data.recipient_id] });
       toast({
         title: "Success",
-        description: "Shift swap updated"
+        description: "Shift swap updated successfully",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
         description: `Failed to update shift swap: ${error.message}`,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   });
-};
+}
 
-export const useDeleteShiftSwap = () => {
+// Delete a shift swap
+export function useDeleteShiftSwap() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (id: string) => {
+      // Get the requester and recipient IDs before deletion
+      const { data: swapData } = await supabase
+        .from('shift_swaps')
+        .select('requester_id, recipient_id')
+        .eq('id', id)
+        .single();
+      
+      const requester = swapData?.requester_id;
+      const recipient = swapData?.recipient_id;
+      
       const { error } = await supabase
         .from('shift_swaps')
         .delete()
         .eq('id', id);
-        
-      if (error) throw error;
-      return id;
+      
+      if (error) {
+        console.error('Error deleting shift swap:', error);
+        throw error;
+      }
+      return { id, requester, recipient };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['shift-swaps'] });
+      if (result.requester) {
+        queryClient.invalidateQueries({ queryKey: ['shift_swaps', result.requester] });
+      }
+      if (result.recipient) {
+        queryClient.invalidateQueries({ queryKey: ['shift_swaps', result.recipient] });
+      }
       toast({
-        title: "Success", 
-        description: "Shift swap deleted"
+        title: "Success",
+        description: "Shift swap deleted successfully",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
         description: `Failed to delete shift swap: ${error.message}`,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   });
-};
+}
