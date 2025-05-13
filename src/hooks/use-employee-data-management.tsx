@@ -18,10 +18,11 @@ export function useEmployeeDataManagement() {
     }
   }, [error, toast]);
 
+  // Return a consistent object structure even if data is missing
   return {
-    employeeData,
+    employeeData: employeeData || null,
     isLoading,
     error,
-    employeeId: employeeData?.id
+    employeeId: employeeData?.id || null
   };
 }
