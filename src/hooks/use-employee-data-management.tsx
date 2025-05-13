@@ -5,17 +5,9 @@ import { useToast } from './use-toast';
 
 export function useEmployeeDataManagement() {
   const { data: employeeData, isLoading, error } = useOwnEmployeeData();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Could not load your employee information",
-        variant: "destructive"
-      });
-    }
-  }, [error, toast]);
+  
+  // We no longer need to display the toast here since it's handled in the useOwnEmployeeData hook
+  // This avoids duplicate error messages and handles the error at the appropriate level
 
   return {
     employeeData,
