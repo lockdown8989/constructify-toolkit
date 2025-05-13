@@ -30,7 +30,6 @@ export interface PayslipResult {
   localFile?: string;
   path?: string;
   filename?: string;
-  url?: string;
 }
 
 export async function generatePayslipPDF(
@@ -375,7 +374,7 @@ async function uploadPayslipToStorage(
       console.error('Error adding document record:', docError);
     }
     
-    return { success: true, path: filePath, filename: `${filename}.pdf`, url: filePath };
+    return { success: true, path: filePath, filename: `${filename}.pdf` };
   } catch (error) {
     console.error('Exception during payslip upload:', error);
     return { success: false, error: String(error), localFile: filename };

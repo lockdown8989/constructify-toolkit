@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Employee } from '@/components/dashboard/salary-table/types';
 import { calculateSalaryWithGPT, getEmployeeAttendance, calculateUKIncomeTax } from './use-salary-calculation';
@@ -62,7 +63,7 @@ export const processEmployeePayroll = async (
     const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     const payPeriod = `${format(firstDayOfMonth, 'dd/MM/yyyy')} - ${format(lastDayOfMonth, 'dd/MM/yyyy')}`;
     
-    // Add record to payroll table
+    // Add record to payroll table - MODIFIED to use only available columns
     const { data: payrollData, error: payrollError } = await supabase
       .from('payroll')
       .insert({
@@ -80,9 +81,6 @@ export const processEmployeePayroll = async (
       .single();
 
     if (payrollError) throw payrollError;
-    
-    let documentUrl = '';
-    let documentName = '';
     
     // Generate PDF payslip
     try {
@@ -106,10 +104,15 @@ export const processEmployeePayroll = async (
         true // Upload to storage
       );
       
-      // Store document info for notification
-      if (pdfResult && typeof pdfResult === 'object') {
-        if ('url' in pdfResult) documentUrl = pdfResult.url as string;
-        if ('filename' in pdfResult) documentName = pdfResult.filename as string;
+      // Send notification to the employee
+      if (employee.user_id) {
+        await notifyEmployeeAboutPayslip(
+          employeeId,
+          employee.user_id,
+          finalSalary,
+          currency,
+          paymentDate
+        );
       }
       
     } catch (pdfError) {
@@ -117,16 +120,10 @@ export const processEmployeePayroll = async (
       // Continue as PDF generation is non-critical
     }
     
-    return { 
-      success: true, 
-      finalSalary,
-      documentUrl,
-      documentName,
-      payrollId: payrollData?.id
-    };
+    return { success: true };
   } catch (error) {
     console.error("Error in processEmployeePayroll:", error);
-    return { success: false, error };
+    throw error; // Re-throw to be handled by the caller
   }
 };
 

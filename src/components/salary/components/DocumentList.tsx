@@ -1,44 +1,22 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useEmployeeDocuments } from '@/hooks/use-documents';
 import { Card } from '@/components/ui/card';
-import { FileText, RefreshCw } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useQueryClient } from '@tanstack/react-query';
 
 interface DocumentListProps {
   employeeId?: string;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
-  const { data: documents = [], isLoading, refetch, isError } = useEmployeeDocuments(employeeId);
+  const { data: documents = [], isLoading } = useEmployeeDocuments(employeeId);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [isDownloading, setIsDownloading] = useState<string | null>(null);
-
-  // Refresh documents when the component mounts or when employeeId changes
-  useEffect(() => {
-    if (employeeId) {
-      refetch();
-    }
-  }, [employeeId, refetch]);
-  
-  const handleRefresh = () => {
-    refetch();
-    toast({
-      title: "Refreshing documents",
-      description: "Checking for new documents..."
-    });
-  };
   
   const handleDownload = async (path: string, fileName: string) => {
-    if (isDownloading) return; // Prevent multiple simultaneous downloads
-    
     try {
-      setIsDownloading(path);
-      
       const { data, error } = await supabase.storage
         .from('documents')
         .download(path);
@@ -52,11 +30,6 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
       a.download = fileName;
       a.click();
       window.URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Download successful",
-        description: `${fileName} has been downloaded`
-      });
     } catch (error) {
       console.error('Download error:', error);
       toast({
@@ -64,29 +37,11 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
         description: "Could not download the document",
         variant: "destructive"
       });
-    } finally {
-      setIsDownloading(null);
     }
   };
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-8">
-        <RefreshCw className="h-8 w-8 animate-spin text-primary mb-2" />
-        <p className="text-sm text-gray-500">Loading documents...</p>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex flex-col items-center justify-center py-8">
-        <p className="text-sm text-red-500">Error loading documents. Please try again.</p>
-        <Button variant="outline" size="sm" onClick={handleRefresh} className="mt-2">
-          Try Again
-        </Button>
-      </div>
-    );
+    return <div>Loading documents...</div>;
   }
 
   const contractDoc = documents.find(doc => doc.document_type === 'contract');
@@ -94,14 +49,6 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-sm font-medium">Your Documents</h3>
-        <Button variant="ghost" size="sm" onClick={handleRefresh} className="h-8 w-8 p-0">
-          <RefreshCw className="h-4 w-4" />
-          <span className="sr-only">Refresh documents</span>
-        </Button>
-      </div>
-
       <Card className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -117,9 +64,8 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
             <Button 
               variant="outline"
               onClick={() => handleDownload(contractDoc.path!, contractDoc.name)}
-              disabled={isDownloading === contractDoc.path}
             >
-              {isDownloading === contractDoc.path ? 'Downloading...' : 'Download'}
+              Download
             </Button>
           )}
         </div>
@@ -140,9 +86,8 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
             <Button 
               variant="outline"
               onClick={() => handleDownload(payslipDoc.path!, payslipDoc.name)}
-              disabled={isDownloading === payslipDoc.path}
             >
-              {isDownloading === payslipDoc.path ? 'Downloading...' : 'Download'}
+              Download
             </Button>
           )}
         </div>

@@ -8,8 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const sendDocumentUploadNotification = async (
   employeeId: string,
   documentType: string,
-  documentName: string,
-  documentUrl?: string
+  documentName: string
 ): Promise<boolean> => {
   try {
     // Get employee user_id from employee record
@@ -30,12 +29,11 @@ export const sendDocumentUploadNotification = async (
     // Send the notification
     const success = await sendNotification({
       user_id: employee.user_id,
-      title: `New ${formattedDocType} Document Available`,
-      message: `A new ${documentType.toLowerCase()} document (${documentName}) is now available in your documents section.${documentUrl ? ' Click to download.' : ''}`,
+      title: `New ${formattedDocType} Uploaded`,
+      message: `A new ${documentType.toLowerCase()} document (${documentName}) has been uploaded to your profile.`,
       type: 'info',
       related_entity: 'documents',
-      related_id: employeeId,
-      action_url: documentUrl
+      related_id: employeeId
     });
     
     return success;
@@ -46,7 +44,7 @@ export const sendDocumentUploadNotification = async (
 };
 
 /**
- * Assigns a document to an employee and sends notification
+ * Assigns a document to an employee
  */
 export const assignDocumentToEmployee = async (
   documentId: string,
@@ -55,50 +53,22 @@ export const assignDocumentToEmployee = async (
   dueDate?: string
 ): Promise<{ success: boolean; message: string; data?: any }> => {
   try {
-    // Get the document details first
-    const { data: document, error: docError } = await supabase
-      .from('documents')
-      .select('*')
-      .eq('id', documentId)
-      .single();
-      
-    if (docError) {
-      console.error('Error getting document:', docError);
-      return { success: false, message: `Failed to get document details: ${docError.message}` };
-    }
-    
-    // Create assignment record
-    const { data: assignment, error: assignError } = await supabase
-      .from('document_assignments')
-      .insert({
-        document_id: documentId,
-        employee_id: employeeId,
-        assigned_at: new Date().toISOString(),
-        is_required: isRequired,
-        due_date: dueDate,
-        status: 'pending'
+    // Call the edge function to assign the document
+    const { data, error } = await supabase.functions.invoke('notify-on-document-upload', {
+      body: JSON.stringify({
+        documentId,
+        employeeId,
+        isRequired,
+        dueDate
       })
-      .select('id')
-      .single();
-      
-    if (assignError) {
-      console.error('Error creating document assignment:', assignError);
-      return { success: false, message: `Failed to assign document: ${assignError.message}` };
+    });
+    
+    if (error) {
+      console.error('Error assigning document:', error);
+      return { success: false, message: `Failed to assign document: ${error.message}` };
     }
     
-    // Send notification to employee
-    await sendDocumentUploadNotification(
-      employeeId,
-      document.document_type,
-      document.name,
-      document.url
-    );
-    
-    return { 
-      success: true, 
-      message: "Document assigned and employee notified", 
-      data: { assignmentId: assignment.id }
-    };
+    return data;
   } catch (error) {
     console.error('Error calling document assignment function:', error);
     return { success: false, message: `Error: ${error.message}` };
