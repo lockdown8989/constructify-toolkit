@@ -38,7 +38,7 @@ const OpenShiftResponseActions = ({
       toast({
         title: `Failed to ${response === 'confirmed' ? 'accept' : 'reject'} shift`,
         description: "Please try again later.",
-        variant: "destructive",
+        type: "error", // Changed from variant to type
       });
     } finally {
       setLoading(null);
