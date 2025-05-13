@@ -141,6 +141,12 @@ export const useSignUpSubmit = ({
       if (user) {
         console.log(`Got user with ID: ${user.id}, assigning role: ${userRole}, manager ID: ${effectiveManagerId || 'none'}`);
         
+        // CRITICAL: For managers, ALWAYS set their own manager_id to their generated ID
+        // This ensures they're recognized as managers throughout the system
+        if (userRole === 'manager') {
+          console.log(`Setting manager's own manager_id to: ${effectiveManagerId}`);
+        }
+        
         // Try role assignment and employee record creation in parallel
         const [roleSuccess, employeeSuccess] = await Promise.allSettled([
           assignUserRole(user.id, userRole),
@@ -148,7 +154,7 @@ export const useSignUpSubmit = ({
             user.id,
             getFullName(),
             userRole,
-            effectiveManagerId
+            effectiveManagerId  // This is important - managers get their own manager_id
           )
         ]);
 

@@ -22,6 +22,13 @@ const Dashboard = () => {
     console.log("Dashboard rendered with isManager:", isManager);
     console.log("User data:", user);
     console.log("Employees count:", employees.length);
+
+    // For debugging - show role-based dashboard access
+    if (isManager) {
+      console.log("User has manager privileges - showing manager dashboard");
+    } else {
+      console.log("User does not have manager privileges - showing employee dashboard");
+    }
   }, [isManager, user, employees]);
 
   // Get user's first name for greeting
