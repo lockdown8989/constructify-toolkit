@@ -12,6 +12,8 @@ export function useAuth() {
 
   // Create a combined API that supports both implementations
   return {
+    // From legacy auth
+    ...legacyAuth,
     // From new auth
     ...newAuth,
     // Add helper getters for role checks that may be missing in either implementation

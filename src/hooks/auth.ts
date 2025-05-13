@@ -143,6 +143,10 @@ export const useAuth = () => {
     return hasRole(['manager', 'admin', 'hr']);
   };
 
+  // Properties for compatibility with AuthProvider
+  const isAdmin = hasRole('admin');
+  const isHR = hasRole('hr');
+
   // Add missing methods from AuthProvider.tsx to ensure backward compatibility
   const resetPassword = async (email: string) => {
     try {
@@ -172,6 +176,8 @@ export const useAuth = () => {
     hasRole,
     isManager,
     resetPassword,
-    updatePassword
+    updatePassword,
+    isAdmin,
+    isHR
   };
 };
