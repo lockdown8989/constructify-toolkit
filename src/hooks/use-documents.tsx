@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +17,8 @@ export type DocumentModel = {
 };
 
 export function useEmployeeDocuments(employeeId: string | undefined) {
+  const queryClient = useQueryClient();
+
   return useQuery({
     queryKey: ['employee-documents', employeeId],
     queryFn: async () => {
@@ -23,36 +26,62 @@ export function useEmployeeDocuments(employeeId: string | undefined) {
       
       console.log('Fetching documents for employee:', employeeId);
       
-      const { data: docs, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('employee_id', employeeId);
+      try {
+        // Attempt to call the edge function first for better document retrieval
+        const { data: functionData, error: functionError } = await supabase.functions
+          .invoke('get-employee-documents', {
+            body: { employeeId, documentType: 'all' }
+          });
+          
+        if (!functionError && functionData?.success && Array.isArray(functionData.data)) {
+          console.log(`Found ${functionData.data.length} documents via edge function`);
+          return functionData.data as DocumentModel[];
+        } else if (functionError) {
+          console.error('Edge function error:', functionError);
+        }
         
-      if (error) {
-        console.error('Error fetching documents:', error);
+        // Fallback to direct query
+        const { data: docs, error } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('employee_id', employeeId);
+          
+        if (error) {
+          console.error('Error fetching documents:', error);
+          return [];
+        }
+        
+        console.log(`Found ${docs.length} documents for employee via direct query`);
+        
+        // Add public URLs for documents
+        const docsWithUrls = await Promise.all(docs.map(async (doc) => {
+          if (doc.path && !doc.url) {
+            const { data } = supabase.storage
+              .from('documents')
+              .getPublicUrl(doc.path);
+              
+            // Update the document with the URL in the database
+            await supabase
+              .from('documents')
+              .update({ url: data.publicUrl })
+              .eq('id', doc.id);
+              
+            return {
+              ...doc,
+              url: data.publicUrl
+            };
+          }
+          return doc;
+        }));
+        
+        return docsWithUrls as DocumentModel[];
+      } catch (error) {
+        console.error("Error in useEmployeeDocuments:", error);
         return [];
       }
-      
-      console.log(`Found ${docs.length} documents for employee`);
-      
-      // Add public URLs for documents
-      const docsWithUrls = await Promise.all(docs.map(async (doc) => {
-        if (doc.path && !doc.url) {
-          const { data } = supabase.storage
-            .from('documents')
-            .getPublicUrl(doc.path);
-            
-          return {
-            ...doc,
-            url: data.publicUrl
-          };
-        }
-        return doc;
-      }));
-      
-      return docsWithUrls as DocumentModel[];
     },
-    enabled: !!employeeId
+    enabled: !!employeeId,
+    refetchInterval: 10000, // Refetch every 10 seconds to check for new documents
   });
 }
 

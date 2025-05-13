@@ -37,10 +37,10 @@ export const sendDocumentUploadNotification = async (
       type: 'info',
       related_entity: 'documents',
       related_id: employeeId,
-      action_url: documentUrl
+      action_url: documentUrl  // This ensures the URL is included in the notification
     });
     
-    console.log(`Notification ${success ? 'sent successfully' : 'failed'} to employee ${employee.name}`);
+    console.log(`Notification ${success ? 'sent successfully' : 'failed'} to employee ${employee.name} with document URL: ${documentUrl || 'none'}`);
     return success;
   } catch (error) {
     console.error('Error sending document notification:', error);
@@ -58,6 +58,8 @@ export const assignDocumentToEmployee = async (
   dueDate?: string
 ): Promise<{ success: boolean; message: string; data?: any }> => {
   try {
+    console.log(`Assigning document ${documentId} to employee ${employeeId}`);
+    
     // Get the document details first
     const { data: document, error: docError } = await supabase
       .from('documents')
@@ -65,9 +67,9 @@ export const assignDocumentToEmployee = async (
       .eq('id', documentId)
       .single();
       
-    if (docError) {
+    if (docError || !document) {
       console.error('Error getting document:', docError);
-      return { success: false, message: `Failed to get document details: ${docError.message}` };
+      return { success: false, message: `Failed to get document details: ${docError?.message}` };
     }
     
     // Create assignment record
@@ -89,20 +91,40 @@ export const assignDocumentToEmployee = async (
       return { success: false, message: `Failed to assign document: ${assignError.message}` };
     }
     
+    console.log('Document assigned, sending notification with URL:', document.url);
+    
+    // Make sure document has a URL
+    let documentUrl = document.url;
+    if (!documentUrl && document.path) {
+      const { data: urlData } = supabase.storage
+        .from('documents')
+        .getPublicUrl(document.path);
+        
+      documentUrl = urlData.publicUrl;
+      
+      // Update document with URL if it was missing
+      if (documentUrl) {
+        await supabase
+          .from('documents')
+          .update({ url: documentUrl })
+          .eq('id', documentId);
+      }
+    }
+    
     // Send notification to employee
     await sendDocumentUploadNotification(
       employeeId,
       document.document_type,
       document.name,
-      document.url
+      documentUrl
     );
     
     return { 
       success: true, 
       message: "Document assigned and employee notified", 
-      data: { assignmentId: assignment.id }
+      data: { assignmentId: assignment?.id }
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error calling document assignment function:', error);
     return { success: false, message: `Error: ${error.message}` };
   }
