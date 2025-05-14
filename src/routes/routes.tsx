@@ -1,17 +1,18 @@
-import { Home } from "@/pages/Home";
-import { About } from "@/pages/About";
-import { Contact } from "@/pages/Contact";
-import { Dashboard } from "@/pages/Dashboard";
-import { People } from "@/pages/People";
-import { EmployeeWorkflow } from "@/pages/EmployeeWorkflow";
-import { LeaveManagement } from "@/pages/LeaveManagement";
-import { Salary } from "@/pages/Salary";
-import { Payroll } from "@/pages/Payroll";
-import { Attendance } from "@/pages/Attendance";
-import { ShiftCalendar } from "@/pages/ShiftCalendar";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { Login } from "@/pages/Login";
-import { Register } from "@/pages/Register";
+
+import Home from "@/pages/Home";
+import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+import Dashboard from "@/pages/Dashboard";
+import People from "@/pages/People";
+import EmployeeWorkflow from "@/pages/EmployeeWorkflow";
+import LeaveManagement from "@/pages/LeaveManagement";
+import Salary from "@/pages/Salary";
+import Payroll from "@/pages/Payroll";
+import Attendance from "@/pages/Attendance";
+import ShiftCalendar from "@/pages/ShiftCalendar";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import TimeClock from "@/pages/TimeClock";
 import ManagerTimeClock from "@/pages/ManagerTimeClock";
 

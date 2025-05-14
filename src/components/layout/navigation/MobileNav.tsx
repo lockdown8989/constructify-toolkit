@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -185,9 +184,10 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                     className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target bg-gray-100"
                   >
                     <Clock className="mr-3 h-5 w-5 text-teal-600" />
-                    <span>Manager Time Clock</span>
+                    <span>⏰️IN ⏱️OUT</span>
                   </Link>
                 )}
+                
                 {hasManagerialAccess ? (
                   <Link
                     to="/employee-workflow"
