@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -9,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/hooks/auth"
-import { Settings, User as UserIcon, LogOut, Trash2 } from "lucide-react"
+import { Settings, User as UserIcon, LogOut } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useLanguage, TranslationKey } from "@/hooks/language"
 
@@ -46,10 +47,6 @@ const UserMenu = () => {
     navigate('/profile-settings');
   };
   
-  const navigateToDeleteAccount = () => {
-    navigate('/settings?section=delete-account');
-  };
-  
   if (!user) {
     return null;
   }
@@ -78,10 +75,6 @@ const UserMenu = () => {
         <DropdownMenuItem onClick={navigateToProfileSettings}>
           <Settings className="mr-2 h-4 w-4" />
           <span>{t('profile_settings')}</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={navigateToDeleteAccount}>
-          <Trash2 className="mr-2 h-4 w-4" />
-          <span>Delete My Account</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} className="text-red-500">
