@@ -2,23 +2,18 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Clock, Coffee, Square } from 'lucide-react';
+import { Play } from 'lucide-react';
 import { useTimeClock } from '@/hooks/time-clock';
 import { formatDuration } from '@/utils/time-utils';
 import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 const DashboardTimeClock = () => {
   const { 
     status,
     handleClockIn,
-    handleClockOut,
-    handleBreakStart,
-    handleBreakEnd,
     elapsedTime
   } = useTimeClock();
-  
-  const isMobile = useIsMobile();
+
   const isWorking = status === 'clocked-in' || status === 'on-break';
 
   return (
@@ -55,36 +50,6 @@ const DashboardTimeClock = () => {
         >
           <Play className="w-6 h-6 mr-2" />
           Start Shift
-        </Button>
-      )}
-      
-      {status === 'clocked-in' && (
-        <div className={cn("grid gap-3", isMobile ? "grid-cols-1" : "grid-cols-2")}>
-          <Button 
-            onClick={handleBreakStart}
-            variant="outline"
-            className="border-blue-300 h-14"
-          >
-            <Coffee className="w-5 h-5 mr-2" />
-            Take Break
-          </Button>
-          <Button 
-            onClick={handleClockOut}
-            className="bg-red-600 hover:bg-red-700 h-14"
-          >
-            <Square className="w-5 h-5 mr-2" />
-            End Shift
-          </Button>
-        </div>
-      )}
-      
-      {status === 'on-break' && (
-        <Button 
-          onClick={handleBreakEnd}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-lg h-14"
-        >
-          <Play className="w-6 h-6 mr-2" />
-          Resume Work
         </Button>
       )}
     </Card>

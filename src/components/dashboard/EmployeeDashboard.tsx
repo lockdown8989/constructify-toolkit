@@ -8,15 +8,12 @@ import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management'
 import { useAuth } from '@/hooks/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import EmployeeTimeClock from './EmployeeTimeClock';
 
 const EmployeeDashboard: React.FC<{ firstName: string }> = ({ firstName }) => {
   const { user } = useAuth();
   const { employeeId, isLoading, error } = useEmployeeDataManagement();
   const [currentEmployeeId, setCurrentEmployeeId] = useState<string | null>(null);
   const [loadingEmployee, setLoadingEmployee] = useState(true);
-  const isMobile = useIsMobile();
 
   // Fetch employee record if not available through hook
   useEffect(() => {
@@ -78,13 +75,7 @@ const EmployeeDashboard: React.FC<{ firstName: string }> = ({ firstName }) => {
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       <h1 className="text-2xl font-bold mb-6">Hello {firstName}</h1>
       <div className="grid gap-6">
-        {/* Always show time clock at the top on mobile */}
-        {isMobile && <EmployeeTimeClock />}
-
         <EmployeeAttendanceSummary />
-        
-        {/* Show time clock on desktop within the dashboard */}
-        {!isMobile && <EmployeeTimeClock />}
         
         {resolvedEmployeeId && (
           <>

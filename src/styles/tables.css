@@ -1,5 +1,5 @@
 
-/* Table base styles */
+/* Table component styles */
 .table-container {
   @apply w-full overflow-auto;
 }
@@ -13,7 +13,8 @@
 }
 
 .table-head {
-  @apply border-b transition-colors h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0;
+  @apply border-b transition-colors hover:bg-muted/50 [&:has([role=checkbox])]:pr-0 
+    h-12 px-4 text-left align-middle font-medium text-muted-foreground;
 }
 
 .table-body {
@@ -21,36 +22,59 @@
 }
 
 .table-row {
-  @apply border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted;
+  @apply border-b transition-colors hover:bg-muted/50 
+    data-[state=selected]:bg-muted;
 }
 
 .table-cell {
   @apply p-4 align-middle [&:has([role=checkbox])]:pr-0;
 }
 
+.table-footer {
+  @apply border-t bg-muted/50 font-medium [&>tr>td]:p-4;
+}
+
 .table-caption {
   @apply mt-4 text-sm text-muted-foreground;
 }
 
-/* Mobile table alternatives */
+/* Data table specific styles */
+.data-table-toolbar {
+  @apply flex flex-col md:flex-row gap-2 md:items-center py-4;
+}
+
+.data-table-view-options {
+  @apply flex items-center justify-between;
+}
+
+.data-table-view-options-label {
+  @apply text-sm font-medium text-muted-foreground;
+}
+
+.data-table-pagination {
+  @apply flex items-center justify-end px-2 py-4;
+}
+
+/* Sorting styles */
+.table-sortable {
+  @apply flex items-center space-x-1 cursor-pointer select-none;
+}
+
+.sort-indicator {
+  @apply h-4 w-4 text-muted-foreground;
+}
+
+/* Mobile table styles */
 .mobile-table-card {
-  @apply border rounded-lg p-4 mb-3;
-}
-
-.mobile-table-header {
-  @apply flex justify-between items-center mb-3;
-}
-
-.mobile-table-title {
-  @apply font-medium;
+  @apply rounded-lg border bg-card text-card-foreground shadow-sm mb-2 p-4;
 }
 
 .mobile-table-row {
-  @apply flex flex-col space-y-1 py-2 border-t first:border-t-0;
+  @apply grid grid-cols-2 gap-1;
 }
 
 .mobile-table-label {
-  @apply text-xs text-muted-foreground;
+  @apply text-sm font-medium text-muted-foreground;
 }
 
 .mobile-table-value {

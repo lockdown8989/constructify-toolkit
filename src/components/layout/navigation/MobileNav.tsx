@@ -9,6 +9,7 @@ import {
 import { Menu, Home, User, Users, Calendar, FileText, Workflow, DollarSign, Receipt, Utensils, Clock, ClipboardCheck, Coffee } from "lucide-react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "@/hooks/auth"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { useState } from "react"
 import { useTimeClock } from "@/hooks/time-clock"
 import { Badge } from "@/components/ui/badge"
@@ -123,24 +124,6 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                  'Clocked Out'}
               </Badge>
             </div>
-          </div>
-        )}
-        
-        <div className="h-[1px] bg-neutral-200 my-2 mx-6"></div>
-        
-        {/* Manager Time Clock Access */}
-        {hasManagerialAccess && (
-          <div className="px-4 mb-4">
-            <Button 
-              onClick={() => {
-                navigate('/manager-time-clock');
-                setIsOpen(false);
-              }}
-              className="w-full bg-purple-600 hover:bg-purple-700"
-            >
-              <Clock className="h-4 w-4 mr-2" />
-              Manager Time Clock
-            </Button>
           </div>
         )}
         

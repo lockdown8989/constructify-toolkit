@@ -1,5 +1,5 @@
 
-/* Card base styles */
+/* Card component styles */
 .card {
   @apply rounded-lg border bg-card text-card-foreground shadow-sm;
 }
@@ -24,39 +24,35 @@
   @apply flex items-center p-6 pt-0;
 }
 
-/* Card variants */
-.card-outline {
-  @apply border border-primary;
+/* Dashboard card styles */
+.dashboard-card {
+  @apply rounded-xl border bg-card p-6 shadow-sm transition-all 
+    hover:shadow-md dark:shadow-gray-900/10;
 }
 
-.card-compact {
+.dashboard-stat-card {
+  @apply flex flex-col rounded-xl border bg-card p-6 shadow-sm;
+}
+
+/* Calendar card styles */
+.calendar-card {
+  @apply bg-white rounded-lg shadow p-4 mb-4;
+}
+
+/* Employee card styles */
+.employee-card {
+  @apply rounded-xl border bg-card overflow-hidden shadow-sm hover:shadow-md 
+    transition-all duration-200;
+}
+
+.employee-card-header {
+  @apply p-4 border-b flex items-center justify-between;
+}
+
+.employee-card-content {
   @apply p-4;
 }
-.card-compact .card-header {
-  @apply p-4;
-}
-.card-compact .card-content {
-  @apply p-4 pt-0;
-}
-.card-compact .card-footer {
-  @apply p-4 pt-0;
-}
 
-/* Card mobile styles */
-@media (max-width: 640px) {
-  .card {
-    @apply rounded-xl;
-  }
-
-  .card-header {
-    @apply p-4;
-  }
-
-  .card-content {
-    @apply p-4 pt-0;
-  }
-
-  .card-footer {
-    @apply p-4 pt-0;
-  }
+.employee-card-footer {
+  @apply p-4 border-t bg-muted/20 flex justify-between items-center;
 }
