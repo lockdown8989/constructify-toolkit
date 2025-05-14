@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -13,7 +14,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { isAdmin, isHR, isManager, fetchUserRoles, resetRoles } = useRoles(user);
-  const { signIn, signUp, resetPassword, updatePassword, signOut } = useAuthActions();
+  const { signIn, signUp, resetPassword, updatePassword, signOut: authSignOut } = useAuthActions();
 
   useEffect(() => {
     const setupAuth = async () => {
@@ -172,10 +173,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Calculate if user is authenticated
   const isAuthenticated = !!user;
 
-  // Update the signOut function to navigate to the root path
+  // We'll use the signOut from useAuthActions but enhance it with error handling
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await authSignOut();
       // No need to navigate here as the onAuthStateChange will handle it
     } catch (error) {
       console.error("Error signing out:", error);
