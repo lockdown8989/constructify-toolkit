@@ -18,16 +18,18 @@ import {
 } from "./approval";
 import { ClipboardCheck } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
 
 const LeaveApprovalDashboard: React.FC = () => {
   const { data: leaves = [], isLoading: isLoadingLeaves } = useLeaveCalendar();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
   
-  // Mock current user - this should come from a proper auth context in a real app
+  // Get current user info from auth context
   const currentUser = {
-    id: "550e8400-e29b-41d4-a716-446655440000",
-    name: "Valentina Cortez",
+    id: user?.id || "",
+    name: user?.user_metadata?.full_name || user?.user_metadata?.name || "Manager",
     department: "HR",
     isManager: true
   };

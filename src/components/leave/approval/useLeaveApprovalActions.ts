@@ -5,12 +5,14 @@ import { useToast } from "@/hooks/use-toast";
 import { createAuditLog } from "../utils/leave-utils";
 import type { LeaveCalendar } from "@/hooks/leave/leave-types";
 import { sendNotification } from "@/services/notifications/notification-sender";
+import { useAuth } from "@/hooks/use-auth";
 
 // Hook to handle leave approval actions
 export const useLeaveApprovalActions = (currentUser: any) => {
   const { mutate: updateLeave } = useUpdateLeaveCalendar();
   const { mutate: updateEmployee } = useUpdateEmployee();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Update employee status if they are currently on leave
   const updateEmployeeStatus = (employeeId: string, startDate: string, endDate: string) => {
@@ -37,7 +39,10 @@ export const useLeaveApprovalActions = (currentUser: any) => {
 
   // Handle leave approval
   const handleApprove = async (leave: LeaveCalendar) => {
-    const auditLog = createAuditLog(leave, "Approved", currentUser.name);
+    // Get current user's full name from auth context
+    const managerName = currentUser?.name || 'System';
+    
+    const auditLog = createAuditLog(leave, "Approved", managerName);
     
     updateLeave(
       { id: leave.id, status: "Approved", notes: auditLog },
@@ -50,7 +55,7 @@ export const useLeaveApprovalActions = (currentUser: any) => {
             await sendNotification({
               user_id: leave.employee_id,
               title: "Leave request approved",
-              message: `Your ${leave.type} leave request from ${leave.start_date} to ${leave.end_date} has been approved.`,
+              message: `Your ${leave.type} leave request from ${leave.start_date} to ${leave.end_date} has been approved by ${managerName}.`,
               type: "success",
               related_entity: "leave_calendar",
               related_id: leave.id
@@ -78,7 +83,10 @@ export const useLeaveApprovalActions = (currentUser: any) => {
 
   // Handle leave rejection
   const handleReject = async (leave: LeaveCalendar) => {
-    const auditLog = createAuditLog(leave, "Rejected", currentUser.name);
+    // Get current user's full name from auth context
+    const managerName = currentUser?.name || 'System';
+    
+    const auditLog = createAuditLog(leave, "Rejected", managerName);
     
     updateLeave(
       { id: leave.id, status: "Rejected", notes: auditLog },
@@ -89,7 +97,7 @@ export const useLeaveApprovalActions = (currentUser: any) => {
             await sendNotification({
               user_id: leave.employee_id,
               title: "Leave request rejected",
-              message: `Your ${leave.type} leave request from ${leave.start_date} to ${leave.end_date} has been rejected.`,
+              message: `Your ${leave.type} leave request from ${leave.start_date} to ${leave.end_date} has been rejected by ${managerName}.`,
               type: "warning",
               related_entity: "leave_calendar",
               related_id: leave.id
