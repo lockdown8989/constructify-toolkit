@@ -1,16 +1,14 @@
 
-import { Link } from "react-router-dom"
 import { useAuth } from "@/hooks/auth"
 import { useIsMobile } from "@/hooks/use-mobile"
 import NotificationBell from '@/components/notifications/NotificationBell'
 import MobileNav from "./navigation/MobileNav"
-import DesktopNav from "./navigation/DesktopNav"
-import UserMenu from "./navigation/UserMenu"
 import ThemeToggle from "./navigation/ThemeToggle"
+import UserMenu from "./navigation/UserMenu"
 import AuthButtons from "./navigation/AuthButtons"
 
 const Navbar = () => {
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const isMobile = useIsMobile()
 
   // Check if user exists to determine authentication status
@@ -19,17 +17,10 @@ const Navbar = () => {
   return (
     <div className="border-b sticky top-0 bg-background z-40 safe-area-inset">
       <div className="flex h-16 items-center px-4">
-        {isMobile ? (
-          <MobileNav isAuthenticated={isAuthenticated} />
-        ) : (
-          <Link to={isAuthenticated ? "/dashboard" : "/"} className="mr-6 flex items-center space-x-2 z-50">
-            <span className="font-bold">TeamPulse</span>
-          </Link>
-        )}
+        {isMobile && <MobileNav isAuthenticated={isAuthenticated} />}
         
-        {!isMobile && <DesktopNav isAuthenticated={isAuthenticated} />}
-        
-        <nav className="ml-auto flex items-center space-x-2">
+        {/* Push all the right side elements to the end */}
+        <div className="ml-auto flex items-center space-x-2">
           <ThemeToggle />
           
           {/* Add notification bell before user account menu */}
@@ -40,7 +31,7 @@ const Navbar = () => {
           ) : (
             <AuthButtons />
           )}
-        </nav>
+        </div>
       </div>
     </div>
   )
