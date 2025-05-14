@@ -28,6 +28,7 @@ export interface AuthContextType {
   resetPassword?: (email: string) => Promise<any>;
   updatePassword?: (password: string) => Promise<any>;
   signOut?: () => Promise<void>;
+  deleteAccount?: () => Promise<{ success: boolean; error?: string }>;
 }
 
 // Function to check if user is authenticated

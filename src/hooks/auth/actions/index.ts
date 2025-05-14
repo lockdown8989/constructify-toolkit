@@ -4,3 +4,4 @@ export * from './useSignIn';
 export * from './useSignUp';
 export * from './usePasswordReset';
 export * from './useSignOut';
+export * from './useDeleteAccount';

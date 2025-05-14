@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Loader2, ArrowLeft, Trash2 } from "lucide-react";
@@ -18,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const Settings = () => {
-  const { user, isLoading, signOut } = useAuth();
+  const { user, isLoading, signOut, deleteAccount } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,17 +45,28 @@ const Settings = () => {
   const handleDeleteAccount = async () => {
     try {
       setIsDeleting(true);
-      // Here you would normally call an API to delete the user account
-      toast({
-        title: "Account Deletion",
-        description: "Your account deletion request has been submitted. You will be signed out now.",
-      });
       
-      // For now, just sign the user out
-      setTimeout(async () => {
-        await signOut();
-        navigate('/auth');
-      }, 2000);
+      // Call the deleteAccount method from useAuth
+      const { success, error } = await deleteAccount!();
+      
+      if (success) {
+        toast({
+          title: "Account Deleted",
+          description: "Your account has been deleted successfully. You will be signed out now.",
+        });
+        
+        // Navigate to auth page after successful deletion
+        setTimeout(() => {
+          navigate('/auth');
+        }, 2000);
+      } else {
+        toast({
+          title: "Error",
+          description: error || "There was a problem deleting your account. Please try again later.",
+          variant: "destructive",
+        });
+        setIsDeleting(false);
+      }
     } catch (error) {
       console.error('Error deleting account:', error);
       toast({
@@ -64,7 +74,6 @@ const Settings = () => {
         description: "There was a problem deleting your account. Please try again later.",
         variant: "destructive",
       });
-    } finally {
       setIsDeleting(false);
     }
   };

@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -14,7 +13,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { isAdmin, isHR, isManager, fetchUserRoles, resetRoles } = useRoles(user);
-  const { signIn, signUp, resetPassword, updatePassword, signOut: authSignOut } = useAuthActions();
+  const { signIn, signUp, resetPassword, updatePassword, signOut: authSignOut, deleteAccount: authDeleteAccount } = useAuthActions();
 
   useEffect(() => {
     const setupAuth = async () => {
@@ -188,6 +187,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Add delete account function
+  const deleteAccount = async () => {
+    try {
+      const result = await authDeleteAccount();
+      return result;
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete account. Please try again.",
+        variant: "destructive",
+      });
+      return { success: false, error: "Failed to delete account" };
+    }
+  };
+
   const value = {
     user,
     session,
@@ -201,6 +216,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     resetPassword,
     updatePassword,
     signOut,
+    deleteAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
