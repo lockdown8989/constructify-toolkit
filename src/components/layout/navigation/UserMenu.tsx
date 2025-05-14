@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/hooks/auth"
-import { Settings, User as UserIcon, LogOut } from "lucide-react"
+import { Settings, User as UserIcon, LogOut, Trash2 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useLanguage, TranslationKey } from "@/hooks/language"
 
@@ -47,8 +47,8 @@ const UserMenu = () => {
     navigate('/profile-settings');
   };
   
-  const navigateToSettings = () => {
-    navigate('/settings');
+  const navigateToDeleteAccount = () => {
+    navigate('/settings?section=delete-account');
   };
   
   if (!user) {
@@ -80,9 +80,9 @@ const UserMenu = () => {
           <Settings className="mr-2 h-4 w-4" />
           <span>{t('profile_settings')}</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={navigateToSettings}>
-          <Settings className="mr-2 h-4 w-4" />
-          <span>{t('settings')}</span>
+        <DropdownMenuItem onClick={navigateToDeleteAccount}>
+          <Trash2 className="mr-2 h-4 w-4" />
+          <span>Delete Account</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} className="text-red-500">
