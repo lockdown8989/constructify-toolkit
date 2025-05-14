@@ -1,7 +1,7 @@
 
 import React, { useEffect } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/auth";
 import { useAuthPage } from "@/hooks/auth/useAuthPage";
 import { AuthHeader } from "@/components/auth/AuthHeader";
 import { AuthTabs } from "@/components/auth/AuthTabs";
