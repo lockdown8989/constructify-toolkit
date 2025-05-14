@@ -25,6 +25,7 @@ import Settings from "@/pages/Settings";
 import ProfileSettings from "@/pages/ProfileSettings";
 import Attendance from "@/pages/Attendance";
 import TimeClock from "@/pages/TimeClock";
+import ManagerTimeClock from "@/pages/ManagerTimeClock"; // Add import for the new page
 import RestaurantSchedule from "@/pages/RestaurantSchedule";
 import NotFound from "@/pages/NotFound";
 import Hiring from "@/pages/Hiring";
@@ -114,6 +115,12 @@ function App() {
                   <Route path="/time-clock" element={
                     <ProtectedRoute>
                       <TimeClock />
+                    </ProtectedRoute>
+                  } />
+                  {/* Add new route for Manager Time Clock */}
+                  <Route path="/manager-time-clock" element={
+                    <ProtectedRoute>
+                      <ManagerTimeClock />
                     </ProtectedRoute>
                   } />
                   <Route path="/hiring" element={
