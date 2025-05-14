@@ -22,3 +22,17 @@
   color: var(--color-primary);
   font-weight: 500;
 }
+
+.touch-target {
+  position: relative;
+}
+
+.touch-target::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  z-index: -1;
+}
