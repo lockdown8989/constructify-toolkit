@@ -8,8 +8,16 @@ import { useNavigate } from "react-router-dom";
  */
 export const useDeleteAccount = () => {
   const { toast } = useToast();
-  // Using optional chaining to handle cases where the hook might be used outside Router context
-  const navigate = useNavigate?.() || null;
+  
+  // Safely get navigator - will return null if outside Router context
+  let navigate;
+  try {
+    navigate = useNavigate();
+  } catch (error) {
+    // Handle case when hook is used outside Router context
+    navigate = null;
+    console.log("useDeleteAccount: useNavigate failed - outside Router context");
+  }
 
   const deleteAccount = async (): Promise<{success: boolean; error?: string}> => {
     try {
