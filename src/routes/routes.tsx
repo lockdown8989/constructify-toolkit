@@ -31,6 +31,10 @@ export const router = createBrowserRouter([
     element: <LandingPage />,
   },
   {
+    path: "/landing",
+    element: <LandingPage />,
+  },
+  {
     path: "/auth",
     element: <Auth />,
   },

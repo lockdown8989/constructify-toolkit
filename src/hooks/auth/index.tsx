@@ -187,8 +187,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
               // Navigate to dashboard after sign in
               navigate('/dashboard');
             } else if (event === 'SIGNED_OUT') {
-              // Navigate to landing page after sign out
-              navigate('/landing');
+              // Navigate to root (/) instead of /landing to avoid 404
+              navigate('/');
             }
           }
         );
@@ -317,7 +317,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsAdmin(false);
       setIsHR(false);
       setIsManager(false);
-      navigate('/landing');
+      // Navigate to root path instead of /landing
+      navigate('/');
     } catch (error) {
       console.error("Sign out error:", error);
     }

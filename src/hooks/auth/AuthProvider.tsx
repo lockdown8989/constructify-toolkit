@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -172,6 +171,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Calculate if user is authenticated
   const isAuthenticated = !!user;
+
+  // Update the signOut function to navigate to the root path
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      // No need to navigate here as the onAuthStateChange will handle it
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const value = {
     user,
