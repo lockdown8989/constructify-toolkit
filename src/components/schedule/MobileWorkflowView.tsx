@@ -50,7 +50,7 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
         </TabsTrigger>
       </TabsList>
       
-      <TabsContent value="shifts" className="space-y-4 mt-4 no-scrollbar">
+      <TabsContent value="shifts" className="space-y-4 mt-4 no-scrollbar mobile-full-width">
         <Card className="border rounded-xl shadow-sm overflow-hidden">
           <CardHeader className="pb-2 pt-4 px-4">
             <CardTitle className="text-base flex items-center">
@@ -66,15 +66,15 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
         <ShiftSwapForm />
       </TabsContent>
       
-      <TabsContent value="timeclock" className="space-y-4 mt-4 no-scrollbar">
+      <TabsContent value="timeclock" className="space-y-4 mt-4 no-scrollbar mobile-full-width">
         <TimeClockWidget />
       </TabsContent>
       
-      <TabsContent value="availability" className="space-y-4 mt-4 no-scrollbar">
+      <TabsContent value="availability" className="space-y-4 mt-4 no-scrollbar mobile-full-width">
         <AvailabilityManagement />
       </TabsContent>
       
-      <TabsContent value="leave" className="space-y-4 mt-4 no-scrollbar">
+      <TabsContent value="leave" className="space-y-4 mt-4 no-scrollbar mobile-full-width">
         <LeaveBalanceCard leaveBalance={leaveBalance} />
         <Card className="border rounded-xl shadow-sm overflow-hidden">
           <CardHeader className="pb-2 pt-4 px-4">

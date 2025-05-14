@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -154,6 +153,7 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
               <User className="mr-3 h-5 w-5 text-neutral-600" />
               <span>Contact</span>
             </Link>
+            
             {isAuthenticated && (
               <>
                 <div className="h-[1px] bg-neutral-200 my-3 mx-6" />
