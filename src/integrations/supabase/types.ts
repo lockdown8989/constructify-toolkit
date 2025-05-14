@@ -1081,6 +1081,10 @@ export type Database = {
         }
         Returns: number
       }
+      delete_user: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       has_role: {
         Args:
           | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
