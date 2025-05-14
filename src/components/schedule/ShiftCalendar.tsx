@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import EmployeeShift from './components/EmployeeShift';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
+import MobileScheduleView from './MobileScheduleView';
+import { Employee } from '@/types/restaurant-schedule';
 
 const ShiftCalendar = () => {
   const { user, isAdmin, isHR, isManager } = useAuth();
@@ -25,6 +27,18 @@ const ShiftCalendar = () => {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const { refreshSchedules } = useEmployeeSchedule();
+  
+  // Sample employee data for demo - in real app this would come from a hook/API
+  const [employees, setEmployees] = useState<Employee[]>([
+    { id: "emp1", name: "Courtney Henry", role: "Front of house", hourlyRate: 15 },
+    { id: "emp2", name: "Alex Jackson", role: "Waiting Staff", hourlyRate: 12 },
+    { id: "emp3", name: "Esther Howarde", role: "Waiting Staff", hourlyRate: 12 },
+    { id: "emp4", name: "Guy Hawkins", role: "Waiting Staff", hourlyRate: 12 },
+    { id: "emp5", name: "Jacob Jones", role: "Marketing", hourlyRate: 18 },
+    { id: "emp6", name: "Jerome Bell", role: "Waiting Staff", hourlyRate: 12 },
+    { id: "emp7", name: "Leslie Alexander", role: "Chef", hourlyRate: 20 },
+    { id: "emp8", name: "Marvin McKinney", role: "Chef", hourlyRate: 22 }
+  ]);
   
   // Calculate visible days based on the view type
   useEffect(() => {
@@ -169,6 +183,29 @@ const ShiftCalendar = () => {
     });
   };
 
+  // If on mobile, render the mobile schedule view
+  if (isMobile) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <ScheduleHeader 
+          locationName={locationName} 
+          setLocationName={setLocationName}
+          onSearch={setSearchQuery}
+          searchQuery={searchQuery}
+          weekView={weekView}
+          setWeekView={setWeekView}
+        />
+        <MobileScheduleView 
+          schedules={schedules}
+          employees={employees}
+          onAddShift={handleAddShift}
+          onShiftClick={handleShiftClick}
+        />
+      </div>
+    );
+  }
+
+  // Desktop view (existing implementation)
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow overflow-hidden">
       {/* Custom header with location name */}
