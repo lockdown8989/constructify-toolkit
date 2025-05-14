@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Loader2, ArrowLeft, Trash2 } from "lucide-react";
@@ -181,7 +182,7 @@ const Settings = () => {
               <CardHeader className="bg-destructive/10">
                 <CardTitle className="text-xl font-medium flex items-center">
                   <Trash2 className="mr-3 h-5 w-5 text-destructive" />
-                  Delete Account
+                  Delete My Account
                 </CardTitle>
                 <CardDescription>
                   Permanently delete your account and all associated data

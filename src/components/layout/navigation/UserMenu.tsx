@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -82,7 +81,7 @@ const UserMenu = () => {
         </DropdownMenuItem>
         <DropdownMenuItem onClick={navigateToDeleteAccount}>
           <Trash2 className="mr-2 h-4 w-4" />
-          <span>Delete Account</span>
+          <span>Delete My Account</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} className="text-red-500">
