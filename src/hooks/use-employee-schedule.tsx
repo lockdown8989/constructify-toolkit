@@ -154,6 +154,7 @@ export const useEmployeeSchedule = () => {
     newSchedules,
     schedules,
     isLoading,
-    refreshSchedules
+    refreshSchedules,
+    refetch
   };
 };

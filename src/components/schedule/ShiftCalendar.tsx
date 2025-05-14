@@ -1,43 +1,63 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSchedules } from '@/hooks/use-schedules';
-import { format, addDays, startOfWeek, isToday } from 'date-fns';
+import { format, addDays, startOfWeek, isToday, isSameWeek } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useAuth } from '@/hooks/use-auth';
-import { Check, MessageSquare, Plus } from 'lucide-react';
+import { useAuth } from '@/hooks/auth';
+import { ChevronLeft, ChevronRight, Check, MessageSquare, Plus } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import ShiftCalendarHeader from './components/ShiftCalendarHeader';
+import ScheduleHeader from '@/components/restaurant/ScheduleHeader';
 import ShiftCalendarToolbar from './components/ShiftCalendarToolbar';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import EmployeeShift from './components/EmployeeShift';
+import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
 
 const ShiftCalendar = () => {
   const { user, isAdmin, isHR, isManager } = useAuth();
-  const { data: schedules = [], isLoading } = useSchedules();
+  const { data: schedules = [], isLoading, refetch } = useSchedules();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [visibleDays, setVisibleDays] = useState<Date[]>([]);
-  const [locationName, setLocationName] = useState("The Swan Inn");
+  const [locationName, setLocationName] = useState("Main Location");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [weekView, setWeekView] = useState(true);
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const { refreshSchedules } = useEmployeeSchedule();
   
-  // Calculate visible days (e.g., Friday & Saturday in the design)
+  // Calculate visible days based on the view type
   useEffect(() => {
     const startOfCurrentWeek = startOfWeek(selectedDate, { weekStartsOn: 1 }); // Start from Monday
     const days = [];
     
-    // For mobile, show 2 days at a time
-    const daysToShow = isMobile ? 2 : 7;
-    
-    for (let i = 0; i < daysToShow; i++) {
-      days.push(addDays(startOfCurrentWeek, i));
+    if (weekView) {
+      // For week view, show 7 days or fewer on mobile
+      const daysToShow = isMobile ? 4 : 7;
+      
+      for (let i = 0; i < daysToShow; i++) {
+        days.push(addDays(startOfCurrentWeek, i));
+      }
+    } else {
+      // For day view, only show the selected date
+      days.push(selectedDate);
     }
     
     setVisibleDays(days);
-  }, [selectedDate, isMobile]);
+  }, [selectedDate, isMobile, weekView]);
   
-  // Group employees and their schedules
-  const groupedSchedules = schedules.reduce((groups: Record<string, any>, schedule) => {
+  // Filter and group employees and their schedules
+  const filteredSchedules = schedules.filter(schedule => {
+    // Apply search filter
+    if (searchQuery) {
+      const title = schedule.title?.toLowerCase() || '';
+      return title.includes(searchQuery.toLowerCase());
+    }
+    return true;
+  });
+  
+  // Group by employee
+  const groupedSchedules = filteredSchedules.reduce((groups: Record<string, any>, schedule) => {
     const employeeId = schedule.employee_id;
     
     if (!groups[employeeId]) {
@@ -48,7 +68,30 @@ const ShiftCalendar = () => {
       };
     }
     
-    groups[employeeId].shifts.push(schedule);
+    // Only include shifts for visible days if in week view
+    if (weekView) {
+      const scheduleDate = new Date(schedule.start_time);
+      const isVisible = visibleDays.some(day => 
+        day.getDate() === scheduleDate.getDate() &&
+        day.getMonth() === scheduleDate.getMonth() &&
+        day.getFullYear() === scheduleDate.getFullYear()
+      );
+      
+      if (isVisible) {
+        groups[employeeId].shifts.push(schedule);
+      }
+    } else {
+      // For day view, only include shifts for the selected date
+      const scheduleDate = new Date(schedule.start_time);
+      const selectedDateCopy = new Date(selectedDate);
+      
+      if (scheduleDate.getDate() === selectedDateCopy.getDate() &&
+          scheduleDate.getMonth() === selectedDateCopy.getMonth() &&
+          scheduleDate.getFullYear() === selectedDateCopy.getFullYear()) {
+        groups[employeeId].shifts.push(schedule);
+      }
+    }
+    
     return groups;
   }, {});
   
@@ -77,18 +120,30 @@ const ShiftCalendar = () => {
     shifts: schedules.filter(s => s.employee_id === user?.id)
   };
   
-  // Get all employees with schedules, with current user first
-  const allEmployeeSchedules = [
-    currentUserSchedule,
-    ...employeeSchedules.filter((e: any) => e.employeeId !== user?.id)
-  ];
+  // Get all employees with schedules, with current user first if they have shifts
+  const currentUserHasShifts = currentUserSchedule.shifts.length > 0;
+  const allEmployeeSchedules = currentUserHasShifts 
+    ? [currentUserSchedule, ...employeeSchedules.filter((e: any) => e.employeeId !== user?.id)]
+    : [...employeeSchedules];
   
-  const handleNextDays = () => {
-    setSelectedDate(addDays(selectedDate, isMobile ? 2 : 7));
+  const handleNextPeriod = () => {
+    if (weekView) {
+      setSelectedDate(addDays(selectedDate, 7));
+    } else {
+      setSelectedDate(addDays(selectedDate, 1));
+    }
   };
   
-  const handlePreviousDays = () => {
-    setSelectedDate(addDays(selectedDate, isMobile ? -2 : -7));
+  const handlePreviousPeriod = () => {
+    if (weekView) {
+      setSelectedDate(addDays(selectedDate, -7));
+    } else {
+      setSelectedDate(addDays(selectedDate, -1));
+    }
+  };
+
+  const handleToday = () => {
+    setSelectedDate(new Date());
   };
   
   const handleAddShift = (employeeId: string, day: Date) => {
@@ -105,142 +160,177 @@ const ShiftCalendar = () => {
     });
   };
 
+  const handleRefresh = () => {
+    refetch();
+    refreshSchedules();
+    toast({
+      title: "Schedule refreshed",
+      description: "The schedule has been updated with the latest information.",
+    });
+  };
+
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow overflow-hidden">
-      {/* Location header */}
-      <ShiftCalendarHeader 
+      {/* Custom header with location name */}
+      <ScheduleHeader 
         locationName={locationName} 
-        setLocationName={setLocationName} 
+        setLocationName={setLocationName}
+        onSearch={setSearchQuery}
+        searchQuery={searchQuery}
+        weekView={weekView}
+        setWeekView={setWeekView}
       />
       
       {/* Day selector toolbar */}
-      <ShiftCalendarToolbar 
-        visibleDays={visibleDays} 
-        onNext={handleNextDays}
-        onPrevious={handlePreviousDays}
-        isMobile={isMobile}
-      />
+      <div className="flex items-center justify-between p-2 border-b bg-gray-50">
+        <Button variant="ghost" size="sm" onClick={handlePreviousPeriod} className="h-8 w-8 p-0">
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={handleToday}>
+            Today
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleRefresh}>
+            Refresh
+          </Button>
+        </div>
+        
+        <Button variant="ghost" size="sm" onClick={handleNextPeriod} className="h-8 w-8 p-0">
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      {/* Date column headers */}
+      <div className="flex border-b border-gray-200">
+        <div className="w-[120px] p-2 flex items-center justify-center bg-gray-50 border-r border-gray-200">
+          <span className="font-medium text-sm">Employees</span>
+        </div>
+        
+        {visibleDays.map(day => {
+          const isCurrentDay = isToday(day);
+          return (
+            <div 
+              key={format(day, 'yyyy-MM-dd')} 
+              className={`flex-1 p-2 text-center ${isCurrentDay ? 'bg-blue-50' : ''}`}
+            >
+              <div className="text-xs uppercase text-gray-500">{format(day, 'EEE')}</div>
+              <div className={`font-semibold ${isCurrentDay ? 'text-blue-600' : ''}`}>
+                {format(day, 'd')}
+              </div>
+            </div>
+          );
+        })}
+      </div>
       
       {/* Main grid */}
       <div className="overflow-y-auto flex-1">
         <div className="min-w-[400px]">
-          {/* Employees and shifts grid */}
-          <div className="divide-y divide-gray-200">
-            {allEmployeeSchedules.map((employee: any) => (
-              <div key={employee.employeeId} className="flex">
-                {/* Employee name column */}
-                <div className="w-[120px] p-3 bg-gray-50 flex flex-col justify-center items-center text-center border-r border-gray-200">
-                  {employee.isCurrentUser ? (
-                    <div className="bg-gray-800 text-white px-3 py-1 rounded-md text-sm font-medium mb-1">
-                      You
-                    </div>
-                  ) : (
-                    <Avatar className="h-8 w-8 mb-1">
-                      <AvatarFallback className="bg-blue-100 text-blue-800">
-                        {employee.employeeName.split(' ').map((n: string) => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div className="font-medium text-sm">{employee.employeeName}</div>
-                  {employee.role && (
-                    <div className="text-xs text-gray-500 truncate max-w-[110px]">
-                      {employee.role}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Shifts columns */}
-                <div className="flex flex-grow divide-x divide-gray-200">
-                  {visibleDays.map(day => {
-                    // Find shifts for this employee on this day
-                    const dayShifts = employee.shifts.filter((shift: any) => {
-                      const shiftDate = new Date(shift.start_time);
-                      return (
-                        shiftDate.getDate() === day.getDate() &&
-                        shiftDate.getMonth() === day.getMonth() &&
-                        shiftDate.getFullYear() === day.getFullYear()
-                      );
-                    });
-                    
-                    const isDayToday = isToday(day);
-                    
-                    // Generate a consistent color based on employee name
-                    const colorIndex = employee.employeeName.charCodeAt(0) % 5;
-                    const colorClasses = [
-                      'bg-blue-50 border-l-4 border-blue-500', // Blue
-                      'bg-yellow-50 border-l-4 border-yellow-500', // Yellow
-                      'bg-green-50 border-l-4 border-green-500', // Green
-                      'bg-pink-50 border-l-4 border-pink-500', // Pink
-                      'bg-purple-50 border-l-4 border-purple-500' // Purple
-                    ];
-                    const colorClass = colorClasses[colorIndex];
-                    
-                    return (
-                      <div 
-                        key={format(day, 'yyyy-MM-dd')} 
-                        className={cn(
-                          "w-full h-full min-h-[120px] p-2 relative",
-                          isDayToday ? "bg-blue-50/30" : ""
-                        )}
-                      >
-                        {dayShifts.length > 0 ? (
-                          <div className="space-y-2 h-full">
-                            {dayShifts.map((shift: any) => (
-                              <EmployeeShift 
-                                key={shift.id}
-                                shift={shift}
-                                colorClass={colorClass}
-                                onClick={() => handleShiftClick(shift)}
-                              />
-                            ))}
-                          </div>
-                        ) : (
-                          <div className={cn(
-                            "h-full flex items-center justify-center",
-                            (isAdmin || isManager || isHR) && "cursor-pointer hover:bg-gray-50"
-                          )}>
-                            {(isAdmin || isManager || isHR) && (
-                              <button
-                                onClick={() => handleAddShift(employee.employeeId, day)}
-                                className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-gray-200 active:bg-gray-300"
-                              >
-                                <Plus className="h-5 w-5 text-gray-400" />
-                              </button>
-                            )}
-                          </div>
-                        )}
+          {isLoading ? (
+            <div className="p-8 text-center text-gray-500">Loading schedules...</div>
+          ) : allEmployeeSchedules.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">No schedules found for the selected period</div>
+          ) : (
+            /* Employees and shifts grid */
+            <div className="divide-y divide-gray-200">
+              {allEmployeeSchedules.map((employee: any) => (
+                <div key={employee.employeeId} className="flex">
+                  {/* Employee name column */}
+                  <div className="w-[120px] p-3 bg-gray-50 flex flex-col justify-center items-center text-center border-r border-gray-200">
+                    {employee.isCurrentUser ? (
+                      <div className="bg-gray-800 text-white px-3 py-1 rounded-md text-sm font-medium mb-1">
+                        You
                       </div>
-                    );
-                  })}
+                    ) : (
+                      <Avatar className="h-8 w-8 mb-1">
+                        <AvatarFallback className="bg-blue-100 text-blue-800">
+                          {employee.employeeName.split(' ').map((n: string) => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div className="font-medium text-sm">{employee.employeeName}</div>
+                    {employee.role && (
+                      <div className="text-xs text-gray-500 truncate max-w-[110px]">
+                        {employee.role}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Shifts columns */}
+                  <div className="flex flex-grow divide-x divide-gray-200">
+                    {visibleDays.map(day => {
+                      // Find shifts for this employee on this day
+                      const dayShifts = employee.shifts.filter((shift: any) => {
+                        const shiftDate = new Date(shift.start_time);
+                        return (
+                          shiftDate.getDate() === day.getDate() &&
+                          shiftDate.getMonth() === day.getMonth() &&
+                          shiftDate.getFullYear() === day.getFullYear()
+                        );
+                      });
+                      
+                      const isDayToday = isToday(day);
+                      
+                      // Generate a consistent color based on employee name
+                      const colorIndex = employee.employeeName.charCodeAt(0) % 5;
+                      const colorClasses = [
+                        'bg-blue-50 border-l-4 border-blue-500', // Blue
+                        'bg-yellow-50 border-l-4 border-yellow-500', // Yellow
+                        'bg-green-50 border-l-4 border-green-500', // Green
+                        'bg-pink-50 border-l-4 border-pink-500', // Pink
+                        'bg-purple-50 border-l-4 border-purple-500' // Purple
+                      ];
+                      const colorClass = colorClasses[colorIndex];
+                      
+                      return (
+                        <div 
+                          key={format(day, 'yyyy-MM-dd')} 
+                          className={cn(
+                            "w-full h-full min-h-[120px] p-2 relative",
+                            isDayToday ? "bg-blue-50/30" : ""
+                          )}
+                        >
+                          {dayShifts.length > 0 ? (
+                            <div className="space-y-2 h-full">
+                              {dayShifts.map((shift: any) => (
+                                <EmployeeShift 
+                                  key={shift.id}
+                                  shift={shift}
+                                  colorClass={colorClass}
+                                  onClick={() => handleShiftClick(shift)}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <div className={cn(
+                              "h-full flex items-center justify-center",
+                              (isAdmin || isManager || isHR) && "cursor-pointer hover:bg-gray-50"
+                            )}>
+                              {(isAdmin || isManager || isHR) && (
+                                <button
+                                  onClick={() => handleAddShift(employee.employeeId, day)}
+                                  className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-gray-200 active:bg-gray-300"
+                                >
+                                  <Plus className="h-5 w-5 text-gray-400" />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       
-      {/* Bottom navigation */}
-      <div className="border-t border-gray-200 px-2 py-3 flex justify-around">
-        <button className="flex flex-col items-center text-gray-500">
-          <div className="h-6 w-6 mb-1">🏠</div>
-          <span className="text-xs">Home</span>
-        </button>
-        <button className="flex flex-col items-center text-blue-500">
-          <div className="h-6 w-6 mb-1">🗓️</div>
-          <span className="text-xs">Schedule</span>
-        </button>
-        <button className="flex flex-col items-center text-gray-500 relative">
-          <div className="h-6 w-6 mb-1">👥</div>
-          <span className="text-xs">Team</span>
-        </button>
-        <button className="flex flex-col items-center text-gray-500">
-          <div className="h-6 w-6 mb-1">🚀</div>
-          <span className="text-xs">Tasks</span>
-        </button>
-        <button className="flex flex-col items-center text-gray-500">
-          <div className="h-6 w-6 mb-1">⏱️</div>
-          <span className="text-xs">Time</span>
-        </button>
+      {/* Display information about schedule updates */}
+      <div className="border-t border-gray-200 p-3 flex justify-between items-center bg-gray-50 text-sm text-gray-500">
+        <div>Last updated: {format(new Date(), 'MMM d, yyyy h:mm a')}</div>
+        <div>{allEmployeeSchedules.length} employees</div>
       </div>
     </div>
   );

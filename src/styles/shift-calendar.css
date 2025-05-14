@@ -1,53 +1,58 @@
 
-/* Shift calendar specific styles */
-.shift-card {
-  transition: all 0.15s ease-in-out;
+/* Shift Calendar Styles */
+.shift-calendar {
+  --header-height: 60px;
+  --toolbar-height: 40px;
+  --day-column-width: 150px;
+  --employee-column-width: 120px;
 }
 
-.shift-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.shift-card:active {
-  transform: translateY(0px);
-}
-
-/* Better touch targets for mobile */
 @media (max-width: 768px) {
-  .shift-card {
-    min-height: 60px;
-  }
-  
-  .shift-calendar-nav button {
-    min-width: 44px;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .shift-calendar {
+    --day-column-width: 100px;
+    --employee-column-width: 100px;
   }
 }
 
-/* Status badges */
-.status-confirmed {
-  @apply bg-green-100 text-green-700 border border-green-300;
+/* Special momentum scroll for mobile devices */
+.momentum-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
 }
 
-.status-pending {
-  @apply bg-amber-100 text-amber-700 border border-amber-300;
+/* Ensure calendar fills available height */
+.calendar-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - var(--header-height) - var(--toolbar-height));
 }
 
-.status-completed {
-  @apply bg-blue-100 text-blue-700 border border-blue-300;
+/* Shift block styling */
+.shift-block {
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 0.875rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Animation for notifications */
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+.shift-block:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
-.notification-badge {
-  animation: pulse 1.5s infinite ease-in-out;
+/* Safe area insets for mobile */
+.safe-area-inset {
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
 }

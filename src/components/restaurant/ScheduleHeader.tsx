@@ -1,91 +1,96 @@
 
 import React from 'react';
-import { Search, Calendar, RefreshCw, Users } from 'lucide-react';
-import { ViewMode } from '@/types/restaurant-schedule';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
+import { ChevronDown, Calendar, Filter, Menu, Search } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ViewType } from '@/components/schedule/types/calendar-types';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { cn } from '@/lib/utils';
 
 interface ScheduleHeaderProps {
-  setViewMode: (value: ViewMode) => void;
-  onSyncCalendar?: () => void;
-  onSyncEmployeeData?: () => void;
-  isSyncing?: boolean;
+  locationName: string;
+  setLocationName: (name: string) => void;
+  viewType?: ViewType;
+  onSearch?: (query: string) => void;
+  searchQuery?: string;
+  weekView?: boolean;
+  setWeekView?: (view: boolean) => void;
 }
 
-const ScheduleHeader = ({ 
-  setViewMode, 
-  onSyncCalendar, 
-  onSyncEmployeeData,
-  isSyncing = false 
-}: ScheduleHeaderProps) => {
+const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({ 
+  locationName, 
+  setLocationName,
+  viewType = 'day',
+  onSearch,
+  searchQuery = '',
+  weekView = true,
+  setWeekView
+}) => {
   const isMobile = useIsMobile();
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onSearch) {
+      onSearch(e.target.value);
+    }
+  };
+  
+  const toggleView = () => {
+    if (setWeekView) {
+      setWeekView(!weekView);
+    }
+  };
+
   return (
-    <div className="mb-4 sm:mb-6">
-      <div className="flex flex-wrap items-center mb-4 sm:mb-5 gap-2">
-        <Calendar className="h-7 w-7 sm:h-8 sm:w-8 text-primary mr-2 sm:mr-3" />
-        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-gray-900">Shift Calendar</h1>
+    <div className="flex flex-col bg-white">
+      <div className="flex items-center justify-between border-b border-gray-200 p-3 sm:p-4">
+        <div className="flex items-center">
+          <Calendar className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-gray-600" />
+          <h1 className="text-lg sm:text-xl font-semibold">Schedule</h1>
+        </div>
         
-        <div className="ml-auto flex items-center gap-2">
-          {onSyncEmployeeData && (
+        <div className="flex items-center space-x-2">
+          {setWeekView && (
             <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={onSyncEmployeeData}
-              disabled={isSyncing}
-              className="rounded-full border-gray-200 hover:bg-gray-50"
+              variant="ghost" 
+              size={isMobile ? "sm" : "default"} 
+              onClick={toggleView} 
+              className="hidden sm:flex items-center gap-2"
             >
-              <Users className={cn("h-3.5 w-3.5 mr-1.5", isSyncing && "animate-pulse")} />
-              <span className={isMobile ? "sr-only" : ""}>
-                {isSyncing ? "Syncing..." : "Sync Staff"}
-              </span>
+              <span>{weekView ? "This Week" : "Today"}</span>
             </Button>
           )}
           
-          {onSyncCalendar && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={onSyncCalendar}
-              className="rounded-full border-gray-200 hover:bg-gray-50"
-            >
-              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-              <span className={isMobile ? "sr-only" : ""}>Sync Calendar</span>
+          <Button variant="ghost" size="sm" className="p-2 text-gray-600 hover:bg-gray-100 rounded-full">
+            <Filter className="h-5 w-5" />
+          </Button>
+          
+          <div className="relative">
+            <Button variant="ghost" size="sm" className="p-2 text-gray-600 hover:bg-gray-100 rounded-full">
+              <Menu className="h-5 w-5" />
             </Button>
-          )}
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 p-1 flex items-center justify-center bg-red-500 text-white text-xs rounded-full">
+              3
+            </Badge>
+          </div>
         </div>
       </div>
       
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-        <Tabs 
-          defaultValue="week" 
-          onValueChange={(value) => setViewMode(value as ViewMode)}
-          className="bg-gray-100 rounded-full p-1"
-        >
-          <TabsList className="bg-transparent">
-            <TabsTrigger 
-              value="week" 
-              className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm text-sm"
-            >
-              Week
-            </TabsTrigger>
-            <TabsTrigger 
-              value="month" 
-              className="rounded-full data-[state=active]:bg-white data-[state=active]:shadow-sm text-sm"
-            >
-              Month
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+      <div className="flex flex-col sm:flex-row sm:items-center p-3 sm:p-4 gap-3 border-b border-gray-200">
+        <div className="flex items-center flex-grow">
+          <span className="text-gray-500 mr-2 hidden sm:inline">Location:</span>
+          <div className="flex items-center cursor-pointer hover:bg-gray-50 px-2 py-1 rounded-md">
+            <span className="font-medium">{locationName}</span>
+            <ChevronDown className="h-4 w-4 ml-1 text-gray-500" />
+          </div>
+        </div>
         
-        <div className="relative w-full sm:w-80">
+        <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input 
-            placeholder="Search employees or roles..." 
-            className="pl-9 rounded-full border-gray-200 w-full focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
+          <Input
+            placeholder="Search employees..."
+            className="pl-9 rounded-full border-gray-200"
+            value={searchQuery}
+            onChange={handleSearchChange}
           />
         </div>
       </div>
