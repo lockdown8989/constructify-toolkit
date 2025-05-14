@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,70 +13,89 @@ import { User } from "@supabase/supabase-js"
 import { useAuth } from "@/hooks/auth"
 import { Badge } from "@/components/ui/badge"
 import { Settings } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { useLanguage } from "@/hooks/language"
+import { LogOut } from "lucide-react"
 
 interface UserMenuProps {
   user: User;
   signOut: () => void;
 }
 
-const UserMenu = ({ user, signOut }: UserMenuProps) => {
-  const { isManager, isAdmin, isHR } = useAuth();
+const UserMenu = () => {
+  const { user, signOut } = useAuth();
+  const { isAdmin, isManager, isHR } = useAuth();
+  const navigate = useNavigate();
+  const { t } = useLanguage();
   
-  // Determine user role for display
-  const getUserRole = () => {
-    if (isAdmin) return "Admin";
-    if (isHR) return "HR";
-    if (isManager) return "Manager";
-    return "Employee";
+  // Format display name from email or profile
+  const getDisplayName = (): string => {
+    if (!user) return '';
+    
+    // Get name from metadata if available
+    const firstName = user.user_metadata?.first_name;
+    const lastName = user.user_metadata?.last_name;
+    if (firstName && lastName) return `${firstName} ${lastName}`;
+    if (firstName) return firstName;
+    
+    // Fall back to email
+    return user.email?.split('@')[0] || 'User';
   };
   
-  // Get role badge color - using only valid badge variants
-  const getRoleBadgeVariant = () => {
-    if (isAdmin) return "destructive";
-    if (isHR) return "secondary";     
-    if (isManager) return "default";
-    return "outline";                 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
   };
+  
+  const navigateToProfile = () => {
+    navigate('/profile');
+  };
+  
+  const navigateToProfileSettings = () => {
+    navigate('/profile-settings');
+  };
+  
+  const navigateToSettings = () => {
+    navigate('/settings');
+  };
+  
+  if (!user) {
+    return null;
+  }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.full_name} />
-            <AvatarFallback>{user?.user_metadata?.full_name?.charAt(0)}</AvatarFallback>
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+          <Avatar>
+            <AvatarFallback className="bg-primary text-primary-foreground">
+              {getDisplayName().charAt(0).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
-              {user?.user_metadata?.full_name}
-            </p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {user?.email}
-            </p>
-            <div className="mt-2">
-              <Badge variant={getRoleBadgeVariant()} className="mt-1">
-                {getUserRole()}
-              </Badge>
-            </div>
-          </div>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>
+          <div className="font-normal text-muted-foreground text-xs">{t('signed_in_as')}</div>
+          <div className="font-medium text-foreground truncate">{user.email}</div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/settings" className="flex items-center">
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
-          </Link>
+        <DropdownMenuItem onClick={navigateToProfile}>
+          <User className="mr-2 h-4 w-4" />
+          <span>{t('profile')}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={navigateToProfileSettings}>
+          <Settings className="mr-2 h-4 w-4" />
+          <span>{t('profile_settings')}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={navigateToSettings}>
+          <Settings className="mr-2 h-4 w-4" />
+          <span>{t('settings')}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => signOut()}
-          className="cursor-pointer"
-        >
-          Sign Out
+        <DropdownMenuItem onClick={handleSignOut} className="text-red-500">
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>{t('sign_out')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
