@@ -1,6 +1,5 @@
 
-// Create a new index file to re-export auth hooks with proper typing
-
+// Export all auth hooks with proper typing
 export { AuthProvider, useAuth } from './AuthProvider';
 export { useAuthActions } from './useAuthActions';
 export { useAuthPage } from './useAuthPage';
