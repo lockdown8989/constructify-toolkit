@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,6 +10,7 @@ import { NotificationSettings } from "@/components/settings/NotificationSettings
 import { ThemeSelector } from "@/components/settings/ThemeSelector";
 import { PersonalInfoForm } from "@/components/profile-settings/PersonalInfoForm";
 import { RegionalPreferencesForm } from "@/components/profile-settings/RegionalPreferencesForm";
+import { DeleteAccountSection } from "@/components/profile-settings/DeleteAccountSection";
 
 const ProfileSettings = () => {
   const { user, isLoading } = useAuth();
@@ -51,6 +51,7 @@ const ProfileSettings = () => {
               <CardDescription>{t('updatePersonalInfo')}</CardDescription>
             </CardHeader>
             <PersonalInfoForm user={user} />
+            <DeleteAccountSection />
           </Card>
         );
       case 'notifications':
