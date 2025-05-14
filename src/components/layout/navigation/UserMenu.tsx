@@ -12,16 +12,13 @@ import {
 import { useAuth } from "@/hooks/auth"
 import { Settings, User as UserIcon, LogOut } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import { useLanguage, TranslationKey } from "@/hooks/language"
-import { useState } from "react"
-import { toast } from "@/components/ui/use-toast"
+import { useLanguage } from "@/hooks/use-language"
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
   const { isAdmin, isManager, isHR } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [isSigningOut, setIsSigningOut] = useState(false);
   
   // Format display name from email or profile
   const getDisplayName = (): string => {
@@ -38,23 +35,11 @@ const UserMenu = () => {
   };
   
   const handleSignOut = async () => {
-    if (isSigningOut) return; // Prevent multiple clicks
-    
-    try {
-      setIsSigningOut(true);
-      console.log("UserMenu: Attempting to sign out");
-      
-      // Check if we have an active session first
-      try {
-        await signOut();
-        console.log("UserMenu: Sign out successful, navigating to /auth");
-      } catch (error) {
-        console.error("UserMenu: Sign out error:", error);
-        // Even on error, navigate to auth page
-        navigate('/auth');
-      }
-    } finally {
-      setIsSigningOut(false);
+    console.log("Sign out initiated from UserMenu");
+    if (signOut) {
+      await signOut();
+    } else {
+      console.error("signOut function is not available");
     }
   };
   
@@ -96,13 +81,9 @@ const UserMenu = () => {
           <span>{t('profile_settings')}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          onClick={handleSignOut} 
-          className="text-red-500"
-          disabled={isSigningOut}
-        >
+        <DropdownMenuItem onClick={handleSignOut} className="text-red-500">
           <LogOut className="mr-2 h-4 w-4" />
-          <span>{isSigningOut ? "Signing out..." : t('sign_out')}</span>
+          <span>{t('sign_out')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

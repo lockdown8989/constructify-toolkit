@@ -12,47 +12,29 @@ export const useSignOut = () => {
 
   const signOut = async () => {
     try {
-      console.log("Attempting to sign out user");
-      
-      // Check if we have an active session first
-      const { data: sessionData } = await supabase.auth.getSession();
-      
-      // If no session exists, just redirect to auth page without error
-      if (!sessionData?.session) {
-        console.log("No active session found, redirecting to auth page");
-        navigate('/auth');
-        
-        toast({
-          title: "Signed out",
-          description: "You have been successfully signed out.",
-        });
-        
-        return { success: true };
-      }
-      
-      // Proceed with sign out if session exists
+      console.log("Signing out user...");
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.error("Supabase sign out error:", error);
+        console.error('Sign out error:', error);
         toast({
           title: "Sign out failed",
-          description: "An error occurred while signing out: " + error.message,
+          description: error.message || "An error occurred while signing out. Please try again.",
           variant: "destructive",
         });
-        throw error;
+        return;
       }
       
-      // Navigate to auth page after successful sign out
-      console.log("Sign out successful, redirecting to auth page");
-      navigate('/auth');
-      
+      // Even if there's no session, we want to reset the UI state
+      // and redirect the user to the authentication page
+      console.log("Sign out successful");
       toast({
         title: "Signed out",
         description: "You have been successfully signed out.",
       });
       
-      return { success: true };
+      // Navigate to auth page after sign out
+      navigate('/auth');
     } catch (error) {
       console.error('Sign out error:', error);
       toast({
@@ -60,7 +42,6 @@ export const useSignOut = () => {
         description: "An error occurred while signing out. Please try again.",
         variant: "destructive",
       });
-      return { success: false, error };
     }
   };
 

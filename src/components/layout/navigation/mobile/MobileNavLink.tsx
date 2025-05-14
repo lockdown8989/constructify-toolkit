@@ -1,16 +1,15 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { LucideIcon } from 'lucide-react';
+import { Link } from "react-router-dom";
+import { LucideIcon } from "lucide-react";
 
 interface MobileNavLinkProps {
   to: string;
   icon: LucideIcon;
   label: string;
-  onClick?: () => void;
+  onClick: () => void;
 }
 
-const MobileNavLink: React.FC<MobileNavLinkProps> = ({ to, icon: Icon, label, onClick }) => {
+const MobileNavLink = ({ to, icon: Icon, label, onClick }: MobileNavLinkProps) => {
   return (
     <Link
       to={to}

@@ -1,8 +1,5 @@
 
-import { UserIcon, LogOut, Settings, FileText, Info, HelpCircle } from "lucide-react";
-import { useAuth } from "@/hooks/auth";
-import { useNavigate } from "react-router-dom";
-import { toast } from "@/components/ui/use-toast";
+import { FileText, User, Calendar, DollarSign } from "lucide-react";
 import MobileNavLink from "./MobileNavLink";
 
 interface CommonSectionProps {
@@ -12,76 +9,41 @@ interface CommonSectionProps {
   onClose: () => void;
 }
 
-const CommonSection = ({ 
-  isAuthenticated, 
-  isEmployee, 
-  hasManagerialAccess, 
-  onClose 
-}: CommonSectionProps) => {
-  const { signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSignOut = async () => {
-    try {
-      console.log("Mobile nav: Attempting to sign out");
-      await signOut();
-      onClose();
-    } catch (error) {
-      console.error("Mobile sign out error:", error);
-      
-      // Even if there's an error, navigate to auth page
-      console.log("Navigating to auth page despite error");
-      navigate('/auth');
-      onClose();
-      
-      toast({
-        title: "Session Ended",
-        description: "Your session has been ended. Please sign in again if needed.",
-      });
-    }
-  };
-
+const CommonSection = ({ isAuthenticated, isEmployee, hasManagerialAccess, onClose }: CommonSectionProps) => {
   return (
     <>
+      <MobileNavLink
+        to="/about"
+        icon={FileText}
+        label="About"
+        onClick={onClose}
+      />
+      
+      <MobileNavLink
+        to="/contact"
+        icon={User}
+        label="Contact"
+        onClick={onClose}
+      />
+      
       {isAuthenticated && (
         <>
-          <MobileNavLink 
-            to="/profile" 
-            icon={UserIcon}
-            label="Profile" 
-            onClick={onClose} 
+          <MobileNavLink
+            to="/leave-management"
+            icon={Calendar}
+            label="Leave & Schedule"
+            onClick={onClose}
           />
-          <MobileNavLink 
-            to="/profile-settings" 
-            icon={Settings}
-            label="Settings" 
-            onClick={onClose} 
-          />
+          
+          {(isEmployee || hasManagerialAccess) && (
+            <MobileNavLink
+              to="/salary"
+              icon={DollarSign}
+              label="Salary"
+              onClick={onClose}
+            />
+          )}
         </>
-      )}
-      
-      <MobileNavLink 
-        to="/about" 
-        icon={Info}
-        label="About" 
-        onClick={onClose} 
-      />
-
-      <MobileNavLink 
-        to="/help" 
-        icon={HelpCircle}
-        label="Help" 
-        onClick={onClose} 
-      />
-      
-      {isAuthenticated && (
-        <div 
-          onClick={handleSignOut}
-          className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-red-600 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
-        >
-          <LogOut className="mr-3 h-5 w-5 text-red-600" />
-          <span>Sign Out</span>
-        </div>
       )}
     </>
   );
