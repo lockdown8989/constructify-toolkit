@@ -43,16 +43,16 @@ const UserMenu = () => {
     try {
       setIsSigningOut(true);
       console.log("UserMenu: Attempting to sign out");
-      await signOut();
-      console.log("UserMenu: Sign out successful, navigating to /auth");
-      navigate('/auth');
-    } catch (error) {
-      console.error("UserMenu: Sign out error:", error);
-      toast({
-        title: "Sign out failed",
-        description: "There was an error signing out. Please try again.",
-        variant: "destructive",
-      });
+      
+      // Check if we have an active session first
+      try {
+        await signOut();
+        console.log("UserMenu: Sign out successful, navigating to /auth");
+      } catch (error) {
+        console.error("UserMenu: Sign out error:", error);
+        // Even on error, navigate to auth page
+        navigate('/auth');
+      }
     } finally {
       setIsSigningOut(false);
     }

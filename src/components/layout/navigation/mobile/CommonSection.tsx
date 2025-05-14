@@ -23,19 +23,20 @@ const CommonSection = ({
 
   const handleSignOut = async () => {
     try {
+      console.log("Mobile nav: Attempting to sign out");
       await signOut();
-      toast({
-        title: "Signed out successfully",
-        description: "You have been signed out of your account.",
-      });
-      navigate('/auth');
       onClose();
     } catch (error) {
       console.error("Mobile sign out error:", error);
+      
+      // Even if there's an error, navigate to auth page
+      console.log("Navigating to auth page despite error");
+      navigate('/auth');
+      onClose();
+      
       toast({
-        title: "Sign out failed",
-        description: "There was an error signing out. Please try again.",
-        variant: "destructive",
+        title: "Session Ended",
+        description: "Your session has been ended. Please sign in again if needed.",
       });
     }
   };
