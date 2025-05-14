@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from "react-router-dom";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SidebarNavLinkProps {
   to: string;
@@ -21,20 +22,36 @@ const SidebarNavLink: React.FC<SidebarNavLinkProps> = ({
   isCollapsed,
   onClick 
 }) => {
-  return (
+  const link = (
     <Link
       to={to}
       onClick={onClick}
       className={cn(
-        "flex items-center py-2 rounded-xl font-medium hover:bg-white/70 active:bg-white/90 transition-all",
-        isCollapsed ? "px-2 justify-center" : "px-4 mx-2",
-        isActive && "bg-white/90 text-primary"
+        "sidebar-link",
+        isActive && "active"
       )}
     >
-      <Icon className={cn("h-5 w-5", isCollapsed ? "" : "mr-3", !isActive && "text-neutral-600")} />
+      <Icon className={cn("sidebar-link-icon", !isActive && "text-neutral-600")} />
       {!isCollapsed && <span>{label}</span>}
     </Link>
   );
+
+  if (isCollapsed) {
+    return (
+      <TooltipProvider delayDuration={300}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {link}
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>{label}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  return link;
 };
 
 export default SidebarNavLink;

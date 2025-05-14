@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/auth";
 import { useTimeClock } from "@/hooks/time-clock";
@@ -16,8 +16,8 @@ interface DesktopSidebarProps {
 const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ isAuthenticated }) => {
   const { isAdmin, isHR, isManager } = useAuth();
   const hasManagerialAccess = isManager || isAdmin || isHR;
-  const isEmployee = isAuthenticated && !hasManagerialAccess;
   const navigate = useNavigate();
+  const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
   const isClockingEnabled = !hasManagerialAccess && isAuthenticated;
@@ -32,7 +32,7 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ isAuthenticated }) => {
   
   return (
     <div className={cn(
-      "desktop-sidebar hidden lg:flex flex-col h-screen bg-[#f8f8f8]/95 border-r transition-all duration-300", 
+      "desktop-sidebar flex-col h-screen border-r transition-all duration-300", 
       isCollapsed ? "w-[70px]" : "w-[240px]"
     )}>
       <SidebarHeader 
@@ -40,22 +40,24 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ isAuthenticated }) => {
         toggleCollapse={toggleCollapse}
       />
       
-      <TimeClockControls
-        isClockingEnabled={isClockingEnabled}
-        isCollapsed={isCollapsed}
-        status={status}
-        onClockIn={handleClockIn}
-        onClockOut={handleClockOut}
-        onBreakStart={handleBreakStart}
-        onBreakEnd={handleBreakEnd}
-      />
-      
-      <NavigationLinks 
-        isAuthenticated={isAuthenticated}
-        isCollapsed={isCollapsed}
-        hasManagerialAccess={hasManagerialAccess}
-        handleHomeClick={handleHomeClick}
-      />
+      <div className="sidebar-content">
+        <TimeClockControls
+          isClockingEnabled={isClockingEnabled}
+          isCollapsed={isCollapsed}
+          status={status}
+          onClockIn={handleClockIn}
+          onClockOut={handleClockOut}
+          onBreakStart={handleBreakStart}
+          onBreakEnd={handleBreakEnd}
+        />
+        
+        <NavigationLinks 
+          isAuthenticated={isAuthenticated}
+          isCollapsed={isCollapsed}
+          hasManagerialAccess={hasManagerialAccess}
+          currentPath={location.pathname}
+        />
+      </div>
     </div>
   );
 };

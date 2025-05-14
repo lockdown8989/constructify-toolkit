@@ -1,7 +1,10 @@
 
 import React from 'react';
-import { Home, FileText, User, Users, Calendar, Workflow, DollarSign, Receipt, Clock, ClipboardCheck } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { 
+  Home, FileText, User, Users, Calendar, 
+  Workflow, DollarSign, Receipt, Clock, ClipboardCheck,
+  LayoutDashboard, Settings 
+} from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SidebarNavLink from './SidebarNavLink';
 import SidebarDivider from './SidebarDivider';
@@ -10,34 +13,28 @@ interface NavigationLinksProps {
   isAuthenticated: boolean;
   isCollapsed: boolean;
   hasManagerialAccess: boolean;
-  handleHomeClick: () => void;
+  currentPath: string;
 }
 
 const NavigationLinks: React.FC<NavigationLinksProps> = ({
   isAuthenticated,
   isCollapsed,
   hasManagerialAccess,
-  handleHomeClick
+  currentPath
 }) => {
-  const location = useLocation();
-  
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => currentPath === path;
 
   return (
-    <ScrollArea className="flex-1">
-      <nav className={`grid gap-1 py-2 ${isCollapsed ? "px-2" : "px-2"}`}>
+    <ScrollArea className="h-full">
+      <nav className={`grid gap-1 py-3 ${isCollapsed ? "px-2" : "px-3"}`}>
         {/* Common Links */}
-        <div
-          onClick={handleHomeClick}
-        >
-          <SidebarNavLink
-            to="/dashboard"
-            icon={Home}
-            label="Home"
-            isActive={isActive("/dashboard")}
-            isCollapsed={isCollapsed}
-          />
-        </div>
+        <SidebarNavLink
+          to="/dashboard"
+          icon={LayoutDashboard}
+          label="Dashboard"
+          isActive={isActive("/dashboard")}
+          isCollapsed={isCollapsed}
+        />
         
         <SidebarNavLink
           to="/about"
@@ -72,7 +69,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
             <SidebarNavLink
               to="/employee-workflow"
               icon={Clock}
-              label={hasManagerialAccess ? "My Employee Shifts" : "My Schedule"}
+              label={hasManagerialAccess ? "Employee Shifts" : "My Schedule"}
               isActive={isActive("/employee-workflow")}
               isCollapsed={isCollapsed}
             />
@@ -100,7 +97,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
             <SidebarNavLink
               to="/leave-management"
               icon={Calendar}
-              label="Leave & Schedule"
+              label="Leave Management"
               isActive={isActive("/leave-management")}
               isCollapsed={isCollapsed}
             />
@@ -117,11 +114,21 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
               <SidebarNavLink
                 to="/payroll"
                 icon={Receipt}
-                label="Payslip"
+                label="Payroll"
                 isActive={isActive("/payroll")}
                 isCollapsed={isCollapsed}
               />
             )}
+            
+            <SidebarDivider isCollapsed={isCollapsed} />
+            
+            <SidebarNavLink
+              to="/settings"
+              icon={Settings}
+              label="Settings"
+              isActive={isActive("/settings")}
+              isCollapsed={isCollapsed}
+            />
           </>
         )}
       </nav>
