@@ -42,6 +42,11 @@ const LeaveManagement = () => {
         setCurrentView(initialView);
       }
     }
+    
+    // Default to shift-history view for managers
+    if (hasManagerAccess && !location.state?.initialView) {
+      setCurrentView("shift-history");
+    }
   }, [location.state, hasManagerAccess]);
 
   // Define view options based on user access
@@ -60,8 +65,10 @@ const LeaveManagement = () => {
     // Only add manager view for managers
     if (hasManagerAccess) {
       return {
-        ...baseOptions,
+        "shift-history": baseOptions["shift-history"],
         manager: { label: "Manager View", icon: <Users className="h-4 w-4 mr-2" /> },
+        calendar: baseOptions.calendar,
+        "schedule-requests": baseOptions["schedule-requests"]
       };
     }
 
@@ -86,6 +93,16 @@ const LeaveManagement = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-full min-w-[200px]">
+            {hasManagerAccess && (
+              <DropdownMenuItem 
+                onClick={() => setCurrentView("shift-history")}
+                className="cursor-pointer flex items-center"
+              >
+                <History className="h-4 w-4 mr-2" />
+                Shift History
+              </DropdownMenuItem>
+            )}
+
             {!hasManagerAccess && (
               <DropdownMenuItem 
                 onClick={() => setCurrentView("employee")}
@@ -95,14 +112,16 @@ const LeaveManagement = () => {
                 Employee View
               </DropdownMenuItem>
             )}
-            
-            <DropdownMenuItem 
-              onClick={() => setCurrentView("shift-history")}
-              className="cursor-pointer flex items-center"
-            >
-              <History className="h-4 w-4 mr-2" />
-              Shift History
-            </DropdownMenuItem>
+
+            {!hasManagerAccess && (
+              <DropdownMenuItem 
+                onClick={() => setCurrentView("shift-history")}
+                className="cursor-pointer flex items-center"
+              >
+                <History className="h-4 w-4 mr-2" />
+                Shift History
+              </DropdownMenuItem>
+            )}
             
             <DropdownMenuItem 
               onClick={() => setCurrentView("calendar")}
