@@ -1,10 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { X, UserCheck, Clock } from 'lucide-react';
+import { X, UserCheck } from 'lucide-react';
 import { useEmployees } from '@/hooks/use-employees';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,6 +15,7 @@ const ManagerTimeClock = () => {
   const { data: employees = [], isLoading } = useEmployees();
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   const [action, setAction] = useState<'in' | 'out' | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const { toast } = useToast();
 
   // Redirect if not a manager
@@ -23,6 +23,22 @@ const ManagerTimeClock = () => {
     navigate('/dashboard');
     return null;
   }
+
+  // Update current time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
+
+  // Format time as HH:MM
+  const formattedTime = currentTime.toLocaleTimeString('en-US', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 
   const handleExitFullscreen = () => {
     navigate('/dashboard');
@@ -156,12 +172,11 @@ const ManagerTimeClock = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black text-white z-50 flex flex-col">
-      {/* Header */}
-      <div className="p-6 flex items-center justify-between border-b border-gray-800">
+    <div className="fixed inset-0 bg-black text-white z-50 flex flex-col landscape:flex-row">
+      {/* Header - only visible in portrait mode */}
+      <div className="p-4 flex items-center justify-between border-b border-gray-800 portrait:flex landscape:hidden">
         <div className="flex items-center">
-          <Clock className="w-8 h-8 mr-3" />
-          <h1 className="text-3xl font-bold">Manager Time Clock</h1>
+          <h1 className="text-xl font-bold">Manager Time Clock</h1>
         </div>
         <Button 
           variant="ghost" 
@@ -169,78 +184,91 @@ const ManagerTimeClock = () => {
           onClick={handleExitFullscreen}
           className="text-white hover:bg-gray-800"
         >
-          <X className="h-8 w-8" />
+          <X className="h-6 w-6" />
         </Button>
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col md:flex-row">
+      <div className="flex flex-1 flex-col md:flex-row landscape:flex-row">
         {/* Left side - Employee selection */}
-        <div className="w-full md:w-1/2 border-r border-gray-800 p-6 overflow-auto">
-          <h2 className="text-xl mb-6 font-semibold">Select Employee</h2>
+        <div className="w-full md:w-1/2 landscape:w-1/3 border-r border-gray-800 p-4 overflow-auto landscape:max-h-screen">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Select Employee</h2>
+            
+            {/* Exit button for landscape mode */}
+            <div className="portrait:hidden landscape:flex">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleExitFullscreen}
+                className="text-white hover:bg-gray-800"
+              >
+                <X className="h-6 w-6" />
+              </Button>
+            </div>
+          </div>
           
           {isLoading ? (
             <div className="flex items-center justify-center h-40">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-2">
               {employees.map((employee) => (
-                <Card 
+                <div 
                   key={employee.id}
-                  className={`cursor-pointer p-4 flex items-center transition-all ${
+                  className={`cursor-pointer p-3 flex items-center rounded-lg transition-all ${
                     selectedEmployee === employee.id 
-                      ? 'bg-teal-700 text-white border-teal-500' 
-                      : 'bg-gray-900 hover:bg-gray-800 border-gray-700'
+                      ? 'bg-gray-800 border border-teal-500' 
+                      : 'hover:bg-gray-800'
                   }`}
                   onClick={() => handleSelectEmployee(employee.id)}
                 >
-                  <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center mr-4 overflow-hidden">
+                  <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center mr-3 overflow-hidden">
                     {employee.avatar ? (
                       <img src={employee.avatar} alt={employee.name} className="w-full h-full object-cover" />
                     ) : (
-                      <UserCheck className="w-6 h-6 text-gray-400" />
+                      <UserCheck className="w-5 h-5 text-gray-400" />
                     )}
                   </div>
                   <div>
                     <h3 className="font-medium">{employee.name}</h3>
                     <p className="text-sm text-gray-400">{employee.job_title || 'No title'}</p>
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
           )}
         </div>
 
         {/* Right side - Clock actions */}
-        <div className="w-full md:w-1/2 p-6 flex flex-col items-center justify-center">
-          <div className="text-center mb-12">
-            <h2 className="text-6xl font-mono">
-              {new Date().toLocaleTimeString('en-US', { 
-                hour12: true, 
-                hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit'
-              })}
-            </h2>
-            <p className="text-xl text-gray-400 mt-2">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        <div className="w-full md:w-1/2 landscape:w-2/3 p-4 flex flex-col items-center justify-center">
+          {/* Company logo/header */}
+          <div className="text-center mb-6">
+            <div className="text-lg uppercase tracking-wider">TeamPulse</div>
+            <p className="text-sm text-gray-400">{currentTime.toLocaleDateString()}</p>
+          </div>
+          
+          {/* Large digital clock */}
+          <div className="text-center mb-10">
+            <h2 className="text-[10rem] font-mono leading-none">{formattedTime}</h2>
           </div>
 
           {selectedEmployee ? (
-            <div className="w-full max-w-md text-center">
-              <h3 className="text-2xl mb-2 font-semibold">{getSelectedEmployeeName()}</h3>
+            <div className="w-full max-w-lg text-center">
+              <h3 className="text-xl mb-2 font-semibold">{getSelectedEmployeeName()}</h3>
               <p className="text-gray-400 mb-8">Status: {getEmployeeStatus(selectedEmployee)}</p>
               
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-4">
                 <Button 
-                  className={`p-8 text-2xl ${action === 'in' ? 'animate-pulse' : ''}`}
+                  className={`py-6 text-3xl rounded-md ${action === 'in' ? 'animate-pulse' : ''}`}
                   style={{ backgroundColor: '#00A896' }}
                   onClick={() => handleClockAction('in')}
                 >
                   IN
                 </Button>
                 <Button 
-                  className={`p-8 text-2xl ${action === 'out' ? 'animate-pulse' : ''}`}
+                  className={`py-6 text-3xl rounded-md ${action === 'out' ? 'animate-pulse' : ''}`}
                   style={{ backgroundColor: '#E63946' }}
                   onClick={() => handleClockAction('out')}
                 >
@@ -250,7 +278,7 @@ const ManagerTimeClock = () => {
             </div>
           ) : (
             <div className="text-center text-gray-400">
-              <h3 className="text-2xl mb-4">No Employee Selected</h3>
+              <h3 className="text-xl mb-4">No Employee Selected</h3>
               <p>Please select an employee from the list</p>
             </div>
           )}

@@ -47,6 +47,7 @@
   margin-top: 1.5rem;
 }
 
+/* Manager time clock fullscreen styles */
 .manager-time-clock {
   position: fixed;
   inset: 0;
@@ -55,6 +56,40 @@
   color: white;
   display: flex;
   flex-direction: column;
+}
+
+/* Landscape mode optimizations */
+@media (orientation: landscape) {
+  .manager-time-clock {
+    flex-direction: row;
+  }
+  
+  .manager-time-clock-sidebar {
+    width: 33%;
+    border-right: 1px solid #333;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  
+  .manager-time-clock-main {
+    width: 67%;
+  }
+  
+  .manager-time-clock-clock {
+    font-size: 8rem;
+  }
+}
+
+/* Portrait mode adjustments */
+@media (orientation: portrait) {
+  .manager-time-clock-clock {
+    font-size: 5rem;
+  }
+  
+  .manager-time-clock-sidebar {
+    max-height: 40vh;
+    overflow-y: auto;
+  }
 }
 
 .employee-list-item {
@@ -71,4 +106,42 @@
 .employee-list-item.selected {
   background-color: rgba(16, 185, 129, 0.2);
   border: 1px solid rgba(16, 185, 129, 0.5);
+}
+
+/* Action buttons styling to match the image */
+.time-clock-button-in {
+  background-color: #00A896 !important;
+  color: white !important;
+  font-size: 2rem !important;
+  font-weight: bold !important;
+  padding: 1.5rem !important;
+  border-radius: 0.5rem !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.time-clock-button-out {
+  background-color: #E63946 !important;
+  color: white !important;
+  font-size: 2rem !important;
+  font-weight: bold !important;
+  padding: 1.5rem !important;
+  border-radius: 0.5rem !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Digital clock styling */
+.digital-clock {
+  font-family: 'Courier New', monospace;
+  font-size: 8rem;
+  font-weight: bold;
+  line-height: 1;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .digital-clock {
+    font-size: 5rem;
+  }
 }
