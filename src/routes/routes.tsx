@@ -1,4 +1,3 @@
-
 import { createBrowserRouter } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -23,16 +22,11 @@ import Hiring from "@/pages/Hiring";
 import ScheduleRequests from "@/pages/ScheduleRequests";
 import EmployeeWorkflow from "@/pages/EmployeeWorkflow";
 import About from "@/pages/About";
-import LandingPage from "@/pages/LandingPage";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <LandingPage />,
-  },
-  {
-    path: "/landing",
-    element: <LandingPage />,
+    element: <Index />,
   },
   {
     path: "/auth",
