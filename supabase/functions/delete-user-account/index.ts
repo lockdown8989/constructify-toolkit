@@ -46,14 +46,19 @@ serve(async (req) => {
       );
     }
     
+    console.log("Deleting user:", user.id);
+    
     // Delete the user's profiles and related data
     // First clean up profiles to avoid FK constraints
     await supabaseAdmin.from('profiles').delete().eq('id', user.id);
+    await supabaseAdmin.from('user_roles').delete().eq('user_id', user.id);
+    await supabaseAdmin.from('notifications').delete().eq('user_id', user.id);
     
     // Delete the user from auth.users using admin API
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
     
     if (deleteError) {
+      console.error("Error deleting user:", deleteError);
       return new Response(
         JSON.stringify({ error: 'Failed to delete user', details: deleteError.message }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -65,6 +70,7 @@ serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
+    console.error("Error in delete-user-account function:", error);
     return new Response(
       JSON.stringify({ error: 'Internal error', details: error.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

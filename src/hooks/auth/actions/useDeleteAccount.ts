@@ -10,37 +10,27 @@ export const useDeleteAccount = () => {
 
   const deleteAccount = async (): Promise<{success: boolean; error?: string}> => {
     try {
-      // Use the standard user deletion method which works with client permissions
-      // instead of the admin method which doesn't work from the client
+      // First call the database function to delete user data from all tables
+      const { data, error: rpcError } = await supabase.rpc('delete_user');
+      
+      if (rpcError) {
+        console.error('Error deleting user data:', rpcError);
+        
+        toast({
+          title: "Account deletion failed",
+          description: rpcError.message || "Could not delete your account data. Please try again later.",
+          variant: "destructive",
+        });
+        
+        return { success: false, error: rpcError.message };
+      }
+      
+      // Only after data is deleted, update the user record
       const { error } = await supabase.auth.updateUser({
         data: { requesting_deletion: true }
       });
       
-      // Delete the user's own account
-      if (!error) {
-        const { error: deleteError } = await supabase.rpc('delete_user');
-        
-        if (deleteError) {
-          console.error('Error deleting user account:', deleteError);
-          
-          toast({
-            title: "Account deletion failed",
-            description: deleteError.message || "An error occurred while deleting your account. Please try again.",
-            variant: "destructive",
-          });
-          
-          return { success: false, error: deleteError.message };
-        }
-
-        toast({
-          title: "Account deleted",
-          description: "Your account has been successfully deleted. You will be redirected shortly.",
-        });
-        
-        // Sign out after successful deletion
-        await supabase.auth.signOut();
-        return { success: true };
-      } else {
+      if (error) {
         console.error('Error marking account for deletion:', error);
         
         toast({
@@ -51,6 +41,15 @@ export const useDeleteAccount = () => {
         
         return { success: false, error: error.message };
       }
+
+      toast({
+        title: "Account deleted",
+        description: "Your account has been successfully deleted. You will be redirected shortly.",
+      });
+      
+      // Sign out after successful deletion
+      await supabase.auth.signOut();
+      return { success: true };
     } catch (error: any) {
       console.error('Exception in deleteAccount:', error);
       

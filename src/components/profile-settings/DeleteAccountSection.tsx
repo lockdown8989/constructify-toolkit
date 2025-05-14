@@ -40,12 +40,12 @@ export const DeleteAccountSection = () => {
           navigate("/");
         }, 1500);
       } else {
+        console.error("Account deletion failed:", error);
         toast({
           title: "Error deleting account",
           description: error || "An error occurred. Please try again.",
           variant: "destructive",
         });
-        setIsDialogOpen(false);
       }
     } catch (err) {
       console.error("Error in deletion process:", err);
@@ -56,6 +56,7 @@ export const DeleteAccountSection = () => {
       });
     } finally {
       setIsDeleting(false);
+      setIsDialogOpen(false);
     }
   };
   
@@ -86,7 +87,7 @@ export const DeleteAccountSection = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="text-destructive">Delete account?</DialogTitle>
+            <DialogTitle className="text-destructive">Delete my account?</DialogTitle>
             <DialogDescription>
               This action cannot be undone. Your account and all associated data will be permanently deleted.
             </DialogDescription>
@@ -118,7 +119,7 @@ export const DeleteAccountSection = () => {
               ) : (
                 <>
                   <UserMinus className="mr-2 h-4 w-4" />
-                  Delete Account
+                  Delete My Account
                 </>
               )}
             </Button>

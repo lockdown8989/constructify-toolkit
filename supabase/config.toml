@@ -90,3 +90,7 @@ verify_jwt = true
 # Function that notifies employees when documents are uploaded
 [functions.notify-on-document-upload]
 verify_jwt = true
+
+# Function for deleting user accounts completely
+[functions.delete-user-account]
+verify_jwt = true
