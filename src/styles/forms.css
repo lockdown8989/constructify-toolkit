@@ -1,7 +1,7 @@
 
-/* Form component styles */
+/* Form base styles */
 .form {
-  @apply space-y-6;
+  @apply space-y-4;
 }
 
 .form-group {
@@ -9,20 +9,11 @@
 }
 
 .form-item {
-  @apply space-y-2;
+  @apply space-y-1;
 }
 
 .form-label {
-  @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed 
-    peer-disabled:opacity-70;
-}
-
-.form-input {
-  @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 
-    text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm 
-    file:font-medium placeholder:text-muted-foreground focus-visible:outline-none 
-    focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 
-    disabled:cursor-not-allowed disabled:opacity-50;
+  @apply block text-sm font-medium leading-none;
 }
 
 .form-description {
@@ -33,44 +24,41 @@
   @apply text-sm font-medium text-destructive;
 }
 
-/* Form field styles */
-.form-field {
-  @apply space-y-2;
-}
-
 .form-control {
-  @apply flex w-full flex-col;
+  @apply flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm
+  ring-offset-background focus-visible:outline-none focus-visible:ring-2
+  focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
 }
 
-/* Date and time form fields */
-.date-time-field {
-  @apply flex gap-2;
+/* Form elements */
+.input {
+  @apply form-control h-10;
 }
 
-.form-select {
-  @apply h-10 rounded-md border border-input bg-background px-3 py-2 text-sm 
-    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 
-    focus-visible:ring-offset-2;
+.textarea {
+  @apply form-control min-h-[80px] resize-none;
 }
 
-/* Checkbox styles */
-.checkbox-wrapper {
-  @apply flex items-center space-x-2;
+.select {
+  @apply form-control h-10;
 }
 
-.checkbox-input {
-  @apply h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary;
+/* Form layouts */
+.form-inline {
+  @apply flex flex-row items-end space-x-2 space-y-0;
 }
 
-/* Radio button styles */
-.radio-group {
-  @apply flex flex-col space-y-2;
-}
+/* Form responsive */
+@media (max-width: 640px) {
+  .form-group {
+    @apply mb-4;
+  }
 
-.radio-item {
-  @apply flex items-center space-x-2;
-}
+  .form-control {
+    @apply text-base py-2.5;
+  }
 
-.radio-input {
-  @apply h-4 w-4 border-gray-300 text-primary focus:ring-primary;
+  .input, .select {
+    @apply h-11;
+  }
 }
