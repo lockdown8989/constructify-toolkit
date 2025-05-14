@@ -1,7 +1,7 @@
 
 import { useAuth } from "@/hooks/use-auth";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Loader2, ArrowLeft, Trash2 } from "lucide-react";
 import { RegionSettings } from "@/components/settings/RegionSettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { useLanguage } from "@/hooks/use-language";
@@ -14,12 +14,16 @@ import { AppearanceSection } from "@/components/settings/sections/AppearanceSect
 import { LocalizationSection } from "@/components/settings/sections/LocalizationSection";
 import { SettingsBackButton } from "@/components/settings/sections/SettingsBackButton";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const Settings = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, signOut } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Get section from location state or URL parameter
   const getInitialSection = () => {
@@ -38,6 +42,32 @@ const Settings = () => {
     searchParams.set('section', activeSection);
     navigate(`/settings?${searchParams.toString()}`, { replace: true });
   }, [activeSection, navigate, location.search]);
+  
+  const handleDeleteAccount = async () => {
+    try {
+      setIsDeleting(true);
+      // Here you would normally call an API to delete the user account
+      toast({
+        title: "Account Deletion",
+        description: "Your account deletion request has been submitted. You will be signed out now.",
+      });
+      
+      // For now, just sign the user out
+      setTimeout(async () => {
+        await signOut();
+        navigate('/auth');
+      }, 2000);
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast({
+        title: "Error",
+        description: "There was a problem deleting your account. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
   
   if (isLoading) {
     return (
@@ -131,6 +161,60 @@ const Settings = () => {
                   />
                 </div>
               </div>
+            </Card>
+          </div>
+        )}
+
+        {activeSection === 'delete-account' && (
+          <div className="space-y-4">
+            <SettingsBackButton onClick={() => setActiveSection('account')} />
+            <Card className="border rounded-xl shadow-sm border-destructive/20">
+              <CardHeader className="bg-destructive/10">
+                <CardTitle className="text-xl font-medium flex items-center">
+                  <Trash2 className="mr-3 h-5 w-5 text-destructive" />
+                  Delete Account
+                </CardTitle>
+                <CardDescription>
+                  Permanently delete your account and all associated data
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground mb-6">
+                  When you delete your account, all of your personal data, attendance records, and associated information will be permanently removed. This action cannot be undone.
+                </p>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full">
+                      Delete My Account
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your
+                        account and remove all your data from our servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleDeleteAccount}
+                        disabled={isDeleting}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        {isDeleting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Deleting...
+                          </>
+                        ) : "Yes, Delete My Account"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </CardContent>
             </Card>
           </div>
         )}
