@@ -3,27 +3,33 @@ import React from 'react';
 import { format } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ViewType } from '../types/calendar-types';
 
 interface ShiftCalendarToolbarProps {
   visibleDays: Date[];
   onNext: () => void;
   onPrevious: () => void;
   isMobile: boolean;
+  viewType?: ViewType;
 }
 
 const ShiftCalendarToolbar: React.FC<ShiftCalendarToolbarProps> = ({
   visibleDays,
   onNext,
   onPrevious,
-  isMobile
+  isMobile,
+  viewType = 'day'
 }) => {
   // No days available
   if (!visibleDays.length) {
     return null;
   }
   
+  // Calculate number of columns based on view type
+  const numColumns = viewType === 'week' ? 7 : viewType === 'month' ? 7 : 2;
+  
   return (
-    <div className="grid grid-cols-[120px_1fr] border-b border-gray-200">
+    <div className={`grid grid-cols-[120px_1fr] border-b border-gray-200`}>
       {/* Empty cell in top-left */}
       <div className="border-r border-gray-200 bg-gray-50 flex items-center justify-center">
         <Button 
@@ -46,8 +52,8 @@ const ShiftCalendarToolbar: React.FC<ShiftCalendarToolbarProps> = ({
       </div>
       
       {/* Day headers */}
-      <div className="grid grid-cols-2">
-        {visibleDays.map((day, index) => {
+      <div className={`grid grid-cols-${numColumns}`}>
+        {visibleDays.slice(0, numColumns).map((day, index) => {
           const isToday = new Date().toDateString() === day.toDateString();
           
           return (

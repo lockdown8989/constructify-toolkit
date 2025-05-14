@@ -2,10 +2,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ViewType } from '../types/calendar-types';
 
 interface ScheduleViewSelectorProps {
-  viewType: 'day' | 'week' | 'month';
-  onViewChange: (type: 'day' | 'week' | 'month') => void;
+  viewType: ViewType;
+  onViewChange: (type: ViewType) => void;
 }
 
 const ScheduleViewSelector: React.FC<ScheduleViewSelectorProps> = ({

@@ -2,7 +2,8 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { format, addDays, startOfWeek } from 'date-fns';
+import { format, addDays, startOfWeek, endOfMonth, startOfMonth } from 'date-fns';
+import { ViewType } from '../types/calendar-types';
 
 interface WeekNavigationProps {
   currentDate: Date;
@@ -10,6 +11,7 @@ interface WeekNavigationProps {
   onNextWeek: () => void;
   onSelectToday: () => void;
   isMobile: boolean;
+  viewType?: ViewType;
 }
 
 const WeekNavigation: React.FC<WeekNavigationProps> = ({
@@ -17,14 +19,25 @@ const WeekNavigation: React.FC<WeekNavigationProps> = ({
   onPreviousWeek,
   onNextWeek,
   onSelectToday,
-  isMobile
+  isMobile,
+  viewType = 'week'
 }) => {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = addDays(weekStart, 6);
   
-  const formattedRange = isMobile
-    ? `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`
-    : `${format(weekStart, 'MMMM d')} - ${format(weekEnd, 'MMMM d')}`;
+  let formattedRange;
+  
+  if (viewType === 'month') {
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
+    formattedRange = format(monthStart, 'MMMM yyyy');
+  } else if (viewType === 'day') {
+    formattedRange = format(currentDate, isMobile ? 'MMM d' : 'MMMM d, yyyy');
+  } else {
+    formattedRange = isMobile
+      ? `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`
+      : `${format(weekStart, 'MMMM d')} - ${format(weekEnd, 'MMMM d')}`;
+  }
     
   return (
     <div className={`flex items-center justify-between ${isMobile ? 'week-nav-mobile' : 'mb-4'}`}>

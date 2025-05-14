@@ -2,15 +2,18 @@
 import React from 'react';
 import { ChevronDown, Calendar, Filter, Menu } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { ViewType } from '../types/calendar-types';
 
 interface ShiftCalendarHeaderProps {
   locationName: string;
   setLocationName: (name: string) => void;
+  viewType?: ViewType;
 }
 
 const ShiftCalendarHeader: React.FC<ShiftCalendarHeaderProps> = ({ 
   locationName, 
-  setLocationName 
+  setLocationName,
+  viewType = 'day'
 }) => {
   return (
     <div className="flex items-center justify-between border-b border-gray-200 p-4">
