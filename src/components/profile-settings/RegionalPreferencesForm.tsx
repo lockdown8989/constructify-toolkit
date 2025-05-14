@@ -1,3 +1,4 @@
+
 import { useState, useEffect, ChangeEvent } from "react";
 import { User } from "@supabase/supabase-js";
 import { CardContent, CardFooter } from "@/components/ui/card";
@@ -6,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage, languageOptions } from "@/hooks/language";
-import { CountryInput } from "@/components/settings/CountryInput";
+import CountryInput from "@/components/settings/CountryInput";
 import { CurrencySelector } from "@/components/settings/CurrencySelector";
 import { LanguageSelector } from "@/components/settings/LanguageSelector";
 

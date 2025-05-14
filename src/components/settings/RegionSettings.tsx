@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { CardContent, CardFooter } from "@/components/ui/card";
-import { CountryInput } from "./CountryInput";
+import CountryInput from "./CountryInput";
 import { CurrencySelector } from "./CurrencySelector";
 import { LanguageSelector } from "./LanguageSelector";
 import { useRegionSettings } from "@/hooks/use-region-settings";

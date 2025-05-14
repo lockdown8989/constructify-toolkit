@@ -12,6 +12,8 @@ export type TranslationKey =
   | 'language'
   | 'currency'
   | 'save_changes'
+  | 'saving'
+  | 'saveChanges'
   | 'cancel';
 
 // Default translations
@@ -26,9 +28,20 @@ const translations: Record<string, Record<TranslationKey, string>> = {
     language: 'Language',
     currency: 'Currency',
     save_changes: 'Save Changes',
+    saving: 'Saving...',
+    saveChanges: 'Save Changes',
     cancel: 'Cancel'
   },
 };
+
+// Language options for dropdown menus
+export const languageOptions = [
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español (Spanish)' },
+  { value: 'bg', label: 'Български (Bulgarian)' },
+  { value: 'pl', label: 'Polski (Polish)' },
+  { value: 'ro', label: 'Română (Romanian)' }
+];
 
 type LanguageContextType = {
   language: string;

@@ -1,20 +1,43 @@
 
-import React, { ChangeEvent } from 'react';
+import React, { ChangeEvent, useState } from 'react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { MapPin, Loader2 } from 'lucide-react';
 
 export interface CountryInputProps {
-  value: string;
+  country: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  isLocating?: boolean;
+  onDetect?: () => void;
 }
 
-const CountryInput = ({ value, onChange }: CountryInputProps) => {
+const CountryInput = ({ country, onChange, isLocating, onDetect }: CountryInputProps) => {
   return (
-    <Input
-      id="country"
-      value={value}
-      onChange={onChange}
-      placeholder="Enter your country"
-    />
+    <div className="flex items-center space-x-2">
+      <Input
+        id="country"
+        name="country"
+        value={country}
+        onChange={onChange}
+        placeholder="Enter your country"
+        className="flex-1"
+      />
+      {onDetect && (
+        <Button 
+          type="button" 
+          variant="outline" 
+          size="icon" 
+          onClick={onDetect}
+          disabled={isLocating}
+        >
+          {isLocating ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <MapPin className="h-4 w-4" />
+          )}
+        </Button>
+      )}
+    </div>
   );
 };
 
