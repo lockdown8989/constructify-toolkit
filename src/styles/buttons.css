@@ -1,0 +1,51 @@
+
+/* Button component styles */
+.button {
+  @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md 
+    px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none 
+    focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none 
+    disabled:opacity-50;
+}
+
+.button-primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90;
+}
+
+.button-destructive {
+  @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
+}
+
+.button-outline {
+  @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+}
+
+.button-secondary {
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+}
+
+.button-ghost {
+  @apply hover:bg-accent hover:text-accent-foreground;
+}
+
+.button-link {
+  @apply text-primary underline-offset-4 hover:underline;
+}
+
+/* Button sizes */
+.button-sm {
+  @apply h-9 rounded-md px-3;
+}
+
+.button-lg {
+  @apply h-11 rounded-md px-8;
+}
+
+.button-icon {
+  @apply h-10 w-10;
+}
+
+/* Manager time clock button styles */
+.manager-clock-button {
+  @apply flex items-center gap-2 mb-1 w-full justify-start rounded-md px-3 py-2
+    text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground;
+}
