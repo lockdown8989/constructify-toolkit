@@ -1,5 +1,5 @@
 
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { Navigate } from "react-router-dom";
 import Dashboard from "./Dashboard";
 

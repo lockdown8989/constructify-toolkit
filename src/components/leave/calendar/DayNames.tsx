@@ -1,9 +1,3 @@
 
-import React from 'react';
-import DayNamesComponent from './components/DayNames';
-
-const DayNames = () => {
-  return <DayNamesComponent />;
-};
-
+import DayNames from './components/DayNames';
 export default DayNames;

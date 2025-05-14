@@ -1,13 +1,12 @@
 
 import { createRoot } from 'react-dom/client';
-import { RouterProvider } from 'react-router-dom';
-import App from './App';
-import { router } from './routes/routes';
+import { AuthProvider } from './hooks/auth';
+import App from './App.tsx';
 import './index.css';
 
-// Create the root and render the app with proper provider hierarchy
+// Create the root and render the app
 createRoot(document.getElementById("root")!).render(
-  <App>
-    <RouterProvider router={router} />
-  </App>
+  <AuthProvider>
+    <App />
+  </AuthProvider>
 );

@@ -1,21 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 
 /**
  * Hook for handling account deletion functionality
  */
 export const useDeleteAccount = () => {
   const { toast } = useToast();
-  // Make navigator optional to avoid errors when used outside Router context
-  let navigate;
-  try {
-    navigate = useNavigate();
-  } catch (error) {
-    // Silently handle the error if not in a router context
-    console.log("Navigation not available in current context");
-  }
 
   const deleteAccount = async (): Promise<{success: boolean; error?: string}> => {
     try {
@@ -34,19 +25,21 @@ export const useDeleteAccount = () => {
         return { success: false, error: rpcError.message };
       }
       
-      // Now delete the user from auth.users by calling our edge function
-      const { error: functionError } = await supabase.functions.invoke('delete-user-account');
+      // Only after data is deleted, update the user record
+      const { error } = await supabase.auth.updateUser({
+        data: { requesting_deletion: true }
+      });
       
-      if (functionError) {
-        console.error('Error calling deletion function:', functionError);
+      if (error) {
+        console.error('Error marking account for deletion:', error);
         
         toast({
           title: "Account deletion failed",
-          description: functionError.message || "An error occurred while deleting your account. Please try again.",
+          description: error.message || "An error occurred while deleting your account. Please try again.",
           variant: "destructive",
         });
         
-        return { success: false, error: functionError.message };
+        return { success: false, error: error.message };
       }
 
       toast({
@@ -56,14 +49,6 @@ export const useDeleteAccount = () => {
       
       // Sign out after successful deletion
       await supabase.auth.signOut();
-      
-      // Redirect to home page if navigation is available
-      if (navigate) {
-        setTimeout(() => {
-          navigate("/");
-        }, 2000);
-      }
-      
       return { success: true };
     } catch (error: any) {
       console.error('Exception in deleteAccount:', error);

@@ -6,22 +6,21 @@ import { LanguageProvider } from "@/hooks/use-language";
 import { NotificationProvider } from "@/hooks/use-notification-settings";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
-import { AuthProvider } from "@/hooks/auth";
+import { router } from "./routes/routes";
+import { RouterProvider } from "react-router-dom";
 import "./App.css";
 
 // Create a client
 const queryClient = new QueryClient();
 
-function App({ children }: { children?: React.ReactNode }) {
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="ui-theme">
         <LanguageProvider>
           <CurrencyProvider>
             <NotificationProvider>
-              <AuthProvider>
-                {children}
-              </AuthProvider>
+              <RouterProvider router={router} />
               <Toaster />
               <SonnerToaster />
             </NotificationProvider>
