@@ -31,7 +31,7 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ isAuthenticated }) => {
   
   return (
     <div className={cn(
-      "hidden lg:flex flex-col h-screen bg-[#f8f8f8]/95 border-r transition-all duration-300", 
+      "desktop-sidebar hidden lg:flex flex-col h-screen bg-[#f8f8f8]/95 border-r transition-all duration-300", 
       isCollapsed ? "w-[70px]" : "w-[240px]"
     )}>
       <div className="flex items-center p-4 border-b">
