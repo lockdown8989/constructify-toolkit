@@ -46,13 +46,13 @@ const CommonSection = ({
         <>
           <MobileNavLink 
             to="/profile" 
-            icon={<UserIcon />} 
+            icon={UserIcon}
             label="Profile" 
             onClick={onClose} 
           />
           <MobileNavLink 
             to="/profile-settings" 
-            icon={<Settings />} 
+            icon={Settings}
             label="Settings" 
             onClick={onClose} 
           />
@@ -61,14 +61,14 @@ const CommonSection = ({
       
       <MobileNavLink 
         to="/about" 
-        icon={<Info />} 
+        icon={Info}
         label="About" 
         onClick={onClose} 
       />
 
       <MobileNavLink 
         to="/help" 
-        icon={<HelpCircle />} 
+        icon={HelpCircle}
         label="Help" 
         onClick={onClose} 
       />
