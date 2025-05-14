@@ -18,6 +18,8 @@ import { OpenShiftType } from '@/types/supabase/schedules';
 
 const RestaurantSchedule = () => {
   const [syncingData, setSyncingData] = useState(false);
+  const [locationName, setLocationName] = useState("Main Restaurant"); // Added location state
+  
   const { 
     employees,
     shifts,
@@ -111,6 +113,8 @@ const RestaurantSchedule = () => {
     <div className="container py-6 sm:py-8 max-w-[1400px] px-3 md:px-6 mx-auto">
       <div className="mb-4 sm:mb-6">
         <ScheduleHeader 
+          locationName={locationName}  
+          setLocationName={setLocationName}  
           setViewMode={setViewMode} 
           onSyncCalendar={syncWithCalendar}
           onSyncEmployeeData={syncEmployeeData}
