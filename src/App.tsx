@@ -66,6 +66,11 @@ function App() {
                       <RestaurantSchedule />
                     </ProtectedRoute>
                   } />
+                  <Route path="/shift-calendar" element={
+                    <ProtectedRoute>
+                      <RestaurantSchedule />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/leave-management" element={
                     <ProtectedRoute>
                       <LeaveManagement />
