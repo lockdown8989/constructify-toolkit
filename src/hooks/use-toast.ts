@@ -1,15 +1,19 @@
-import { Toast, ToastActionElement, ToastProps } from "@/components/ui/toast";
+
+import { Toast as ToastPrimitive, ToastActionElement, ToastProps } from "@/components/ui/toast";
 import * as React from "react";
 
 const TOAST_LIMIT = 10;
 const TOAST_REMOVE_DELAY = 1000000;
 
-type ToasterToast = Toast & {
+type ToasterToastProps = ToastProps & {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: ToastActionElement;
 };
+
+// Renamed type to avoid circular references
+type ToasterToast = ToasterToastProps;
 
 type ToastType = "default" | "destructive" | "success";
 
@@ -143,7 +147,8 @@ function dispatch(action: Action) {
   });
 }
 
-type Toast = Omit<ToasterToast, "id">;
+// Avoid circular reference by using a more specific type
+type ToastProps = Omit<ToasterToastProps, "id">;
 
 function toast({ ...props }: ToastOptions) {
   const id = genId();

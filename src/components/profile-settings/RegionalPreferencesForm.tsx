@@ -1,4 +1,3 @@
-
 import { useState, useEffect, ChangeEvent } from "react";
 import { User } from "@supabase/supabase-js";
 import { CardContent, CardFooter } from "@/components/ui/card";
@@ -160,7 +159,7 @@ export const RegionalPreferencesForm = ({ user }: RegionalPreferencesFormProps) 
         <div>
           <h3 className="text-lg font-medium mb-3">Country</h3>
           <CountryInput
-            value={preferences.country}
+            country={preferences.country}
             onChange={handleCountryChange}
           />
         </div>

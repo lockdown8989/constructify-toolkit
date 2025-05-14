@@ -6,7 +6,8 @@ import { LanguageProvider } from "@/hooks/use-language";
 import { NotificationProvider } from "@/hooks/use-notification-settings";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
-import RouterComponent from "./routes/routes";
+import { router } from "./routes/routes";
+import { RouterProvider } from "react-router-dom";
 import "./App.css";
 
 // Create a client
@@ -19,7 +20,7 @@ function App() {
         <CurrencyProvider>
           <LanguageProvider>
             <NotificationProvider>
-              <RouterComponent />
+              <RouterProvider router={router} />
               <Toaster />
               <SonnerToaster />
             </NotificationProvider>

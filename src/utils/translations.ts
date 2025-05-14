@@ -1,4 +1,3 @@
-
 export type TranslationKey = 
   | 'settings'
   | 'manageSettings'
@@ -24,7 +23,9 @@ export type TranslationKey =
   | 'loading'
   | 'profile_settings'
   | 'account_settings'  
-  | 'region_language';
+  | 'region_language'
+  | 'signed_in_as'  // Added missing key
+  | 'sign_out';     // Added missing key
 
 export type Translations = Record<TranslationKey, string>;
 
@@ -54,7 +55,9 @@ export const translations: Record<string, Translations> = {
     loading: 'Loading...',
     profile_settings: 'Profile Settings',
     account_settings: 'Account Settings',
-    region_language: 'Region & Language'
+    region_language: 'Region & Language',
+    signed_in_as: 'Signed in as',
+    sign_out: 'Sign out',
   },
   es: {
     settings: 'Configuración',
@@ -81,7 +84,9 @@ export const translations: Record<string, Translations> = {
     loading: 'Cargando...',
     profile_settings: 'Configuración de perfil',
     account_settings: 'Configuración de la cuenta',
-    region_language: 'Región e idioma'
+    region_language: 'Región e idioma',
+    signed_in_as: 'Conectado como',
+    sign_out: 'Cerrar sesión',
   },
   bg: {
     settings: 'Настройки',
@@ -108,7 +113,9 @@ export const translations: Record<string, Translations> = {
     loading: 'Зареждане...',
     profile_settings: 'Настройки на профила',
     account_settings: 'Настройки на акаунта',
-    region_language: 'Регион и език'
+    region_language: 'Регион и език',
+    signed_in_as: 'Влезли сте като',
+    sign_out: 'Излизане',
   },
   pl: {
     settings: 'Ustawienia',
@@ -135,7 +142,9 @@ export const translations: Record<string, Translations> = {
     loading: 'Ładowanie...',
     profile_settings: 'Ustawienia profilu',
     account_settings: 'Ustawienia konta',
-    region_language: 'Region i język'
+    region_language: 'Region i język',
+    signed_in_as: 'Zalogowany jako',
+    sign_out: 'Wyloguj się',
   },
   ro: {
     settings: 'Setări',
@@ -162,6 +171,8 @@ export const translations: Record<string, Translations> = {
     loading: 'Se încarcă...',
     profile_settings: 'Setări profil',
     account_settings: 'Setări cont',
-    region_language: 'Regiune și limbă'
+    region_language: 'Regiune și limbă',
+    signed_in_as: 'Conectat ca',
+    sign_out: 'Deconectare',
   }
 };

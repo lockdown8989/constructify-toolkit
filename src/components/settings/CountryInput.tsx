@@ -14,21 +14,25 @@ import {
 } from "@/components/ui/select";
 
 interface CountryInputProps {
-  country: string;
-  isLocating: boolean;
+  country?: string;
+  value?: string;  // Added value prop
+  isLocating?: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onDetect: () => Promise<void>;
+  onDetect?: () => Promise<void>;
 }
 
 export const CountryInput = ({
   country,
-  isLocating,
+  value,  // Added value prop
+  isLocating = false,
   onChange,
   onDetect
 }: CountryInputProps) => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const countryOptions = getCountryOptions();
+  
+  const effectiveValue = value || country || "";
   
   const handleCountryChange = (value: string) => {
     const event = {
@@ -44,7 +48,7 @@ export const CountryInput = ({
   return (
     <div className="flex flex-col sm:flex-row gap-3">
       <div className="flex-1">
-        <Select value={country} onValueChange={handleCountryChange}>
+        <Select value={effectiveValue} onValueChange={handleCountryChange}>
           <SelectTrigger className="h-12 rounded-xl bg-background">
             <SelectValue placeholder="Select country" />
           </SelectTrigger>
@@ -58,7 +62,7 @@ export const CountryInput = ({
         </Select>
       </div>
       
-      {user && (
+      {user && onDetect && (
         <Button
           type="button"
           variant="outline"
