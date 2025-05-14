@@ -1,150 +1,74 @@
 
-/* Time clock specific styles */
-.timeclock-container {
-  @apply w-full max-w-4xl mx-auto p-4 md:p-6;
+/* Time Clock specific styles */
+.time-clock-display {
+  font-family: monospace;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 1rem 0;
 }
 
-.timeclock-status {
-  @apply flex items-center gap-2 text-sm font-medium;
+.time-clock-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
-.timeclock-status-indicator {
-  @apply h-3 w-3 rounded-full;
+.time-clock-status.active {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: rgb(6, 95, 70);
 }
 
-.timeclock-status-active {
-  @apply bg-green-500;
+.time-clock-status.inactive {
+  background-color: rgba(229, 231, 235, 0.5);
+  color: rgb(75, 85, 99);
 }
 
-.timeclock-status-inactive {
-  @apply bg-gray-400;
+.time-clock-status.break {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: rgb(30, 64, 175);
 }
 
-.timeclock-status-break {
-  @apply bg-amber-500;
+.time-clock-card {
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background-color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+              0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.timeclock-display {
-  @apply font-mono text-4xl font-bold text-center my-6;
+.time-clock-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.5rem;
 }
 
-.timeclock-actions {
-  @apply flex flex-col sm:flex-row gap-3 my-4;
+.manager-time-clock {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background-color: #1a1a1a;
+  color: white;
+  display: flex;
+  flex-direction: column;
 }
 
-.timeclock-button {
-  @apply flex-1 h-12 flex items-center justify-center gap-2 font-medium rounded-md;
+.employee-list-item {
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
 }
 
-.timeclock-button-in {
-  @apply bg-green-500 text-white hover:bg-green-600;
+.employee-list-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-.timeclock-button-out {
-  @apply bg-red-500 text-white hover:bg-red-600;
-}
-
-.timeclock-button-break {
-  @apply bg-amber-500 text-white hover:bg-amber-600;
-}
-
-.timeclock-history {
-  @apply mt-8;
-}
-
-.timeclock-history-title {
-  @apply text-lg font-semibold mb-3;
-}
-
-.timeclock-history-item {
-  @apply p-3 border-b flex justify-between items-center;
-}
-
-.timeclock-history-time {
-  @apply font-mono text-sm;
-}
-
-.timeclock-history-type {
-  @apply text-sm font-medium px-2 py-1 rounded-full;
-}
-
-.timeclock-history-in {
-  @apply bg-green-100 text-green-800;
-}
-
-.timeclock-history-out {
-  @apply bg-red-100 text-red-800;
-}
-
-/* Manager time clock styles */
-.manager-timeclock {
-  @apply fixed inset-0 bg-background z-50 flex flex-col;
-}
-
-.manager-timeclock-header {
-  @apply flex items-center justify-between p-4 border-b;
-}
-
-.manager-timeclock-title {
-  @apply text-xl font-bold flex items-center gap-2;
-}
-
-.manager-timeclock-content {
-  @apply flex-1 flex flex-col md:flex-row overflow-hidden;
-}
-
-.manager-timeclock-sidebar {
-  @apply w-full md:w-80 border-r overflow-y-auto p-4;
-}
-
-.manager-timeclock-main {
-  @apply flex-1 flex flex-col items-center justify-center p-4;
-}
-
-.manager-timeclock-clock {
-  @apply font-mono text-5xl font-bold mb-8;
-}
-
-.manager-timeclock-date {
-  @apply text-lg text-muted-foreground mb-12;
-}
-
-.manager-timeclock-buttons {
-  @apply flex gap-4;
-}
-
-.manager-employee-list {
-  @apply space-y-2 mt-4;
-}
-
-.manager-employee-card {
-  @apply p-3 rounded-lg border cursor-pointer transition-colors;
-}
-
-.manager-employee-card-selected {
-  @apply bg-primary/10 border-primary;
-}
-
-.manager-employee-card-active {
-  @apply bg-green-50 border-green-200;
-}
-
-.manager-employee-info {
-  @apply flex items-center gap-3;
-}
-
-.manager-employee-avatar {
-  @apply h-10 w-10 rounded-full bg-muted flex items-center justify-center overflow-hidden;
-}
-
-.manager-employee-details {
-  @apply flex-1;
-}
-
-.manager-employee-name {
-  @apply font-medium;
-}
-
-.manager-employee-position {
-  @apply text-sm text-muted-foreground;
+.employee-list-item.selected {
+  background-color: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.5);
 }

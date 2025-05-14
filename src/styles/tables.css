@@ -1,82 +1,50 @@
 
-/* Table component styles */
+/* Table styles */
 .table-container {
-  @apply w-full overflow-auto;
+  overflow-x: auto;
+  width: 100%;
 }
 
 .table {
-  @apply w-full caption-bottom text-sm;
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.table-header {
-  @apply [&_tr]:border-b;
+.table thead {
+  background-color: var(--color-bg-subtle);
 }
 
-.table-head {
-  @apply border-b transition-colors hover:bg-muted/50 [&:has([role=checkbox])]:pr-0 
-    h-12 px-4 text-left align-middle font-medium text-muted-foreground;
+.table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 500;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.table-body {
-  @apply [&_tr:last-child]:border-0;
+.table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.table-row {
-  @apply border-b transition-colors hover:bg-muted/50 
-    data-[state=selected]:bg-muted;
+.table tbody tr:hover {
+  background-color: var(--color-bg-hover);
 }
 
-.table-cell {
-  @apply p-4 align-middle [&:has([role=checkbox])]:pr-0;
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: var(--color-bg-subtle);
 }
 
-.table-footer {
-  @apply border-t bg-muted/50 font-medium [&>tr>td]:p-4;
+.table-bordered th,
+.table-bordered td {
+  border: 1px solid var(--color-border);
 }
 
-.table-caption {
-  @apply mt-4 text-sm text-muted-foreground;
+.table-compact th,
+.table-compact td {
+  padding: 0.5rem;
 }
 
-/* Data table specific styles */
-.data-table-toolbar {
-  @apply flex flex-col md:flex-row gap-2 md:items-center py-4;
-}
-
-.data-table-view-options {
-  @apply flex items-center justify-between;
-}
-
-.data-table-view-options-label {
-  @apply text-sm font-medium text-muted-foreground;
-}
-
-.data-table-pagination {
-  @apply flex items-center justify-end px-2 py-4;
-}
-
-/* Sorting styles */
-.table-sortable {
-  @apply flex items-center space-x-1 cursor-pointer select-none;
-}
-
-.sort-indicator {
-  @apply h-4 w-4 text-muted-foreground;
-}
-
-/* Mobile table styles */
-.mobile-table-card {
-  @apply rounded-lg border bg-card text-card-foreground shadow-sm mb-2 p-4;
-}
-
-.mobile-table-row {
-  @apply grid grid-cols-2 gap-1;
-}
-
-.mobile-table-label {
-  @apply text-sm font-medium text-muted-foreground;
-}
-
-.mobile-table-value {
-  @apply text-sm;
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -165,6 +166,26 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
                   >
                     <ClipboardCheck className="mr-3 h-5 w-5 text-neutral-600" />
                     <span>Attendance</span>
+                  </Link>
+                )}
+                {/* Add Employee Clock button for all users */}
+                <Link
+                  to="/time-clock"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target"
+                >
+                  <Clock className="mr-3 h-5 w-5 text-neutral-600" />
+                  <span>Employee Clock</span>
+                </Link>
+                {/* Manager Time Clock button for managers only */}
+                {hasManagerialAccess && (
+                  <Link
+                    to="/manager-time-clock"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target bg-gray-100"
+                  >
+                    <Clock className="mr-3 h-5 w-5 text-teal-600" />
+                    <span>Manager Time Clock</span>
                   </Link>
                 )}
                 {hasManagerialAccess ? (
