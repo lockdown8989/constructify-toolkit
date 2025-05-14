@@ -35,10 +35,7 @@ export const DeleteAccountSection = () => {
           description: "Your account has been successfully deleted.",
         });
         
-        // Redirect to landing page after a short delay
-        setTimeout(() => {
-          navigate("/");
-        }, 1500);
+        // Redirection is now handled directly in the useDeleteAccount hook
       } else {
         console.error("Account deletion failed:", error);
         toast({

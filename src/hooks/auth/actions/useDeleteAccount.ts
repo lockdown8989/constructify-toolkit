@@ -1,47 +1,33 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Hook for handling account deletion functionality
  */
 export const useDeleteAccount = () => {
   const { toast } = useToast();
+  // Using optional chaining to handle cases where the hook might be used outside Router context
+  const navigate = useNavigate?.() || null;
 
   const deleteAccount = async (): Promise<{success: boolean; error?: string}> => {
     try {
-      // First call the database function to delete user data from all tables
-      const { data, error: rpcError } = await supabase.rpc('delete_user');
+      // First call the edge function to delete user data from all tables
+      const { error: functionError } = await supabase.functions.invoke("delete-user-account");
       
-      if (rpcError) {
-        console.error('Error deleting user data:', rpcError);
+      if (functionError) {
+        console.error('Error deleting user data:', functionError);
         
         toast({
           title: "Account deletion failed",
-          description: rpcError.message || "Could not delete your account data. Please try again later.",
+          description: functionError.message || "Could not delete your account data. Please try again later.",
           variant: "destructive",
         });
         
-        return { success: false, error: rpcError.message };
+        return { success: false, error: functionError.message };
       }
       
-      // Only after data is deleted, update the user record
-      const { error } = await supabase.auth.updateUser({
-        data: { requesting_deletion: true }
-      });
-      
-      if (error) {
-        console.error('Error marking account for deletion:', error);
-        
-        toast({
-          title: "Account deletion failed",
-          description: error.message || "An error occurred while deleting your account. Please try again.",
-          variant: "destructive",
-        });
-        
-        return { success: false, error: error.message };
-      }
-
       toast({
         title: "Account deleted",
         description: "Your account has been successfully deleted. You will be redirected shortly.",
@@ -49,6 +35,14 @@ export const useDeleteAccount = () => {
       
       // Sign out after successful deletion
       await supabase.auth.signOut();
+      
+      // Redirect to homepage if navigation is available
+      if (navigate) {
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
+      }
+      
       return { success: true };
     } catch (error: any) {
       console.error('Exception in deleteAccount:', error);

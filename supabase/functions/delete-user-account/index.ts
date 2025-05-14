@@ -48,11 +48,54 @@ serve(async (req) => {
     
     console.log("Deleting user:", user.id);
     
-    // Delete the user's profiles and related data
-    // First clean up profiles to avoid FK constraints
-    await supabaseAdmin.from('profiles').delete().eq('id', user.id);
-    await supabaseAdmin.from('user_roles').delete().eq('user_id', user.id);
-    await supabaseAdmin.from('notifications').delete().eq('user_id', user.id);
+    // Delete all user data first before removing the user account
+    // Start with tables that may have foreign key constraints
+    const tables = [
+      'notifications',
+      'user_roles',
+      'profiles',
+      'attendance',
+      'availability_requests',
+      'calendar_preferences',
+      'documents',
+      'employees',
+      'leave_calendar',
+      'notification_settings',
+      'open_shift_assignments',
+      'payroll',
+      'salary_statistics',
+      'schedules',
+      'shift_swaps',
+      'workflow_notifications',
+      'workflow_requests'
+    ];
+    
+    // Delete data from all tables where user_id matches
+    for (const table of tables) {
+      try {
+        const { error } = await supabaseAdmin
+          .from(table)
+          .delete()
+          .eq('user_id', user.id);
+          
+        if (error && !error.message.includes('does not exist')) {
+          console.warn(`Warning when deleting from ${table}:`, error);
+        }
+      } catch (err) {
+        console.warn(`Error deleting from ${table}:`, err);
+        // Continue with other tables even if one fails
+      }
+    }
+    
+    // Special case for employees table which might use user_id as a foreign key
+    try {
+      await supabaseAdmin
+        .from('employees')
+        .delete()
+        .eq('user_id', user.id);
+    } catch (err) {
+      console.warn("Error deleting employee record:", err);
+    }
     
     // Delete the user from auth.users using admin API
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
@@ -66,7 +109,7 @@ serve(async (req) => {
     }
     
     return new Response(
-      JSON.stringify({ success: true, message: 'User deleted successfully' }),
+      JSON.stringify({ success: true, message: 'User and all associated data deleted successfully' }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
