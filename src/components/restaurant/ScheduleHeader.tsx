@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChevronDown, Calendar, Filter, Menu, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +5,7 @@ import { ViewType } from '@/components/schedule/types/calendar-types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ViewMode } from '@/types/restaurant-schedule';
 
 interface ScheduleHeaderProps {
   locationName: string;
@@ -15,6 +15,10 @@ interface ScheduleHeaderProps {
   searchQuery?: string;
   weekView?: boolean;
   setWeekView?: (view: boolean) => void;
+  setViewMode?: (viewMode: ViewMode) => void;
+  onSyncCalendar?: () => void;
+  onSyncEmployeeData?: () => void;
+  isSyncing?: boolean;
 }
 
 const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({ 
@@ -24,7 +28,11 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
   onSearch,
   searchQuery = '',
   weekView = true,
-  setWeekView
+  setWeekView,
+  setViewMode,
+  onSyncCalendar,
+  onSyncEmployeeData,
+  isSyncing = false
 }) => {
   const isMobile = useIsMobile();
 
@@ -60,9 +68,17 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
             </Button>
           )}
           
-          <Button variant="ghost" size="sm" className="p-2 text-gray-600 hover:bg-gray-100 rounded-full">
-            <Filter className="h-5 w-5" />
-          </Button>
+          {onSyncCalendar && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onSyncCalendar} 
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
+              disabled={isSyncing}
+            >
+              <Filter className="h-5 w-5" />
+            </Button>
+          )}
           
           <div className="relative">
             <Button variant="ghost" size="sm" className="p-2 text-gray-600 hover:bg-gray-100 rounded-full">
