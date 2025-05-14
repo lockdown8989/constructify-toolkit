@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { 
   Dialog,
   DialogContent,
@@ -12,51 +11,30 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2, UserMinus } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
-import { useToast } from "@/hooks/use-toast";
 import { useDeleteAccount } from "@/hooks/auth/actions/useDeleteAccount";
 
 export const DeleteAccountSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { t } = useLanguage();
-  const { toast } = useToast();
-  const navigate = useNavigate();
   const { deleteAccount } = useDeleteAccount();
 
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     
     try {
-      const { success, error } = await deleteAccount();
+      const { success } = await deleteAccount();
       
-      if (success) {
-        toast({
-          title: "Account deleted",
-          description: "Your account has been successfully deleted.",
-        });
-        
-        // Redirect to landing page after a short delay
-        setTimeout(() => {
-          navigate("/");
-        }, 1500);
-      } else {
-        console.error("Account deletion failed:", error);
-        toast({
-          title: "Error deleting account",
-          description: error || "An error occurred. Please try again.",
-          variant: "destructive",
-        });
+      if (!success) {
+        // Error is already handled in the hook with toast notifications
+        setIsDialogOpen(false);
       }
+      // If successful, the hook will handle redirects and notifications
     } catch (err) {
-      console.error("Error in deletion process:", err);
-      toast({
-        title: "Unexpected error",
-        description: "Something went wrong. Please try again later.",
-        variant: "destructive",
-      });
+      console.error("Unexpected error in deletion process:", err);
+      setIsDialogOpen(false);
     } finally {
       setIsDeleting(false);
-      setIsDialogOpen(false);
     }
   };
   

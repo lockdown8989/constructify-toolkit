@@ -48,11 +48,8 @@ serve(async (req) => {
     
     console.log("Deleting user:", user.id);
     
-    // Delete the user's profiles and related data
-    // First clean up profiles to avoid FK constraints
-    await supabaseAdmin.from('profiles').delete().eq('id', user.id);
-    await supabaseAdmin.from('user_roles').delete().eq('user_id', user.id);
-    await supabaseAdmin.from('notifications').delete().eq('user_id', user.id);
+    // Note: We've already deleted the user's data using the delete_user RPC function,
+    // which is called before this edge function. Here we're just deleting the actual auth user.
     
     // Delete the user from auth.users using admin API
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
