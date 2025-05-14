@@ -7,19 +7,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Calendar, Users, Bell, RefreshCw, Clock, History } from "lucide-react";
+import { ChevronDown, Calendar, Users, RefreshCw, Clock, History } from "lucide-react";
 import LeaveRealtimeUpdates from "@/components/leave/LeaveRealtimeUpdates";
 import EmployeeTab from "@/components/leave/tabs/EmployeeTab";
 import ManagerTab from "@/components/leave/tabs/ManagerTab";
 import CalendarTab from "@/components/leave/tabs/CalendarTab";
-import NotificationsTab from "@/components/leave/tabs/NotificationsTab";
 import ScheduleRequestsTab from "@/components/leave/tabs/ScheduleRequestsTab"; 
-import ShiftHistoryTab from "@/components/leave/tabs/ShiftHistoryTab"; // Added this import
+import ShiftHistoryTab from "@/components/leave/tabs/ShiftHistoryTab";
 import { useAccessControl } from "@/hooks/leave/useAccessControl";
 import { useLocation } from "react-router-dom";
 
 // Define the view types
-type ViewType = "employee" | "manager" | "calendar" | "notifications" | "schedule-requests" | "shift-history";
+type ViewType = "employee" | "manager" | "calendar" | "schedule-requests" | "shift-history";
 
 // Define the view option type
 type ViewOption = {
@@ -37,8 +36,8 @@ const LeaveManagement = () => {
     if (location.state && location.state.initialView) {
       const initialView = location.state.initialView as ViewType;
       if (
-        (initialView !== "manager" && initialView !== "notifications") || 
-        (hasManagerAccess && (initialView === "manager" || initialView === "notifications"))
+        (initialView !== "manager") || 
+        (hasManagerAccess && (initialView === "manager"))
       ) {
         setCurrentView(initialView);
       }
@@ -48,18 +47,21 @@ const LeaveManagement = () => {
   // Define view options based on user access
   const getViewOptions = (): Record<string, ViewOption> => {
     const baseOptions: Record<string, ViewOption> = {
-      employee: { label: "Employee View", icon: <Users className="h-4 w-4 mr-2" /> },
       "shift-history": { label: "Shift History", icon: <History className="h-4 w-4 mr-2" /> },
       calendar: { label: "Calendar View", icon: <Calendar className="h-4 w-4 mr-2" /> },
       "schedule-requests": { label: "Schedule Requests", icon: <Clock className="h-4 w-4 mr-2" /> }
     };
 
-    // Only add manager and notifications options if user has manager access
+    // Only add employee view for non-managers
+    if (!hasManagerAccess) {
+      baseOptions.employee = { label: "Employee View", icon: <Users className="h-4 w-4 mr-2" /> };
+    }
+
+    // Only add manager view for managers
     if (hasManagerAccess) {
       return {
         ...baseOptions,
         manager: { label: "Manager View", icon: <Users className="h-4 w-4 mr-2" /> },
-        notifications: { label: "Notifications", icon: <Bell className="h-4 w-4 mr-2" /> }
       };
     }
 
@@ -84,13 +86,15 @@ const LeaveManagement = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-full min-w-[200px]">
-            <DropdownMenuItem 
-              onClick={() => setCurrentView("employee")}
-              className="cursor-pointer flex items-center"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Employee View
-            </DropdownMenuItem>
+            {!hasManagerAccess && (
+              <DropdownMenuItem 
+                onClick={() => setCurrentView("employee")}
+                className="cursor-pointer flex items-center"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Employee View
+              </DropdownMenuItem>
+            )}
             
             <DropdownMenuItem 
               onClick={() => setCurrentView("shift-history")}
@@ -117,23 +121,13 @@ const LeaveManagement = () => {
             </DropdownMenuItem>
 
             {hasManagerAccess && (
-              <>
-                <DropdownMenuItem 
-                  onClick={() => setCurrentView("manager")}
-                  className="cursor-pointer flex items-center"
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Manager View
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem 
-                  onClick={() => setCurrentView("notifications")}
-                  className="cursor-pointer flex items-center"
-                >
-                  <Bell className="h-4 w-4 mr-2" />
-                  Notifications
-                </DropdownMenuItem>
-              </>
+              <DropdownMenuItem 
+                onClick={() => setCurrentView("manager")}
+                className="cursor-pointer flex items-center"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Manager View
+              </DropdownMenuItem>
             )}
           </DropdownMenuContent>
         </DropdownMenu>
@@ -144,7 +138,6 @@ const LeaveManagement = () => {
         {currentView === "shift-history" && <ShiftHistoryTab />}
         {currentView === "manager" && hasManagerAccess && <ManagerTab />}
         {currentView === "calendar" && <CalendarTab />}
-        {currentView === "notifications" && hasManagerAccess && <NotificationsTab />}
         {currentView === "schedule-requests" && <ScheduleRequestsTab />}
       </div>
     </div>
