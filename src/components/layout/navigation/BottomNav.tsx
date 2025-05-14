@@ -29,17 +29,6 @@ const BottomNav: React.FC<BottomNavProps> = ({ isAuthenticated }) => {
         )}
       </NavLink>
       
-      <NavLink to="/schedule" className="bottom-nav-item">
-        {({ isActive }) => (
-          <>
-            <Calendar className={`h-5 w-5 ${isActive ? "text-primary" : ""}`} />
-            <div className={`text-xs mt-0.5 ${isActive ? "text-primary font-medium" : ""}`}>
-              Schedule
-            </div>
-          </>
-        )}
-      </NavLink>
-      
       {hasManagerAccess && (
         <NavLink to="/people" className="bottom-nav-item">
           {({ isActive }) => (
