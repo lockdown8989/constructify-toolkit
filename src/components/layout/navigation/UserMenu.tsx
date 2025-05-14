@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,15 +13,10 @@ import { Link } from "react-router-dom"
 import { User } from "@supabase/supabase-js"
 import { useAuth } from "@/hooks/auth"
 import { Badge } from "@/components/ui/badge"
-import { Settings } from "lucide-react"
+import { Settings, User as UserIcon } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useLanguage } from "@/hooks/language"
 import { LogOut } from "lucide-react"
-
-interface UserMenuProps {
-  user: User;
-  signOut: () => void;
-}
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
@@ -81,7 +77,7 @@ const UserMenu = () => {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={navigateToProfile}>
-          <User className="mr-2 h-4 w-4" />
+          <UserIcon className="mr-2 h-4 w-4" />
           <span>{t('profile')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={navigateToProfileSettings}>

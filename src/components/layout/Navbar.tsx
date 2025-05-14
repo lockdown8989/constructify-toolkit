@@ -36,7 +36,7 @@ const Navbar = () => {
           {isAuthenticated && <NotificationBell />}
           
           {isAuthenticated ? (
-            <UserMenu user={user} signOut={signOut} />
+            <UserMenu />
           ) : (
             <AuthButtons />
           )}

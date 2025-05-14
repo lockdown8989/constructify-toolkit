@@ -1,12 +1,12 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import { User } from "@supabase/supabase-js";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage, languageOptions } from "@/hooks/language";
 import { CountryInput } from "@/components/settings/CountryInput";
 import { CurrencySelector } from "@/components/settings/CurrencySelector";
 import { LanguageSelector } from "@/components/settings/LanguageSelector";
@@ -22,7 +22,7 @@ export const RegionalPreferencesForm = ({ user }: RegionalPreferencesFormProps) 
   const [isSaving, setIsSaving] = useState(false);
   const [preferences, setPreferences] = useState({
     preferred_currency: "USD",
-    preferred_language: "en",
+    preferred_language: "en" as "en" | "es" | "bg" | "pl" | "ro",
     country: "",
   });
 
@@ -48,7 +48,7 @@ export const RegionalPreferencesForm = ({ user }: RegionalPreferencesFormProps) 
         if (data) {
           setPreferences({
             preferred_currency: data.preferred_currency || "USD",
-            preferred_language: data.preferred_language || "en",
+            preferred_language: (data.preferred_language || "en") as "en" | "es" | "bg" | "pl" | "ro",
             country: data.country || "",
           });
         }
@@ -72,14 +72,14 @@ export const RegionalPreferencesForm = ({ user }: RegionalPreferencesFormProps) 
   const handleLanguageChange = (language: string) => {
     setPreferences((prev) => ({
       ...prev,
-      preferred_language: language,
+      preferred_language: language as "en" | "es" | "bg" | "pl" | "ro",
     }));
   };
 
-  const handleCountryChange = (country: string) => {
+  const handleCountryChange = (e: ChangeEvent<HTMLInputElement>) => {
     setPreferences((prev) => ({
       ...prev,
-      country,
+      country: e.target.value,
     }));
   };
 
@@ -110,14 +110,14 @@ export const RegionalPreferencesForm = ({ user }: RegionalPreferencesFormProps) 
       }
 
       // Update the language in the app
-      setLanguage(preferences.preferred_language);
+      await setLanguage(preferences.preferred_language);
 
       toast({
         title: "Preferences updated",
         description: "Your regional preferences have been successfully updated.",
-        variant: "success",
+        variant: "default",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error:", error);
       toast({
         title: "An unexpected error occurred",
