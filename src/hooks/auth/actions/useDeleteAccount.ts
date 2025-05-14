@@ -8,7 +8,14 @@ import { useNavigate } from "react-router-dom";
  */
 export const useDeleteAccount = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
+  // Make navigator optional to avoid errors when used outside Router context
+  let navigate;
+  try {
+    navigate = useNavigate();
+  } catch (error) {
+    // Silently handle the error if not in a router context
+    console.log("Navigation not available in current context");
+  }
 
   const deleteAccount = async (): Promise<{success: boolean; error?: string}> => {
     try {
@@ -50,10 +57,12 @@ export const useDeleteAccount = () => {
       // Sign out after successful deletion
       await supabase.auth.signOut();
       
-      // Redirect to home page
-      setTimeout(() => {
-        navigate("/");
-      }, 2000);
+      // Redirect to home page if navigation is available
+      if (navigate) {
+        setTimeout(() => {
+          navigate("/");
+        }, 2000);
+      }
       
       return { success: true };
     } catch (error: any) {

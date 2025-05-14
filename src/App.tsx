@@ -6,6 +6,7 @@ import { LanguageProvider } from "@/hooks/use-language";
 import { NotificationProvider } from "@/hooks/use-notification-settings";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/hooks/auth";
 import "./App.css";
 
 // Create a client
@@ -18,7 +19,9 @@ function App({ children }: { children?: React.ReactNode }) {
         <LanguageProvider>
           <CurrencyProvider>
             <NotificationProvider>
-              {children}
+              <AuthProvider>
+                {children}
+              </AuthProvider>
               <Toaster />
               <SonnerToaster />
             </NotificationProvider>
