@@ -12,7 +12,7 @@ import {
 import { useAuth } from "@/hooks/auth"
 import { Settings, User as UserIcon, LogOut } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import { useLanguage, TranslationKey } from "@/hooks/language"
+import { useLanguage } from "@/hooks/use-language"
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
@@ -35,8 +35,12 @@ const UserMenu = () => {
   };
   
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
+    console.log("Sign out initiated from UserMenu");
+    if (signOut) {
+      await signOut();
+    } else {
+      console.error("signOut function is not available");
+    }
   };
   
   const navigateToProfile = () => {
