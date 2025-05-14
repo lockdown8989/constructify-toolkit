@@ -1,0 +1,26 @@
+
+/* Tab navigation */
+.tab-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  background-color: var(--color-card);
+  border-radius: 0.5rem;
+}
+
+.tab-nav-item {
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.tab-nav-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.tab-nav-item.active {
+  background-color: var(--color-primary);
+  color: white;
+}
