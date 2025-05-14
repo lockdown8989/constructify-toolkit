@@ -7,6 +7,14 @@ import { useToast } from '@/hooks/use-toast';
 
 type LanguageCode = 'en' | 'es' | 'bg' | 'pl' | 'ro';
 
+export const languageOptions = [
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español (Spanish)' },
+  { value: 'bg', label: 'Български (Bulgarian)' },
+  { value: 'pl', label: 'Polski (Polish)' },
+  { value: 'ro', label: 'Română (Romanian)' }
+];
+
 interface LanguageContextType {
   language: LanguageCode;
   setLanguage: (language: LanguageCode) => Promise<void>;
@@ -20,14 +28,6 @@ const LanguageContext = createContext<LanguageContextType>({
   isLoading: true,
   t: (key: TranslationKey) => key,
 });
-
-export const languageOptions = [
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Español (Spanish)' },
-  { value: 'bg', label: 'Български (Bulgarian)' },
-  { value: 'pl', label: 'Polski (Polish)' },
-  { value: 'ro', label: 'Română (Romanian)' }
-];
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
@@ -114,6 +114,14 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   );
 };
 
-export const useLanguage = () => useContext(LanguageContext);
+export const useLanguage = () => {
+  const context = useContext(LanguageContext);
+  
+  if (!context) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  
+  return context;
+};
 
 export default useLanguage;
