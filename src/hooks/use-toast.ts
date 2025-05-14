@@ -1,19 +1,24 @@
 
-import { Toast as ToastPrimitive, ToastActionElement, ToastProps } from "@/components/ui/toast";
+import { ToastActionElement } from "@/components/ui/toast";
 import * as React from "react";
 
 const TOAST_LIMIT = 10;
 const TOAST_REMOVE_DELAY = 1000000;
 
-type ToasterToastProps = ToastProps & {
+// Define base props without circular references
+type BaseToastProps = {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: ToastActionElement;
+  variant?: "default" | "destructive" | "success";
+  duration?: number;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
-// Renamed type to avoid circular references
-type ToasterToast = ToasterToastProps;
+// Type for toast props without circular references
+type ToasterToastProps = BaseToastProps;
 
 type ToastType = "default" | "destructive" | "success";
 
@@ -44,11 +49,11 @@ type ActionType = typeof actionTypes;
 type Action =
   | {
       type: ActionType["ADD_TOAST"];
-      toast: ToasterToast;
+      toast: ToasterToastProps;
     }
   | {
       type: ActionType["UPDATE_TOAST"];
-      toast: Partial<ToasterToast>;
+      toast: Partial<ToasterToastProps>;
     }
   | {
       type: ActionType["DISMISS_TOAST"];
@@ -60,7 +65,7 @@ type Action =
     };
 
 interface State {
-  toasts: ToasterToast[];
+  toasts: ToasterToastProps[];
 }
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
@@ -147,9 +152,6 @@ function dispatch(action: Action) {
   });
 }
 
-// Avoid circular reference by using a more specific type
-type ToastProps = Omit<ToasterToastProps, "id">;
-
 function toast({ ...props }: ToastOptions) {
   const id = genId();
 
@@ -200,4 +202,4 @@ function useToast() {
 }
 
 export { useToast, toast };
-export type { ToastOptions };
+export type { ToastOptions, BaseToastProps as ToastProps };

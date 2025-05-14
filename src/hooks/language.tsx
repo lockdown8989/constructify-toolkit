@@ -1,104 +1,63 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { translations } from '@/utils/translations';
-import type { TranslationKey, Translations } from '@/utils/translations';
+import React, { createContext, useContext, useState } from 'react';
 
-export type LanguageType = 'en' | 'es' | 'bg' | 'pl' | 'ro';
+// Define the translation keys to ensure type safety
+export type TranslationKey = 
+  | 'signed_in_as'
+  | 'profile'
+  | 'profile_settings'
+  | 'settings'
+  | 'sign_out'
+  | 'country'
+  | 'language'
+  | 'currency'
+  | 'save_changes'
+  | 'cancel';
 
-export interface LanguageContextType {
-  language: LanguageType;
-  setLanguage: (language: LanguageType) => Promise<void>;
+// Default translations
+const translations: Record<string, Record<TranslationKey, string>> = {
+  en: {
+    signed_in_as: 'Signed in as',
+    profile: 'Profile',
+    profile_settings: 'Profile Settings',
+    settings: 'Settings',
+    sign_out: 'Sign Out',
+    country: 'Country',
+    language: 'Language',
+    currency: 'Currency',
+    save_changes: 'Save Changes',
+    cancel: 'Cancel'
+  },
+};
+
+type LanguageContextType = {
+  language: string;
+  setLanguage: (language: string) => void;
   t: (key: TranslationKey) => string;
-  languageLoaded: boolean;
-}
+};
 
-export const languageOptions = [
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Español' },
-  { value: 'bg', label: 'Български' },
-  { value: 'pl', label: 'Polski' },
-  { value: 'ro', label: 'Română' }
-];
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-const defaultLanguage: LanguageType = 'en';
-
-const LanguageContext = createContext<LanguageContextType>({
-  language: defaultLanguage,
-  setLanguage: async () => {},
-  t: (key) => key,
-  languageLoaded: false
-});
-
-export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<LanguageType>(defaultLanguage);
-  const [languageLoaded, setLanguageLoaded] = useState<boolean>(false);
-
-  useEffect(() => {
-    async function loadInitialLanguage() {
-      try {
-        // First try to get language from localStorage
-        const savedLang = localStorage.getItem('preferred_language') as LanguageType;
-        if (savedLang && Object.keys(translations).includes(savedLang)) {
-          setLanguageState(savedLang);
-          setLanguageLoaded(true);
-          return;
-        }
-
-        // If not in localStorage, try to get from user profile
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('preferred_language')
-            .eq('id', user.id)
-            .single();
-          
-          if (data?.preferred_language && Object.keys(translations).includes(data.preferred_language)) {
-            const lang = data.preferred_language as LanguageType;
-            setLanguageState(lang);
-            localStorage.setItem('preferred_language', lang);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading language preference:', error);
-      } finally {
-        setLanguageLoaded(true);
-      }
-    }
-
-    loadInitialLanguage();
-  }, []);
-  
-  const setLanguage = async (newLanguage: LanguageType) => {
-    try {
-      setLanguageState(newLanguage);
-      localStorage.setItem('preferred_language', newLanguage);
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        await supabase
-          .from('profiles')
-          .update({ preferred_language: newLanguage })
-          .eq('id', user.id);
-      }
-    } catch (error) {
-      console.error('Error setting language:', error);
-    }
-  };
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const [language, setLanguage] = useState('en');
 
   const t = (key: TranslationKey): string => {
-    if (!translations[language]) return translations['en'][key] || key;
-    return translations[language][key] || translations['en'][key] || key;
+    return translations[language]?.[key] || key;
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, languageLoaded }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
-};
+}
 
-export const useLanguage = () => useContext(LanguageContext);
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+  
+  if (context === undefined) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  
+  return context;
+}

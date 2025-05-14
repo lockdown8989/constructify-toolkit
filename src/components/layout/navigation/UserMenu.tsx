@@ -1,5 +1,5 @@
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -9,14 +9,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Link } from "react-router-dom"
-import { User } from "@supabase/supabase-js"
 import { useAuth } from "@/hooks/auth"
-import { Badge } from "@/components/ui/badge"
-import { Settings, User as UserIcon } from "lucide-react"
+import { Settings, User as UserIcon, LogOut } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import { useLanguage } from "@/hooks/language"
-import { LogOut } from "lucide-react"
+import { useLanguage, TranslationKey } from "@/hooks/language"
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
