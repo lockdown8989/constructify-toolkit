@@ -1,17 +1,60 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 import { MapPin, Users } from 'lucide-react';
 import { useEmployeeComposition } from '@/hooks/use-employee-composition';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface EmployeeCompositionProps {
   className?: string;
 }
 
 const EmployeeComposition: React.FC<EmployeeCompositionProps> = ({ className }) => {
-  const { data: compositionData, isLoading } = useEmployeeComposition();
+  const { data: compositionData, isLoading, error } = useEmployeeComposition();
+  const queryClient = useQueryClient();
+  
+  // Set up real-time subscription for employee composition changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('employee-composition-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'employee_composition'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['employee-composition'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+  
+  // Display error message if data loading fails
+  if (error) {
+    return (
+      <div className={cn("bg-white rounded-3xl p-6 card-shadow h-72 flex items-center justify-center", className)}>
+        <div className="text-center">
+          <p className="text-red-500 font-medium mb-2">Failed to load employee data</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => queryClient.invalidateQueries({ queryKey: ['employee-composition'] })}
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
   
   if (isLoading || !compositionData) {
     return (
