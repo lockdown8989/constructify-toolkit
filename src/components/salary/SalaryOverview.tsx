@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { useSalaryStatistics } from '@/hooks/use-salary-statistics';
@@ -12,6 +11,7 @@ import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management'
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
+import { useEmployees } from '@/hooks/use-employees';
 
 export const SalaryOverview = () => {
   const { user } = useAuth();
@@ -20,6 +20,9 @@ export const SalaryOverview = () => {
   const { toast } = useToast();
   const { data: stats, isLoading, error, isError, refetch } = useSalaryStatistics(employeeId || user?.id);
   const [isDownloading, setIsDownloading] = useState(false);
+  // Get employee data
+  const { data: employeeData } = useEmployees();
+  const currentEmployee = employeeData?.find(emp => emp.user_id === user?.id);
 
   const handleRetry = () => {
     toast({
@@ -48,9 +51,9 @@ export const SalaryOverview = () => {
       const result = await generatePayslipPDF(
         employeeId || user.id,
         {
-          name: user.name || 'Employee',
-          title: user.job_title || 'Employee',
-          department: user.department || 'General',
+          name: currentEmployee?.name || 'Employee',
+          title: currentEmployee?.job_title || 'Employee',
+          department: currentEmployee?.department || 'General',
           salary: stats.base_salary?.toString() || '0',
           paymentDate: stats.payment_date || new Date().toISOString().split('T')[0],
           payPeriod: paymentDate,
