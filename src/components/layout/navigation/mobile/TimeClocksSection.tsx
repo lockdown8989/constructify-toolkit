@@ -14,17 +14,7 @@ const TimeClocksSection = ({ hasManagerialAccess, isAuthenticated, onClose }: Ti
   
   return (
     <>
-      {/* Only show Employee Clock button for managers */}
-      {hasManagerialAccess && (
-        <MobileNavLink
-          to="/time-clock"
-          icon={Clock}
-          label="Employee Clock"
-          onClick={onClose}
-        />
-      )}
-      
-      {/* Manager Time Clock button for managers only */}
+      {/* Only show Manager Time Clock button for managers */}
       {hasManagerialAccess && (
         <Link
           to="/manager-time-clock"

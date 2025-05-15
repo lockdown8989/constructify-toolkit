@@ -28,7 +28,7 @@ export interface Employee {
   id: string;
   name: string;
   avatar?: string;
-  title?: string;
+  title: string; // Made required to match with salary-table/types
   job_title?: string;
   salary: string | number;
   status?: string;

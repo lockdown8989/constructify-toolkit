@@ -3,7 +3,7 @@ export interface Employee {
   id: string;
   name: string;
   avatar?: string;
-  title: string;
+  title: string;  // Required in this interface
   salary: string | number;
   status: 'Paid' | 'Absent' | 'Pending';
   selected?: boolean;
