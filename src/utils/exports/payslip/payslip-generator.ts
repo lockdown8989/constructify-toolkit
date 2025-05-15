@@ -1,6 +1,6 @@
 
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { PayslipData } from './types';
 
 /**
@@ -14,6 +14,9 @@ export const generatePayslipPDF = async (payslipData: PayslipData): Promise<Blob
       unit: 'mm',
       format: 'a4'
     });
+
+    // Add autotable plugin to jsPDF prototype
+    (jsPDF as any).API.autoTable = autoTable;
 
     // Company logo and header
     doc.setFontSize(20);
@@ -63,7 +66,7 @@ export const generatePayslipPDF = async (payslipData: PayslipData): Promise<Blob
       }
     });
     
-    const employeeTableResult = doc.autoTable.previous;
+    const employeeTableResult = doc.previousAutoTable;
     currentY = (employeeTableResult?.finalY || 90) + 10;
     
     // Payment information section
@@ -95,7 +98,7 @@ export const generatePayslipPDF = async (payslipData: PayslipData): Promise<Blob
       }
     });
     
-    const paymentTableResult = doc.autoTable.previous;
+    const paymentTableResult = doc.previousAutoTable;
     currentY = (paymentTableResult?.finalY || currentY + 30) + 10;
     
     // Earnings section
@@ -103,6 +106,12 @@ export const generatePayslipPDF = async (payslipData: PayslipData): Promise<Blob
     doc.text('Earnings', 15, currentY);
     
     doc.setFont('helvetica', 'normal');
+    
+    // Helper function for currency formatting
+    function formatCurrency(amount: number, currency: string): string {
+      if (isNaN(amount)) return `${currency} 0.00`;
+      return `${currency} ${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+    }
     
     doc.autoTable({
       startY: currentY + 5,
@@ -124,7 +133,7 @@ export const generatePayslipPDF = async (payslipData: PayslipData): Promise<Blob
       }
     });
     
-    const earningsTableResult = doc.autoTable.previous;
+    const earningsTableResult = doc.previousAutoTable;
     currentY = (earningsTableResult?.finalY || currentY + 50) + 10;
     
     // Deductions section
@@ -152,7 +161,7 @@ export const generatePayslipPDF = async (payslipData: PayslipData): Promise<Blob
       }
     });
     
-    const deductionsTableResult = doc.autoTable.previous;
+    const deductionsTableResult = doc.previousAutoTable;
     currentY = (deductionsTableResult?.finalY || currentY + 40) + 10;
     
     // Summary section
@@ -188,7 +197,7 @@ export const generatePayslipPDF = async (payslipData: PayslipData): Promise<Blob
     });
     
     // Add footer with pagination
-    const pageCount = doc.getNumberOfPages();
+    const pageCount = doc.internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(8);
@@ -198,12 +207,6 @@ export const generatePayslipPDF = async (payslipData: PayslipData): Promise<Blob
         287,
         { align: 'center' }
       );
-    }
-    
-    // Helper function for currency formatting
-    function formatCurrency(amount: number, currency: string): string {
-      if (isNaN(amount)) return `${currency} 0.00`;
-      return `${currency} ${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
     }
     
     // Generate PDF blob with error handling

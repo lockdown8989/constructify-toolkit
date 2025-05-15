@@ -30,14 +30,15 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
+    
+    // Append to document, click, and remove (more cross-browser compatible)
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
-    
-    // Clean up the object URL
     setTimeout(() => {
+      document.body.removeChild(link);
+      // Clean up the object URL
       URL.revokeObjectURL(url);
-    }, 100);
+    }, 200);
     
     return pdfBlob;
   } catch (error) {

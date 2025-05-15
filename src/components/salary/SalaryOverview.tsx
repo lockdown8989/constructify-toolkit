@@ -7,9 +7,9 @@ import DocumentList from './components/DocumentList';
 import { useAuth } from '@/hooks/use-auth';
 import { useEmployees } from '@/hooks/use-employees';
 import { Skeleton } from '@/components/ui/skeleton';
-import { downloadPayslip } from '@/utils/exports/payslip';
+import { downloadPayslip } from '@/utils/exports/payslip/download-payslip';
 import { useToast } from '@/hooks/use-toast';
-import { PayslipData } from '@/types/supabase/payroll';
+import { PayslipData } from '@/utils/exports/payslip/types';
 
 const SalaryOverview = () => {
   const { user } = useAuth();
@@ -35,11 +35,18 @@ const SalaryOverview = () => {
       const currentDate = new Date();
       const formattedMonth = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
       
-      // Calculate proper tax and net amounts
-      const salary = typeof currentEmployeeData.salary === 'number' ? 
-        currentEmployeeData.salary : 
-        parseFloat(String(currentEmployeeData.salary).replace(/[^\d.]/g, ''));
+      // Ensure salary is a number
+      let salary: number;
+      if (typeof currentEmployeeData.salary === 'number') {
+        salary = currentEmployeeData.salary;
+      } else if (typeof currentEmployeeData.salary === 'string') {
+        // Remove any non-numeric characters except decimal point and convert to number
+        salary = parseFloat(currentEmployeeData.salary.replace(/[^\d.]/g, ''));
+      } else {
+        salary = 0;
+      }
       
+      // Calculate proper tax and net amounts
       const taxAmount = salary * 0.2; // 20% tax rate
       const netAmount = salary - taxAmount;
       
@@ -73,6 +80,7 @@ const SalaryOverview = () => {
       toast({
         title: "Success",
         description: "Payslip PDF has been downloaded",
+        variant: "success",
       });
     } catch (error) {
       console.error("Error downloading PDF:", error);
@@ -133,7 +141,7 @@ const SalaryOverview = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Current Salary</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${currentEmployeeData.salary.toLocaleString()}</div>
+            <div className="text-2xl font-bold">${currentEmployeeData?.salary?.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Next payment: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
             </p>
@@ -145,9 +153,9 @@ const SalaryOverview = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Department</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{currentEmployeeData.department}</div>
+            <div className="text-2xl font-bold">{currentEmployeeData?.department}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Position: {currentEmployeeData.job_title}
+              Position: {currentEmployeeData?.job_title}
             </p>
           </CardContent>
         </Card>
@@ -157,9 +165,9 @@ const SalaryOverview = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Employment Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{currentEmployeeData.status}</div>
+            <div className="text-2xl font-bold">{currentEmployeeData?.status}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Since: {new Date(currentEmployeeData.start_date).toLocaleDateString()}
+              Since: {currentEmployeeData?.start_date ? new Date(currentEmployeeData.start_date).toLocaleDateString() : '-'}
             </p>
           </CardContent>
         </Card>
@@ -167,7 +175,7 @@ const SalaryOverview = () => {
       
       <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Recent Documents</h2>
-        <DocumentList employeeId={currentEmployeeData.id} />
+        {currentEmployeeData && <DocumentList employeeId={currentEmployeeData.id} />}
       </div>
     </div>
   );
