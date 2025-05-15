@@ -7,7 +7,7 @@ import DocumentList from './components/DocumentList';
 import { useAuth } from '@/hooks/use-auth';
 import { useEmployees } from '@/hooks/use-employees';
 import { Skeleton } from '@/components/ui/skeleton';
-import generatePayslipPDF from '@/utils/exports/payslip-generator';
+import { downloadPayslip } from '@/utils/exports/payslip';
 import { useToast } from '@/hooks/use-toast';
 import { PayslipData } from '@/types/supabase/payroll';
 
@@ -32,32 +32,44 @@ const SalaryOverview = () => {
     
     setIsDownloading(true);
     try {
+      const currentDate = new Date();
+      const formattedMonth = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      
+      // Calculate proper tax and net amounts
+      const salary = typeof currentEmployeeData.salary === 'number' ? 
+        currentEmployeeData.salary : 
+        parseFloat(String(currentEmployeeData.salary).replace(/[^\d.]/g, ''));
+      
+      const taxAmount = salary * 0.2; // 20% tax rate
+      const netAmount = salary - taxAmount;
+      
       // Create a PayslipData object with all required fields
       const payslipData: PayslipData = {
         id: currentEmployeeData.id,
         employeeId: currentEmployeeData.id,
         employeeName: currentEmployeeData.name,
-        position: currentEmployeeData.job_title,
-        department: currentEmployeeData.department,
-        period: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-        payPeriod: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        position: currentEmployeeData.job_title || 'Employee',
+        department: currentEmployeeData.department || 'General',
+        period: formattedMonth,
+        payPeriod: formattedMonth,
         paymentDate: new Date().toISOString(),
-        baseSalary: currentEmployeeData.salary,
-        grossPay: currentEmployeeData.salary,
+        baseSalary: salary,
+        grossPay: salary,
         deductions: 0,
-        taxes: currentEmployeeData.salary * 0.2, // 20% tax rate
-        netPay: currentEmployeeData.salary * 0.8, // 80% of salary after taxes
-        currency: 'USD',
+        taxes: taxAmount,
+        netPay: netAmount,
+        currency: 'GBP',
         bankAccount: '****1234',
         title: 'Monthly Payslip',
-        salary: currentEmployeeData.salary,
+        salary: salary,
         overtimePay: 0,
         bonus: 0,
-        totalPay: currentEmployeeData.salary,
-        notes: '' // Adding notes property
+        totalPay: salary,
+        notes: '' 
       };
       
-      await generatePayslipPDF(payslipData);
+      await downloadPayslip(payslipData);
+      
       toast({
         title: "Success",
         description: "Payslip PDF has been downloaded",
