@@ -8,6 +8,7 @@ export interface Employee {
   paymentDate: string;
   department?: string;
   avatar?: string;  // Make sure avatar is optional here as well
+  site?: string;    // Add site property
   selected?: boolean;
   user_id?: string;
 }

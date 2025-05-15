@@ -39,8 +39,13 @@ export const exportPayrollData = async (currency: string = 'GBP') => {
     
     // Format data for CSV export
     const formattedData = data.map(record => {
-      // Safely access the nested employee data
-      const employeeData = record.employees || {};
+      // Safely access the nested employee data with proper type assertions
+      const employeeData = record.employees as {
+        name?: string;
+        job_title?: string;
+        department?: string;
+        site?: string;
+      } || {};
       
       return {
         'Employee Name': employeeData.name || 'Unknown',
