@@ -3,18 +3,19 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Employee } from '@/components/dashboard/salary-table/types';
 import { processEmployeePayroll, savePayrollHistory } from './payroll/use-payroll-processing';
-import { exportPayrollData } from './payroll/use-payroll-export';
+import { exportPayrollData } from './use-payroll-export';
 import { useCurrencyPreference } from '@/hooks/use-currency-preference';
 import { useAuth } from '@/hooks/use-auth';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const usePayroll = (employees: Employee[]) => {
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
   const [isProcessing, setIsProcessing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [processingHistory, setProcessingHistory] = useState<any[]>([]);
   const { toast } = useToast();
   const { currency } = useCurrencyPreference();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const handleSelectEmployee = (id: string) => {
     setSelectedEmployees(prev => {
@@ -93,6 +94,11 @@ export const usePayroll = (employees: Employee[]) => {
           failCount,
           user.id
         );
+        
+        // Invalidate the processing history query to refresh the data
+        queryClient.invalidateQueries({
+          queryKey: ['payroll-processing-history']
+        });
       }
       
       if (successCount > 0) {

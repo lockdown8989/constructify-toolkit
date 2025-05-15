@@ -1,31 +1,29 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-export interface AttendanceData {
-  workingHours: number;
-  overtimeHours: number;
-  totalPay: number;
-}
-
-export const getEmployeeAttendance = async (employeeId: string): Promise<AttendanceData> => {
+// Fetch employee attendance data
+export const getEmployeeAttendance = async (employeeId: string) => {
   try {
-    // Get employee attendance data for the current month
-    const startDate = new Date();
-    startDate.setDate(1); // First day of current month
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
     
+    const now = new Date();
+    
+    // Get attendance records for the current month
     const { data, error } = await supabase
       .from('attendance')
       .select('working_minutes, overtime_minutes')
       .eq('employee_id', employeeId)
-      .gte('date', startDate.toISOString().split('T')[0])
-      .order('date', { ascending: false });
+      .gte('date', startOfMonth.toISOString().split('T')[0])
+      .lte('date', now.toISOString().split('T')[0]);
       
     if (error) throw error;
     
-    // Calculate total working and overtime hours
     let totalWorkingMinutes = 0;
     let totalOvertimeMinutes = 0;
     
+    // Sum up all working and overtime minutes
     if (data && data.length > 0) {
       data.forEach(record => {
         totalWorkingMinutes += record.working_minutes || 0;
@@ -37,92 +35,46 @@ export const getEmployeeAttendance = async (employeeId: string): Promise<Attenda
     const workingHours = parseFloat((totalWorkingMinutes / 60).toFixed(2));
     const overtimeHours = parseFloat((totalOvertimeMinutes / 60).toFixed(2));
     
-    // Default total pay - this will be calculated properly later
-    const totalPay = 0;
-    
-    return {
-      workingHours,
-      overtimeHours,
-      totalPay
-    };
+    return { workingHours, overtimeHours };
   } catch (error) {
-    console.error('Error fetching employee attendance:', error);
-    // Return default values if there's an error
-    return {
-      workingHours: 0,
-      overtimeHours: 0,
-      totalPay: 0
-    };
+    console.error('Error getting employee attendance:', error);
+    return { workingHours: 0, overtimeHours: 0 };
   }
 };
 
-export const calculateSalaryWithGPT = async (
-  employeeId: string,
-  baseSalary: number,
-  currency: string
-): Promise<number> => {
+// Call the GPT salary calculation function or simulate it
+export const calculateSalaryWithGPT = async (employeeId: string, baseSalary: number, currency: string) => {
   try {
-    // Get employee's attendance data
-    const attendance = await getEmployeeAttendance(employeeId);
+    // For real implementation, this would call a Supabase Edge Function with GPT
+    // For now, we'll simulate a calculation based on the base salary
+
+    // Get the attendance data
+    const { workingHours, overtimeHours } = await getEmployeeAttendance(employeeId);
     
-    // Call the Supabase Edge Function that uses OpenAI API
-    const { data: response, error } = await supabase.functions.invoke('calculate-salary', {
-      body: {
-        employeeId,
-        baseSalary,
-        currency,
-        workingHours: attendance.workingHours,
-        overtimeHours: attendance.overtimeHours
-      }
-    });
+    // Let's assume a standard month is 160 working hours
+    const standardHours = 160;
+    const hourlyRate = baseSalary / standardHours;
     
-    if (error) {
-      console.error('Error calling calculate-salary function:', error);
-      throw new Error(`Failed to calculate salary: ${error.message}`);
-    }
-    
-    if (!response || !response.finalSalary) {
-      console.error('Invalid response from calculate-salary function:', response);
-      throw new Error('Failed to get a valid salary calculation');
-    }
-    
-    console.log(`Calculated salary for employee ${employeeId}: ${response.finalSalary} ${currency}`);
-    
-    return response.finalSalary;
-    
-  } catch (error) {
-    console.error('Error calculating salary with GPT:', error);
-    
-    // Fallback to basic calculation if API call fails
-    const attendance = await getEmployeeAttendance(employeeId);
-    
-    // Calculate standard working hours per month (assuming 40 hour work week, 4 weeks)
-    const standardMonthlyHours = 160;
-    
-    // Calculate hourly rate
-    const hourlyRate = baseSalary / standardMonthlyHours;
-    
-    // Calculate regular pay
-    const regularPay = hourlyRate * (attendance.workingHours || standardMonthlyHours);
+    // Calculate base pay based on actual hours worked
+    const actualWorkPay = Math.min(workingHours, standardHours) * hourlyRate;
     
     // Calculate overtime pay (1.5x regular rate)
-    const overtimePay = hourlyRate * 1.5 * (attendance.overtimeHours || 0);
+    const overtimePay = overtimeHours * (hourlyRate * 1.5);
     
-    // Calculate total salary (before deductions)
-    const totalSalary = regularPay + overtimePay;
+    // Apply deductions (tax, insurance, etc.)
+    const deductionRate = 0.3; // 30% total deductions
+    const deductions = baseSalary * deductionRate;
     
-    // Calculate estimated tax and insurance (simplified)
-    const taxRate = 0.2; // 20% tax
-    const insuranceRate = 0.05; // 5% insurance
-    const otherRate = 0.08; // 8% other deductions
+    // Calculate final salary
+    let finalSalary = Math.max(0, actualWorkPay + overtimePay - deductions);
+
+    // Round to 2 decimal places
+    finalSalary = Math.round(finalSalary * 100) / 100;
     
-    const taxDeduction = totalSalary * taxRate;
-    const insuranceDeduction = totalSalary * insuranceRate;
-    const otherDeduction = totalSalary * otherRate;
-    
-    // Calculate final salary after deductions
-    const finalSalary = totalSalary - (taxDeduction + insuranceDeduction + otherDeduction);
-    
-    return parseFloat(finalSalary.toFixed(2));
+    return finalSalary;
+  } catch (error) {
+    console.error('Error calculating salary with GPT:', error);
+    // Return a default fallback calculation
+    return baseSalary * 0.7; // Simple 30% deduction as fallback
   }
 };

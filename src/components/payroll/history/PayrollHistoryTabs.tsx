@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import SalaryTable from '@/components/dashboard/salary-table';
 import { Employee } from '@/components/dashboard/salary-table/types';
 import { PayrollProcessingHistory } from './PayrollProcessingHistory';
+import { PaymentHistory } from './PaymentHistory';
+import { PreviousMonthPayslips } from './PreviousMonthPayslips';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { FileText, History, CalendarDays, ClipboardList } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 
 interface PayrollHistoryTabsProps {
   currentMonthEmployees: Employee[];
@@ -34,11 +35,11 @@ export const PayrollHistoryTabs: React.FC<PayrollHistoryTabsProps> = ({
           <span className={isMobile ? "hidden" : ""}>Previous Month</span>
         </TabsTrigger>
         <TabsTrigger value="history" className="flex items-center gap-2 py-3 data-[state=active]:bg-white">
-          <History size={16} />
+          <FileText size={16} />
           <span className={isMobile ? "hidden" : ""}>Payment History</span>
         </TabsTrigger>
         <TabsTrigger value="processing" className="flex items-center gap-2 py-3 data-[state=active]:bg-white">
-          <ClipboardList size={16} />
+          <History size={16} />
           <span className={isMobile ? "hidden" : ""}>Processing Log</span>
         </TabsTrigger>
       </TabsList>
@@ -53,29 +54,11 @@ export const PayrollHistoryTabs: React.FC<PayrollHistoryTabsProps> = ({
       </TabsContent>
       
       <TabsContent value="previous">
-        <Card className="border rounded-xl shadow-sm">
-          <CardContent className="flex flex-col items-center justify-center py-12 px-4">
-            <History className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-medium mb-2">Previous Month's Payslips</h3>
-            <p className="text-muted-foreground text-center mb-6">Payslip data for previous month is archived.</p>
-            <Button variant="outline">
-              View Archive
-            </Button>
-          </CardContent>
-        </Card>
+        <PreviousMonthPayslips />
       </TabsContent>
       
       <TabsContent value="history">
-        <Card className="border rounded-xl shadow-sm">
-          <CardContent className="flex flex-col items-center justify-center py-12 px-4">
-            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-medium mb-2">Payment History</h3>
-            <p className="text-muted-foreground text-center mb-6">View detailed payslip history and generate reports.</p>
-            <Button variant="outline">
-              Generate Report
-            </Button>
-          </CardContent>
-        </Card>
+        <PaymentHistory />
       </TabsContent>
       
       <TabsContent value="processing">
