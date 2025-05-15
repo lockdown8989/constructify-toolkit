@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,6 +9,8 @@ import { StatusActions } from '@/components/dashboard/salary-table/StatusActions
 import { StatusFilter } from '@/components/dashboard/salary-table/StatusFilter';
 import { Employee, PayslipData } from '@/types/supabase/payroll';
 import { formatCurrency } from '@/utils/format';
+import { downloadPayslip } from '@/utils/exports/payslip-generator';
+import { useToast } from '@/hooks/use-toast';
 
 interface SalaryTableProps {
   data: Employee[];
@@ -19,6 +20,7 @@ interface SalaryTableProps {
 export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const { toast } = useToast();
 
   // Filter data based on search and status
   const filteredData = data.filter(item => {
@@ -37,41 +39,49 @@ export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
   };
 
   const handlePayslipDownload = async (employee: Employee) => {
-    const payslipData: PayslipData = {
-      id: employee.id,
-      employeeId: employee.id,
-      employeeName: employee.name,
-      position: employee.title || employee.job_title || 'Employee',
-      department: employee.department || 'N/A',
-      payPeriod: `${new Date().toLocaleString('default', { month: 'long' })} ${new Date().getFullYear()}`,
-      period: `${new Date().toLocaleString('default', { month: 'long' })} ${new Date().getFullYear()}`,
-      paymentDate: employee.paymentDate || new Date().toISOString(),
-      baseSalary: typeof employee.salary === 'number' ? employee.salary : 
-                 typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
-      grossPay: typeof employee.salary === 'number' ? employee.salary : 
-               typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
-      taxes: typeof employee.salary === 'number' ? employee.salary * 0.2 : 
-            typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) * 0.2 : 0,
-      deductions: 0,
-      netPay: typeof employee.salary === 'number' ? employee.salary * 0.8 : 
-             typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) * 0.8 : 0,
-      currency: 'GBP',
-      bankAccount: '****1234',
-      title: 'Monthly Payslip',
-      salary: employee.salary,
-      overtimePay: 0,
-      bonus: 0,
-      totalPay: typeof employee.salary === 'number' ? employee.salary : 
-                typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
-      notes: ''
-    };
-    
     try {
-      // Import dynamically to avoid TS2305 error
-      const { downloadPayslip } = await import('@/utils/exports/payslip-generator');
+      const payslipData: PayslipData = {
+        id: employee.id,
+        employeeId: employee.id,
+        employeeName: employee.name,
+        position: employee.title || employee.job_title || 'Employee',
+        department: employee.department || 'N/A',
+        payPeriod: `${new Date().toLocaleString('default', { month: 'long' })} ${new Date().getFullYear()}`,
+        period: `${new Date().toLocaleString('default', { month: 'long' })} ${new Date().getFullYear()}`,
+        paymentDate: employee.paymentDate || new Date().toISOString(),
+        baseSalary: typeof employee.salary === 'number' ? employee.salary : 
+                   typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
+        grossPay: typeof employee.salary === 'number' ? employee.salary : 
+                 typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
+        taxes: typeof employee.salary === 'number' ? employee.salary * 0.2 : 
+              typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) * 0.2 : 0,
+        deductions: 0,
+        netPay: typeof employee.salary === 'number' ? employee.salary * 0.8 : 
+               typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) * 0.8 : 0,
+        currency: 'GBP',
+        bankAccount: '****1234',
+        title: 'Monthly Payslip',
+        salary: employee.salary,
+        overtimePay: 0,
+        bonus: 0,
+        totalPay: typeof employee.salary === 'number' ? employee.salary : 
+                  typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
+        notes: ''
+      };
+      
       await downloadPayslip(payslipData);
+      
+      toast({
+        title: "Success",
+        description: `Payslip for ${employee.name} has been generated.`
+      });
     } catch (error) {
       console.error('Error downloading payslip:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download payslip. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -143,7 +153,12 @@ export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
                       }}
                       isProcessing={false}
                       onDownload={handlePayslipDownload}
-                      onAttach={async () => {}}
+                      onAttach={async () => {
+                        toast({
+                          title: "Info",
+                          description: "Attach to resume feature is not implemented yet."
+                        });
+                      }}
                     />
                     {onStatusChange && (
                       <StatusActions
