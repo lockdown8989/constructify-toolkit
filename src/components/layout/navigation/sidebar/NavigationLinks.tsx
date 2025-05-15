@@ -23,6 +23,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
   currentPath
 }) => {
   const isActive = (path: string) => currentPath === path;
+  const isEmployee = isAuthenticated && !hasManagerialAccess;
 
   return (
     <ScrollArea className="h-full">
@@ -66,7 +67,6 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
                   isCollapsed={isCollapsed}
                 />
 
-                {/* New Manager Time Clock Link */}
                 <SidebarNavLink
                   to="/manager-time-clock"
                   icon={Timer}
@@ -81,10 +81,21 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
             <SidebarNavLink
               to="/employee-workflow"
               icon={Clock}
-              label={hasManagerialAccess ? "Employee Shifts" : "My Schedule"}
+              label={hasManagerialAccess ? "Employee Shifts" : "Overview"}
               isActive={isActive("/employee-workflow")}
               isCollapsed={isCollapsed}
             />
+            
+            {/* Calendar link - only for employees */}
+            {isEmployee && (
+              <SidebarNavLink
+                to="/employee-calendar"
+                icon={Calendar}
+                label="My Calendar"
+                isActive={isActive("/employee-calendar")}
+                isCollapsed={isCollapsed}
+              />
+            )}
             
             {hasManagerialAccess && (
               <>
