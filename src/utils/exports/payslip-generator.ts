@@ -1,126 +1,112 @@
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { format } from 'date-fns';
 import { PayslipData } from '@/types/supabase/payroll';
-import { formatCurrency } from '@/utils/format';
 
-// Extend jsPDF with autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: typeof autoTable;
-    lastAutoTable?: {
-      finalY: number;
-    };
-  }
-}
-
-export const generatePayslipPDF = async (payslipData: PayslipData): Promise<string> => {
-  const { 
-    employeeName, 
-    position, 
-    department, 
-    period, 
-    baseSalary, 
-    overtimePay, 
-    bonus, 
-    deductions,
-    totalPay,
-    currency
-  } = payslipData;
-
-  // Create a new PDF document
-  const doc = new jsPDF();
-  const textColor = '#333333';
-  const headerColor = '#4a86e8';
-
-  // Add company header
-  doc.setFontSize(22);
-  doc.setTextColor(headerColor);
-  doc.text('COMPANY NAME', 105, 20, { align: 'center' });
-  doc.setFontSize(14);
-  doc.text('PAYSLIP', 105, 30, { align: 'center' });
-
-  // Add payslip period
-  doc.setFontSize(12);
-  doc.setTextColor(textColor);
-  doc.text(`Pay Period: ${period}`, 105, 40, { align: 'center' });
-
-  // Add employee details
-  doc.setFontSize(12);
-  doc.text('Employee Details', 14, 55);
-
-  // Add employee information table
-  doc.autoTable({
-    startY: 60,
-    head: [['Name', 'Position', 'Department']],
-    body: [[employeeName, position, department]],
-    theme: 'grid',
-    styles: {
-      fontSize: 10,
-      textColor: textColor,
-      lineColor: '#cccccc',
-      lineWidth: 0.1,
-    },
-    headStyles: {
-      fillColor: [240, 240, 240],
-      textColor: [50, 50, 50],
-      fontStyle: 'bold',
-    },
-  });
-
-  // Add earnings table
-  doc.setFontSize(12);
-  doc.text('Earnings & Deductions', 14, doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 15 : 100);
-
-  doc.autoTable({
-    startY: doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 20 : 105,
-    head: [['Description', 'Amount']],
-    body: [
-      ['Base Salary', formatCurrency(baseSalary, currency)],
-      ['Overtime Pay', formatCurrency(overtimePay, currency)],
-      ['Bonus', formatCurrency(bonus, currency)],
-      ['Deductions', `- ${formatCurrency(deductions, currency)}`],
-      ['Total Pay', formatCurrency(totalPay, currency)],
-    ],
-    theme: 'grid',
-    styles: {
-      fontSize: 10,
-      textColor: textColor,
-      lineColor: '#cccccc',
-      lineWidth: 0.1,
-    },
-    headStyles: {
-      fillColor: [240, 240, 240],
-      textColor: [50, 50, 50],
-      fontStyle: 'bold',
-    },
-    columnStyles: {
-      1: { halign: 'right' },
-    },
-  });
-
-  // Add footer with signature
-  const finalY = doc.lastAutoTable?.finalY || 150;
-  doc.text('Authorized Signature: _________________________', 14, finalY + 30);
-  doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, finalY + 40);
-
-  // Add confidentiality notice
-  doc.setFontSize(8);
-  doc.setTextColor('#666666');
-  doc.text('This document is confidential and intended for the named employee only.', 105, 280, { align: 'center' });
-
-  // Convert the PDF to a blob and return the URL
-  const pdfBlob = doc.output('blob');
-  return URL.createObjectURL(pdfBlob);
+const formatCurrency = (value: number, currency: string = 'USD'): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+  }).format(value);
 };
 
-export const downloadPayslipPDF = (payslipData: PayslipData) => {
-  generatePayslipPDF(payslipData).then((url) => {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Payslip_${payslipData.employeeName.replace(/\s+/g, '_')}_${payslipData.period}.pdf`;
-    link.click();
-  }).catch(error => {
-    console.error('Error generating payslip PDF:', error);
+// Create PDF payslip and return as blob
+export const generatePayslipPDF = (data: PayslipData): Blob => {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  // Add company header
+  doc.setFillColor(41, 128, 185);
+  doc.rect(0, 0, pageWidth, 40, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(24);
+  doc.text('TeamPulse', 15, 20);
+  doc.setFontSize(12);
+  doc.text('Employee Payslip', 15, 30);
+
+  // Employee details
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(14);
+  doc.text('Employee Details', 15, 50);
+  
+  doc.setFontSize(10);
+  const employeeDetails = [
+    ['Employee Name:', data.employeeName],
+    ['Position:', data.position],
+    ['Department:', data.department],
+    ['Pay Period:', data.period],
+    ['Payment Date:', new Date(data.paymentDate).toLocaleDateString()]
+  ];
+  
+  autoTable(doc, {
+    startY: 55,
+    head: [],
+    body: employeeDetails,
+    theme: 'plain',
+    styles: {
+      cellPadding: 2,
+      fontSize: 10
+    },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 50 },
+      1: { cellWidth: 100 }
+    }
   });
+  
+  // Payment details
+  doc.setFontSize(14);
+  doc.text('Payment Details', 15, 105);
+  
+  const paymentDetails = [
+    ['Base Salary:', formatCurrency(data.baseSalary, data.currency)],
+    ['Gross Pay:', formatCurrency(data.grossPay, data.currency)],
+    ['Deductions:', formatCurrency(data.deductions, data.currency)],
+    ['Net Pay:', formatCurrency(data.netPay, data.currency)]
+  ];
+  
+  autoTable(doc, {
+    startY: 110,
+    head: [],
+    body: paymentDetails,
+    theme: 'plain',
+    styles: {
+      cellPadding: 2,
+      fontSize: 10
+    },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 50 },
+      1: { cellWidth: 100 }
+    }
+  });
+  
+  // Additional notes
+  if (data.notes) {
+    doc.setFontSize(14);
+    doc.text('Notes', 15, 160);
+    doc.setFontSize(10);
+    doc.text(data.notes, 15, 170);
+  }
+  
+  // Footer
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Generated on ${format(new Date(), 'dd MMM yyyy, HH:mm')}`, 15, 280);
+  
+  return doc.output('blob');
+};
+
+// Download payslip as PDF
+export const downloadPayslip = (data: PayslipData): void => {
+  const blob = generatePayslipPDF(data);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const fileName = `Payslip_${data.employeeName.replace(/\s+/g, '_')}_${data.period.replace(/\s+/g, '_')}.pdf`;
+  
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  
+  // Clean up
+  URL.revokeObjectURL(url);
 };

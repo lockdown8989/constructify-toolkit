@@ -7,36 +7,54 @@ export interface PayrollRecord {
   overtime_hours: number | null;
   base_pay: number | null;
   overtime_pay: number | null;
-  salary_paid: number | null;
   deductions: number | null;
-  bonus: number | null;
   payment_status: string | null;
+  bonus: number | null;
   document_url: string | null;
   document_name: string | null;
-  employee_name?: string;
-  pay_period?: string;
+  salary_paid: number | null;
 }
 
 export interface PayslipData {
   id: string;
-  employeeName: string;
   employeeId: string;
+  employeeName: string;
   position: string;
   department: string;
   period: string;
+  paymentDate: string;
   baseSalary: number;
-  overtimePay: number;
-  bonus: number;
+  grossPay: number;
   deductions: number;
-  totalPay: number;
+  netPay: number;
   currency: string;
-  name?: string; // Added to support existing references
-  payPeriod?: string; // Added to support existing references
-  salary?: string; // Added to support existing references
-  grossPay?: string; // Added to support existing references
-  netPay?: string; // Added to support existing references
-  taxes?: string; // Added to support existing references
-  paymentDate?: string; // Added to support existing references
-  bankAccount?: string; // Added to support existing references
-  title?: string; // Added to support existing references
+  bankAccount?: string;
+  notes?: string;
+  title?: string;
+  salary?: string | number;
+}
+
+// For backward compatibility
+export interface Employee {
+  id: string;
+  name: string;
+  job_title?: string;
+  title?: string; 
+  salary?: string | number;
+  status?: "Paid" | "Pending" | "Absent";
+  paymentDate?: string;
+  department?: string;
+  site?: string;
+  avatar?: string;
+  selected?: boolean;
+}
+
+export interface PayrollHistoryRecord {
+  id: string;
+  month: string;
+  total_paid: number;
+  employees_paid: number;
+  created_at: string;
+  status: string;
+  processed_by: string;
 }

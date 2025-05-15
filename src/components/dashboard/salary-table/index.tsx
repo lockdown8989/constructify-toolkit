@@ -1,110 +1,98 @@
 
 import React, { useState } from 'react';
-import { Employee } from './types';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
-import TableRow from './TableRow';
-import SearchBar from './SearchBar';
-import PayslipActions from './PayslipActions';
-import StatusActions from './StatusActions';
-import StatusFilter from './StatusFilter';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { downloadPayslip } from '@/utils/exports/payslip-generator';
+import { TableRow as SalaryTableRow } from '@/components/dashboard/salary-table/TableRow';
+import { SearchBar } from '@/components/dashboard/salary-table/SearchBar';
+import { PayslipActions } from '@/components/dashboard/salary-table/PayslipActions';
+import { StatusActions } from '@/components/dashboard/salary-table/StatusActions';
+import { StatusFilter } from '@/components/dashboard/salary-table/StatusFilter';
+import type { Employee, PayslipData } from '@/types/supabase/payroll';
 
 interface SalaryTableProps {
-  employees: Employee[];
-  onSelectEmployee?: (id: string) => void;
+  data: Employee[];
+  onStatusChange?: (id: string, status: "Paid" | "Pending" | "Absent") => void;
 }
 
-const SalaryTable: React.FC<SalaryTableProps> = ({ employees, onSelectEmployee }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const isMobile = useIsMobile();
-  
-  // Filter employees based on search term and status filter
-  const filteredEmployees = employees.filter(employee => {
-    // Filter by search term
-    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          employee.title.toLowerCase().includes(searchTerm.toLowerCase());
+export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  // Filter data based on search and status
+  const filteredData = data.filter(item => {
+    const matchesSearch = !searchTerm || 
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (item.department && item.department.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    // Filter by status
-    const matchesStatus = statusFilter === 'all' || employee.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
-  
-  // Function to handle payslip download
-  const handleGeneratePayslip = async (employee: Employee) => {
-    const payslipData = {
-      name: employee.name,
-      title: employee.title,
-      department: employee.department,
-      salary: employee.salary,
-      paymentDate: new Date().toLocaleDateString()
+
+  // Handle search
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+  };
+
+  const handlePayslipDownload = (employee: Employee) => {
+    const payslipData: PayslipData = {
+      id: employee.id,
+      employeeId: employee.id,
+      employeeName: employee.name,
+      position: employee.title || employee.job_title || 'Employee',
+      department: employee.department || 'N/A',
+      period: `${new Date().toLocaleString('default', { month: 'long' })} ${new Date().getFullYear()}`,
+      paymentDate: employee.paymentDate || new Date().toISOString(),
+      baseSalary: typeof employee.salary === 'number' ? employee.salary : 0,
+      grossPay: typeof employee.salary === 'number' ? employee.salary : 0,
+      deductions: 0,
+      netPay: typeof employee.salary === 'number' ? employee.salary : 0,
+      currency: 'USD'
     };
     
-    const pdfBlob = await generatePayslipPDF(payslipData);
-    
-    // Create object URL for downloading
-    const url = URL.createObjectURL(pdfBlob);
-    
-    // Create download link and click it
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${employee.name.replace(/\s/g, '_')}_payslip.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    
-    // Clean up
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 100);
+    downloadPayslip(payslipData);
   };
 
   return (
-    <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-      {/* Table header with search and filters */}
-      <div className="p-4 border-b">
-        <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
-          <SearchBar value={searchTerm} onChange={setSearchTerm} />
-          <StatusFilter value={statusFilter} onChange={setStatusFilter} />
-        </div>
+    <div className="w-full">
+      <div className="flex justify-between mb-4 flex-col sm:flex-row gap-3">
+        <SearchBar onSearch={handleSearch} />
+        <StatusFilter onFilterChange={setStatusFilter} activeFilter={statusFilter} />
       </div>
       
-      {/* Table body */}
-      <div className={`${filteredEmployees.length === 0 ? 'border-b' : ''}`}>
-        {filteredEmployees.length === 0 ? (
-          <div className="py-8 text-center text-gray-500">
-            No employees found matching your criteria
-          </div>
-        ) : (
-          <div>
-            {filteredEmployees.map((employee, index) => (
-              <TableRow 
-                key={employee.id} 
+      <div className="rounded-md border bg-white">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[250px]">Employee</TableHead>
+              <TableHead>Salary</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Payment Date</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredData.map((employee) => (
+              <SalaryTableRow
+                key={employee.id}
                 employee={employee}
-                isLast={index === filteredEmployees.length - 1}
-                isSelected={employee.selected || false}
-                onSelect={() => onSelectEmployee && onSelectEmployee(employee.id)}
+                onDownload={() => handlePayslipDownload(employee)}
+                onStatusChange={onStatusChange}
               />
             ))}
-          </div>
-        )}
+            
+            {filteredData.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center">
+                  No results found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
-      
-      {/* Table footer with status and payslip actions */}
-      {!isMobile && (
-        <div className="p-4 border-t">
-          <div className="flex justify-between">
-            <StatusActions />
-            <PayslipActions onGeneratePayslip={() => {
-              const selectedEmployee = employees.find(e => e.selected);
-              if (selectedEmployee) {
-                handleGeneratePayslip(selectedEmployee);
-              }
-            }} />
-          </div>
-        </div>
-      )}
     </div>
   );
-};
-
-export default SalaryTable;
+}

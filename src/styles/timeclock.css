@@ -92,7 +92,7 @@
   }
 }
 
-/* Tablet optimizations - new styles */
+/* Tablet optimizations - enhanced for iPads and Android tablets */
 @media (min-width: 768px) and (max-width: 1366px) {
   .employee-list-item {
     padding: 1rem;
@@ -122,6 +122,38 @@
   @media (min-width: 1024px) {
     .digital-clock {
       font-size: 12rem;
+    }
+  }
+}
+
+/* Mobile optimizations for iPhone and Android phones */
+@media (max-width: 767px) {
+  .digital-clock {
+    font-size: 5rem;
+  }
+  
+  .employee-list-item {
+    padding: 0.5rem;
+  }
+  
+  .time-clock-button-in,
+  .time-clock-button-out {
+    font-size: 1.5rem !important;
+    padding: 1rem !important;
+  }
+  
+  /* Specific iPhone adjustments */
+  @media screen and (max-width: 428px) {
+    /* For iPhone 13 Pro Max and smaller */
+    .digital-clock {
+      font-size: 4rem;
+    }
+  }
+  
+  /* Small Android phones */
+  @media screen and (max-width: 360px) {
+    .digital-clock {
+      font-size: 3.5rem;
     }
   }
 }
@@ -174,12 +206,6 @@
   text-align: center;
 }
 
-@media (max-width: 768px) {
-  .digital-clock {
-    font-size: 5rem;
-  }
-}
-
 /* Touch-friendly improvements */
 .touch-friendly {
   min-height: 48px;
@@ -190,4 +216,44 @@
   .tap-highlight {
     -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
   }
+}
+
+/* Pin code entry animation */
+@keyframes pulse-border {
+  0% { border-color: rgba(16, 185, 129, 0.4); }
+  50% { border-color: rgba(16, 185, 129, 0.8); }
+  100% { border-color: rgba(16, 185, 129, 0.4); }
+}
+
+.pin-entry-field {
+  animation: pulse-border 2s infinite;
+}
+
+/* Confirmation screens */
+.confirmation-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.success-icon {
+  color: rgb(16, 185, 129);
+  width: 5rem;
+  height: 5rem;
+  margin-bottom: 1rem;
+}
+
+.error-icon {
+  color: rgb(220, 38, 38);
+  width: 5rem;
+  height: 5rem;
+  margin-bottom: 1rem;
+}
+
+/* Safe area insets for notched devices */
+.timeclock-safe-area {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
