@@ -39,18 +39,28 @@ export const generatePayslip = async (employeeId: string): Promise<string | null
     
     // Create payslip data
     const payslipData: PayslipData = {
+      id: payrollRecord.id,
+      employeeName: employee.name,
       employeeId: employee.id,
-      name: employee.name,
-      department: employee.department,
       position: employee.job_title,
+      department: employee.department,
+      period: payrollRecord.pay_period || new Date().toISOString().split('T')[0],
+      baseSalary: parseInt(employee.salary?.toString().replace(/\$|,/g, '') || '0', 10),
+      overtimePay: payrollRecord.overtime_pay || 0,
+      bonus: payrollRecord.bonus || 0,
+      deductions: payrollRecord.deductions || 0,
+      totalPay: payrollRecord.salary_paid || 0,
+      currency: '$',
+      // Add compatible fields for backward compatibility
+      name: employee.name,
       payPeriod: payrollRecord.pay_period,
-      grossPay: payrollRecord.gross_pay.toString(),
-      taxes: payrollRecord.taxes.toString(),
-      netPay: payrollRecord.net_pay.toString(),
+      grossPay: payrollRecord.base_pay?.toString(),
+      netPay: payrollRecord.salary_paid?.toString(),
+      taxes: (payrollRecord.deductions || 0).toString(),
       paymentDate: new Date().toISOString().split('T')[0],
+      salary: employee.salary?.toString(),
       bankAccount: '****1234', // Masked for privacy
-      title: 'Monthly Payslip',
-      salary: employee.salary.toString()
+      title: 'Monthly Payslip'
     };
     
     // Generate PDF

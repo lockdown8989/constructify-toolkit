@@ -14,6 +14,7 @@ export interface PayrollRecord {
   document_url: string | null;
   document_name: string | null;
   employee_name?: string;
+  pay_period?: string;
 }
 
 export interface PayslipData {
@@ -29,4 +30,13 @@ export interface PayslipData {
   deductions: number;
   totalPay: number;
   currency: string;
+  name?: string; // Added to support existing references
+  payPeriod?: string; // Added to support existing references
+  salary?: string; // Added to support existing references
+  grossPay?: string; // Added to support existing references
+  netPay?: string; // Added to support existing references
+  taxes?: string; // Added to support existing references
+  paymentDate?: string; // Added to support existing references
+  bankAccount?: string; // Added to support existing references
+  title?: string; // Added to support existing references
 }

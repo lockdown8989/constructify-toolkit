@@ -7,17 +7,33 @@ import { useEmployees } from '@/hooks/use-employees';
 import { SalaryTable } from '@/components/salary/table/SalaryTable';
 import { PayrollStatsGrid } from '../stats/PayrollStatsGrid';
 
-const PayrollHistoryTabs: React.FC = () => {
+interface PayrollHistoryTabsProps {
+  currentMonthEmployees?: any[];
+  onSelectEmployee?: (id: string) => void;
+  onUpdateStatus?: (id: string, status: "Paid" | "Absent" | "Pending") => void;
+}
+
+const PayrollHistoryTabs: React.FC<PayrollHistoryTabsProps> = ({
+  currentMonthEmployees,
+  onSelectEmployee,
+  onUpdateStatus
+}) => {
   const { data: employees, isLoading, error } = useEmployees();
   const [selectedEmployeeId, setSelectedEmployeeId] = React.useState<string | null>(null);
 
   const handleSelectEmployee = (id: string) => {
     setSelectedEmployeeId(id);
+    if (onSelectEmployee) {
+      onSelectEmployee(id);
+    }
   };
 
   const handleUpdateStatus = (id: string, status: "Paid" | "Absent" | "Pending") => {
     // This would be implemented with a mutation to update payroll status
     console.log(`Update employee ${id} status to ${status}`);
+    if (onUpdateStatus) {
+      onUpdateStatus(id, status);
+    }
   };
 
   if (isLoading) {
@@ -34,6 +50,16 @@ const PayrollHistoryTabs: React.FC = () => {
     );
   }
 
+  // Calculate the stats for display
+  const displayEmployees = currentMonthEmployees || employees;
+  const totalPayroll = displayEmployees.reduce((sum, emp) => {
+    const salary = parseInt(emp.salary?.toString().replace(/\$|,/g, '') || '0', 10);
+    return sum + (emp.status !== 'Absent' ? salary : 0);
+  }, 0);
+  const paidEmployees = displayEmployees.filter(e => e.status === 'Paid').length;
+  const pendingEmployees = displayEmployees.filter(e => e.status === 'Pending').length;
+  const absentEmployees = displayEmployees.filter(e => e.status === 'Absent').length;
+
   return (
     <Card className="p-4">
       <Tabs defaultValue="payslips">
@@ -43,14 +69,21 @@ const PayrollHistoryTabs: React.FC = () => {
         </TabsList>
         <TabsContent value="payslips">
           <SalaryTable 
-            employees={employees} 
+            employees={displayEmployees} 
             onSelectEmployee={handleSelectEmployee} 
             onUpdateStatus={handleUpdateStatus} 
             className="mt-4"
           />
         </TabsContent>
         <TabsContent value="statistics">
-          <PayrollStatsGrid employees={employees} className="mt-4" />
+          <PayrollStatsGrid 
+            totalPayroll={totalPayroll}
+            totalEmployees={displayEmployees.length}
+            paidEmployees={paidEmployees}
+            pendingEmployees={pendingEmployees}
+            absentEmployees={absentEmployees}
+            className="mt-4"
+          />
         </TabsContent>
       </Tabs>
     </Card>

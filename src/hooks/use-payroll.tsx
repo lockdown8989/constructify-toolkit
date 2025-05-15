@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { usePayrollProcessing } from './payroll/use-payroll-processing';
 import { Employee } from '@/types/employee';
 import { PayrollRecord } from '@/types/supabase/payroll';
+import { useState } from 'react';
 
 export const usePayroll = () => {
   const { toast } = useToast();

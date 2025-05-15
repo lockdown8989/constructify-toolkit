@@ -1,103 +1,126 @@
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { format } from 'date-fns';
 import { PayslipData } from '@/types/supabase/payroll';
+import { formatCurrency } from '@/utils/format';
 
-export const generatePayslipPDF = (employeeId: string, payslipData: PayslipData): Blob => {
+// Extend jsPDF with autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: typeof autoTable;
+    lastAutoTable?: {
+      finalY: number;
+    };
+  }
+}
+
+export const generatePayslipPDF = async (payslipData: PayslipData): Promise<string> => {
+  const { 
+    employeeName, 
+    position, 
+    department, 
+    period, 
+    baseSalary, 
+    overtimePay, 
+    bonus, 
+    deductions,
+    totalPay,
+    currency
+  } = payslipData;
+
   // Create a new PDF document
   const doc = new jsPDF();
-  
-  // Add company logo/header
-  doc.setFillColor(44, 62, 80); // Dark blue header
-  doc.rect(0, 0, 210, 40, 'F');
-  
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
-  doc.text('TeamPulse', 105, 20, { align: 'center' });
-  
-  doc.setFontSize(16);
-  doc.text('Employee Payslip', 105, 30, { align: 'center' });
-  
-  // Employee information
-  doc.setTextColor(0, 0, 0);
+  const textColor = '#333333';
+  const headerColor = '#4a86e8';
+
+  // Add company header
+  doc.setFontSize(22);
+  doc.setTextColor(headerColor);
+  doc.text('COMPANY NAME', 105, 20, { align: 'center' });
+  doc.setFontSize(14);
+  doc.text('PAYSLIP', 105, 30, { align: 'center' });
+
+  // Add payslip period
   doc.setFontSize(12);
-  doc.text(`Employee: ${payslipData.employeeName}`, 20, 50);
-  doc.text(`Position: ${payslipData.position}`, 20, 60);
-  doc.text(`Department: ${payslipData.department}`, 20, 70);
-  doc.text(`Employee ID: ${payslipData.employeeId}`, 20, 80);
-  
-  // Period and reference
-  doc.text(`Pay Period: ${payslipData.period}`, 120, 50);
-  doc.text(`Reference ID: ${payslipData.id.substring(0, 8)}`, 120, 60);
-  doc.text(`Date Generated: ${format(new Date(), 'yyyy-MM-dd')}`, 120, 70);
-  
-  // Earnings table
-  autoTable(doc, {
-    head: [['Earnings', 'Amount']],
-    body: [
-      ['Base Salary', `${payslipData.currency} ${payslipData.baseSalary.toFixed(2)}`],
-      ['Overtime Pay', `${payslipData.currency} ${payslipData.overtimePay.toFixed(2)}`],
-      ['Bonus', `${payslipData.currency} ${payslipData.bonus.toFixed(2)}`]
-    ],
-    startY: 90,
-    theme: 'striped',
-    headStyles: { fillColor: [44, 62, 80], textColor: 255 },
-    styles: { fontSize: 10 }
-  });
-  
-  // Deductions table
-  autoTable(doc, {
-    head: [['Deductions', 'Amount']],
-    body: [
-      ['Tax', `${payslipData.currency} ${(payslipData.deductions * 0.7).toFixed(2)}`],
-      ['Insurance', `${payslipData.currency} ${(payslipData.deductions * 0.2).toFixed(2)}`],
-      ['Other Deductions', `${payslipData.currency} ${(payslipData.deductions * 0.1).toFixed(2)}`],
-      ['Total Deductions', `${payslipData.currency} ${payslipData.deductions.toFixed(2)}`]
-    ],
-    startY: doc.lastAutoTable.finalY + 10,
-    theme: 'striped',
-    headStyles: { fillColor: [44, 62, 80], textColor: 255 },
-    styles: { fontSize: 10 }
-  });
-  
-  // Total pay
-  const totalY = doc.lastAutoTable.finalY + 20;
-  doc.setFillColor(44, 62, 80);
-  doc.rect(100, totalY - 10, 90, 14, 'F');
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(textColor);
+  doc.text(`Pay Period: ${period}`, 105, 40, { align: 'center' });
+
+  // Add employee details
   doc.setFontSize(12);
-  doc.text(`TOTAL NET PAY: ${payslipData.currency} ${payslipData.totalPay.toFixed(2)}`, 145, totalY, { align: 'center' });
-  
-  // Footer
-  const footerY = totalY + 30;
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(10);
-  doc.text('This is a computer-generated document. No signature is required.', 105, footerY, { align: 'center' });
-  
-  // Add page number
+  doc.text('Employee Details', 14, 55);
+
+  // Add employee information table
+  doc.autoTable({
+    startY: 60,
+    head: [['Name', 'Position', 'Department']],
+    body: [[employeeName, position, department]],
+    theme: 'grid',
+    styles: {
+      fontSize: 10,
+      textColor: textColor,
+      lineColor: '#cccccc',
+      lineWidth: 0.1,
+    },
+    headStyles: {
+      fillColor: [240, 240, 240],
+      textColor: [50, 50, 50],
+      fontStyle: 'bold',
+    },
+  });
+
+  // Add earnings table
+  doc.setFontSize(12);
+  doc.text('Earnings & Deductions', 14, doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 15 : 100);
+
+  doc.autoTable({
+    startY: doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 20 : 105,
+    head: [['Description', 'Amount']],
+    body: [
+      ['Base Salary', formatCurrency(baseSalary, currency)],
+      ['Overtime Pay', formatCurrency(overtimePay, currency)],
+      ['Bonus', formatCurrency(bonus, currency)],
+      ['Deductions', `- ${formatCurrency(deductions, currency)}`],
+      ['Total Pay', formatCurrency(totalPay, currency)],
+    ],
+    theme: 'grid',
+    styles: {
+      fontSize: 10,
+      textColor: textColor,
+      lineColor: '#cccccc',
+      lineWidth: 0.1,
+    },
+    headStyles: {
+      fillColor: [240, 240, 240],
+      textColor: [50, 50, 50],
+      fontStyle: 'bold',
+    },
+    columnStyles: {
+      1: { halign: 'right' },
+    },
+  });
+
+  // Add footer with signature
+  const finalY = doc.lastAutoTable?.finalY || 150;
+  doc.text('Authorized Signature: _________________________', 14, finalY + 30);
+  doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, finalY + 40);
+
+  // Add confidentiality notice
   doc.setFontSize(8);
-  doc.text(`Page 1 of 1`, 105, footerY + 10, { align: 'center' });
-  
-  // Return the PDF as a blob
+  doc.setTextColor('#666666');
+  doc.text('This document is confidential and intended for the named employee only.', 105, 280, { align: 'center' });
+
+  // Convert the PDF to a blob and return the URL
   const pdfBlob = doc.output('blob');
-  return pdfBlob;
+  return URL.createObjectURL(pdfBlob);
 };
 
-export const downloadPayslip = async (employeeId: string, payslipData: PayslipData) => {
-  try {
-    const pdfBlob = generatePayslipPDF(employeeId, payslipData);
-    const url = URL.createObjectURL(pdfBlob);
-    
+export const downloadPayslipPDF = (payslipData: PayslipData) => {
+  generatePayslipPDF(payslipData).then((url) => {
     const link = document.createElement('a');
     link.href = url;
-    link.download = `payslip_${payslipData.employeeId}_${payslipData.period.replace(/\s/g, '_')}.pdf`;
-    document.body.appendChild(link);
+    link.download = `Payslip_${payslipData.employeeName.replace(/\s+/g, '_')}_${payslipData.period}.pdf`;
     link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error('Error downloading payslip:', error);
-    throw error;
-  }
+  }).catch(error => {
+    console.error('Error generating payslip PDF:', error);
+  });
 };

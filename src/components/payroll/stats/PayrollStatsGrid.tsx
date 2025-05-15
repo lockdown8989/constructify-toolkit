@@ -5,12 +5,13 @@ import { formatCurrency, formatNumber } from '@/utils/format';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DollarSign, Users, CheckCircle, Clock, UserMinus } from 'lucide-react';
 
-interface PayrollStatsGridProps {
+export interface PayrollStatsGridProps {
   totalPayroll: number;
   totalEmployees: number;
   paidEmployees: number;
   pendingEmployees: number;
   absentEmployees: number;
+  className?: string;
 }
 
 export const PayrollStatsGrid: React.FC<PayrollStatsGridProps> = ({
@@ -19,6 +20,7 @@ export const PayrollStatsGrid: React.FC<PayrollStatsGridProps> = ({
   paidEmployees,
   pendingEmployees,
   absentEmployees,
+  className = '',
 }) => {
   const isMobile = useIsMobile();
 
@@ -61,7 +63,7 @@ export const PayrollStatsGrid: React.FC<PayrollStatsGridProps> = ({
   ];
 
   return (
-    <div className={`grid grid-cols-2 ${isMobile ? '' : 'md:grid-cols-5'} gap-4`}>
+    <div className={`grid grid-cols-2 ${isMobile ? '' : 'md:grid-cols-5'} gap-4 ${className}`}>
       {stats.map((stat, index) => (
         <Card key={index} className={`border shadow-sm ${stat.color} border-opacity-50`}>
           <CardContent className="p-4 flex flex-col">

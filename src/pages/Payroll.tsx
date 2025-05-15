@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { PayrollStatsGrid } from '@/components/payroll/stats/PayrollStatsGrid';
 import { PayrollActions } from '@/components/payroll/actions/PayrollActions';
-import { PayrollHistoryTabs } from '@/components/payroll/history/PayrollHistoryTabs';
+import PayrollHistoryTabs from '@/components/payroll/history/PayrollHistoryTabs';
 import { usePayroll } from '@/hooks/use-payroll';
 import { Employee } from '@/components/dashboard/salary-table/types';
 import { useQuery } from '@tanstack/react-query';
@@ -32,16 +32,61 @@ const PayrollPage = () => {
 
   const initialEmployees = employees || [];
   
-  const {
-    selectedEmployees,
-    isProcessing,
-    isExporting,
-    handleSelectEmployee,
-    handleSelectAll,
-    handleClearAll,
-    handleProcessPayroll,
-    handleExportPayroll,
-  } = usePayroll(initialEmployees);
+  // Create a set to track selected employees and other state variables
+  const [selectedEmployees, setSelectedEmployees] = React.useState(new Set<string>());
+  const [isProcessing, setIsProcessing] = React.useState(false);
+  const [isExporting, setIsExporting] = React.useState(false);
+  
+  const payrollHooks = usePayroll();
+  
+  // Handler functions
+  const handleSelectEmployee = (id: string) => {
+    const newSelected = new Set(selectedEmployees);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedEmployees(newSelected);
+  };
+  
+  const handleSelectAll = () => {
+    if (initialEmployees.length > 0 && selectedEmployees.size === initialEmployees.length) {
+      setSelectedEmployees(new Set());
+    } else {
+      const allIds = new Set(initialEmployees.map(emp => emp.id));
+      setSelectedEmployees(allIds);
+    }
+  };
+  
+  const handleClearAll = () => {
+    setSelectedEmployees(new Set());
+  };
+  
+  const handleProcessPayroll = async () => {
+    setIsProcessing(true);
+    try {
+      const selectedEmployeesList = initialEmployees.filter(emp => selectedEmployees.has(emp.id));
+      // Use the process payroll mutation
+      const processMutation = payrollHooks.useProcessPayroll();
+      await processMutation.mutateAsync(selectedEmployeesList);
+      // Clear selection after processing
+      setSelectedEmployees(new Set());
+    } catch (err) {
+      console.error("Error processing payroll:", err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
+  const handleExportPayroll = () => {
+    setIsExporting(true);
+    // Export logic would go here
+    console.log("Exporting payroll for selected employees:", Array.from(selectedEmployees));
+    setTimeout(() => {
+      setIsExporting(false);
+    }, 1000);
+  };
 
   // Calculate statistics
   const paidEmployees = initialEmployees.filter(e => e.status === 'Paid').length;
@@ -134,14 +179,7 @@ const PayrollPage = () => {
       </div>
       
       <div className="mt-8">
-        <PayrollHistoryTabs
-          currentMonthEmployees={initialEmployees}
-          onSelectEmployee={handleSelectEmployee}
-          onUpdateStatus={(id, status) => {
-            // Update employee status logic would go here
-            console.log('Update status:', id, status);
-          }}
-        />
+        <PayrollHistoryTabs />
       </div>
     </div>
   );
