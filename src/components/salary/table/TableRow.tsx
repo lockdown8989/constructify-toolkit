@@ -5,7 +5,6 @@ import { Employee } from './types';
 import { PayslipActions } from './PayslipActions';
 import { StatusActions } from './StatusActions';
 import { useAuth } from '@/hooks/use-auth';
-import { formatCurrency } from '@/utils/format';
 
 interface TableRowProps {
   employee: Employee;
@@ -54,7 +53,7 @@ export const TableRow: React.FC<TableRowProps> = ({
         </div>
       </td>
       <td className="py-4 text-gray-600">{employee.title}</td>
-      <td className="py-4 font-medium">{formatCurrency(employee.salary, 'GBP')}</td>
+      <td className="py-4 font-medium">{employee.salary}</td>
       <td className="py-4">
         <span className={cn(
           "inline-block px-3 py-1 rounded-full text-xs font-medium",

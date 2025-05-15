@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -22,7 +23,6 @@ import { useToast } from '@/hooks/use-toast';
 import ScheduleHeader from '@/components/schedule/components/ScheduleHeader';
 import MobileNavigation from '@/components/schedule/components/MobileNavigation';
 import { useScheduleRealtime } from '@/hooks/leave/use-schedule-realtime';
-import { useGetAvailability } from '@/hooks/availability';
 
 const ScheduleRequestsTab: React.FC = () => {
   const { toast } = useToast();
@@ -33,7 +33,6 @@ const ScheduleRequestsTab: React.FC = () => {
   const [showAvailabilityForm, setShowAvailabilityForm] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
   const [pendingCount, setPendingCount] = useState({ shifts: 0, availability: 0 });
-  const { data: availabilityRequests = [] } = useGetAvailability();
 
   // Use the real-time hook
   useScheduleRealtime();
@@ -250,12 +249,7 @@ const ScheduleRequestsTab: React.FC = () => {
                         </div>
                       </CardHeader>
                       <CardContent className="p-4">
-                        <AvailabilityRequestList 
-                          requests={availabilityRequests?.map(req => ({
-                            ...req,
-                            notes: req.notes || null // Ensure notes is never undefined
-                          })) || []} 
-                        />
+                        <AvailabilityRequestList />
                       </CardContent>
                     </Card>
                   </div>

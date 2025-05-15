@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Clock } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -8,13 +7,12 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import AvailabilityRequestForm from './AvailabilityRequestForm';
 import AvailabilityRequestList from './AvailabilityRequestList';
-import { useGetAvailability } from '@/hooks/availability';
-import { AvailabilityRequest } from '@/types/availability';
+import { useAvailabilityRequests } from '@/hooks/availability';
 
 const AvailabilityManagement = () => {
   const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
-  const { data: availabilityData, isLoading } = useGetAvailability();
+  const { isLoading } = useAvailabilityRequests();
   
   if (!user) {
     return (
@@ -49,12 +47,7 @@ const AvailabilityManagement = () => {
         {showForm ? (
           <AvailabilityRequestForm onClose={() => setShowForm(false)} />
         ) : (
-          <AvailabilityRequestList 
-            requests={(availabilityData || []).map(req => ({
-              ...req,
-              notes: req.notes || null // Ensure notes is never undefined
-            }))} 
-          />
+          <AvailabilityRequestList />
         )}
       </CardContent>
     </Card>

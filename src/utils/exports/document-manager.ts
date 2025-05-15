@@ -1,104 +1,147 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { v4 as uuidv4 } from 'uuid';
+import { generatePayslipPDF } from './payslip-generator';
 
-export const uploadDocument = async (file: File, folderName: string): Promise<string | null> => {
-  try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${uuidv4()}.${fileExt}`;
-    const filePath = `${folderName}/${fileName}`;
-    
-    const { error } = await supabase.storage
-      .from('documents')
-      .upload(filePath, file);
-      
-    if (error) {
-      throw error;
-    }
-    
-    const { data } = supabase.storage
-      .from('documents')
-      .getPublicUrl(filePath);
-      
-    return data.publicUrl;
-  } catch (error) {
-    console.error('Error uploading document:', error);
-    return null;
-  }
-};
+interface DocumentAssignmentRequest {
+  employeeId: string;
+  documentType: string;
+  documentName: string;
+  documentPath: string;
+}
+
+interface DocumentUploadResult {
+  success: boolean;
+  message: string;
+  error?: string;
+  path?: string;
+}
 
 export const uploadEmployeeDocument = async (
-  employeeId: string, 
-  file: File, 
+  file: File,
+  employeeId: string,
   documentType: string
-): Promise<string | null> => {
+): Promise<DocumentUploadResult> => {
   try {
-    const folderName = `employee-${employeeId}/${documentType}`;
-    const documentUrl = await uploadDocument(file, folderName);
-    
-    if (documentUrl) {
-      // Save document reference in database
-      const { error } = await supabase
-        .from('employee_documents')
-        .insert({
-          employee_id: employeeId,
-          document_type: documentType,
-          document_url: documentUrl,
-          uploaded_at: new Date().toISOString()
-        });
-        
-      if (error) throw error;
+    // Validate input
+    if (!file || !employeeId || !documentType) {
+      return {
+        success: false,
+        message: 'Missing required information for document upload',
+        error: 'Invalid input parameters'
+      };
     }
-    
-    return documentUrl;
+
+    // Create folder path for employee documents
+    const folderPath = `documents/${employeeId}/${documentType}`;
+    const filePath = `${folderPath}/${file.name}`;
+
+    // Upload file to storage
+    const { data, error } = await supabase.storage
+      .from('documents')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
+
+    if (error) {
+      console.error('Error uploading document:', error);
+      return {
+        success: false,
+        message: 'Failed to upload document',
+        error: error.message
+      };
+    }
+
+    // Add entry to documents table
+    const { error: docError } = await supabase
+      .from('documents')
+      .insert({
+        employee_id: employeeId,
+        document_type: documentType,
+        name: file.name,
+        path: filePath,
+        size: `${(file.size / 1024).toFixed(2)} KB`
+      });
+
+    if (docError) {
+      console.error('Error adding document record:', docError);
+      return {
+        success: false,
+        message: 'Document uploaded but failed to update database',
+        error: docError.message,
+        path: filePath
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Document uploaded successfully',
+      path: filePath
+    };
   } catch (error) {
-    console.error('Error uploading employee document:', error);
-    return null;
+    console.error('Exception during document upload:', error);
+    return {
+      success: false,
+      message: 'An unexpected error occurred',
+      error: String(error)
+    };
   }
 };
 
 export const attachPayslipToResume = async (
   employeeId: string,
-  payslipUrl: string
-): Promise<boolean> => {
+  employeeData: any
+): Promise<DocumentUploadResult> => {
   try {
-    // Update employee record with payslip information
-    const { error } = await supabase
-      .from('employee_documents')
-      .insert({
-        employee_id: employeeId,
-        document_type: 'payslip',
-        document_url: payslipUrl,
-        uploaded_at: new Date().toISOString()
-      });
-      
-    if (error) throw error;
-    
-    return true;
-  } catch (error) {
-    console.error('Error attaching payslip to resume:', error);
-    return false;
-  }
-};
+    // Generate the payslip PDF
+    const result = await generatePayslipPDF(employeeId, employeeData, true);
 
-export const getEmployeeDocuments = async (employeeId: string, documentType?: string) => {
-  try {
-    let query = supabase
-      .from('employee_documents')
-      .select('*')
-      .eq('employee_id', employeeId);
-      
-    if (documentType) {
-      query = query.eq('document_type', documentType);
+    if (!result.success) {
+      return {
+        success: false,
+        message: 'Failed to generate payslip',
+        error: result.error
+      };
     }
-    
-    const { data, error } = await query;
-    
-    if (error) throw error;
-    
-    return data;
+
+    if (!result.path) {
+      return {
+        success: false,
+        message: 'Payslip generated but path is missing',
+        error: 'Invalid payslip path'
+      };
+    }
+
+    // Update employee record to link payslip to resume
+    const { error } = await supabase
+      .from('employees')
+      .update({
+        payslip_attached: true,
+        payslip_path: result.path,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', employeeId);
+
+    if (error) {
+      console.error('Error updating employee record:', error);
+      return {
+        success: false,
+        message: 'Payslip generated but failed to attach to resume',
+        error: error.message
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Payslip has been attached to your resume',
+      path: result.path
+    };
   } catch (error) {
-    console.error('Error fetching employee documents:', error);
-    throw error;
+    console.error('Exception attaching payslip to resume:', error);
+    return {
+      success: false,
+      message: 'An unexpected error occurred',
+      error: String(error)
+    };
   }
 };

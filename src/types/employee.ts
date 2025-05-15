@@ -5,8 +5,8 @@ export interface Employee {
   job_title: string;
   department: string;
   site: string;
-  salary: number | string; // Updated to accept both number and string
-  status: 'Paid' | 'Absent' | 'Pending' | string; // Updated to accept string or specific values
+  salary: number;
+  status: string;
   avatar?: string;
   location?: string;
   hourly_rate?: number;
@@ -17,6 +17,4 @@ export interface Employee {
   user_id?: string;
   manager_id?: string;
   selected?: boolean;
-  title?: string; // Added for compatibility with salary table components
-  paymentDate?: string; // Added for compatibility with salary table components
 }

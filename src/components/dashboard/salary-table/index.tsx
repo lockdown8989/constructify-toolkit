@@ -1,187 +1,162 @@
 
 import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { TableRow as SalaryTableRow } from '@/components/dashboard/salary-table/TableRow';
-import { SearchBar } from '@/components/dashboard/salary-table/SearchBar';
-import { PayslipActions } from '@/components/dashboard/salary-table/PayslipActions';
-import { StatusActions } from '@/components/dashboard/salary-table/StatusActions';
-import { StatusFilter } from '@/components/dashboard/salary-table/StatusFilter';
-import { Employee, PayslipData } from '@/types/supabase/payroll';
-import { formatCurrency } from '@/utils/format';
-import { downloadPayslip } from '@/utils/exports';
+import { Download } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from "@/components/ui/button";
 import { useToast } from '@/hooks/use-toast';
+import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
+import { generatePayslipPDF, attachPayslipToResume } from '@/utils/exports'; 
+import { SalaryTableProps, Employee } from './types';
+import { SearchBar } from './SearchBar';
+import { StatusFilter } from './StatusFilter';
+import { TableRow } from './TableRow';
 
-interface SalaryTableProps {
-  data: Employee[];
-  onStatusChange?: (id: string, status: "Paid" | "Pending" | "Absent") => void;
-}
-
-export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+const SalaryTable: React.FC<SalaryTableProps> = ({ 
+  employees, 
+  onSelectEmployee,
+  onUpdateStatus,
+  className 
+}) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Paid' | 'Absent' | 'Pending'>('All');
+  const [isProcessing, setIsProcessing] = useState<{ [key: string]: boolean }>({});
   const { toast } = useToast();
-
-  // Filter data based on search and status
-  const filteredData = data.filter(item => {
-    const matchesSearch = !searchTerm || 
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (item.department && item.department.toLowerCase().includes(searchTerm.toLowerCase()));
+  const { employeeId } = useEmployeeDataManagement();
+  
+  const filteredEmployees = employees.filter(employee => {
+    const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         employee.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'All' || employee.status === statusFilter;
+    const isOwnData = !employeeId || employee.id === employeeId;
     
-    const matchesStatus = statusFilter === 'all' || item.status?.toLowerCase() === statusFilter.toLowerCase();
-    
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && isOwnData;
   });
-
-  // Handle search
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-  };
-
-  const handlePayslipDownload = async (employee: Employee) => {
-    try {
-      const payslipData: PayslipData = {
-        id: employee.id,
-        employeeId: employee.id,
-        employeeName: employee.name,
-        position: employee.title || employee.job_title || 'Employee',
-        department: employee.department || 'N/A',
-        payPeriod: `${new Date().toLocaleString('default', { month: 'long' })} ${new Date().getFullYear()}`,
-        period: `${new Date().toLocaleString('default', { month: 'long' })} ${new Date().getFullYear()}`,
-        paymentDate: employee.paymentDate || new Date().toISOString(),
-        baseSalary: typeof employee.salary === 'number' ? employee.salary : 
-                  typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
-        grossPay: typeof employee.salary === 'number' ? employee.salary : 
-                typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
-        taxes: typeof employee.salary === 'number' ? employee.salary * 0.2 : 
-              typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) * 0.2 : 0,
-        deductions: 0,
-        netPay: typeof employee.salary === 'number' ? employee.salary * 0.8 : 
-              typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) * 0.8 : 0,
-        currency: 'GBP',
-        bankAccount: '****1234',
-        title: 'Monthly Payslip',
-        salary: employee.salary,
-        overtimePay: 0,
-        bonus: 0,
-        totalPay: typeof employee.salary === 'number' ? employee.salary : 
-                typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
-        notes: ''
-      };
-      
-      await downloadPayslip(payslipData);
-      
-      toast({
-        title: "Success",
-        description: `Payslip for ${employee.name} has been generated.`
-      });
-    } catch (error) {
-      console.error('Error downloading payslip:', error);
-      toast({
-        title: "Error",
-        description: "Failed to download payslip. Please try again.",
-        variant: "destructive"
-      });
+  
+  const handleStatusChange = (employeeId: string, newStatus: 'Paid' | 'Absent' | 'Pending') => {
+    if (onUpdateStatus) {
+      onUpdateStatus(employeeId, newStatus);
     }
   };
-
-  // Calculate status counts for the StatusFilter
+  
+  const handleDownloadPayslip = async (employee: Employee) => {
+    setIsProcessing(prev => ({ ...prev, [employee.id]: true }));
+    
+    try {
+      await generatePayslipPDF(employee.id, {
+        name: employee.name,
+        title: employee.title,
+        salary: typeof employee.salary === 'number' ? employee.salary.toString() : employee.salary,
+        department: employee.department,
+        paymentDate: employee.paymentDate
+      });
+      
+      toast({
+        title: "Payslip generated",
+        description: "Payslip has been downloaded to your device",
+      });
+    } catch (error) {
+      console.error('Error generating payslip:', error);
+      toast({
+        title: "Error generating payslip",
+        description: String(error),
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(prev => ({ ...prev, [employee.id]: false }));
+    }
+  };
+  
+  const handleAttachToResume = async (employee: Employee) => {
+    setIsProcessing(prev => ({ ...prev, [employee.id]: true }));
+    
+    try {
+      const result = await attachPayslipToResume(employee.id, {
+        name: employee.name,
+        title: employee.title,
+        salary: typeof employee.salary === 'number' ? employee.salary.toString() : employee.salary,
+        department: employee.department,
+        paymentDate: employee.paymentDate
+      });
+      
+      if (result.success) {
+        toast({
+          title: "Payslip attached",
+          description: result.message,
+        });
+      } else {
+        toast({
+          title: "Error attaching payslip",
+          description: result.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error attaching payslip to resume:', error);
+      toast({
+        title: "Error attaching payslip",
+        description: String(error),
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(prev => ({ ...prev, [employee.id]: false }));
+    }
+  };
+  
   const statusCount = {
-    All: filteredData.length,
-    Paid: filteredData.filter(e => e.status === 'Paid').length,
-    Pending: filteredData.filter(e => e.status === 'Pending').length,
-    Absent: filteredData.filter(e => e.status === 'Absent').length
+    All: employees.length,
+    Paid: employees.filter(e => e.status === 'Paid').length,
+    Pending: employees.filter(e => e.status === 'Pending').length,
+    Absent: employees.filter(e => e.status === 'Absent').length
   };
 
   return (
-    <div className="w-full">
-      <div className="flex justify-between mb-4 flex-col sm:flex-row gap-3">
-        <SearchBar value={searchTerm} onChange={handleSearch} onSearch={handleSearch} />
-        <StatusFilter 
-          currentStatus="All" 
-          onStatusChange={(status) => setStatusFilter(status.toLowerCase())}
-          statusCount={statusCount}
-          activeFilter={statusFilter}
-          onFilterChange={setStatusFilter}
-        />
+    <div className={cn("bg-white rounded-3xl p-6 card-shadow", className)}>
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-xl font-medium">Salary</h3>
+        
+        <div className="flex gap-2">
+          <SearchBar value={searchQuery} onChange={setSearchQuery} />
+          <StatusFilter 
+            currentStatus={statusFilter}
+            onStatusChange={setStatusFilter}
+            statusCount={statusCount}
+          />
+          <Button variant="outline" size="icon">
+            <Download className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
       
-      <div className="rounded-md border bg-white">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[250px]">Employee</TableHead>
-              <TableHead>Salary</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Payment Date</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredData.map((employee) => (
-              <TableRow key={employee.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={employee.avatar} alt={employee.name} />
-                      <AvatarFallback>{employee.name?.charAt(0) || 'U'}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">{employee.name}</div>
-                      <div className="text-sm text-gray-500">{employee.title || employee.job_title}</div>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>{formatCurrency(employee.salary)}</TableCell>
-                <TableCell>
-                  <Badge variant={
-                    employee.status === 'Paid' ? 'default' :
-                    employee.status === 'Absent' ? 'outline' : 'secondary'
-                  }>
-                    {employee.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>{employee.paymentDate || '-'}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <PayslipActions
-                      employee={{
-                        ...employee,
-                        title: employee.title || 'Employee',
-                        status: (employee.status === 'Paid' || employee.status === 'Pending' || employee.status === 'Absent') ? 
-                                employee.status as 'Paid' | 'Pending' | 'Absent' : 'Pending'
-                      }}
-                      isProcessing={false}
-                      onDownload={handlePayslipDownload}
-                      onAttach={async () => {
-                        toast({
-                          title: "Info",
-                          description: "Attach to resume feature is not implemented yet."
-                        });
-                      }}
-                    />
-                    {onStatusChange && (
-                      <StatusActions
-                        onStatusChange={(status) => onStatusChange(employee.id, status)}
-                        employeeId={employee.id}
-                      />
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="text-left text-sm text-gray-500">
+              <th className="pb-4 font-medium w-6"></th>
+              <th className="pb-4 font-medium">Name</th>
+              <th className="pb-4 font-medium">Job Title</th>
+              <th className="pb-4 font-medium">Net Salary</th>
+              <th className="pb-4 font-medium">Status</th>
+              <th className="pb-4 font-medium">Payment Date</th>
+              <th className="pb-4 font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {filteredEmployees.map(employee => (
+              <TableRow
+                key={employee.id}
+                employee={employee}
+                isProcessing={isProcessing[employee.id] || false}
+                onSelectEmployee={onSelectEmployee || (() => {})}
+                onStatusChange={handleStatusChange}
+                onDownloadPayslip={handleDownloadPayslip}
+                onAttachToResume={handleAttachToResume}
+              />
             ))}
-            
-            {filteredData.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
-                  No results found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
     </div>
   );
-}
+};
+
+export default SalaryTable;

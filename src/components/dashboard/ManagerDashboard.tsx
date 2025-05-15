@@ -1,11 +1,10 @@
 
 import React from 'react';
-import { Employee } from '@/types/employee';
+import { Employee } from '@/components/dashboard/salary-table/types';
 import CurrentDateTime from '@/components/dashboard/CurrentDateTime';
 import DashboardStatsSection from '@/components/dashboard/DashboardStatsSection';
 import DashboardProgressSection from '@/components/dashboard/DashboardProgressSection';
 import DashboardMainContent from '@/components/dashboard/DashboardMainContent';
-import { SalaryTableProps } from '@/components/dashboard/salary-table/types';
 
 interface ManagerDashboardProps {
   firstName: string;
@@ -17,7 +16,7 @@ interface ManagerDashboardProps {
     projectTime: number;
     output: number;
   };
-  salaryEmployees: SalaryTableProps['employees'];
+  salaryEmployees: Employee[];
 }
 
 const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
@@ -27,17 +26,6 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
   interviewStats,
   salaryEmployees
 }) => {
-  // Convert SalaryTable Employee[] to Employee[] from types/employee
-  const mappedEmployees: Employee[] = salaryEmployees.map(emp => ({
-    ...emp,
-    job_title: emp.job_title || emp.title || 'Employee',
-    site: emp.site || 'Main Office',
-    department: emp.department || 'General',
-    status: (emp.status === 'Paid' || emp.status === 'Pending' || emp.status === 'Absent') 
-            ? emp.status 
-            : 'Pending'
-  }));
-
   return (
     <div className="max-w-[1800px] mx-auto">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -56,7 +44,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
       />
       
       {/* Main Content */}
-      <DashboardMainContent isManager={true} salaryEmployees={mappedEmployees} />
+      <DashboardMainContent isManager={true} salaryEmployees={salaryEmployees} />
     </div>
   );
 };

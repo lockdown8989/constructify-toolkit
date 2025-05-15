@@ -1,208 +1,183 @@
-
-import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { CalendarIcon, X } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Save, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
-import { useCreateAvailability } from '@/hooks/availability';
-import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useCreateAvailabilityRequest } from '@/hooks/availability';
 import { useAuth } from '@/hooks/use-auth';
-import { NewAvailabilityRequest } from '@/types/availability';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AvailabilityRequestFormProps {
   onClose: () => void;
 }
 
-const AvailabilityRequestForm: React.FC<AvailabilityRequestFormProps> = ({ onClose }) => {
-  const createMutation = useCreateAvailability();
+const AvailabilityRequestForm = ({ onClose }: AvailabilityRequestFormProps) => {
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('17:00');
   const [isAvailable, setIsAvailable] = useState(true);
-  const [employeeId, setEmployeeId] = useState<string | null>(null);
+  const [notes, setNotes] = useState('');
+  
   const { user } = useAuth();
+  const { toast } = useToast();
+  const { mutate: createRequest, isPending } = useCreateAvailabilityRequest();
   
-  useEffect(() => {
-    // Fetch the employee ID when the component mounts
-    const getEmployeeId = async () => {
-      if (user) {
-        const { data } = await supabase
-          .from('employees')
-          .select('id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-          
-        if (data) {
-          setEmployeeId(data.id);
-        }
-      }
-    };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    getEmployeeId();
-  }, [user]);
-  
-  const form = useForm({
-    defaultValues: {
-      date: new Date(),
-      startTime: '09:00',
-      endTime: '17:00',
-      notes: '',
-    }
-  });
-  
-  const onSubmit = async (data: any) => {
-    if (!employeeId) {
-      console.error('No employee ID found');
+    if (!user || !date) {
+      toast({
+        title: "Error",
+        description: "Missing required fields",
+        variant: "destructive",
+      });
       return;
     }
     
     try {
-      const requestData: NewAvailabilityRequest = {
-        employee_id: employeeId,
-        date: format(data.date, 'yyyy-MM-dd'),
-        start_time: data.startTime,
-        end_time: data.endTime,
-        is_available: isAvailable,
-        notes: data.notes || null
-      };
+      const { data: employeeData, error: employeeError } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
       
-      await createMutation.mutate(requestData);
-      onClose();
+      if (employeeError || !employeeData) {
+        throw new Error('Could not find employee record');
+      }
+      
+      createRequest({
+        employee_id: employeeData.id,
+        date: format(date, 'yyyy-MM-dd'),
+        start_time: startTime,
+        end_time: endTime,
+        is_available: isAvailable,
+        notes: notes.trim() || null,
+      }, {
+        onSuccess: () => {
+          onClose();
+        }
+      });
     } catch (error) {
-      console.error('Error creating availability:', error);
+      console.error('Error submitting availability:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit availability request",
+        variant: "destructive",
+      });
     }
   };
   
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium">Set Availability</h3>
-          <Button type="button" variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="date">Date</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              id="date"
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !date && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date ? format(date, 'PPP') : <span>Pick a date</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="startTime">Start Time</Label>
+          <div className="flex items-center">
+            <Clock className="h-4 w-4 mr-2 text-gray-500" />
+            <Input
+              id="startTime"
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              className="flex-1"
+            />
+          </div>
         </div>
         
-        <div className="flex items-center space-x-2 mb-4">
-          <Checkbox 
-            id="isAvailable" 
-            checked={isAvailable} 
-            onCheckedChange={(checked) => setIsAvailable(checked as boolean)} 
+        <div className="space-y-2">
+          <Label htmlFor="endTime">End Time</Label>
+          <div className="flex items-center">
+            <Clock className="h-4 w-4 mr-2 text-gray-500" />
+            <Input
+              id="endTime"
+              type="time"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              className="flex-1"
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="availability" className="cursor-pointer">
+            {isAvailable ? 'Available for scheduling' : 'Not available for scheduling'}
+          </Label>
+          <Switch
+            id="availability"
+            checked={isAvailable}
+            onCheckedChange={setIsAvailable}
           />
-          <label 
-            htmlFor="isAvailable" 
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            I am available on this date
-          </label>
         </div>
-        
-        <FormField
-          control={form.control}
-          name="date"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Date</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) => {
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      return date < today;
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="notes">Notes (Optional)</Label>
+        <Textarea
+          id="notes"
+          placeholder="Add any additional information about your availability"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          className="min-h-[80px]"
         />
-        
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="startTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Start Time</FormLabel>
-                <FormControl>
-                  <Input type="time" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="endTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>End Time</FormLabel>
-                <FormControl>
-                  <Input type="time" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notes (Optional)</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Add any additional information about your availability" 
-                  className="resize-none" 
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={createMutation.isPending}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={createMutation.isPending}>
-            {createMutation.isPending ? 'Saving...' : 'Save Availability'}
-          </Button>
-        </div>
-      </form>
-    </Form>
+      </div>
+      
+      <div className="flex justify-end gap-2 pt-2">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onClose}
+          className="flex items-center"
+          disabled={isPending}
+        >
+          <XCircle className="h-4 w-4 mr-1.5" />
+          Cancel
+        </Button>
+        <Button 
+          type="submit" 
+          className="flex items-center"
+          disabled={isPending}
+        >
+          <Save className="h-4 w-4 mr-1.5" />
+          {isPending ? "Submitting..." : "Submit Availability"}
+        </Button>
+      </div>
+    </form>
   );
 };
 

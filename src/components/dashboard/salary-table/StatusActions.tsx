@@ -9,22 +9,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export interface StatusActionsProps {
+interface StatusActionsProps {
   onStatusChange: (status: 'Paid' | 'Pending' | 'Absent') => void;
-  employeeId?: string;
-  onUpdateStatus?: (id: string, status: 'Paid' | 'Pending' | 'Absent') => void;
 }
 
-export const StatusActions: React.FC<StatusActionsProps> = ({ 
-  onStatusChange, 
-  employeeId, 
-  onUpdateStatus 
-}) => {
-  const handleStatusChange = (status: 'Paid' | 'Pending' | 'Absent') => {
-    if (onStatusChange) onStatusChange(status);
-    if (onUpdateStatus && employeeId) onUpdateStatus(employeeId, status);
-  };
-
+export const StatusActions: React.FC<StatusActionsProps> = ({ onStatusChange }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -34,13 +23,13 @@ export const StatusActions: React.FC<StatusActionsProps> = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={() => handleStatusChange('Paid')}>
+        <DropdownMenuItem onClick={() => onStatusChange('Paid')}>
           Mark as Paid
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleStatusChange('Pending')}>
+        <DropdownMenuItem onClick={() => onStatusChange('Pending')}>
           Mark as Pending
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleStatusChange('Absent')}>
+        <DropdownMenuItem onClick={() => onStatusChange('Absent')}>
           Mark as Absent
         </DropdownMenuItem>
       </DropdownMenuContent>

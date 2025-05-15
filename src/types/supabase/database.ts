@@ -1,3 +1,4 @@
+
 import { Json } from '@/integrations/supabase/types';
 import type { 
   Employee, 
@@ -22,24 +23,6 @@ import type {
   Profile, 
   UserRole 
 } from './auth';
-import type {
-  AttendanceRecord
-} from './attendance';
-import type {
-  HiringStatistic
-} from './hiring';
-import type {
-  Interview
-} from './interviews';
-import type {
-  Project
-} from './projects';
-import type {
-  PayrollRecord
-} from './payroll';
-import type {
-  PayrollHistoryRecord
-} from './payroll-history';
 
 export interface Database {
   public: {
@@ -124,7 +107,14 @@ export interface Database {
       };
       // Add the missing tables
       attendance: {
-        Row: AttendanceRecord;
+        Row: {
+          id: string;
+          employee_id: string | null;
+          date: string | null;
+          check_in: string | null;
+          check_out: string | null;
+          status: string | null;
+        };
         Insert: {
           id?: string;
           employee_id?: string | null;
@@ -133,11 +123,26 @@ export interface Database {
           check_out?: string | null;
           status?: string | null;
         };
-        Update: Partial<AttendanceRecord>;
+        Update: Partial<{
+          id: string;
+          employee_id: string | null;
+          date: string | null;
+          check_in: string | null;
+          check_out: string | null;
+          status: string | null;
+        }>;
         Relationships: [];
       };
       hiring_statistics: {
-        Row: HiringStatistic;
+        Row: {
+          id: string;
+          month: string;
+          year: number;
+          design_count: number;
+          others_count: number;
+          created_at: string | null;
+          updated_at: string | null;
+        };
         Insert: {
           id?: string;
           month: string;
@@ -147,22 +152,47 @@ export interface Database {
           created_at?: string | null;
           updated_at?: string | null;
         };
-        Update: Partial<HiringStatistic>;
+        Update: Partial<{
+          id: string;
+          month: string;
+          year: number;
+          design_count: number;
+          others_count: number;
+          created_at: string | null;
+          updated_at: string | null;
+        }>;
         Relationships: [];
       };
       interviews: {
-        Row: Interview;
+        Row: {
+          id: string;
+          candidate_name: string;
+          stage: string;
+          progress: number;
+        };
         Insert: {
           id?: string;
           candidate_name: string;
           stage?: string;
           progress?: number;
         };
-        Update: Partial<Interview>;
+        Update: Partial<{
+          id: string;
+          candidate_name: string;
+          stage: string;
+          progress: number;
+        }>;
         Relationships: [];
       };
       projects: {
-        Row: Project;
+        Row: {
+          id: string;
+          name: string;
+          department: string;
+          deadline: string;
+          priority: string;
+          created_at: string | null;
+        };
         Insert: {
           id?: string;
           name: string;
@@ -171,27 +201,14 @@ export interface Database {
           priority?: string;
           created_at?: string | null;
         };
-        Update: Partial<Project>;
-        Relationships: [];
-      };
-      payroll: {
-        Row: PayrollRecord;
-        Insert: {
-          id?: string;
-          employee_id?: string | null;
-          salary_paid: number;
-          payment_date?: string | null;
-          payment_status?: string | null;
-          document_name?: string | null;
-          document_url?: string | null;
-          base_pay?: number | null;
-          overtime_hours?: number | null;
-          overtime_pay?: number | null;
-          deductions?: number | null;
-          working_hours?: number | null;
-          bonus?: number | null;
-        };
-        Update: Partial<PayrollRecord>;
+        Update: Partial<{
+          id: string;
+          name: string;
+          department: string;
+          deadline: string;
+          priority: string;
+          created_at: string | null;
+        }>;
         Relationships: [];
       };
     };

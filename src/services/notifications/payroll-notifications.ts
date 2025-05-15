@@ -34,7 +34,6 @@ export const notifyEmployeeAboutPayslip = async (
       return false;
     }
     
-    console.log(`Notification sent successfully to user ${userId} for payslip`);
     return true;
   } catch (error) {
     console.error('Exception sending payslip notification:', error);
@@ -81,7 +80,6 @@ export const batchNotifyEmployeesAboutPayslips = async (
       return false;
     }
     
-    console.log(`Batch notifications sent successfully to ${employeeData.length} employees`);
     return true;
   } catch (error) {
     console.error('Exception sending batch payslip notifications:', error);

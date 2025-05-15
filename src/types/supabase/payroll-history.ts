@@ -12,4 +12,3 @@ export interface PayrollHistoryRecord {
     last_name: string;
   };
 }
-

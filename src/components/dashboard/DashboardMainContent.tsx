@@ -1,13 +1,12 @@
 
 import React, { useState } from 'react';
-import { Employee } from '@/types/employee';  // Import from the main Employee type
+import { Employee } from '@/components/salary/table/types';  // Changed to use the same Employee type as the SalaryTable component
 import SalaryTable from '@/components/salary/table/SalaryTable';
 import AttendanceReport from '@/components/dashboard/attendance-report';
 import HiringStatistics from '@/components/dashboard/HiringStatistics';
 import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
 import ManagerTab from '@/components/leave/tabs/ManagerTab';
 import DashboardTimeClock from '@/components/dashboard/DashboardTimeClock';
-import { SalaryTableProps } from '@/components/salary/table/types';
 
 interface DashboardMainContentProps {
   isManager: boolean;
@@ -40,13 +39,6 @@ const DashboardMainContent: React.FC<DashboardMainContentProps> = ({
         <SalaryTable 
           employees={salaryEmployees.map(emp => ({
             ...emp,
-            title: emp.title || emp.job_title || 'Employee',
-            job_title: emp.job_title || emp.title || 'Employee',
-            site: emp.site || 'Main Office',
-            department: emp.department || 'General',
-            status: (emp.status === 'Paid' || emp.status === 'Pending' || emp.status === 'Absent') 
-                    ? emp.status 
-                    : 'Pending' as 'Paid' | 'Pending' | 'Absent',
             selected: emp.id === selectedEmployee
           }))} 
           onSelectEmployee={handleSelectEmployee}

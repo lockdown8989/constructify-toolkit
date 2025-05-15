@@ -1,63 +1,44 @@
 
-export interface PayslipData {
-  id: string;
-  employeeId: string;
-  employeeName: string;
-  name?: string; // For backward compatibility
-  department: string;
-  position: string;
-  payPeriod: string;
-  period: string;
-  grossPay: number;
-  taxes: number;
-  netPay: number;
-  paymentDate: string;
-  baseSalary: number;
-  deductions: number;
-  currency: string;
-  bankAccount: string;
-  title: string;
-  salary: string | number;
-  overtimePay: number;
-  bonus: number;
-  totalPay: number;
-  notes: string;
-}
-
-export interface Employee {
-  id: string;
-  name: string;
-  avatar?: string;
-  title?: string; // Made optional to match with salary-table/types
-  job_title?: string;
-  salary: string | number;
-  status?: 'Paid' | 'Absent' | 'Pending' | string;
-  paymentDate?: string;
-  department?: string;
-  site?: string;
-  position?: string;
-}
-
 export interface PayrollRecord {
   id: string;
   employee_id: string;
-  employee_name?: string; // Added for compatibility
-  employeeName?: string; // Added for compatibility
-  payment_date: string;
-  payment_status: string;
+  base_pay: number;
+  salary_paid: number;
+  deductions: number;
   working_hours: number;
   overtime_hours: number;
-  base_pay: number;
   overtime_pay: number;
-  deductions: number;
-  bonus: number;
+  payment_status: string;
+  payment_date: string;
+  processing_date: string;
   document_url?: string;
   document_name?: string;
-  salary_paid: number;
-  department?: string;
-  status?: string;
-  pay_period?: string; // Added for compatibility
-  gross_pay?: number; // Added for compatibility
-  taxes?: number; // Added for compatibility
-  net_pay?: number; // Added for compatibility
+  bonus?: number;
+  tax_code?: string;
+  ni_number?: string;
+  payment_method?: string;
+  pay_period?: string;
+  tax_paid?: number;
+  ni_contribution?: number;
+  other_deductions?: number;
+  pension_contribution?: number;
+  ytd_gross?: number;
+  ytd_tax?: number;
+  ytd_ni?: number;
+  ytd_other?: number;
+  ytd_net?: number;
+}
+
+export interface PayrollHistoryRecord {
+  id: string;
+  employee_count: number;
+  success_count: number;
+  fail_count: number;
+  processed_by: string;
+  processing_date: string;
+  employee_ids: string[];
+  profiles?: {
+    first_name: string;
+    last_name: string;
+  }
 }

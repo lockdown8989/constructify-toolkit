@@ -1,52 +1,32 @@
 
-import React, { useState, useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { useEffect, useState } from 'react';
 
 interface DigitalClockProps {
   className?: string;
 }
 
-const DigitalClock: React.FC<DigitalClockProps> = ({ className }) => {
-  const [time, setTime] = useState<string>('');
-  const [date, setDate] = useState<string>('');
+const DigitalClock = ({ className = '' }: DigitalClockProps) => {
+  const [currentTime, setCurrentTime] = useState(new Date());
 
+  // Update current time every second
   useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      
-      // Format time as HH:MM:SS
-      const hours = now.getHours().toString().padStart(2, '0');
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      const seconds = now.getSeconds().toString().padStart(2, '0');
-      
-      setTime(`${hours}:${minutes}:${seconds}`);
-      
-      // Format date
-      const options: Intl.DateTimeFormatOptions = {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric'
-      };
-      setDate(now.toLocaleDateString('en-US', options));
-    };
-
-    // Update immediately
-    updateTime();
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
     
-    // Then update every second
-    const interval = setInterval(updateTime, 1000);
-    
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, []);
 
+  // Format time as HH:MM
+  const formattedTime = currentTime.toLocaleTimeString('en-US', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
   return (
-    <div className="text-center">
-      <div className={cn("digital-clock font-mono font-bold", className)}>
-        {time}
-      </div>
-      <div className="text-gray-400 text-sm mt-1">
-        {date}
-      </div>
+    <div className={`text-[10rem] font-mono leading-none ${className}`}>
+      {formattedTime}
     </div>
   );
 };

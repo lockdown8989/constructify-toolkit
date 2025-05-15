@@ -1,12 +1,8 @@
 
 @import './base.css';
-@import './buttons.css';
-@import './cards.css';
-@import './components.css';
-@import './forms.css';
-@import './mobile.css';
-@import './navigation.css';
-@import './tables.css';
 @import './utilities.css';
-@import './timeclock.css';
+@import './components.css';
+@import './mobile.css';
 @import './shift-calendar.css';
+@import './navigation.css';
+@import './timeclock.css';
