@@ -86,16 +86,6 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
               isCollapsed={isCollapsed}
             />
             
-            {!hasManagerialAccess && (
-              <SidebarNavLink
-                to="/employee-calendar"
-                icon={Calendar}
-                label="Employee Calendar"
-                isActive={isActive("/employee-calendar")}
-                isCollapsed={isCollapsed}
-              />
-            )}
-            
             {hasManagerialAccess && (
               <>
                 <SidebarNavLink

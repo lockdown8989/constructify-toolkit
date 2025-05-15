@@ -42,16 +42,6 @@ const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated }) => {
       >
         Leave
       </NavLink>
-      {!hasManagerAccess && (
-        <NavLink
-          to="/employee-calendar"
-          className={({ isActive }) =>
-            `nav-link ${isActive ? "active" : ""}`
-          }
-        >
-          Calendar
-        </NavLink>
-      )}
       {hasManagerAccess && (
         <NavLink
           to="/people"

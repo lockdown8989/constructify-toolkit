@@ -25,14 +25,13 @@ import Settings from "@/pages/Settings";
 import ProfileSettings from "@/pages/ProfileSettings";
 import Attendance from "@/pages/Attendance";
 import TimeClock from "@/pages/TimeClock";
-import ManagerTimeClock from "@/pages/ManagerTimeClock"; 
+import ManagerTimeClock from "@/pages/ManagerTimeClock"; // Add import for the new page
 import RestaurantSchedule from "@/pages/RestaurantSchedule";
 import NotFound from "@/pages/NotFound";
 import Hiring from "@/pages/Hiring";
 import ScheduleRequests from "@/pages/ScheduleRequests";
 import EmployeeWorkflow from "@/pages/EmployeeWorkflow";
 import About from "@/pages/About";
-import EmployeeCalendar from './pages/EmployeeCalendar';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -142,11 +141,6 @@ function App() {
                   <Route path="/about" element={
                     <ProtectedRoute>
                       <About />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/employee-calendar" element={
-                    <ProtectedRoute>
-                      <EmployeeCalendar />
                     </ProtectedRoute>
                   } />
                 </Route>
