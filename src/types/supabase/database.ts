@@ -23,6 +23,22 @@ import type {
   Profile, 
   UserRole 
 } from './auth';
+import type {
+  AttendanceRecord
+} from './attendance';
+import type {
+  HiringStatistic
+} from './hiring';
+import type {
+  Interview
+} from './interviews';
+import type {
+  Project
+} from './projects';
+import type {
+  PayrollRecord,
+  PayrollHistoryRecord
+} from './payroll';
 
 export interface Database {
   public: {
@@ -107,14 +123,7 @@ export interface Database {
       };
       // Add the missing tables
       attendance: {
-        Row: {
-          id: string;
-          employee_id: string | null;
-          date: string | null;
-          check_in: string | null;
-          check_out: string | null;
-          status: string | null;
-        };
+        Row: AttendanceRecord;
         Insert: {
           id?: string;
           employee_id?: string | null;
@@ -123,26 +132,11 @@ export interface Database {
           check_out?: string | null;
           status?: string | null;
         };
-        Update: Partial<{
-          id: string;
-          employee_id: string | null;
-          date: string | null;
-          check_in: string | null;
-          check_out: string | null;
-          status: string | null;
-        }>;
+        Update: Partial<AttendanceRecord>;
         Relationships: [];
       };
       hiring_statistics: {
-        Row: {
-          id: string;
-          month: string;
-          year: number;
-          design_count: number;
-          others_count: number;
-          created_at: string | null;
-          updated_at: string | null;
-        };
+        Row: HiringStatistic;
         Insert: {
           id?: string;
           month: string;
@@ -152,47 +146,22 @@ export interface Database {
           created_at?: string | null;
           updated_at?: string | null;
         };
-        Update: Partial<{
-          id: string;
-          month: string;
-          year: number;
-          design_count: number;
-          others_count: number;
-          created_at: string | null;
-          updated_at: string | null;
-        }>;
+        Update: Partial<HiringStatistic>;
         Relationships: [];
       };
       interviews: {
-        Row: {
-          id: string;
-          candidate_name: string;
-          stage: string;
-          progress: number;
-        };
+        Row: Interview;
         Insert: {
           id?: string;
           candidate_name: string;
           stage?: string;
           progress?: number;
         };
-        Update: Partial<{
-          id: string;
-          candidate_name: string;
-          stage: string;
-          progress: number;
-        }>;
+        Update: Partial<Interview>;
         Relationships: [];
       };
       projects: {
-        Row: {
-          id: string;
-          name: string;
-          department: string;
-          deadline: string;
-          priority: string;
-          created_at: string | null;
-        };
+        Row: Project;
         Insert: {
           id?: string;
           name: string;
@@ -201,14 +170,27 @@ export interface Database {
           priority?: string;
           created_at?: string | null;
         };
-        Update: Partial<{
-          id: string;
-          name: string;
-          department: string;
-          deadline: string;
-          priority: string;
-          created_at: string | null;
-        }>;
+        Update: Partial<Project>;
+        Relationships: [];
+      };
+      payroll: {
+        Row: PayrollRecord;
+        Insert: {
+          id?: string;
+          employee_id?: string | null;
+          salary_paid: number;
+          payment_date?: string | null;
+          payment_status?: string | null;
+          document_name?: string | null;
+          document_url?: string | null;
+          base_pay?: number | null;
+          overtime_hours?: number | null;
+          overtime_pay?: number | null;
+          deductions?: number | null;
+          working_hours?: number | null;
+          bonus?: number | null;
+        };
+        Update: Partial<PayrollRecord>;
         Relationships: [];
       };
     };
