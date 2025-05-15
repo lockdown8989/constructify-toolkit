@@ -47,18 +47,19 @@ export const useAvailability = () => {
 
     if (existingEntry) {
       // Update existing entry
-      await updateMutation.mutate({
+      await updateMutation.updateAvailability({
         id: existingEntry.id,
         is_available: isAvailable,
       });
     } else {
       // Create new entry
       await createMutation.mutate({
-        employee_id: employeeId,
         date: formattedDate,
         start_time: startTime,
         end_time: endTime,
         is_available: isAvailable,
+        employee_id: employeeId,
+        notes: null,
       });
     }
 
@@ -73,7 +74,7 @@ export const useAvailability = () => {
     refetch,
     toggleAvailability,
     createAvailability: createMutation.mutate,
-    updateAvailability: updateMutation.mutate,
+    updateAvailability: updateMutation.updateAvailability,
     deleteAvailability: deleteMutation.deleteAvailability,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isUpdating,

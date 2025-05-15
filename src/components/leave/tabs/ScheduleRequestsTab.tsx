@@ -250,7 +250,12 @@ const ScheduleRequestsTab: React.FC = () => {
                         </div>
                       </CardHeader>
                       <CardContent className="p-4">
-                        <AvailabilityRequestList requests={availabilityRequests || []} />
+                        <AvailabilityRequestList 
+                          requests={availabilityRequests?.map(req => ({
+                            ...req,
+                            notes: req.notes || null // Ensure notes is never undefined
+                          })) || []} 
+                        />
                       </CardContent>
                     </Card>
                   </div>

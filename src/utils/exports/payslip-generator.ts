@@ -1,112 +1,92 @@
-
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { format } from 'date-fns';
+import 'jspdf-autotable';
 import { PayslipData } from '@/types/supabase/payroll';
+import { format } from 'date-fns';
 
-const formatCurrency = (value: number, currency: string = 'USD'): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-  }).format(value);
-};
+export async function downloadPayslip(data: PayslipData) {
+  try {
+    const doc = new jsPDF();
+    
+    // Define document properties
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 10;
+    let y = margin;
 
-// Create PDF payslip and return as blob
-export const generatePayslipPDF = (data: PayslipData): Blob => {
-  const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
+    // Function to add a styled text
+    const addStyledText = (text: string, x: number, yPos: number, fontSize: number, fontWeight: string = 'normal', color: string = '#000') => {
+      doc.setFontSize(fontSize);
+      doc.setFont('helvetica', fontWeight);
+      doc.setTextColor(color);
+      doc.text(text, x, yPos);
+    };
 
-  // Add company header
-  doc.setFillColor(41, 128, 185);
-  doc.rect(0, 0, pageWidth, 40, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
-  doc.text('TeamPulse', 15, 20);
-  doc.setFontSize(12);
-  doc.text('Employee Payslip', 15, 30);
+    // Company Header
+    addStyledText('Acme Corp', pageWidth / 2, y + 5, 16, 'bold');
+    addStyledText('123 Main Street, Anytown, USA', pageWidth / 2, y + 12, 10, 'normal', '#777');
+    doc.line(margin, y + 15, pageWidth - margin, y + 15);
+    y += 20;
 
-  // Employee details
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(14);
-  doc.text('Employee Details', 15, 50);
-  
-  doc.setFontSize(10);
-  const employeeDetails = [
-    ['Employee Name:', data.employeeName],
-    ['Position:', data.position],
-    ['Department:', data.department],
-    ['Pay Period:', data.period],
-    ['Payment Date:', new Date(data.paymentDate).toLocaleDateString()]
-  ];
-  
-  autoTable(doc, {
-    startY: 55,
-    head: [],
-    body: employeeDetails,
-    theme: 'plain',
-    styles: {
-      cellPadding: 2,
-      fontSize: 10
-    },
-    columnStyles: {
-      0: { fontStyle: 'bold', cellWidth: 50 },
-      1: { cellWidth: 100 }
+    // Payslip Title
+    addStyledText('Payslip', pageWidth / 2, y + 5, 14, 'bold');
+    y += 10;
+
+    // Employee and Period Information
+    addStyledText(`Employee: ${data.employeeName}`, margin, y + 5, 10);
+    addStyledText(`ID: ${data.employeeId}`, margin, y + 10, 10);
+    addStyledText(`Department: ${data.department}`, margin, y + 15, 10);
+    addStyledText(`Position: ${data.position}`, margin, y + 20, 10);
+    addStyledText(`Period: ${data.period}`, pageWidth - 70, y + 5, 10);
+    addStyledText(`Payment Date: ${format(new Date(data.paymentDate), 'MMMM dd, yyyy')}`, pageWidth - 70, y + 10, 10);
+    y += 25;
+
+    // Salary Details Table
+    const tableData = [
+      { label: 'Base Salary', amount: data.baseSalary },
+      { label: 'Overtime Pay', amount: data.overtimePay },
+      { label: 'Bonus', amount: data.bonus },
+      { label: 'Gross Pay', amount: data.grossPay },
+      { label: 'Deductions', amount: data.deductions },
+      { label: 'Taxes', amount: data.taxes },
+      { label: 'Net Pay', amount: data.netPay },
+    ];
+
+    let tableY = y;
+    tableData.forEach((item, index) => {
+      addStyledText(item.label, margin, tableY + 5, 10);
+      addStyledText(`${data.currency} ${item.amount.toFixed(2)}`, pageWidth - 70, tableY + 5, 10);
+      tableY += 5;
+    });
+    y = tableY + 10;
+
+    // Bank Account Information
+    addStyledText('Bank Account:', margin, y + 5, 10);
+    addStyledText(data.bankAccount, margin + 40, y + 5, 10);
+    y += 10;
+
+    // Add notes section if available
+    if (data.notes) {
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text("Notes:", 20, y);
+      y += 5;
+      
+      doc.setFontSize(9);
+      doc.setTextColor(50, 50, 50);
+      const notes = data.notes || ""; // Ensure notes is never undefined
+      doc.text(notes, 20, y, { maxWidth: 170 });
     }
-  });
-  
-  // Payment details
-  doc.setFontSize(14);
-  doc.text('Payment Details', 15, 105);
-  
-  const paymentDetails = [
-    ['Base Salary:', formatCurrency(data.baseSalary, data.currency)],
-    ['Gross Pay:', formatCurrency(data.grossPay, data.currency)],
-    ['Deductions:', formatCurrency(data.deductions, data.currency)],
-    ['Net Pay:', formatCurrency(data.netPay, data.currency)]
-  ];
-  
-  autoTable(doc, {
-    startY: 110,
-    head: [],
-    body: paymentDetails,
-    theme: 'plain',
-    styles: {
-      cellPadding: 2,
-      fontSize: 10
-    },
-    columnStyles: {
-      0: { fontStyle: 'bold', cellWidth: 50 },
-      1: { cellWidth: 100 }
-    }
-  });
-  
-  // Additional notes
-  if (data.notes) {
-    doc.setFontSize(14);
-    doc.text('Notes', 15, 160);
-    doc.setFontSize(10);
-    doc.text(data.notes, 15, 170);
+
+    // Footer
+    doc.line(margin, pageHeight - 30, pageWidth - margin, pageHeight - 30);
+    addStyledText('Acme Corp - Confidential', pageWidth / 2, pageHeight - 20, 8, 'italic', '#777');
+
+    // Save the PDF
+    const filename = `Payslip_${data.employeeName}_${data.period}.pdf`;
+    doc.save(filename);
   }
-  
-  // Footer
-  doc.setFontSize(10);
-  doc.setTextColor(100, 100, 100);
-  doc.text(`Generated on ${format(new Date(), 'dd MMM yyyy, HH:mm')}`, 15, 280);
-  
-  return doc.output('blob');
-};
-
-// Download payslip as PDF
-export const downloadPayslip = (data: PayslipData): void => {
-  const blob = generatePayslipPDF(data);
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  const fileName = `Payslip_${data.employeeName.replace(/\s+/g, '_')}_${data.period.replace(/\s+/g, '_')}.pdf`;
-  
-  link.href = url;
-  link.download = fileName;
-  link.click();
-  
-  // Clean up
-  URL.revokeObjectURL(url);
-};
+  catch (error) {
+    console.error("Error generating payslip:", error);
+    throw error;
+  }
+}

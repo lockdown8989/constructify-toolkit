@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/use-auth';
 import AvailabilityRequestForm from './AvailabilityRequestForm';
 import AvailabilityRequestList from './AvailabilityRequestList';
 import { useGetAvailability } from '@/hooks/availability';
+import { AvailabilityRequest } from '@/types/availability';
 
 const AvailabilityManagement = () => {
   const { user } = useAuth();
@@ -48,7 +49,12 @@ const AvailabilityManagement = () => {
         {showForm ? (
           <AvailabilityRequestForm onClose={() => setShowForm(false)} />
         ) : (
-          <AvailabilityRequestList requests={availabilityData || []} />
+          <AvailabilityRequestList 
+            requests={(availabilityData || []).map(req => ({
+              ...req,
+              notes: req.notes || null // Ensure notes is never undefined
+            }))} 
+          />
         )}
       </CardContent>
     </Card>

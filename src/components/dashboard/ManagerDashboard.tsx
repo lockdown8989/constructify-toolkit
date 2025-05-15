@@ -1,10 +1,11 @@
 
 import React from 'react';
-import { Employee } from '@/components/dashboard/salary-table/types';
+import { Employee } from '@/types/employee';
 import CurrentDateTime from '@/components/dashboard/CurrentDateTime';
 import DashboardStatsSection from '@/components/dashboard/DashboardStatsSection';
 import DashboardProgressSection from '@/components/dashboard/DashboardProgressSection';
 import DashboardMainContent from '@/components/dashboard/DashboardMainContent';
+import { SalaryTableProps } from '@/components/dashboard/salary-table/types';
 
 interface ManagerDashboardProps {
   firstName: string;
@@ -16,7 +17,7 @@ interface ManagerDashboardProps {
     projectTime: number;
     output: number;
   };
-  salaryEmployees: Employee[];
+  salaryEmployees: SalaryTableProps['employees'];
 }
 
 const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
@@ -26,8 +27,8 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
   interviewStats,
   salaryEmployees
 }) => {
-  // Convert Employee[] from salary-table/types to Employee[] from types/employee
-  const mappedEmployees = salaryEmployees.map(emp => ({
+  // Convert SalaryTable Employee[] to Employee[] from types/employee
+  const mappedEmployees: Employee[] = salaryEmployees.map(emp => ({
     ...emp,
     job_title: emp.job_title || emp.title || 'Employee',
     site: emp.site || 'Main Office',

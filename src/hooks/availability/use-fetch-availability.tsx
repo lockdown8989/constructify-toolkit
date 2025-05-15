@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { AvailabilityRequest } from '@/types/availability';
 
 export const useGetAvailability = (filters?: Partial<{
   status: string;
@@ -40,7 +41,7 @@ export const useGetAvailability = (filters?: Partial<{
       const { data, error } = await query;
 
       if (error) throw error;
-      return data;
+      return data as AvailabilityRequest[];
     },
   });
 };

@@ -1,3 +1,4 @@
+
 export interface PayslipData {
   id: string;
   employeeId: string;
@@ -20,7 +21,7 @@ export interface PayslipData {
   overtimePay: number;
   bonus: number;
   totalPay: number;
-  notes?: string; // Adding notes property for payslip-generator.ts
+  notes?: string;
 }
 
 export interface Employee {
@@ -42,7 +43,6 @@ export interface PayrollRecord {
   employee_id: string;
   employee_name?: string; // Added for compatibility
   employeeName?: string; // Added for compatibility
-  pay_period?: string; // Added for compatibility
   payment_date: string;
   payment_status: string;
   working_hours: number;
@@ -56,4 +56,8 @@ export interface PayrollRecord {
   salary_paid: number;
   department?: string;
   status?: string;
+  pay_period?: string; // Added for compatibility
+  gross_pay?: number; // Added for compatibility
+  taxes?: number; // Added for compatibility
+  net_pay?: number; // Added for compatibility
 }

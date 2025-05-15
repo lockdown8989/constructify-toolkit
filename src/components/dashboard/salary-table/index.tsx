@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -8,7 +9,7 @@ import { SearchBar } from '@/components/dashboard/salary-table/SearchBar';
 import { PayslipActions } from '@/components/dashboard/salary-table/PayslipActions';
 import { StatusActions } from '@/components/dashboard/salary-table/StatusActions';
 import { StatusFilter } from '@/components/dashboard/salary-table/StatusFilter';
-import type { Employee, PayslipData } from '@/types/supabase/payroll';
+import { Employee, PayslipData } from '@/types/supabase/payroll';
 
 interface SalaryTableProps {
   data: Employee[];
@@ -42,20 +43,27 @@ export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
       employeeName: employee.name,
       position: employee.title || employee.job_title || 'Employee',
       department: employee.department || 'N/A',
+      payPeriod: `${new Date().toLocaleString('default', { month: 'long' })} ${new Date().getFullYear()}`,
       period: `${new Date().toLocaleString('default', { month: 'long' })} ${new Date().getFullYear()}`,
       paymentDate: employee.paymentDate || new Date().toISOString(),
       baseSalary: typeof employee.salary === 'number' ? employee.salary : 
-                 typeof employee.salary === 'string' ? parseInt(employee.salary.replace(/[^0-9]/g, ''), 10) : 0,
+                 typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
       grossPay: typeof employee.salary === 'number' ? employee.salary : 
-               typeof employee.salary === 'string' ? parseInt(employee.salary.replace(/[^0-9]/g, ''), 10) : 0,
+               typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
+      taxes: typeof employee.salary === 'number' ? employee.salary * 0.2 : 
+            typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) * 0.2 : 0,
       deductions: 0,
-      netPay: typeof employee.salary === 'number' ? employee.salary : 
-             typeof employee.salary === 'string' ? parseInt(employee.salary.replace(/[^0-9]/g, ''), 10) : 0,
+      netPay: typeof employee.salary === 'number' ? employee.salary * 0.8 : 
+             typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) * 0.8 : 0,
       currency: 'USD',
+      bankAccount: '****1234',
+      title: 'Monthly Payslip',
+      salary: employee.salary,
       overtimePay: 0,
       bonus: 0,
       totalPay: typeof employee.salary === 'number' ? employee.salary : 
-                typeof employee.salary === 'string' ? parseInt(employee.salary.replace(/[^0-9]/g, ''), 10) : 0
+                typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
+      notes: ''
     };
     
     await downloadPayslip(payslipData);

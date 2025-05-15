@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
@@ -13,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { useCreateAvailability } from '@/hooks/availability';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { NewAvailabilityRequest } from '@/types/availability';
 
 interface AvailabilityRequestFormProps {
   onClose: () => void;
@@ -59,14 +61,16 @@ const AvailabilityRequestForm: React.FC<AvailabilityRequestFormProps> = ({ onClo
     }
     
     try {
-      await createMutation.mutate({
+      const requestData: NewAvailabilityRequest = {
         employee_id: employeeId,
         date: format(data.date, 'yyyy-MM-dd'),
         start_time: data.startTime,
         end_time: data.endTime,
         is_available: isAvailable,
-        notes: data.notes
-      });
+        notes: data.notes || null
+      };
+      
+      await createMutation.mutate(requestData);
       onClose();
     } catch (error) {
       console.error('Error creating availability:', error);

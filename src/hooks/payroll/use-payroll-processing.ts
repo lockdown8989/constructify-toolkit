@@ -21,21 +21,21 @@ export const processEmployeePayroll = async (employee: Employee): Promise<Payrol
     employee_id: employee.id,
     employee_name: employee.name, // This field is now in the interface
     payment_date: new Date().toISOString(),
-    gross_pay: basePay,
-    taxes: taxes,
-    net_pay: netPay,
+    payment_status: 'Pending',
     working_hours: 160, // Standard monthly hours
     overtime_hours: 0,
     base_pay: basePay,
     overtime_pay: 0,
     deductions: taxes,
-    payment_status: 'Pending',
     bonus: 0,
-    document_url: undefined,
-    document_name: undefined,
     salary_paid: netPay,
     department: employee.department,
-    status: 'Pending'
+    status: 'Pending',
+    // Added compatible fields
+    pay_period: format(new Date(), 'yyyy-MM'),
+    gross_pay: basePay,
+    taxes: taxes,
+    net_pay: netPay
   };
   
   return payrollRecord;

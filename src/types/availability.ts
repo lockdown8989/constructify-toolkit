@@ -8,9 +8,9 @@ export interface AvailabilityRequest {
   start_time: string;
   end_time: string;
   is_available: boolean;
-  notes: string | null;
-  manager_notes: string | null;
-  reviewer_id: string | null;
+  notes?: string | null; // Made optional to match the database schema
+  manager_notes?: string | null;
+  reviewer_id?: string | null;
   status: AvailabilityStatus;
   created_at: string;
   updated_at: string;

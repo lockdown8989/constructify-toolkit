@@ -5,7 +5,7 @@ export interface Employee {
   job_title: string;
   department: string;
   site: string;
-  salary: number;
+  salary: number | string; // Updated to accept both number and string
   status: string;
   avatar?: string;
   location?: string;
