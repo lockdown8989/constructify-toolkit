@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { PayslipData } from '@/types/supabase/payroll';
-import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
+import generatePayslipPDF from '@/utils/exports/payslip-generator';
 
 export const getEmployeeById = async (employeeId: string) => {
   const { data, error } = await supabase

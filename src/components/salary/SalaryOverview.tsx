@@ -7,7 +7,7 @@ import DocumentList from './components/DocumentList';
 import { useAuth } from '@/hooks/use-auth';
 import { useEmployees } from '@/hooks/use-employees';
 import { Skeleton } from '@/components/ui/skeleton';
-import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
+import generatePayslipPDF from '@/utils/exports/payslip-generator';
 import { useToast } from '@/hooks/use-toast';
 import { PayslipData } from '@/types/supabase/payroll';
 

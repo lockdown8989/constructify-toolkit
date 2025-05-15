@@ -67,8 +67,9 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
     }
   });
 
-  // Payment Information
-  const currentY = doc.autoTable.previous.finalY + 10;
+  // Payment Information - store last Y position
+  let currentY = doc.autoTable.lastEndPos?.y || 90;
+  currentY += 10;
   
   doc.setFont('helvetica', 'bold');
   doc.text('Payment Information', 15, currentY);
@@ -98,21 +99,22 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
     }
   });
 
-  // Earnings section
-  const earningsY = doc.autoTable.previous.finalY + 10;
+  // Earnings section - use lastEndPos to position
+  currentY = doc.autoTable.lastEndPos?.y || currentY + 30;
+  currentY += 10;
   
   doc.setFont('helvetica', 'bold');
-  doc.text('Earnings', 15, earningsY);
+  doc.text('Earnings', 15, currentY);
   
   doc.setFont('helvetica', 'normal');
   
   doc.autoTable({
-    startY: earningsY + 5,
+    startY: currentY + 5,
     head: [['Description', 'Amount']],
     body: [
-      ['Base Salary', formatCurrency(payslipData.baseSalary)],
-      ['Overtime Pay', formatCurrency(payslipData.overtimePay)],
-      ['Bonus', formatCurrency(payslipData.bonus)]
+      ['Base Salary', formatCurrency(payslipData.baseSalary, 'GBP')],
+      ['Overtime Pay', formatCurrency(payslipData.overtimePay, 'GBP')],
+      ['Bonus', formatCurrency(payslipData.bonus, 'GBP')]
     ],
     theme: 'grid',
     headStyles: {
@@ -126,20 +128,21 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
     }
   });
   
-  // Deductions section
-  const deductionsY = doc.autoTable.previous.finalY + 10;
+  // Deductions section - use lastEndPos to position
+  currentY = doc.autoTable.lastEndPos?.y || currentY + 50;
+  currentY += 10;
   
   doc.setFont('helvetica', 'bold');
-  doc.text('Deductions', 15, deductionsY);
+  doc.text('Deductions', 15, currentY);
   
   doc.setFont('helvetica', 'normal');
   
   doc.autoTable({
-    startY: deductionsY + 5,
+    startY: currentY + 5,
     head: [['Description', 'Amount']],
     body: [
-      ['Income Tax', formatCurrency(payslipData.taxes)],
-      ['Other Deductions', formatCurrency(payslipData.deductions)]
+      ['Income Tax', formatCurrency(payslipData.taxes, 'GBP')],
+      ['Other Deductions', formatCurrency(payslipData.deductions, 'GBP')]
     ],
     theme: 'grid',
     headStyles: {
@@ -153,21 +156,22 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
     }
   });
   
-  // Summary section
-  const summaryY = doc.autoTable.previous.finalY + 10;
+  // Summary section - use lastEndPos to position
+  currentY = doc.autoTable.lastEndPos?.y || currentY + 40;
+  currentY += 10;
   
   doc.setFont('helvetica', 'bold');
-  doc.text('Summary', 15, summaryY);
+  doc.text('Summary', 15, currentY);
   
   doc.setFont('helvetica', 'normal');
   
   doc.autoTable({
-    startY: summaryY + 5,
+    startY: currentY + 5,
     head: [['Description', 'Amount']],
     body: [
-      ['Gross Pay', formatCurrency(payslipData.grossPay)],
-      ['Total Deductions', formatCurrency(payslipData.taxes + payslipData.deductions)],
-      ['Net Pay', formatCurrency(payslipData.netPay)]
+      ['Gross Pay', formatCurrency(payslipData.grossPay, 'GBP')],
+      ['Total Deductions', formatCurrency(payslipData.taxes + payslipData.deductions, 'GBP')],
+      ['Net Pay', formatCurrency(payslipData.netPay, 'GBP')]
     ],
     theme: 'grid',
     headStyles: {
@@ -198,13 +202,14 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
   
   // Notes
   if (payslipData.notes) {
-    const notesY = doc.autoTable.previous.finalY + 10;
+    currentY = doc.autoTable.lastEndPos?.y || currentY + 60;
+    currentY += 10;
     
     doc.setFont('helvetica', 'bold');
-    doc.text('Notes', 15, notesY);
+    doc.text('Notes', 15, currentY);
     
     doc.setFont('helvetica', 'normal');
-    doc.text(payslipData.notes, 15, notesY + 10);
+    doc.text(payslipData.notes, 15, currentY + 10);
   }
   
   // Footer
@@ -233,4 +238,6 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
   return pdfBlob;
 };
 
-export default downloadPayslip;
+// Export as the default so it can be imported with import generatePayslipPDF from
+const generatePayslipPDF = downloadPayslip;
+export default generatePayslipPDF;

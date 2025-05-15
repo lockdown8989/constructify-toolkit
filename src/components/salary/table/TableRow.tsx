@@ -54,7 +54,7 @@ export const TableRow: React.FC<TableRowProps> = ({
         </div>
       </td>
       <td className="py-4 text-gray-600">{employee.title}</td>
-      <td className="py-4 font-medium">{formatCurrency(employee.salary)}</td>
+      <td className="py-4 font-medium">{formatCurrency(employee.salary, 'GBP')}</td>
       <td className="py-4">
         <span className={cn(
           "inline-block px-3 py-1 rounded-full text-xs font-medium",
