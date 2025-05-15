@@ -1,96 +1,97 @@
 
-import React, { useState } from 'react';
-import { useAvailabilityRequests, useUpdateAvailabilityRequest } from '@/hooks/availability';
-import { useAuth } from '@/hooks/use-auth';
-import { Skeleton } from '@/components/ui/skeleton';
-import AvailabilityRequestItem from './components/AvailabilityRequestItem';
-import ApprovalDialog from './components/ApprovalDialog';
+import React from 'react';
+import { format } from 'date-fns';
+import { useAvailability, useUpdateAvailability, useDeleteAvailability } from '@/hooks/availability';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Pencil, Trash2, Check, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
-const AvailabilityRequestList = () => {
-  const { data: requests = [], isLoading: isLoadingRequests, isError, error } = useAvailabilityRequests();
-  const { user } = useAuth();
-  const { mutate: updateRequest } = useUpdateAvailabilityRequest();
-  const [managerNotes, setManagerNotes] = useState("");
-  const [selectedRequest, setSelectedRequest] = useState<string | null>(null);
+const AvailabilityRequestList: React.FC = () => {
+  const { availabilityData, isLoading } = useAvailability();
+  const { updateAvailability } = useUpdateAvailability();
+  const { deleteAvailability } = useDeleteAvailability();
   
-  const handleApprove = (requestId: string) => {
-    updateRequest({
-      id: requestId,
-      status: 'Approved',
-      manager_notes: managerNotes,
-      reviewer_id: user?.id
-    });
-    setSelectedRequest(null);
-    setManagerNotes("");
-  };
+  if (isLoading) {
+    return <div className="text-center py-4">Loading availability data...</div>;
+  }
   
-  const handleReject = (requestId: string) => {
-    updateRequest({
-      id: requestId,
-      status: 'Rejected',
-      manager_notes: managerNotes,
-      reviewer_id: user?.id
-    });
-    setSelectedRequest(null);
-    setManagerNotes("");
-  };
-  
-  if (isLoadingRequests) {
+  if (availabilityData.length === 0) {
     return (
-      <div className="space-y-3 mt-2">
-        <Skeleton className="h-16 w-full rounded-lg" />
-        <Skeleton className="h-16 w-full rounded-lg" />
-        <Skeleton className="h-16 w-full rounded-lg" />
+      <div className="text-center py-8 border rounded-md bg-gray-50">
+        <p className="text-gray-500">No availability records found.</p>
+        <p className="text-sm text-gray-400 mt-1">Click the "Set Availability" button to add your first record.</p>
       </div>
     );
   }
-  
-  if (isError) {
-    return (
-      <div className="text-center py-6 text-red-500">
-        <p>Error loading availability data.</p>
-        <p className="text-sm mt-2">
-          {error instanceof Error ? error.message : 'Please try again later.'}
-        </p>
-      </div>
-    );
-  }
-  
-  if (requests.length === 0) {
-    return (
-      <div className="text-center py-6 text-gray-500">
-        <p>No availability preferences set.</p>
-        <p className="text-sm mt-2">
-          Set your preferred working hours to help your manager schedule shifts more effectively.
-        </p>
-      </div>
-    );
-  }
-
-  const selectedRequestData = requests.find(r => r.id === selectedRequest);
   
   return (
-    <div className="space-y-3 mt-2">
-      {requests.map((request) => (
-        <AvailabilityRequestItem
-          key={request.id}
-          request={request}
-          onReview={(id) => setSelectedRequest(id)}
-        />
-      ))}
-      
-      <ApprovalDialog
-        isOpen={!!selectedRequest}
-        onClose={() => {
-          setSelectedRequest(null);
-          setManagerNotes("");
-        }}
-        onApprove={() => selectedRequest && handleApprove(selectedRequest)}
-        onReject={() => selectedRequest && handleReject(selectedRequest)}
-        managerNotes={managerNotes}
-        onNotesChange={setManagerNotes}
-        employeeName={selectedRequestData?.employees?.name}
-      />
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Time</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Notes</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {availabilityData.map((item) => (
+            <TableRow key={item.id}>
+              <TableCell>{format(new Date(item.date), 'MMM dd, yyyy')}</TableCell>
+              <TableCell>{item.start_time} - {item.end_time}</TableCell>
+              <TableCell>
+                <Badge variant={item.is_available ? "success" : "destructive"}>
+                  {item.is_available ? 'Available' : 'Unavailable'}
+                </Badge>
+              </TableCell>
+              <TableCell className="max-w-[200px] truncate">{item.notes || '-'}</TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => updateAvailability({
+                      id: item.id,
+                      is_available: !item.is_available
+                    })}
+                  >
+                    {item.is_available ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+                  </Button>
+                  
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Availability Record</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this availability record? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => deleteAvailability(item.id)}
+                          className="bg-red-500 hover:bg-red-600"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };

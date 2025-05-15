@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { PayrollStatsGrid } from '@/components/payroll/stats/PayrollStatsGrid';
 import { PayrollActions } from '@/components/payroll/actions/PayrollActions';
@@ -63,10 +62,26 @@ const PayrollPage = () => {
     setSelectedEmployees(new Set());
   };
   
+  // Handler for processing payroll
   const handleProcessPayroll = async () => {
     setIsProcessing(true);
     try {
-      const selectedEmployeesList = initialEmployees.filter(emp => selectedEmployees.has(emp.id));
+      // Convert to correct Employee type before passing to processPayroll
+      const selectedEmployeesList = initialEmployees
+        .filter(emp => selectedEmployees.has(emp.id))
+        .map(emp => ({
+          id: emp.id,
+          name: emp.name,
+          job_title: emp.job_title || emp.title || 'Employee',
+          department: emp.department || '',
+          site: emp.site || 'Main Office',
+          salary: typeof emp.salary === 'number' ? emp.salary : 
+                 typeof emp.salary === 'string' ? parseInt(emp.salary.replace(/[^0-9]/g, ''), 10) : 0,
+          status: emp.status || 'Active',
+          lifecycle: 'Active',
+          start_date: new Date().toISOString()
+        }));
+        
       // Use the process payroll mutation
       const processMutation = payrollHooks.useProcessPayroll();
       await processMutation.mutateAsync(selectedEmployeesList);

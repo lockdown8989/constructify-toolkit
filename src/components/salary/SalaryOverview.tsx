@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +30,23 @@ const SalaryOverview = () => {
     
     setIsDownloading(true);
     try {
-      await generatePayslipPDF(currentEmployeeData.id);
+      // Create a PayslipData object instead of passing the ID directly
+      const payslipData: PayslipData = {
+        id: currentEmployeeData.id,
+        employeeId: currentEmployeeData.id,
+        employeeName: currentEmployeeData.name,
+        position: currentEmployeeData.job_title,
+        department: currentEmployeeData.department,
+        period: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        paymentDate: new Date().toISOString(),
+        baseSalary: currentEmployeeData.salary,
+        grossPay: currentEmployeeData.salary,
+        deductions: 0,
+        netPay: currentEmployeeData.salary,
+        currency: 'USD'
+      };
+      
+      await generatePayslipPDF(payslipData);
       toast({
         title: "Success",
         description: "Payslip PDF has been downloaded",

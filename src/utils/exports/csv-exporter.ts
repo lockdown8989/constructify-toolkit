@@ -33,7 +33,7 @@ export const generateCSV = (data: any[], filename: string) => {
 export const exportPayrollToCSV = (payrollData: PayrollRecord[], filename = 'payroll-export.csv') => {
   const formattedData = payrollData.map(record => ({
     'Employee ID': record.employee_id,
-    'Employee Name': record.employee_name || 'Unknown',
+    'Employee Name': record.employee_name || 'Unknown', // Use employee_name which we added to the type
     'Payment Date': record.payment_date,
     'Working Hours': record.working_hours,
     'Overtime Hours': record.overtime_hours,

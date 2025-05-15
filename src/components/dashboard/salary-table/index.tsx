@@ -26,7 +26,7 @@ export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       (item.department && item.department.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || item.status?.toLowerCase() === statusFilter.toLowerCase();
     
     return matchesSearch && matchesStatus;
   });
@@ -45,21 +45,38 @@ export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
       department: employee.department || 'N/A',
       period: `${new Date().toLocaleString('default', { month: 'long' })} ${new Date().getFullYear()}`,
       paymentDate: employee.paymentDate || new Date().toISOString(),
-      baseSalary: typeof employee.salary === 'number' ? employee.salary : 0,
-      grossPay: typeof employee.salary === 'number' ? employee.salary : 0,
+      baseSalary: typeof employee.salary === 'number' ? employee.salary : 
+                 typeof employee.salary === 'string' ? parseInt(employee.salary.replace(/[^0-9]/g, ''), 10) : 0,
+      grossPay: typeof employee.salary === 'number' ? employee.salary : 
+               typeof employee.salary === 'string' ? parseInt(employee.salary.replace(/[^0-9]/g, ''), 10) : 0,
       deductions: 0,
-      netPay: typeof employee.salary === 'number' ? employee.salary : 0,
+      netPay: typeof employee.salary === 'number' ? employee.salary : 
+             typeof employee.salary === 'string' ? parseInt(employee.salary.replace(/[^0-9]/g, ''), 10) : 0,
       currency: 'USD'
     };
     
     downloadPayslip(payslipData);
   };
 
+  // Calculate status counts for the StatusFilter
+  const statusCount = {
+    All: filteredData.length,
+    Paid: filteredData.filter(e => e.status === 'Paid').length,
+    Pending: filteredData.filter(e => e.status === 'Pending').length,
+    Absent: filteredData.filter(e => e.status === 'Absent').length
+  };
+
   return (
     <div className="w-full">
       <div className="flex justify-between mb-4 flex-col sm:flex-row gap-3">
-        <SearchBar onSearch={handleSearch} />
-        <StatusFilter onFilterChange={setStatusFilter} activeFilter={statusFilter} />
+        <SearchBar value={searchTerm} onChange={handleSearch} />
+        <StatusFilter 
+          currentStatus="All" 
+          onStatusChange={(status) => setStatusFilter(status.toLowerCase())}
+          statusCount={statusCount}
+          activeFilter={statusFilter}
+          onFilterChange={setStatusFilter}
+        />
       </div>
       
       <div className="rounded-md border bg-white">
@@ -75,12 +92,45 @@ export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
           </TableHeader>
           <TableBody>
             {filteredData.map((employee) => (
-              <SalaryTableRow
-                key={employee.id}
-                employee={employee}
-                onDownload={() => handlePayslipDownload(employee)}
-                onStatusChange={onStatusChange}
-              />
+              <TableRow key={employee.id}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={employee.avatar} alt={employee.name} />
+                      <AvatarFallback>{employee.name?.charAt(0) || 'U'}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium">{employee.name}</div>
+                      <div className="text-sm text-gray-500">{employee.title || employee.job_title}</div>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>{employee.salary}</TableCell>
+                <TableCell>
+                  <Badge variant={
+                    employee.status === 'Paid' ? 'success' :
+                    employee.status === 'Absent' ? 'outline' : 'warning'
+                  }>
+                    {employee.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>{employee.paymentDate || '-'}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <PayslipActions
+                      employee={employee}
+                      isProcessing={false}
+                      onDownload={() => handlePayslipDownload(employee)}
+                      onAttach={async () => {}}
+                    />
+                    {onStatusChange && (
+                      <StatusActions
+                        onStatusChange={(status) => onStatusChange(employee.id, status)}
+                      />
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
             ))}
             
             {filteredData.length === 0 && (

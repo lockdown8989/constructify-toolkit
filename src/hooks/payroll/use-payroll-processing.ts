@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 
 export const processEmployeePayroll = async (employee: Employee): Promise<PayrollRecord> => {
   // Calculate base pay
-  const basePay = employee.salary / 12; // Monthly salary
+  const basePay = typeof employee.salary === 'number' ? employee.salary / 12 : 0; // Monthly salary
   
   // Calculate taxes (simplified)
   const taxRate = 0.2; // 20% tax rate
@@ -20,15 +20,24 @@ export const processEmployeePayroll = async (employee: Employee): Promise<Payrol
   const payrollRecord: PayrollRecord = {
     id: crypto.randomUUID(),
     employee_id: employee.id,
-    employee_name: employee.name,
+    employee_name: employee.name, // This field is now in the interface
     pay_period: format(new Date(), 'yyyy-MM'),
+    payment_date: new Date().toISOString(),
     gross_pay: basePay,
     taxes: taxes,
     net_pay: netPay,
-    status: 'Pending',
-    created_at: new Date().toISOString(),
-    processed_at: null,
-    department: employee.department
+    working_hours: 160, // Standard monthly hours
+    overtime_hours: 0,
+    base_pay: basePay,
+    overtime_pay: 0,
+    deductions: taxes,
+    payment_status: 'Pending',
+    bonus: 0,
+    document_url: null,
+    document_name: null,
+    salary_paid: netPay,
+    department: employee.department,
+    status: 'Pending'
   };
   
   return payrollRecord;

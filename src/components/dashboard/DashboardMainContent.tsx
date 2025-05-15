@@ -39,6 +39,8 @@ const DashboardMainContent: React.FC<DashboardMainContentProps> = ({
         <SalaryTable 
           employees={salaryEmployees.map(emp => ({
             ...emp,
+            job_title: emp.title || 'Employee', // Add missing properties
+            site: 'Main Office', // Add missing properties
             selected: emp.id === selectedEmployee
           }))} 
           onSelectEmployee={handleSelectEmployee}

@@ -2,6 +2,8 @@
 export interface PayrollRecord {
   id: string;
   employee_id: string | null;
+  employee_name?: string; // Add this field since it's being used
+  pay_period?: string;
   payment_date: string | null;
   working_hours: number | null;
   overtime_hours: number | null;
@@ -13,6 +15,13 @@ export interface PayrollRecord {
   document_url: string | null;
   document_name: string | null;
   salary_paid: number | null;
+  gross_pay?: number;
+  taxes?: number;
+  net_pay?: number;
+  department?: string;
+  created_at?: string;
+  processed_at?: string;
+  status?: string;
 }
 
 export interface PayslipData {
@@ -32,6 +41,12 @@ export interface PayslipData {
   notes?: string;
   title?: string;
   salary?: string | number;
+  overtimePay?: number; // Add this field
+  bonus?: number; // Add this field
+  totalPay?: number; // Add this field
+  name?: string; // For backward compatibility
+  payPeriod?: string; // For backward compatibility
+  taxes?: string | number; // For backward compatibility
 }
 
 // For backward compatibility
@@ -44,17 +59,7 @@ export interface Employee {
   status?: "Paid" | "Pending" | "Absent";
   paymentDate?: string;
   department?: string;
-  site?: string;
+  site?: string; // Add this to match Employee interface
   avatar?: string;
   selected?: boolean;
-}
-
-export interface PayrollHistoryRecord {
-  id: string;
-  month: string;
-  total_paid: number;
-  employees_paid: number;
-  created_at: string;
-  status: string;
-  processed_by: string;
 }

@@ -37,7 +37,7 @@ export const SalaryTable: React.FC<SalaryTableProps> = ({
     } else {
       const filtered = employees.filter(emp => 
         emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        emp.department.toLowerCase().includes(searchTerm.toLowerCase())
+        emp.department?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredEmployees(filtered);
     }
@@ -50,18 +50,24 @@ export const SalaryTable: React.FC<SalaryTableProps> = ({
   const handleGeneratePayslip = (employeeData: Employee) => {
     // Convert the employee data to the expected PayslipData format
     const payslipData: PayslipData = {
+      id: employeeData.id,
       employeeId: employeeData.id,
-      name: employeeData.name,
-      department: employeeData.department,
-      position: employeeData.job_title,
+      employeeName: employeeData.name,
+      name: employeeData.name, // For backward compatibility
+      department: employeeData.department || '',
+      position: employeeData.job_title || '',
       payPeriod: format(new Date(), 'yyyy-MM'),
-      grossPay: employeeData.salary.toString(),
-      taxes: (employeeData.salary * 0.2).toString(), // Simplified tax calculation (20%)
-      netPay: (employeeData.salary * 0.8).toString(),
+      period: format(new Date(), 'yyyy-MM'),
+      grossPay: typeof employeeData.salary === 'number' ? employeeData.salary : 0,
+      taxes: typeof employeeData.salary === 'number' ? employeeData.salary * 0.2 : 0, // Simplified tax calculation (20%)
+      netPay: typeof employeeData.salary === 'number' ? employeeData.salary * 0.8 : 0,
       paymentDate: format(new Date(), 'yyyy-MM-dd'),
+      baseSalary: typeof employeeData.salary === 'number' ? employeeData.salary : 0,
+      deductions: 0,
+      currency: 'USD',
       bankAccount: '****1234',
       title: 'Monthly Payslip',
-      salary: employeeData.salary.toString(),
+      salary: employeeData.salary,
     };
     
     onSelectEmployee(employeeData.id);
@@ -69,7 +75,7 @@ export const SalaryTable: React.FC<SalaryTableProps> = ({
   
   return (
     <div className={`space-y-4 ${className}`}>
-      <SearchBar onSearch={handleSearch} />
+      <SearchBar value={searchTerm} onChange={handleSearch} />
       <div className="rounded-lg border overflow-hidden">
         <Table>
           <TableHeader>
@@ -86,16 +92,20 @@ export const SalaryTable: React.FC<SalaryTableProps> = ({
                 <TableRow key={emp.id}>
                   <TableCell className="font-medium">{emp.name}</TableCell>
                   <TableCell>{emp.department}</TableCell>
-                  <TableCell>${emp.salary}</TableCell>
+                  <TableCell>${typeof emp.salary === 'number' ? emp.salary : emp.salary}</TableCell>
                   <TableCell className="flex gap-2">
                     <PayslipActions 
-                      employee={emp}
+                      employee={{
+                        ...emp,
+                        title: emp.job_title || '',
+                        paymentDate: format(new Date(), 'yyyy-MM-dd')
+                      }}
                       onGenerate={() => handleGeneratePayslip(emp)}
                     />
                     {onUpdateStatus && (
                       <StatusActions 
+                        onStatusChange={(status) => onUpdateStatus(emp.id, status)}
                         employeeId={emp.id}
-                        onUpdateStatus={onUpdateStatus}
                       />
                     )}
                   </TableCell>

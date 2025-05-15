@@ -45,27 +45,26 @@ export const generatePayslip = async (employeeId: string): Promise<string | null
       position: employee.job_title,
       department: employee.department,
       period: payrollRecord.pay_period || new Date().toISOString().split('T')[0],
+      paymentDate: payrollRecord.payment_date || new Date().toISOString(),
       baseSalary: parseInt(employee.salary?.toString().replace(/\$|,/g, '') || '0', 10),
       overtimePay: payrollRecord.overtime_pay || 0,
       bonus: payrollRecord.bonus || 0,
       deductions: payrollRecord.deductions || 0,
-      totalPay: payrollRecord.salary_paid || 0,
+      grossPay: payrollRecord.base_pay || 0,
+      netPay: payrollRecord.salary_paid || 0,
       currency: '$',
       // Add compatible fields for backward compatibility
       name: employee.name,
       payPeriod: payrollRecord.pay_period,
-      grossPay: payrollRecord.base_pay?.toString(),
-      netPay: payrollRecord.salary_paid?.toString(),
-      taxes: (payrollRecord.deductions || 0).toString(),
-      paymentDate: new Date().toISOString().split('T')[0],
+      taxes: payrollRecord.deductions?.toString() || '0',
       salary: employee.salary?.toString(),
       bankAccount: '****1234', // Masked for privacy
       title: 'Monthly Payslip'
     };
     
-    // Generate PDF
+    // Generate PDF - ensure this returns a string, not a Blob
     const pdfUrl = await generatePayslipPDF(payslipData);
-    return pdfUrl;
+    return typeof pdfUrl === 'string' ? pdfUrl : URL.createObjectURL(pdfUrl as unknown as Blob);
   } catch (error) {
     console.error('Error generating payslip:', error);
     return null;
