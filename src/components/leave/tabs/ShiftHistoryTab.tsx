@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO, isAfter, subMonths } from 'date-fns';
 import { Schedule } from '@/hooks/use-schedules';
+import { convertEmployeeScheduleToSchedule } from '@/utils/schedule-utils';
 
 const ShiftHistoryTab = () => {
   const { schedules, isLoading, refetch } = useEmployeeSchedule();
@@ -37,16 +38,6 @@ const ShiftHistoryTab = () => {
       title: "Refreshed",
       description: "Shift history has been updated",
     });
-  };
-  
-  // Convert EmployeeSchedule to Schedule type
-  const convertToSchedule = (employeeSchedule: typeof schedules[0]): Schedule => {
-    return {
-      ...employeeSchedule,
-      mobile_notification_sent: employeeSchedule.mobile_notification_sent,
-      created_platform: employeeSchedule.created_platform,
-      last_modified_platform: employeeSchedule.last_modified_platform,
-    };
   };
   
   return (
@@ -79,19 +70,24 @@ const ShiftHistoryTab = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {recentSchedules.map(schedule => (
-              <div key={schedule.id}>
-                <ShiftDetailCard
-                  schedule={convertToSchedule(schedule)}
-                  onInfoClick={() => {}}
-                  onEmailClick={() => {}}
-                  onCancelClick={() => {}}
-                />
-                <div className="mt-1 text-xs text-right text-muted-foreground">
-                  Status: {schedule.status} • Updated: {format(parseISO(schedule.updated_at || schedule.created_at), 'MMM d, yyyy')}
+            {recentSchedules.map(schedule => {
+              // Convert EmployeeSchedule to Schedule
+              const convertedSchedule = convertEmployeeScheduleToSchedule(schedule);
+              
+              return (
+                <div key={schedule.id}>
+                  <ShiftDetailCard
+                    schedule={convertedSchedule}
+                    onInfoClick={() => {}}
+                    onEmailClick={() => {}}
+                    onCancelClick={() => {}}
+                  />
+                  <div className="mt-1 text-xs text-right text-muted-foreground">
+                    Status: {schedule.status} • Updated: {format(parseISO(schedule.updated_at || schedule.created_at), 'MMM d, yyyy')}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>
