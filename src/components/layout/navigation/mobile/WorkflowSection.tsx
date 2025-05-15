@@ -2,6 +2,7 @@
 import { Calendar, Calendar as CalendarIcon, Users } from "lucide-react";
 import MobileNavLink from "./MobileNavLink";
 import MobileNavDivider from "./MobileNavDivider";
+import { useAuth } from "@/hooks/auth";
 
 interface WorkflowSectionProps {
   hasManagerialAccess: boolean;
@@ -9,6 +10,9 @@ interface WorkflowSectionProps {
 }
 
 const WorkflowSection = ({ hasManagerialAccess, onClose }: WorkflowSectionProps) => {
+  const { isAdmin, isManager, isHR } = useAuth();
+  const isEmployee = !hasManagerialAccess;
+
   return (
     <>
       <MobileNavDivider label="Workflow" />
@@ -20,7 +24,7 @@ const WorkflowSection = ({ hasManagerialAccess, onClose }: WorkflowSectionProps)
         onClick={onClose}
       />
       
-      {!hasManagerialAccess && (
+      {isEmployee && (
         <MobileNavLink
           to="/employee-calendar"
           icon={CalendarIcon}
