@@ -8,7 +8,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Employee } from '@/types/employee';
+import { Employee } from '@/components/salary/table/types';
 import { SearchBar } from '@/components/dashboard/salary-table/SearchBar';
 import { PayslipActions } from '@/components/dashboard/salary-table/PayslipActions';
 import { StatusActions } from '@/components/dashboard/salary-table/StatusActions';
@@ -55,19 +55,22 @@ export const SalaryTable: React.FC<SalaryTableProps> = ({
       employeeName: employeeData.name,
       name: employeeData.name, // For backward compatibility
       department: employeeData.department || '',
-      position: employeeData.job_title || '',
+      position: employeeData.job_title || employeeData.title || '',
       payPeriod: format(new Date(), 'yyyy-MM'),
       period: format(new Date(), 'yyyy-MM'),
-      grossPay: typeof employeeData.salary === 'number' ? employeeData.salary : 0,
-      taxes: typeof employeeData.salary === 'number' ? employeeData.salary * 0.2 : 0, // Simplified tax calculation (20%)
-      netPay: typeof employeeData.salary === 'number' ? employeeData.salary * 0.8 : 0,
+      grossPay: typeof employeeData.salary === 'number' ? employeeData.salary : parseFloat(String(employeeData.salary)),
+      taxes: typeof employeeData.salary === 'number' ? employeeData.salary * 0.2 : parseFloat(String(employeeData.salary)) * 0.2, // Simplified tax calculation (20%)
+      netPay: typeof employeeData.salary === 'number' ? employeeData.salary * 0.8 : parseFloat(String(employeeData.salary)) * 0.8,
       paymentDate: format(new Date(), 'yyyy-MM-dd'),
-      baseSalary: typeof employeeData.salary === 'number' ? employeeData.salary : 0,
+      baseSalary: typeof employeeData.salary === 'number' ? employeeData.salary : parseFloat(String(employeeData.salary)),
       deductions: 0,
       currency: 'USD',
       bankAccount: '****1234',
       title: 'Monthly Payslip',
       salary: employeeData.salary,
+      overtimePay: 0,
+      bonus: 0,
+      totalPay: typeof employeeData.salary === 'number' ? employeeData.salary : parseFloat(String(employeeData.salary)),
     };
     
     onSelectEmployee(employeeData.id);
@@ -97,8 +100,9 @@ export const SalaryTable: React.FC<SalaryTableProps> = ({
                     <PayslipActions 
                       employee={{
                         ...emp,
-                        title: emp.job_title || '',
-                        paymentDate: format(new Date(), 'yyyy-MM-dd')
+                        title: emp.title || emp.job_title || '',
+                        status: (emp.status as 'Paid' | 'Pending' | 'Absent') || 'Pending',
+                        paymentDate: emp.paymentDate || format(new Date(), 'yyyy-MM-dd')
                       }}
                       onGenerate={() => handleGeneratePayslip(emp)}
                     />

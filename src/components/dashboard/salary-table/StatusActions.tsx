@@ -11,8 +11,8 @@ import {
 
 export interface StatusActionsProps {
   onStatusChange: (status: 'Paid' | 'Pending' | 'Absent') => void;
-  employeeId?: string; // Add this for compatibility
-  onUpdateStatus?: (id: string, status: 'Paid' | 'Pending' | 'Absent') => void; // Add this for compatibility
+  employeeId?: string;
+  onUpdateStatus?: (id: string, status: 'Paid' | 'Pending' | 'Absent') => void;
 }
 
 export const StatusActions: React.FC<StatusActionsProps> = ({ 

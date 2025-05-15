@@ -36,7 +36,7 @@ export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
     setSearchTerm(term);
   };
 
-  const handlePayslipDownload = (employee: Employee) => {
+  const handlePayslipDownload = async (employee: Employee) => {
     const payslipData: PayslipData = {
       id: employee.id,
       employeeId: employee.id,
@@ -52,10 +52,14 @@ export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
       deductions: 0,
       netPay: typeof employee.salary === 'number' ? employee.salary : 
              typeof employee.salary === 'string' ? parseInt(employee.salary.replace(/[^0-9]/g, ''), 10) : 0,
-      currency: 'USD'
+      currency: 'USD',
+      overtimePay: 0,
+      bonus: 0,
+      totalPay: typeof employee.salary === 'number' ? employee.salary : 
+                typeof employee.salary === 'string' ? parseInt(employee.salary.replace(/[^0-9]/g, ''), 10) : 0
     };
     
-    downloadPayslip(payslipData);
+    await downloadPayslip(payslipData);
   };
 
   // Calculate status counts for the StatusFilter
@@ -69,7 +73,7 @@ export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
   return (
     <div className="w-full">
       <div className="flex justify-between mb-4 flex-col sm:flex-row gap-3">
-        <SearchBar value={searchTerm} onChange={handleSearch} />
+        <SearchBar value={searchTerm} onChange={handleSearch} onSearch={handleSearch} />
         <StatusFilter 
           currentStatus="All" 
           onStatusChange={(status) => setStatusFilter(status.toLowerCase())}
@@ -120,12 +124,13 @@ export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
                     <PayslipActions
                       employee={employee}
                       isProcessing={false}
-                      onDownload={() => handlePayslipDownload(employee)}
+                      onDownload={handlePayslipDownload}
                       onAttach={async () => {}}
                     />
                     {onStatusChange && (
                       <StatusActions
                         onStatusChange={(status) => onStatusChange(employee.id, status)}
+                        employeeId={employee.id}
                       />
                     )}
                   </div>

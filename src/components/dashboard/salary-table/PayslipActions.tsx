@@ -15,16 +15,18 @@ import { useToast } from '@/hooks/use-toast';
 
 interface PayslipActionsProps {
   employee: Employee;
-  isProcessing: boolean;
-  onDownload: (employee: Employee) => Promise<void>;
-  onAttach: (employee: Employee) => Promise<void>;
+  isProcessing?: boolean;
+  onDownload?: (employee: Employee) => Promise<void> | void;
+  onAttach?: (employee: Employee) => Promise<void> | void;
+  onGenerate?: () => void;
 }
 
 export const PayslipActions: React.FC<PayslipActionsProps> = ({
   employee,
-  isProcessing,
-  onDownload,
-  onAttach,
+  isProcessing = false,
+  onDownload = async () => {},
+  onAttach = async () => {},
+  onGenerate,
 }) => {
   return (
     <DropdownMenu>
@@ -43,6 +45,12 @@ export const PayslipActions: React.FC<PayslipActionsProps> = ({
       <DropdownMenuContent>
         <DropdownMenuLabel>Payslip Options</DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {onGenerate && (
+          <DropdownMenuItem onClick={onGenerate}>
+            <FileText className="h-4 w-4 mr-2" />
+            Generate Payslip
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={() => onDownload(employee)}>
           <Download className="h-4 w-4 mr-2" />
           Download PDF

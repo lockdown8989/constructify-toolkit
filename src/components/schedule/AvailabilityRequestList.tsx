@@ -1,97 +1,94 @@
-
 import React from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { MoreVertical, CheckCircle, XCircle } from 'lucide-react';
+import { useUpdateAvailabilityRequest } from '@/hooks/use-availability';
 import { format } from 'date-fns';
-import { useAvailability, useUpdateAvailability, useDeleteAvailability } from '@/hooks/availability';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Pencil, Trash2, Check, X } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
-const AvailabilityRequestList: React.FC = () => {
-  const { availabilityData, isLoading } = useAvailability();
-  const { updateAvailability } = useUpdateAvailability();
-  const { deleteAvailability } = useDeleteAvailability();
-  
-  if (isLoading) {
-    return <div className="text-center py-4">Loading availability data...</div>;
-  }
-  
-  if (availabilityData.length === 0) {
-    return (
-      <div className="text-center py-8 border rounded-md bg-gray-50">
-        <p className="text-gray-500">No availability records found.</p>
-        <p className="text-sm text-gray-400 mt-1">Click the "Set Availability" button to add your first record.</p>
-      </div>
-    );
-  }
-  
+interface AvailabilityRequest {
+  id: string;
+  employee_id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  notes?: string;
+  manager_notes?: string;
+  reviewer_id?: string;
+  created_at: string;
+  updated_at: string;
+  employee_name?: string;
+}
+
+interface AvailabilityRequestListProps {
+  requests: AvailabilityRequest[];
+}
+
+const AvailabilityRequestList: React.FC<AvailabilityRequestListProps> = ({ requests }) => {
+  const updateAvailability = useUpdateAvailabilityRequest();
+
+  const handleApprove = (id: string) => {
+    updateAvailability.mutate({ id, status: 'Approved' });
+  };
+
+  const handleReject = (id: string) => {
+    updateAvailability.mutate({ id, status: 'Rejected' });
+  };
+
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Time</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Notes</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {availabilityData.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell>{format(new Date(item.date), 'MMM dd, yyyy')}</TableCell>
-              <TableCell>{item.start_time} - {item.end_time}</TableCell>
-              <TableCell>
-                <Badge variant={item.is_available ? "success" : "destructive"}>
-                  {item.is_available ? 'Available' : 'Unavailable'}
-                </Badge>
-              </TableCell>
-              <TableCell className="max-w-[200px] truncate">{item.notes || '-'}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => updateAvailability({
-                      id: item.id,
-                      is_available: !item.is_available
-                    })}
-                  >
-                    {item.is_available ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
-                  </Button>
-                  
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Availability Record</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this availability record? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
-                          onClick={() => deleteAvailability(item.id)}
-                          className="bg-red-500 hover:bg-red-600"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="space-y-4">
+      {requests.map((request) => (
+        <Card key={request.id}>
+          <CardHeader>
+            <CardTitle>{request.employee_name || 'Employee'} - {format(new Date(request.date), 'MM/dd/yyyy')}</CardTitle>
+            <CardDescription>
+              {request.start_time} - {request.end_time}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between">
+            <div>
+              <Badge variant={request.status === 'Approved' ? 'success' : 'destructive'}>
+                {request.status}
+              </Badge>
+              <p className="text-sm text-gray-500 mt-2">
+                {request.notes}
+              </p>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleApprove(request.id)}>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Approve
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleReject(request.id)}>
+                  <XCircle className="h-4 w-4 mr-2" />
+                  Reject
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 };

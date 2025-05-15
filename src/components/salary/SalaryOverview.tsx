@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +8,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { useEmployees } from '@/hooks/use-employees';
 import { Skeleton } from '@/components/ui/skeleton';
 import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { PayslipData } from '@/types/supabase/payroll';
 
 const SalaryOverview = () => {
   const { user } = useAuth();
@@ -43,7 +45,10 @@ const SalaryOverview = () => {
         grossPay: currentEmployeeData.salary,
         deductions: 0,
         netPay: currentEmployeeData.salary,
-        currency: 'USD'
+        currency: 'USD',
+        overtimePay: 0,
+        bonus: 0,
+        totalPay: currentEmployeeData.salary
       };
       
       await generatePayslipPDF(payslipData);

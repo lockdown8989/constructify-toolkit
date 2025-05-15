@@ -2,14 +2,15 @@
 export interface Employee {
   id: string;
   name: string;
+  avatar?: string;  // Make sure avatar is optional here as well
   title: string;
   salary: string | number;
   status: 'Paid' | 'Absent' | 'Pending';
-  paymentDate: string;
-  department?: string;
-  avatar?: string;  // Make sure avatar is optional here as well
   selected?: boolean;
-  user_id?: string;
+  paymentDate?: string;
+  department?: string;
+  job_title?: string;
+  site?: string;
 }
 
 export interface SalaryTableProps {

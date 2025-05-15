@@ -20,8 +20,8 @@ export interface StatusFilterProps {
     Pending: number;
     Absent: number;
   };
-  activeFilter?: string; // Add this prop
-  onFilterChange?: (filter: string) => void; // Add this prop
+  activeFilter?: string;
+  onFilterChange?: (filter: string) => void;
 }
 
 export const StatusFilter: React.FC<StatusFilterProps> = ({

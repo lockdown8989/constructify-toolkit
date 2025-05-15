@@ -1,4 +1,3 @@
-
 import { Json } from '@/integrations/supabase/types';
 import type { 
   Employee, 
@@ -36,9 +35,11 @@ import type {
   Project
 } from './projects';
 import type {
-  PayrollRecord,
-  PayrollHistoryRecord
+  PayrollRecord
 } from './payroll';
+import type {
+  PayrollHistoryRecord
+} from './payroll-history';
 
 export interface Database {
   public: {
