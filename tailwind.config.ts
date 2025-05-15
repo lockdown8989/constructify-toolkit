@@ -133,6 +133,10 @@ export default {
 				'pulse-soft': {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.8' }
+				},
+				'calendar-pull': {
+					'0%': { transform: 'translateX(-100%)' },
+					'100%': { transform: 'translateX(300%)' }
 				}
 			},
 			animation: {
@@ -141,7 +145,8 @@ export default {
 				'fade-in': 'fade-in 0.3s ease-out',
 				'fade-up': 'fade-up 0.4s ease-out',
 				'scale-in': 'scale-in 0.3s ease-out',
-				'pulse-soft': 'pulse-soft 3s infinite ease-in-out'
+				'pulse-soft': 'pulse-soft 3s infinite ease-in-out',
+				'calendar-pull': 'calendar-pull 1.5s infinite ease-in-out'
 			},
 			touchAction: {
 				'pan-y': 'pan-y',
