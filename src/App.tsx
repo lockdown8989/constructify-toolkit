@@ -1,3 +1,4 @@
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"; 
 import { ThemeProvider } from "@/components/theme-provider";
 import { CurrencyProvider } from "@/hooks/use-currency-preference";
@@ -24,7 +25,7 @@ import Settings from "@/pages/Settings";
 import ProfileSettings from "@/pages/ProfileSettings";
 import Attendance from "@/pages/Attendance";
 import TimeClock from "@/pages/TimeClock";
-import ManagerTimeClock from "@/pages/ManagerTimeClock"; // Add import for the new page
+import ManagerTimeClock from "@/pages/ManagerTimeClock"; 
 import RestaurantSchedule from "@/pages/RestaurantSchedule";
 import NotFound from "@/pages/NotFound";
 import Hiring from "@/pages/Hiring";
@@ -143,16 +144,11 @@ function App() {
                       <About />
                     </ProtectedRoute>
                   } />
-                  {
-                    path: "/employee-calendar",
-                    element: (
-                      <ProtectedRoute>
-                        <AppLayout>
-                          <EmployeeCalendar />
-                        </AppLayout>
-                      </ProtectedRoute>
-                    ),
-                  }
+                  <Route path="/employee-calendar" element={
+                    <ProtectedRoute>
+                      <EmployeeCalendar />
+                    </ProtectedRoute>
+                  } />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

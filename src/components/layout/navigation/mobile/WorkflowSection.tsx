@@ -21,12 +21,14 @@ const WorkflowSection = ({ hasManagerialAccess, onClose }: WorkflowSectionProps)
       />
       
       {!hasManagerialAccess && (
-        <MobileNavLink
-          to="/employee-calendar"
-          icon={CalendarIcon}
-          label="Employee Calendar"
-          onClick={onClose}
-        />
+        <>
+          <MobileNavLink
+            to="/employee-calendar"
+            icon={CalendarIcon}
+            label="Employee Calendar"
+            onClick={onClose}
+          />
+        </>
       )}
       
       {hasManagerialAccess && (

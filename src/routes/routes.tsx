@@ -15,6 +15,7 @@ import Auth from "@/pages/Auth";
 import NotFound from "@/pages/NotFound";
 import TimeClock from "@/pages/TimeClock";
 import ManagerTimeClock from "@/pages/ManagerTimeClock";
+import EmployeeCalendar from "@/pages/EmployeeCalendar";
 
 const router = createBrowserRouter([
   {
@@ -101,11 +102,19 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
-    {
+  {
     path: "/manager-time-clock",
     element: (
       <ProtectedRoute>
         <ManagerTimeClock />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/employee-calendar",
+    element: (
+      <ProtectedRoute>
+        <EmployeeCalendar />
       </ProtectedRoute>
     ),
   },
