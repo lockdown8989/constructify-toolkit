@@ -27,6 +27,12 @@ export interface PayrollRecord {
   ytd_ni?: number;
   ytd_other?: number;
   ytd_net?: number;
+  employees?: {
+    name: string;
+    job_title: string;
+    department: string;
+    site: string;
+  };
 }
 
 export interface PayrollHistoryRecord {

@@ -69,7 +69,7 @@ export const usePayroll = (employees: Employee[]) => {
             name: employee.name,
             job_title: employee.title || '',  // Map title to job_title
             department: employee.department || '',
-            site: '',  // Provide default value for site
+            site: employee.site || '',  // Provide default value for site
             salary: typeof employee.salary === 'string' 
               ? parseFloat(employee.salary.replace(/[^\d.]/g, '')) 
               : employee.salary,
@@ -125,10 +125,10 @@ export const usePayroll = (employees: Employee[]) => {
   const handleExportPayroll = async () => {
     setIsExporting(true);
     try {
-      await exportPayrollData('GBP');
+      await exportPayrollData(currency || 'GBP');
       toast({
         title: "Export successful",
-        description: `Payroll data has been exported to CSV in £.`,
+        description: `Payroll data has been exported to CSV in ${currency || '£'}.`,
       });
     } catch (err) {
       console.error("Error exporting payrolls:", err);

@@ -38,22 +38,27 @@ export const exportPayrollData = async (currency: string = 'GBP') => {
     }
     
     // Format data for CSV export
-    const formattedData = data.map(record => ({
-      'Employee Name': record.employees ? record.employees.name || 'Unknown' : 'Unknown',
-      'Job Title': record.employees ? record.employees.job_title || 'Unknown' : 'Unknown',
-      'Department': record.employees ? record.employees.department || 'Unknown' : 'Unknown',
-      'Site': record.employees ? record.employees.site || 'Unknown' : 'Unknown',
-      'Base Salary': `${currency} ${record.base_pay?.toFixed(2) || '0.00'}`,
-      'Deductions': `${currency} ${record.deductions?.toFixed(2) || '0.00'}`,
-      'Tax Paid': `${currency} ${record.tax_paid?.toFixed(2) || '0.00'}`,
-      'NI Contribution': `${currency} ${record.ni_contribution?.toFixed(2) || '0.00'}`,
-      'Hours Worked': record.working_hours?.toFixed(2) || '0.00',
-      'Overtime Hours': record.overtime_hours?.toFixed(2) || '0.00',
-      'Overtime Pay': `${currency} ${record.overtime_pay?.toFixed(2) || '0.00'}`,
-      'Net Salary': `${currency} ${record.salary_paid?.toFixed(2) || '0.00'}`,
-      'Status': record.payment_status || 'Unknown',
-      'Payment Date': record.payment_date ? format(new Date(record.payment_date), 'dd/MM/yyyy') : 'Pending'
-    }));
+    const formattedData = data.map(record => {
+      // Safely access the nested employee data
+      const employeeData = record.employees || {};
+      
+      return {
+        'Employee Name': employeeData.name || 'Unknown',
+        'Job Title': employeeData.job_title || 'Unknown',
+        'Department': employeeData.department || 'Unknown',
+        'Site': employeeData.site || 'Unknown',
+        'Base Salary': `${currency} ${record.base_pay?.toFixed(2) || '0.00'}`,
+        'Deductions': `${currency} ${record.deductions?.toFixed(2) || '0.00'}`,
+        'Tax Paid': `${currency} ${record.tax_paid?.toFixed(2) || '0.00'}`,
+        'NI Contribution': `${currency} ${record.ni_contribution?.toFixed(2) || '0.00'}`,
+        'Hours Worked': record.working_hours?.toFixed(2) || '0.00',
+        'Overtime Hours': record.overtime_hours?.toFixed(2) || '0.00',
+        'Overtime Pay': `${currency} ${record.overtime_pay?.toFixed(2) || '0.00'}`,
+        'Net Salary': `${currency} ${record.salary_paid?.toFixed(2) || '0.00'}`,
+        'Status': record.payment_status || 'Unknown',
+        'Payment Date': record.payment_date ? format(new Date(record.payment_date), 'dd/MM/yyyy') : 'Pending'
+      };
+    });
     
     // Generate CSV filename with current date
     const currentDate = format(new Date(), 'yyyy-MM-dd');
