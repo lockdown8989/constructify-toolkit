@@ -1,86 +1,60 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import SalaryTable from '@/components/dashboard/salary-table';
-import { Employee } from '@/components/dashboard/salary-table/types';
-import { PayrollProcessingHistory } from './PayrollProcessingHistory';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { FileText, History, CalendarDays, ClipboardList } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
+import { AlertCircle } from 'lucide-react';
+import { useEmployees } from '@/hooks/use-employees';
+import { SalaryTable } from '@/components/salary/table/SalaryTable';
+import { PayrollStatsGrid } from '../stats/PayrollStatsGrid';
 
-interface PayrollHistoryTabsProps {
-  currentMonthEmployees: Employee[];
-  onSelectEmployee: (id: string) => void;
-  onUpdateStatus: (id: string, status: 'Paid' | 'Absent' | 'Pending') => void;
-}
+const PayrollHistoryTabs: React.FC = () => {
+  const { data: employees, isLoading, error } = useEmployees();
+  const [selectedEmployeeId, setSelectedEmployeeId] = React.useState<string | null>(null);
 
-export const PayrollHistoryTabs: React.FC<PayrollHistoryTabsProps> = ({
-  currentMonthEmployees,
-  onSelectEmployee,
-  onUpdateStatus,
-}) => {
-  const isMobile = useIsMobile();
-  
+  const handleSelectEmployee = (id: string) => {
+    setSelectedEmployeeId(id);
+  };
+
+  const handleUpdateStatus = (id: string, status: "Paid" | "Absent" | "Pending") => {
+    // This would be implemented with a mutation to update payroll status
+    console.log(`Update employee ${id} status to ${status}`);
+  };
+
+  if (isLoading) {
+    return <div className="p-8 text-center">Loading employee data...</div>;
+  }
+
+  if (error || !employees) {
+    return (
+      <div className="p-8 text-center">
+        <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
+        <h2 className="text-lg font-semibold">Error loading employee data</h2>
+        <p className="text-gray-500">Please try again later</p>
+      </div>
+    );
+  }
+
   return (
-    <Tabs defaultValue="current" className="w-full">
-      <TabsList className="mb-6 grid grid-cols-4 h-auto p-1 bg-muted/20 border">
-        <TabsTrigger value="current" className="flex items-center gap-2 py-3 data-[state=active]:bg-white">
-          <FileText size={16} />
-          <span className={isMobile ? "hidden" : ""}>Current Month</span>
-        </TabsTrigger>
-        <TabsTrigger value="previous" className="flex items-center gap-2 py-3 data-[state=active]:bg-white">
-          <CalendarDays size={16} />
-          <span className={isMobile ? "hidden" : ""}>Previous Month</span>
-        </TabsTrigger>
-        <TabsTrigger value="history" className="flex items-center gap-2 py-3 data-[state=active]:bg-white">
-          <History size={16} />
-          <span className={isMobile ? "hidden" : ""}>Payment History</span>
-        </TabsTrigger>
-        <TabsTrigger value="processing" className="flex items-center gap-2 py-3 data-[state=active]:bg-white">
-          <ClipboardList size={16} />
-          <span className={isMobile ? "hidden" : ""}>Processing Log</span>
-        </TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="current">
-        <SalaryTable 
-          employees={currentMonthEmployees}
-          onSelectEmployee={onSelectEmployee}
-          onUpdateStatus={onUpdateStatus}
-          className="rounded-xl border shadow-sm"
-        />
-      </TabsContent>
-      
-      <TabsContent value="previous">
-        <Card className="border rounded-xl shadow-sm">
-          <CardContent className="flex flex-col items-center justify-center py-12 px-4">
-            <History className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-medium mb-2">Previous Month's Payslips</h3>
-            <p className="text-muted-foreground text-center mb-6">Payslip data for previous month is archived.</p>
-            <Button variant="outline">
-              View Archive
-            </Button>
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="history">
-        <Card className="border rounded-xl shadow-sm">
-          <CardContent className="flex flex-col items-center justify-center py-12 px-4">
-            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-medium mb-2">Payment History</h3>
-            <p className="text-muted-foreground text-center mb-6">View detailed payslip history and generate reports.</p>
-            <Button variant="outline">
-              Generate Report
-            </Button>
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="processing">
-        <PayrollProcessingHistory />
-      </TabsContent>
-    </Tabs>
+    <Card className="p-4">
+      <Tabs defaultValue="payslips">
+        <TabsList className="w-full">
+          <TabsTrigger value="payslips" className="w-1/2">Payslips</TabsTrigger>
+          <TabsTrigger value="statistics" className="w-1/2">Statistics</TabsTrigger>
+        </TabsList>
+        <TabsContent value="payslips">
+          <SalaryTable 
+            employees={employees} 
+            onSelectEmployee={handleSelectEmployee} 
+            onUpdateStatus={handleUpdateStatus} 
+            className="mt-4"
+          />
+        </TabsContent>
+        <TabsContent value="statistics">
+          <PayrollStatsGrid employees={employees} className="mt-4" />
+        </TabsContent>
+      </Tabs>
+    </Card>
   );
 };
+
+export default PayrollHistoryTabs;

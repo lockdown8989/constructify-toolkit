@@ -36,6 +36,7 @@ export const useClockActions = () => {
           .select('id, active_session')
           .eq('employee_id', selectedEmployee)
           .eq('date', today)
+          .eq('active_session', true)
           .maybeSingle();
           
         if (existingRecord?.active_session) {
@@ -47,10 +48,10 @@ export const useClockActions = () => {
           return;
         }
         
-        // Clock in
+        // Clock in - Create a new record without using upsert
         const { error } = await supabase
           .from('attendance')
-          .upsert({
+          .insert({
             employee_id: selectedEmployee,
             date: today,
             check_in: now.toISOString(),
@@ -58,8 +59,6 @@ export const useClockActions = () => {
             attendance_status: 'Present',
             device_info: 'Manager Dashboard',
             notes: 'Clocked in by manager'
-          }, {
-            onConflict: 'employee_id,date'
           });
           
         if (error) throw error;

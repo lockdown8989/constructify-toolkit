@@ -1,137 +1,133 @@
 
-import { useState } from 'react';
-import { Employee } from '@/types/employee';
-import { useToast } from '@/hooks/use-toast'; 
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
-import { syncEmployeeData } from '@/services/employee-sync';
+import { useToast } from '@/hooks/use-toast';
+import { Employee } from '@/types/employee';
+import * as employeeSync from '@/services/employee-sync';
+import { generatePayslip } from '@/services/employee-sync/payslip-sync';
 
-export function useEmployeeManagement() {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { toast } = useToast();
+export const useEmployeeManagement = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
-  // Function to create or update employee with full synchronization
-  const createOrUpdateEmployee = async (employee: Employee, isNewEmployee: boolean = false) => {
-    setIsProcessing(true);
-    try {
-      let result;
+  const fetchEmployees = async () => {
+    const { data, error } = await supabase.from('employees').select('*');
+    
+    if (error) throw error;
+    return data as Employee[];
+  };
+  
+  const updateEmployeeStatus = async (id: string, status: string) => {
+    const { error } = await supabase
+      .from('employees')
+      .update({ status })
+      .eq('id', id);
       
-      if (isNewEmployee) {
-        // Create new employee
-        const { data, error } = await supabase
-          .from('employees')
-          .insert(employee)
-          .select()
-          .single();
-          
-        if (error) throw error;
-        result = data;
-      } else {
-        // Update existing employee
-        const { data, error } = await supabase
-          .from('employees')
-          .update(employee)
-          .eq('id', employee.id)
-          .select()
-          .single();
-          
-        if (error) throw error;
-        result = data;
+    if (error) throw error;
+    return { id, status };
+  };
+  
+  const assignShift = async (employeeId: string, shiftId: string) => {
+    const { error } = await supabase
+      .from('employee_shifts')
+      .insert({
+        employee_id: employeeId,
+        shift_id: shiftId,
+        assigned_at: new Date().toISOString()
+      });
+      
+    if (error) throw error;
+    return { employeeId, shiftId };
+  };
+  
+  const generateEmployeePayslip = async (employeeId: string) => {
+    try {
+      const url = await generatePayslip(employeeId);
+      
+      if (!url) {
+        throw new Error("Failed to generate payslip");
       }
       
-      // Manually trigger sync for immediate feedback (normally this would happen via realtime subscription)
-      await syncEmployeeData(result, isNewEmployee);
-      
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['employees'] });
-      
-      toast({
-        title: isNewEmployee ? "Employee Created" : "Employee Updated",
-        description: `${employee.name} has been ${isNewEmployee ? "created" : "updated"} and synchronized across all modules.`,
-      });
-      
-      return { success: true, employee: result };
+      return url;
     } catch (error) {
-      console.error('Error managing employee:', error);
-      toast({
-        title: "Error",
-        description: `Failed to ${isNewEmployee ? "create" : "update"} employee. ${error instanceof Error ? error.message : ''}`,
-        variant: "destructive",
-      });
-      return { success: false, error };
-    } finally {
-      setIsProcessing(false);
+      console.error("Error generating payslip:", error);
+      throw error;
     }
   };
   
-  // Function to handle employee batch operations with synchronization
-  const processEmployeeBatch = async (employeeIds: string[], operation: 'sync' | 'recalculate' | 'generate-payslips') => {
-    setIsProcessing(true);
-    try {
-      let successCount = 0;
-      let failureCount = 0;
-      
-      for (const id of employeeIds) {
-        try {
-          // Get employee data
-          const { data: employee, error } = await supabase
-            .from('employees')
-            .select('*')
-            .eq('id', id)
-            .single();
-            
-          if (error) {
-            failureCount++;
-            continue;
-          }
-          
-          if (operation === 'sync') {
-            await syncEmployeeData(employee, false);
-          } else if (operation === 'recalculate') {
-            // Recalculate salary and attendance
-            const currentMonth = new Date().toISOString().slice(0, 7) + '-01';
-            await import('@/services/employee-sync/salary-sync').then(module => 
-              module.calculateSalary(id, currentMonth)
-            );
-          } else if (operation === 'generate-payslips') {
-            // Generate payslips
-            const currentMonth = new Date().toISOString().slice(0, 7) + '-01';
-            await import('@/services/employee-sync/payslip-sync').then(module => 
-              module.processPayslip(id, currentMonth)
-            );
-          }
-          
-          successCount++;
-        } catch (error) {
-          console.error(`Error processing employee ${id}:`, error);
-          failureCount++;
-        }
+  // Create React Query hooks
+  const useEmployees = () => {
+    return useQuery({
+      queryKey: ['employees'],
+      queryFn: fetchEmployees
+    });
+  };
+  
+  const useUpdateStatus = () => {
+    return useMutation({
+      mutationFn: ({ id, status }: { id: string, status: string }) => 
+        updateEmployeeStatus(id, status),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['employees'] });
+        toast({
+          title: "Status Updated",
+          description: "Employee status has been updated."
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Update Failed",
+          description: error instanceof Error ? error.message : "Unknown error occurred",
+          variant: "destructive"
+        });
       }
-      
-      toast({
-        title: "Batch Processing Complete",
-        description: `Successfully processed ${successCount} employees. Failed: ${failureCount}.`,
-        variant: failureCount > 0 ? "destructive" : "default",
-      });
-      
-      return { success: successCount > 0, successCount, failureCount };
-    } catch (error) {
-      console.error('Error in batch operation:', error);
-      toast({
-        title: "Batch Operation Failed",
-        description: `Failed to process employee batch. ${error instanceof Error ? error.message : ''}`,
-        variant: "destructive",
-      });
-      return { success: false, error };
-    } finally {
-      setIsProcessing(false);
-    }
+    });
+  };
+  
+  const useAssignShift = () => {
+    return useMutation({
+      mutationFn: ({ employeeId, shiftId }: { employeeId: string, shiftId: string }) =>
+        assignShift(employeeId, shiftId),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['employee-shifts'] });
+        toast({
+          title: "Shift Assigned",
+          description: "Shift has been successfully assigned to employee."
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Assignment Failed",
+          description: error instanceof Error ? error.message : "Unknown error occurred",
+          variant: "destructive"
+        });
+      }
+    });
+  };
+  
+  const useGeneratePayslip = () => {
+    return useMutation({
+      mutationFn: (employeeId: string) => generateEmployeePayslip(employeeId),
+      onSuccess: () => {
+        toast({
+          title: "Payslip Generated",
+          description: "Employee payslip has been successfully generated."
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Generation Failed",
+          description: error instanceof Error ? error.message : "Unknown error occurred",
+          variant: "destructive"
+        });
+      }
+    });
   };
   
   return {
-    createOrUpdateEmployee,
-    processEmployeeBatch,
-    isProcessing
+    useEmployees,
+    useUpdateStatus,
+    useAssignShift,
+    useGeneratePayslip
   };
-}
+};

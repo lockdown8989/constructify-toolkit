@@ -1,121 +1,115 @@
 
-import React, { useState } from 'react';
-import { Download } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from "@/components/ui/button";
-import { useToast } from '@/hooks/use-toast';
-import { SearchBar } from './SearchBar';
-import { StatusFilter } from './StatusFilter';
-import { TableRow } from './TableRow';
-import { SalaryTableProps } from './types';
+import React from 'react';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { Employee } from '@/types/employee';
+import { SearchBar } from '@/components/dashboard/salary-table/SearchBar';
+import { PayslipActions } from '@/components/dashboard/salary-table/PayslipActions';
+import { StatusActions } from '@/components/dashboard/salary-table/StatusActions';
+import { PayslipData } from '@/types/supabase/payroll';
+import { format } from 'date-fns';
 
-const SalaryTable: React.FC<SalaryTableProps> = ({ 
-  employees, 
+export interface SalaryTableProps {
+  employees: Employee[];
+  onSelectEmployee: (id: string) => void;
+  className?: string;
+  onUpdateStatus?: (id: string, status: "Paid" | "Absent" | "Pending") => void;
+}
+
+export const SalaryTable: React.FC<SalaryTableProps> = ({
+  employees,
   onSelectEmployee,
-  onUpdateStatus,
-  className 
+  className = "",
+  onUpdateStatus
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Paid' | 'Absent' | 'Pending'>('All');
-  const [isProcessing, setIsProcessing] = useState<{ [key: string]: boolean }>({});
-  const { toast } = useToast();
-
-  const filteredEmployees = employees.filter(employee => {
-    const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         employee.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'All' || employee.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  const handleDownloadPayslip = async (employee: typeof employees[0]) => {
-    setIsProcessing(prev => ({ ...prev, [employee.id]: true }));
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated download
-      toast({
-        title: "Payslip downloaded",
-        description: `Payslip for ${employee.name} has been downloaded.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Download failed",
-        description: String(error),
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(prev => ({ ...prev, [employee.id]: false }));
+  const [filteredEmployees, setFilteredEmployees] = React.useState<Employee[]>(employees);
+  const [searchTerm, setSearchTerm] = React.useState("");
+  
+  React.useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setFilteredEmployees(employees);
+    } else {
+      const filtered = employees.filter(emp => 
+        emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.department.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredEmployees(filtered);
     }
+  }, [searchTerm, employees]);
+  
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
   };
-
-  const handleAttachToResume = async (employee: typeof employees[0]) => {
-    setIsProcessing(prev => ({ ...prev, [employee.id]: true }));
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated attachment
-      toast({
-        title: "Payslip attached",
-        description: `Payslip has been attached to ${employee.name}'s resume.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Attachment failed",
-        description: String(error),
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(prev => ({ ...prev, [employee.id]: false }));
-    }
+  
+  const handleGeneratePayslip = (employeeData: Employee) => {
+    // Convert the employee data to the expected PayslipData format
+    const payslipData: PayslipData = {
+      employeeId: employeeData.id,
+      name: employeeData.name,
+      department: employeeData.department,
+      position: employeeData.job_title,
+      payPeriod: format(new Date(), 'yyyy-MM'),
+      grossPay: employeeData.salary.toString(),
+      taxes: (employeeData.salary * 0.2).toString(), // Simplified tax calculation (20%)
+      netPay: (employeeData.salary * 0.8).toString(),
+      paymentDate: format(new Date(), 'yyyy-MM-dd'),
+      bankAccount: '****1234',
+      title: 'Monthly Payslip',
+      salary: employeeData.salary.toString(),
+    };
+    
+    onSelectEmployee(employeeData.id);
   };
-
-  const statusCount = {
-    All: employees.length,
-    Paid: employees.filter(e => e.status === 'Paid').length,
-    Pending: employees.filter(e => e.status === 'Pending').length,
-    Absent: employees.filter(e => e.status === 'Absent').length
-  };
-
+  
   return (
-    <div className={cn("bg-white rounded-3xl p-6 card-shadow", className)}>
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-medium">Salary</h3>
-        <div className="flex gap-2">
-          <SearchBar value={searchQuery} onChange={setSearchQuery} />
-          <StatusFilter 
-            currentStatus={statusFilter}
-            onStatusChange={setStatusFilter}
-            statusCount={statusCount}
-          />
-          <Button variant="outline" size="icon">
-            <Download className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-      
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="text-left text-sm text-gray-500">
-              <th className="pb-4 font-medium w-6"></th>
-              <th className="pb-4 font-medium">Name</th>
-              <th className="pb-4 font-medium">Job Title</th>
-              <th className="pb-4 font-medium">Net Salary</th>
-              <th className="pb-4 font-medium">Status</th>
-              <th className="pb-4 font-medium">Payment Date</th>
-              <th className="pb-4 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filteredEmployees.map(employee => (
-              <TableRow
-                key={employee.id}
-                employee={employee}
-                isProcessing={isProcessing[employee.id] || false}
-                onSelectEmployee={onSelectEmployee || (() => {})}
-                onStatusChange={onUpdateStatus || (() => {})}
-                onDownloadPayslip={handleDownloadPayslip}
-                onAttachToResume={handleAttachToResume}
-              />
-            ))}
-          </tbody>
-        </table>
+    <div className={`space-y-4 ${className}`}>
+      <SearchBar onSearch={handleSearch} />
+      <div className="rounded-lg border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Employee Name</TableHead>
+              <TableHead>Department</TableHead>
+              <TableHead>Salary</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredEmployees.length > 0 ? (
+              filteredEmployees.map((emp) => (
+                <TableRow key={emp.id}>
+                  <TableCell className="font-medium">{emp.name}</TableCell>
+                  <TableCell>{emp.department}</TableCell>
+                  <TableCell>${emp.salary}</TableCell>
+                  <TableCell className="flex gap-2">
+                    <PayslipActions 
+                      employee={emp}
+                      onGenerate={() => handleGeneratePayslip(emp)}
+                    />
+                    {onUpdateStatus && (
+                      <StatusActions 
+                        employeeId={emp.id}
+                        onUpdateStatus={onUpdateStatus}
+                      />
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-4">
+                  No employees found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

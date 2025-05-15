@@ -1,158 +1,89 @@
-import { useState } from 'react';
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Employee } from '@/components/dashboard/salary-table/types';
-import { processEmployeePayroll, savePayrollHistory } from './payroll/use-payroll-processing';
-import { exportPayrollData } from './payroll/use-payroll-export';
-import { useCurrencyPreference } from '@/hooks/use-currency-preference';
-import { useAuth } from '@/hooks/use-auth';
+import { usePayrollProcessing } from './payroll/use-payroll-processing';
+import { Employee } from '@/types/employee';
+import { PayrollRecord } from '@/types/supabase/payroll';
 
-export const usePayroll = (employees: Employee[]) => {
-  const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const [processingHistory, setProcessingHistory] = useState<any[]>([]);
+export const usePayroll = () => {
   const { toast } = useToast();
-  const { currency } = useCurrencyPreference();
-  const { user } = useAuth();
-
-  const handleSelectEmployee = (id: string) => {
-    setSelectedEmployees(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
+  const queryClient = useQueryClient();
+  const { processPayroll } = usePayrollProcessing();
+  
+  const fetchPayroll = async (period?: string) => {
+    const currentPeriod = period || new Date().toISOString().split('T')[0].substring(0, 7); // YYYY-MM format
+    
+    const { data, error } = await supabase
+      .from('payroll_history')
+      .select('*')
+      .ilike('pay_period', `${currentPeriod}%`)
+      .order('created_at', { ascending: false });
+      
+    if (error) throw error;
+    return data as PayrollRecord[];
+  };
+  
+  const usePayrollData = (period?: string) => {
+    return useQuery({
+      queryKey: ['payroll', period],
+      queryFn: () => fetchPayroll(period),
     });
   };
   
-  const handleSelectAll = () => {
-    const allIds = employees.map(emp => emp.id);
-    setSelectedEmployees(new Set(allIds));
-  };
-  
-  const handleClearAll = () => {
-    setSelectedEmployees(new Set());
-  };
-
-  const handleProcessPayroll = async () => {
-    if (selectedEmployees.size === 0) {
-      toast({
-        title: "No employees selected",
-        description: "Please select at least one employee to process payslip.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsProcessing(true);
-    
-    try {
-      let successCount = 0;
-      let failCount = 0;
-      const processedEmployeeIds = Array.from(selectedEmployees);
-      
-      for (const employeeId of processedEmployeeIds) {
-        try {
-          const employee = employees.find(emp => emp.id === employeeId);
-          if (!employee) {
-            failCount++;
-            console.error(`Employee with ID ${employeeId} not found`);
-            continue;
-          }
-
-          await processEmployeePayroll(employeeId, employee, 'GBP');
-          successCount++;
-        } catch (err) {
-          console.error('Error processing payroll:', err);
-          failCount++;
-        }
-      }
-      
-      // Save processing history
-      if (user) {
-        await savePayrollHistory(
-          processedEmployeeIds,
-          successCount,
-          failCount,
-          user.id
-        );
-      }
-      
-      if (successCount > 0) {
+  const useProcessPayroll = () => {
+    return useMutation({
+      mutationFn: async (employees: Employee[]) => {
+        return await processPayroll(employees);
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['payroll'] });
         toast({
-          title: failCount === 0 ? "Payslips processed successfully" : "Payslips partially processed",
-          description: `Processed: ${successCount} employees. Failed: ${failCount} employees.`,
-          variant: failCount === 0 ? "default" : "destructive"
+          title: "Success",
+          description: "Payroll successfully processed"
         });
-      } else {
+      },
+      onError: (error) => {
         toast({
-          title: "Payslip processing failed",
-          description: "Failed to process any payments. Check the logs for more details.",
+          title: "Error",
+          description: "Failed to process payroll",
           variant: "destructive"
         });
+        console.error("Payroll processing error:", error);
       }
-    } catch (error) {
-      console.error("Unexpected error during payroll processing:", error);
-      toast({
-        title: "Processing failed",
-        description: "An unexpected error occurred. Please try again later.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-      // Clear selection after processing regardless of success/failure
-      setSelectedEmployees(new Set());
-    }
+    });
   };
-
-  const handleExportPayroll = async () => {
-    setIsExporting(true);
-    try {
-      await exportPayrollData('GBP');
-      toast({
-        title: "Export successful",
-        description: `Payroll data has been exported to CSV in £.`,
-      });
-    } catch (err) {
-      console.error("Error exporting payrolls:", err);
-      // Provide more specific error message based on the error
-      let errorMessage = "An unexpected error occurred while exporting payroll data.";
-      
-      if (err instanceof Error) {
-        if (err.message === 'No payroll data available to export') {
-          errorMessage = "No payroll data is available to export. Process some payrolls first.";
-        } else if (err.message.includes('42703')) {
-          errorMessage = "Database column error. Please contact system administrator.";
-        } else if (err.message.includes('permission denied')) {
-          errorMessage = "You don't have permission to export payroll data.";
-        } else if (err.message.includes('network')) {
-          errorMessage = "Network error. Please check your connection and try again.";
-        } else if (err.message) {
-          // Use the actual error message if it's informative
-          errorMessage = `Export failed: ${err.message}`;
-        }
+  
+  const useUpdatePayrollStatus = () => {
+    return useMutation({
+      mutationFn: async ({ id, status }: { id: string, status: 'Pending' | 'Paid' | 'Cancelled' }) => {
+        const { error } = await supabase
+          .from('payroll_history')
+          .update({ status, processed_at: status === 'Paid' ? new Date().toISOString() : null })
+          .eq('id', id);
+          
+        if (error) throw error;
+        return { id, status };
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['payroll'] });
+      },
+      onError: (error) => {
+        toast({
+          title: "Error",
+          description: "Failed to update payroll status",
+          variant: "destructive"
+        });
+        console.error("Payroll status update error:", error);
       }
-      
-      toast({
-        title: "Export failed",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    } finally {
-      setIsExporting(false);
-    }
+    });
   };
-
+  
   return {
-    selectedEmployees,
-    isProcessing,
-    isExporting,
-    handleSelectEmployee,
-    handleSelectAll,
-    handleClearAll,
-    handleProcessPayroll,
-    handleExportPayroll,
+    usePayrollData,
+    useProcessPayroll,
+    useUpdatePayrollStatus
   };
 };
+
+export default usePayroll;
