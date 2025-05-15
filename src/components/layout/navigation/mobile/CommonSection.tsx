@@ -1,7 +1,6 @@
 
-import React from 'react';
-import { Bell, FileText, User, Calendar } from "lucide-react";
-import MobileNavLink from './MobileNavLink';
+import { FileText, User, Calendar, DollarSign } from "lucide-react";
+import MobileNavLink from "./MobileNavLink";
 
 interface CommonSectionProps {
   isAuthenticated: boolean;
@@ -10,12 +9,7 @@ interface CommonSectionProps {
   onClose: () => void;
 }
 
-const CommonSection: React.FC<CommonSectionProps> = ({ 
-  isAuthenticated, 
-  isEmployee,
-  hasManagerialAccess, 
-  onClose 
-}) => {
+const CommonSection = ({ isAuthenticated, isEmployee, hasManagerialAccess, onClose }: CommonSectionProps) => {
   return (
     <>
       <MobileNavLink
@@ -32,22 +26,24 @@ const CommonSection: React.FC<CommonSectionProps> = ({
         onClick={onClose}
       />
       
-      {isAuthenticated && isEmployee && (
-        <MobileNavLink
-          to="/employee-calendar"
-          icon={Calendar}
-          label="My Calendar"
-          onClick={onClose}
-        />
-      )}
-      
       {isAuthenticated && (
-        <MobileNavLink
-          to="/notifications"
-          icon={Bell}
-          label="Notifications"
-          onClick={onClose}
-        />
+        <>
+          <MobileNavLink
+            to="/leave-management"
+            icon={Calendar}
+            label="Leave & Schedule"
+            onClick={onClose}
+          />
+          
+          {(isEmployee || hasManagerialAccess) && (
+            <MobileNavLink
+              to="/salary"
+              icon={DollarSign}
+              label="Salary"
+              onClick={onClose}
+            />
+          )}
+        </>
       )}
     </>
   );
