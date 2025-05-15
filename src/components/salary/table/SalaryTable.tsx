@@ -55,7 +55,7 @@ export const SalaryTable: React.FC<SalaryTableProps> = ({
       employeeName: employeeData.name,
       name: employeeData.name, // For backward compatibility
       department: employeeData.department || '',
-      position: employeeData.job_title || employeeData.title || '',
+      position: employeeData.title || employeeData.job_title || '',
       payPeriod: format(new Date(), 'yyyy-MM'),
       period: format(new Date(), 'yyyy-MM'),
       grossPay: typeof employeeData.salary === 'number' ? employeeData.salary : parseFloat(String(employeeData.salary)),
@@ -109,7 +109,6 @@ export const SalaryTable: React.FC<SalaryTableProps> = ({
                     {onUpdateStatus && (
                       <StatusActions 
                         onStatusChange={(status) => onUpdateStatus(emp.id, status)}
-                        employeeId={emp.id}
                       />
                     )}
                   </TableCell>

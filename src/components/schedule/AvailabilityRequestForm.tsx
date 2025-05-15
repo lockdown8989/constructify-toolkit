@@ -18,7 +18,7 @@ interface AvailabilityRequestFormProps {
 }
 
 const AvailabilityRequestForm: React.FC<AvailabilityRequestFormProps> = ({ onClose }) => {
-  const { createAvailability, isCreating } = useCreateAvailability();
+  const { mutate: createAvailability, isPending: isCreating } = useCreateAvailability();
   const [isAvailable, setIsAvailable] = useState(true);
   
   const form = useForm({

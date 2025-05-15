@@ -1,15 +1,15 @@
 
 import { useState } from 'react';
 import { useCreateAvailability } from './use-create-availability';
-import { useFetchAvailability } from './use-fetch-availability';
+import { useGetAvailability } from './use-fetch-availability';
 import { useDeleteAvailability } from './use-delete-availability';
 import { useUpdateAvailability } from './use-update-availability';
 
 export const useAvailability = () => {
-  const { data, isLoading, error, refetch } = useFetchAvailability();
-  const { createAvailability, isCreating } = useCreateAvailability();
-  const { updateAvailability, isUpdating } = useUpdateAvailability();
-  const { deleteAvailability, isDeleting } = useDeleteAvailability();
+  const { data, isLoading, error, refetch } = useGetAvailability();
+  const { mutate: createAvailability, isPending: isCreating } = useCreateAvailability();
+  const { mutate: updateAvailability, isPending: isUpdating } = useUpdateAvailability();
+  const { mutate: deleteAvailability, isPending: isDeleting } = useDeleteAvailability();
 
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);

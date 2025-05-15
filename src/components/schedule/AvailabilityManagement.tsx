@@ -8,12 +8,12 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import AvailabilityRequestForm from './AvailabilityRequestForm';
 import AvailabilityRequestList from './AvailabilityRequestList';
-import { useAvailability } from '@/hooks/availability';
+import { useGetAvailability } from '@/hooks/availability';
 
 const AvailabilityManagement = () => {
   const { user } = useAuth();
   const [showForm, setShowForm] = useState(false);
-  const { availabilityData, isLoading } = useAvailability();
+  const { data: availabilityData, isLoading } = useGetAvailability();
   
   if (!user) {
     return (
@@ -48,7 +48,7 @@ const AvailabilityManagement = () => {
         {showForm ? (
           <AvailabilityRequestForm onClose={() => setShowForm(false)} />
         ) : (
-          <AvailabilityRequestList />
+          <AvailabilityRequestList requests={availabilityData || []} />
         )}
       </CardContent>
     </Card>

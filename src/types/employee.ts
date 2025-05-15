@@ -17,4 +17,6 @@ export interface Employee {
   user_id?: string;
   manager_id?: string;
   selected?: boolean;
+  title?: string; // Added for compatibility with salary table components
+  paymentDate?: string; // Added for compatibility with salary table components
 }

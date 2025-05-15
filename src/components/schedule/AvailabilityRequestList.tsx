@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Card,
@@ -15,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { MoreVertical, CheckCircle, XCircle } from 'lucide-react';
-import { useUpdateAvailabilityRequest } from '@/hooks/use-availability';
+import { useUpdateAvailability } from '@/hooks/availability';
 import { format } from 'date-fns';
 
 interface AvailabilityRequest {
@@ -39,14 +40,14 @@ interface AvailabilityRequestListProps {
 }
 
 const AvailabilityRequestList: React.FC<AvailabilityRequestListProps> = ({ requests }) => {
-  const updateAvailability = useUpdateAvailabilityRequest();
+  const { updateAvailability } = useUpdateAvailability();
 
   const handleApprove = (id: string) => {
-    updateAvailability.mutate({ id, status: 'Approved' });
+    updateAvailability({ id, status: 'Approved' });
   };
 
   const handleReject = (id: string) => {
-    updateAvailability.mutate({ id, status: 'Rejected' });
+    updateAvailability({ id, status: 'Rejected' });
   };
 
   return (
@@ -61,7 +62,7 @@ const AvailabilityRequestList: React.FC<AvailabilityRequestListProps> = ({ reque
           </CardHeader>
           <CardContent className="flex items-center justify-between">
             <div>
-              <Badge variant={request.status === 'Approved' ? 'success' : 'destructive'}>
+              <Badge variant={request.status === 'Approved' ? 'outline' : 'destructive'}>
                 {request.status}
               </Badge>
               <p className="text-sm text-gray-500 mt-2">
