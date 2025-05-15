@@ -204,6 +204,60 @@ export type Database = {
           },
         ]
       }
+      document_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          completed_at: string | null
+          document_id: string
+          due_date: string | null
+          employee_id: string
+          id: string
+          is_required: boolean | null
+          status: string
+          viewed_at: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          completed_at?: string | null
+          document_id: string
+          due_date?: string | null
+          employee_id: string
+          id?: string
+          is_required?: boolean | null
+          status?: string
+          viewed_at?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          completed_at?: string | null
+          document_id?: string
+          due_date?: string | null
+          employee_id?: string
+          id?: string
+          is_required?: boolean | null
+          status?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_assignments_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_assignments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           access_level: string
