@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { usePayrollProcessing } from './payroll/use-payroll-processing';
 import { Employee } from '@/types/employee';
 import { PayrollRecord } from '@/types/supabase/payroll';
-import { useState } from 'react';
+import { notifyEmployeeAboutPayslip } from '@/services/notifications/payroll-notifications';
 
 export const usePayroll = () => {
   const { toast } = useToast();
@@ -41,7 +41,34 @@ export const usePayroll = () => {
     return useMutation({
       mutationFn: async (employees: Employee[]) => {
         try {
-          return await processPayroll(employees);
+          const processedRecords = await processPayroll(employees);
+          
+          // Send notifications to employees about their payslips
+          for (const record of processedRecords) {
+            try {
+              // Find the employee with user_id to send notification to
+              const { data: employeeData } = await supabase
+                .from('employees')
+                .select('user_id')
+                .eq('id', record.employee_id)
+                .single();
+                
+              if (employeeData?.user_id) {
+                await notifyEmployeeAboutPayslip(
+                  record.employee_id,
+                  employeeData.user_id,
+                  record.net_pay || record.salary_paid,
+                  'GBP',
+                  record.payment_date
+                );
+              }
+            } catch (notifyError) {
+              console.error(`Error notifying employee ${record.employee_id}:`, notifyError);
+              // Continue processing other employees even if notification fails for one
+            }
+          }
+          
+          return processedRecords;
         } catch (error) {
           console.error("Process payroll mutation error:", error);
           throw error;
@@ -51,7 +78,7 @@ export const usePayroll = () => {
         queryClient.invalidateQueries({ queryKey: ['payroll'] });
         toast({
           title: "Success",
-          description: "Payroll successfully processed"
+          description: "Payroll successfully processed and employees notified"
         });
       },
       onError: (error) => {
