@@ -5,7 +5,7 @@ export interface Employee {
   avatar?: string;
   title: string;  // Required in this interface
   salary: string | number;
-  status: 'Paid' | 'Absent' | 'Pending';
+  status: 'Paid' | 'Absent' | 'Pending' | string;
   selected?: boolean;
   paymentDate?: string;
   department?: string;

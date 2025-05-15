@@ -21,17 +21,17 @@ export interface PayslipData {
   overtimePay: number;
   bonus: number;
   totalPay: number;
-  notes?: string;
+  notes: string;
 }
 
 export interface Employee {
   id: string;
   name: string;
   avatar?: string;
-  title: string; // Made required to match with salary-table/types
+  title?: string; // Made optional to match with salary-table/types
   job_title?: string;
   salary: string | number;
-  status?: string;
+  status?: 'Paid' | 'Absent' | 'Pending' | string;
   paymentDate?: string;
   department?: string;
   site?: string;

@@ -22,6 +22,7 @@ export const formatDate = (dateString: string | null | undefined): string => {
 
 /**
  * Format currency with proper symbol and formatting
+ * Now using GBP as the default currency
  */
 export const formatCurrency = (amount: number | string, currency: string = 'GBP'): string => {
   if (typeof amount === 'string') {

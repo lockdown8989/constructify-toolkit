@@ -6,7 +6,7 @@ export interface Employee {
   department: string;
   site: string;
   salary: number | string; // Updated to accept both number and string
-  status: string;
+  status: 'Paid' | 'Absent' | 'Pending' | string; // Updated to accept string or specific values
   avatar?: string;
   location?: string;
   hourly_rate?: number;

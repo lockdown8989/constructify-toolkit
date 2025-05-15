@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Table, 
@@ -13,6 +14,7 @@ import { PayslipActions } from '@/components/dashboard/salary-table/PayslipActio
 import { StatusActions } from '@/components/dashboard/salary-table/StatusActions';
 import { PayslipData } from '@/types/supabase/payroll';
 import { format } from 'date-fns';
+import { formatCurrency } from '@/utils/format';
 
 export interface SalaryTableProps {
   employees: Employee[];
@@ -63,7 +65,7 @@ export const SalaryTable: React.FC<SalaryTableProps> = ({
       paymentDate: format(new Date(), 'yyyy-MM-dd'),
       baseSalary: typeof employeeData.salary === 'number' ? employeeData.salary : parseFloat(String(employeeData.salary)),
       deductions: 0,
-      currency: 'USD',
+      currency: 'GBP',
       bankAccount: '****1234',
       title: 'Monthly Payslip',
       salary: employeeData.salary,
@@ -96,7 +98,7 @@ export const SalaryTable: React.FC<SalaryTableProps> = ({
                 <TableRow key={emp.id}>
                   <TableCell className="font-medium">{emp.name}</TableCell>
                   <TableCell>{emp.department}</TableCell>
-                  <TableCell>${typeof emp.salary === 'number' ? emp.salary : emp.salary}</TableCell>
+                  <TableCell>{formatCurrency(emp.salary)}</TableCell>
                   <TableCell className="flex gap-2">
                     <PayslipActions 
                       employee={{

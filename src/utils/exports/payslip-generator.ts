@@ -1,185 +1,236 @@
-import jsPDF from 'jspdf';
+
+import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { PayslipData } from '@/types/supabase/payroll';
+import { formatCurrency } from '@/utils/format';
 
-// Function to generate payslip PDF
-export const generatePayslipPDF = async (payslipData: PayslipData) => {
-  const doc = new jsPDF();
-
-  // Define header
-  const header = (data: any) => {
-    doc.setFontSize(20);
-    doc.setTextColor(40);
-    doc.setFont('', 'bold');
-    doc.text("Payslip", doc.internal.pageSize.getWidth() / 2, 10, {
-      align: 'center'
-    });
-  };
-
-  // Define footer
-  const footer = (data: any) => {
-    const pageCount = doc.internal.getNumberOfPages();
-    doc.line(20, doc.internal.pageSize.getHeight() - 20, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 20);
-    doc.setFontSize(10);
-    doc.setTextColor(40);
-    doc.text(`Page ${data.pageNumber} of ${pageCount}`, doc.internal.pageSize.getWidth() - 30, doc.internal.pageSize.getHeight() - 10);
-  };
-
-  // Call header and footer on every page
-  doc.autoTable({
-    didDrawPage: (data) => {
-      header(data);
-      footer(data);
-    },
-  });
-
-  // Payslip data
-  const data = [
-    [
-      { content: 'Employee ID:', styles: { valign: 'middle', fontStyle: 'bold' } },
-      { content: payslipData.employeeId, styles: { valign: 'middle' } }
-    ],
-    [
-      { content: 'Employee Name:', styles: { valign: 'middle', fontStyle: 'bold' } },
-      { content: payslipData.employeeName, styles: { valign: 'middle' } }
-    ],
-    [
-      { content: 'Department:', styles: { valign: 'middle', fontStyle: 'bold' } },
-      { content: payslipData.department, styles: { valign: 'middle' } }
-    ],
-    [
-      { content: 'Position:', styles: { valign: 'middle', fontStyle: 'bold' } },
-      { content: payslipData.position, styles: { valign: 'middle' } }
-    ],
-    [
-      { content: 'Pay Period:', styles: { valign: 'middle', fontStyle: 'bold' } },
-      { content: payslipData.payPeriod, styles: { valign: 'middle' } }
-    ],
-    [
-      { content: 'Payment Date:', styles: { valign: 'middle', fontStyle: 'bold' } },
-      { content: payslipData.paymentDate, styles: { valign: 'middle' } }
-    ],
-    [
-      { content: 'Bank Account:', styles: { valign: 'middle', fontStyle: 'bold' } },
-      { content: payslipData.bankAccount, styles: { valign: 'middle' } }
-    ],
-  ];
-
-  // Define general styles
-  const generalStyles = {
-    font: 'helvetica',
-    fontSize: 12,
-    textColor: 40,
-    cellPadding: 3,
-  };
-
-  // Table options
-  const options = {
-    startY: 30,
-    useCss: false,
-    styles: generalStyles,
-    columnStyles: {
-      0: { fontStyle: 'bold', textColor: 80 },
-      1: { textColor: 60 },
-    },
-    margin: { horizontal: 20 },
-  };
-
-  // Function to add title with underline
-  const addTitle = (doc: jsPDF, text: string, y: number) => {
-    doc.setFontSize(14);
-    doc.setFont('', 'bold');
-    doc.setTextColor(40);
-    doc.text(text, 20, y);
-    const textWidth = doc.getTextWidth(text);
-    doc.line(20, y + 2, 20 + textWidth, y + 2);
-    return y + 10;
-  };
-
-  // Add payslip details table
-  doc.autoTable({
-    body: data,
-    ...options,
-  });
-
-  let yPos = doc.autoTable.previous.finalY + 15;
-
-  // Add title for earnings
-  yPos = addTitle(doc, 'Earnings', yPos);
-
-  // Earnings data
-  const earningsData = [
-    [
-      { content: 'Base Salary:', styles: { valign: 'middle', fontStyle: 'bold' } },
-      { content: `${payslipData.currency} ${payslipData.baseSalary}`, styles: { valign: 'middle' } }
-    ],
-    [
-      { content: 'Overtime Pay:', styles: { valign: 'middle', fontStyle: 'bold' } },
-      { content: `${payslipData.currency} ${payslipData.overtimePay}`, styles: { valign: 'middle' } }
-    ],
-    [
-      { content: 'Bonus:', styles: { valign: 'middle', fontStyle: 'bold' } },
-      { content: `${payslipData.currency} ${payslipData.bonus}`, styles: { valign: 'middle' } }
-    ],
-    [
-      { content: 'Total Pay:', styles: { valign: 'middle', fontStyle: 'bold' } },
-      { content: `${payslipData.currency} ${payslipData.totalPay}`, styles: { valign: 'middle' } }
-    ],
-  ];
-
-  // Add earnings table
-  doc.autoTable({
-    body: earningsData,
-    startY: yPos,
-    margin: { horizontal: 20 },
-    styles: generalStyles,
-    columnStyles: {
-      0: { fontStyle: 'bold', textColor: 80 },
-      1: { textColor: 60 },
-    },
-  });
-
-  yPos = doc.autoTable.previous.finalY + 15;
-
-  // Add title for deductions
-  yPos = addTitle(doc, 'Deductions', yPos);
-
-  // Deductions data
-  const deductionsData = [
-    [
-      { content: 'Deductions:', styles: { valign: 'middle', fontStyle: 'bold' } },
-      { content: `${payslipData.currency} ${payslipData.deductions}`, styles: { valign: 'middle' } }
-    ],
-    [
-      { content: 'Taxes:', styles: { valign: 'middle', fontStyle: 'bold' } },
-      { content: `${payslipData.currency} ${payslipData.taxes}`, styles: { valign: 'middle' } }
-    ],
-    [
-      { content: 'Net Pay:', styles: { valign: 'middle', fontStyle: 'bold' } },
-      { content: `${payslipData.currency} ${payslipData.netPay}`, styles: { valign: 'middle' } }
-    ],
-  ];
-
-  // Add deductions table
-  doc.autoTable({
-    body: deductionsData,
-    startY: yPos,
-    margin: { horizontal: 20 },
-    styles: generalStyles,
-    columnStyles: {
-      0: { fontStyle: 'bold', textColor: 80 },
-      1: { textColor: 60 },
-    },
-  });
-  
-  yPos = doc.autoTable.previous.finalY + 10;
-  
-  if (payslipData.notes) {
-    doc.setFontSize(10);
-    doc.text("Notes:", 20, yPos + 20);
-    doc.text(payslipData.notes || "", 70, yPos + 20);
+// Add type definitions for jsPDF with autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+    getNumberOfPages: () => number;
   }
+}
 
-  // Open the PDF in a new tab
-  doc.output('pdfobjectnewwindow');
+export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> => {
+  // Create new PDF document
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+
+  // Company logo and header
+  doc.setFontSize(20);
+  doc.setTextColor(0, 0, 0);
+  doc.text('PAYSLIP', 105, 15, { align: 'center' });
+  
+  doc.setFontSize(10);
+  doc.text('Company Name Ltd.', 105, 25, { align: 'center' });
+  doc.text('123 Business Street, London, UK', 105, 30, { align: 'center' });
+  doc.text('Registration No: 12345678', 105, 35, { align: 'center' });
+
+  // Add horizontal line
+  doc.setDrawColor(220, 220, 220);
+  doc.setLineWidth(0.5);
+  doc.line(15, 40, 195, 40);
+
+  // Employee information section
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Employee Information', 15, 50);
+  
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  
+  // Employee details table
+  doc.autoTable({
+    startY: 55,
+    head: [['Employee Name', 'Department', 'Position', 'Pay Period']],
+    body: [
+      [
+        payslipData.employeeName,
+        payslipData.department,
+        payslipData.position,
+        payslipData.payPeriod
+      ]
+    ],
+    theme: 'grid',
+    headStyles: {
+      fillColor: [220, 220, 220],
+      textColor: [0, 0, 0],
+      fontStyle: 'bold'
+    },
+    styles: {
+      fontSize: 10,
+      cellPadding: 3
+    }
+  });
+
+  // Payment Information
+  const currentY = doc.autoTable.previous.finalY + 10;
+  
+  doc.setFont('helvetica', 'bold');
+  doc.text('Payment Information', 15, currentY);
+  
+  doc.setFont('helvetica', 'normal');
+  
+  // Payment details table
+  doc.autoTable({
+    startY: currentY + 5,
+    head: [['Payment Date', 'Bank Account', 'Currency']],
+    body: [
+      [
+        new Date(payslipData.paymentDate).toLocaleDateString('en-GB'),
+        payslipData.bankAccount,
+        payslipData.currency
+      ]
+    ],
+    theme: 'grid',
+    headStyles: {
+      fillColor: [220, 220, 220],
+      textColor: [0, 0, 0],
+      fontStyle: 'bold'
+    },
+    styles: {
+      fontSize: 10,
+      cellPadding: 3
+    }
+  });
+
+  // Earnings section
+  const earningsY = doc.autoTable.previous.finalY + 10;
+  
+  doc.setFont('helvetica', 'bold');
+  doc.text('Earnings', 15, earningsY);
+  
+  doc.setFont('helvetica', 'normal');
+  
+  doc.autoTable({
+    startY: earningsY + 5,
+    head: [['Description', 'Amount']],
+    body: [
+      ['Base Salary', formatCurrency(payslipData.baseSalary)],
+      ['Overtime Pay', formatCurrency(payslipData.overtimePay)],
+      ['Bonus', formatCurrency(payslipData.bonus)]
+    ],
+    theme: 'grid',
+    headStyles: {
+      fillColor: [220, 220, 220],
+      textColor: [0, 0, 0],
+      fontStyle: 'bold'
+    },
+    styles: {
+      fontSize: 10,
+      cellPadding: 3
+    }
+  });
+  
+  // Deductions section
+  const deductionsY = doc.autoTable.previous.finalY + 10;
+  
+  doc.setFont('helvetica', 'bold');
+  doc.text('Deductions', 15, deductionsY);
+  
+  doc.setFont('helvetica', 'normal');
+  
+  doc.autoTable({
+    startY: deductionsY + 5,
+    head: [['Description', 'Amount']],
+    body: [
+      ['Income Tax', formatCurrency(payslipData.taxes)],
+      ['Other Deductions', formatCurrency(payslipData.deductions)]
+    ],
+    theme: 'grid',
+    headStyles: {
+      fillColor: [220, 220, 220],
+      textColor: [0, 0, 0],
+      fontStyle: 'bold'
+    },
+    styles: {
+      fontSize: 10,
+      cellPadding: 3
+    }
+  });
+  
+  // Summary section
+  const summaryY = doc.autoTable.previous.finalY + 10;
+  
+  doc.setFont('helvetica', 'bold');
+  doc.text('Summary', 15, summaryY);
+  
+  doc.setFont('helvetica', 'normal');
+  
+  doc.autoTable({
+    startY: summaryY + 5,
+    head: [['Description', 'Amount']],
+    body: [
+      ['Gross Pay', formatCurrency(payslipData.grossPay)],
+      ['Total Deductions', formatCurrency(payslipData.taxes + payslipData.deductions)],
+      ['Net Pay', formatCurrency(payslipData.netPay)]
+    ],
+    theme: 'grid',
+    headStyles: {
+      fillColor: [220, 220, 220],
+      textColor: [0, 0, 0],
+      fontStyle: 'bold'
+    },
+    styles: {
+      fontSize: 10,
+      cellPadding: 3
+    },
+    columnStyles: {
+      1: {
+        font: 'helvetica',
+        fontStyle: 'bold'
+      }
+    },
+    didDrawCell: (data) => {
+      // Highlight the Net Pay row
+      if (data.section === 'body' && data.row.index === 2) {
+        doc.setFillColor(240, 240, 240);
+        doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+        doc.setTextColor(0, 0, 0);
+        doc.text(data.cell.text, data.cell.x + data.cell.padding.left, data.cell.y + data.cell.height / 2 + 3);
+      }
+    }
+  });
+  
+  // Notes
+  if (payslipData.notes) {
+    const notesY = doc.autoTable.previous.finalY + 10;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Notes', 15, notesY);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(payslipData.notes, 15, notesY + 10);
+  }
+  
+  // Footer
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.text(
+      `Page ${i} of ${pageCount} - Generated on ${new Date().toLocaleDateString('en-GB')}`,
+      105,
+      287,
+      { align: 'center' }
+    );
+  }
+  
+  // Generate PDF blob
+  const pdfBlob = doc.output('blob');
+  
+  // Trigger download
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(pdfBlob);
+  link.download = `Payslip_${payslipData.employeeName.replace(/\s+/g, '_')}_${payslipData.payPeriod}.pdf`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+  
+  return pdfBlob;
 };
+
+export default downloadPayslip;
