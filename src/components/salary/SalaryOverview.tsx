@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { useSalaryStatistics } from '@/hooks/use-salary-statistics';
 import { useAuth } from '@/hooks/use-auth';
@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
 
 export const SalaryOverview = () => {
   const { user } = useAuth();
@@ -18,6 +19,7 @@ export const SalaryOverview = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: stats, isLoading, error, isError, refetch } = useSalaryStatistics(employeeId || user?.id);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleRetry = () => {
     toast({
@@ -25,6 +27,54 @@ export const SalaryOverview = () => {
       description: "Attempting to fetch your payslip data again."
     });
     refetch();
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!stats || !user) {
+      toast({
+        title: "Cannot generate payslip",
+        description: "Missing required salary or user information",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      const paymentDate = stats.payment_date ? 
+        format(new Date(stats.payment_date), 'MMMM yyyy') : 
+        format(new Date(), 'MMMM yyyy');
+        
+      const result = await generatePayslipPDF(
+        employeeId || user.id,
+        {
+          name: user.name || 'Employee',
+          title: user.job_title || 'Employee',
+          department: user.department || 'General',
+          salary: stats.base_salary?.toString() || '0',
+          paymentDate: stats.payment_date || new Date().toISOString().split('T')[0],
+          payPeriod: paymentDate,
+        }
+      );
+
+      if (result.success) {
+        toast({
+          title: "Payslip downloaded",
+          description: "Your payslip has been downloaded successfully"
+        });
+      } else {
+        throw new Error(result.error || "Failed to generate payslip");
+      }
+    } catch (error) {
+      console.error('Error downloading payslip:', error);
+      toast({
+        title: "Download failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -80,7 +130,12 @@ export const SalaryOverview = () => {
                     format(new Date(), 'MMMM yyyy')}
                 </p>
               </div>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleDownloadPDF}
+                disabled={isDownloading}
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Download PDF
               </Button>

@@ -1,169 +1,147 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { generatePayslipPDF, PayslipResult } from './payslip-generator'; 
+import { generatePayslipPDF } from './payslip-generator';
 
-export async function uploadEmployeeDocument(
-  employeeId: string,
+interface DocumentAssignmentRequest {
+  employeeId: string;
+  documentType: string;
+  documentName: string;
+  documentPath: string;
+}
+
+interface DocumentUploadResult {
+  success: boolean;
+  message: string;
+  error?: string;
+  path?: string;
+}
+
+export const uploadEmployeeDocument = async (
   file: File,
-  documentType: 'resume' | 'contract' | 'payslip'
-): Promise<{ success: boolean; path?: string; error?: string }> {
+  employeeId: string,
+  documentType: string
+): Promise<DocumentUploadResult> => {
   try {
-    // Generate a unique filename
-    const timestamp = new Date().getTime();
-    const fileExtension = file.name.split('.').pop();
-    const filename = `${documentType}_${timestamp}.${fileExtension}`;
-    
-    // Upload file to Supabase storage
+    // Validate input
+    if (!file || !employeeId || !documentType) {
+      return {
+        success: false,
+        message: 'Missing required information for document upload',
+        error: 'Invalid input parameters'
+      };
+    }
+
+    // Create folder path for employee documents
+    const folderPath = `documents/${employeeId}/${documentType}`;
+    const filePath = `${folderPath}/${file.name}`;
+
+    // Upload file to storage
     const { data, error } = await supabase.storage
       .from('documents')
-      .upload(`employees/${employeeId}/${documentType}/${filename}`, file, {
-        contentType: file.type,
+      .upload(filePath, file, {
+        cacheControl: '3600',
         upsert: true
       });
-      
+
     if (error) {
-      console.error(`Error uploading ${documentType}:`, error);
-      return { success: false, error: error.message };
+      console.error('Error uploading document:', error);
+      return {
+        success: false,
+        message: 'Failed to upload document',
+        error: error.message
+      };
     }
-    
-    // Get the public URL
-    const { data: urlData } = supabase.storage
-      .from('documents')
-      .getPublicUrl(`employees/${employeeId}/${documentType}/${filename}`);
-    
-    // Update documents table with document reference
-    const { error: insertError } = await supabase
+
+    // Add entry to documents table
+    const { error: docError } = await supabase
       .from('documents')
       .insert({
         employee_id: employeeId,
         document_type: documentType,
         name: file.name,
-        path: data.path,
-        size: `${Math.round(file.size / 1024)} kb`
+        path: filePath,
+        size: `${(file.size / 1024).toFixed(2)} KB`
       });
-      
-    if (insertError) {
-      console.error(`Error updating document record:`, insertError);
-    }
-    
-    return { success: true, path: urlData.publicUrl };
-  } catch (error) {
-    console.error(`Exception during ${documentType} upload:`, error);
-    return { success: false, error: String(error) };
-  }
-}
 
-export async function attachPayslipToResume(
-  employeeId: string,
-  employeeData: {
-    name: string;
-    title: string;
-    salary: string;
-    department?: string;
-    paymentDate?: string;
-  }
-): Promise<{ success: boolean; message: string }> {
-  try {
-    console.log("Starting attachPayslipToResume with employee ID:", employeeId);
-    
-    // Check if documents bucket exists
-    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-    
-    if (bucketsError) {
-      console.error('Error checking buckets:', bucketsError);
+    if (docError) {
+      console.error('Error adding document record:', docError);
       return {
         success: false,
-        message: `Failed to check storage buckets: ${bucketsError.message}`
+        message: 'Document uploaded but failed to update database',
+        error: docError.message,
+        path: filePath
       };
     }
-    
-    const documentsBucket = buckets.find(b => b.name === 'documents');
-    
-    if (!documentsBucket) {
-      console.log('Documents bucket not found. Creating it now...');
-      const { error: createError } = await supabase.storage.createBucket('documents', {
-        public: true,
-        fileSizeLimit: 5242880 // 5MB
-      });
-      
-      if (createError) {
-        console.error('Error creating documents bucket:', createError);
-        return {
-          success: false,
-          message: `Failed to create storage bucket: ${createError.message}`
-        };
-      }
-    }
-    
-    // First check if the employee has a resume in the documents bucket
-    const { data: documents, error: documentsError } = await supabase
-      .from('documents')
-      .select('*')
-      .eq('employee_id', employeeId)
-      .eq('document_type', 'resume');
-      
-    if (documentsError) {
-      console.error('Error fetching resume document:', documentsError);
-      return {
-        success: false,
-        message: `Failed to check for resume: ${documentsError.message}`
-      };
-    }
-    
-    console.log("Resume documents found:", documents?.length || 0);
-    
-    // Generate the payslip
-    const payslipResult = await generatePayslipPDF(employeeId, employeeData, true);
-    
-    if (!payslipResult.success) {
-      return {
-        success: false,
-        message: `Failed to generate payslip: ${payslipResult.error || "Unknown error"}`
-      };
-    }
-    
-    console.log("Payslip generated successfully, path:", payslipResult.path);
-    
-    if (!payslipResult.path) {
-      return {
-        success: false,
-        message: "Payslip generated but path is missing"
-      };
-    }
-    
-    // Add the payslip as a document in the documents table
-    const { error: insertError } = await supabase
-      .from('documents')
-      .insert({
-        employee_id: employeeId,
-        document_type: 'payslip',
-        name: payslipResult.filename || `Payslip_${new Date().toISOString().split('T')[0]}`,
-        path: payslipResult.path,
-        size: 'auto-generated'
-      });
-      
-    if (insertError) {
-      console.error('Error inserting payslip document record:', insertError);
-      return {
-        success: false,
-        message: `Payslip generated but failed to attach to records: ${insertError.message}`
-      };
-    }
-    
-    // Determine message based on whether there was a resume
-    const successMessage = documents && documents.length > 0
-      ? 'Payslip generated and attached to employee resume'
-      : 'Payslip generated and added to employee documents';
-    
+
     return {
       success: true,
-      message: successMessage
+      message: 'Document uploaded successfully',
+      path: filePath
     };
   } catch (error) {
-    console.error('Error attaching payslip to resume:', error);
+    console.error('Exception during document upload:', error);
     return {
       success: false,
-      message: `Unexpected error: ${String(error)}`
+      message: 'An unexpected error occurred',
+      error: String(error)
     };
   }
-}
+};
+
+export const attachPayslipToResume = async (
+  employeeId: string,
+  employeeData: any
+): Promise<DocumentUploadResult> => {
+  try {
+    // Generate the payslip PDF
+    const result = await generatePayslipPDF(employeeId, employeeData, true);
+
+    if (!result.success) {
+      return {
+        success: false,
+        message: 'Failed to generate payslip',
+        error: result.error
+      };
+    }
+
+    if (!result.path) {
+      return {
+        success: false,
+        message: 'Payslip generated but path is missing',
+        error: 'Invalid payslip path'
+      };
+    }
+
+    // Update employee record to link payslip to resume
+    const { error } = await supabase
+      .from('employees')
+      .update({
+        payslip_attached: true,
+        payslip_path: result.path,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', employeeId);
+
+    if (error) {
+      console.error('Error updating employee record:', error);
+      return {
+        success: false,
+        message: 'Payslip generated but failed to attach to resume',
+        error: error.message
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Payslip has been attached to your resume',
+      path: result.path
+    };
+  } catch (error) {
+    console.error('Exception attaching payslip to resume:', error);
+    return {
+      success: false,
+      message: 'An unexpected error occurred',
+      error: String(error)
+    };
+  }
+};
