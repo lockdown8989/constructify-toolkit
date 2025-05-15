@@ -1,4 +1,3 @@
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"; 
 import { ThemeProvider } from "@/components/theme-provider";
 import { CurrencyProvider } from "@/hooks/use-currency-preference";
@@ -144,11 +143,16 @@ function App() {
                       <About />
                     </ProtectedRoute>
                   } />
-                  <Route path="/employee-calendar" element={
-                    <ProtectedRoute>
-                      <EmployeeCalendar />
-                    </ProtectedRoute>
-                  } />
+                  {
+                    path: "/employee-calendar",
+                    element: (
+                      <ProtectedRoute>
+                        <AppLayout>
+                          <EmployeeCalendar />
+                        </AppLayout>
+                      </ProtectedRoute>
+                    ),
+                  }
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

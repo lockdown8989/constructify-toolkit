@@ -10,7 +10,6 @@ interface DesktopNavProps {
 const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated }) => {
   const { isAdmin, isManager, isHR } = useAuth();
   const hasManagerAccess = isAdmin || isManager || isHR;
-  const isEmployee = isAuthenticated && !hasManagerAccess;
 
   // Only show navigation links if the user is authenticated
   if (!isAuthenticated) {
@@ -43,17 +42,6 @@ const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated }) => {
       >
         Leave
       </NavLink>
-      {/* Add Employee Calendar link for non-managers */}
-      {isEmployee && (
-        <NavLink
-          to="/employee-calendar"
-          className={({ isActive }) =>
-            `nav-link ${isActive ? "active" : ""}`
-          }
-        >
-          Calendar
-        </NavLink>
-      )}
       {hasManagerAccess && (
         <NavLink
           to="/people"
