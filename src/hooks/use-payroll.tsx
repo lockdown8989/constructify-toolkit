@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Employee } from '@/components/dashboard/salary-table/types';
@@ -62,7 +63,21 @@ export const usePayroll = (employees: Employee[]) => {
             continue;
           }
 
-          await processEmployeePayroll(employeeId, employee, 'GBP');
+          // Convert dashboard employee type to the expected employee type
+          const processableEmployee = {
+            id: employee.id,
+            name: employee.name,
+            job_title: employee.title || '',  // Map title to job_title
+            department: employee.department || '',
+            site: '',  // Provide default value for site
+            salary: typeof employee.salary === 'string' 
+              ? parseFloat(employee.salary.replace(/[^\d.]/g, '')) 
+              : employee.salary,
+            status: employee.status,
+            user_id: employee.user_id
+          };
+
+          await processEmployeePayroll(employeeId, processableEmployee, 'GBP');
           successCount++;
         } catch (err) {
           console.error('Error processing payroll:', err);
