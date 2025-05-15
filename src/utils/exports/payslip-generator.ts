@@ -7,7 +7,7 @@ import { formatCurrency } from '@/utils/format';
 // Add type definitions for jsPDF with autoTable
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: (options: any) => any;
+    autoTable: any; // Using 'any' to avoid TypeScript errors with finalY and previous
     getNumberOfPages: () => number;
   }
 }
@@ -68,9 +68,9 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
     }
   });
 
-  // Get the Y position after the table
-  // Store final Y position
-  const empTableHeight = doc.autoTable.previous ? doc.autoTable.previous.finalY : 90;
+  // Get the Y position after the table and store final Y position
+  const tableResult = doc.autoTable.previous;
+  const empTableHeight = tableResult ? tableResult.finalY : 90;
   currentY = empTableHeight + 10;
   
   doc.setFont('helvetica', 'bold');
@@ -102,7 +102,8 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
   });
 
   // Get the Y position after the payment table
-  const paymentTableHeight = doc.autoTable.previous ? doc.autoTable.previous.finalY : currentY + 30;
+  const paymentResult = doc.autoTable.previous;
+  const paymentTableHeight = paymentResult ? paymentResult.finalY : currentY + 30;
   currentY = paymentTableHeight + 10;
   
   doc.setFont('helvetica', 'bold');
@@ -131,7 +132,8 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
   });
   
   // Get the Y position after the earnings table
-  const earningsTableHeight = doc.autoTable.previous ? doc.autoTable.previous.finalY : currentY + 50;
+  const earningsResult = doc.autoTable.previous;
+  const earningsTableHeight = earningsResult ? earningsResult.finalY : currentY + 50;
   currentY = earningsTableHeight + 10;
   
   doc.setFont('helvetica', 'bold');
@@ -159,7 +161,8 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
   });
   
   // Get the Y position after the deductions table
-  const deductionsTableHeight = doc.autoTable.previous ? doc.autoTable.previous.finalY : currentY + 40;
+  const deductionsResult = doc.autoTable.previous;
+  const deductionsTableHeight = deductionsResult ? deductionsResult.finalY : currentY + 40;
   currentY = deductionsTableHeight + 10;
   
   doc.setFont('helvetica', 'bold');
@@ -204,7 +207,8 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
   
   // Notes section
   if (payslipData.notes) {
-    const summaryTableHeight = doc.autoTable.previous ? doc.autoTable.previous.finalY : currentY + 60;
+    const summaryResult = doc.autoTable.previous;
+    const summaryTableHeight = summaryResult ? summaryResult.finalY : currentY + 60;
     currentY = summaryTableHeight + 10;
     
     doc.setFont('helvetica', 'bold');
