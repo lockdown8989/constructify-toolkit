@@ -1,94 +1,103 @@
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { format } from 'date-fns';
 import { PayslipData } from '@/types/supabase/payroll';
 
-export const generatePayslipPDF = async (payslipData: PayslipData): Promise<string> => {
+export const generatePayslipPDF = (employeeId: string, payslipData: PayslipData): Blob => {
   // Create a new PDF document
   const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
   
-  // Company header
-  doc.setFontSize(22);
-  doc.setTextColor(40, 40, 40);
-  doc.text("TeamPulse HR", pageWidth / 2, 20, { align: 'center' });
+  // Add company logo/header
+  doc.setFillColor(44, 62, 80); // Dark blue header
+  doc.rect(0, 0, 210, 40, 'F');
   
-  // Payslip title
-  doc.setFontSize(18);
-  doc.setTextColor(60, 60, 60);
-  doc.text(payslipData.title || "Monthly Payslip", pageWidth / 2, 30, { align: 'center' });
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(24);
+  doc.text('TeamPulse', 105, 20, { align: 'center' });
   
-  // Date and reference
-  doc.setFontSize(10);
-  doc.setTextColor(100, 100, 100);
-  doc.text(`Payment Date: ${payslipData.paymentDate}`, pageWidth - 15, 40, { align: 'right' });
-  doc.text(`Reference: PS-${Date.now().toString().substring(0, 10)}`, pageWidth - 15, 45, { align: 'right' });
+  doc.setFontSize(16);
+  doc.text('Employee Payslip', 105, 30, { align: 'center' });
   
-  // Employee information section
+  // Employee information
+  doc.setTextColor(0, 0, 0);
   doc.setFontSize(12);
-  doc.setTextColor(60, 60, 60);
+  doc.text(`Employee: ${payslipData.employeeName}`, 20, 50);
+  doc.text(`Position: ${payslipData.position}`, 20, 60);
+  doc.text(`Department: ${payslipData.department}`, 20, 70);
+  doc.text(`Employee ID: ${payslipData.employeeId}`, 20, 80);
   
-  // Employee details table
+  // Period and reference
+  doc.text(`Pay Period: ${payslipData.period}`, 120, 50);
+  doc.text(`Reference ID: ${payslipData.id.substring(0, 8)}`, 120, 60);
+  doc.text(`Date Generated: ${format(new Date(), 'yyyy-MM-dd')}`, 120, 70);
+  
+  // Earnings table
   autoTable(doc, {
-    startY: 50,
-    head: [['Employee Details']],
+    head: [['Earnings', 'Amount']],
     body: [
-      ['Name:', payslipData.name],
-      ['Department:', payslipData.department],
-      ['Position:', payslipData.position],
-      ['Pay Period:', payslipData.payPeriod],
+      ['Base Salary', `${payslipData.currency} ${payslipData.baseSalary.toFixed(2)}`],
+      ['Overtime Pay', `${payslipData.currency} ${payslipData.overtimePay.toFixed(2)}`],
+      ['Bonus', `${payslipData.currency} ${payslipData.bonus.toFixed(2)}`]
     ],
-    headStyles: {
-      fillColor: [220, 220, 220],
-      textColor: [40, 40, 40],
-      fontSize: 11,
-    },
-    bodyStyles: {
-      fontSize: 10,
-    },
+    startY: 90,
+    theme: 'striped',
+    headStyles: { fillColor: [44, 62, 80], textColor: 255 },
+    styles: { fontSize: 10 }
   });
   
-  // Payment details table
+  // Deductions table
   autoTable(doc, {
+    head: [['Deductions', 'Amount']],
+    body: [
+      ['Tax', `${payslipData.currency} ${(payslipData.deductions * 0.7).toFixed(2)}`],
+      ['Insurance', `${payslipData.currency} ${(payslipData.deductions * 0.2).toFixed(2)}`],
+      ['Other Deductions', `${payslipData.currency} ${(payslipData.deductions * 0.1).toFixed(2)}`],
+      ['Total Deductions', `${payslipData.currency} ${payslipData.deductions.toFixed(2)}`]
+    ],
     startY: doc.lastAutoTable.finalY + 10,
-    head: [['Payment Details']],
-    body: [
-      ['Gross Pay:', `$${parseFloat(payslipData.grossPay).toFixed(2)}`],
-      ['Tax Deductions:', `$${parseFloat(payslipData.taxes).toFixed(2)}`],
-      ['Net Pay:', `$${parseFloat(payslipData.netPay).toFixed(2)}`],
-      ['Bank Account:', payslipData.bankAccount],
-    ],
-    headStyles: {
-      fillColor: [220, 220, 220],
-      textColor: [40, 40, 40],
-      fontSize: 11,
-    },
-    bodyStyles: {
-      fontSize: 10,
-    },
+    theme: 'striped',
+    headStyles: { fillColor: [44, 62, 80], textColor: 255 },
+    styles: { fontSize: 10 }
   });
+  
+  // Total pay
+  const totalY = doc.lastAutoTable.finalY + 20;
+  doc.setFillColor(44, 62, 80);
+  doc.rect(100, totalY - 10, 90, 14, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(12);
+  doc.text(`TOTAL NET PAY: ${payslipData.currency} ${payslipData.totalPay.toFixed(2)}`, 145, totalY, { align: 'center' });
   
   // Footer
-  const pageCount = doc.internal.pages.length;
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
-    doc.text(
-      'This is an electronically generated document and does not require a signature.',
-      pageWidth / 2,
-      doc.internal.pageSize.getHeight() - 10,
-      { align: 'center' }
-    );
-    doc.text(
-      `Page ${i} of ${pageCount}`,
-      pageWidth / 2,
-      doc.internal.pageSize.getHeight() - 5,
-      { align: 'center' }
-    );
-  }
+  const footerY = totalY + 30;
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(10);
+  doc.text('This is a computer-generated document. No signature is required.', 105, footerY, { align: 'center' });
   
-  // Convert to data URL for preview
-  const pdfDataUrl = doc.output('dataurlstring');
-  return pdfDataUrl;
+  // Add page number
+  doc.setFontSize(8);
+  doc.text(`Page 1 of 1`, 105, footerY + 10, { align: 'center' });
+  
+  // Return the PDF as a blob
+  const pdfBlob = doc.output('blob');
+  return pdfBlob;
+};
+
+export const downloadPayslip = async (employeeId: string, payslipData: PayslipData) => {
+  try {
+    const pdfBlob = generatePayslipPDF(employeeId, payslipData);
+    const url = URL.createObjectURL(pdfBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `payslip_${payslipData.employeeId}_${payslipData.period.replace(/\s/g, '_')}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error downloading payslip:', error);
+    throw error;
+  }
 };

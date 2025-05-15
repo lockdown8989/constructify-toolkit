@@ -32,15 +32,13 @@ const ClockActions = ({
           
           <div className="grid grid-cols-2 gap-6">
             <Button 
-              className={`${buttonClasses} ${action === 'in' ? 'animate-pulse' : ''}`}
-              style={{ backgroundColor: '#00A896' }}
+              className={`${buttonClasses} ${action === 'in' ? 'animate-pulse' : ''} time-clock-button-in`}
               onClick={() => onClockAction('in')}
             >
               IN
             </Button>
             <Button 
-              className={`${buttonClasses} ${action === 'out' ? 'animate-pulse' : ''}`}
-              style={{ backgroundColor: '#E63946' }}
+              className={`${buttonClasses} ${action === 'out' ? 'animate-pulse' : ''} time-clock-button-out`}
               onClick={() => onClockAction('out')}
             >
               OUT

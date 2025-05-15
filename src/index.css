@@ -1,3 +1,5 @@
 
 /* This file is kept for backward compatibility but all styles have been moved to the /styles directory */
 @import './styles/index.css';
+@import './styles/timeclock.css';
+@import './styles/mobile.css';

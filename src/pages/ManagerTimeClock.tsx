@@ -11,6 +11,7 @@ import EmployeeList from '@/components/time-clock/EmployeeList';
 import ClockActions from '@/components/time-clock/ClockActions';
 import { useClockActions } from '@/components/time-clock/useClockActions';
 import { useIsMobile } from '@/hooks/use-mobile';
+import PinCodeEntry from '@/components/time-clock/PinCodeEntry';
 
 const ManagerTimeClock = () => {
   const { isManager, isAdmin, isHR } = useAuth();
@@ -19,9 +20,13 @@ const ManagerTimeClock = () => {
   const { toast } = useToast();
   const {
     selectedEmployee,
+    selectedEmployeeName,
     action,
+    showPinEntry,
     handleSelectEmployee,
-    handleClockAction
+    handleClockAction,
+    handlePinSubmit,
+    handleCancelPin
   } = useClockActions();
   const isMobile = useIsMobile();
   const [orientation, setOrientation] = useState(
@@ -47,17 +52,6 @@ const ManagerTimeClock = () => {
   const handleExitFullscreen = () => {
     navigate('/dashboard');
   };
-  
-  const getEmployeeStatus = (employeeId: string) => {
-    const employee = employees.find(emp => emp.id === employeeId);
-    return employee?.status || 'Unknown';
-  };
-  
-  const getSelectedEmployeeName = () => {
-    if (!selectedEmployee) return '';
-    const employee = employees.find(emp => emp.id === selectedEmployee);
-    return employee?.name || 'Employee';
-  };
 
   // Define the layout based on device and orientation
   const isTablet = window.innerWidth >= 768 && window.innerWidth <= 1024;
@@ -82,6 +76,20 @@ const ManagerTimeClock = () => {
           <X className="h-6 w-6" />
         </Button>
       </div>
+
+      {/* PIN Entry Overlay */}
+      {showPinEntry && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="max-w-md w-full">
+            <PinCodeEntry 
+              onComplete={handlePinSubmit} 
+              onCancel={handleCancelPin}
+              title={action === 'in' ? `Clock In: ${selectedEmployeeName}` : `Clock Out: ${selectedEmployeeName}`}
+              action={action || undefined}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Main content with responsive layout */}
       <div className={`flex flex-1 ${orientation === 'landscape' ? 'flex-row' : 'flex-col'}`}>
@@ -124,7 +132,7 @@ const ManagerTimeClock = () => {
           <ClockActions
             selectedEmployee={selectedEmployee}
             action={action}
-            selectedEmployeeName={getSelectedEmployeeName()}
+            selectedEmployeeName={selectedEmployeeName}
             onClockAction={handleClockAction}
           />
         </div>

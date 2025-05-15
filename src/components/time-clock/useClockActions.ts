@@ -6,11 +6,14 @@ import { useToast } from '@/hooks/use-toast';
 
 export const useClockActions = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
+  const [selectedEmployeeName, setSelectedEmployeeName] = useState<string>('');
   const [action, setAction] = useState<'in' | 'out' | null>(null);
+  const [showPinEntry, setShowPinEntry] = useState<boolean>(false);
   const { toast } = useToast();
 
-  const handleSelectEmployee = (employeeId: string) => {
+  const handleSelectEmployee = (employeeId: string, employeeName: string) => {
     setSelectedEmployee(employeeId);
+    setSelectedEmployeeName(employeeName);
   };
 
   const handleClockAction = async (clockAction: 'in' | 'out') => {
@@ -24,12 +27,26 @@ export const useClockActions = () => {
     }
 
     setAction(clockAction);
-    
+    setShowPinEntry(true);
+  };
+
+  const handlePinSubmit = async (pin: string) => {
+    // In a real system, this would verify the PIN against a secure database
+    // For this demo, we're just checking if the PIN has 4 digits
+    if (pin.length !== 4) {
+      toast({
+        title: "Invalid PIN",
+        description: "Please enter a valid 4-digit PIN",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const now = new Date();
       const today = now.toISOString().split('T')[0];
       
-      if (clockAction === 'in') {
+      if (action === 'in') {
         // Check if there's already an active session for today
         const { data: existingRecord } = await supabase
           .from('attendance')
@@ -42,9 +59,10 @@ export const useClockActions = () => {
         if (existingRecord?.active_session) {
           toast({
             title: "Already clocked in",
-            description: "This employee is already clocked in for today",
+            description: `${selectedEmployeeName} is already clocked in for today`,
             variant: "destructive",
           });
+          setShowPinEntry(false);
           return;
         }
         
@@ -58,14 +76,14 @@ export const useClockActions = () => {
             active_session: true,
             attendance_status: 'Present',
             device_info: 'Manager Dashboard',
-            notes: 'Clocked in by manager'
+            notes: 'Clocked in via manager dashboard with PIN'
           });
           
         if (error) throw error;
         
         toast({
           title: "Clocked In",
-          description: `Employee clocked in at ${format(now, 'h:mm a')}`,
+          description: `${selectedEmployeeName} clocked in at ${format(now, 'h:mm a')}`,
         });
       } else {
         // Find active session
@@ -79,9 +97,10 @@ export const useClockActions = () => {
         if (!activeSession) {
           toast({
             title: "No active session",
-            description: "This employee is not clocked in",
+            description: `${selectedEmployeeName} is not clocked in`,
             variant: "destructive",
           });
+          setShowPinEntry(false);
           return;
         }
         
@@ -104,14 +123,16 @@ export const useClockActions = () => {
         
         toast({
           title: "Clocked Out",
-          description: `Employee clocked out at ${format(now, 'h:mm a')}`,
+          description: `${selectedEmployeeName} clocked out at ${format(now, 'h:mm a')}`,
         });
       }
 
       // Reset state
       setTimeout(() => {
         setSelectedEmployee(null);
+        setSelectedEmployeeName('');
         setAction(null);
+        setShowPinEntry(false);
       }, 2000);
       
     } catch (error) {
@@ -121,14 +142,24 @@ export const useClockActions = () => {
         description: "There was an error processing the clock action",
         variant: "destructive",
       });
+      setShowPinEntry(false);
     }
+  };
+
+  const handleCancelPin = () => {
+    setShowPinEntry(false);
+    setAction(null);
   };
 
   return {
     selectedEmployee,
+    selectedEmployeeName,
     action,
+    showPinEntry,
     handleSelectEmployee,
     handleClockAction,
+    handlePinSubmit,
+    handleCancelPin,
     setSelectedEmployee,
     setAction
   };
