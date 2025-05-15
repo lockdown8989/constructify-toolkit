@@ -75,9 +75,10 @@ export const processEmployeePayroll = async (
         tax_paid: taxDeduction,
         ni_contribution: insuranceDeduction,
         other_deductions: otherDeduction,
-        payment_status: 'Paid',
+        payment_status: 'Pending', // Start with pending status
         payment_date: paymentDate,
-        processing_date: processingDate
+        processing_date: processingDate,
+        delivery_status: 'pending' // Track delivery status
       })
       .select()
       .single();
@@ -115,6 +116,16 @@ export const processEmployeePayroll = async (
           currency,
           paymentDate
         );
+        
+        // Mark as delivered and update payment status to Paid
+        await supabase
+          .from('payroll')
+          .update({
+            delivered_at: new Date().toISOString(),
+            delivery_status: 'delivered',
+            payment_status: 'Paid'
+          })
+          .eq('id', payrollData.id);
       }
       
     } catch (pdfError) {

@@ -23,6 +23,8 @@ export const exportPayrollData = async (currency: string = 'GBP') => {
         overtime_pay,
         payment_status,
         payment_date,
+        delivery_status,
+        delivered_at,
         employees (
           name,
           job_title,
@@ -61,7 +63,9 @@ export const exportPayrollData = async (currency: string = 'GBP') => {
         'Overtime Pay': `${currency} ${record.overtime_pay?.toFixed(2) || '0.00'}`,
         'Net Salary': `${currency} ${record.salary_paid?.toFixed(2) || '0.00'}`,
         'Status': record.payment_status || 'Unknown',
-        'Payment Date': record.payment_date ? format(new Date(record.payment_date), 'dd/MM/yyyy') : 'Pending'
+        'Payment Date': record.payment_date ? format(new Date(record.payment_date), 'dd/MM/yyyy') : 'Pending',
+        'Delivery Status': record.delivery_status || 'pending',
+        'Delivered At': record.delivered_at ? format(new Date(record.delivered_at), 'dd/MM/yyyy HH:mm') : 'Not delivered'
       };
     });
     

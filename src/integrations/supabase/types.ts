@@ -615,6 +615,8 @@ export type Database = {
           base_pay: number | null
           bonus: number | null
           deductions: number | null
+          delivered_at: string | null
+          delivery_status: string | null
           document_name: string | null
           document_url: string | null
           employee_id: string | null
@@ -623,6 +625,7 @@ export type Database = {
           overtime_pay: number | null
           payment_date: string | null
           payment_status: string | null
+          processing_date: string | null
           salary_paid: number
           working_hours: number | null
         }
@@ -630,6 +633,8 @@ export type Database = {
           base_pay?: number | null
           bonus?: number | null
           deductions?: number | null
+          delivered_at?: string | null
+          delivery_status?: string | null
           document_name?: string | null
           document_url?: string | null
           employee_id?: string | null
@@ -638,6 +643,7 @@ export type Database = {
           overtime_pay?: number | null
           payment_date?: string | null
           payment_status?: string | null
+          processing_date?: string | null
           salary_paid: number
           working_hours?: number | null
         }
@@ -645,6 +651,8 @@ export type Database = {
           base_pay?: number | null
           bonus?: number | null
           deductions?: number | null
+          delivered_at?: string | null
+          delivery_status?: string | null
           document_name?: string | null
           document_url?: string | null
           employee_id?: string | null
@@ -653,6 +661,7 @@ export type Database = {
           overtime_pay?: number | null
           payment_date?: string | null
           payment_status?: string | null
+          processing_date?: string | null
           salary_paid?: number
           working_hours?: number | null
         }
@@ -665,6 +674,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payroll_history: {
+        Row: {
+          created_at: string | null
+          employee_count: number
+          employee_ids: string[]
+          fail_count: number
+          id: string
+          processed_by: string | null
+          processing_date: string | null
+          success_count: number
+        }
+        Insert: {
+          created_at?: string | null
+          employee_count: number
+          employee_ids: string[]
+          fail_count: number
+          id?: string
+          processed_by?: string | null
+          processing_date?: string | null
+          success_count: number
+        }
+        Update: {
+          created_at?: string | null
+          employee_count?: number
+          employee_ids?: string[]
+          fail_count?: number
+          id?: string
+          processed_by?: string | null
+          processing_date?: string | null
+          success_count?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

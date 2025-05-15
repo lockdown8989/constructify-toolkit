@@ -23,6 +23,10 @@ import type {
   Profile, 
   UserRole 
 } from './auth';
+import type {
+  PayrollRecord,
+  PayrollHistoryRecord
+} from './payroll';
 
 export interface Database {
   public: {
@@ -209,6 +213,18 @@ export interface Database {
           priority: string;
           created_at: string | null;
         }>;
+        Relationships: [];
+      };
+      payroll: {
+        Row: PayrollRecord;
+        Insert: Omit<PayrollRecord, 'id'> & { id?: string };
+        Update: Partial<PayrollRecord>;
+        Relationships: [];
+      };
+      payroll_history: {
+        Row: PayrollHistoryRecord;
+        Insert: Omit<PayrollHistoryRecord, 'id'> & { id?: string };
+        Update: Partial<PayrollHistoryRecord>;
         Relationships: [];
       };
     };

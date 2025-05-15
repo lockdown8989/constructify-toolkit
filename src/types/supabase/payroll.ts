@@ -27,6 +27,8 @@ export interface PayrollRecord {
   ytd_ni?: number;
   ytd_other?: number;
   ytd_net?: number;
+  delivered_at?: string;
+  delivery_status?: string;
   employees?: {
     name: string;
     job_title: string;
