@@ -39,10 +39,10 @@ export const exportPayrollData = async (currency: string = 'GBP') => {
     
     // Format data for CSV export
     const formattedData = data.map(record => ({
-      'Employee Name': record.employees?.name || 'Unknown',
-      'Job Title': record.employees?.job_title || 'Unknown',
-      'Department': record.employees?.department || 'Unknown',
-      'Site': record.employees?.site || 'Unknown',
+      'Employee Name': record.employees ? record.employees.name || 'Unknown' : 'Unknown',
+      'Job Title': record.employees ? record.employees.job_title || 'Unknown' : 'Unknown',
+      'Department': record.employees ? record.employees.department || 'Unknown' : 'Unknown',
+      'Site': record.employees ? record.employees.site || 'Unknown' : 'Unknown',
       'Base Salary': `${currency} ${record.base_pay?.toFixed(2) || '0.00'}`,
       'Deductions': `${currency} ${record.deductions?.toFixed(2) || '0.00'}`,
       'Tax Paid': `${currency} ${record.tax_paid?.toFixed(2) || '0.00'}`,
