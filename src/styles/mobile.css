@@ -1,4 +1,3 @@
-
 /* Improved touch targets for mobile */
 @media (max-width: 768px) {
   button, a, input[type="checkbox"], input[type="radio"], [role="button"], 
@@ -45,6 +44,47 @@
   
   .shift-calendar-mobile .calendar-day-header {
     @apply text-xs py-1;
+  }
+  
+  /* Calendar improvements for mobile */
+  .calendar-grid-mobile {
+    @apply grid-cols-7 gap-0;
+  }
+  
+  .calendar-day-mobile {
+    @apply aspect-square p-0.5 text-[10px];
+  }
+  
+  .calendar-event-mobile {
+    @apply text-xs py-0.5 px-1 rounded-sm;
+  }
+  
+  /* Calendar event dot improvements */
+  .calendar-event-indicator {
+    @apply flex justify-center gap-0.5 mt-0.5;
+  }
+  
+  /* Apply Material/iOS-like styles for better mobile experience */
+  .mobile-calendar-card {
+    @apply rounded-xl overflow-hidden shadow-md mx-0;
+  }
+  
+  /* Week view day styles */
+  .mobile-day-header {
+    @apply text-[10px] bg-gray-50 py-1 text-center font-medium rounded-t;
+  }
+  
+  .mobile-day-number {
+    @apply h-6 w-6 flex items-center justify-center text-xs;
+  }
+  
+  .mobile-day-today .mobile-day-number {
+    @apply bg-primary text-white rounded-full;
+  }
+  
+  /* Week view event styles */
+  .mobile-week-event {
+    @apply text-[10px] py-0.5 px-1 rounded-sm mb-0.5 truncate;
   }
 }
 
@@ -189,3 +229,47 @@
   @apply flex items-center justify-between py-1 px-2 bg-gray-50 rounded-lg text-sm mb-2;
 }
 
+/* Mobile calendar swipe area */
+.calendar-swipe-area {
+  @apply w-full h-full touch-action-pan-y overscroll-behavior-y-contain;
+}
+
+/* Calendar day has events indicator */
+.has-events-indicator {
+  @apply relative;
+}
+
+.has-events-indicator::after {
+  content: '';
+  @apply absolute -bottom-[2px] left-1/2 transform -translate-x-1/2 
+         h-1 w-1 rounded-full bg-blue-500;
+}
+
+/* Multiple events indicator */
+.multiple-events-indicator::after {
+  @apply w-auto px-0.5 h-0.5 rounded-sm;
+}
+
+/* Today highlight in calendar */
+.calendar-day-today {
+  @apply bg-blue-50/50 rounded;
+}
+
+/* Pull to refresh animation for calendar */
+.calendar-pull-indicator {
+  @apply h-1 bg-gray-200 overflow-hidden transition-all duration-300 opacity-0;
+}
+
+.calendar-pull-indicator.active {
+  @apply h-2 opacity-100;
+}
+
+.calendar-pull-indicator::after {
+  content: '';
+  @apply absolute top-0 left-0 h-full w-1/3 bg-blue-500 animate-calendar-pull;
+}
+
+@keyframes calendar-pull {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
