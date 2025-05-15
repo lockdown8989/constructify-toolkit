@@ -77,7 +77,7 @@ export const usePayroll = (employees: Employee[]) => {
             user_id: employee.user_id
           };
 
-          await processEmployeePayroll(employeeId, processableEmployee, 'GBP');
+          await processEmployeePayroll(employeeId, processableEmployee, currency || 'GBP');
           successCount++;
         } catch (err) {
           console.error('Error processing payroll:', err);
@@ -128,7 +128,7 @@ export const usePayroll = (employees: Employee[]) => {
       await exportPayrollData(currency || 'GBP');
       toast({
         title: "Export successful",
-        description: `Payroll data has been exported to CSV in ${currency || '£'}.`,
+        description: `Payroll data has been exported to CSV in ${currency || 'GBP'}.`,
       });
     } catch (err) {
       console.error("Error exporting payrolls:", err);

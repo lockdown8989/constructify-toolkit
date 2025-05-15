@@ -675,13 +675,26 @@ export type Database = {
           document_url: string | null
           employee_id: string | null
           id: string
+          ni_contribution: number | null
+          ni_number: string | null
+          other_deductions: number | null
           overtime_hours: number | null
           overtime_pay: number | null
+          pay_period: string | null
           payment_date: string | null
+          payment_method: string | null
           payment_status: string | null
+          pension_contribution: number | null
           processing_date: string | null
           salary_paid: number
+          tax_code: string | null
+          tax_paid: number | null
           working_hours: number | null
+          ytd_gross: number | null
+          ytd_net: number | null
+          ytd_ni: number | null
+          ytd_other: number | null
+          ytd_tax: number | null
         }
         Insert: {
           base_pay?: number | null
@@ -693,13 +706,26 @@ export type Database = {
           document_url?: string | null
           employee_id?: string | null
           id?: string
+          ni_contribution?: number | null
+          ni_number?: string | null
+          other_deductions?: number | null
           overtime_hours?: number | null
           overtime_pay?: number | null
+          pay_period?: string | null
           payment_date?: string | null
+          payment_method?: string | null
           payment_status?: string | null
+          pension_contribution?: number | null
           processing_date?: string | null
           salary_paid: number
+          tax_code?: string | null
+          tax_paid?: number | null
           working_hours?: number | null
+          ytd_gross?: number | null
+          ytd_net?: number | null
+          ytd_ni?: number | null
+          ytd_other?: number | null
+          ytd_tax?: number | null
         }
         Update: {
           base_pay?: number | null
@@ -711,13 +737,26 @@ export type Database = {
           document_url?: string | null
           employee_id?: string | null
           id?: string
+          ni_contribution?: number | null
+          ni_number?: string | null
+          other_deductions?: number | null
           overtime_hours?: number | null
           overtime_pay?: number | null
+          pay_period?: string | null
           payment_date?: string | null
+          payment_method?: string | null
           payment_status?: string | null
+          pension_contribution?: number | null
           processing_date?: string | null
           salary_paid?: number
+          tax_code?: string | null
+          tax_paid?: number | null
           working_hours?: number | null
+          ytd_gross?: number | null
+          ytd_net?: number | null
+          ytd_ni?: number | null
+          ytd_other?: number | null
+          ytd_tax?: number | null
         }
         Relationships: [
           {

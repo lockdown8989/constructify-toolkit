@@ -43,10 +43,12 @@ export const processEmployeePayroll = async (
     const taxRate = 0.2;
     const insuranceRate = 0.05;
     const otherRate = 0.08;
+    const pensionRate = 0.05;
     const taxDeduction = baseSalary * taxRate;
     const insuranceDeduction = baseSalary * insuranceRate;
     const otherDeduction = baseSalary * otherRate;
-    const totalDeductions = taxDeduction + insuranceDeduction + otherDeduction;
+    const pensionDeduction = baseSalary * pensionRate;
+    const totalDeductions = taxDeduction + insuranceDeduction + otherDeduction + pensionDeduction;
     
     // Calculate overtime pay
     const hourlyRate = baseSalary / 160; // Assuming 160 hours per month
@@ -60,6 +62,20 @@ export const processEmployeePayroll = async (
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     const payPeriod = `${format(firstDayOfMonth, 'dd/MM/yyyy')} - ${format(lastDayOfMonth, 'dd/MM/yyyy')}`;
+    
+    // Generate tax code (example format)
+    const taxCode = `${Math.floor(1000 + Math.random() * 9000)}L`;
+    
+    // Generate NI number (example format: AB123456C)
+    const niNumber = `${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${Math.floor(100000 + Math.random() * 900000)}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`;
+    
+    // Calculate YTD values (these would normally come from a database)
+    // For now, we'll just use the current month's values
+    const ytdGross = baseSalary;
+    const ytdTax = taxDeduction;
+    const ytdNi = insuranceDeduction;
+    const ytdOther = otherDeduction + pensionDeduction;
+    const ytdNet = finalSalary;
     
     // Add record to payroll table
     const { data: payrollData, error: payrollError } = await supabase
@@ -75,10 +91,20 @@ export const processEmployeePayroll = async (
         tax_paid: taxDeduction,
         ni_contribution: insuranceDeduction,
         other_deductions: otherDeduction,
+        pension_contribution: pensionDeduction,
         payment_status: 'Pending', // Start with pending status
         payment_date: paymentDate,
         processing_date: processingDate,
-        delivery_status: 'pending' // Track delivery status
+        delivery_status: 'pending', // Track delivery status
+        pay_period: payPeriod,
+        tax_code: taxCode,
+        ni_number: niNumber,
+        payment_method: 'Bank Transfer',
+        ytd_gross: ytdGross,
+        ytd_tax: ytdTax,
+        ytd_ni: ytdNi,
+        ytd_other: ytdOther,
+        ytd_net: ytdNet
       })
       .select()
       .single();
