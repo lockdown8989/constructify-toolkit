@@ -1,5 +1,6 @@
 
 import { PayslipData as BasePayslipData } from '@/types/supabase/payroll';
+import { PubSub } from 'jspdf/types/jspdf';
 
 // Add type definitions for jsPDF with autoTable
 declare module 'jspdf' {
@@ -14,7 +15,7 @@ declare module 'jspdf' {
     };
     internal: {
       getNumberOfPages(): number;
-      events: any;
+      events: PubSub;
       scaleFactor: number;
       pageSize: { 
         width: number; 
