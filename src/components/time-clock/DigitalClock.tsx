@@ -29,7 +29,7 @@ const DigitalClock = () => {
 
   return (
     <div className={`digital-clock ${getClockSize()} font-mono font-bold text-white`}>
-      {format(time, "HH:mm")}
+      {format(time, "HH:mm:ss")}
     </div>
   );
 };

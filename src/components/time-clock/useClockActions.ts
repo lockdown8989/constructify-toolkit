@@ -36,9 +36,13 @@ export const useClockActions = () => {
           .select('id, active_session')
           .eq('employee_id', selectedEmployee)
           .eq('date', today)
+          .eq('active_session', true)
           .maybeSingle();
           
-        if (checkError) throw checkError;
+        if (checkError) {
+          console.error('Error checking for existing active session:', checkError);
+          throw checkError;
+        }
           
         if (existingRecord?.active_session) {
           toast({
@@ -49,8 +53,8 @@ export const useClockActions = () => {
           return;
         }
         
-        // Clock in
-        const { error } = await supabase
+        // Clock in - create a new record or update existing non-active one
+        const { data, error } = await supabase
           .from('attendance')
           .upsert({
             employee_id: selectedEmployee,
@@ -59,12 +63,17 @@ export const useClockActions = () => {
             active_session: true,
             attendance_status: 'Present',
             device_info: 'Manager Dashboard',
-            notes: 'Clocked in by manager'
+            notes: 'Clocked in by manager',
+            status: 'Present'
           }, {
             onConflict: 'employee_id,date'
-          });
+          })
+          .select();
           
-        if (error) throw error;
+        if (error) {
+          console.error('Error clocking in:', error);
+          throw error;
+        }
         
         toast({
           title: "Clocked In",
@@ -79,7 +88,10 @@ export const useClockActions = () => {
           .eq('active_session', true)
           .maybeSingle();
           
-        if (findError) throw findError;
+        if (findError) {
+          console.error('Error finding active session:', findError);
+          throw findError;
+        }
           
         if (!activeSession) {
           toast({
@@ -95,7 +107,7 @@ export const useClockActions = () => {
         const workingMinutes = Math.round((now.getTime() - checkInTime.getTime()) / (1000 * 60));
         
         // Clock out
-        const { error: updateError } = await supabase
+        const { data, error: updateError } = await supabase
           .from('attendance')
           .update({
             check_out: now.toISOString(),
@@ -103,9 +115,13 @@ export const useClockActions = () => {
             working_minutes: workingMinutes,
             overtime_minutes: Math.max(0, workingMinutes - 480) // Over 8 hours
           })
-          .eq('id', activeSession.id);
+          .eq('id', activeSession.id)
+          .select();
           
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Error clocking out:', updateError);
+          throw updateError;
+        }
         
         toast({
           title: "Clocked Out",
@@ -126,6 +142,7 @@ export const useClockActions = () => {
         description: "There was an error processing the clock action",
         variant: "destructive",
       });
+      throw error; // Rethrow to allow handling in the component
     }
   };
 

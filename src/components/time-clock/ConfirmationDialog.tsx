@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Check, X, Clock, Home, Coffee } from 'lucide-react';
+import { Check, Home, Coffee } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ConfirmationDialogProps {
@@ -22,7 +22,16 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   employeeName,
   employeeAvatar
 }) => {
-  const currentTime = format(new Date(), 'HH:mm');
+  const currentTime = format(new Date(), 'HH:mm:ss');
+  
+  const getActionText = () => {
+    switch (action) {
+      case 'in': return 'clocked in';
+      case 'out': return 'clocked out';
+      case 'break': return 'on break';
+      default: return '';
+    }
+  };
   
   const getHeaderColor = () => {
     switch (action) {
@@ -41,46 +50,37 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
       default: return null;
     }
   };
-  
-  const getActionText = () => {
-    switch (action) {
-      case 'in': return 'clocked in';
-      case 'out': return 'clocked out';
-      case 'break': return 'on break';
-      default: return '';
-    }
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-[360px] p-0 overflow-hidden">
-        <div className={`${getHeaderColor()} p-4 flex items-center justify-center`}>
+      <DialogContent className="max-w-[360px] p-0 overflow-hidden bg-black text-white border border-gray-800">
+        <div className={`${getHeaderColor()} p-6 flex items-center justify-center`}>
           {getHeaderIcon()}
         </div>
         
-        <div className="px-6 py-5">
+        <div className="px-6 py-8">
           <div className="flex flex-col items-center justify-center">
             {employeeAvatar ? (
-              <div className="w-16 h-16 rounded-full overflow-hidden mb-3">
+              <div className="w-20 h-20 rounded-full overflow-hidden mb-4">
                 <img src={employeeAvatar} alt={employeeName} className="w-full h-full object-cover" />
               </div>
             ) : (
-              <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mb-3">
-                <Clock className="w-8 h-8 text-gray-500" />
+              <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center mb-4">
+                <span className="text-2xl font-bold text-gray-300">{employeeName.charAt(0)}</span>
               </div>
             )}
             
-            <h3 className="text-xl font-semibold mb-1">Hi {employeeName}</h3>
-            <p className="text-muted-foreground mb-4">
+            <h3 className="text-2xl font-semibold mb-2">Hi {employeeName}</h3>
+            <p className="text-gray-400 mb-4 text-center">
               You're about to be {getActionText()} at 
             </p>
-            <p className="text-3xl font-bold mb-4">{currentTime}</p>
+            <p className="text-4xl font-bold mb-6">{currentTime}</p>
           </div>
           
-          <div className="grid grid-cols-2 gap-2 mt-2">
+          <div className="grid grid-cols-2 gap-4 mt-4">
             <Button 
               variant="outline" 
-              className="w-full" 
+              className="w-full text-gray-300 border-gray-700 hover:bg-gray-800 hover:text-white" 
               onClick={onClose}
             >
               Cancel

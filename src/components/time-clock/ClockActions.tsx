@@ -71,13 +71,13 @@ const ClockActions = ({
             
             <div className="grid grid-cols-2 gap-4">
               <Button 
-                className={`py-6 text-3xl rounded-md ${action === 'in' ? 'animate-pulse' : ''} time-clock-button-in`}
+                className={`py-8 text-3xl rounded-md ${action === 'in' ? 'animate-pulse' : ''} bg-emerald-500 hover:bg-emerald-600`}
                 onClick={() => handleActionClick('in')}
               >
                 IN
               </Button>
               <Button 
-                className={`py-6 text-3xl rounded-md ${action === 'out' ? 'animate-pulse' : ''} time-clock-button-out`}
+                className={`py-8 text-3xl rounded-md ${action === 'out' ? 'animate-pulse' : ''} bg-red-600 hover:bg-red-700`}
                 onClick={() => handleActionClick('out')}
               >
                 OUT
