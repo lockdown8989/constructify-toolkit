@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -14,9 +15,9 @@ export interface EmployeeSchedule {
   created_at: string;
   location?: string;
   updated_at?: string;
-  mobile_notification_sent?: boolean;
-  created_platform?: string;
-  last_modified_platform?: string;
+  mobile_notification_sent: boolean;
+  created_platform: string;
+  last_modified_platform: string;
 }
 
 export const useEmployeeSchedule = () => {
@@ -95,6 +96,8 @@ export const useEmployeeSchedule = () => {
   
   // Track new schedules (created in the last 24 hours) and set initial tab
   useEffect(() => {
+    if (!data) return;
+    
     console.log('Processing schedules for tabs, count:', data.length);
     
     // Debug schedules data

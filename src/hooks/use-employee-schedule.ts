@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./auth";
 
@@ -10,9 +11,20 @@ export interface EmployeeSchedule {
   end_time: string;
   status: string;
   created_at: string;
+  location?: string;
+  updated_at?: string;
+  mobile_notification_sent: boolean;
+  created_platform: string;
+  last_modified_platform: string;
 }
 
 export const useEmployeeSchedule = () => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
+  const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("my-shifts");
+  const [newSchedules, setNewSchedules] = useState<Record<string, boolean>>({});
   const { user } = useAuth();
   
   // In a real app, this would fetch from an API/database
@@ -26,7 +38,12 @@ export const useEmployeeSchedule = () => {
         start_time: "2025-05-16T08:00:00",
         end_time: "2025-05-16T16:00:00",
         status: "confirmed",
-        created_at: "2025-05-10T10:00:00"
+        created_at: "2025-05-10T10:00:00",
+        location: "Main Office",
+        updated_at: "2025-05-10T10:00:00",
+        mobile_notification_sent: false,
+        created_platform: "web",
+        last_modified_platform: "web"
       },
       {
         id: "2",
@@ -35,7 +52,12 @@ export const useEmployeeSchedule = () => {
         start_time: "2025-05-18T16:00:00",
         end_time: "2025-05-18T23:00:00",
         status: "confirmed",
-        created_at: "2025-05-10T10:00:00"
+        created_at: "2025-05-10T10:00:00",
+        location: "Main Office",
+        updated_at: "2025-05-10T10:00:00",
+        mobile_notification_sent: false,
+        created_platform: "web",
+        last_modified_platform: "web"
       },
       {
         id: "3",
@@ -44,7 +66,12 @@ export const useEmployeeSchedule = () => {
         start_time: "2025-05-20T14:00:00",
         end_time: "2025-05-20T15:30:00",
         status: "confirmed",
-        created_at: "2025-05-10T10:00:00"
+        created_at: "2025-05-10T10:00:00",
+        location: "Conference Room",
+        updated_at: "2025-05-10T10:00:00",
+        mobile_notification_sent: false,
+        created_platform: "web",
+        last_modified_platform: "web"
       }
     ];
   };
@@ -60,9 +87,21 @@ export const useEmployeeSchedule = () => {
   };
   
   return {
+    currentDate,
+    setCurrentDate,
+    selectedScheduleId,
+    setSelectedScheduleId,
+    isInfoDialogOpen,
+    setIsInfoDialogOpen,
+    isCancelDialogOpen,
+    setIsCancelDialogOpen,
+    activeTab,
+    setActiveTab,
+    newSchedules,
     schedules: data || [],
     isLoading,
     error,
-    refreshSchedules
+    refreshSchedules,
+    refetch
   };
 };

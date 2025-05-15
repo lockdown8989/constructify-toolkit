@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO, isAfter, subMonths } from 'date-fns';
+import { Schedule } from '@/hooks/use-schedules';
 
 const ShiftHistoryTab = () => {
   const { schedules, isLoading, refetch } = useEmployeeSchedule();
@@ -36,6 +37,16 @@ const ShiftHistoryTab = () => {
       title: "Refreshed",
       description: "Shift history has been updated",
     });
+  };
+  
+  // Convert EmployeeSchedule to Schedule type
+  const convertToSchedule = (employeeSchedule: typeof schedules[0]): Schedule => {
+    return {
+      ...employeeSchedule,
+      mobile_notification_sent: employeeSchedule.mobile_notification_sent,
+      created_platform: employeeSchedule.created_platform,
+      last_modified_platform: employeeSchedule.last_modified_platform,
+    };
   };
   
   return (
@@ -71,7 +82,7 @@ const ShiftHistoryTab = () => {
             {recentSchedules.map(schedule => (
               <div key={schedule.id}>
                 <ShiftDetailCard
-                  schedule={schedule}
+                  schedule={convertToSchedule(schedule)}
                   onInfoClick={() => {}}
                   onEmailClick={() => {}}
                   onCancelClick={() => {}}
