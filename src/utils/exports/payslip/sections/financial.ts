@@ -123,3 +123,6 @@ export const addNotesSection = (doc: jsPDF, notes: string, currentY: number): vo
   doc.setFont('helvetica', 'normal');
   doc.text(notes, 15, currentY + 10);
 };
+
+// Re-export from employee-info.ts for payslip-generator.ts to use
+export { addEmployeeInfo, addPaymentInfo } from '../sections/employee-info';
