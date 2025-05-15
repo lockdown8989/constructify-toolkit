@@ -58,9 +58,9 @@ const ManagerTimeClock = () => {
   };
 
   // Safe clock action handler with error handling
-  const handleSafeClockAction = (action: 'in' | 'out') => {
+  const handleSafeClockAction = async (action: 'in' | 'out') => {
     try {
-      handleClockAction(action);
+      await handleClockAction(action);
     } catch (error) {
       console.error('Error in handleSafeClockAction:', error);
       toast({
@@ -76,7 +76,7 @@ const ManagerTimeClock = () => {
       {/* Header - only visible in portrait mode */}
       <div className="p-4 flex items-center justify-between border-b border-gray-800 portrait:flex landscape:hidden">
         <div className="flex items-center">
-          <h1 className="text-xl font-bold tracking-wide">BIZIMPLY</h1>
+          <h1 className="text-xl font-bold tracking-wide">TeamPulse</h1>
         </div>
         <Button 
           variant="ghost" 
@@ -120,7 +120,7 @@ const ManagerTimeClock = () => {
         <div className={`${isLandscape ? 'w-2/3' : 'w-full'} p-4 flex flex-col items-center justify-center`}>
           {/* Company logo/header */}
           <div className="text-center mb-6">
-            <div className="text-lg uppercase tracking-wider">BIZIMPLY</div>
+            <div className="text-lg uppercase tracking-wider">TeamPulse</div>
             <p className="text-sm text-gray-400">{new Date().toLocaleDateString()}</p>
           </div>
           

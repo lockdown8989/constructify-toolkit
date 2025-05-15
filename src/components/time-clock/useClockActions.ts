@@ -35,7 +35,6 @@ export const useClockActions = () => {
           .from('attendance')
           .select('id, active_session')
           .eq('employee_id', selectedEmployee)
-          .eq('date', today)
           .eq('active_session', true)
           .maybeSingle();
           
@@ -53,20 +52,17 @@ export const useClockActions = () => {
           return;
         }
         
-        // Clock in - create a new record or update existing non-active one
+        // Clock in - create a new record
         const { data, error } = await supabase
           .from('attendance')
-          .upsert({
+          .insert({
             employee_id: selectedEmployee,
             date: today,
             check_in: now.toISOString(),
             active_session: true,
             attendance_status: 'Present',
             device_info: 'Manager Dashboard',
-            notes: 'Clocked in by manager',
-            status: 'Present'
-          }, {
-            onConflict: 'employee_id,date'
+            notes: 'Clocked in by manager'
           })
           .select();
           
@@ -107,16 +103,16 @@ export const useClockActions = () => {
         const workingMinutes = Math.round((now.getTime() - checkInTime.getTime()) / (1000 * 60));
         
         // Clock out
-        const { data, error: updateError } = await supabase
+        const { error: updateError } = await supabase
           .from('attendance')
           .update({
             check_out: now.toISOString(),
             active_session: false,
             working_minutes: workingMinutes,
-            overtime_minutes: Math.max(0, workingMinutes - 480) // Over 8 hours
+            overtime_minutes: Math.max(0, workingMinutes - 480), // Over 8 hours
+            status: 'Present'
           })
-          .eq('id', activeSession.id)
-          .select();
+          .eq('id', activeSession.id);
           
         if (updateError) {
           console.error('Error clocking out:', updateError);

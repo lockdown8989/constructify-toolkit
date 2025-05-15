@@ -23,6 +23,7 @@ const ClockActions = ({
   const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'in' | 'out' | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
   const handleActionClick = (clickAction: 'in' | 'out') => {
@@ -46,10 +47,11 @@ const ClockActions = ({
     }
   };
 
-  const handleConfirmAction = () => {
-    if (pendingAction) {
+  const handleConfirmAction = async () => {
+    if (pendingAction && !isProcessing) {
       try {
-        onClockAction(pendingAction);
+        setIsProcessing(true);
+        await onClockAction(pendingAction);
         setIsConfirmationOpen(false);
       } catch (error) {
         console.error('Error in clock action:', error);
@@ -58,6 +60,8 @@ const ClockActions = ({
           description: "There was an error processing the clock action",
           variant: "destructive",
         });
+      } finally {
+        setIsProcessing(false);
       }
     }
   };
@@ -73,12 +77,14 @@ const ClockActions = ({
               <Button 
                 className={`py-8 text-3xl rounded-md ${action === 'in' ? 'animate-pulse' : ''} bg-emerald-500 hover:bg-emerald-600`}
                 onClick={() => handleActionClick('in')}
+                disabled={isProcessing}
               >
                 IN
               </Button>
               <Button 
                 className={`py-8 text-3xl rounded-md ${action === 'out' ? 'animate-pulse' : ''} bg-red-600 hover:bg-red-700`}
                 onClick={() => handleActionClick('out')}
+                disabled={isProcessing}
               >
                 OUT
               </Button>
