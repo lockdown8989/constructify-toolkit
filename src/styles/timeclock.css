@@ -92,6 +92,40 @@
   }
 }
 
+/* Tablet optimizations - new styles */
+@media (min-width: 768px) and (max-width: 1366px) {
+  .employee-list-item {
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .employee-list-item.selected {
+    transform: translateX(4px);
+  }
+  
+  .digital-clock {
+    font-size: 10rem;
+  }
+  
+  .tablet-clock {
+    font-size: 12rem;
+  }
+  
+  /* Portrait tablet specific adjustments */
+  @media (orientation: portrait) {
+    .digital-clock {
+      font-size: 8rem;
+    }
+  }
+  
+  /* Larger tablets (iPad Pro, etc) */
+  @media (min-width: 1024px) {
+    .digital-clock {
+      font-size: 12rem;
+    }
+  }
+}
+
 .employee-list-item {
   cursor: pointer;
   padding: 0.75rem 1rem;
@@ -143,5 +177,17 @@
 @media (max-width: 768px) {
   .digital-clock {
     font-size: 5rem;
+  }
+}
+
+/* Touch-friendly improvements */
+.touch-friendly {
+  min-height: 48px;
+}
+
+/* Tap highlight effect for better feedback on touch devices */
+@media (hover: none) {
+  .tap-highlight {
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
   }
 }

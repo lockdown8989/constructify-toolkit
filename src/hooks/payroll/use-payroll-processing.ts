@@ -1,161 +1,193 @@
 
+import { useState, useCallback } from 'react';
+import { useToast } from '../use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Employee } from '@/components/dashboard/salary-table/types';
-import { calculateSalaryWithGPT, getEmployeeAttendance } from './use-salary-calculation';
-import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
-import { sendNotification } from '@/services/notifications/notification-sender';
-import { notifyEmployeeAboutPayslip } from '@/services/notifications/payroll-notifications';
+import { generatePayslipPDF, PayslipData } from '@/utils/exports/payslip-generator';
 import { format } from 'date-fns';
+import { Employee } from '@/types/employee';
 
-export const processEmployeePayroll = async (
-  employeeId: string, 
-  employee: Employee, 
-  currency: string = 'GBP'
-) => {
-  try {
-    // Get employee attendance data for accurate calculation
-    const { workingHours, overtimeHours } = await getEmployeeAttendance(employeeId);
-    
-    // Get employee details from the profile table for more accurate info
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('first_name, last_name, country')
-      .eq('id', employee.user_id)
-      .single();
-    
-    // Extract numeric salary value
-    let baseSalary: number;
-    if (typeof employee.salary === 'string') {
-      // Remove currency symbols and commas
-      baseSalary = parseFloat(String(employee.salary).replace(/[^\d.]/g, ''));
-      if (isNaN(baseSalary)) {
-        baseSalary = 0; // Default to 0 if parsing fails
-      }
-    } else if (typeof employee.salary === 'number') {
-      baseSalary = employee.salary;
-    } else {
-      baseSalary = 0; // Default case
-    }
-    
-    // Calculate final salary using AI function with currency
-    const finalSalary = await calculateSalaryWithGPT(employeeId, baseSalary, currency);
-    
-    // Determine tax, insurance and other deductions
-    const taxRate = 0.2;
-    const insuranceRate = 0.05;
-    const otherRate = 0.08;
-    const taxDeduction = baseSalary * taxRate;
-    const insuranceDeduction = baseSalary * insuranceRate;
-    const otherDeduction = baseSalary * otherRate;
-    const totalDeductions = taxDeduction + insuranceDeduction + otherDeduction;
-    
-    // Calculate overtime pay
-    const hourlyRate = baseSalary / 160; // Assuming 160 hours per month
-    const overtimePay = overtimeHours * hourlyRate * 1.5; // Overtime rate of 1.5x
-    
-    const paymentDate = new Date().toISOString().split('T')[0];
-    const processingDate = new Date().toISOString();
-    
-    // Generate pay period
-    const today = new Date();
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    const payPeriod = `${format(firstDayOfMonth, 'dd/MM/yyyy')} - ${format(lastDayOfMonth, 'dd/MM/yyyy')}`;
-    
-    // Add record to payroll table
-    const { data: payrollData, error: payrollError } = await supabase
-      .from('payroll')
-      .insert({
-        employee_id: employeeId,
-        base_pay: baseSalary,
-        working_hours: workingHours,
-        overtime_hours: overtimeHours,
-        overtime_pay: overtimePay,
-        salary_paid: finalSalary,
-        deductions: totalDeductions,
-        tax_paid: taxDeduction,
-        ni_contribution: insuranceDeduction,
-        other_deductions: otherDeduction,
-        payment_status: 'Paid',
-        payment_date: paymentDate,
-        processing_date: processingDate
-      })
-      .select()
-      .single();
+export const usePayrollProcessing = () => {
+  const { toast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [processedCount, setProcessedCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
 
-    if (payrollError) throw payrollError;
+  // Process payroll for all employees
+  const processPayroll = useCallback(async (employees: Employee[], payPeriod: string) => {
+    setIsProcessing(true);
+    setProgress(0);
+    setProcessedCount(0);
+    setTotalCount(employees.length);
     
-    // Generate PDF payslip
     try {
-      const employeeName = employee.name || `${profileData?.first_name || ''} ${profileData?.last_name || ''}`;
+      // Record payroll processing start in history
+      const { error: historyError } = await supabase
+        .from('payroll_history')
+        .insert({
+          period: payPeriod,
+          status: 'processing',
+          employees_count: employees.length,
+          started_at: new Date().toISOString(),
+          processed_by: (await supabase.auth.getUser()).data.user?.id || 'unknown'
+        });
       
-      const pdfResult = await generatePayslipPDF(
-        employeeId, 
-        {
-          name: employeeName,
-          title: employee.title || 'Employee',
-          salary: baseSalary.toString(),
-          department: employee.department || 'General',
-          paymentDate: format(new Date(), 'dd/MM/yyyy'),
-          currency,
-          employeeId,
-          address: employee.department || '',
-          payPeriod,
-          overtimeHours,
-          contractualHours: workingHours
-        },
-        true // Upload to storage
-      );
-      
-      // Send notification to the employee
-      if (employee.user_id) {
-        await notifyEmployeeAboutPayslip(
-          employeeId,
-          employee.user_id,
-          finalSalary,
-          currency,
-          paymentDate
-        );
+      if (historyError) {
+        throw historyError;
       }
       
-    } catch (pdfError) {
-      console.error('Error generating payslip PDF:', pdfError);
-      // Continue as PDF generation is non-critical
-    }
-    
-    return { success: true };
-  } catch (error) {
-    console.error("Error in processEmployeePayroll:", error);
-    throw error; // Re-throw to be handled by the caller
-  }
-};
-
-// Record payroll processing history
-export const savePayrollHistory = async (
-  employeeIds: string[],
-  successCount: number,
-  failCount: number,
-  processedBy: string
-) => {
-  try {
-    const { error } = await supabase
-      .from('payroll_history')
-      .insert({
-        employee_count: employeeIds.length,
-        success_count: successCount,
-        fail_count: failCount,
-        processed_by: processedBy,
-        employee_ids: employeeIds,
-        processing_date: new Date().toISOString()
+      // Process each employee payroll
+      let successCount = 0;
+      let failedCount = 0;
+      
+      for (let i = 0; i < employees.length; i++) {
+        try {
+          const employee = employees[i];
+          
+          // Update progress
+          const currentProgress = Math.round(((i + 1) / employees.length) * 100);
+          setProgress(currentProgress);
+          setProcessedCount(i + 1);
+          
+          // Generate payslip
+          await generateAndStorePayslip(employee, payPeriod);
+          
+          // Update employee payroll status
+          await supabase
+            .from('employees')
+            .update({ last_paid: new Date().toISOString() })
+            .eq('id', employee.id);
+          
+          successCount++;
+        } catch (err) {
+          console.error(`Failed to process payroll for employee ${employees[i].name}:`, err);
+          failedCount++;
+        }
+      }
+      
+      // Record payroll processing completion
+      await supabase
+        .from('payroll_history')
+        .insert({
+          period: payPeriod,
+          status: 'completed',
+          employees_count: employees.length,
+          succeeded_count: successCount,
+          failed_count: failedCount,
+          started_at: new Date().toISOString(),
+          completed_at: new Date().toISOString(),
+          processed_by: (await supabase.auth.getUser()).data.user?.id || 'unknown'
+        });
+      
+      toast({
+        title: 'Payroll Processing Complete',
+        description: `Successfully processed ${successCount} payslips. Failed: ${failedCount}.`,
+        variant: failedCount > 0 ? 'destructive' : 'default',
       });
       
-    if (error) {
-      console.error('Error saving payroll history:', error);
-      return false;
+      return {
+        success: true,
+        successCount,
+        failedCount
+      };
+    } catch (error) {
+      console.error('Error processing payroll:', error);
+      toast({
+        title: 'Payroll Processing Failed',
+        description: `An error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: 'destructive',
+      });
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    } finally {
+      setIsProcessing(false);
     }
-    return true;
-  } catch (err) {
-    console.error('Exception in savePayrollHistory:', err);
-    return false;
-  }
+  }, [toast]);
+
+  // Generate and store payslip for an individual employee
+  const generateAndStorePayslip = async (employee: Employee, payPeriod: string) => {
+    // Format payment date
+    const [month, year] = payPeriod.split(' ');
+    
+    // Create payslip data
+    const payslipData: PayslipData = {
+      name: employee.name,
+      title: employee.job_title || 'Employee',
+      department: employee.department || 'General',
+      salary: `$${employee.salary?.toLocaleString() || '0'}`,
+      paymentDate: payPeriod
+    };
+    
+    // Generate PDF blob
+    const pdfBlob = await generatePayslipPDF(payslipData);
+    
+    // Create file name
+    const fileName = `${employee.name.replace(/\s/g, '_')}_payslip_${month}_${year}.pdf`;
+    const filePath = `payslips/${employee.id}/${year}/${month}/${fileName}`;
+    
+    // Upload to storage
+    const { error: uploadError } = await supabase.storage
+      .from('payslips')
+      .upload(filePath, pdfBlob);
+    
+    if (uploadError) {
+      throw uploadError;
+    }
+    
+    // Create payslip record
+    const { error: recordError } = await supabase
+      .from('payslips')
+      .insert({
+        employee_id: employee.id,
+        month: month,
+        year: year,
+        amount: employee.salary,
+        status: 'generated',
+        file_path: filePath,
+        created_at: new Date().toISOString()
+      });
+    
+    if (recordError) {
+      throw recordError;
+    }
+  };
+
+  // Process payroll for a single employee
+  const processSinglePayroll = useCallback(async (employee: Employee, payPeriod: string) => {
+    setIsProcessing(true);
+    
+    try {
+      await generateAndStorePayslip(employee, payPeriod);
+      
+      toast({
+        title: 'Payroll Processed',
+        description: `Successfully processed payslip for ${employee.name}.`,
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error processing individual payroll:', error);
+      toast({
+        title: 'Payroll Processing Failed',
+        description: `An error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: 'destructive',
+      });
+      
+      return false;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [toast]);
+
+  return {
+    isProcessing,
+    progress,
+    processedCount,
+    totalCount,
+    processPayroll,
+    processSinglePayroll
+  };
 };

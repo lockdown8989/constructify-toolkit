@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import DigitalClock from '@/components/time-clock/DigitalClock';
 import EmployeeList from '@/components/time-clock/EmployeeList';
 import ClockActions from '@/components/time-clock/ClockActions';
 import { useClockActions } from '@/components/time-clock/useClockActions';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const ManagerTimeClock = () => {
   const { isManager, isAdmin, isHR } = useAuth();
@@ -22,6 +23,20 @@ const ManagerTimeClock = () => {
     handleSelectEmployee,
     handleClockAction
   } = useClockActions();
+  const isMobile = useIsMobile();
+  const [orientation, setOrientation] = useState(
+    window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'
+  );
+  
+  // Update orientation on resize
+  useEffect(() => {
+    const updateOrientation = () => {
+      setOrientation(window.innerWidth > window.innerHeight ? 'landscape' : 'portrait');
+    };
+    
+    window.addEventListener('resize', updateOrientation);
+    return () => window.removeEventListener('resize', updateOrientation);
+  }, []);
 
   // Redirect if not a manager
   if (!isManager && !isAdmin && !isHR) {
@@ -44,12 +59,19 @@ const ManagerTimeClock = () => {
     return employee?.name || 'Employee';
   };
 
+  // Define the layout based on device and orientation
+  const isTablet = window.innerWidth >= 768 && window.innerWidth <= 1024;
+  const isLargeTablet = window.innerWidth > 1024 && window.innerWidth <= 1366;
+
   return (
-    <div className="fixed inset-0 bg-black text-white z-50 flex flex-col landscape:flex-row">
-      {/* Header - only visible in portrait mode */}
-      <div className="p-4 flex items-center justify-between border-b border-gray-800 portrait:flex landscape:hidden">
+    <div className="fixed inset-0 bg-black text-white z-50 flex flex-col">
+      {/* Header - shown on all layouts */}
+      <div className="p-4 flex items-center justify-between border-b border-gray-800">
         <div className="flex items-center">
-          <h1 className="text-xl font-bold">⏰️IN ⏱️OUT</h1>
+          <h1 className="text-xl font-bold flex items-center">
+            <span className="text-red-500 mr-1">⏰️</span>IN 
+            <span className="text-gray-300 mr-1 ml-1">⏱️</span>OUT
+          </h1>
         </div>
         <Button 
           variant="ghost" 
@@ -61,24 +83,17 @@ const ManagerTimeClock = () => {
         </Button>
       </div>
 
-      {/* Main content */}
-      <div className="flex flex-1 flex-col md:flex-row landscape:flex-row">
+      {/* Main content with responsive layout */}
+      <div className={`flex flex-1 ${orientation === 'landscape' ? 'flex-row' : 'flex-col'}`}>
         {/* Left side - Employee selection */}
-        <div className="w-full md:w-1/2 landscape:w-1/3 border-r border-gray-800 p-4 overflow-auto landscape:max-h-screen">
+        <div className={`
+          ${orientation === 'landscape' ? 'w-1/3 max-w-md' : 'w-full h-1/2'} 
+          border-gray-800 
+          ${orientation === 'landscape' ? 'border-r' : 'border-b'}
+          p-4 overflow-auto
+        `}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Select Employee</h2>
-            
-            {/* Exit button for landscape mode */}
-            <div className="portrait:hidden landscape:flex">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handleExitFullscreen}
-                className="text-white hover:bg-gray-800"
-              >
-                <X className="h-6 w-6" />
-              </Button>
-            </div>
           </div>
           
           <EmployeeList
@@ -90,10 +105,13 @@ const ManagerTimeClock = () => {
         </div>
 
         {/* Right side - Clock actions */}
-        <div className="w-full md:w-1/2 landscape:w-2/3 p-4 flex flex-col items-center justify-center">
+        <div className={`
+          ${orientation === 'landscape' ? 'w-2/3' : 'w-full h-1/2'} 
+          p-4 flex flex-col items-center justify-center
+        `}>
           {/* Company logo/header */}
           <div className="text-center mb-6">
-            <div className="text-lg uppercase tracking-wider">TeamPulse</div>
+            <div className="text-2xl uppercase tracking-wider">TeamPulse</div>
             <p className="text-sm text-gray-400">{new Date().toLocaleDateString()}</p>
           </div>
           
@@ -102,6 +120,7 @@ const ManagerTimeClock = () => {
             <DigitalClock />
           </div>
 
+          {/* Clock action buttons - bigger on tablets */}
           <ClockActions
             selectedEmployee={selectedEmployee}
             action={action}

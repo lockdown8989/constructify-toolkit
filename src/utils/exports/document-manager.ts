@@ -1,147 +1,170 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { generatePayslipPDF } from './payslip-generator';
+import { v4 as uuidv4 } from 'uuid';
+import { generatePayslipPDF, PayslipData } from './payslip-generator';
 
-interface DocumentAssignmentRequest {
-  employeeId: string;
-  documentType: string;
-  documentName: string;
-  documentPath: string;
-}
-
-interface DocumentUploadResult {
+// Types for document operations
+export interface DocumentUploadResult {
   success: boolean;
   message: string;
-  error?: string;
   path?: string;
+  error?: string;
 }
 
-export const uploadEmployeeDocument = async (
+export interface Document {
+  id: string;
+  name: string;
+  file_path: string;
+  file_type: string;
+  created_at: string;
+  uploaded_by: string;
+  size?: number;
+  description?: string;
+  employee_id?: string;
+}
+
+// Types for document assignments
+export interface DocumentAssignment {
+  id: string;
+  document_id: string;
+  employee_id: string;
+  assigned_at: string;
+  assigned_by: string;
+  status: 'pending' | 'viewed' | 'signed';
+  due_date?: string;
+}
+
+// Upload document to Supabase storage
+export const uploadDocument = async (
   file: File,
-  employeeId: string,
-  documentType: string
+  employeeId: string | null,
+  description?: string
 ): Promise<DocumentUploadResult> => {
   try {
-    // Validate input
-    if (!file || !employeeId || !documentType) {
-      return {
-        success: false,
-        message: 'Missing required information for document upload',
-        error: 'Invalid input parameters'
-      };
-    }
-
-    // Create folder path for employee documents
-    const folderPath = `documents/${employeeId}/${documentType}`;
-    const filePath = `${folderPath}/${file.name}`;
-
-    // Upload file to storage
+    // Create a unique file name
+    const fileExtension = file.name.split('.').pop();
+    const uniqueFileName = `${uuidv4()}.${fileExtension}`;
+    const filePath = employeeId 
+      ? `employees/${employeeId}/${uniqueFileName}`
+      : `general/${uniqueFileName}`;
+    
+    // Upload to Supabase storage
     const { data, error } = await supabase.storage
       .from('documents')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: true
-      });
-
+      .upload(filePath, file);
+    
     if (error) {
-      console.error('Error uploading document:', error);
-      return {
-        success: false,
-        message: 'Failed to upload document',
-        error: error.message
-      };
+      throw error;
     }
-
-    // Add entry to documents table
-    const { error: docError } = await supabase
+    
+    // Create document record in database
+    const { data: docData, error: docError } = await supabase
       .from('documents')
       .insert({
-        employee_id: employeeId,
-        document_type: documentType,
         name: file.name,
-        path: filePath,
-        size: `${(file.size / 1024).toFixed(2)} KB`
+        file_path: data.path,
+        file_type: file.type,
+        size: file.size,
+        description: description || '',
+        employee_id: employeeId,
+        uploaded_by: (await supabase.auth.getUser()).data.user?.id || 'unknown',
+        created_at: new Date().toISOString()
       });
-
+    
     if (docError) {
-      console.error('Error adding document record:', docError);
-      return {
-        success: false,
-        message: 'Document uploaded but failed to update database',
-        error: docError.message,
-        path: filePath
-      };
+      throw docError;
     }
-
+    
     return {
       success: true,
       message: 'Document uploaded successfully',
-      path: filePath
+      path: data.path
     };
   } catch (error) {
-    console.error('Exception during document upload:', error);
+    console.error('Error uploading document:', error);
     return {
       success: false,
-      message: 'An unexpected error occurred',
-      error: String(error)
+      message: `Error uploading document: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 };
 
-export const attachPayslipToResume = async (
-  employeeId: string,
-  employeeData: any
+// Generate and upload a payslip document
+export const generatePayslipDocument = async (
+  employeeData: PayslipData,
+  employeeId: string
 ): Promise<DocumentUploadResult> => {
   try {
-    // Generate the payslip PDF
-    const result = await generatePayslipPDF(employeeId, employeeData, true);
-
-    if (!result.success) {
-      return {
-        success: false,
-        message: 'Failed to generate payslip',
-        error: result.error
-      };
-    }
-
-    if (!result.path) {
-      return {
-        success: false,
-        message: 'Payslip generated but path is missing',
-        error: 'Invalid payslip path'
-      };
-    }
-
-    // Update employee record to link payslip to resume
-    const { error } = await supabase
-      .from('employees')
-      .update({
-        payslip_attached: true,
-        payslip_path: result.path,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', employeeId);
-
-    if (error) {
-      console.error('Error updating employee record:', error);
-      return {
-        success: false,
-        message: 'Payslip generated but failed to attach to resume',
-        error: error.message
-      };
-    }
-
-    return {
-      success: true,
-      message: 'Payslip has been attached to your resume',
-      path: result.path
-    };
+    // Generate PDF blob
+    const pdfBlob = await generatePayslipPDF(employeeData);
+    
+    // Create file from blob
+    const fileName = `${employeeData.name.replace(/\s/g, '_')}_payslip_${employeeData.paymentDate.replace(/\s/g, '_')}.pdf`;
+    const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+    
+    // Upload using the uploadDocument function
+    return await uploadDocument(file, employeeId, `Payslip for ${employeeData.paymentDate}`);
   } catch (error) {
-    console.error('Exception attaching payslip to resume:', error);
+    console.error('Error generating payslip document:', error);
     return {
       success: false,
-      message: 'An unexpected error occurred',
-      error: String(error)
+      message: `Error generating payslip document: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
+  }
+};
+
+// Get document public URL
+export const getDocumentUrl = async (filePath: string): Promise<string | null> => {
+  try {
+    const { data } = await supabase.storage
+      .from('documents')
+      .getPublicUrl(filePath);
+    
+    return data.publicUrl;
+  } catch (error) {
+    console.error('Error getting document URL:', error);
+    return null;
+  }
+};
+
+// Delete document
+export const deleteDocument = async (documentId: string): Promise<boolean> => {
+  try {
+    // Get document info to get the file path
+    const { data: document, error: fetchError } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('id', documentId)
+      .single();
+    
+    if (fetchError || !document) {
+      throw new Error('Document not found');
+    }
+    
+    // Delete from storage
+    const { error: storageError } = await supabase.storage
+      .from('documents')
+      .remove([document.file_path]);
+    
+    if (storageError) {
+      throw storageError;
+    }
+    
+    // Delete record from database
+    const { error: dbError } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', documentId);
+    
+    if (dbError) {
+      throw dbError;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting document:', error);
+    return false;
   }
 };

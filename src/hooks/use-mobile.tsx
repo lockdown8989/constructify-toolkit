@@ -4,6 +4,7 @@ import * as React from "react"
 // Defining breakpoints for different device sizes
 const MOBILE_BREAKPOINT = 768
 const TABLET_BREAKPOINT = 1024
+const LARGE_TABLET_BREAKPOINT = 1366
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean>(() => 
@@ -55,6 +56,37 @@ export function useIsTablet() {
   return isTablet
 }
 
+export function useIsLargeTablet() {
+  const [isLargeTablet, setIsLargeTablet] = React.useState<boolean>(() => 
+    typeof window !== "undefined" 
+      ? window.innerWidth >= TABLET_BREAKPOINT && window.innerWidth <= LARGE_TABLET_BREAKPOINT 
+      : false
+  )
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const checkLargeTablet = () => {
+      setIsLargeTablet(
+        window.innerWidth >= TABLET_BREAKPOINT && window.innerWidth <= LARGE_TABLET_BREAKPOINT
+      )
+    }
+    
+    window.addEventListener("resize", checkLargeTablet)
+    checkLargeTablet()
+    
+    return () => window.removeEventListener("resize", checkLargeTablet)
+  }, [])
+
+  return isLargeTablet
+}
+
+export function useIsAnyTablet() {
+  const isTablet = useIsTablet()
+  const isLargeTablet = useIsLargeTablet()
+  return isTablet || isLargeTablet
+}
+
 export function useIsSmallScreen() {
   const isMobile = useIsMobile()
   const isTablet = useIsTablet()
@@ -76,4 +108,28 @@ export function useIsTouchDevice() {
   }, [])
   
   return isTouch
+}
+
+// Check current orientation
+export function useOrientation() {
+  const [orientation, setOrientation] = React.useState<'portrait' | 'landscape'>(
+    typeof window !== "undefined" 
+      ? window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'
+      : 'portrait'
+  )
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const updateOrientation = () => {
+      setOrientation(window.innerWidth > window.innerHeight ? 'landscape' : 'portrait')
+    }
+    
+    window.addEventListener("resize", updateOrientation)
+    updateOrientation()
+    
+    return () => window.removeEventListener("resize", updateOrientation)
+  }, [])
+
+  return orientation
 }

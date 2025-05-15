@@ -14,22 +14,32 @@ const ClockActions = ({
   selectedEmployeeName,
   onClockAction
 }: ClockActionsProps) => {
+  // Determine if we're on a tablet
+  const isTablet = window.innerWidth >= 768 && window.innerWidth <= 1366;
+  
+  // Adjust button sizes for tablets
+  const buttonClasses = isTablet 
+    ? "py-8 text-4xl rounded-lg font-bold shadow-lg transition-transform active:scale-95" 
+    : "py-6 text-3xl rounded-md";
+
   return (
-    <div className="w-full max-w-lg text-center">
+    <div className={`w-full ${isTablet ? 'max-w-xl' : 'max-w-lg'} text-center`}>
       {selectedEmployee ? (
         <>
-          <h3 className="text-xl mb-2 font-semibold">{selectedEmployeeName}</h3>
+          <h3 className={`${isTablet ? 'text-2xl mb-4' : 'text-xl mb-2'} font-semibold`}>
+            {selectedEmployeeName}
+          </h3>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-6">
             <Button 
-              className={`py-6 text-3xl rounded-md ${action === 'in' ? 'animate-pulse' : ''}`}
+              className={`${buttonClasses} ${action === 'in' ? 'animate-pulse' : ''}`}
               style={{ backgroundColor: '#00A896' }}
               onClick={() => onClockAction('in')}
             >
               IN
             </Button>
             <Button 
-              className={`py-6 text-3xl rounded-md ${action === 'out' ? 'animate-pulse' : ''}`}
+              className={`${buttonClasses} ${action === 'out' ? 'animate-pulse' : ''}`}
               style={{ backgroundColor: '#E63946' }}
               onClick={() => onClockAction('out')}
             >
@@ -39,8 +49,8 @@ const ClockActions = ({
         </>
       ) : (
         <div className="text-center text-gray-400">
-          <h3 className="text-xl mb-4">No Employee Selected</h3>
-          <p>Please select an employee from the list</p>
+          <h3 className={`${isTablet ? 'text-2xl' : 'text-xl'} mb-4`}>No Employee Selected</h3>
+          <p className={isTablet ? 'text-lg' : ''}>Please select an employee from the list</p>
         </div>
       )}
     </div>

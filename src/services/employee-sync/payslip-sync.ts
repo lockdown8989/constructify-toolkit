@@ -1,168 +1,141 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { Employee } from '@/types/employee';
-import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
-import { sendNotification } from '@/services/notifications/notification-sender';
+import { supabase } from '../../integrations/supabase/client';
+import { generatePayslipPDF, PayslipData } from '../../utils/exports/payslip-generator';
+import { getEmployeeById } from '../../hooks/use-employees';
+import { format } from 'date-fns';
 
-export const initializePayslipTemplate = async (employee: Employee) => {
+// Generate payslip PDF for an employee
+export const generateEmployeePayslip = async (employeeId: string, month?: string, year?: string) => {
   try {
-    // Check if employee already exists in payroll system
-    const { data: existingPayroll } = await supabase
-      .from('payroll')
-      .select('id')
-      .eq('employee_id', employee.id)
-      .limit(1);
-      
-    if (existingPayroll && existingPayroll.length > 0) {
-      return { success: true, message: 'Employee already has payslip template' };
+    // Get employee data
+    const employee = await getEmployeeById(employeeId);
+    if (!employee) {
+      throw new Error('Employee not found');
+    }
+
+    // Format date for payslip
+    const currentDate = new Date();
+    const paymentMonth = month || format(currentDate, 'MMMM');
+    const paymentYear = year || format(currentDate, 'yyyy');
+    const paymentDate = `${paymentMonth} ${paymentYear}`;
+    
+    // Get overtime data (sample - in real application, this would come from a database)
+    const overtimeHours = Math.floor(Math.random() * 20); // Sample overtime between 0-20 hours
+    const contractualHours = 160; // Standard monthly hours (40h x 4 weeks)
+
+    // Create payslip data
+    const payslipData: PayslipData = {
+      name: employee.name,
+      title: employee.job_title || 'Employee',
+      department: employee.department || 'General',
+      salary: `$${employee.salary?.toLocaleString() || '0'}`,
+      paymentDate: paymentDate,
+      payPeriod: `${paymentMonth} ${paymentYear}`,
+      overtimeHours: overtimeHours,
+      contractualHours: contractualHours
+    };
+    
+    // Generate PDF blob
+    const pdfBlob = await generatePayslipPDF(payslipData);
+    
+    // Convert blob to file
+    const pdfFile = new File([pdfBlob], `${employee.name.replace(/\s/g, '_')}_payslip_${paymentMonth}_${paymentYear}.pdf`, {
+      type: 'application/pdf'
+    });
+    
+    // Upload to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('payslips')
+      .upload(`${employeeId}/${paymentYear}/${paymentMonth}/${pdfFile.name}`, pdfFile);
+    
+    if (error) {
+      throw error;
     }
     
-    // Create initial payroll record
-    const currentMonth = new Date().toISOString().split('T')[0].substring(0, 7) + '-01';
-    
-    const { data, error } = await supabase
-      .from('payroll')
+    // Create payslip record in database
+    const { data: payslipData2, error: payslipError } = await supabase
+      .from('payslips')
       .insert({
-        employee_id: employee.id,
-        base_pay: employee.salary,
-        salary_paid: 0, // Will be calculated during payroll processing
-        deductions: 0,
-        payment_status: 'Pending',
-        payment_date: currentMonth,
-        processing_date: new Date().toISOString()
+        employee_id: employeeId,
+        month: paymentMonth,
+        year: paymentYear,
+        amount: employee.salary,
+        status: 'generated',
+        file_path: data.path,
+        created_at: new Date().toISOString()
       });
-      
-    if (error) throw error;
     
-    return { success: true };
+    if (payslipError) {
+      throw payslipError;
+    }
+    
+    // Return success with path
+    return {
+      success: true,
+      message: 'Payslip generated successfully',
+      path: data?.path || null
+    };
+    
   } catch (error) {
-    console.error('Error initializing payslip template:', error);
-    throw error;
+    console.error('Error generating payslip:', error);
+    return {
+      success: false,
+      message: `Error generating payslip: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 };
 
-// Process payslip for an employee
-export const processPayslip = async (employeeId: string, month: string) => {
+// Download payslip for an employee
+export const downloadPayslip = async (employeeId: string, month: string, year: string) => {
   try {
-    // First, ensure salary is calculated
-    const salaryResult = await import('./salary-sync').then(module => 
-      module.calculateSalary(employeeId, month)
-    );
-    
-    if (!salaryResult.success) {
-      throw new Error('Failed to calculate salary for payslip');
-    }
-    
-    // Get employee details
-    const { data: employee, error: employeeError } = await supabase
-      .from('employees')
-      .select('name, job_title, department, user_id')
-      .eq('id', employeeId)
-      .single();
-      
-    if (employeeError) throw employeeError;
-    
-    // Update payroll record with calculated values
-    const { data: payrollUpdate, error: payrollError } = await supabase
-      .from('payroll')
-      .update({
-        base_pay: salaryResult.baseSalary,
-        salary_paid: salaryResult.netSalary,
-        deductions: salaryResult.deductions,
-        overtime_pay: salaryResult.overtimePay,
-        working_hours: salaryResult.totalWorkingHours,
-        overtime_hours: salaryResult.totalOvertimeHours,
-        payment_status: 'Paid',
-        payment_date: new Date().toISOString().split('T')[0]
-      })
+    // Check if payslip exists in database
+    const { data: payslips, error: fetchError } = await supabase
+      .from('payslips')
+      .select('*')
       .eq('employee_id', employeeId)
-      .eq('payment_date', month.substring(0, 10))
-      .select()
+      .eq('month', month)
+      .eq('year', year)
       .single();
+    
+    if (fetchError || !payslips) {
+      // Generate new payslip if not found
+      const pdfResult = await generateEmployeePayslip(employeeId, month, year);
+      if (!pdfResult || !pdfResult.success) {
+        throw new Error(pdfResult?.error || 'Failed to generate payslip');
+      }
       
-    if (payrollError) {
-      // If no record exists for this month, create one
-      if (payrollError.code === 'PGRST116') {
-        const { data: newPayroll, error: insertError } = await supabase
-          .from('payroll')
-          .insert({
-            employee_id: employeeId,
-            base_pay: salaryResult.baseSalary,
-            salary_paid: salaryResult.netSalary,
-            deductions: salaryResult.deductions,
-            overtime_pay: salaryResult.overtimePay,
-            working_hours: salaryResult.totalWorkingHours,
-            overtime_hours: salaryResult.totalOvertimeHours,
-            payment_status: 'Paid',
-            payment_date: month.substring(0, 10)
-          })
-          .select()
-          .single();
-          
-        if (insertError) throw insertError;
-      } else {
-        throw payrollError;
+      // Get public URL
+      const { data: publicUrl } = await supabase.storage
+        .from('payslips')
+        .getPublicUrl(pdfResult.path || '');
+      
+      if (pdfResult && pdfResult.path) {
+        return {
+          success: true,
+          message: 'Payslip downloaded successfully',
+          url: publicUrl.publicUrl
+        };
       }
+      throw new Error('Failed to get public URL');
     }
     
-    // Get the payment month name for the PDF
-    const paymentDate = new Date(month);
-    const paymentMonthYear = paymentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-    
-    // Generate PDF payslip - Fix for TypeScript error related to url and name properties
-    const pdfResult = await generatePayslipPDF(
-      employeeId,
-      {
-        name: employee?.name || 'Employee',
-        title: employee?.job_title || 'Employee',
-        department: employee?.department || 'General',
-        salary: salaryResult.baseSalary.toString(),
-        paymentDate: new Date().toISOString().split('T')[0],
-        payPeriod: paymentMonthYear,
-        overtimeHours: salaryResult.totalOvertimeHours,
-        contractualHours: salaryResult.totalWorkingHours,
-      }
-    );
-    
-    // Update payroll record with the document URL and name
-    // Fix TypeScript errors by checking if properties exist
-    if (pdfResult) {
-      const documentUrl = typeof pdfResult === 'object' && 'url' in pdfResult ? pdfResult.url : null;
-      const documentName = typeof pdfResult === 'object' && 'name' in pdfResult 
-        ? pdfResult.name 
-        : `Payslip_${employeeId}_${month.replace('-', '')}.pdf`;
-        
-      if (documentUrl) {
-        await supabase
-          .from('payroll')
-          .update({
-            document_url: documentUrl,
-            document_name: documentName
-          })
-          .eq('employee_id', employeeId)
-          .eq('payment_date', month.substring(0, 10));
-      }
-    }
-    
-    // Notify the employee about the new payslip
-    if (employee?.user_id) {
-      await sendNotification({
-        user_id: employee.user_id,
-        title: 'Payslip Available',
-        message: `Your payslip for ${paymentMonthYear} is now available. Net pay: ${salaryResult.netSalary.toFixed(2)}`,
-        type: 'success',
-        related_entity: 'payroll',
-        related_id: payrollUpdate?.id
-      });
-    }
+    // Get existing payslip
+    const { data: publicUrl } = await supabase.storage
+      .from('payslips')
+      .getPublicUrl(payslips.file_path);
     
     return {
       success: true,
-      payslip: pdfResult,
-      payrollDetails: payrollUpdate || {}
+      message: 'Existing payslip downloaded',
+      url: publicUrl.publicUrl
     };
   } catch (error) {
-    console.error('Error processing payslip:', error);
-    throw error;
+    console.error('Error downloading payslip:', error);
+    return {
+      success: false,
+      message: `Error downloading payslip: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 };

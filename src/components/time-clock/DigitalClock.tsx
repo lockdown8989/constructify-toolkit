@@ -1,32 +1,33 @@
 
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-interface DigitalClockProps {
-  className?: string;
-}
+const DigitalClock = () => {
+  const [time, setTime] = useState(new Date());
 
-const DigitalClock = ({ className = '' }: DigitalClockProps) => {
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  // Update current time every second
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
+    const timerId = setInterval(() => {
+      setTime(new Date());
     }, 1000);
-    
-    return () => clearInterval(timer);
+
+    return () => {
+      clearInterval(timerId);
+    };
   }, []);
 
-  // Format time as HH:MM
-  const formattedTime = currentTime.toLocaleTimeString('en-US', {
-    hour12: false,
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  // Detect if we're on a tablet
+  const isTablet = window.innerWidth >= 768 && window.innerWidth <= 1366;
+  
+  // Format the time as HH:MM:SS
+  const formatTime = (date: Date) => {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  };
 
   return (
-    <div className={`text-[10rem] font-mono leading-none ${className}`}>
-      {formattedTime}
+    <div className={`digital-clock ${isTablet ? 'tablet-clock' : ''}`}>
+      {formatTime(time)}
     </div>
   );
 };

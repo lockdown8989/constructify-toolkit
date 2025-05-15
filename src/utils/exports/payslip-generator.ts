@@ -1,98 +1,84 @@
 
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import { supabase } from '@/integrations/supabase/client';
+import autoTable from 'jspdf-autotable';
+import { format } from 'date-fns';
 
-export const generatePayslipPDF = async (employeeId: string, month?: string) => {
-  try {
-    // Fetch employee data
-    const { data: employee, error: empError } = await supabase
-      .from('employees')
-      .select('*')
-      .eq('id', employeeId)
-      .single();
+export interface PayslipData {
+  name: string;
+  title: string;
+  department: string;
+  salary: string;
+  paymentDate: string;
+  payPeriod?: string;
+  overtimeHours?: number;
+  contractualHours?: number;
+}
 
-    if (empError) throw new Error(`Error fetching employee: ${empError.message}`);
-    if (!employee) throw new Error('Employee not found');
+export const generatePayslipPDF = (data: PayslipData) => {
+  const doc = new jsPDF();
 
-    // Fetch the most recent payroll record for this employee
-    const { data: payrollData, error: payrollError } = await supabase
-      .from('payroll')
-      .select('*')
-      .eq('employee_id', employeeId)
-      .order('payment_date', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (payrollError && payrollError.code !== 'PGRST116') {
-      // If error is not "no rows returned" error
-      throw new Error(`Error fetching payroll data: ${payrollError.message}`);
-    }
-
-    // Create PDF
-    const doc = new jsPDF();
-    
-    // Add company logo or header
-    doc.setFontSize(20);
-    doc.setTextColor(0, 0, 128);
-    doc.text('COMPANY PAYSLIP', 105, 20, { align: 'center' });
-    
-    // Employee information section
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Employee: ${employee.name}`, 20, 40);
-    doc.text(`Department: ${employee.department}`, 20, 48);
-    doc.text(`Position: ${employee.job_title}`, 20, 56);
-    doc.text(`Employee ID: ${employee.id.substring(0, 8)}...`, 20, 64);
-    
-    const currentDate = new Date();
-    const payDate = payrollData?.payment_date 
-      ? new Date(payrollData.payment_date) 
-      : currentDate;
-    
-    doc.text(`Pay Date: ${payDate.toLocaleDateString()}`, 140, 40);
-    
-    // Payment details
-    doc.setFontSize(14);
-    doc.setTextColor(0, 0, 128);
-    doc.text('Payment Details', 20, 80);
-    
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    
-    // Create table for payment details
-    const paymentData = [
-      ['Description', 'Amount'],
-      ['Base Salary', `$${employee.salary.toLocaleString()}`],
-      ['Overtime Pay', `$${payrollData?.overtime_pay?.toLocaleString() || '0.00'}`],
-      ['Bonus', `$${payrollData?.bonus?.toLocaleString() || '0.00'}`],
-      ['Deductions', `-$${payrollData?.deductions?.toLocaleString() || '0.00'}`],
-      ['Total Pay', `$${payrollData?.salary_paid?.toLocaleString() || employee.salary.toLocaleString()}`]
-    ];
-    
-    (doc as any).autoTable({
-      startY: 85,
-      head: [paymentData[0]],
-      body: paymentData.slice(1),
-      theme: 'striped',
-      headStyles: { fillColor: [0, 0, 128] },
-    });
-    
-    // Add notes
-    doc.setFontSize(11);
-    doc.text('This is a computer-generated document and does not require a signature.', 20, 160);
-    
-    // Add footer
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text('© 2025 Company Name. All Rights Reserved.', 105, 280, { align: 'center' });
-    
-    // Save and download the PDF
-    doc.save(`payslip-${employee.name.replace(/\s+/g, '-')}-${payDate.toISOString().split('T')[0]}.pdf`);
-    
-    return true;
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    throw error;
+  // Add company header
+  doc.setFontSize(18);
+  doc.text('TeamPulse Ltd', 105, 20, { align: 'center' });
+  
+  doc.setFontSize(12);
+  doc.text('Payslip', 105, 30, { align: 'center' });
+  doc.text(`Payment Date: ${data.paymentDate}`, 105, 38, { align: 'center' });
+  
+  // Add employee info
+  doc.setFontSize(11);
+  doc.text(`Employee: ${data.name}`, 20, 50);
+  doc.text(`Job Title: ${data.title}`, 20, 58);
+  doc.text(`Department: ${data.department}`, 20, 66);
+  
+  // Add payment period if available
+  if (data.payPeriod) {
+    doc.text(`Pay Period: ${data.payPeriod}`, 130, 50);
+  } else {
+    doc.text(`Pay Period: ${format(new Date(), 'MMMM yyyy')}`, 130, 50);
   }
+  
+  const currentDate = new Date();
+  const formattedDate = format(currentDate, 'yyyy-MM-dd');
+  doc.text(`Generated on: ${formattedDate}`, 130, 66);
+  
+  // Payment details table
+  const paymentBody = [];
+  
+  // Base salary
+  paymentBody.push(['Base Salary', data.salary]);
+  
+  // Add overtime if available
+  if (data.overtimeHours && data.overtimeHours > 0) {
+    const baseSalaryValue = parseInt(data.salary.replace(/[^0-9]/g, ''), 10);
+    const hourlyRate = data.contractualHours ? (baseSalaryValue / data.contractualHours) : (baseSalaryValue / 160); 
+    const overtimeAmount = Math.round(hourlyRate * 1.5 * data.overtimeHours);
+    paymentBody.push(['Overtime', `$${overtimeAmount.toLocaleString()}`]);
+    
+    // Calculate total
+    const total = baseSalaryValue + overtimeAmount;
+    paymentBody.push(['Total', `$${total.toLocaleString()}`]);
+  }
+  
+  autoTable(doc, {
+    head: [['Payment Detail', 'Amount']],
+    body: paymentBody,
+    startY: 75,
+    theme: 'grid'
+  });
+  
+  // Add footer
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.text(
+      `This payslip is computer-generated and does not require signature. Page ${i} of ${pageCount}`,
+      105, 
+      doc.internal.pageSize.height - 10, 
+      { align: 'center' }
+    );
+  }
+  
+  return doc.output('blob');
 };
