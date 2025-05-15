@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,18 +10,41 @@ import DigitalClock from '@/components/time-clock/DigitalClock';
 import EmployeeList from '@/components/time-clock/EmployeeList';
 import ClockActions from '@/components/time-clock/ClockActions';
 import { useClockActions } from '@/components/time-clock/useClockActions';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 const ManagerTimeClock = () => {
   const { isManager, isAdmin, isHR } = useAuth();
   const navigate = useNavigate();
   const { data: employees = [], isLoading } = useEmployees();
   const { toast } = useToast();
+  const isLandscape = useMediaQuery('(orientation: landscape)');
+  const isMobile = useMediaQuery('(max-width: 640px)');
+  const [selectedEmployeeData, setSelectedEmployeeData] = useState<{
+    name: string;
+    avatar?: string;
+  } | null>(null);
+  
   const {
     selectedEmployee,
     action,
     handleSelectEmployee,
     handleClockAction
   } = useClockActions();
+
+  // Update selected employee data when selection changes
+  useEffect(() => {
+    if (selectedEmployee) {
+      const employee = employees.find(emp => emp.id === selectedEmployee);
+      if (employee) {
+        setSelectedEmployeeData({
+          name: employee.name,
+          avatar: employee.avatar
+        });
+      }
+    } else {
+      setSelectedEmployeeData(null);
+    }
+  }, [selectedEmployee, employees]);
 
   // Redirect if not a manager
   if (!isManager && !isAdmin && !isHR) {
@@ -31,17 +54,6 @@ const ManagerTimeClock = () => {
 
   const handleExitFullscreen = () => {
     navigate('/dashboard');
-  };
-  
-  const getEmployeeStatus = (employeeId: string) => {
-    const employee = employees.find(emp => emp.id === employeeId);
-    return employee?.status || 'Unknown';
-  };
-  
-  const getSelectedEmployeeName = () => {
-    if (!selectedEmployee) return '';
-    const employee = employees.find(emp => emp.id === selectedEmployee);
-    return employee?.name || 'Employee';
   };
 
   return (
@@ -64,7 +76,7 @@ const ManagerTimeClock = () => {
       {/* Main content */}
       <div className="flex flex-1 flex-col md:flex-row landscape:flex-row">
         {/* Left side - Employee selection */}
-        <div className="w-full md:w-1/2 landscape:w-1/3 border-r border-gray-800 p-4 overflow-auto landscape:max-h-screen">
+        <div className={`${isLandscape ? 'w-1/3' : 'w-full'} border-r border-gray-800 p-4 overflow-auto landscape:max-h-screen`}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Select Employee</h2>
             
@@ -90,7 +102,7 @@ const ManagerTimeClock = () => {
         </div>
 
         {/* Right side - Clock actions */}
-        <div className="w-full md:w-1/2 landscape:w-2/3 p-4 flex flex-col items-center justify-center">
+        <div className={`${isLandscape ? 'w-2/3' : 'w-full'} p-4 flex flex-col items-center justify-center`}>
           {/* Company logo/header */}
           <div className="text-center mb-6">
             <div className="text-lg uppercase tracking-wider">TeamPulse</div>
@@ -105,7 +117,8 @@ const ManagerTimeClock = () => {
           <ClockActions
             selectedEmployee={selectedEmployee}
             action={action}
-            selectedEmployeeName={getSelectedEmployeeName()}
+            selectedEmployeeName={selectedEmployeeData?.name || ''}
+            selectedEmployeeAvatar={selectedEmployeeData?.avatar}
             onClockAction={handleClockAction}
           />
         </div>

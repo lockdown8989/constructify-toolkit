@@ -1,32 +1,31 @@
 
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from "react";
+import { format } from "date-fns";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
-interface DigitalClockProps {
-  className?: string;
-}
+const DigitalClock = () => {
+  const [time, setTime] = useState(new Date());
+  const isLandscape = useMediaQuery('(orientation: landscape)');
+  const isMobile = useMediaQuery('(max-width: 640px)');
 
-const DigitalClock = ({ className = '' }: DigitalClockProps) => {
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  // Update current time every second
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(new Date());
+      setTime(new Date());
     }, 1000);
-    
+
     return () => clearInterval(timer);
   }, []);
 
-  // Format time as HH:MM
-  const formattedTime = currentTime.toLocaleTimeString('en-US', {
-    hour12: false,
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  const getClockSize = () => {
+    if (isMobile) {
+      return isLandscape ? "text-6xl" : "text-5xl";
+    }
+    return isLandscape ? "text-8xl" : "text-7xl";
+  };
 
   return (
-    <div className={`text-[10rem] font-mono leading-none ${className}`}>
-      {formattedTime}
+    <div className={`digital-clock ${getClockSize()} font-mono font-bold`}>
+      {format(time, "HH:mm")}
     </div>
   );
 };
