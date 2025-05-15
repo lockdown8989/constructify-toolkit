@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { PayslipData } from '@/types/supabase/payroll';
 import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
@@ -37,7 +36,7 @@ export const generatePayslip = async (employeeId: string): Promise<string | null
       throw new Error('No payroll record found for employee');
     }
     
-    // Create payslip data
+    // Create payslip data with all required fields
     const payslipData: PayslipData = {
       id: payrollRecord.id,
       employeeName: employee.name,
@@ -45,6 +44,7 @@ export const generatePayslip = async (employeeId: string): Promise<string | null
       position: employee.job_title,
       department: employee.department,
       period: payrollRecord.pay_period || new Date().toISOString().split('T')[0],
+      payPeriod: payrollRecord.pay_period || new Date().toISOString().split('T')[0],
       paymentDate: payrollRecord.payment_date || new Date().toISOString(),
       baseSalary: parseInt(employee.salary?.toString().replace(/\$|,/g, '') || '0', 10),
       overtimePay: payrollRecord.overtime_pay || 0,
@@ -52,19 +52,19 @@ export const generatePayslip = async (employeeId: string): Promise<string | null
       deductions: payrollRecord.deductions || 0,
       grossPay: payrollRecord.base_pay || 0,
       netPay: payrollRecord.salary_paid || 0,
+      taxes: payrollRecord.deductions || 0,
       currency: '$',
-      // Add compatible fields for backward compatibility
       name: employee.name,
-      payPeriod: payrollRecord.pay_period,
-      taxes: payrollRecord.deductions?.toString() || '0',
-      salary: employee.salary?.toString(),
       bankAccount: '****1234', // Masked for privacy
-      title: 'Monthly Payslip'
+      title: 'Monthly Payslip',
+      salary: employee.salary?.toString() || '0',
+      totalPay: payrollRecord.base_pay || 0,
+      notes: '' // Adding notes property
     };
     
-    // Generate PDF - ensure this returns a string, not a Blob
-    const pdfUrl = await generatePayslipPDF(payslipData);
-    return typeof pdfUrl === 'string' ? pdfUrl : URL.createObjectURL(pdfUrl as unknown as Blob);
+    // Generate PDF
+    const pdfBlob = await generatePayslipPDF(payslipData);
+    return typeof pdfBlob === 'string' ? pdfBlob : URL.createObjectURL(pdfBlob);
   } catch (error) {
     console.error('Error generating payslip:', error);
     return null;

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Table, 
@@ -71,11 +70,13 @@ export const SalaryTable: React.FC<SalaryTableProps> = ({
       overtimePay: 0,
       bonus: 0,
       totalPay: typeof employeeData.salary === 'number' ? employeeData.salary : parseFloat(String(employeeData.salary)),
+      notes: ''
     };
     
     onSelectEmployee(employeeData.id);
   };
   
+  // Fix the status check in the table rows
   return (
     <div className={`space-y-4 ${className}`}>
       <SearchBar value={searchTerm} onChange={handleSearch} />
@@ -101,7 +102,8 @@ export const SalaryTable: React.FC<SalaryTableProps> = ({
                       employee={{
                         ...emp,
                         title: emp.title || emp.job_title || '',
-                        status: (emp.status as 'Paid' | 'Pending' | 'Absent') || 'Pending',
+                        status: (emp.status === 'Paid' || emp.status === 'Pending' || emp.status === 'Absent') ? 
+                                emp.status as 'Paid' | 'Pending' | 'Absent' : 'Pending',
                         paymentDate: emp.paymentDate || format(new Date(), 'yyyy-MM-dd')
                       }}
                       onGenerate={() => handleGeneratePayslip(emp)}

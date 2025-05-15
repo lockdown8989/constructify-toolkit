@@ -4,12 +4,13 @@ import { useCreateAvailability } from './use-create-availability';
 import { useGetAvailability } from './use-fetch-availability';
 import { useDeleteAvailability } from './use-delete-availability';
 import { useUpdateAvailability } from './use-update-availability';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useAvailability = () => {
   const { data, isLoading, error, refetch } = useGetAvailability();
-  const { mutate: createAvailability, isPending: isCreating } = useCreateAvailability();
-  const { mutate: updateAvailability, isPending: isUpdating } = useUpdateAvailability();
-  const { mutate: deleteAvailability, isPending: isDeleting } = useDeleteAvailability();
+  const createMutation = useCreateAvailability();
+  const updateMutation = useUpdateAvailability();
+  const deleteMutation = useDeleteAvailability();
 
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
@@ -23,6 +24,20 @@ export const useAvailability = () => {
   const toggleAvailability = async (date: Date, startTime: string, endTime: string, isAvailable: boolean) => {
     const formattedDate = formatDate(date);
     
+    // Get current user's employee ID
+    const { data: userData } = await supabase.auth.getUser();
+    const { data: employeeData } = await supabase
+      .from('employees')
+      .select('id')
+      .eq('user_id', userData.user?.id)
+      .maybeSingle();
+      
+    const employeeId = employeeData?.id;
+    if (!employeeId) {
+      console.error('No employee ID found');
+      return;
+    }
+    
     // Check if there's an existing entry
     const existingEntry = data?.find(
       entry => entry.date === formattedDate && 
@@ -32,13 +47,14 @@ export const useAvailability = () => {
 
     if (existingEntry) {
       // Update existing entry
-      await updateAvailability({
+      await updateMutation.mutate({
         id: existingEntry.id,
         is_available: isAvailable,
       });
     } else {
       // Create new entry
-      await createAvailability({
+      await createMutation.mutate({
+        employee_id: employeeId,
         date: formattedDate,
         start_time: startTime,
         end_time: endTime,
@@ -56,12 +72,12 @@ export const useAvailability = () => {
     error,
     refetch,
     toggleAvailability,
-    createAvailability,
-    updateAvailability,
-    deleteAvailability,
-    isCreating,
-    isUpdating,
-    isDeleting,
+    createAvailability: createMutation.mutate,
+    updateAvailability: updateMutation.mutate,
+    deleteAvailability: deleteMutation.deleteAvailability,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isUpdating,
+    isDeleting: deleteMutation.isDeleting,
     selectedDay,
     setSelectedDay,
     selectedTimeSlot,

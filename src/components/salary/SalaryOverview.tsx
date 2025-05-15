@@ -32,7 +32,7 @@ const SalaryOverview = () => {
     
     setIsDownloading(true);
     try {
-      // Create a PayslipData object instead of passing the ID directly
+      // Create a PayslipData object with all required fields
       const payslipData: PayslipData = {
         id: currentEmployeeData.id,
         employeeId: currentEmployeeData.id,
@@ -40,15 +40,21 @@ const SalaryOverview = () => {
         position: currentEmployeeData.job_title,
         department: currentEmployeeData.department,
         period: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        payPeriod: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
         paymentDate: new Date().toISOString(),
         baseSalary: currentEmployeeData.salary,
         grossPay: currentEmployeeData.salary,
         deductions: 0,
-        netPay: currentEmployeeData.salary,
+        taxes: currentEmployeeData.salary * 0.2, // 20% tax rate
+        netPay: currentEmployeeData.salary * 0.8, // 80% of salary after taxes
         currency: 'USD',
+        bankAccount: '****1234',
+        title: 'Monthly Payslip',
+        salary: currentEmployeeData.salary,
         overtimePay: 0,
         bonus: 0,
-        totalPay: currentEmployeeData.salary
+        totalPay: currentEmployeeData.salary,
+        notes: '' // Adding notes property
       };
       
       await generatePayslipPDF(payslipData);

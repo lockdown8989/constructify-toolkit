@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Employee } from '@/types/employee';
 import { PayrollRecord, PayslipData } from '@/types/supabase/payroll';
@@ -21,7 +20,6 @@ export const processEmployeePayroll = async (employee: Employee): Promise<Payrol
     id: crypto.randomUUID(),
     employee_id: employee.id,
     employee_name: employee.name, // This field is now in the interface
-    pay_period: format(new Date(), 'yyyy-MM'),
     payment_date: new Date().toISOString(),
     gross_pay: basePay,
     taxes: taxes,
@@ -33,8 +31,8 @@ export const processEmployeePayroll = async (employee: Employee): Promise<Payrol
     deductions: taxes,
     payment_status: 'Pending',
     bonus: 0,
-    document_url: null,
-    document_name: null,
+    document_url: undefined,
+    document_name: undefined,
     salary_paid: netPay,
     department: employee.department,
     status: 'Pending'

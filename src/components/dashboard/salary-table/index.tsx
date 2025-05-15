@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -112,8 +111,8 @@ export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
                 <TableCell>{employee.salary}</TableCell>
                 <TableCell>
                   <Badge variant={
-                    employee.status === 'Paid' ? 'success' :
-                    employee.status === 'Absent' ? 'outline' : 'warning'
+                    employee.status === 'Paid' ? 'default' :
+                    employee.status === 'Absent' ? 'outline' : 'secondary'
                   }>
                     {employee.status}
                   </Badge>

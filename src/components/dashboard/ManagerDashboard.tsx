@@ -26,6 +26,17 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
   interviewStats,
   salaryEmployees
 }) => {
+  // Convert Employee[] from salary-table/types to Employee[] from types/employee
+  const mappedEmployees = salaryEmployees.map(emp => ({
+    ...emp,
+    job_title: emp.job_title || emp.title || 'Employee',
+    site: emp.site || 'Main Office',
+    department: emp.department || 'General',
+    status: (emp.status === 'Paid' || emp.status === 'Pending' || emp.status === 'Absent') 
+            ? emp.status 
+            : 'Pending'
+  }));
+
   return (
     <div className="max-w-[1800px] mx-auto">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -44,7 +55,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
       />
       
       {/* Main Content */}
-      <DashboardMainContent isManager={true} salaryEmployees={salaryEmployees} />
+      <DashboardMainContent isManager={true} salaryEmployees={mappedEmployees} />
     </div>
   );
 };

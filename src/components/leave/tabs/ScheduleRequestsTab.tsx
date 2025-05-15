@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -251,7 +250,7 @@ const ScheduleRequestsTab: React.FC = () => {
                         </div>
                       </CardHeader>
                       <CardContent className="p-4">
-                        <AvailabilityRequestList requests={availabilityRequests} />
+                        <AvailabilityRequestList requests={availabilityRequests || []} />
                       </CardContent>
                     </Card>
                   </div>

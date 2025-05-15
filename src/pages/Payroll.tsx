@@ -62,7 +62,7 @@ const PayrollPage = () => {
     setSelectedEmployees(new Set());
   };
   
-  // Handler for processing payroll
+  // Update the handleProcessPayroll function
   const handleProcessPayroll = async () => {
     setIsProcessing(true);
     try {

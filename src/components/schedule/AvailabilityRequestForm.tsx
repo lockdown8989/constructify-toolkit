@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 import { CalendarIcon, X } from 'lucide-react';
@@ -12,14 +11,37 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { useCreateAvailability } from '@/hooks/availability';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 
 interface AvailabilityRequestFormProps {
   onClose: () => void;
 }
 
 const AvailabilityRequestForm: React.FC<AvailabilityRequestFormProps> = ({ onClose }) => {
-  const { mutate: createAvailability, isPending: isCreating } = useCreateAvailability();
+  const createMutation = useCreateAvailability();
   const [isAvailable, setIsAvailable] = useState(true);
+  const [employeeId, setEmployeeId] = useState<string | null>(null);
+  const { user } = useAuth();
+  
+  useEffect(() => {
+    // Fetch the employee ID when the component mounts
+    const getEmployeeId = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('employees')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        if (data) {
+          setEmployeeId(data.id);
+        }
+      }
+    };
+    
+    getEmployeeId();
+  }, [user]);
   
   const form = useForm({
     defaultValues: {
@@ -31,8 +53,14 @@ const AvailabilityRequestForm: React.FC<AvailabilityRequestFormProps> = ({ onClo
   });
   
   const onSubmit = async (data: any) => {
+    if (!employeeId) {
+      console.error('No employee ID found');
+      return;
+    }
+    
     try {
-      await createAvailability({
+      await createMutation.mutate({
+        employee_id: employeeId,
         date: format(data.date, 'yyyy-MM-dd'),
         start_time: data.startTime,
         end_time: data.endTime,
@@ -162,11 +190,11 @@ const AvailabilityRequestForm: React.FC<AvailabilityRequestFormProps> = ({ onClo
         />
         
         <div className="flex justify-end space-x-2 pt-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isCreating}>
+          <Button type="button" variant="outline" onClick={onClose} disabled={createMutation.isPending}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isCreating}>
-            {isCreating ? 'Saving...' : 'Save Availability'}
+          <Button type="submit" disabled={createMutation.isPending}>
+            {createMutation.isPending ? 'Saving...' : 'Save Availability'}
           </Button>
         </div>
       </form>

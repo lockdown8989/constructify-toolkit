@@ -7,6 +7,7 @@ import HiringStatistics from '@/components/dashboard/HiringStatistics';
 import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
 import ManagerTab from '@/components/leave/tabs/ManagerTab';
 import DashboardTimeClock from '@/components/dashboard/DashboardTimeClock';
+import { SalaryTableProps } from '@/components/salary/table/types';
 
 interface DashboardMainContentProps {
   isManager: boolean;
@@ -43,6 +44,9 @@ const DashboardMainContent: React.FC<DashboardMainContentProps> = ({
             job_title: emp.job_title || emp.title || 'Employee',
             site: emp.site || 'Main Office',
             department: emp.department || 'General',
+            status: (emp.status === 'Paid' || emp.status === 'Pending' || emp.status === 'Absent') 
+                    ? emp.status 
+                    : 'Pending' as 'Paid' | 'Pending' | 'Absent',
             selected: emp.id === selectedEmployee
           }))} 
           onSelectEmployee={handleSelectEmployee}
