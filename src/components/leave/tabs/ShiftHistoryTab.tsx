@@ -8,8 +8,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO, isAfter, subMonths } from 'date-fns';
-import { Schedule } from '@/hooks/use-schedules';
-import { convertEmployeeScheduleToSchedule } from '@/utils/schedule-utils';
 
 const ShiftHistoryTab = () => {
   const { schedules, isLoading, refetch } = useEmployeeSchedule();
@@ -70,24 +68,19 @@ const ShiftHistoryTab = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {recentSchedules.map(schedule => {
-              // Convert EmployeeSchedule to Schedule
-              const convertedSchedule = convertEmployeeScheduleToSchedule(schedule);
-              
-              return (
-                <div key={schedule.id}>
-                  <ShiftDetailCard
-                    schedule={convertedSchedule}
-                    onInfoClick={() => {}}
-                    onEmailClick={() => {}}
-                    onCancelClick={() => {}}
-                  />
-                  <div className="mt-1 text-xs text-right text-muted-foreground">
-                    Status: {schedule.status} • Updated: {format(parseISO(schedule.updated_at || schedule.created_at), 'MMM d, yyyy')}
-                  </div>
+            {recentSchedules.map(schedule => (
+              <div key={schedule.id}>
+                <ShiftDetailCard
+                  schedule={schedule}
+                  onInfoClick={() => {}}
+                  onEmailClick={() => {}}
+                  onCancelClick={() => {}}
+                />
+                <div className="mt-1 text-xs text-right text-muted-foreground">
+                  Status: {schedule.status} • Updated: {format(parseISO(schedule.updated_at || schedule.created_at), 'MMM d, yyyy')}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
       </CardContent>

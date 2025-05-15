@@ -11,7 +11,6 @@ import { checkLeaveBalance, processLeaveRequest } from '@/services/employee-sync
 import { useAttendance } from '@/hooks/use-attendance';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
 import { Loader2, CheckCircle, CalendarDays, DollarSign, ClipboardList } from "lucide-react";
-import { convertEmployeeScheduleToSchedule } from '@/utils/schedule-utils';
 
 const EmployeeWorkflow: React.FC = () => {
   const { toast } = useToast();

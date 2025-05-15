@@ -12,7 +12,6 @@ import { useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { OpenShiftType } from '@/types/supabase/schedules';
 import { supabase } from '@/integrations/supabase/client';
-import { convertEmployeeScheduleToSchedule, convertEmployeeSchedulesToSchedules } from '@/utils/schedule-utils';
 
 const EmployeeScheduleView: React.FC = () => {
   const location = useLocation();
@@ -33,9 +32,6 @@ const EmployeeScheduleView: React.FC = () => {
     isLoading,
     refreshSchedules
   } = useEmployeeSchedule();
-  
-  // Convert employee schedules to the Schedule type
-  const convertedSchedules = convertEmployeeSchedulesToSchedules(schedules);
   
   // State to track if a shift was just dropped
   const [droppedShiftId, setDroppedShiftId] = useState<string | null>(null);
@@ -194,11 +190,7 @@ const EmployeeScheduleView: React.FC = () => {
   };
 
   const selectedSchedule = selectedScheduleId 
-    ? schedules.find(s => s.id === selectedScheduleId)
-    : null;
-    
-  const convertedSelectedSchedule = selectedSchedule 
-    ? convertEmployeeScheduleToSchedule(selectedSchedule) 
+    ? schedules.find(s => s.id === selectedScheduleId) 
     : null;
 
   if (isLoading) {
@@ -223,7 +215,7 @@ const EmployeeScheduleView: React.FC = () => {
       <WeeklyCalendarView
         startDate={currentDate}
         onDateChange={setCurrentDate}
-        schedules={convertedSchedules}
+        schedules={schedules}
         onShiftDrop={handleShiftDrop}
         highlightedShiftId={droppedShiftId}
       />
@@ -233,7 +225,7 @@ const EmployeeScheduleView: React.FC = () => {
       <ScheduleTabs
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        schedules={convertedSchedules}
+        schedules={schedules}
         newSchedules={newSchedules}
         onInfoClick={setSelectedScheduleId}
         onEmailClick={handleEmailClick}
@@ -245,7 +237,7 @@ const EmployeeScheduleView: React.FC = () => {
       />
 
       <ScheduleDialogs
-        selectedSchedule={convertedSelectedSchedule}
+        selectedSchedule={selectedSchedule}
         isInfoDialogOpen={isInfoDialogOpen}
         setIsInfoDialogOpen={setIsInfoDialogOpen}
         isCancelDialogOpen={isCancelDialogOpen}
