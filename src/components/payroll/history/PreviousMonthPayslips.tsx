@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,14 +42,24 @@ export const PreviousMonthPayslips = () => {
           employees (
             name,
             job_title,
-            department
+            department,
+            site
           )
         `)
         .like('payment_date', `${prevMonth}%`)
         .order('payment_date', { ascending: false });
         
       if (error) throw error;
-      return data as PayrollRecord[];
+      
+      // Transform data to match the PayrollRecord type
+      return data.map(item => ({
+        ...item,
+        employees: Array.isArray(item.employees) ? item.employees[0] : item.employees,
+        working_hours: 0,
+        overtime_hours: 0,
+        overtime_pay: 0,
+        processing_date: item.payment_date
+      })) as PayrollRecord[];
     }
   });
 

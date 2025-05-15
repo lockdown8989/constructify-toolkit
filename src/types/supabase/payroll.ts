@@ -5,12 +5,12 @@ export interface PayrollRecord {
   base_pay: number;
   salary_paid: number;
   deductions: number;
-  working_hours: number;
-  overtime_hours: number;
-  overtime_pay: number;
+  working_hours?: number;
+  overtime_hours?: number;
+  overtime_pay?: number;
   payment_status: string;
   payment_date: string;
-  processing_date: string;
+  processing_date?: string;
   document_url?: string;
   document_name?: string;
   bonus?: number;

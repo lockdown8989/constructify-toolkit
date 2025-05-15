@@ -24,7 +24,12 @@ export const usePayrollProcessingHistory = () => {
         .limit(50);
         
       if (error) throw error;
-      return data as PayrollHistoryRecord[];
+      
+      // Cast the data to match our expected type
+      return data.map(item => ({
+        ...item,
+        profiles: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+      })) as PayrollHistoryRecord[];
     }
   });
 };
@@ -71,14 +76,25 @@ export const usePaymentHistory = (timeRange: string = 'last3months') => {
           employees (
             name,
             job_title,
-            department
+            department,
+            site
           )
         `)
         .gte('payment_date', `${fromDate}-01`)
         .order('payment_date', { ascending: false });
         
       if (error) throw error;
-      return data as PayrollRecord[];
+      
+      // Transform data to ensure employees is a single object, not an array
+      return data.map(item => ({
+        ...item,
+        employees: Array.isArray(item.employees) ? item.employees[0] : item.employees,
+        // Add default values for required fields
+        working_hours: 0,
+        overtime_hours: 0,
+        overtime_pay: 0,
+        processing_date: item.payment_date
+      })) as PayrollRecord[];
     }
   });
 };
@@ -109,14 +125,25 @@ export const usePreviousMonthPayslips = () => {
           employees (
             name,
             job_title,
-            department
+            department,
+            site
           )
         `)
         .like('payment_date', `${prevMonth}%`)
         .order('payment_date', { ascending: false });
         
       if (error) throw error;
-      return data as PayrollRecord[];
+      
+      // Transform data to ensure employees is a single object, not an array
+      return data.map(item => ({
+        ...item,
+        employees: Array.isArray(item.employees) ? item.employees[0] : item.employees,
+        // Add default values for required fields
+        working_hours: 0,
+        overtime_hours: 0,
+        overtime_pay: 0,
+        processing_date: item.payment_date
+      })) as PayrollRecord[];
     }
   });
 };

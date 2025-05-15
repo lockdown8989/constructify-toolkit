@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
@@ -68,14 +67,24 @@ export const PaymentHistory = () => {
           employees (
             name,
             job_title,
-            department
+            department,
+            site
           )
         `)
         .gte('payment_date', `${fromDate}-01`)
         .order('payment_date', { ascending: false });
         
       if (error) throw error;
-      return data as PayrollRecord[];
+      
+      // Transform data to match the PayrollRecord type
+      return data.map(item => ({
+        ...item,
+        employees: Array.isArray(item.employees) ? item.employees[0] : item.employees,
+        working_hours: 0,
+        overtime_hours: 0,
+        overtime_pay: 0,
+        processing_date: item.payment_date
+      })) as PayrollRecord[];
     }
   });
 
