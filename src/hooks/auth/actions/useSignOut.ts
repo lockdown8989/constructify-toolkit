@@ -13,6 +13,23 @@ export const useSignOut = () => {
   const signOut = async () => {
     try {
       console.log("Signing out user...");
+      
+      // First check if there's an active session to avoid the "Auth session missing!" error
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (!sessionData.session) {
+        console.log("No active session found, redirecting to auth page");
+        toast({
+          title: "Already signed out",
+          description: "You were already signed out. Redirecting to sign in page.",
+        });
+        
+        // Navigate to auth page even if there's no session
+        navigate('/auth');
+        return;
+      }
+      
+      // Proceed with signout if there is a session
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -42,6 +59,9 @@ export const useSignOut = () => {
         description: "An error occurred while signing out. Please try again.",
         variant: "destructive",
       });
+      
+      // Still try to navigate to auth page even if there's an error
+      navigate('/auth');
     }
   };
 
