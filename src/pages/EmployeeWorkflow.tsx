@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,7 +31,8 @@ const EmployeeWorkflow: React.FC = () => {
     isLoading: isLoadingSchedule, 
     activeTab: scheduleTab,
     setActiveTab: setScheduleTab,
-    newSchedules
+    newSchedules,
+    viewFullSchedule
   } = useEmployeeSchedule();
   
   // Check if employee has an active session
@@ -345,7 +345,12 @@ const EmployeeWorkflow: React.FC = () => {
                     }
                   </div>
                   
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={viewFullSchedule}
+                    aria-label="View full schedule"
+                  >
                     View Full Schedule
                   </Button>
                 </div>

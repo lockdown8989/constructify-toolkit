@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useSchedules } from '@/hooks/use-schedules';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 export const useEmployeeSchedule = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -15,6 +15,12 @@ export const useEmployeeSchedule = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { toast } = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Function to navigate to full schedule view
+  const viewFullSchedule = () => {
+    navigate('/shift-calendar');
+  };
   
   // Fetch schedules with the refresh trigger
   const { data: schedules = [], isLoading, refetch } = useSchedules();
@@ -155,6 +161,7 @@ export const useEmployeeSchedule = () => {
     schedules,
     isLoading,
     refreshSchedules,
-    refetch
+    refetch,
+    viewFullSchedule
   };
 };

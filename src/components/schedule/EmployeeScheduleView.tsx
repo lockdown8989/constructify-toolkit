@@ -1,20 +1,20 @@
-
 import React, { useState, useEffect } from 'react';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
-import { Check, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, RefreshCw, ArrowLeft } from 'lucide-react';
 import WeeklyCalendarView from '@/components/schedule/WeeklyCalendarView';
 import { ScheduleDialogs } from './components/ScheduleDialogs';
 import { ScheduleTabs } from './components/ScheduleTabs';
 import { Schedule } from '@/hooks/use-schedules';
 import { Button } from '@/components/ui/button';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { OpenShiftType } from '@/types/supabase/schedules';
 import { supabase } from '@/integrations/supabase/client';
 
 const EmployeeScheduleView: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const {
     currentDate,
@@ -60,6 +60,10 @@ const EmployeeScheduleView: React.FC = () => {
     
     fetchOpenShifts();
   }, []);
+
+  const handleNavigateBack = () => {
+    navigate('/employee-workflow');
+  };
 
   const handleEmailClick = (schedule: Schedule) => {
     const subject = `Regarding shift on ${format(new Date(schedule.start_time), 'MMMM d, yyyy')}`;
@@ -200,7 +204,18 @@ const EmployeeScheduleView: React.FC = () => {
   return (
     <div className="pb-6 max-w-4xl mx-auto">
       <div className="flex justify-between items-center px-4 pt-2 pb-4">
-        <h2 className="text-xl font-semibold">Your Schedule</h2>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleNavigateBack}
+            className="flex items-center gap-1"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back</span>
+          </Button>
+          <h2 className="text-xl font-semibold">Your Schedule</h2>
+        </div>
         <Button 
           variant="outline" 
           size="sm" 

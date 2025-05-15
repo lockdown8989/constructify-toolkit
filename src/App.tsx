@@ -25,13 +25,14 @@ import Settings from "@/pages/Settings";
 import ProfileSettings from "@/pages/ProfileSettings";
 import Attendance from "@/pages/Attendance";
 import TimeClock from "@/pages/TimeClock";
-import ManagerTimeClock from "@/pages/ManagerTimeClock"; // Add import for the new page
+import ManagerTimeClock from "@/pages/ManagerTimeClock";
 import RestaurantSchedule from "@/pages/RestaurantSchedule";
 import NotFound from "@/pages/NotFound";
 import Hiring from "@/pages/Hiring";
 import ScheduleRequests from "@/pages/ScheduleRequests";
 import EmployeeWorkflow from "@/pages/EmployeeWorkflow";
 import About from "@/pages/About";
+import EmployeeScheduleView from "@/components/schedule/EmployeeScheduleView";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -69,7 +70,7 @@ function App() {
                   } />
                   <Route path="/shift-calendar" element={
                     <ProtectedRoute>
-                      <RestaurantSchedule />
+                      <EmployeeScheduleView />
                     </ProtectedRoute>
                   } />
                   <Route path="/leave-management" element={
@@ -117,7 +118,6 @@ function App() {
                       <TimeClock />
                     </ProtectedRoute>
                   } />
-                  {/* Add new route for Manager Time Clock */}
                   <Route path="/manager-time-clock" element={
                     <ProtectedRoute>
                       <ManagerTimeClock />
