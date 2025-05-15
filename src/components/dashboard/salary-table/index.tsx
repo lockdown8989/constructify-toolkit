@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,7 +10,7 @@ import { StatusActions } from '@/components/dashboard/salary-table/StatusActions
 import { StatusFilter } from '@/components/dashboard/salary-table/StatusFilter';
 import { Employee, PayslipData } from '@/types/supabase/payroll';
 import { formatCurrency } from '@/utils/format';
-import { downloadPayslip } from '@/utils/exports/payslip-generator';
+import { downloadPayslip } from '@/utils/exports';
 import { useToast } from '@/hooks/use-toast';
 
 interface SalaryTableProps {

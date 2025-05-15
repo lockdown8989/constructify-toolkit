@@ -132,7 +132,7 @@ const PayrollPage = () => {
         toast({
           title: "No data to export",
           description: "There is no payroll data available to export.",
-          variant: "warning"
+          variant: "destructive"
         });
         return;
       }
@@ -233,6 +233,18 @@ const PayrollPage = () => {
     );
   }
 
+  // Convert employees to the expected format for PayrollActions
+  const employeesForActions = initialEmployees.map(emp => ({
+    id: emp.id,
+    name: emp.name,
+    title: emp.job_title || emp.title || 'Employee',
+    department: emp.department || '',
+    status: emp.status || 'Pending',
+    salary: emp.salary,
+    avatar: emp.avatar,
+    paymentDate: emp.paymentDate
+  }));
+
   return (
     <div className="container py-6 animate-fade-in">
       <header className="mb-6">
@@ -261,7 +273,7 @@ const PayrollPage = () => {
             isExporting={isExporting}
             onProcessPayroll={handleProcessPayroll}
             onExportPayroll={handleExportPayroll}
-            employees={initialEmployees}
+            employees={employeesForActions}
             selectedEmployees={selectedEmployees}
             onSelectEmployee={handleSelectEmployee}
             onSelectAll={handleSelectAll}
