@@ -1,6 +1,7 @@
 
-import { Clock } from "lucide-react";
+import { Calendar, Calendar as CalendarIcon, Users } from "lucide-react";
 import MobileNavLink from "./MobileNavLink";
+import MobileNavDivider from "./MobileNavDivider";
 
 interface WorkflowSectionProps {
   hasManagerialAccess: boolean;
@@ -10,18 +11,29 @@ interface WorkflowSectionProps {
 const WorkflowSection = ({ hasManagerialAccess, onClose }: WorkflowSectionProps) => {
   return (
     <>
-      {hasManagerialAccess ? (
+      <MobileNavDivider label="Workflow" />
+      
+      <MobileNavLink
+        to="/employee-workflow"
+        icon={Users}
+        label={hasManagerialAccess ? "Employee Shifts" : "My Schedule"}
+        onClick={onClose}
+      />
+      
+      {!hasManagerialAccess && (
         <MobileNavLink
-          to="/employee-workflow"
-          icon={Clock}
-          label="My Employee Shifts"
+          to="/employee-calendar"
+          icon={CalendarIcon}
+          label="Employee Calendar"
           onClick={onClose}
         />
-      ) : (
+      )}
+      
+      {hasManagerialAccess && (
         <MobileNavLink
-          to="/employee-workflow"
-          icon={Clock}
-          label="My Schedule"
+          to="/shift-calendar"
+          icon={Calendar}
+          label="Restaurant Schedule"
           onClick={onClose}
         />
       )}

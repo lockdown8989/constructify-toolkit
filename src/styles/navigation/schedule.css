@@ -1,69 +1,60 @@
 
 /* Schedule navigation */
-.schedule-nav {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.5rem;
-  background-color: var(--color-card);
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.momentum-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
 }
 
-.schedule-nav-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
+.min-width-fit-content {
+  min-width: fit-content;
+}
+
+.shift-card {
+  border-left-width: 4px;
   transition: all 0.2s ease;
 }
 
-.schedule-nav-button:hover {
+.active-touch-state:active {
   background-color: rgba(0, 0, 0, 0.05);
 }
 
-.schedule-nav-button:active {
-  background-color: rgba(0, 0, 0, 0.1);
+/* Calendar specific styles */
+.calendar-grid-mobile .day-cell {
+  min-height: 80px;
 }
 
-/* Today indicator */
-.today-indicator {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
+.calendar-event {
+  margin-bottom: 2px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-time-range {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+/* Current time indicator */
+.current-time-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #f43f5e;
+  z-index: 5;
+}
+
+.current-time-indicator::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  background-color: #f43f5e;
   border-radius: 50%;
-  background-color: var(--color-primary);
-  color: white;
-  font-weight: 500;
-}
-
-/* Date range selector */
-.date-range-selector {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background-color: var(--color-card);
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.date-range-selector-button {
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
-  transition: all 0.2s ease;
-  font-size: 0.875rem;
-}
-
-.date-range-selector-button:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.date-range-selector-button.active {
-  background-color: var(--color-primary);
-  color: white;
 }

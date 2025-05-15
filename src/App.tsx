@@ -1,4 +1,3 @@
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"; 
 import { ThemeProvider } from "@/components/theme-provider";
 import { CurrencyProvider } from "@/hooks/use-currency-preference";
@@ -32,6 +31,7 @@ import Hiring from "@/pages/Hiring";
 import ScheduleRequests from "@/pages/ScheduleRequests";
 import EmployeeWorkflow from "@/pages/EmployeeWorkflow";
 import About from "@/pages/About";
+import EmployeeCalendar from './pages/EmployeeCalendar';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -143,6 +143,16 @@ function App() {
                       <About />
                     </ProtectedRoute>
                   } />
+                  {
+                    path: "/employee-calendar",
+                    element: (
+                      <ProtectedRoute>
+                        <AppLayout>
+                          <EmployeeCalendar />
+                        </AppLayout>
+                      </ProtectedRoute>
+                    ),
+                  }
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
