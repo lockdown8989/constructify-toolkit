@@ -1,188 +1,136 @@
 
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Download, Calendar, FileText } from 'lucide-react';
+import DocumentList from './components/DocumentList';
 import { useAuth } from '@/hooks/use-auth';
 import { useEmployees } from '@/hooks/use-employees';
-import { useToast } from '@/components/ui/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
+import { useToast } from '@/components/ui/use-toast';
 
-const SalaryOverview: React.FC = () => {
+const SalaryOverview = () => {
   const { user } = useAuth();
-  const { data: employees = [] } = useEmployees();
+  const { data: employees = [], isLoading } = useEmployees();
   const { toast } = useToast();
   const [isDownloading, setIsDownloading] = useState(false);
-
-  // Find current employee data based on user ID
-  const currentEmployee = employees.find(emp => emp.user_id === user?.id);
-
-  const handleDownloadPDF = async () => {
-    if (!currentEmployee) {
+  
+  // Find the current user's employee data
+  const currentEmployeeData = user ? employees.find(emp => emp.user_id === user.id) : null;
+  
+  const handleDownloadPdf = async () => {
+    if (!currentEmployeeData) {
       toast({
         title: "Error",
-        description: "Could not find your employee record",
-        variant: "destructive"
+        description: "Employee data not found",
+        variant: "destructive",
       });
       return;
     }
-
+    
     setIsDownloading(true);
     try {
-      await generatePayslipPDF(currentEmployee, "current");
+      await generatePayslipPDF(currentEmployeeData.id);
       toast({
         title: "Success",
-        description: "Salary statement downloaded successfully",
-        variant: "success"
+        description: "Payslip PDF has been downloaded",
       });
     } catch (error) {
-      console.error("PDF download error:", error);
+      console.error("Error downloading PDF:", error);
       toast({
-        title: "Download Failed",
-        description: "Could not generate PDF. Please try again later.",
-        variant: "destructive"
+        title: "Error",
+        description: "Failed to download payslip PDF",
+        variant: "destructive",
       });
     } finally {
       setIsDownloading(false);
     }
   };
 
-  if (!currentEmployee) {
+  if (isLoading) {
+    return (
+      <div className="container py-6 space-y-4">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentEmployeeData) {
     return (
       <div className="container py-6">
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Salary Overview</h2>
-          <p>Loading your salary information...</p>
-        </Card>
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-md">
+          <p>No employee data found for your account.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container py-6">
+    <div className="container py-6 animate-fade-in">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">My Salary</h1>
-        <Button 
-          onClick={handleDownloadPDF} 
-          disabled={isDownloading}
-          className="flex items-center gap-2"
-        >
-          {isDownloading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
+        <h1 className="text-2xl font-bold">Salary Overview</h1>
+        
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            View History
+          </Button>
+          
+          <Button onClick={handleDownloadPdf} disabled={isDownloading} className="flex items-center gap-2">
             <Download className="h-4 w-4" />
-          )}
-          Download PDF
-        </Button>
+            {isDownloading ? 'Downloading...' : 'Download PDF'}
+          </Button>
+        </div>
       </div>
       
-      <Tabs defaultValue="overview">
-        <TabsList className="mb-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="history">Payment History</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Current Salary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${currentEmployeeData.salary.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Next payment: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+            </p>
+          </CardContent>
+        </Card>
         
-        <TabsContent value="overview">
-          <Card className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-lg font-medium mb-4">Salary Information</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Base Salary:</span>
-                    <span className="font-medium">${currentEmployee.salary.toLocaleString()}</span>
-                  </div>
-                  {currentEmployee.hourly_rate && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Hourly Rate:</span>
-                      <span className="font-medium">${currentEmployee.hourly_rate}/hr</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Status:</span>
-                    <span className="font-medium">{currentEmployee.status}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-4">Next Payment</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Amount:</span>
-                    <span className="font-medium">${currentEmployee.salary.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Date:</span>
-                    <span className="font-medium">25th of this month</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Payment Method:</span>
-                    <span className="font-medium">Direct Deposit</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Department</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{currentEmployeeData.department}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Position: {currentEmployeeData.job_title}
+            </p>
+          </CardContent>
+        </Card>
         
-        <TabsContent value="history">
-          <Card className="p-6">
-            <h3 className="text-lg font-medium mb-4">Payment History</h3>
-            <div className="space-y-4">
-              {[...Array(3)].map((_, index) => (
-                <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">April {2023 - index}</p>
-                    <p className="text-sm text-gray-500">Paid on 25th</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">${currentEmployee.salary.toLocaleString()}</p>
-                    <p className="text-sm text-green-600">Complete</p>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    <FileText className="h-4 w-4 mr-2" />
-                    View
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="documents">
-          <Card className="p-6">
-            <h3 className="text-lg font-medium mb-4">Salary Documents</h3>
-            <div className="space-y-4">
-              {[
-                { name: "Annual Tax Statement", date: "Jan 15, 2023", type: "pdf" },
-                { name: "Compensation Letter", date: "May 10, 2023", type: "pdf" },
-                { name: "Bonus Structure", date: "Jun 22, 2023", type: "doc" }
-              ].map((doc, index) => (
-                <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
-                  <div className="flex items-center">
-                    <img 
-                      src={doc.type === "pdf" ? "/pdf-icon.png" : "/word-icon.png"} 
-                      alt={doc.type} 
-                      className="w-8 h-8 mr-3" 
-                    />
-                    <div>
-                      <p className="font-medium">{doc.name}</p>
-                      <p className="text-sm text-gray-500">{doc.date}</p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Employment Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{currentEmployeeData.status}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Since: {new Date(currentEmployeeData.start_date).toLocaleDateString()}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+      
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">Recent Documents</h2>
+        <DocumentList employeeId={currentEmployeeData.id} />
+      </div>
     </div>
   );
 };
