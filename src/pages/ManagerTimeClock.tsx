@@ -47,13 +47,28 @@ const ManagerTimeClock = () => {
   }, [selectedEmployee, employees]);
 
   // Redirect if not a manager
-  if (!isManager && !isAdmin && !isHR) {
-    navigate('/dashboard');
-    return null;
-  }
+  useEffect(() => {
+    if (!isManager && !isAdmin && !isHR) {
+      navigate('/dashboard');
+    }
+  }, [isManager, isAdmin, isHR, navigate]);
 
   const handleExitFullscreen = () => {
     navigate('/dashboard');
+  };
+
+  // Safe clock action handler with error handling
+  const handleSafeClockAction = (action: 'in' | 'out') => {
+    try {
+      handleClockAction(action);
+    } catch (error) {
+      console.error('Error in handleSafeClockAction:', error);
+      toast({
+        title: "Error",
+        description: "There was an error processing the clock action",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -119,7 +134,7 @@ const ManagerTimeClock = () => {
             action={action}
             selectedEmployeeName={selectedEmployeeData?.name || ''}
             selectedEmployeeAvatar={selectedEmployeeData?.avatar}
-            onClockAction={handleClockAction}
+            onClockAction={handleSafeClockAction}
           />
         </div>
       </div>

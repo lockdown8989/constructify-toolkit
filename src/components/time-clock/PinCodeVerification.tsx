@@ -97,7 +97,7 @@ const PinCodeVerification: React.FC<PinCodeVerificationProps> = ({
           )}
           
           <div className="text-xs text-center text-muted-foreground">
-            Default PIN: 1234
+            <strong>Default PIN for all employees: 1234</strong>
           </div>
         </div>
       </DialogContent>

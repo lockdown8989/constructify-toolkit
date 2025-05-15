@@ -31,12 +31,14 @@ export const useClockActions = () => {
       
       if (clockAction === 'in') {
         // Check if there's already an active session for today
-        const { data: existingRecord } = await supabase
+        const { data: existingRecord, error: checkError } = await supabase
           .from('attendance')
           .select('id, active_session')
           .eq('employee_id', selectedEmployee)
           .eq('date', today)
           .maybeSingle();
+          
+        if (checkError) throw checkError;
           
         if (existingRecord?.active_session) {
           toast({
@@ -70,12 +72,14 @@ export const useClockActions = () => {
         });
       } else {
         // Find active session
-        const { data: activeSession } = await supabase
+        const { data: activeSession, error: findError } = await supabase
           .from('attendance')
           .select('*')
           .eq('employee_id', selectedEmployee)
           .eq('active_session', true)
           .maybeSingle();
+          
+        if (findError) throw findError;
           
         if (!activeSession) {
           toast({
@@ -91,7 +95,7 @@ export const useClockActions = () => {
         const workingMinutes = Math.round((now.getTime() - checkInTime.getTime()) / (1000 * 60));
         
         // Clock out
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from('attendance')
           .update({
             check_out: now.toISOString(),
@@ -101,7 +105,7 @@ export const useClockActions = () => {
           })
           .eq('id', activeSession.id);
           
-        if (error) throw error;
+        if (updateError) throw updateError;
         
         toast({
           title: "Clocked Out",

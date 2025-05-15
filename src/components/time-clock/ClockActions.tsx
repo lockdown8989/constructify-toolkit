@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import PinCodeVerification from './PinCodeVerification';
 import ConfirmationDialog from './ConfirmationDialog';
+import { useToast } from '@/hooks/use-toast';
 
 interface ClockActionsProps {
   selectedEmployee: string | null;
@@ -22,21 +23,42 @@ const ClockActions = ({
   const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'in' | 'out' | null>(null);
+  const { toast } = useToast();
 
   const handleActionClick = (clickAction: 'in' | 'out') => {
+    if (!selectedEmployee) {
+      toast({
+        title: "No Employee Selected",
+        description: "Please select an employee first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setPendingAction(clickAction);
     setIsPinDialogOpen(true);
   };
 
   const handlePinSuccess = () => {
     if (pendingAction) {
+      setIsPinDialogOpen(false);
       setIsConfirmationOpen(true);
     }
   };
 
   const handleConfirmAction = () => {
     if (pendingAction) {
-      onClockAction(pendingAction);
+      try {
+        onClockAction(pendingAction);
+        setIsConfirmationOpen(false);
+      } catch (error) {
+        console.error('Error in clock action:', error);
+        toast({
+          title: "Error",
+          description: "There was an error processing the clock action",
+          variant: "destructive",
+        });
+      }
     }
   };
 

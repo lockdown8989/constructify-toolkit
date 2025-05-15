@@ -72,7 +72,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             
             <h3 className="text-xl font-semibold mb-1">Hi {employeeName}</h3>
             <p className="text-muted-foreground mb-4">
-              You've {getActionText()} at 
+              You're about to be {getActionText()} at 
             </p>
             <p className="text-3xl font-bold mb-4">{currentTime}</p>
           </div>
@@ -83,16 +83,16 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
               className="w-full" 
               onClick={onClose}
             >
-              Not Me
+              Cancel
             </Button>
             <Button 
-              className="w-full" 
+              className={`w-full ${action === 'in' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-red-600 hover:bg-red-700'}`}
               onClick={() => {
                 onConfirm();
                 onClose();
               }}
             >
-              OK
+              Confirm
             </Button>
           </div>
         </div>
