@@ -1,8 +1,7 @@
 
 export { generateCSV } from './csv-exporter';
-// Import and re-export the default export with a name
-import generatePayslipPDF from './payslip-generator';
-export { generatePayslipPDF };
+// Import and re-export from payslip module
+export { generatePayslipPDF, downloadPayslip } from './payslip/index';
 export { 
   uploadDocument, 
   uploadEmployeeDocument, 
