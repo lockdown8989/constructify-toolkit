@@ -1,9 +1,23 @@
-
-import { useState, useEffect } from 'react';
-import { useSchedules } from '@/hooks/use-schedules';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+
+export interface EmployeeSchedule {
+  id: string;
+  title: string;
+  employee_id: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  created_at: string;
+  location?: string;
+  updated_at?: string;
+  mobile_notification_sent?: boolean;
+  created_platform?: string;
+  last_modified_platform?: string;
+}
 
 export const useEmployeeSchedule = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -16,33 +30,82 @@ export const useEmployeeSchedule = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   
-  // Fetch schedules with the refresh trigger
-  const { data: schedules = [], isLoading, refetch } = useSchedules();
+  // In a real app, this would fetch from an API/database
+  const fetchSchedules = async (): Promise<EmployeeSchedule[]> => {
+    // This is mock data - in a real app, you'd fetch from Supabase or another backend
+    return [
+      {
+        id: "1",
+        title: "Morning Shift",
+        employee_id: user?.id || "",
+        start_time: "2025-05-16T08:00:00",
+        end_time: "2025-05-16T16:00:00",
+        status: "confirmed",
+        created_at: "2025-05-10T10:00:00",
+        location: "Main Office",
+        updated_at: "2025-05-10T10:00:00",
+        mobile_notification_sent: false,
+        created_platform: "web",
+        last_modified_platform: "web"
+      },
+      {
+        id: "2",
+        title: "Evening Shift",
+        employee_id: user?.id || "",
+        start_time: "2025-05-18T16:00:00",
+        end_time: "2025-05-18T23:00:00",
+        status: "confirmed",
+        created_at: "2025-05-10T10:00:00",
+        location: "Main Office",
+        updated_at: "2025-05-10T10:00:00",
+        mobile_notification_sent: false,
+        created_platform: "web",
+        last_modified_platform: "web"
+      },
+      {
+        id: "3",
+        title: "Staff Meeting",
+        employee_id: user?.id || "",
+        start_time: "2025-05-20T14:00:00",
+        end_time: "2025-05-20T15:30:00",
+        status: "confirmed",
+        created_at: "2025-05-10T10:00:00",
+        location: "Conference Room",
+        updated_at: "2025-05-10T10:00:00",
+        mobile_notification_sent: false,
+        created_platform: "web",
+        last_modified_platform: "web"
+      }
+    ];
+  };
+  
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['employeeSchedules', user?.id, refreshTrigger],
+    queryFn: fetchSchedules,
+    enabled: !!user?.id
+  });
   
   // Function to manually refresh schedules
   const refreshSchedules = () => {
     console.log('Manually refreshing schedules...');
     setRefreshTrigger(prev => prev + 1);
-    refetch();
-    toast({
-      title: "Refreshing shifts",
-      description: "Your schedule is being updated...",
-    });
   };
+  
+  const refetch = refreshSchedules;
   
   // Track new schedules (created in the last 24 hours) and set initial tab
   useEffect(() => {
-    console.log('Processing schedules for tabs, count:', schedules.length);
+    console.log('Processing schedules for tabs, count:', data.length);
     
     // Debug schedules data
-    schedules.forEach(schedule => {
+    data.forEach(schedule => {
       console.log(`Schedule ${schedule.id}: status=${schedule.status}, start_time=${schedule.start_time}`);
     });
     
     const now = new Date();
     const newScheduleIds: Record<string, boolean> = {};
     
-    schedules.forEach(schedule => {
+    data.forEach(schedule => {
       const createdAt = new Date(schedule.created_at || schedule.start_time);
       const hoursSinceCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
       if (hoursSinceCreation < 24) {
@@ -53,7 +116,7 @@ export const useEmployeeSchedule = () => {
     setNewSchedules(newScheduleIds);
     
     // Check for pending shifts
-    const pendingShifts = schedules.filter(schedule => schedule.status === 'pending');
+    const pendingShifts = data.filter(schedule => schedule.status === 'pending');
     console.log('Found pending shifts:', pendingShifts.length);
     
     // Show pending tab if there are pending shifts
@@ -66,7 +129,7 @@ export const useEmployeeSchedule = () => {
         description: "You have shifts that require your response.",
       });
     }
-  }, [schedules, toast]);
+  }, [data, toast]);
 
   // Subscribe to realtime updates for new schedules
   useEffect(() => {
@@ -152,8 +215,9 @@ export const useEmployeeSchedule = () => {
     activeTab,
     setActiveTab,
     newSchedules,
-    schedules,
+    schedules: data || [],
     isLoading,
+    error,
     refreshSchedules,
     refetch
   };

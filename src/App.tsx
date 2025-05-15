@@ -6,7 +6,7 @@ import { LanguageProvider } from "@/hooks/use-language";
 import { NotificationProvider } from "@/hooks/use-notification-settings";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import "./App.css";
@@ -25,13 +25,14 @@ import Settings from "@/pages/Settings";
 import ProfileSettings from "@/pages/ProfileSettings";
 import Attendance from "@/pages/Attendance";
 import TimeClock from "@/pages/TimeClock";
-import ManagerTimeClock from "@/pages/ManagerTimeClock"; // Add import for the new page
+import ManagerTimeClock from "@/pages/ManagerTimeClock";
 import RestaurantSchedule from "@/pages/RestaurantSchedule";
 import NotFound from "@/pages/NotFound";
 import Hiring from "@/pages/Hiring";
 import ScheduleRequests from "@/pages/ScheduleRequests";
 import EmployeeWorkflow from "@/pages/EmployeeWorkflow";
 import About from "@/pages/About";
+import EmployeeCalendar from "@/pages/EmployeeCalendar";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -48,100 +49,64 @@ function App() {
                 <Route path="/auth" element={<Auth />} />
                 <Route element={<AppLayout />}>
                   <Route path="/home" element={
-                    <ProtectedRoute>
-                      <Index />
-                    </ProtectedRoute>
+                    <ProtectedRoute><Index /></ProtectedRoute>
                   } />
                   <Route path="/dashboard" element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
+                    <ProtectedRoute><Dashboard /></ProtectedRoute>
                   } />
                   <Route path="/schedule" element={
-                    <ProtectedRoute>
-                      <Schedule />
-                    </ProtectedRoute>
+                    <ProtectedRoute><Schedule /></ProtectedRoute>
                   } />
                   <Route path="/restaurant-schedule" element={
-                    <ProtectedRoute>
-                      <RestaurantSchedule />
-                    </ProtectedRoute>
+                    <ProtectedRoute><RestaurantSchedule /></ProtectedRoute>
                   } />
                   <Route path="/shift-calendar" element={
-                    <ProtectedRoute>
-                      <RestaurantSchedule />
-                    </ProtectedRoute>
+                    <ProtectedRoute><RestaurantSchedule /></ProtectedRoute>
+                  } />
+                  <Route path="/employee-calendar" element={
+                    <ProtectedRoute><EmployeeCalendar /></ProtectedRoute>
                   } />
                   <Route path="/leave-management" element={
-                    <ProtectedRoute>
-                      <LeaveManagement />
-                    </ProtectedRoute>
+                    <ProtectedRoute><LeaveManagement /></ProtectedRoute>
                   } />
                   <Route path="/payroll" element={
-                    <ProtectedRoute>
-                      <Payroll />
-                    </ProtectedRoute>
+                    <ProtectedRoute><Payroll /></ProtectedRoute>
                   } />
                   <Route path="/salary" element={
-                    <ProtectedRoute>
-                      <Salary />
-                    </ProtectedRoute>
+                    <ProtectedRoute><Salary /></ProtectedRoute>
                   } />
                   <Route path="/people" element={
-                    <ProtectedRoute>
-                      <People />
-                    </ProtectedRoute>
+                    <ProtectedRoute><People /></ProtectedRoute>
                   } />
                   <Route path="/profile" element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
+                    <ProtectedRoute><Profile /></ProtectedRoute>
                   } />
                   <Route path="/profile-settings" element={
-                    <ProtectedRoute>
-                      <ProfileSettings />
-                    </ProtectedRoute>
+                    <ProtectedRoute><ProfileSettings /></ProtectedRoute>
                   } />
                   <Route path="/settings" element={
-                    <ProtectedRoute>
-                      <Settings />
-                    </ProtectedRoute>
+                    <ProtectedRoute><Settings /></ProtectedRoute>
                   } />
                   <Route path="/attendance" element={
-                    <ProtectedRoute>
-                      <Attendance />
-                    </ProtectedRoute>
+                    <ProtectedRoute><Attendance /></ProtectedRoute>
                   } />
                   <Route path="/time-clock" element={
-                    <ProtectedRoute>
-                      <TimeClock />
-                    </ProtectedRoute>
+                    <ProtectedRoute><TimeClock /></ProtectedRoute>
                   } />
-                  {/* Add new route for Manager Time Clock */}
                   <Route path="/manager-time-clock" element={
-                    <ProtectedRoute>
-                      <ManagerTimeClock />
-                    </ProtectedRoute>
+                    <ProtectedRoute><ManagerTimeClock /></ProtectedRoute>
                   } />
                   <Route path="/hiring" element={
-                    <ProtectedRoute>
-                      <Hiring />
-                    </ProtectedRoute>
+                    <ProtectedRoute><Hiring /></ProtectedRoute>
                   } />
                   <Route path="/schedule-requests" element={
-                    <ProtectedRoute>
-                      <ScheduleRequests />
-                    </ProtectedRoute>
+                    <ProtectedRoute><ScheduleRequests /></ProtectedRoute>
                   } />
                   <Route path="/employee-workflow" element={
-                    <ProtectedRoute>
-                      <EmployeeWorkflow />
-                    </ProtectedRoute>
+                    <ProtectedRoute><EmployeeWorkflow /></ProtectedRoute>
                   } />
                   <Route path="/about" element={
-                    <ProtectedRoute>
-                      <About />
-                    </ProtectedRoute>
+                    <ProtectedRoute><About /></ProtectedRoute>
                   } />
                 </Route>
                 <Route path="*" element={<NotFound />} />
