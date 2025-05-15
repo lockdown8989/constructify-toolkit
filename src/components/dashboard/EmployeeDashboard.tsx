@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import EmployeeAttendanceSummary from '@/components/dashboard/EmployeeAttendanceSummary';
 import EmployeeStatistics from '@/components/people/EmployeeStatistics';
 import DocumentList from '@/components/salary/components/DocumentList';
+import PayslipList from '@/components/salary/components/PayslipList';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
 import { useAuth } from '@/hooks/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -79,6 +80,9 @@ const EmployeeDashboard: React.FC<{ firstName: string }> = ({ firstName }) => {
         
         {resolvedEmployeeId && (
           <>
+            {/* Add Payslip List component */}
+            <PayslipList employeeId={resolvedEmployeeId} />
+            
             <Card className="p-6">
               <h3 className="text-xs font-semibold text-gray-500 mb-5 uppercase tracking-wider">
                 Statistics

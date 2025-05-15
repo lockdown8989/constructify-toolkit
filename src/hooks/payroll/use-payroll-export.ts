@@ -1,92 +1,68 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { formatCurrency } from '@/utils/format';
+import { exportToCSV } from '@/utils/exports';
+import { toast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
-/**
- * Export payroll data to CSV
- */
-export const exportPayrollData = async (currency: string = 'GBP'): Promise<void> => {
+export const exportPayrollData = async (currency: string = 'GBP') => {
   try {
-    // Fetch payroll data joined with employee data
+    // Get payroll data for the current month
+    const currentMonth = format(new Date(), 'yyyy-MM');
     const { data, error } = await supabase
       .from('payroll')
       .select(`
-        *, 
-        employees(
-          id,
+        id,
+        employee_id,
+        base_pay,
+        salary_paid,
+        deductions,
+        tax_paid,
+        ni_contribution,
+        working_hours,
+        overtime_hours,
+        overtime_pay,
+        payment_status,
+        payment_date,
+        employees (
           name,
           job_title,
-          department
+          department,
+          site
         )
       `)
-      .order('payment_date', { ascending: false });
+      .like('payment_date', `${currentMonth}%`);
       
-    if (error) {
-      console.error('Error fetching payroll data:', error);
-      throw new Error(`Failed to fetch payroll data: ${error.message}`);
-    }
-    
+    if (error) throw error;
     if (!data || data.length === 0) {
       throw new Error('No payroll data available to export');
     }
     
-    // Format data for CSV
-    const csvData = data.map(record => {
-      // Use safe type assertion for employees data
-      const employee = record.employees as { 
-        name?: string, 
-        job_title?: string, 
-        department?: string 
-      } | null;
-      
-      return {
-        "Employee Name": employee?.name || 'Unknown',
-        "Job Title": employee?.job_title || 'Unknown',
-        "Department": employee?.department || 'Unknown',
-        "Base Pay": formatCurrency(record.base_pay || 0, 'GBP'),
-        "Working Hours": record.working_hours || 0,
-        "Overtime Hours": record.overtime_hours || 0,
-        "Overtime Pay": formatCurrency(record.overtime_pay || 0, 'GBP'),
-        "Deductions": formatCurrency(record.deductions || 0, 'GBP'),
-        "Bonus": formatCurrency(record.bonus || 0, 'GBP'),
-        "Net Salary": formatCurrency(record.salary_paid || 0, 'GBP'),
-        "Payment Date": record.payment_date || new Date().toISOString().split('T')[0],
-        "Status": record.payment_status || 'Unknown'
-      };
-    });
+    // Format data for CSV export
+    const formattedData = data.map(record => ({
+      'Employee Name': record.employees?.name || 'Unknown',
+      'Job Title': record.employees?.job_title || 'Unknown',
+      'Department': record.employees?.department || 'Unknown',
+      'Site': record.employees?.site || 'Unknown',
+      'Base Salary': `${currency} ${record.base_pay?.toFixed(2) || '0.00'}`,
+      'Deductions': `${currency} ${record.deductions?.toFixed(2) || '0.00'}`,
+      'Tax Paid': `${currency} ${record.tax_paid?.toFixed(2) || '0.00'}`,
+      'NI Contribution': `${currency} ${record.ni_contribution?.toFixed(2) || '0.00'}`,
+      'Hours Worked': record.working_hours?.toFixed(2) || '0.00',
+      'Overtime Hours': record.overtime_hours?.toFixed(2) || '0.00',
+      'Overtime Pay': `${currency} ${record.overtime_pay?.toFixed(2) || '0.00'}`,
+      'Net Salary': `${currency} ${record.salary_paid?.toFixed(2) || '0.00'}`,
+      'Status': record.payment_status || 'Unknown',
+      'Payment Date': record.payment_date ? format(new Date(record.payment_date), 'dd/MM/yyyy') : 'Pending'
+    }));
     
-    // Convert to CSV string
-    const headers = Object.keys(csvData[0]);
-    const csvString = [
-      headers.join(','),
-      ...csvData.map(row => headers.map(header => {
-        const value = row[header as keyof typeof row];
-        // Escape commas and quotes in values
-        return `"${String(value).replace(/"/g, '""')}"`;
-      }).join(','))
-    ].join('\n');
+    // Generate CSV filename with current date
+    const currentDate = format(new Date(), 'yyyy-MM-dd');
+    const filename = `payroll_export_${currentDate}.csv`;
     
-    // Create and download CSV file
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const date = new Date().toISOString().split('T')[0];
-    const filename = `payroll_export_${date}.csv`;
+    // Export to CSV
+    await exportToCSV(formattedData, filename);
     
-    // Create download link
-    const link = document.createElement('a');
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', filename);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url); // Clean up by revoking the object URL
-    } else {
-      throw new Error('Browser does not support downloading files programmatically');
-    }
-    
-    return;
+    return { success: true };
   } catch (error) {
     console.error('Error exporting payroll data:', error);
     throw error;
