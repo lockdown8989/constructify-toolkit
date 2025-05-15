@@ -1,3 +1,4 @@
+
 /* Improved touch targets for mobile */
 @media (max-width: 768px) {
   button, a, input[type="checkbox"], input[type="radio"], [role="button"], 
@@ -231,7 +232,9 @@
 
 /* Mobile calendar swipe area */
 .calendar-swipe-area {
-  @apply w-full h-full touch-action-pan-y overscroll-behavior-y-contain;
+  @apply w-full h-full;
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
 }
 
 /* Calendar day has events indicator */

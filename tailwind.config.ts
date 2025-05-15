@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -143,8 +142,46 @@ export default {
 				'fade-up': 'fade-up 0.4s ease-out',
 				'scale-in': 'scale-in 0.3s ease-out',
 				'pulse-soft': 'pulse-soft 3s infinite ease-in-out'
-			}
+			},
+			touchAction: {
+				'pan-y': 'pan-y',
+				'pan-x': 'pan-x',
+				'pinch-zoom': 'pinch-zoom',
+				'manipulation': 'manipulation',
+				'none': 'none',
+			},
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		function({ addUtilities }) {
+			const newUtilities = {
+				'.touch-action-pan-y': {
+					'touch-action': 'pan-y',
+				},
+				'.touch-action-pan-x': {
+					'touch-action': 'pan-x',
+				},
+				'.touch-action-pinch-zoom': {
+					'touch-action': 'pinch-zoom',
+				},
+				'.touch-action-manipulation': {
+					'touch-action': 'manipulation',
+				},
+				'.touch-action-none': {
+					'touch-action': 'none',
+				},
+				'.overscroll-behavior-y-contain': {
+					'overscroll-behavior-y': 'contain',
+				},
+				'.overscroll-behavior-x-contain': {
+					'overscroll-behavior-x': 'contain',
+				},
+				'.overscroll-behavior-contain': {
+					'overscroll-behavior': 'contain',
+				},
+			}
+			addUtilities(newUtilities);
+		}
+	],
 } satisfies Config;
