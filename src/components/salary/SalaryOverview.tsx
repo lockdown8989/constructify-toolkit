@@ -1,125 +1,189 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Download, FileText, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
 import { useEmployees } from '@/hooks/use-employees';
-import { Download } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
-import { toast } from '@/components/ui/use-toast';
 
-interface SalaryOverviewProps {
-  onDownloadSuccess?: () => void;
-}
-
-const SalaryOverview: React.FC<SalaryOverviewProps> = ({ onDownloadSuccess }) => {
+const SalaryOverview: React.FC = () => {
   const { user } = useAuth();
-  const [downloading, setDownloading] = useState(false);
-  const { employeeId } = useEmployeeDataManagement();
-  const { data: employees } = useEmployees();
-  
-  // Find the current employee's data
-  const currentEmployee = employees?.find(emp => emp.user_id === user?.id);
-  
-  const handleDownload = async () => {
+  const { data: employees = [] } = useEmployees();
+  const { toast } = useToast();
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  // Find current employee data based on user ID
+  const currentEmployee = employees.find(emp => emp.user_id === user?.id);
+
+  const handleDownloadPDF = async () => {
     if (!currentEmployee) {
       toast({
         title: "Error",
-        description: "Could not find your employee data",
+        description: "Could not find your employee record",
         variant: "destructive"
       });
       return;
     }
-    
-    setDownloading(true);
+
+    setIsDownloading(true);
     try {
-      await generatePayslipPDF({
-        employee: {
-          name: currentEmployee.name,
-          position: currentEmployee.job_title,
-          department: currentEmployee.department,
-          startDate: currentEmployee.start_date,
-        },
-        salary: {
-          base: currentEmployee.salary,
-          bonus: 0,
-          deductions: 0,
-          total: currentEmployee.salary,
-        },
-        payPeriod: `${new Date().toLocaleString('default', { month: 'long' })} ${new Date().getFullYear()}`,
-        paymentDate: new Date().toLocaleDateString(),
-        paymentMethod: 'Direct Deposit',
-        paymentId: `PAY-${Date.now().toString().substring(5)}`,
-      });
-      
+      await generatePayslipPDF(currentEmployee, "current");
       toast({
         title: "Success",
-        description: "Your payslip has been downloaded",
-        variant: "default"
+        description: "Salary statement downloaded successfully",
+        variant: "success"
       });
-      
-      if (onDownloadSuccess) {
-        onDownloadSuccess();
-      }
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error("PDF download error:", error);
       toast({
-        title: "Error",
-        description: "Failed to generate payslip",
+        title: "Download Failed",
+        description: "Could not generate PDF. Please try again later.",
         variant: "destructive"
       });
     } finally {
-      setDownloading(false);
+      setIsDownloading(false);
     }
   };
-  
+
+  if (!currentEmployee) {
+    return (
+      <div className="container py-6">
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4">Salary Overview</h2>
+          <p>Loading your salary information...</p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <Card className="p-6 mb-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-        <div>
-          <h3 className="text-xl font-semibold">Salary Overview</h3>
-          <p className="text-sm text-gray-500">View and download your salary information</p>
-        </div>
+    <div className="container py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">My Salary</h1>
         <Button 
-          className="mt-3 md:mt-0" 
-          onClick={handleDownload}
-          disabled={downloading || !currentEmployee}
+          onClick={handleDownloadPDF} 
+          disabled={isDownloading}
+          className="flex items-center gap-2"
         >
-          <Download className="mr-2 h-4 w-4" />
-          {downloading ? 'Generating...' : 'Download PDF'}
+          {isDownloading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
+          Download PDF
         </Button>
       </div>
       
-      <div className="mt-4">
-        {currentEmployee ? (
-          <>
-            <div className="grid grid-cols-2 gap-4">
+      <Tabs defaultValue="overview">
+        <TabsList className="mb-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="history">Payment History</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview">
+          <Card className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <p className="text-sm text-gray-500">Name</p>
-                <p className="font-medium">{currentEmployee.name}</p>
+                <h3 className="text-lg font-medium mb-4">Salary Information</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Base Salary:</span>
+                    <span className="font-medium">${currentEmployee.salary.toLocaleString()}</span>
+                  </div>
+                  {currentEmployee.hourly_rate && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Hourly Rate:</span>
+                      <span className="font-medium">${currentEmployee.hourly_rate}/hr</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Status:</span>
+                    <span className="font-medium">{currentEmployee.status}</span>
+                  </div>
+                </div>
               </div>
+              
               <div>
-                <p className="text-sm text-gray-500">Position</p>
-                <p className="font-medium">{currentEmployee.job_title}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Department</p>
-                <p className="font-medium">{currentEmployee.department}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Monthly Salary</p>
-                <p className="font-medium">${currentEmployee.salary.toLocaleString()}</p>
+                <h3 className="text-lg font-medium mb-4">Next Payment</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Amount:</span>
+                    <span className="font-medium">${currentEmployee.salary.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Date:</span>
+                    <span className="font-medium">25th of this month</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Payment Method:</span>
+                    <span className="font-medium">Direct Deposit</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </>
-        ) : (
-          <div className="text-center py-4">
-            <p className="text-gray-500">No salary information available</p>
-          </div>
-        )}
-      </div>
-    </Card>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="history">
+          <Card className="p-6">
+            <h3 className="text-lg font-medium mb-4">Payment History</h3>
+            <div className="space-y-4">
+              {[...Array(3)].map((_, index) => (
+                <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">April {2023 - index}</p>
+                    <p className="text-sm text-gray-500">Paid on 25th</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">${currentEmployee.salary.toLocaleString()}</p>
+                    <p className="text-sm text-green-600">Complete</p>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    <FileText className="h-4 w-4 mr-2" />
+                    View
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="documents">
+          <Card className="p-6">
+            <h3 className="text-lg font-medium mb-4">Salary Documents</h3>
+            <div className="space-y-4">
+              {[
+                { name: "Annual Tax Statement", date: "Jan 15, 2023", type: "pdf" },
+                { name: "Compensation Letter", date: "May 10, 2023", type: "pdf" },
+                { name: "Bonus Structure", date: "Jun 22, 2023", type: "doc" }
+              ].map((doc, index) => (
+                <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
+                  <div className="flex items-center">
+                    <img 
+                      src={doc.type === "pdf" ? "/pdf-icon.png" : "/word-icon.png"} 
+                      alt={doc.type} 
+                      className="w-8 h-8 mr-3" 
+                    />
+                    <div>
+                      <p className="font-medium">{doc.name}</p>
+                      <p className="text-sm text-gray-500">{doc.date}</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

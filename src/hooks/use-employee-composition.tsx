@@ -5,6 +5,10 @@ import { useToast } from "@/hooks/use-toast";
 import type { EmployeeCompositionModel } from "@/types/database";
 import { useEffect } from "react";
 
+/**
+ * Hook to fetch and manage employee composition data
+ * @returns Query object with employee composition data
+ */
 export const useEmployeeComposition = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -31,29 +35,25 @@ export const useEmployeeComposition = () => {
     };
   }, [queryClient]);
   
-  // Add an effect to calculate and update composition data periodically
+  // Effect to calculate employee composition data periodically
   useEffect(() => {
     const calculateEmployeeComposition = async () => {
       try {
         // Get all employees
         const { data: employees, error: empError } = await supabase
           .from('employees')
-          .select('id, name');
+          .select('id');
         
         if (empError) throw empError;
         
-        // Calculate gender percentages (this would typically come from employee profiles)
-        // In a real implementation, you would query actual gender data
-        // This is just a placeholder implementation
+        // Get a count of employees by gender (simulated for this demo)
+        // In a real app, you would query actual gender data
         const totalEmployees = employees?.length || 0;
         
-        // For demo purposes, we're randomly assigning genders
-        // In a real app, you would get this from employee profiles
-        const maleCount = Math.floor(totalEmployees * 0.55); // 55% male for demo
-        const femaleCount = totalEmployees - maleCount;
-        
-        const malePercentage = totalEmployees > 0 ? (maleCount / totalEmployees) * 100 : 0;
-        const femalePercentage = totalEmployees > 0 ? (femaleCount / totalEmployees) * 100 : 0;
+        // Simulate gender distribution (55% male, 45% female)
+        // In a real implementation, you would calculate this from actual employee data
+        const malePercentage = 55;
+        const femalePercentage = 45;
         
         // Check if we already have a record
         const { data: existingRecord } = await supabase
@@ -101,6 +101,7 @@ export const useEmployeeComposition = () => {
     return () => clearInterval(interval);
   }, []);
   
+  // Query to fetch the latest composition data
   return useQuery({
     queryKey: ['employee-composition'],
     queryFn: async () => {
