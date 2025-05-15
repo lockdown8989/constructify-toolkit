@@ -7,7 +7,7 @@ import { formatCurrency } from '@/utils/format';
 // Add type definitions for jsPDF with autoTable
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: (options: any) => jsPDF;
+    autoTable: (options: any) => any;
     getNumberOfPages: () => number;
   }
 }
@@ -44,8 +44,9 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
   doc.setFontSize(10);
   
   // Employee details table
+  let currentY = 55;
   doc.autoTable({
-    startY: 55,
+    startY: currentY,
     head: [['Employee Name', 'Department', 'Position', 'Pay Period']],
     body: [
       [
@@ -67,9 +68,10 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
     }
   });
 
-  // Payment Information - store last Y position
-  let currentY = doc.autoTable.lastEndPos?.y || 90;
-  currentY += 10;
+  // Get the Y position after the table
+  // Store final Y position
+  const empTableHeight = doc.autoTable.previous ? doc.autoTable.previous.finalY : 90;
+  currentY = empTableHeight + 10;
   
   doc.setFont('helvetica', 'bold');
   doc.text('Payment Information', 15, currentY);
@@ -99,9 +101,9 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
     }
   });
 
-  // Earnings section - use lastEndPos to position
-  currentY = doc.autoTable.lastEndPos?.y || currentY + 30;
-  currentY += 10;
+  // Get the Y position after the payment table
+  const paymentTableHeight = doc.autoTable.previous ? doc.autoTable.previous.finalY : currentY + 30;
+  currentY = paymentTableHeight + 10;
   
   doc.setFont('helvetica', 'bold');
   doc.text('Earnings', 15, currentY);
@@ -128,9 +130,9 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
     }
   });
   
-  // Deductions section - use lastEndPos to position
-  currentY = doc.autoTable.lastEndPos?.y || currentY + 50;
-  currentY += 10;
+  // Get the Y position after the earnings table
+  const earningsTableHeight = doc.autoTable.previous ? doc.autoTable.previous.finalY : currentY + 50;
+  currentY = earningsTableHeight + 10;
   
   doc.setFont('helvetica', 'bold');
   doc.text('Deductions', 15, currentY);
@@ -156,9 +158,9 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
     }
   });
   
-  // Summary section - use lastEndPos to position
-  currentY = doc.autoTable.lastEndPos?.y || currentY + 40;
-  currentY += 10;
+  // Get the Y position after the deductions table
+  const deductionsTableHeight = doc.autoTable.previous ? doc.autoTable.previous.finalY : currentY + 40;
+  currentY = deductionsTableHeight + 10;
   
   doc.setFont('helvetica', 'bold');
   doc.text('Summary', 15, currentY);
@@ -200,10 +202,10 @@ export const downloadPayslip = async (payslipData: PayslipData): Promise<Blob> =
     }
   });
   
-  // Notes
+  // Notes section
   if (payslipData.notes) {
-    currentY = doc.autoTable.lastEndPos?.y || currentY + 60;
-    currentY += 10;
+    const summaryTableHeight = doc.autoTable.previous ? doc.autoTable.previous.finalY : currentY + 60;
+    currentY = summaryTableHeight + 10;
     
     doc.setFont('helvetica', 'bold');
     doc.text('Notes', 15, currentY);
