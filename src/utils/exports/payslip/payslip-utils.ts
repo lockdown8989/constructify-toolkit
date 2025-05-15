@@ -57,7 +57,7 @@ export const addEmployeeInfo = (doc: jsPDF, payslipData: PayslipData, currentY: 
     }
   });
   
-  return doc.autoTable.previous;
+  return doc.previousAutoTable || { finalY: currentY + 30 };
 };
 
 /**
@@ -92,7 +92,7 @@ export const addPaymentInfo = (doc: jsPDF, payslipData: PayslipData, currentY: n
     }
   });
   
-  return doc.autoTable.previous;
+  return doc.previousAutoTable || { finalY: currentY + 30 };
 };
 
 /**
@@ -124,7 +124,7 @@ export const addEarningsSection = (doc: jsPDF, payslipData: PayslipData, current
     }
   });
   
-  return doc.autoTable.previous;
+  return doc.previousAutoTable || { finalY: currentY + 50 };
 };
 
 /**
@@ -155,7 +155,7 @@ export const addDeductionsSection = (doc: jsPDF, payslipData: PayslipData, curre
     }
   });
   
-  return doc.autoTable.previous;
+  return doc.previousAutoTable || { finalY: currentY + 40 };
 };
 
 /**
@@ -202,7 +202,7 @@ export const addSummarySection = (doc: jsPDF, payslipData: PayslipData, currentY
     }
   });
   
-  return doc.autoTable.previous;
+  return doc.previousAutoTable || { finalY: currentY + 60 };
 };
 
 /**
@@ -220,7 +220,7 @@ export const addNotesSection = (doc: jsPDF, notes: string, currentY: number): vo
  * Add footer with pagination
  */
 export const addFooter = (doc: jsPDF): void => {
-  const pageCount = doc.getNumberOfPages();
+  const pageCount = doc.internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(8);

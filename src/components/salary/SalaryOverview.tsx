@@ -40,8 +40,8 @@ const SalaryOverview = () => {
       if (typeof currentEmployeeData.salary === 'number') {
         salary = currentEmployeeData.salary;
       } else if (typeof currentEmployeeData.salary === 'string') {
-        // Remove any non-numeric characters except decimal point and convert to number
-        salary = parseFloat(currentEmployeeData.salary.replace(/[^\d.]/g, ''));
+        // Convert string salary to number safely
+        salary = parseFloat(String(currentEmployeeData.salary).replace(/[^\d.]/g, ''));
       } else {
         salary = 0;
       }
