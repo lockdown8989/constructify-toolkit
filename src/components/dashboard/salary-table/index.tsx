@@ -51,14 +51,14 @@ export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
         period: `${new Date().toLocaleString('default', { month: 'long' })} ${new Date().getFullYear()}`,
         paymentDate: employee.paymentDate || new Date().toISOString(),
         baseSalary: typeof employee.salary === 'number' ? employee.salary : 
-                   typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
+                  typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
         grossPay: typeof employee.salary === 'number' ? employee.salary : 
-                 typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
+                typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
         taxes: typeof employee.salary === 'number' ? employee.salary * 0.2 : 
               typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) * 0.2 : 0,
         deductions: 0,
         netPay: typeof employee.salary === 'number' ? employee.salary * 0.8 : 
-               typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) * 0.8 : 0,
+              typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) * 0.8 : 0,
         currency: 'GBP',
         bankAccount: '****1234',
         title: 'Monthly Payslip',
@@ -66,7 +66,7 @@ export function SalaryTable({ data, onStatusChange }: SalaryTableProps) {
         overtimePay: 0,
         bonus: 0,
         totalPay: typeof employee.salary === 'number' ? employee.salary : 
-                  typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
+                typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0,
         notes: ''
       };
       

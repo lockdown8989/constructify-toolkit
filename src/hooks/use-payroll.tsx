@@ -15,14 +15,19 @@ export const usePayroll = () => {
   const fetchPayroll = async (period?: string) => {
     const currentPeriod = period || new Date().toISOString().split('T')[0].substring(0, 7); // YYYY-MM format
     
-    const { data, error } = await supabase
-      .from('payroll_history')
-      .select('*')
-      .ilike('pay_period', `${currentPeriod}%`)
-      .order('created_at', { ascending: false });
-      
-    if (error) throw error;
-    return data as PayrollRecord[];
+    try {
+      const { data, error } = await supabase
+        .from('payroll_history')
+        .select('*')
+        .ilike('pay_period', `${currentPeriod}%`)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      return data as PayrollRecord[];
+    } catch (error) {
+      console.error('Error fetching payroll data:', error);
+      return [];
+    }
   };
   
   const usePayrollData = (period?: string) => {
@@ -35,7 +40,12 @@ export const usePayroll = () => {
   const useProcessPayroll = () => {
     return useMutation({
       mutationFn: async (employees: Employee[]) => {
-        return await processPayroll(employees);
+        try {
+          return await processPayroll(employees);
+        } catch (error) {
+          console.error("Process payroll mutation error:", error);
+          throw error;
+        }
       },
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['payroll'] });
@@ -45,12 +55,12 @@ export const usePayroll = () => {
         });
       },
       onError: (error) => {
+        console.error("Payroll processing error:", error);
         toast({
           title: "Error",
           description: "Failed to process payroll",
           variant: "destructive"
         });
-        console.error("Payroll processing error:", error);
       }
     });
   };

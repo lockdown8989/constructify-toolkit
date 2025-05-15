@@ -28,6 +28,34 @@ export const PayslipActions: React.FC<PayslipActionsProps> = ({
   onAttach = async () => {},
   onGenerate,
 }) => {
+  const { toast } = useToast();
+  
+  const handleDownload = async () => {
+    try {
+      await onDownload(employee);
+    } catch (error) {
+      console.error('Error downloading payslip:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to download payslip',
+        variant: 'destructive'
+      });
+    }
+  };
+  
+  const handleAttach = async () => {
+    try {
+      await onAttach(employee);
+    } catch (error) {
+      console.error('Error attaching payslip:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to attach payslip',
+        variant: 'destructive'
+      });
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -51,11 +79,11 @@ export const PayslipActions: React.FC<PayslipActionsProps> = ({
             Generate Payslip
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onClick={() => onDownload(employee)}>
+        <DropdownMenuItem onClick={handleDownload}>
           <Download className="h-4 w-4 mr-2" />
           Download PDF
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onAttach(employee)}>
+        <DropdownMenuItem onClick={handleAttach}>
           <Check className="h-4 w-4 mr-2" />
           Attach to Resume
         </DropdownMenuItem>

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Employee } from '@/types/employee';
 import { PayrollRecord, PayslipData } from '@/types/supabase/payroll';
@@ -6,7 +7,10 @@ import { format } from 'date-fns';
 
 export const processEmployeePayroll = async (employee: Employee): Promise<PayrollRecord> => {
   // Calculate base pay
-  const basePay = typeof employee.salary === 'number' ? employee.salary / 12 : 0; // Monthly salary
+  const salary = typeof employee.salary === 'number' ? employee.salary : 
+                 typeof employee.salary === 'string' ? parseFloat(employee.salary.replace(/[^0-9.]/g, '')) : 0;
+  
+  const basePay = salary / 12; // Monthly salary
   
   // Calculate taxes (simplified)
   const taxRate = 0.2; // 20% tax rate
@@ -42,44 +46,57 @@ export const processEmployeePayroll = async (employee: Employee): Promise<Payrol
 };
 
 export const savePayrollHistory = async (payrollRecord: PayrollRecord) => {
-  const { data, error } = await supabase
-    .from('payroll_history')
-    .insert(payrollRecord);
+  try {
+    const { data, error } = await supabase
+      .from('payroll_history')
+      .insert(payrollRecord);
+      
+    if (error) throw error;
     
-  if (error) throw error;
-  
-  return data;
+    return data;
+  } catch (error) {
+    console.error('Error saving payroll history:', error);
+    throw error;
+  }
 };
 
 export const usePayrollProcessing = () => {
   const { toast } = useToast();
   
   const processPayroll = async (employees: Employee[]) => {
+    if (!employees || employees.length === 0) {
+      throw new Error('No employees provided');
+    }
+    
     try {
       const payrollRecords: PayrollRecord[] = [];
       
       for (const employee of employees) {
-        const record = await processEmployeePayroll(employee);
-        payrollRecords.push(record);
-        
-        // Save to database
-        await savePayrollHistory(record);
+        try {
+          const record = await processEmployeePayroll(employee);
+          payrollRecords.push(record);
+          
+          // Save to database
+          await savePayrollHistory(record);
+        } catch (empError) {
+          console.error(`Error processing payroll for employee ${employee.id}:`, empError);
+          // Continue with next employee even if one fails
+        }
+      }
+      
+      if (payrollRecords.length === 0) {
+        throw new Error('Failed to process payroll for any employees');
       }
       
       toast({
         title: "Payroll Processed",
-        description: `Successfully processed payroll for ${employees.length} employees.`
+        description: `Successfully processed payroll for ${payrollRecords.length} employees.`
       });
       
       return payrollRecords;
     } catch (error) {
       console.error("Error processing payroll:", error);
-      toast({
-        title: "Payroll Processing Failed",
-        description: "There was an error processing the payroll.",
-        variant: "destructive"
-      });
-      throw error;
+      throw error; // Re-throw to be handled by the caller
     }
   };
   

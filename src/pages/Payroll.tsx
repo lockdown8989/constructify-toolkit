@@ -85,12 +85,12 @@ const PayrollPage = () => {
         .map(emp => ({
           ...emp,
           job_title: emp.job_title || emp.title || 'Employee',
-          department: emp.department || '',
+          department: emp.department || 'General',
           site: emp.site || 'Main Office',
           salary: typeof emp.salary === 'number' ? emp.salary : 
-                 typeof emp.salary === 'string' ? parseInt(emp.salary.replace(/[^0-9]/g, ''), 10) : 0,
+                 typeof emp.salary === 'string' ? parseFloat(emp.salary.replace(/[^0-9.]/g, '')) : 0,
           status: emp.status || 'Active',
-          lifecycle: 'Active',
+          lifecycle: emp.lifecycle || 'Active',
           start_date: emp.start_date || new Date().toISOString()
         }));
         
