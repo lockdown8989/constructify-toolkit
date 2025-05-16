@@ -9,7 +9,11 @@ import { useEmployeeLeave } from '@/hooks/use-employee-leave';
 import { checkLeaveBalance, processLeaveRequest } from '@/services/employee-sync/leave-sync';
 import { useAttendance } from '@/hooks/use-attendance';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
-import { Loader2, CheckCircle, CalendarDays, DollarSign, ClipboardList } from "lucide-react";
+import { Loader2, CheckCircle, CalendarDays, DollarSign, ClipboardList, Download } from "lucide-react";
+import { format } from 'date-fns';
+import { generatePayslipPDF } from '@/utils/exports';
+import { useEmployees } from '@/hooks/use-employees';
+import { usePreviousMonthPayslips } from '@/hooks/use-payroll-history';
 
 const EmployeeWorkflow: React.FC = () => {
   const { toast } = useToast();
@@ -17,6 +21,7 @@ const EmployeeWorkflow: React.FC = () => {
   const [activeTab, setActiveTab] = useState("attendance");
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
+  const [isDownloading, setIsDownloading] = useState<Record<string, boolean>>({});
   
   // Get employee attendance data
   const { data: attendanceData, isLoading: isLoadingAttendance } = 
@@ -34,6 +39,9 @@ const EmployeeWorkflow: React.FC = () => {
     newSchedules,
     viewFullSchedule
   } = useEmployeeSchedule();
+  
+  // Get payslips data
+  const { data: payslipsData, isLoading: isLoadingPayslips } = usePreviousMonthPayslips();
   
   // Check if employee has an active session
   useEffect(() => {
@@ -101,7 +109,40 @@ const EmployeeWorkflow: React.FC = () => {
     }
   };
   
-  const isLoading = isLoadingEmployee || isLoadingAttendance || isLoadingLeave || isLoadingSchedule;
+  // Handle payslip download
+  const handleDownloadPayslip = async (payslipId: string, paymentDate: string) => {
+    if (!employeeId || !employeeData) return;
+    
+    setIsDownloading(prev => ({ ...prev, [payslipId]: true }));
+    try {
+      const paymentMonth = format(new Date(paymentDate), 'MMMM yyyy');
+      
+      await generatePayslipPDF(employeeId, {
+        name: employeeData.name,
+        title: employeeData.job_title,
+        department: employeeData.department,
+        salary: employeeData.salary.toString(),
+        paymentDate: paymentDate,
+        payPeriod: paymentMonth,
+      });
+      
+      toast({
+        title: "Payslip Downloaded",
+        description: `Your ${paymentMonth} payslip has been downloaded.`
+      });
+    } catch (error) {
+      console.error('Error downloading payslip:', error);
+      toast({
+        title: "Download Failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDownloading(prev => ({ ...prev, [payslipId]: false }));
+    }
+  };
+  
+  const isLoading = isLoadingEmployee || isLoadingAttendance || isLoadingLeave || isLoadingSchedule || isLoadingPayslips;
   
   if (isLoading) {
     return (
@@ -360,7 +401,9 @@ const EmployeeWorkflow: React.FC = () => {
                 <div className="space-y-4">
                   <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
                     <div className="flex items-center">
-                      <DollarSign className="h-10 w-10 text-blue-500 mr-3" />
+                      <div className="h-10 w-10 text-blue-500 mr-3 flex items-center justify-center">
+                        <span className="text-2xl font-bold">£</span>
+                      </div>
                       <div>
                         <h3 className="text-lg font-medium">Current Monthly Salary</h3>
                         <p className="text-xl font-bold">
@@ -372,24 +415,76 @@ const EmployeeWorkflow: React.FC = () => {
                   
                   <h4 className="font-medium mt-2">Recent Payslips</h4>
                   <div className="border rounded-lg divide-y">
-                    {[...Array(3)].map((_, i) => {
-                      const date = new Date();
-                      date.setMonth(date.getMonth() - i);
-                      
-                      return (
-                        <div key={i} className="flex justify-between items-center p-3">
-                          <div>
-                            <p className="font-medium">{date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
-                            <p className="text-sm text-muted-foreground">
-                              Payment Date: {new Date(date.getFullYear(), date.getMonth() + 1, 1).toLocaleDateString()}
-                            </p>
+                    {payslipsData && payslipsData.length > 0 ? 
+                      payslipsData.slice(0, 6).map((payslip) => {
+                        const paymentDate = payslip.payment_date ? 
+                          new Date(payslip.payment_date) : new Date();
+                        
+                        const monthYear = format(paymentDate, 'MMMM yyyy');
+                        const formattedPaymentDate = format(paymentDate, 'dd.MM.yyyy');
+                        
+                        return (
+                          <div key={payslip.id} 
+                            className="flex justify-between items-center p-3"
+                          >
+                            <div>
+                              <p className="font-medium">{monthYear}</p>
+                              <p className="text-sm text-muted-foreground">
+                                Payment Date: {formattedPaymentDate}
+                              </p>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleDownloadPayslip(payslip.id, payslip.payment_date)}
+                              disabled={isDownloading[payslip.id]}
+                            >
+                              {isDownloading[payslip.id] ? (
+                                <span className="flex items-center">
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> 
+                                  Loading...
+                                </span>
+                              ) : (
+                                <span className="flex items-center">
+                                  <Download className="h-4 w-4 mr-2" /> 
+                                  Download
+                                </span>
+                              )}
+                            </Button>
                           </div>
-                          <Button variant="ghost" size="sm">
-                            Download
-                          </Button>
-                        </div>
-                      );
-                    })}
+                        );
+                      }) : 
+                      // Sample payslips if no real data is available (for demo purposes)
+                      [...Array(3)].map((_, i) => {
+                        const date = new Date();
+                        date.setMonth(date.getMonth() - i);
+                        const monthYear = format(date, 'MMMM yyyy');
+                        const paymentDate = format(new Date(date.getFullYear(), date.getMonth() + 1, 1), 'dd.MM.yyyy');
+                        
+                        return (
+                          <div key={i} className="flex justify-between items-center p-3">
+                            <div>
+                              <p className="font-medium">{monthYear}</p>
+                              <p className="text-sm text-muted-foreground">
+                                Payment Date: {paymentDate}
+                              </p>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => toast({
+                                title: "Sample Payslip",
+                                description: "This is a sample payslip. Real payslip data will be available once processed.",
+                                variant: "default"
+                              })}
+                            >
+                              <Download className="h-4 w-4 mr-2" /> 
+                              Download
+                            </Button>
+                          </div>
+                        );
+                      })
+                    }
                   </div>
                 </div>
               )}
