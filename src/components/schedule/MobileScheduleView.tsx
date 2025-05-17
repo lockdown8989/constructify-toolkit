@@ -14,6 +14,7 @@ interface MobileScheduleViewProps {
   onAddShift: () => void;
   onShiftClick: (shift: any) => void;
   selectedDate?: Date;
+  onDateClick?: (date: Date) => void; // Added this optional prop
 }
 
 const MobileScheduleView: React.FC<MobileScheduleViewProps> = ({
@@ -21,14 +22,25 @@ const MobileScheduleView: React.FC<MobileScheduleViewProps> = ({
   employees,
   onAddShift,
   onShiftClick,
-  selectedDate = new Date()
+  selectedDate = new Date(),
+  onDateClick
 }) => {
   const { hasManagerAccess } = useAccessControl();
 
+  // Handle date click if the function is provided
+  const handleDateClick = () => {
+    if (onDateClick && selectedDate) {
+      onDateClick(selectedDate);
+    }
+  };
+
   return (
     <div className="p-4 pb-24">
-      {/* Date indicator */}
-      <div className="mb-5 text-center">
+      {/* Date indicator - now clickable if onDateClick provided */}
+      <div 
+        className={`mb-5 text-center ${onDateClick ? 'cursor-pointer active-touch-state' : ''}`}
+        onClick={onDateClick ? handleDateClick : undefined}
+      >
         <div className="text-sm text-muted-foreground mb-1">
           <Calendar className="h-4 w-4 inline-block mr-1.5" />
           {format(selectedDate, 'EEEE, MMMM d, yyyy')}

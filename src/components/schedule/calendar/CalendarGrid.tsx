@@ -12,6 +12,7 @@ interface CalendarGridProps {
   handleShiftClick: (shift: any) => void;
   handleEmployeeAddShift: (employeeId: string, date: Date) => void;
   isLoading: boolean;
+  onDateClick?: (date: Date) => void; // Added this optional prop
 }
 
 const CalendarGrid: React.FC<CalendarGridProps> = ({
@@ -23,7 +24,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   handleAddShift,
   handleShiftClick,
   handleEmployeeAddShift,
-  isLoading
+  isLoading,
+  onDateClick
 }) => {
   if (isLoading) {
     return <div className="p-8 text-center text-gray-500">Loading schedules...</div>;
@@ -46,6 +48,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
           handleAddShift={handleAddShift}
           handleShiftClick={handleShiftClick}
           handleEmployeeAddShift={handleEmployeeAddShift}
+          onDateClick={onDateClick}
         />
       ))}
     </div>

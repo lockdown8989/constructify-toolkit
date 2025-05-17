@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { format, isToday } from 'date-fns';
-import { Plus } from 'lucide-react';
+import { format, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import EmployeeShift from '../components/EmployeeShift';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getInitials } from '@/utils/format';
+import ShiftActionsMenu from '../ShiftActionsMenu';
 
 interface EmployeeRowProps {
   employee: any;
@@ -15,6 +15,7 @@ interface EmployeeRowProps {
   handleAddShift: (date: Date) => void;
   handleShiftClick: (shift: any) => void;
   handleEmployeeAddShift: (employeeId: string, date: Date) => void;
+  onDateClick?: (date: Date) => void; // Added this optional prop
 }
 
 const EmployeeRow: React.FC<EmployeeRowProps> = ({
@@ -25,95 +26,90 @@ const EmployeeRow: React.FC<EmployeeRowProps> = ({
   isHR,
   handleAddShift,
   handleShiftClick,
-  handleEmployeeAddShift
+  handleEmployeeAddShift,
+  onDateClick
 }) => {
+  // Define hasManagerAccess for readability
+  const hasManagerAccess = isAdmin || isManager || isHR;
+
   return (
-    <div className="flex">
-      {/* Employee name column */}
-      <div className="w-[120px] p-3 bg-gray-50 flex flex-col justify-center items-center text-center border-r border-gray-200">
-        {employee.isCurrentUser ? (
-          <div className="bg-gray-800 text-white px-3 py-1 rounded-md text-sm font-medium mb-1">
-            You
-          </div>
-        ) : (
-          <Avatar className="h-8 w-8 mb-1">
-            <AvatarFallback className="bg-blue-100 text-blue-800">
-              {employee.employeeName.split(' ').map((n: string) => n[0]).join('')}
-            </AvatarFallback>
+    <div className="flex border-b border-gray-200 overflow-hidden" key={employee.employeeId}>
+      {/* Employee column */}
+      <div className="w-[120px] p-3 shrink-0 flex items-center border-r border-gray-200 bg-gray-50">
+        <div className="flex items-center gap-2">
+          <Avatar className="h-7 w-7">
+            <AvatarImage src={employee.avatar || ''} alt={employee.name} />
+            <AvatarFallback>{getInitials(employee.name)}</AvatarFallback>
           </Avatar>
-        )}
-        <div className="font-medium text-sm">{employee.employeeName}</div>
-        {employee.role && (
-          <div className="text-xs text-gray-500 truncate max-w-[110px]">
-            {employee.role}
-          </div>
-        )}
+          <span className="text-sm font-medium truncate">{employee.name}</span>
+        </div>
       </div>
       
-      {/* Shifts columns */}
-      <div className="flex flex-grow divide-x divide-gray-200">
-        {visibleDays.map(day => {
-          // Find shifts for this employee on this day
-          const dayShifts = employee.shifts.filter((shift: any) => {
-            const shiftDate = new Date(shift.start_time);
-            return (
-              shiftDate.getDate() === day.getDate() &&
-              shiftDate.getMonth() === day.getMonth() &&
-              shiftDate.getFullYear() === day.getFullYear()
-            );
-          });
-          
-          const isDayToday = isToday(day);
-          
-          // Generate a consistent color based on employee name
-          const colorIndex = employee.employeeName.charCodeAt(0) % 5;
-          const colorClasses = [
-            'bg-blue-50 border-l-4 border-blue-500', // Blue
-            'bg-yellow-50 border-l-4 border-yellow-500', // Yellow
-            'bg-green-50 border-l-4 border-green-500', // Green
-            'bg-pink-50 border-l-4 border-pink-500', // Pink
-            'bg-purple-50 border-l-4 border-purple-500' // Purple
-          ];
-          const colorClass = colorClasses[colorIndex];
-          
-          return (
-            <div 
-              key={format(day, 'yyyy-MM-dd')} 
-              className={cn(
-                "w-full h-full min-h-[120px] p-2 relative",
-                isDayToday ? "bg-blue-50/30" : ""
-              )}
-            >
-              {dayShifts.length > 0 ? (
-                <div className="space-y-2 h-full">
-                  {dayShifts.map((shift: any) => (
-                    <EmployeeShift 
-                      key={shift.id}
+      {/* Days columns */}
+      {visibleDays.map(day => {
+        // Find schedules for this employee on this day
+        const shiftsForDay = employee.schedules.filter((shift: any) => 
+          isSameDay(new Date(shift.start_time), day)
+        );
+        
+        return (
+          <div
+            key={format(day, 'yyyy-MM-dd')}
+            className={cn(
+              "flex-1 min-h-16 p-1 relative border-r border-gray-100",
+              hasManagerAccess ? "cursor-pointer hover:bg-gray-50" : ""
+            )}
+            onClick={hasManagerAccess && onDateClick ? () => onDateClick(day) : undefined}
+          >
+            {/* Display shifts for this day */}
+            <div className="flex flex-col gap-1">
+              {shiftsForDay.map((shift: any) => (
+                <div 
+                  key={shift.id}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent triggering parent's onClick
+                    handleShiftClick(shift);
+                  }}
+                  className={cn(
+                    "text-xs py-1 px-2 rounded cursor-pointer flex items-center justify-between",
+                    shift.status === 'pending' ? "bg-amber-100 text-amber-800" : 
+                    shift.status === 'confirmed' ? "bg-green-100 text-green-800" : 
+                    "bg-blue-100 text-blue-800"
+                  )}
+                >
+                  <div className="overflow-hidden text-ellipsis whitespace-nowrap">
+                    {format(new Date(shift.start_time), 'h:mm a')} - {format(new Date(shift.end_time), 'h:mm a')}
+                  </div>
+                  
+                  {hasManagerAccess && (
+                    <ShiftActionsMenu
                       shift={shift}
-                      colorClass={colorClass}
-                      onClick={() => handleShiftClick(shift)}
+                      onEdit={() => handleShiftClick(shift)}
+                      onDelete={() => console.log('Delete shift:', shift.id)}
+                      className="ml-1"
                     />
-                  ))}
-                </div>
-              ) : (
-                <div className={cn(
-                  "h-full flex items-center justify-center",
-                  (isAdmin || isManager || isHR) && "cursor-pointer hover:bg-gray-50"
-                )}>
-                  {(isAdmin || isManager || isHR) && (
-                    <button
-                      onClick={() => handleEmployeeAddShift(employee.employeeId, day)}
-                      className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-gray-200 active:bg-gray-300"
-                    >
-                      <Plus className="h-5 w-5 text-gray-400" />
-                    </button>
                   )}
                 </div>
-              )}
+              ))}
             </div>
-          );
-        })}
-      </div>
+            
+            {/* Add shift button for managers */}
+            {hasManagerAccess && shiftsForDay.length === 0 && (
+              <div 
+                className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent triggering parent's onClick
+                  handleEmployeeAddShift(employee.employeeId, day);
+                }}
+              >
+                <div className="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 cursor-pointer">
+                  <span className="text-xs font-bold">+</span>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
