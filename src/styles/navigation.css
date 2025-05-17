@@ -5,3 +5,14 @@
 @import './navigation/mobile.css';
 @import './navigation/schedule.css';
 @import './navigation/tabs.css';
+
+/* Custom styling for the "IN AND OUT" button */
+.time-clock-nav-button {
+  background-color: rgba(20, 184, 166, 0.1);
+  color: rgb(15, 118, 110);
+  font-weight: 500;
+}
+
+.time-clock-nav-button:hover {
+  background-color: rgba(20, 184, 166, 0.2);
+}
