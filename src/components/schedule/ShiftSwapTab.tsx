@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useShiftSwaps, useCreateShiftSwap, useUpdateShiftSwap } from '@/hooks/use-shift-swaps';
 import { useEmployees } from '@/hooks/use-employees';
@@ -9,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, SwapHorizontal, ArrowLeftRight } from 'lucide-react';
+import { CalendarIcon, ArrowLeftRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ShiftSwapList from './ShiftSwapList';
 import { cn } from '@/lib/utils';
@@ -146,7 +145,7 @@ const ShiftSwapTab = () => {
           className="w-full"
           disabled={!selectedScheduleId || !recipientEmployeeId}
         >
-          <SwapHorizontal className="mr-2 h-4 w-4" />
+          <ArrowLeftRight className="mr-2 h-4 w-4" />
           Request Shift Swap
         </Button>
       </div>
@@ -159,7 +158,7 @@ const ShiftSwapTab = () => {
         <Sheet>
           <SheetTrigger asChild>
             <Button className="w-full">
-              <SwapHorizontal className="mr-2 h-4 w-4" />
+              <ArrowLeftRight className="mr-2 h-4 w-4" />
               New Shift Swap Request
             </Button>
           </SheetTrigger>
@@ -176,7 +175,7 @@ const ShiftSwapTab = () => {
         <Card className="border rounded-xl shadow-sm overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center">
-              <SwapHorizontal className="mr-2 h-5 w-5 text-blue-500" />
+              <ArrowLeftRight className="mr-2 h-5 w-5 text-blue-500" />
               New Shift Swap Request
             </CardTitle>
             <CardDescription>

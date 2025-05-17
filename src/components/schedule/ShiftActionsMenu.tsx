@@ -1,12 +1,11 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { SwapHorizontal, UserPlus, Calendar, Clock } from 'lucide-react';
+import { ArrowLeftRight, UserPlus, Calendar, Clock } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
-  PopoverClose
+  PopoverTrigger
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -60,37 +59,31 @@ const ShiftActionsMenu: React.FC<ShiftActionsMenuProps> = ({
           <p className="text-sm font-medium">{format(date, 'EEEE, MMMM d, yyyy')}</p>
         </div>
         <div className="space-y-1">
-          <PopoverClose asChild>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-left text-sm" 
-              onClick={handleAddShift}
-            >
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add Shift to Employee
-            </Button>
-          </PopoverClose>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-left text-sm" 
+            onClick={handleAddShift}
+          >
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add Shift to Employee
+          </Button>
           
-          <PopoverClose asChild>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-left text-sm" 
-              onClick={handleSwapShift}
-            >
-              <SwapHorizontal className="mr-2 h-4 w-4" />
-              Swap Shift with Another Employee
-            </Button>
-          </PopoverClose>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-left text-sm" 
+            onClick={handleSwapShift}
+          >
+            <ArrowLeftRight className="mr-2 h-4 w-4" />
+            Swap Shift with Another Employee
+          </Button>
           
-          <PopoverClose asChild>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-left text-sm text-gray-500"
-            >
-              <Clock className="mr-2 h-4 w-4" />
-              View All Shifts
-            </Button>
-          </PopoverClose>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-left text-sm text-gray-500"
+          >
+            <Clock className="mr-2 h-4 w-4" />
+            View All Shifts
+          </Button>
         </div>
       </PopoverContent>
     </Popover>

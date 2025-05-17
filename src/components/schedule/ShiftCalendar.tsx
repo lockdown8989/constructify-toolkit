@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSchedules } from '@/hooks/use-schedules';
 import { format, addDays, startOfWeek, isToday, isSameWeek, parseISO } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/use-auth';
-import { ChevronLeft, ChevronRight, Check, MessageSquare, Plus, Calendar as CalendarIcon, UserPlus, SwapHorizontal } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, MessageSquare, Plus, Calendar as CalendarIcon, UserPlus, ArrowLeftRight } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import ScheduleHeader from '@/components/restaurant/ScheduleHeader';
 import ShiftCalendarToolbar from './components/ShiftCalendarToolbar';
@@ -20,6 +19,11 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetClose } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+
+interface ShiftCalendarToolbarProps {
+  viewType: 'day' | 'week';
+  onViewTypeChange: (type: 'day' | 'week') => void;
+}
 
 const ShiftCalendar = () => {
   const { user, isAdmin, isHR, isManager } = useAuth();
@@ -237,6 +241,14 @@ const ShiftCalendar = () => {
     toast({
       title: "Schedule refreshed",
       description: "The schedule has been updated with the latest information.",
+    });
+  };
+
+  const handleEmployeeAddShift = (employeeId: string, day: Date) => {
+    // Handle adding shift to a specific employee
+    toast({
+      title: "Adding shift",
+      description: `Adding shift for employee ID ${employeeId} on ${format(day, 'MMM d')}`,
     });
   };
 
@@ -553,7 +565,7 @@ const ShiftCalendar = () => {
                             )}>
                               {(isAdmin || isManager || isHR) && (
                                 <button
-                                  onClick={() => handleAddShift(employee.employeeId, day)}
+                                  onClick={() => handleEmployeeAddShift(employee.employeeId, day)}
                                   className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-gray-200 active:bg-gray-300"
                                 >
                                   <Plus className="h-5 w-5 text-gray-400" />
