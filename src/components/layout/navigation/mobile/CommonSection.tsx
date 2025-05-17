@@ -24,7 +24,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       <MobileNavLink
         to="/dashboard"
         icon={LayoutDashboard}
-        label="🗃 Dashboard"
+        label="Dashboard"
         onClick={onClose}
       />
       
@@ -51,14 +51,14 @@ const CommonSection: React.FC<CommonSectionProps> = ({
               <MobileNavLink
                 to="/employee-workflow"
                 icon={Calendar}
-                label="🗒 My Schedule"
+                label="My Schedule"
                 onClick={onClose}
               />
               
               <MobileNavLink
                 to="/leave-management"
                 icon={Calendar}
-                label="📑 Leave Management"
+                label="Leave Management"
                 onClick={onClose}
               />
               
@@ -67,6 +67,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
                 icon={DollarSign}
                 label="💰 Salary"
                 onClick={onClose}
+                className="salary-nav-button"
               />
             </>
           )}
@@ -78,6 +79,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
               icon={DollarSign}
               label="💰 Salary"
               onClick={onClose}
+              className="salary-nav-button"
             />
           )}
         </>

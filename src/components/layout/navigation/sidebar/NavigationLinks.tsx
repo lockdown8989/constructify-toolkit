@@ -30,7 +30,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
         <SidebarNavLink
           to="/dashboard"
           icon={LayoutDashboard}
-          label="🗃 Dashboard"
+          label="Dashboard"
           isActive={isActive("/dashboard")}
           isCollapsed={isCollapsed}
         />
@@ -80,7 +80,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
             <SidebarNavLink
               to="/employee-workflow"
               icon={Clock}
-              label={hasManagerialAccess ? "🗒 Employee Shifts" : "🗒 My Schedule"}
+              label={hasManagerialAccess ? "📋 Employee Shifts" : "📋 My Schedule"}
               isActive={isActive("/employee-workflow")}
               isCollapsed={isCollapsed}
             />

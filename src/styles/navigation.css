@@ -16,3 +16,8 @@
 .time-clock-nav-button:hover {
   background-color: rgba(20, 184, 166, 0.2);
 }
+
+/* Custom styling for salary button */
+.salary-nav-button {
+  color: rgb(15, 118, 110);
+}
