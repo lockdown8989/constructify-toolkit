@@ -1,65 +1,90 @@
 
 import React from 'react';
-import { PlusCircle, Calendar, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ViewType } from '../types/calendar-types';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 
 interface ShiftCalendarToolbarProps {
-  view: ViewType;
-  onChangeView: (view: ViewType) => void;
-  onAddShift?: () => void;
-  isManager?: boolean;
-  showFilter?: boolean;
-  onShowFilters?: () => void;
+  currentDate: Date;
+  onDateChange: (date: Date) => void;
+  viewType?: string; // Added viewType prop
+  onViewChange?: (type: string) => void; // Added onViewChange prop
 }
 
 const ShiftCalendarToolbar: React.FC<ShiftCalendarToolbarProps> = ({
-  view,
-  onChangeView,
-  onAddShift,
-  isManager = false,
-  showFilter = false,
-  onShowFilters
+  currentDate,
+  onDateChange,
+  viewType,
+  onViewChange
 }) => {
+  const handleSelectToday = () => {
+    onDateChange(new Date());
+  };
+
   return (
-    <div className="flex items-center justify-between border-b p-2">
-      <Tabs 
-        value={view} 
-        onValueChange={(value) => onChangeView(value as ViewType)}
-        className="w-auto"
+    <div className="flex items-center space-x-2">
+      <Button 
+        variant="outline" 
+        size="sm"
+        onClick={handleSelectToday}
       >
-        <TabsList>
-          <TabsTrigger value="day">Day</TabsTrigger>
-          <TabsTrigger value="week">Week</TabsTrigger>
-          <TabsTrigger value="month">Month</TabsTrigger>
-        </TabsList>
-      </Tabs>
-      
-      <div className="flex items-center gap-2">
-        {showFilter && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={onShowFilters}
-            className="flex items-center gap-1"
-          >
-            <Filter className="h-4 w-4" />
-            <span className="sr-md:inline hidden">Filter</span>
-          </Button>
-        )}
-        
-        {isManager && onAddShift && (
+        Today
+      </Button>
+
+      <Popover>
+        <PopoverTrigger asChild>
           <Button
+            variant="outline"
             size="sm"
-            onClick={onAddShift}
-            className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600"
+            className="pl-3 pr-3 text-left font-normal"
           >
-            <PlusCircle className="h-4 w-4" />
-            <span className="sr-md:inline hidden">Add Shift</span>
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            <span>{format(currentDate, 'PPP')}</span>
           </Button>
-        )}
-      </div>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0">
+          <Calendar
+            mode="single"
+            selected={currentDate}
+            onSelect={(date) => {
+              if (date) onDateChange(date);
+            }}
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+
+      {viewType && onViewChange && (
+        <div className="space-x-1">
+          <Button 
+            variant={viewType === 'day' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => onViewChange('day')}
+          >
+            Day
+          </Button>
+          <Button 
+            variant={viewType === 'week' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => onViewChange('week')}
+          >
+            Week
+          </Button>
+          <Button 
+            variant={viewType === 'month' ? 'default' : 'outline'} 
+            size="sm"
+            onClick={() => onViewChange('month')}
+          >
+            Month
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

@@ -3,7 +3,7 @@ import React from 'react';
 import { 
   Home, FileText, User, Users, Calendar, 
   Workflow, DollarSign, Receipt, Clock, ClipboardCheck,
-  LayoutDashboard, Settings, Timer
+  LayoutDashboard, Settings
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SidebarNavLink from './SidebarNavLink';
@@ -64,16 +64,6 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
                   label="Attendance"
                   isActive={isActive("/attendance")}
                   isCollapsed={isCollapsed}
-                />
-
-                {/* New Manager Time Clock Link */}
-                <SidebarNavLink
-                  to="/manager-time-clock"
-                  icon={Timer}
-                  label="Employee Clock"
-                  isActive={isActive("/manager-time-clock")}
-                  isCollapsed={isCollapsed}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 />
               </>
             )}

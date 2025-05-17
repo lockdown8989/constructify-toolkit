@@ -1,7 +1,6 @@
 
 import { Clock } from "lucide-react";
 import { Link } from "react-router-dom";
-import MobileNavLink from "./MobileNavLink";
 
 interface TimeClocksSectionProps {
   hasManagerialAccess: boolean;
@@ -14,16 +13,6 @@ const TimeClocksSection = ({ hasManagerialAccess, isAuthenticated, onClose }: Ti
   
   return (
     <>
-      {/* Only show Employee Clock button for managers */}
-      {hasManagerialAccess && (
-        <MobileNavLink
-          to="/time-clock"
-          icon={Clock}
-          label="Employee Clock"
-          onClick={onClose}
-        />
-      )}
-      
       {/* Manager Time Clock button for managers only */}
       {hasManagerialAccess && (
         <Link
