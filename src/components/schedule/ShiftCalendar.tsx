@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useSchedules } from '@/hooks/use-schedules';
 import { format, addDays, startOfWeek, isToday, isSameWeek, parseISO } from 'date-fns';
@@ -22,7 +23,7 @@ import { Label } from '@/components/ui/label';
 
 interface ShiftCalendarToolbarProps {
   viewType: 'day' | 'week';
-  onViewTypeChange: (type: 'day' | 'week') => void;
+  onViewChange: (type: 'day' | 'week') => void;
 }
 
 const ShiftCalendar = () => {
@@ -245,7 +246,7 @@ const ShiftCalendar = () => {
   };
 
   // FIX #1: Correct the handleEmployeeAddShift function to use the correct parameter
-  const handleEmployeeAddShift = (date: Date) => {
+  const handleEmployeeAddShift = (employeeId: string, date: Date) => {
     // Handle adding shift to a specific employee
     toast({
       title: "Adding shift",
@@ -407,13 +408,23 @@ const ShiftCalendar = () => {
             </div>
           </SheetContent>
         </Sheet>
+
+        {/* FAB for mobile view - positioned at bottom right */}
+        {(isAdmin || isManager || isHR) && (
+          <Button
+            onClick={() => handleAddShift(new Date())}
+            className="fixed bottom-20 right-6 z-50 h-14 w-14 rounded-full shadow-lg bg-blue-500 hover:bg-blue-600 p-0 flex items-center justify-center"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        )}
       </div>
     );
   }
 
   // Desktop view (existing implementation)
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg shadow overflow-hidden">
+    <div className="flex flex-col h-full bg-white rounded-lg shadow overflow-hidden relative">
       {/* Custom header with location name */}
       <ScheduleHeader 
         locationName={locationName} 
@@ -567,7 +578,7 @@ const ShiftCalendar = () => {
                             )}>
                               {(isAdmin || isManager || isHR) && (
                                 <button
-                                  onClick={() => handleEmployeeAddShift(day)}
+                                  onClick={() => handleAddShift(day)}
                                   className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-gray-200 active:bg-gray-300"
                                 >
                                   <Plus className="h-5 w-5 text-gray-400" />
@@ -691,6 +702,16 @@ const ShiftCalendar = () => {
           </div>
         </PopoverContent>
       </Popover>
+      
+      {/* FAB for desktop view - positioned at bottom right */}
+      {(isAdmin || isManager || isHR) && (
+        <Button
+          onClick={() => handleAddShift(new Date())}
+          className="absolute bottom-16 right-6 z-50 h-14 w-14 rounded-full shadow-lg bg-blue-500 hover:bg-blue-600 p-0 flex items-center justify-center"
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      )}
     </div>
   );
 };
