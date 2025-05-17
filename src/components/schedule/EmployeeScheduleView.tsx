@@ -16,6 +16,8 @@ import { useAuth } from '@/hooks/use-auth';
 import ViewSelector, { ViewType } from './components/ViewSelector';
 import MonthlyView from './views/MonthlyView';
 import DailyView from './views/DailyView';
+import { useCalendarPreferences } from '@/hooks/use-calendar-preferences';
+import DateActionMenu from './calendar/DateActionMenu';
 
 const EmployeeScheduleView: React.FC = () => {
   const location = useLocation();
@@ -40,6 +42,9 @@ const EmployeeScheduleView: React.FC = () => {
     isLoading,
     refreshSchedules
   } = useEmployeeSchedule();
+
+  // Get calendar preferences
+  const { preferences, setDefaultView } = useCalendarPreferences();
   
   // State to track if a shift was just dropped
   const [droppedShiftId, setDroppedShiftId] = useState<string | null>(null);
@@ -47,17 +52,27 @@ const EmployeeScheduleView: React.FC = () => {
   const [isAddShiftDialogOpen, setIsAddShiftDialogOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [viewType, setViewType] = useState<ViewType>('week');
+  const [isDateMenuOpen, setIsDateMenuOpen] = useState(false);
   
   // Check location state for view preference
   useEffect(() => {
     if (location.state?.view) {
       setViewType(location.state.view);
+    } else if (preferences?.default_view) {
+      setViewType(preferences.default_view);
     }
     
     if (location.state?.selectedDate) {
       setCurrentDate(new Date(location.state.selectedDate));
     }
-  }, [location.state]);
+  }, [location.state, preferences]);
+  
+  // When view type changes, save it as preference
+  useEffect(() => {
+    if (viewType && preferences) {
+      setDefaultView(viewType);
+    }
+  }, [viewType, setDefaultView]);
   
   // Fetch open shifts that can be dropped
   useEffect(() => {
@@ -232,9 +247,7 @@ const EmployeeScheduleView: React.FC = () => {
   // Function to handle date click from calendar views
   const handleDateClick = (date: Date) => {
     setCurrentDate(date);
-    if (viewType !== 'day') {
-      setViewType('day');
-    }
+    setIsDateMenuOpen(true);
   };
 
   // Function to handle previous/next navigation
@@ -352,6 +365,7 @@ const EmployeeScheduleView: React.FC = () => {
               setSelectedScheduleId(shift.id);
               setIsInfoDialogOpen(true);
             }}
+            onDateClick={handleDateClick}
           />
         )}
       </div>
@@ -378,6 +392,16 @@ const EmployeeScheduleView: React.FC = () => {
         setIsInfoDialogOpen={setIsInfoDialogOpen}
         isCancelDialogOpen={isCancelDialogOpen}
         setIsCancelDialogOpen={setIsCancelDialogOpen}
+      />
+
+      {/* Date Action Menu */}
+      <DateActionMenu
+        isOpen={isDateMenuOpen}
+        onClose={() => setIsDateMenuOpen(false)}
+        onAddShift={() => selectedDay && handleAddShift(selectedDay)}
+        onAddEmployee={() => selectedDay && handleAddEmployeeShift(selectedDay)}
+        hasManagerAccess={hasManagerAccess}
+        selectedDate={selectedDay || undefined}
       />
     </div>
   );

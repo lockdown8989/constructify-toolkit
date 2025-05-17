@@ -5,8 +5,9 @@ import { Employee } from '@/types/restaurant-schedule';
 import { Plus, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAccessControl } from '@/hooks/leave/useAccessControl';
-import { format } from 'date-fns';
+import { format, isToday } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface MobileScheduleViewProps {
   schedules: Schedule[];
@@ -14,7 +15,7 @@ interface MobileScheduleViewProps {
   onAddShift: () => void;
   onShiftClick: (shift: any) => void;
   selectedDate?: Date;
-  onDateClick?: (date: Date) => void; // Added this optional prop
+  onDateClick?: (date: Date) => void;
 }
 
 const MobileScheduleView: React.FC<MobileScheduleViewProps> = ({
@@ -26,6 +27,7 @@ const MobileScheduleView: React.FC<MobileScheduleViewProps> = ({
   onDateClick
 }) => {
   const { hasManagerAccess } = useAccessControl();
+  const isCurrentDay = isToday(selectedDate);
 
   // Handle date click if the function is provided
   const handleDateClick = () => {
@@ -38,10 +40,17 @@ const MobileScheduleView: React.FC<MobileScheduleViewProps> = ({
     <div className="p-4 pb-24">
       {/* Date indicator - now clickable if onDateClick provided */}
       <div 
-        className={`mb-5 text-center ${onDateClick ? 'cursor-pointer active-touch-state' : ''}`}
+        className={cn(
+          "mb-5 text-center transition-all duration-200",
+          onDateClick ? 'cursor-pointer active:bg-gray-100 rounded-lg p-2 active-touch-state' : '',
+          isCurrentDay && 'animate-pulse-slow'
+        )}
         onClick={onDateClick ? handleDateClick : undefined}
       >
-        <div className="text-sm text-muted-foreground mb-1">
+        <div className={cn(
+          "text-sm mb-1",
+          isCurrentDay ? "text-blue-600 font-medium" : "text-muted-foreground"
+        )}>
           <Calendar className="h-4 w-4 inline-block mr-1.5" />
           {format(selectedDate, 'EEEE, MMMM d, yyyy')}
         </div>
@@ -79,7 +88,10 @@ const MobileScheduleView: React.FC<MobileScheduleViewProps> = ({
             <Card 
               key={shift.id} 
               onClick={() => onShiftClick(shift)}
-              className="border rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer active-touch-state"
+              className={cn(
+                "border rounded-xl shadow-sm transition-all duration-200",
+                "hover:shadow-md active:bg-gray-50 active:scale-[0.98] cursor-pointer active-touch-state"
+              )}
             >
               <CardContent className="p-4">
                 <h4 className="font-medium text-base mb-1">{shift.title || "Untitled Shift"}</h4>
@@ -89,6 +101,16 @@ const MobileScheduleView: React.FC<MobileScheduleViewProps> = ({
                 {shift.employee_id && employees.find(e => e.id === shift.employee_id) && (
                   <div className="text-xs text-gray-500">
                     Assigned to: {employees.find(e => e.id === shift.employee_id)?.name}
+                  </div>
+                )}
+                {shift.status && (
+                  <div className={cn(
+                    "text-xs px-2 py-0.5 rounded-full inline-block mt-2",
+                    shift.status === 'confirmed' ? "bg-green-100 text-green-800" : 
+                    shift.status === 'pending' ? "bg-amber-100 text-amber-800" : 
+                    "bg-gray-100 text-gray-800"
+                  )}>
+                    {shift.status}
                   </div>
                 )}
               </CardContent>

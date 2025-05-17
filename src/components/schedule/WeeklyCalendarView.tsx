@@ -157,8 +157,8 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
             <div
               key={index}
               className={cn(
-                "flex flex-col items-center p-2 rounded-lg cursor-pointer transition-colors",
-                isSelected ? "bg-blue-100" : "hover:bg-gray-100",
+                "flex flex-col items-center p-2 rounded-lg cursor-pointer transition-all duration-200",
+                isSelected ? "bg-blue-100 shadow-sm" : "hover:bg-gray-100",
                 isTodayDate && !isSelected && "animate-pulse-slow border-blue-500 border-2",
                 isTodayDate && isSelected && "border-blue-500 border-2",
                 isDraggingOver === index && "bg-blue-50 border-dashed border-2 border-blue-400",
@@ -197,7 +197,7 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
               <div 
                 key={schedule.id}
                 className={cn(
-                  "p-3 border rounded-lg",
+                  "p-3 border rounded-lg transition-all duration-200 hover:shadow-md",
                   highlightedShiftId === schedule.id ? "border-green-500 bg-green-50" : "border-gray-200",
                   schedule.status === 'pending' ? "bg-amber-50" : ""
                 )}
@@ -240,6 +240,7 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
         onAddShift={handleAddShift}
         onAddEmployee={handleAddEmployeeShift}
         hasManagerAccess={hasManagerAccess}
+        selectedDate={selectedDay || undefined}
       />
     </div>
   );

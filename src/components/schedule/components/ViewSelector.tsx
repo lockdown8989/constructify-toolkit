@@ -19,7 +19,11 @@ const ViewSelector: React.FC<ViewSelectorProps> = ({ view, onChange }) => {
         variant={view === 'day' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => onChange('day')}
-        className={cn("rounded-sm", view !== 'day' && "hover:bg-muted/30")}
+        className={cn(
+          "rounded-sm transition-colors duration-200", 
+          view !== 'day' && "hover:bg-muted/30",
+          view === 'day' && "animate-scale-in"
+        )}
       >
         <Calendar className="h-4 w-4 mr-1" />
         <span>Daily</span>
@@ -29,7 +33,11 @@ const ViewSelector: React.FC<ViewSelectorProps> = ({ view, onChange }) => {
         variant={view === 'week' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => onChange('week')}
-        className={cn("rounded-sm", view !== 'week' && "hover:bg-muted/30")}
+        className={cn(
+          "rounded-sm transition-colors duration-200", 
+          view !== 'week' && "hover:bg-muted/30",
+          view === 'week' && "animate-scale-in"
+        )}
       >
         <CalendarDays className="h-4 w-4 mr-1" />
         <span>Weekly</span>
@@ -39,7 +47,11 @@ const ViewSelector: React.FC<ViewSelectorProps> = ({ view, onChange }) => {
         variant={view === 'month' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => onChange('month')}
-        className={cn("rounded-sm", view !== 'month' && "hover:bg-muted/30")}
+        className={cn(
+          "rounded-sm transition-colors duration-200", 
+          view !== 'month' && "hover:bg-muted/30",
+          view === 'month' && "animate-scale-in"
+        )}
       >
         <CalendarRange className="h-4 w-4 mr-1" />
         <span>Monthly</span>

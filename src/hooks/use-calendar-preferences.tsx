@@ -1,162 +1,148 @@
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { ViewType } from '@/components/schedule/types/calendar-types';
-import { useToast } from './use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
-// Hook to manage calendar preferences for the user
+export interface CalendarPreferences {
+  id?: string;
+  employee_id: string;
+  default_view: ViewType;
+  show_weekends: boolean;
+  color_scheme: string;
+  visible_hours: {
+    start: number;
+    end: number;
+  };
+  mobile_view_settings: {
+    font_size: 'small' | 'medium' | 'large';
+    compact_view: boolean;
+    days_visible: number;
+    auto_refresh: boolean;
+  };
+}
+
 export const useCalendarPreferences = () => {
+  const [preferences, setPreferences] = useState<CalendarPreferences | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const { user } = useAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [viewType, setViewType] = useState<ViewType>('week');
-  const [showWeekends, setShowWeekends] = useState(true);
-  const [employeeId, setEmployeeId] = useState<string | null>(null);
-
-  // Fetch employee ID
-  useEffect(() => {
-    if (user) {
-      const getEmployeeId = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('employees')
-            .select('id')
-            .eq('user_id', user.id)
-            .single();
-            
-          if (error) {
-            console.error('Error fetching employee ID:', error);
-            return;
-          }
-          
-          if (data) {
-            setEmployeeId(data.id);
-          }
-        } catch (err) {
-          console.error('Error in getEmployeeId:', err);
-        }
-      };
-      
-      getEmployeeId();
-    }
-  }, [user]);
 
   // Fetch calendar preferences
   useEffect(() => {
-    if (employeeId) {
-      const fetchPreferences = async () => {
-        try {
-          setLoading(true);
-          
-          const { data, error } = await supabase
-            .from('calendar_preferences')
-            .select('*')
-            .eq('employee_id', employeeId)
-            .single();
-            
-          if (error && error.code !== 'PGRST116') {
-            // PGRST116 is "not found" which is expected for new users
-            console.error('Error fetching calendar preferences:', error);
-          }
-          
-          if (data) {
-            // Apply preferences
-            setViewType(data.default_view as ViewType);
-            setShowWeekends(data.show_weekends);
-          } else {
-            // Create default preferences if none exist
-            await createDefaultPreferences(employeeId);
-          }
-        } catch (err) {
-          console.error('Error in fetchPreferences:', err);
-        } finally {
-          setLoading(false);
-        }
-      };
-      
-      fetchPreferences();
-    }
-  }, [employeeId]);
+    const fetchPreferences = async () => {
+      if (!user) return;
 
-  // Create default preferences for new users
-  const createDefaultPreferences = async (employeeId: string) => {
+      setIsLoading(true);
+
+      try {
+        // First get employee ID for the current user
+        const { data: employeeData, error: employeeError } = await supabase
+          .from('employees')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (employeeError || !employeeData) {
+          console.error('Error fetching employee data:', employeeError);
+          setIsLoading(false);
+          return;
+        }
+
+        // Fetch calendar preferences for this employee
+        const { data, error } = await supabase
+          .from('calendar_preferences')
+          .select('*')
+          .eq('employee_id', employeeData.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // Not found error
+          console.error('Error fetching calendar preferences:', error);
+        }
+
+        if (data) {
+          setPreferences(data as CalendarPreferences);
+        } else {
+          // Create default preferences if none exist
+          const defaultPreferences: Omit<CalendarPreferences, 'id'> = {
+            employee_id: employeeData.id,
+            default_view: 'week',
+            show_weekends: true,
+            color_scheme: 'default',
+            visible_hours: {
+              start: 8,
+              end: 20
+            },
+            mobile_view_settings: {
+              font_size: 'medium',
+              compact_view: true,
+              days_visible: 3,
+              auto_refresh: true
+            }
+          };
+
+          const { data: newData, error: insertError } = await supabase
+            .from('calendar_preferences')
+            .insert(defaultPreferences)
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('Error creating default preferences:', insertError);
+          } else {
+            setPreferences(newData as CalendarPreferences);
+          }
+        }
+      } catch (error) {
+        console.error('Unexpected error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPreferences();
+  }, [user]);
+
+  // Update calendar preferences
+  const updatePreferences = async (updatedPrefs: Partial<CalendarPreferences>) => {
+    if (!preferences?.id) return;
+
     try {
       const { error } = await supabase
         .from('calendar_preferences')
-        .insert({
-          employee_id: employeeId,
-          default_view: 'week',
-          show_weekends: true,
-          color_scheme: 'default',
-          visible_hours: { start: 8, end: 20 },
-          mobile_view_settings: {
-            font_size: 'medium',
-            compact_view: true,
-            days_visible: 3,
-            auto_refresh: true
-          }
-        });
-        
+        .update({ ...updatedPrefs, updated_at: new Date() })
+        .eq('id', preferences.id);
+
       if (error) {
-        console.error('Error creating default preferences:', error);
+        console.error('Error updating preferences:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to update calendar preferences',
+          variant: 'destructive'
+        });
+        return;
       }
-    } catch (err) {
-      console.error('Error in createDefaultPreferences:', err);
+
+      setPreferences(prev => prev ? { ...prev, ...updatedPrefs } : null);
+      toast({
+        title: 'Preferences updated',
+        description: 'Your calendar preferences have been saved',
+      });
+    } catch (error) {
+      console.error('Unexpected error updating preferences:', error);
     }
   };
 
-  // Save preferences when view type changes
-  const updateViewType = async (newViewType: ViewType) => {
-    setViewType(newViewType);
-    
-    if (employeeId) {
-      try {
-        const { error } = await supabase
-          .from('calendar_preferences')
-          .update({ default_view: newViewType })
-          .eq('employee_id', employeeId);
-          
-        if (error) {
-          console.error('Error updating view type:', error);
-          toast({
-            title: "Preferences Not Saved",
-            description: "There was an error saving your calendar preferences.",
-            variant: "destructive"
-          });
-        }
-      } catch (err) {
-        console.error('Error in updateViewType:', err);
-      }
-    }
-  };
-
-  // Toggle weekend visibility
-  const toggleWeekends = async () => {
-    const newValue = !showWeekends;
-    setShowWeekends(newValue);
-    
-    if (employeeId) {
-      try {
-        const { error } = await supabase
-          .from('calendar_preferences')
-          .update({ show_weekends: newValue })
-          .eq('employee_id', employeeId);
-          
-        if (error) {
-          console.error('Error updating weekend visibility:', error);
-        }
-      } catch (err) {
-        console.error('Error in toggleWeekends:', err);
-      }
-    }
+  // Update just the default view
+  const setDefaultView = async (view: ViewType) => {
+    await updatePreferences({ default_view: view });
   };
 
   return {
-    loading,
-    viewType,
-    showWeekends,
-    updateViewType,
-    toggleWeekends
+    preferences,
+    isLoading,
+    updatePreferences,
+    setDefaultView
   };
 };

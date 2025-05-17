@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { format, addHours, setHours, setMinutes } from 'date-fns';
+import { format, addHours, setHours, setMinutes, isSameDay } from 'date-fns';
 import { Schedule } from '@/hooks/use-schedules';
 import { cn } from '@/lib/utils';
 
@@ -8,9 +8,10 @@ interface DailyViewProps {
   date: Date;
   schedules: Schedule[];
   onShiftClick: (shift: any) => void;
+  onDateClick?: (date: Date) => void;
 }
 
-const DailyView: React.FC<DailyViewProps> = ({ date, schedules, onShiftClick }) => {
+const DailyView: React.FC<DailyViewProps> = ({ date, schedules, onShiftClick, onDateClick }) => {
   // Generate time slots for the day (hourly from 6am to 10pm)
   const timeSlots = Array.from({ length: 17 }, (_, i) => {
     const hour = i + 6; // Starting from 6 AM
@@ -39,12 +40,26 @@ const DailyView: React.FC<DailyViewProps> = ({ date, schedules, onShiftClick }) 
 
   // Get the current time for time indicator
   const now = new Date();
+  const isToday = isSameDay(date, now);
   const currentTimeTop = now.getHours() >= 6 && now.getHours() < 23 ? 
     ((now.getHours() - 6) * 60 + now.getMinutes()) : -1;
 
+  // Handle date click
+  const handleDateHeaderClick = () => {
+    if (onDateClick) {
+      onDateClick(date);
+    }
+  };
+
   return (
     <div className="border rounded-md overflow-hidden">
-      <div className="text-center py-3 bg-gray-50 border-b font-medium">
+      <div 
+        className={cn(
+          "text-center py-3 border-b font-medium cursor-pointer",
+          isToday ? "bg-blue-50 animate-pulse-slow" : "bg-gray-50 hover:bg-gray-100"
+        )}
+        onClick={handleDateHeaderClick}
+      >
         {format(date, 'EEEE, MMMM d, yyyy')}
       </div>
       
@@ -61,7 +76,13 @@ const DailyView: React.FC<DailyViewProps> = ({ date, schedules, onShiftClick }) 
             <div className="w-16 pr-2 text-right text-xs text-gray-500 py-1 border-r">
               {format(time, 'h a')}
             </div>
-            <div className="flex-1 relative">
+            <div 
+              className={cn(
+                "flex-1 relative",
+                isToday && "hover:bg-blue-50/30 cursor-pointer"
+              )}
+              onClick={() => onDateClick && onDateClick(new Date(date.setHours(time.getHours(), 0, 0, 0)))}
+            >
               {/* Half-hour marker */}
               <div className="absolute left-0 right-0 top-1/2 border-t border-gray-100"></div>
             </div>
@@ -71,10 +92,10 @@ const DailyView: React.FC<DailyViewProps> = ({ date, schedules, onShiftClick }) 
         {/* Current time indicator */}
         {currentTimeTop > 0 && (
           <div 
-            className="absolute left-0 right-0 border-t border-red-400 z-10 pointer-events-none"
+            className="absolute left-0 right-0 border-t border-red-400 z-10 pointer-events-none animate-pulse"
             style={{ top: `${currentTimeTop}px` }}
           >
-            <div className="w-2 h-2 rounded-full bg-red-400 absolute -left-1 -top-1"></div>
+            <div className="w-3 h-3 rounded-full bg-red-400 absolute -left-1.5 -top-1.5"></div>
           </div>
         )}
         
@@ -88,7 +109,7 @@ const DailyView: React.FC<DailyViewProps> = ({ date, schedules, onShiftClick }) 
             <div
               key={schedule.id}
               className={cn(
-                "absolute left-16 right-4 rounded px-2 py-1 cursor-pointer overflow-hidden",
+                "absolute left-16 right-4 rounded px-2 py-1 cursor-pointer overflow-hidden hover:shadow-md transition-shadow",
                 schedule.status === 'pending' ? "bg-amber-100 text-amber-800 border-amber-200" : 
                 schedule.status === 'confirmed' ? "bg-green-100 text-green-800 border-green-200" : 
                 "bg-blue-100 text-blue-800 border-blue-200",
