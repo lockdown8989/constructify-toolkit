@@ -14,14 +14,14 @@ const WorkflowSection = ({ hasManagerialAccess, onClose }: WorkflowSectionProps)
         <MobileNavLink
           to="/employee-workflow"
           icon={Clock}
-          label="My Employee Shifts"
+          label="🗒 Employee Shifts"
           onClick={onClose}
         />
       ) : (
         <MobileNavLink
           to="/employee-workflow"
           icon={Clock}
-          label="Overview"
+          label="🗒 My Schedule"
           onClick={onClose}
         />
       )}

@@ -15,28 +15,28 @@ const ManagerSection = ({ hasManagerialAccess, onClose }: ManagerSectionProps) =
       <MobileNavLink
         to="/attendance"
         icon={ClipboardCheck}
-        label="Attendance"
+        label="📊 Attendance"
         onClick={onClose}
       />
       
       <MobileNavLink
         to="/people"
         icon={Users}
-        label="Team Members"
+        label="📍 Team Members"
         onClick={onClose}
       />
       
       <MobileNavLink
         to="/shift-calendar"
         icon={Calendar}
-        label="Employee Schedule"
+        label="📆 Employee Schedule"
         onClick={onClose}
       />
       
       <MobileNavLink
         to="/payroll"
         icon={Receipt}
-        label="Payslip"
+        label="📝 Payroll"
         onClick={onClose}
       />
     </>

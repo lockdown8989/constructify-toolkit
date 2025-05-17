@@ -22,7 +22,7 @@ const TimeClocksSection = ({ onClose, isAuthenticated = true, hasManagerialAcces
       <MobileNavLink
         to="/time-clock"
         icon={Clock}
-        label="Time Clock"
+        label="Clock In/Out"
         onClick={() => {
           navigate('/time-clock');
           onClose();

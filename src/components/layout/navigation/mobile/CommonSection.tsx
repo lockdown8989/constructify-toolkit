@@ -1,9 +1,7 @@
 
 import React from 'react';
-import { Link } from "react-router-dom";
 import { 
-  Home, FileText, User, Users, 
-  LayoutDashboard, Calendar, DollarSign 
+  LayoutDashboard, FileText, User, Calendar, DollarSign
 } from "lucide-react";
 import MobileNavLink from "./MobileNavLink";
 import MobileNavDivider from "./MobileNavDivider";
@@ -26,7 +24,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       <MobileNavLink
         to="/dashboard"
         icon={LayoutDashboard}
-        label="Dashboard"
+        label="🗃 Dashboard"
         onClick={onClose}
       />
       
@@ -53,34 +51,21 @@ const CommonSection: React.FC<CommonSectionProps> = ({
               <MobileNavLink
                 to="/employee-workflow"
                 icon={Calendar}
-                label="My Schedule"
+                label="🗒 My Schedule"
                 onClick={onClose}
               />
               
               <MobileNavLink
                 to="/leave-management"
                 icon={Calendar}
-                label="Leave Management"
+                label="📑 Leave Management"
                 onClick={onClose}
               />
               
               <MobileNavLink
                 to="/salary"
                 icon={DollarSign}
-                label="Salary"
-                onClick={onClose}
-              />
-            </>
-          )}
-          
-          {hasManagerialAccess && (
-            <>
-              <MobileNavDivider />
-              
-              <MobileNavLink
-                to="/people"
-                icon={Users}
-                label="Team Members"
+                label="💰 Salary"
                 onClick={onClose}
               />
             </>

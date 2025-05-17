@@ -1,9 +1,8 @@
 
 import React from 'react';
 import { 
-  Home, FileText, User, Users, Calendar, 
-  Workflow, DollarSign, Receipt, Clock, ClipboardCheck,
-  LayoutDashboard
+  LayoutDashboard, FileText, User, Users, Calendar, 
+  Workflow, DollarSign, Receipt, Clock, ClipboardCheck
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SidebarNavLink from './SidebarNavLink';
@@ -31,7 +30,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
         <SidebarNavLink
           to="/dashboard"
           icon={LayoutDashboard}
-          label="Dashboard"
+          label="🗃 Dashboard"
           isActive={isActive("/dashboard")}
           isCollapsed={isCollapsed}
         />
@@ -61,7 +60,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
                 <SidebarNavLink
                   to="/attendance"
                   icon={ClipboardCheck}
-                  label="Attendance"
+                  label="📊 Attendance"
                   isActive={isActive("/attendance")}
                   isCollapsed={isCollapsed}
                 />
@@ -81,7 +80,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
             <SidebarNavLink
               to="/employee-workflow"
               icon={Clock}
-              label={hasManagerialAccess ? "Employee Shifts" : "My Schedule"}
+              label={hasManagerialAccess ? "🗒 Employee Shifts" : "🗒 My Schedule"}
               isActive={isActive("/employee-workflow")}
               isCollapsed={isCollapsed}
             />
@@ -91,7 +90,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
                 <SidebarNavLink
                   to="/people"
                   icon={Users}
-                  label="Team Members"
+                  label="📍 Team Members"
                   isActive={isActive("/people")}
                   isCollapsed={isCollapsed}
                 />
@@ -99,7 +98,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
                 <SidebarNavLink
                   to="/shift-calendar"
                   icon={Calendar}
-                  label="Employee Schedule"
+                  label="📆 Employee Schedule"
                   isActive={isActive("/shift-calendar")}
                   isCollapsed={isCollapsed}
                 />
@@ -109,7 +108,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
             <SidebarNavLink
               to="/leave-management"
               icon={Calendar}
-              label="Leave Management"
+              label="📑 Leave Management"
               isActive={isActive("/leave-management")}
               isCollapsed={isCollapsed}
             />
@@ -117,7 +116,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
             <SidebarNavLink
               to="/salary"
               icon={DollarSign}
-              label="Salary"
+              label="💰 Salary"
               isActive={isActive("/salary")}
               isCollapsed={isCollapsed}
             />
@@ -126,7 +125,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
               <SidebarNavLink
                 to="/payroll"
                 icon={Receipt}
-                label="Payroll"
+                label="📝 Payroll"
                 isActive={isActive("/payroll")}
                 isCollapsed={isCollapsed}
               />
