@@ -30,7 +30,7 @@ const TimeClocksSection = ({ hasManagerialAccess, isAuthenticated, onClose }: Ti
           icon={Clock}
           label="⏰️IN AND OUT⏱️"
           onClick={onClose}
-          className="font-medium text-emerald-700 bg-emerald-50"
+          // Removed the className prop as it's not defined in MobileNavLinkProps
         />
       )}
     </div>

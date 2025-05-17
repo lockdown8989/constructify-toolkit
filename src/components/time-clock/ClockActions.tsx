@@ -53,11 +53,18 @@ const ClockActions = ({
         setIsProcessing(true);
         await onClockAction(pendingAction);
         setIsConfirmationOpen(false);
+        
+        // Show success toast
+        toast({
+          title: pendingAction === 'in' ? "Clocked In" : "Clocked Out",
+          description: `Employee has been successfully clocked ${pendingAction}`,
+          variant: "default",
+        });
       } catch (error) {
         console.error('Error in clock action:', error);
         toast({
           title: "Error",
-          description: "There was an error processing the clock action",
+          description: "There was an error processing the clock action. Please try again.",
           variant: "destructive",
         });
       } finally {

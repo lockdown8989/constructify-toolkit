@@ -23,6 +23,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   employeeAvatar
 }) => {
   const currentTime = format(new Date(), 'HH:mm:ss');
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   
   const getActionText = () => {
     switch (action) {
@@ -48,6 +49,20 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
       case 'out': return <Home className="w-8 h-8 text-white" />;
       case 'break': return <Coffee className="w-8 h-8 text-white" />;
       default: return null;
+    }
+  };
+
+  const handleConfirm = async () => {
+    try {
+      setIsSubmitting(true);
+      await onConfirm();
+      // onClose() will be called by the parent component after successful confirmation
+    } catch (error) {
+      console.error('Error in confirmation:', error);
+      // Allow the dialog to be closed even if there's an error
+      onClose();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -82,17 +97,16 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
               variant="outline" 
               className="w-full text-gray-300 border-gray-700 hover:bg-gray-800 hover:text-white" 
               onClick={onClose}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button 
               className={`w-full ${action === 'in' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-red-600 hover:bg-red-700'}`}
-              onClick={() => {
-                onConfirm();
-                onClose();
-              }}
+              onClick={handleConfirm}
+              disabled={isSubmitting}
             >
-              Confirm
+              {isSubmitting ? "Processing..." : "Confirm"}
             </Button>
           </div>
         </div>

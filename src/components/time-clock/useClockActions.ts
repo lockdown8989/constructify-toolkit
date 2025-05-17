@@ -41,7 +41,7 @@ export const useClockActions = () => {
           
         if (checkError) {
           console.error('Error checking for existing active session:', checkError);
-          throw checkError;
+          throw new Error('Failed to check for active sessions');
         }
           
         if (existingRecord?.active_session) {
@@ -69,7 +69,7 @@ export const useClockActions = () => {
           
         if (error) {
           console.error('Error clocking in:', error);
-          throw error;
+          throw new Error('Failed to clock in: ' + error.message);
         }
         
         toast({
@@ -87,7 +87,7 @@ export const useClockActions = () => {
           
         if (findError) {
           console.error('Error finding active session:', findError);
-          throw findError;
+          throw new Error('Failed to find active session');
         }
           
         if (!activeSession) {
@@ -102,6 +102,7 @@ export const useClockActions = () => {
         // Calculate working minutes
         const checkInTime = new Date(activeSession.check_in);
         const workingMinutes = Math.round((now.getTime() - checkInTime.getTime()) / (1000 * 60));
+        const overtimeMinutes = Math.max(0, workingMinutes - 480); // Over 8 hours
         
         // Clock out
         const { error: updateError } = await supabase
@@ -109,15 +110,15 @@ export const useClockActions = () => {
           .update({
             check_out: now.toISOString(),
             active_session: false,
-            working_minutes: workingMinutes,
-            overtime_minutes: Math.max(0, workingMinutes - 480), // Over 8 hours
+            working_minutes: workingMinutes - overtimeMinutes,
+            overtime_minutes: overtimeMinutes,
             status: 'Present'
           })
           .eq('id', activeSession.id);
           
         if (updateError) {
           console.error('Error clocking out:', updateError);
-          throw updateError;
+          throw new Error('Failed to clock out: ' + updateError.message);
         }
         
         toast({
@@ -126,18 +127,20 @@ export const useClockActions = () => {
         });
       }
 
-      // Reset state after successful action
+      // Reset action after successful operation with a delay for visual feedback
       setTimeout(() => {
         setAction(null);
       }, 2000);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error with clock action:', error);
       toast({
         title: "Error",
-        description: "There was an error processing the clock action",
+        description: error.message || "There was an error processing the clock action",
         variant: "destructive",
       });
+      // Reset action state immediately on error
+      setAction(null);
       throw error; // Rethrow to allow handling in the component
     }
   };
