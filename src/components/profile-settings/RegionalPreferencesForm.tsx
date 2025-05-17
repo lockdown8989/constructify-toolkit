@@ -8,8 +8,12 @@ import { useAuth } from '@/hooks/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRegionSettings } from '@/hooks/use-region-settings';
 
-const RegionalPreferencesForm: React.FC = () => {
-  const { user, isAdmin, isManager, isHR } = useAuth();
+interface RegionalPreferencesFormProps {
+  user?: any;
+}
+
+const RegionalPreferencesForm: React.FC<RegionalPreferencesFormProps> = ({ user }) => {
+  const { isAdmin, isManager, isHR } = useAuth();
   const { toast } = useToast();
   
   const {

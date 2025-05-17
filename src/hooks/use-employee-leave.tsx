@@ -55,6 +55,35 @@ export function useEmployeeLeave(employeeId?: string) {
           };
         }
         
+        // Check for any pending leave requests that might affect the balance
+        const { data: pendingLeave, error: leaveError } = await supabase
+          .from('leave_calendar')
+          .select('type, start_date, end_date')
+          .eq('employee_id', employeeId || data.id)
+          .eq('status', 'Approved');
+        
+        if (leaveError) {
+          console.error("Error fetching leave calendar data:", leaveError);
+        }
+        
+        // Calculate used leave days if we have approved leave data
+        let annualLeaveUsed = 0;
+        let sickLeaveUsed = 0;
+        
+        if (pendingLeave && pendingLeave.length > 0) {
+          pendingLeave.forEach(leave => {
+            const startDate = new Date(leave.start_date);
+            const endDate = new Date(leave.end_date);
+            const days = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            
+            if (leave.type === 'Annual') {
+              annualLeaveUsed += days;
+            } else if (leave.type === 'Sick') {
+              sickLeaveUsed += days;
+            }
+          });
+        }
+        
         return {
           annual_leave_days: data.annual_leave_days || 20,
           sick_leave_days: data.sick_leave_days || 10,
@@ -72,6 +101,9 @@ export function useEmployeeLeave(employeeId?: string) {
         };
       }
     },
-    enabled: !!user
+    enabled: !!user,
+    // Refresh the data every 5 minutes to keep it updated
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000, // Data becomes stale after 2 minutes
   });
 }

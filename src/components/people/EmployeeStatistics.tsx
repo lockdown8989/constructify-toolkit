@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { useAttendanceSync } from '@/hooks/use-attendance-sync';
 import { useEmployeeLeave, LeaveData } from '@/hooks/use-employee-leave';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface EmployeeStatisticsProps {
   annual_leave_days?: number;
@@ -19,10 +20,36 @@ const EmployeeStatistics: React.FC<EmployeeStatisticsProps> = ({
   totalSickLeave = 15,
   employeeId
 }) => {
-  useAttendanceSync(); // Enable real-time sync
+  const queryClient = useQueryClient();
+  // Enable real-time sync
+  useAttendanceSync(); 
   
   // If direct props aren't provided, fetch from the database
-  const { data: leaveData, isLoading } = useEmployeeLeave(employeeId);
+  const { data: leaveData, isLoading, refetch } = useEmployeeLeave(employeeId);
+  
+  // Force refresh data on component mount
+  useEffect(() => {
+    // Refetch leave data on component mount
+    refetch();
+    
+    // Set up periodic refresh
+    const refreshInterval = setInterval(() => {
+      refetch();
+    }, 60000); // Refresh every minute
+    
+    // Set up realtime subscription
+    const handleSync = () => {
+      console.log('Leave data sync triggered, refreshing data...');
+      refetch();
+      // Invalidate related queries to ensure UI is updated
+      queryClient.invalidateQueries({ queryKey: ['employee-leave'] });
+    };
+    
+    // Clean up interval on unmount
+    return () => {
+      clearInterval(refreshInterval);
+    };
+  }, [refetch, queryClient]);
   
   // Use provided props if available, otherwise use data from the hook
   const annualLeave = annual_leave_days ?? leaveData?.annual_leave_days ?? 0;

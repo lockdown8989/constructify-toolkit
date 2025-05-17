@@ -1,147 +1,87 @@
 
-import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
-import { useLeaveNotifications } from "@/hooks/leave/useLeaveNotifications";
-import { getManagerUserIds } from "@/services/notifications/role-utils";
-import { sendNotification } from "@/services/notifications";
+import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '../use-toast';
+import { useAuth } from '../use-auth';
 
-export const useLeaveRealtime = () => {
-  const { toast } = useToast();
+export function useLeaveRealtime() {
   const queryClient = useQueryClient();
-  const { user, isManager, isAdmin, isHR } = useAuth();
-  const { showStatusChangeToast, notifyEmployee } = useLeaveNotifications();
-  
-  const hasManagerAccess = isManager || isAdmin || isHR;
+  const { toast } = useToast();
+  const { user } = useAuth();
   
   useEffect(() => {
-    if (!user || !queryClient) {
-      console.log('LeaveRealtimeUpdates: No user logged in or no queryClient, skipping setup');
-      return;
-    }
+    if (!user) return;
     
-    console.log('LeaveRealtimeUpdates: Setting up realtime updates for user', user.id);
-    console.log('LeaveRealtimeUpdates: User has manager access:', hasManagerAccess);
+    console.log('Setting up leave realtime subscription for user:', user.id);
     
-    const channel = supabase
-      .channel('leave_updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'leave_calendar'
-        },
-        async (payload) => {
-          console.log('LeaveRealtimeUpdates: Leave calendar update received:', payload);
+    // Set up subscription for leave_calendar changes
+    const leaveChannel = supabase
+      .channel('leave_calendar_changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'leave_calendar' 
+        }, 
+        (payload) => {
+          console.log('Leave calendar update detected:', payload);
           
-          // Invalidate queries to refresh data - both manager and employee views
+          // Invalidate relevant queries to refresh the data
+          queryClient.invalidateQueries({ queryKey: ['employee-leave'] });
           queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
-          queryClient.invalidateQueries({ queryKey: ['employee-leave-requests'] });
           
-          if (payload.eventType === 'UPDATE') {
-            await handleLeaveUpdate(payload, user.id, hasManagerAccess);
-          } else if (payload.eventType === 'INSERT') {
-            await handleLeaveInsert(payload, user.id, hasManagerAccess);
+          if (payload.eventType === 'INSERT') {
+            toast({
+              title: 'New leave request',
+              description: 'A new leave request has been added',
+              variant: 'default',
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            toast({
+              title: 'Leave request updated',
+              description: `Leave status changed to ${payload.new.status}`,
+              variant: payload.new.status === 'Approved' ? 'default' : 'destructive',
+            });
           }
         }
       )
-      .subscribe((status) => {
-        console.log('LeaveRealtimeUpdates: Subscription status:', status);
-      });
+      .subscribe();
+      
+    // Set up subscription for employee table changes (leave days allocation)
+    const employeeChannel = supabase
+      .channel('employee_changes')
+      .on('postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'employees',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Employee data updated:', payload);
+          
+          // Check if leave related fields were updated
+          if (payload.new.annual_leave_days !== payload.old.annual_leave_days ||
+              payload.new.sick_leave_days !== payload.old.sick_leave_days) {
+            
+            // Invalidate employee leave query to refresh the data
+            queryClient.invalidateQueries({ queryKey: ['employee-leave'] });
+            
+            toast({
+              title: 'Leave allocation updated',
+              description: 'Your leave days have been updated',
+              variant: 'default',
+            });
+          }
+        }
+      )
+      .subscribe();
     
-    console.log('LeaveRealtimeUpdates: Subscribed to leave_updates channel');
-    
+    // Clean up subscriptions on unmount
     return () => {
-      console.log('LeaveRealtimeUpdates: Cleaning up channel subscription');
-      supabase.removeChannel(channel);
+      supabase.removeChannel(leaveChannel);
+      supabase.removeChannel(employeeChannel);
     };
-  }, [queryClient, toast, user, hasManagerAccess, notifyEmployee]);
-  
-  // Helper functions
-  const handleLeaveUpdate = async (
-    payload: any,
-    userId: string,
-    hasManagerAccess: boolean
-  ) => {
-    const newStatus = payload.new.status;
-    const oldStatus = payload.old.status;
-    
-    if (oldStatus === 'Pending') {
-      await handleStatusChange(payload, userId, hasManagerAccess, newStatus);
-    }
-  };
-  
-  const handleLeaveInsert = async (
-    payload: any,
-    userId: string,
-    hasManagerAccess: boolean
-  ) => {
-    // Only show toast for other users' requests if user is a manager
-    if (hasManagerAccess || userId === payload.new.employee_id) {
-      toast({
-        title: "New leave request",
-        description: "A new leave request has been submitted.",
-      });
-    }
-    
-    // If current user is manager, notify them about the new request
-    if (hasManagerAccess) {
-      await notifyManagersAboutNewRequest(payload);
-    }
-  };
-  
-  const handleStatusChange = async (
-    payload: any,
-    userId: string,
-    hasManagerAccess: boolean,
-    newStatus: string
-  ) => {
-    const isYourRequest = userId === payload.new.employee_id;
-    
-    if ((isYourRequest || hasManagerAccess)) {
-      if (newStatus === 'Approved') {
-        showStatusChangeToast(isYourRequest, payload.new, 'approved');
-        await notifyEmployee(payload.new, 'Approved');
-      } else if (newStatus === 'Rejected') {
-        showStatusChangeToast(isYourRequest, payload.new, 'rejected');
-        await notifyEmployee(payload.new, 'Rejected');
-      }
-    }
-  };
-  
-  const notifyManagersAboutNewRequest = async (payload: any) => {
-    try {
-      console.log('LeaveRealtimeUpdates: Manager user detected, force refreshing leave data');
-      
-      // Get all managers to notify them about the new leave request
-      const managerIds = await getManagerUserIds();
-      console.log('LeaveRealtimeUpdates: Found manager IDs:', managerIds);
-      
-      // Get employee name for notification
-      const { data: employeeData } = await supabase
-        .from('employees')
-        .select('name, department')
-        .eq('id', payload.new.employee_id)
-        .single();
-      
-      const employeeName = employeeData?.name || 'An employee';
-      const department = employeeData?.department || 'Unknown department';
-      
-      for (const managerId of managerIds) {
-        await sendNotification({
-          user_id: managerId,
-          title: "New leave request",
-          message: `${employeeName} (${department}) has submitted a new leave request that requires your review.`,
-          type: "info",
-          related_entity: "leave_calendar",
-          related_id: payload.new.id
-        });
-      }
-    } catch (error) {
-      console.error("Error sending additional notifications to managers:", error);
-    }
-  };
-};
+  }, [queryClient, toast, user]);
+}
