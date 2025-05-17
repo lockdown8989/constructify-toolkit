@@ -1,6 +1,6 @@
 
 import { Clock } from "lucide-react";
-import { Link } from "react-router-dom";
+import MobileNavLink from "./MobileNavLink";
 
 interface TimeClocksSectionProps {
   hasManagerialAccess: boolean;
@@ -9,22 +9,31 @@ interface TimeClocksSectionProps {
 }
 
 const TimeClocksSection = ({ hasManagerialAccess, isAuthenticated, onClose }: TimeClocksSectionProps) => {
-  if (!isAuthenticated) return null;
-  
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
-    <>
-      {/* Manager Time Clock button for managers only */}
+    <div className="my-2">
+      <h4 className="text-xs uppercase text-neutral-500 font-medium mb-1 px-6">Time Management</h4>
+      
+      <MobileNavLink
+        to="/time-clock"
+        icon={Clock}
+        label="Time Clock"
+        onClick={onClose}
+      />
+      
       {hasManagerialAccess && (
-        <Link
+        <MobileNavLink
           to="/manager-time-clock"
+          icon={Clock}
+          label="⏰️IN AND OUT⏱️"
           onClick={onClose}
-          className="flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 hover:bg-white/70 active:bg-white/90 transition-all touch-target bg-gray-100"
-        >
-          <Clock className="mr-3 h-5 w-5 text-teal-600" />
-          <span>⏰️IN ⏱️OUT</span>
-        </Link>
+          className="font-medium text-emerald-700 bg-emerald-50"
+        />
       )}
-    </>
+    </div>
   );
 };
 

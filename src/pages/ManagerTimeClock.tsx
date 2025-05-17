@@ -49,26 +49,17 @@ const ManagerTimeClock = () => {
   // Redirect if not a manager
   useEffect(() => {
     if (!isManager && !isAdmin && !isHR) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to access this page",
+        variant: "destructive",
+      });
       navigate('/dashboard');
     }
-  }, [isManager, isAdmin, isHR, navigate]);
+  }, [isManager, isAdmin, isHR, navigate, toast]);
 
   const handleExitFullscreen = () => {
     navigate('/dashboard');
-  };
-
-  // Safe clock action handler with error handling
-  const handleSafeClockAction = async (action: 'in' | 'out') => {
-    try {
-      await handleClockAction(action);
-    } catch (error) {
-      console.error('Error in handleSafeClockAction:', error);
-      toast({
-        title: "Error",
-        description: "There was an error processing the clock action",
-        variant: "destructive",
-      });
-    }
   };
 
   return (
@@ -134,7 +125,7 @@ const ManagerTimeClock = () => {
             action={action}
             selectedEmployeeName={selectedEmployeeData?.name || ''}
             selectedEmployeeAvatar={selectedEmployeeData?.avatar}
-            onClockAction={handleSafeClockAction}
+            onClockAction={handleClockAction}
           />
         </div>
       </div>

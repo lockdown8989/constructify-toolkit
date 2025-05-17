@@ -11,6 +11,8 @@ export const useClockActions = () => {
 
   const handleSelectEmployee = (employeeId: string) => {
     setSelectedEmployee(employeeId);
+    // Reset action when selecting a new employee
+    setAction(null);
   };
 
   const handleClockAction = async (clockAction: 'in' | 'out') => {
@@ -23,9 +25,8 @@ export const useClockActions = () => {
       return;
     }
 
-    setAction(clockAction);
-    
     try {
+      setAction(clockAction);
       const now = new Date();
       const today = now.toISOString().split('T')[0];
       
@@ -125,9 +126,8 @@ export const useClockActions = () => {
         });
       }
 
-      // Reset state
+      // Reset state after successful action
       setTimeout(() => {
-        setSelectedEmployee(null);
         setAction(null);
       }, 2000);
       

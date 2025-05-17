@@ -66,13 +66,14 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
                   isCollapsed={isCollapsed}
                 />
                 
-                {/* Add Manager Time Clock button */}
+                {/* Add Manager Time Clock button with custom styling */}
                 <SidebarNavLink
                   to="/manager-time-clock"
                   icon={Clock}
                   label="⏰️IN AND OUT⏱️"
                   isActive={isActive("/manager-time-clock")}
                   isCollapsed={isCollapsed}
+                  className="time-clock-nav-button"
                 />
               </>
             )}

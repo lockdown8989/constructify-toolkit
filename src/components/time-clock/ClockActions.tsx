@@ -10,7 +10,7 @@ interface ClockActionsProps {
   action: 'in' | 'out' | null;
   selectedEmployeeName: string;
   selectedEmployeeAvatar?: string;
-  onClockAction: (action: 'in' | 'out') => void;
+  onClockAction: (action: 'in' | 'out') => Promise<void>;
 }
 
 const ClockActions = ({

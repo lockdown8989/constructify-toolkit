@@ -66,11 +66,11 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
               </div>
             ) : (
               <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center mb-4">
-                <span className="text-2xl font-bold text-gray-300">{employeeName.charAt(0)}</span>
+                <span className="text-2xl font-bold text-gray-300">{employeeName?.charAt(0) || '?'}</span>
               </div>
             )}
             
-            <h3 className="text-2xl font-semibold mb-2">Hi {employeeName}</h3>
+            <h3 className="text-2xl font-semibold mb-2">Hi {employeeName || 'there'}</h3>
             <p className="text-gray-400 mb-4 text-center">
               You're about to be {getActionText()} at 
             </p>
