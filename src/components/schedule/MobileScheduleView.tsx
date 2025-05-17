@@ -2,35 +2,47 @@
 import React from 'react';
 import { Schedule } from '@/hooks/use-schedules';
 import { Employee } from '@/types/restaurant-schedule';
-import { Plus } from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAccessControl } from '@/hooks/leave/useAccessControl';
+import { format } from 'date-fns';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface MobileScheduleViewProps {
   schedules: Schedule[];
   employees: Employee[];
   onAddShift: () => void;
   onShiftClick: (shift: any) => void;
+  selectedDate?: Date;
 }
 
 const MobileScheduleView: React.FC<MobileScheduleViewProps> = ({
   schedules,
   employees,
   onAddShift,
-  onShiftClick
+  onShiftClick,
+  selectedDate = new Date()
 }) => {
   const { hasManagerAccess } = useAccessControl();
 
   return (
-    <div className="p-4">
+    <div className="p-4 pb-24">
+      {/* Date indicator */}
+      <div className="mb-5 text-center">
+        <div className="text-sm text-muted-foreground mb-1">
+          <Calendar className="h-4 w-4 inline-block mr-1.5" />
+          {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+        </div>
+      </div>
+      
       {hasManagerAccess && (
-        <div className="mb-4">
+        <div className="mb-5">
           <Button 
             onClick={onAddShift}
             size="sm"
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl active-touch-state"
           >
-            <Plus className="h-4 w-4 mr-1" />
+            <Plus className="h-4 w-4 mr-2" />
             Add Shift
           </Button>
         </div>
@@ -38,30 +50,37 @@ const MobileScheduleView: React.FC<MobileScheduleViewProps> = ({
       
       {schedules.length === 0 ? (
         <div className="text-center p-8 text-gray-500">
-          <p>No shifts found for the selected period</p>
+          <p className="mb-2">No shifts scheduled for this date</p>
           {hasManagerAccess && (
             <Button 
               onClick={onAddShift}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+              className="mt-4 px-5 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors active-touch-state"
             >
-              <Plus className="h-4 w-4 mr-1" />
+              <Plus className="h-4 w-4 mr-2" />
               Add Shift
             </Button>
           )}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {schedules.map(shift => (
-            <div 
+            <Card 
               key={shift.id} 
               onClick={() => onShiftClick(shift)}
-              className="p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              className="border rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer active-touch-state"
             >
-              <h4 className="font-medium">{shift.title || "Untitled Shift"}</h4>
-              <p className="text-sm text-gray-500">
-                {new Date(shift.start_time).toLocaleTimeString()} - {new Date(shift.end_time).toLocaleTimeString()}
-              </p>
-            </div>
+              <CardContent className="p-4">
+                <h4 className="font-medium text-base mb-1">{shift.title || "Untitled Shift"}</h4>
+                <p className="text-sm text-gray-600 mb-2">
+                  {format(new Date(shift.start_time), 'h:mm a')} - {format(new Date(shift.end_time), 'h:mm a')}
+                </p>
+                {shift.employee_id && employees.find(e => e.id === shift.employee_id) && (
+                  <div className="text-xs text-gray-500">
+                    Assigned to: {employees.find(e => e.id === shift.employee_id)?.name}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}

@@ -46,6 +46,21 @@
   .shift-calendar-mobile .calendar-day-header {
     @apply text-xs py-1;
   }
+  
+  /* Apple-style design elements */
+  .card {
+    @apply rounded-xl shadow-sm;
+  }
+  
+  button {
+    @apply rounded-xl;
+  }
+  
+  .mobile-full-width {
+    width: calc(100% + 1rem);
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+  }
 }
 
 /* Touch-friendly interactive elements */
@@ -163,7 +178,7 @@
   
   /* Shift schedule cards */
   .shift-card-mobile {
-    @apply rounded-lg p-2 mb-2;
+    @apply rounded-xl p-2 mb-2;
   }
   
   .shift-time-mobile {
@@ -172,6 +187,31 @@
   
   .shift-employee-mobile {
     @apply text-xs;
+  }
+  
+  /* Apple-style design elements */
+  .ios-rounded {
+    @apply rounded-xl;
+  }
+  
+  /* Large titles (iOS style) */
+  .ios-large-title {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+  
+  /* iOS-style buttons */
+  .ios-button {
+    @apply rounded-xl py-3 font-medium;
+  }
+  
+  /* iOS-style card */
+  .ios-card {
+    @apply rounded-xl bg-white shadow-sm border-0;
+  }
+  
+  /* iOS-style bottom sheet */
+  .ios-sheet {
+    @apply rounded-t-xl;
   }
 }
 
@@ -186,6 +226,5 @@
 
 /* Week date navigation for mobile */
 .week-nav-mobile {
-  @apply flex items-center justify-between py-1 px-2 bg-gray-50 rounded-lg text-sm mb-2;
+  @apply flex items-center justify-between py-1.5 px-3 bg-gray-50/80 rounded-xl text-sm mb-2 mx-1;
 }
-

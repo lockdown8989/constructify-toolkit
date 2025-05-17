@@ -34,9 +34,9 @@ const MobileShiftDialog: React.FC<MobileShiftDialogProps> = ({
 }) => {
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[75%] pb-0 rounded-t-xl">
+      <SheetContent side="bottom" className="h-[75%] pb-0 rounded-t-xl ios-sheet">
         <SheetHeader className="text-left pb-4">
-          <SheetTitle className="text-xl">{title}</SheetTitle>
+          <SheetTitle className="text-xl ios-large-title">{title}</SheetTitle>
           <SheetDescription>
             {selectedDay ? format(selectedDay, 'EEEE, MMMM d, yyyy') : 'Select a date'}
           </SheetDescription>
@@ -47,7 +47,7 @@ const MobileShiftDialog: React.FC<MobileShiftDialogProps> = ({
             <Label htmlFor="employee">Employee</Label>
             <select 
               id="employee"
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border rounded-xl bg-white"
               value={selectedEmployee || ''}
               onChange={(e) => setSelectedEmployee(e.target.value)}
             >
@@ -65,13 +65,13 @@ const MobileShiftDialog: React.FC<MobileShiftDialogProps> = ({
           <Button 
             variant="outline" 
             onClick={() => onOpenChange(false)} 
-            className="flex-1"
+            className="flex-1 ios-button"
           >
             Cancel
           </Button>
           <Button 
             onClick={handleSubmit} 
-            className="flex-1 bg-blue-600 hover:bg-blue-700"
+            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white ios-button"
           >
             {title.split(' ')[0]} Shift
           </Button>

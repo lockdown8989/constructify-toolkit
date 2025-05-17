@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, Clock, CalendarClock, ArrowLeftRight } from 'lucide-react';
+import { CalendarDays, Clock, CalendarClock, ArrowLeftRight, Users } from 'lucide-react';
 import ShiftAcknowledgment from './ShiftAcknowledgment';
 import TimeClockWidget from './TimeClockWidget';
 import ShiftSwapTab from './ShiftSwapTab';
@@ -81,8 +81,8 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
         <Card className="border rounded-xl shadow-sm overflow-hidden">
           <CardHeader className="pb-2 pt-4 px-4">
             <CardTitle className="text-base flex items-center">
-              <CalendarClock className="h-4 w-4 mr-2 text-primary" />
-              Your Schedule
+              <Users className="h-4 w-4 mr-2 text-primary" />
+              Employee Schedule 👥
             </CardTitle>
           </CardHeader>
           <CardContent className="px-0 pb-0 pt-0">

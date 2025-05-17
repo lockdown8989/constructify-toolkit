@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ScheduleHeader from '@/components/restaurant/ScheduleHeader';
 import MobileScheduleView from '@/components/schedule/MobileScheduleView';
@@ -8,6 +8,7 @@ import AddShiftDialog from '@/components/schedule/mobile/AddShiftDialog';
 import SwapShiftDialog from '@/components/schedule/mobile/SwapShiftDialog';
 import AddEmployeeShiftDialog from '@/components/schedule/components/AddEmployeeShiftDialog';
 import ShiftCalendarToolbar from '@/components/schedule/components/ShiftCalendarToolbar';
+import WeekNavigation from '@/components/schedule/components/WeekNavigation';
 import { Employee } from '@/types/restaurant-schedule';
 import { ShiftCalendarProps } from '../types/calendar-types';
 
@@ -62,7 +63,7 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
   const hasManagerAccess = isAdmin || isManager || isHR;
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       <ScheduleHeader 
         locationName={locationName} 
         setLocationName={setLocationName}
@@ -71,19 +72,25 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
         weekView={weekView}
         setWeekView={setWeekView}
       />
-      <div className="flex justify-between items-center p-4 border-b">
-        <ShiftCalendarToolbar
+      
+      {/* Week navigation for better mobile experience */}
+      <div className="px-2 py-3 border-b">
+        <WeekNavigation
           currentDate={selectedDate}
-          onDateChange={date => handleToday()}
-          onAddShift={() => handleAddShift(new Date())}
-          onAddEmployeeShift={() => hasManagerAccess && shiftState.handleAddEmployeeShift(new Date())}
+          onPreviousWeek={() => shiftState.handlePreviousWeek()}
+          onNextWeek={() => shiftState.handleNextWeek()}
+          onSelectToday={handleToday}
+          isMobile={true}
+          viewType={weekView ? 'week' : 'day'}
         />
       </div>
+      
       <MobileScheduleView 
         schedules={schedules}
         employees={employees}
         onAddShift={() => handleAddShift(new Date())}
         onShiftClick={handleShiftClick}
+        selectedDate={selectedDate}
       />
       
       {/* Mobile Add Shift Sheet */}
@@ -127,6 +134,7 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
         <Button
           onClick={() => handleAddShift(new Date())}
           className="fixed bottom-20 right-6 z-50 h-14 w-14 rounded-full shadow-lg bg-blue-500 hover:bg-blue-600 p-0 flex items-center justify-center"
+          aria-label="Add shift"
         >
           <Plus className="h-6 w-6" />
         </Button>
