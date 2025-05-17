@@ -45,7 +45,7 @@ export const useLeaveApprovalActions = (currentUser: any) => {
     const auditLog = createAuditLog(leave, "Approved", managerName);
     
     updateLeave(
-      { id: leave.id, status: "Approved", notes: auditLog },
+      { id: leave.id, status: "Approved", audit_log: auditLog },
       {
         onSuccess: async () => {
           updateEmployeeStatus(leave.employee_id, leave.start_date, leave.end_date);
@@ -55,7 +55,7 @@ export const useLeaveApprovalActions = (currentUser: any) => {
             await sendNotification({
               user_id: leave.employee_id,
               title: "Leave request approved",
-              message: `Your ${leave.type} leave request from ${leave.start_date} to ${leave.end_date} has been approved by ${managerName}.`,
+              message: `Your ${leave.type} leave request from ${new Date(leave.start_date).toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit', year: 'numeric'}).replace(/\//g, '.')} to ${new Date(leave.end_date).toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit', year: 'numeric'}).replace(/\//g, '.')} has been approved by ${managerName}.`,
               type: "success",
               related_entity: "leave_calendar",
               related_id: leave.id
@@ -89,7 +89,7 @@ export const useLeaveApprovalActions = (currentUser: any) => {
     const auditLog = createAuditLog(leave, "Rejected", managerName);
     
     updateLeave(
-      { id: leave.id, status: "Rejected", notes: auditLog },
+      { id: leave.id, status: "Rejected", audit_log: auditLog },
       {
         onSuccess: async () => {
           // Send notification to employee
@@ -97,7 +97,7 @@ export const useLeaveApprovalActions = (currentUser: any) => {
             await sendNotification({
               user_id: leave.employee_id,
               title: "Leave request rejected",
-              message: `Your ${leave.type} leave request from ${leave.start_date} to ${leave.end_date} has been rejected by ${managerName}.`,
+              message: `Your ${leave.type} leave request from ${new Date(leave.start_date).toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit', year: 'numeric'}).replace(/\//g, '.')} to ${new Date(leave.end_date).toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit', year: 'numeric'}).replace(/\//g, '.')} has been rejected by ${managerName}.`,
               type: "warning",
               related_entity: "leave_calendar",
               related_id: leave.id
