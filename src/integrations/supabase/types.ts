@@ -28,7 +28,6 @@ export type Database = {
             | Database["public"]["Enums"]["attendance_status_type"]
             | null
           location: string | null
-          manager_initiated: boolean | null
           month_start_date: string | null
           notes: string | null
           overtime_approved_at: string | null
@@ -57,7 +56,6 @@ export type Database = {
             | Database["public"]["Enums"]["attendance_status_type"]
             | null
           location?: string | null
-          manager_initiated?: boolean | null
           month_start_date?: string | null
           notes?: string | null
           overtime_approved_at?: string | null
@@ -86,7 +84,6 @@ export type Database = {
             | Database["public"]["Enums"]["attendance_status_type"]
             | null
           location?: string | null
-          manager_initiated?: boolean | null
           month_start_date?: string | null
           notes?: string | null
           overtime_approved_at?: string | null
