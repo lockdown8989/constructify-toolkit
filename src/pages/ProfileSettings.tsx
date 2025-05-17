@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/auth";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/hooks/use-language";
@@ -9,7 +10,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { ThemeSelector } from "@/components/settings/ThemeSelector";
 import { PersonalInfoForm } from "@/components/profile-settings/PersonalInfoForm";
-import { RegionalPreferencesForm } from "@/components/profile-settings/RegionalPreferencesForm";
+import RegionalPreferencesForm from "@/components/profile-settings/RegionalPreferencesForm";
 import { DeleteAccountSection } from "@/components/profile-settings/DeleteAccountSection";
 
 const ProfileSettings = () => {

@@ -2,8 +2,8 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import CountryInput from './CountryInput';
-import { LanguageSelector } from './LanguageSelector';
+import CountryInput from '@/components/settings/CountryInput';
+import { LanguageSelector } from '@/components/settings/LanguageSelector';
 import { useAuth } from '@/hooks/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRegionSettings } from '@/hooks/use-region-settings';
