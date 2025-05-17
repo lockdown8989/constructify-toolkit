@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './use-auth';
@@ -59,7 +60,7 @@ export function useEmployeeLeave(employeeId?: string) {
         const { data: pendingLeave, error: leaveError } = await supabase
           .from('leave_calendar')
           .select('type, start_date, end_date')
-          .eq('employee_id', employeeId || data.id)
+          .eq('employee_id', employeeId || user?.id) // Use the ID directly instead of data.id
           .eq('status', 'Approved');
         
         if (leaveError) {
