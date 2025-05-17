@@ -3,7 +3,6 @@ import { useState, ChangeEvent, FormEvent } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/auth';
 import { detectUserLocation } from '@/services/geolocation';
-import { User } from '@/hooks/auth/types';
 
 interface RegionData {
   country: string;
@@ -12,7 +11,7 @@ interface RegionData {
   preferred_language: string;
 }
 
-export const useRegionSettings = (user: User | null) => {
+export const useRegionSettings = (user: any | null) => {
   const { toast } = useToast();
   const { isAdmin, isManager, isHR } = useAuth();
   const isEmployee = user && !isAdmin && !isManager && !isHR;

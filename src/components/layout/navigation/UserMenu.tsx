@@ -36,6 +36,14 @@ const UserMenu = () => {
     return user.email?.split('@')[0] || 'User';
   };
   
+  // Get user role for display
+  const getUserRoleDisplay = (): string => {
+    if (isAdmin) return '(admin)';
+    if (isHR) return '(HR)';
+    if (isManager) return '(manager)';
+    return '(employee)';
+  };
+  
   const handleSignOut = async () => {
     if (isSigningOut) return; // Prevent multiple clicks
     
@@ -83,7 +91,9 @@ const UserMenu = () => {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
           <div className="font-normal text-muted-foreground text-xs">{t('signed_in_as')}</div>
-          <div className="font-medium text-foreground truncate">{user.email}</div>
+          <div className="font-medium text-foreground truncate">
+            {user.email} <span className="ml-1 text-sm text-muted-foreground">{getUserRoleDisplay()}</span>
+          </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={navigateToProfile}>
