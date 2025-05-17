@@ -12,6 +12,7 @@ interface ConfirmationDialogProps {
   action: 'in' | 'out' | 'break';
   employeeName: string;
   employeeAvatar?: string;
+  isSubmitting?: boolean;
 }
 
 const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
@@ -20,10 +21,10 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   onConfirm,
   action,
   employeeName,
-  employeeAvatar
+  employeeAvatar,
+  isSubmitting = false
 }) => {
   const currentTime = format(new Date(), 'HH:mm:ss');
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
   
   const getActionText = () => {
     switch (action) {
@@ -54,15 +55,12 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 
   const handleConfirm = async () => {
     try {
-      setIsSubmitting(true);
       await onConfirm();
       // onClose() will be called by the parent component after successful confirmation
     } catch (error) {
       console.error('Error in confirmation:', error);
       // Allow the dialog to be closed even if there's an error
       onClose();
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

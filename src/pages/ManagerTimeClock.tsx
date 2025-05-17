@@ -27,6 +27,7 @@ const ManagerTimeClock = () => {
   const {
     selectedEmployee,
     action,
+    isProcessing,
     handleSelectEmployee,
     handleClockAction
   } = useClockActions();
@@ -126,6 +127,7 @@ const ManagerTimeClock = () => {
             selectedEmployeeName={selectedEmployeeData?.name || ''}
             selectedEmployeeAvatar={selectedEmployeeData?.avatar}
             onClockAction={handleClockAction}
+            isProcessing={isProcessing}
           />
         </div>
       </div>

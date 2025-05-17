@@ -3,10 +3,12 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getDeviceIdentifier } from '@/hooks/time-clock/utils/device-utils';
 
 export const useClockActions = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   const [action, setAction] = useState<'in' | 'out' | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
   const handleSelectEmployee = (employeeId: string) => {
@@ -25,10 +27,22 @@ export const useClockActions = () => {
       return;
     }
 
+    if (isProcessing) {
+      toast({
+        title: "Processing in progress",
+        description: "Please wait while we process your request",
+        variant: "default",
+      });
+      return;
+    }
+
     try {
+      setIsProcessing(true);
       setAction(clockAction);
       const now = new Date();
       const today = now.toISOString().split('T')[0];
+      const deviceIdentifier = getDeviceIdentifier();
+      const deviceInfo = `Manager Dashboard - ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}`;
       
       if (clockAction === 'in') {
         // Check if there's already an active session for today
@@ -50,6 +64,7 @@ export const useClockActions = () => {
             description: "This employee is already clocked in for today",
             variant: "destructive",
           });
+          setIsProcessing(false);
           return;
         }
         
@@ -62,8 +77,10 @@ export const useClockActions = () => {
             check_in: now.toISOString(),
             active_session: true,
             attendance_status: 'Present',
-            device_info: 'Manager Dashboard',
-            notes: 'Clocked in by manager'
+            device_info: deviceInfo,
+            device_identifier: deviceIdentifier,
+            notes: 'Clocked in by manager',
+            status: 'Present'
           })
           .select();
           
@@ -96,6 +113,7 @@ export const useClockActions = () => {
             description: "This employee is not clocked in",
             variant: "destructive",
           });
+          setIsProcessing(false);
           return;
         }
         
@@ -112,6 +130,8 @@ export const useClockActions = () => {
             active_session: false,
             working_minutes: workingMinutes - overtimeMinutes,
             overtime_minutes: overtimeMinutes,
+            device_info: deviceInfo,
+            device_identifier: deviceIdentifier,
             status: 'Present'
           })
           .eq('id', activeSession.id);
@@ -130,6 +150,7 @@ export const useClockActions = () => {
       // Reset action after successful operation with a delay for visual feedback
       setTimeout(() => {
         setAction(null);
+        setIsProcessing(false);
       }, 2000);
       
     } catch (error: any) {
@@ -141,6 +162,7 @@ export const useClockActions = () => {
       });
       // Reset action state immediately on error
       setAction(null);
+      setIsProcessing(false);
       throw error; // Rethrow to allow handling in the component
     }
   };
@@ -148,6 +170,7 @@ export const useClockActions = () => {
   return {
     selectedEmployee,
     action,
+    isProcessing,
     handleSelectEmployee,
     handleClockAction,
     setSelectedEmployee,

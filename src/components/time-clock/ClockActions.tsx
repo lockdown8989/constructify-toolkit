@@ -11,6 +11,7 @@ interface ClockActionsProps {
   selectedEmployeeName: string;
   selectedEmployeeAvatar?: string;
   onClockAction: (action: 'in' | 'out') => Promise<void>;
+  isProcessing?: boolean;
 }
 
 const ClockActions = ({
@@ -18,12 +19,13 @@ const ClockActions = ({
   action,
   selectedEmployeeName,
   selectedEmployeeAvatar,
-  onClockAction
+  onClockAction,
+  isProcessing
 }: ClockActionsProps) => {
   const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'in' | 'out' | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [localProcessing, setLocalProcessing] = useState(false);
   const { toast } = useToast();
 
   const handleActionClick = (clickAction: 'in' | 'out') => {
@@ -48,9 +50,9 @@ const ClockActions = ({
   };
 
   const handleConfirmAction = async () => {
-    if (pendingAction && !isProcessing) {
+    if (pendingAction && !isProcessing && !localProcessing) {
       try {
-        setIsProcessing(true);
+        setLocalProcessing(true);
         await onClockAction(pendingAction);
         setIsConfirmationOpen(false);
         
@@ -68,7 +70,7 @@ const ClockActions = ({
           variant: "destructive",
         });
       } finally {
-        setIsProcessing(false);
+        setLocalProcessing(false);
       }
     }
   };
@@ -84,16 +86,16 @@ const ClockActions = ({
               <Button 
                 className={`py-8 text-3xl rounded-md ${action === 'in' ? 'animate-pulse' : ''} bg-emerald-500 hover:bg-emerald-600`}
                 onClick={() => handleActionClick('in')}
-                disabled={isProcessing}
+                disabled={isProcessing || localProcessing}
               >
-                IN
+                {(isProcessing || localProcessing) && pendingAction === 'in' ? 'Processing...' : 'IN'}
               </Button>
               <Button 
                 className={`py-8 text-3xl rounded-md ${action === 'out' ? 'animate-pulse' : ''} bg-red-600 hover:bg-red-700`}
                 onClick={() => handleActionClick('out')}
-                disabled={isProcessing}
+                disabled={isProcessing || localProcessing}
               >
-                OUT
+                {(isProcessing || localProcessing) && pendingAction === 'out' ? 'Processing...' : 'OUT'}
               </Button>
             </div>
           </>
@@ -122,6 +124,7 @@ const ClockActions = ({
         action={pendingAction || 'in'}
         employeeName={selectedEmployeeName}
         employeeAvatar={selectedEmployeeAvatar}
+        isSubmitting={isProcessing || localProcessing}
       />
     </>
   );
