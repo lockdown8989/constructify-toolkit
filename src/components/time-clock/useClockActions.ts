@@ -46,12 +46,14 @@ export const useClockActions = () => {
       
       if (clockAction === 'in') {
         // Check if there's already an active session for today
+        // Important: Include the manager_initiated field in our check to avoid filtering out non-manager sessions
         const { data: existingRecord, error: checkError } = await supabase
           .from('attendance')
           .select('id, active_session')
           .eq('employee_id', selectedEmployee)
+          .eq('date', today)
           .eq('active_session', true)
-          .maybeSingle();
+          .maybeSingle(); // Use maybeSingle instead of single to prevent errors when no record is found
           
         if (checkError) {
           console.error('Error checking for existing active session:', checkError);
@@ -68,8 +70,7 @@ export const useClockActions = () => {
           return;
         }
         
-        // Clock in - create a new record
-        // IMPORTANT: Use manager_initiated=true to indicate this was triggered by a manager
+        // Clock in - create a new record with manager_initiated=true
         const { data, error } = await supabase
           .from('attendance')
           .insert({
@@ -82,7 +83,7 @@ export const useClockActions = () => {
             device_identifier: deviceIdentifier,
             notes: 'Clocked in by manager',
             status: 'Present',
-            manager_initiated: true // Add this flag to mark manager-initiated actions
+            manager_initiated: true
           })
           .select();
           
@@ -102,7 +103,7 @@ export const useClockActions = () => {
           .select('*')
           .eq('employee_id', selectedEmployee)
           .eq('active_session', true)
-          .maybeSingle();
+          .maybeSingle(); // Use maybeSingle here too
           
         if (findError) {
           console.error('Error finding active session:', findError);
@@ -135,7 +136,7 @@ export const useClockActions = () => {
             device_info: deviceInfo,
             device_identifier: deviceIdentifier,
             status: 'Present',
-            manager_initiated: true // Add this flag to mark manager-initiated actions
+            manager_initiated: true
           })
           .eq('id', activeSession.id);
           

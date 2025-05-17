@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 interface ConfirmationDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void>;
   action: 'in' | 'out' | 'break';
   employeeName: string;
   employeeAvatar?: string;
@@ -58,10 +58,10 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   const handleConfirm = async () => {
     try {
       await onConfirm();
-      // onClose() will be called by the parent component after successful confirmation
+      // onClose will be called by the parent component on success
     } catch (error) {
       console.error('Error in confirmation:', error);
-      // Allow the dialog to be closed even if there's an error
+      // Always close the dialog on error to prevent getting stuck
       onClose();
     }
   };

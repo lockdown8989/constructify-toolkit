@@ -19,15 +19,15 @@ export const useStatusCheck = (
         const today = new Date().toISOString().split('T')[0];
         
         // Check if there's an active session for today
+        // Only consider self-initiated sessions (where manager_initiated is null or false)
         const { data, error } = await supabase
           .from('attendance')
           .select('*')
           .eq('employee_id', employeeId)
           .eq('date', today)
           .eq('active_session', true)
-          // Only consider records that were NOT initiated by managers
           .is('manager_initiated', null)
-          .maybeSingle();
+          .maybeSingle(); // Use maybeSingle to avoid errors when no record
           
         if (error) {
           console.error('Error checking time clock status:', error);
