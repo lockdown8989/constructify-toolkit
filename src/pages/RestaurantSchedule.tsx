@@ -21,7 +21,7 @@ import EmployeeList from '@/components/restaurant/EmployeeList';
 
 const RestaurantSchedule = () => {
   const [syncingData, setSyncingData] = useState(false);
-  const [locationName, setLocationName] = useState("Main Restaurant");
+  const [locationName, setLocationName] = useState("Main Location");
   const [showEmployeePanel, setShowEmployeePanel] = useState(true);
   
   const { 

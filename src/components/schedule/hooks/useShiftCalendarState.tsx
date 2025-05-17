@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { addDays, startOfWeek } from 'date-fns';
+import { addDays, startOfWeek, format } from 'date-fns';
 import { useSchedules } from '@/hooks/use-schedules';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';

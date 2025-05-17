@@ -4,13 +4,13 @@ import { format, isToday } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { Clock, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import TimeSlots from './TimeSlots';
+import TimeSlots from '../TimeSlots';
 import { type Schedule } from '@/hooks/use-schedules';
 
 interface DayViewProps {
   currentDate: Date;
   schedules: Schedule[];
-  timeSlots: React.ReactNode[];
+  timeSlots?: React.ReactNode[];
   currentTimeTop: number;
   getEventPosition: (schedule: Schedule) => { top: number; height: number };
   getEventColor: (index: number) => string;

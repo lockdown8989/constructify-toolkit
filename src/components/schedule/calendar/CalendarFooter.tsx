@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { format } from 'date-fns';
+import { Info } from 'lucide-react';
 
-const CalendarFooter: React.FC = () => {
+const CalendarFooter = () => {
   return (
-    <div className="border-t border-gray-200 p-3 flex justify-between items-center bg-gray-50 text-sm text-gray-500">
-      <div>Last updated: {format(new Date(), 'MMM d, yyyy h:mm a')}</div>
-      <div>{/* Additional footer content can be added here */}</div>
+    <div className="py-2 px-4 text-xs text-gray-500 flex items-center border-t">
+      <Info className="h-3 w-3 mr-1.5" />
+      <span>Employee Schedule updated automatically. See schedule history for more details.</span>
     </div>
   );
 };

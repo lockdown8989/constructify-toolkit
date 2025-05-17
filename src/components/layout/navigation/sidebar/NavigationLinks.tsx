@@ -99,7 +99,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
                 <SidebarNavLink
                   to="/shift-calendar"
                   icon={Calendar}
-                  label="Restaurant Schedule"
+                  label="Employee Schedule"
                   isActive={isActive("/shift-calendar")}
                   isCollapsed={isCollapsed}
                 />

@@ -32,7 +32,7 @@ const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated }) => {
           `nav-link ${isActive ? "active" : ""}`
         }
       >
-        Restaurant
+        Employee
       </NavLink>
       <NavLink
         to="/leave-management"
