@@ -70,6 +70,16 @@ const CommonSection: React.FC<CommonSectionProps> = ({
               />
             </>
           )}
+          
+          {/* Add the salary button for both employees and managers */}
+          {hasManagerialAccess && (
+            <MobileNavLink
+              to="/salary"
+              icon={DollarSign}
+              label="💰 Salary"
+              onClick={onClose}
+            />
+          )}
         </>
       )}
     </>

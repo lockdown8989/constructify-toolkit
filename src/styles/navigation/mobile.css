@@ -89,3 +89,13 @@
 .time-clock-nav-button:hover {
   background-color: rgba(20, 184, 166, 0.2);
 }
+
+/* Salary and financial related nav items */
+.salary-nav-button {
+  color: rgb(15, 118, 110);
+}
+
+/* Fix spacing for longer menu list */
+.mobile-nav-content {
+  padding-bottom: 24px;
+}
