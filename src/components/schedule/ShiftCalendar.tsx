@@ -72,17 +72,17 @@ const ShiftCalendar = () => {
   // Check if the current user has manager access
   const hasManagerAccess = isAdmin || isManager || isHR;
 
-  // Create wrapper functions to handle the callbacks without returning promises
-  const handleAddShiftSubmit = (formData: any) => {
-    handleSubmitAddShift(formData);
+  // Create wrapper functions that properly handle the component prop types
+  const handleAddShiftSubmit = () => {
+    handleSubmitAddShift({});
   };
   
-  const handleSwapShiftSubmit = (formData: any) => {
-    handleSubmitSwapShift(formData);
+  const handleSwapShiftSubmit = () => {
+    handleSubmitSwapShift({});
   };
   
-  const handleEmployeeShiftSubmit = (formData: any) => {
-    handleSubmitEmployeeShift(formData);
+  const handleEmployeeShiftSubmit = () => {
+    handleSubmitEmployeeShift({});
   };
   
   // Wrapper for handleAddEmployeeShift to adapt to expected signature

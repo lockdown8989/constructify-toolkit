@@ -7,6 +7,7 @@ export interface AuditLogEntry {
   reviewer_id?: string;
   old_status?: string;
   new_status?: string;
+  employee_name?: string; // Added this property
 }
 
 export interface LeaveEvent {
