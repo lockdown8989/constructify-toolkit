@@ -27,14 +27,5 @@ export interface LeaveEvent {
 
 export interface LeaveCalendar extends LeaveEvent {}
 
-export interface LeaveRequest {
-  employee_id: string;
-  start_date: string;
-  end_date: string;
-  type: string;
-  status: string;
-  notes?: string;
-}
-
 export type LeaveStatus = 'Pending' | 'Approved' | 'Rejected';
 export type LeaveType = 'Annual' | 'Sick' | 'Personal' | 'Holiday' | 'Parental' | 'Other';
