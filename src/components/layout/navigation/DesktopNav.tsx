@@ -27,6 +27,14 @@ const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated }) => {
         Dashboard
       </NavLink>
       <NavLink
+        to="/overview"
+        className={({ isActive }) =>
+          `nav-link ${isActive ? "active" : ""}`
+        }
+      >
+        Overview
+      </NavLink>
+      <NavLink
         to="/employee-schedule"
         className={({ isActive }) =>
           `nav-link ${isActive ? "active" : ""}`

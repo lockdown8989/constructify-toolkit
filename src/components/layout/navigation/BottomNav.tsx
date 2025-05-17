@@ -1,7 +1,7 @@
 
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Calendar, Briefcase, Clock, Users } from "lucide-react";
+import { LayoutDashboard, Calendar, Briefcase, Clock, Users, PieChart } from "lucide-react";
 import { useAuth } from "@/hooks/auth";
 
 interface BottomNavProps {
@@ -24,6 +24,17 @@ const BottomNav: React.FC<BottomNavProps> = ({ isAuthenticated }) => {
             <LayoutDashboard className={`h-5 w-5 ${isActive ? "text-primary" : ""}`} />
             <div className={`text-xs mt-0.5 ${isActive ? "text-primary font-medium" : ""}`}>
               Dashboard
+            </div>
+          </>
+        )}
+      </NavLink>
+      
+      <NavLink to="/overview" className="bottom-nav-item">
+        {({ isActive }) => (
+          <>
+            <PieChart className={`h-5 w-5 ${isActive ? "text-primary" : ""}`} />
+            <div className={`text-xs mt-0.5 ${isActive ? "text-primary font-medium" : ""}`}>
+              Overview
             </div>
           </>
         )}

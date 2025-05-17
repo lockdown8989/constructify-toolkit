@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, UserPlus } from 'lucide-react';
 import { format } from 'date-fns';
 import { 
   Popover,
@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { useAccessControl } from '@/hooks/leave/useAccessControl';
+import AddEmployeeShiftButton from './AddEmployeeShiftButton';
 
 interface ShiftCalendarToolbarProps {
   currentDate: Date;
@@ -17,6 +18,7 @@ interface ShiftCalendarToolbarProps {
   viewType?: string;
   onViewChange?: (type: string) => void;
   onAddShift?: () => void;
+  onAddEmployeeShift?: () => void;
 }
 
 const ShiftCalendarToolbar: React.FC<ShiftCalendarToolbarProps> = ({
@@ -24,7 +26,8 @@ const ShiftCalendarToolbar: React.FC<ShiftCalendarToolbarProps> = ({
   onDateChange,
   viewType,
   onViewChange,
-  onAddShift
+  onAddShift,
+  onAddEmployeeShift
 }) => {
   const { hasManagerAccess } = useAccessControl();
   const handleSelectToday = () => {
@@ -95,10 +98,22 @@ const ShiftCalendarToolbar: React.FC<ShiftCalendarToolbarProps> = ({
           onClick={onAddShift}
           variant="default"
           size="sm"
-          className="bg-blue-500 hover:bg-blue-600 text-white ml-auto"
+          className="bg-blue-500 hover:bg-blue-600 text-white"
         >
           <Plus className="h-4 w-4 mr-1" />
           Add Shift
+        </Button>
+      )}
+
+      {hasManagerAccess && onAddEmployeeShift && (
+        <Button
+          onClick={onAddEmployeeShift}
+          variant="default"
+          size="sm"
+          className="bg-green-500 hover:bg-green-600 text-white ml-auto"
+        >
+          <UserPlus className="h-4 w-4 mr-1" />
+          Add Employee Shift
         </Button>
       )}
     </div>

@@ -15,6 +15,8 @@ import SwapShiftDialog from './mobile/SwapShiftDialog';
 import AddShiftPopover from './desktop/AddShiftPopover';
 import SwapShiftPopover from './desktop/SwapShiftPopover';
 import AddShiftFAB from './calendar/AddShiftFAB';
+import AddEmployeeShiftDialog from './components/AddEmployeeShiftDialog';
+import ShiftCalendarToolbar from './components/ShiftCalendarToolbar';
 
 const ShiftCalendar = () => {
   const {
@@ -36,6 +38,8 @@ const ShiftCalendar = () => {
     setIsAddShiftOpen,
     isSwapShiftOpen,
     setIsSwapShiftOpen,
+    isAddEmployeeShiftOpen,
+    setIsAddEmployeeShiftOpen,
     selectedEmployee,
     setSelectedEmployee,
     selectedShift,
@@ -48,11 +52,15 @@ const ShiftCalendar = () => {
     handleToday,
     handleAddShift,
     handleSwapShift,
+    handleAddEmployeeShift,
     handleSubmitAddShift,
+    handleSubmitEmployeeShift,
     handleSubmitSwapShift,
-    handleShiftClick,
-    handleEmployeeAddShift
+    handleShiftClick
   } = useShiftCalendarState();
+
+  // Check if the current user has manager access
+  const hasManagerAccess = isAdmin || isManager || isHR;
 
   // If on mobile, render the mobile schedule view
   if (isMobile) {
@@ -66,6 +74,14 @@ const ShiftCalendar = () => {
           weekView={weekView}
           setWeekView={setWeekView}
         />
+        <div className="flex justify-between items-center p-4 border-b">
+          <ShiftCalendarToolbar
+            currentDate={selectedDate}
+            onDateChange={date => handleToday()}
+            onAddShift={() => handleAddShift(new Date())}
+            onAddEmployeeShift={() => hasManagerAccess && handleAddEmployeeShift(new Date())}
+          />
+        </div>
         <MobileScheduleView 
           schedules={schedules}
           employees={employees}
@@ -98,6 +114,17 @@ const ShiftCalendar = () => {
           setSelectedShift={setSelectedShift}
         />
 
+        {/* Mobile Add Employee Shift Dialog */}
+        <AddEmployeeShiftDialog
+          isOpen={isAddEmployeeShiftOpen}
+          onOpenChange={setIsAddEmployeeShiftOpen}
+          selectedDay={selectedDay}
+          employees={employees}
+          selectedEmployee={selectedEmployee}
+          setSelectedEmployee={setSelectedEmployee}
+          handleSubmit={handleSubmitEmployeeShift}
+        />
+
         {/* FAB for mobile view - positioned at bottom right */}
         {(isAdmin || isManager || isHR) && (
           <Button
@@ -125,15 +152,41 @@ const ShiftCalendar = () => {
       />
       
       {/* Day selector toolbar */}
-      <DateControls
-        selectedDate={selectedDate}
-        weekView={weekView}
-        setWeekView={setWeekView}
-        handlePreviousPeriod={handlePreviousPeriod}
-        handleNextPeriod={handleNextPeriod}
-        handleToday={handleToday}
-        onAddShift={() => handleAddShift(new Date())}
-      />
+      <div className="flex justify-between items-center p-4 border-b">
+        <DateControls
+          selectedDate={selectedDate}
+          weekView={weekView}
+          setWeekView={setWeekView}
+          handlePreviousPeriod={handlePreviousPeriod}
+          handleNextPeriod={handleNextPeriod}
+          handleToday={handleToday}
+        />
+        
+        <div className="flex items-center gap-2">
+          {hasManagerAccess && (
+            <>
+              <Button
+                onClick={() => handleAddShift(selectedDate)}
+                variant="default"
+                size="sm"
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Shift
+              </Button>
+              <Button
+                onClick={() => handleAddEmployeeShift(selectedDate)}
+                variant="default"
+                size="sm"
+                className="bg-green-500 hover:bg-green-600 text-white"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Employee Shift
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
       
       {/* Date column headers */}
       <DayColumns
@@ -156,7 +209,7 @@ const ShiftCalendar = () => {
             isHR={isHR}
             handleAddShift={handleAddShift}
             handleShiftClick={handleShiftClick}
-            handleEmployeeAddShift={handleEmployeeAddShift}
+            handleEmployeeAddShift={handleAddEmployeeShift}
             isLoading={isLoading}
           />
         </div>
@@ -188,6 +241,17 @@ const ShiftCalendar = () => {
         schedules={schedules}
         selectedShift={selectedShift}
         setSelectedShift={setSelectedShift}
+      />
+      
+      {/* Desktop dialog for Add Employee Shift */}
+      <AddEmployeeShiftDialog
+        isOpen={isAddEmployeeShiftOpen && !isMobile}
+        onOpenChange={setIsAddEmployeeShiftOpen}
+        selectedDay={selectedDay}
+        employees={employees}
+        selectedEmployee={selectedEmployee}
+        setSelectedEmployee={setSelectedEmployee}
+        handleSubmit={handleSubmitEmployeeShift}
       />
       
       {/* FAB for desktop view - positioned at bottom right */}
