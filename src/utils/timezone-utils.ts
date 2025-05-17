@@ -87,6 +87,40 @@ export function getLocalTimeDisplay(isoString: string | null | undefined): strin
 }
 
 /**
+ * Get the user's current timezone 
+ * @returns Timezone string (e.g., 'Europe/London')
+ */
+export function getUserTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch (error) {
+    console.error('Error getting user timezone:', error);
+    return 'UTC';
+  }
+}
+
+/**
+ * Get timezone offset in minutes from UTC
+ * @returns Timezone offset in minutes
+ */
+export function getTimezoneOffset(): number {
+  return new Date().getTimezoneOffset();
+}
+
+/**
+ * Format a timezone offset to string representation
+ * @param offsetMinutes - Timezone offset in minutes
+ * @returns Formatted timezone offset (e.g., 'GMT+1:00')
+ */
+export function formatTimezoneOffset(offsetMinutes: number): string {
+  const sign = offsetMinutes <= 0 ? '+' : '-';
+  const absOffset = Math.abs(offsetMinutes);
+  const hours = Math.floor(absOffset / 60);
+  const minutes = absOffset % 60;
+  return `GMT${sign}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
+/**
  * Debug function to log time information
  * @param label - The label for the log
  * @param date - The date object to log
@@ -99,6 +133,8 @@ export function debugTimeInfo(label: string, date: Date): void {
   console.log(`  - Timezone offset: ${date.getTimezoneOffset()} minutes`);
   console.log(`  - UTC string: ${date.toUTCString()}`);
   console.log(`  - Locale time string: ${date.toLocaleTimeString()}`);
+  console.log(`  - User timezone: ${getUserTimezone()}`);
+  console.log(`  - Formatted timezone offset: ${formatTimezoneOffset(date.getTimezoneOffset())}`);
 }
 
 /**

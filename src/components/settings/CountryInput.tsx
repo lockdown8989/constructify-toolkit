@@ -1,5 +1,5 @@
 
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { MapPin, Loader2 } from 'lucide-react';
@@ -21,6 +21,7 @@ const CountryInput = ({ country, onChange, isLocating, onDetect }: CountryInputP
         onChange={onChange}
         placeholder="Enter your country"
         className="flex-1"
+        readOnly={isLocating}
       />
       {onDetect && (
         <Button 
@@ -29,6 +30,7 @@ const CountryInput = ({ country, onChange, isLocating, onDetect }: CountryInputP
           size="icon" 
           onClick={onDetect}
           disabled={isLocating}
+          title="Auto-detect your location"
         >
           {isLocating ? (
             <Loader2 className="h-4 w-4 animate-spin" />

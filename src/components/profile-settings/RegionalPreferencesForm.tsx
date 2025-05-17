@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage, languageOptions } from "@/hooks/language";
+import { useLanguage } from "@/hooks/language";
 import CountryInput from "@/components/settings/CountryInput";
-import { CurrencySelector } from "@/components/settings/CurrencySelector";
 import { LanguageSelector } from "@/components/settings/LanguageSelector";
+import { detectUserLocation } from "@/services/geolocation";
+import { getCountryName } from "@/utils/country-utils";
+import { getUserTimezone, formatTimezoneOffset } from "@/utils/timezone-utils";
+import { useAuth } from "@/hooks/use-auth";
 
 interface RegionalPreferencesFormProps {
   user: User | null;
@@ -18,12 +21,16 @@ interface RegionalPreferencesFormProps {
 export const RegionalPreferencesForm = ({ user }: RegionalPreferencesFormProps) => {
   const { toast } = useToast();
   const { t, setLanguage } = useLanguage();
+  const { userRole } = useAuth();
+  const isEmployee = userRole === 'employee';
   const [isLoading, setIsLoading] = useState(true);
+  const [isLocating, setIsLocating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [preferences, setPreferences] = useState({
-    preferred_currency: "USD",
     preferred_language: "en" as "en" | "es" | "bg" | "pl" | "ro",
     country: "",
+    timezone: "",
+    timezone_offset: 0
   });
 
   useEffect(() => {
@@ -36,7 +43,7 @@ export const RegionalPreferencesForm = ({ user }: RegionalPreferencesFormProps) 
       try {
         const { data, error } = await supabase
           .from("profiles")
-          .select("preferred_currency, preferred_language, country")
+          .select("preferred_language, country, timezone, timezone_offset")
           .eq("id", user.id)
           .maybeSingle();
 
@@ -46,11 +53,21 @@ export const RegionalPreferencesForm = ({ user }: RegionalPreferencesFormProps) 
         }
 
         if (data) {
+          // Get browser timezone as fallback
+          const browserTimezone = getUserTimezone();
+          const browserOffset = new Date().getTimezoneOffset() * -1;
+          
           setPreferences({
-            preferred_currency: data.preferred_currency || "USD",
             preferred_language: (data.preferred_language || "en") as "en" | "es" | "bg" | "pl" | "ro",
             country: data.country || "",
+            timezone: data.timezone || browserTimezone,
+            timezone_offset: data.timezone_offset !== null ? data.timezone_offset : browserOffset
           });
+          
+          // If no country or timezone is set, auto-detect location
+          if (!data.country || !data.timezone) {
+            autoDetectLocation();
+          }
         }
       } catch (error) {
         console.error("Error:", error);
@@ -62,11 +79,36 @@ export const RegionalPreferencesForm = ({ user }: RegionalPreferencesFormProps) 
     fetchPreferences();
   }, [user]);
 
-  const handleCurrencyChange = (currency: string) => {
-    setPreferences((prev) => ({
-      ...prev,
-      preferred_currency: currency,
-    }));
+  const autoDetectLocation = async () => {
+    if (!user || isLocating) return;
+    
+    setIsLocating(true);
+    try {
+      const { country, countryCode, timezone, timezoneOffset } = await detectUserLocation();
+      
+      const countryName = countryCode ? getCountryName(countryCode) : country;
+      
+      setPreferences((prev) => ({
+        ...prev,
+        country: countryName,
+        timezone: timezone,
+        timezone_offset: timezoneOffset
+      }));
+      
+      toast({
+        title: "Location detected",
+        description: `Detected location: ${countryName}, ${timezone}`,
+      });
+    } catch (error) {
+      console.error("Error detecting location:", error);
+      toast({
+        title: "Location detection failed",
+        description: "Could not automatically detect your location.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLocating(false);
+    }
   };
 
   const handleLanguageChange = (language: string) => {
@@ -93,9 +135,10 @@ export const RegionalPreferencesForm = ({ user }: RegionalPreferencesFormProps) 
       const { error } = await supabase
         .from("profiles")
         .update({
-          preferred_currency: preferences.preferred_currency,
           preferred_language: preferences.preferred_language,
           country: preferences.country,
+          timezone: preferences.timezone,
+          timezone_offset: preferences.timezone_offset,
           updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
@@ -150,19 +193,18 @@ export const RegionalPreferencesForm = ({ user }: RegionalPreferencesFormProps) 
         </div>
 
         <div>
-          <h3 className="text-lg font-medium mb-3">Currency</h3>
-          <CurrencySelector
-            currency={preferences.preferred_currency}
-            onChange={handleCurrencyChange}
-          />
-        </div>
-
-        <div>
           <h3 className="text-lg font-medium mb-3">Country</h3>
           <CountryInput
             country={preferences.country}
             onChange={handleCountryChange}
+            onDetect={autoDetectLocation}
+            isLocating={isLocating}
           />
+          {preferences.timezone && (
+            <div className="text-sm text-muted-foreground mt-2">
+              {preferences.timezone} ({formatTimezoneOffset(preferences.timezone_offset)})
+            </div>
+          )}
         </div>
       </CardContent>
 

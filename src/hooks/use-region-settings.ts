@@ -7,22 +7,27 @@ import { detectUserLocation } from "@/services/geolocation";
 import useCurrencyPreference from "@/hooks/use-currency-preference";
 import { getCountryName } from "@/utils/country-utils";
 import { useLanguage } from "@/hooks/use-language";
+import { getUserTimezone } from "@/utils/timezone-utils";
+import { useAuth } from "@/hooks/use-auth";
 
 interface RegionData {
   country: string;
-  preferred_currency: string;
   preferred_language: string;
+  timezone: string;
+  timezone_offset: number;
 }
 
 export const useRegionSettings = (user: User | null) => {
   const { toast } = useToast();
-  const { setCurrency } = useCurrencyPreference();
   const { setLanguage } = useLanguage();
+  const { userRole } = useAuth();
+  const isEmployee = userRole === 'employee';
   
   const [regionData, setRegionData] = useState<RegionData>({
     country: "",
-    preferred_currency: "USD",
     preferred_language: "en",
+    timezone: "",
+    timezone_offset: 0
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
@@ -34,7 +39,7 @@ export const useRegionSettings = (user: User | null) => {
       try {
         const { data, error } = await supabase
           .from("profiles")
-          .select("country, preferred_currency, preferred_language")
+          .select("country, preferred_language, timezone, timezone_offset")
           .eq("id", user.id)
           .maybeSingle();
         
@@ -49,14 +54,19 @@ export const useRegionSettings = (user: User | null) => {
         }
         
         if (data) {
+          // If we haven't detected a location yet, set defaults with browser timezone
+          const browserTimezone = getUserTimezone();
+          const timezoneOffset = new Date().getTimezoneOffset() * -1; // Browser returns opposite sign
+          
           setRegionData({
             country: data.country || "",
-            preferred_currency: data.preferred_currency || "USD",
             preferred_language: data.preferred_language || "en",
+            timezone: data.timezone || browserTimezone,
+            timezone_offset: data.timezone_offset !== null ? data.timezone_offset : timezoneOffset
           });
           
-          // If the country is empty, try to detect user's location
-          if (!data.country) {
+          // If the country is empty or no timezone, auto-detect user's location
+          if (!data.country || !data.timezone) {
             autoDetectLocation();
           }
         }
@@ -78,15 +88,16 @@ export const useRegionSettings = (user: User | null) => {
     
     setIsLocating(true);
     try {
-      const { country, currencyCode } = await detectUserLocation();
+      const { country, countryCode, timezone, timezoneOffset } = await detectUserLocation();
       
-      const countryName = getCountryName(country);
+      const countryName = countryCode ? getCountryName(countryCode) : country;
       
       const { error } = await supabase
         .from("profiles")
         .update({
           country: countryName,
-          preferred_currency: currencyCode || "USD"
+          timezone: timezone,
+          timezone_offset: timezoneOffset,
         })
         .eq("id", user.id);
 
@@ -95,12 +106,13 @@ export const useRegionSettings = (user: User | null) => {
       setRegionData(prev => ({
         ...prev, 
         country: countryName,
-        preferred_currency: currencyCode || prev.preferred_currency
+        timezone: timezone,
+        timezone_offset: timezoneOffset
       }));
       
       toast({
         title: "Location detected",
-        description: `Detected country: ${countryName} (${currencyCode})`,
+        description: `Detected country: ${countryName} (${timezone})`,
       });
     } catch (error: any) {
       console.error("Error auto-detecting location:", error);
@@ -132,8 +144,9 @@ export const useRegionSettings = (user: User | null) => {
         .from("profiles")
         .update({
           country: regionData.country,
-          preferred_currency: regionData.preferred_currency,
           preferred_language: regionData.preferred_language,
+          timezone: regionData.timezone,
+          timezone_offset: regionData.timezone_offset,
           updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
@@ -146,9 +159,6 @@ export const useRegionSettings = (user: User | null) => {
         });
         return;
       }
-      
-      // Update the currency context
-      await setCurrency(regionData.preferred_currency as 'USD' | 'GBP' | 'EUR');
       
       // Update the language context
       await setLanguage(regionData.preferred_language as any);
@@ -173,10 +183,6 @@ export const useRegionSettings = (user: User | null) => {
     const { name, value } = e.target;
     setRegionData((prev) => ({ ...prev, [name]: value }));
   };
-
-  const handleCurrencyChange = (value: string) => {
-    setRegionData((prev) => ({ ...prev, preferred_currency: value }));
-  };
   
   const handleLanguageChange = (value: string) => {
     setRegionData((prev) => ({ ...prev, preferred_language: value }));
@@ -186,8 +192,8 @@ export const useRegionSettings = (user: User | null) => {
     regionData,
     isLocating,
     isSaving,
+    isEmployee,
     handleChange,
-    handleCurrencyChange,
     handleLanguageChange,
     handleSubmit,
     autoDetectLocation
