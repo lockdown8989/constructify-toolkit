@@ -5,7 +5,7 @@ import { ArrowLeftRight, UserPlus, Calendar, Clock } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger
+  PopoverTrigger,
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';

@@ -244,11 +244,11 @@ const ShiftCalendar = () => {
     });
   };
 
-  const handleEmployeeAddShift = (employeeId: string, day: Date) => {
+  const handleEmployeeAddShift = (date: Date) => {
     // Handle adding shift to a specific employee
     toast({
       title: "Adding shift",
-      description: `Adding shift for employee ID ${employeeId} on ${format(day, 'MMM d')}`,
+      description: `Adding shift for employee on ${format(day, 'MMM d')}`,
     });
   };
 
@@ -432,8 +432,8 @@ const ShiftCalendar = () => {
         
         <div className={`flex ${isMobile ? 'flex-col w-full gap-2' : 'items-center gap-4'}`}>
           <ShiftCalendarToolbar 
-            viewType={weekView ? 'week' : 'day'} 
-            onViewTypeChange={(type) => setWeekView(type === 'week')}
+            viewType={weekView ? 'week' : 'day'}
+            onViewChange={(type) => setWeekView(type === 'week')}
           />
           
           <div className={`flex items-center ${isMobile ? 'justify-between w-full' : 'gap-2'}`}>
@@ -565,7 +565,7 @@ const ShiftCalendar = () => {
                             )}>
                               {(isAdmin || isManager || isHR) && (
                                 <button
-                                  onClick={() => handleEmployeeAddShift(employee.employeeId, day)}
+                                  onClick={() => handleEmployeeAddShift(day)}
                                   className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-gray-200 active:bg-gray-300"
                                 >
                                   <Plus className="h-5 w-5 text-gray-400" />
