@@ -1,91 +1,101 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { useAttendanceMetadata } from '../use-attendance-metadata';
 
 export const useBreak = (
   setStatus: (status: 'clocked-in' | 'clocked-out' | 'on-break') => void
 ) => {
   const { toast } = useToast();
-  const { location, deviceInfo } = useAttendanceMetadata();
 
   const handleBreakStart = async (currentRecord: string | null) => {
-    if (!currentRecord) return;
-    
-    console.log('Starting break with record ID:', currentRecord);
-    
-    const now = new Date();
-    const { error } = await supabase
-      .from('attendance')
-      .update({
-        break_start: now.toISOString(),
-        location,
-        device_info: deviceInfo
-        // Keep active_session as true during breaks
-      })
-      .eq('id', currentRecord);
-
-    if (error) {
-      console.error('Error starting break:', error);
+    if (!currentRecord) {
       toast({
-        title: "Error Starting Break",
-        description: error.message,
+        title: "Error",
+        description: "No active session to start break from",
         variant: "destructive",
       });
       return;
     }
 
-    setStatus('on-break');
-    toast({
-      title: "Break Started",
-      description: `Your break started at ${format(now, 'h:mm a')}`,
-    });
-  };
-
-  const handleBreakEnd = async (currentRecord: string | null) => {
-    if (!currentRecord) return;
-    
-    console.log('Ending break with record ID:', currentRecord);
-    
-    // First, retrieve the current break details to calculate duration
-    const { data: record, error: fetchError } = await supabase
-      .from('attendance')
-      .select('break_start, break_minutes')
-      .eq('id', currentRecord)
-      .single();
-
-    if (fetchError) {
-      console.error('Error fetching break start time:', fetchError);
-      toast({
-        title: "Error Ending Break",
-        description: fetchError.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const now = new Date();
-    
-    if (record?.break_start) {
-      const breakStart = new Date(record.break_start);
-      const existingBreakMinutes = record.break_minutes || 0;
-      const newBreakMinutes = Math.round((now.getTime() - breakStart.getTime()) / (1000 * 60)) + existingBreakMinutes;
-
-      console.log('Break details:', {
-        breakStart,
-        existingBreakMinutes,
-        newBreakMinutes,
-        currentRecord
-      });
-
+    try {
+      const now = new Date();
+      
+      // Update the record with break start time
       const { error } = await supabase
         .from('attendance')
         .update({
-          break_minutes: newBreakMinutes,
+          break_start: now.toISOString(),
+        })
+        .eq('id', currentRecord);
+
+      if (error) {
+        console.error('Error starting break:', error);
+        toast({
+          title: "Error Starting Break",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setStatus('on-break');
+      toast({
+        title: "Break Started",
+        description: `Break started at ${format(now, 'h:mm a')}`,
+      });
+    } catch (error) {
+      console.error('Error in handleBreakStart:', error);
+      toast({
+        title: "Error",
+        description: "There was an unexpected error while starting your break",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBreakEnd = async (currentRecord: string | null) => {
+    if (!currentRecord) {
+      toast({
+        title: "Error",
+        description: "No active break to end",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Get break start time to calculate duration
+      const { data: recordData, error: fetchError } = await supabase
+        .from('attendance')
+        .select('break_start')
+        .eq('id', currentRecord)
+        .single();
+        
+      if (fetchError) {
+        console.error('Error fetching break data:', fetchError);
+        throw fetchError;
+      }
+      
+      if (!recordData.break_start) {
+        toast({
+          title: "Error",
+          description: "No break start time found",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const now = new Date();
+      const breakStartTime = new Date(recordData.break_start);
+      const breakMinutes = Math.round((now.getTime() - breakStartTime.getTime()) / (1000 * 60));
+      
+      // Update the record with break end calculation
+      const { error } = await supabase
+        .from('attendance')
+        .update({
           break_start: null,
-          location,
-          device_info: deviceInfo
-          // Keep active_session as true
+          break_minutes: breakMinutes
         })
         .eq('id', currentRecord);
 
@@ -98,13 +108,20 @@ export const useBreak = (
         });
         return;
       }
-    }
 
-    setStatus('clocked-in');
-    toast({
-      title: "Break Ended",
-      description: `Your break ended at ${format(now, 'h:mm a')}`,
-    });
+      setStatus('clocked-in');
+      toast({
+        title: "Break Ended",
+        description: `Break ended after ${breakMinutes} minutes`,
+      });
+    } catch (error) {
+      console.error('Error in handleBreakEnd:', error);
+      toast({
+        title: "Error",
+        description: "There was an unexpected error while ending your break",
+        variant: "destructive",
+      });
+    }
   };
 
   return { handleBreakStart, handleBreakEnd };

@@ -64,11 +64,7 @@ const ClockActions = ({
         });
       } catch (error) {
         console.error('Error in clock action:', error);
-        toast({
-          title: "Error",
-          description: "There was an error processing the clock action. Please try again.",
-          variant: "destructive",
-        });
+        // Dialog will be closed by ConfirmationDialog on error
       } finally {
         setLocalProcessing(false);
       }

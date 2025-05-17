@@ -46,14 +46,14 @@ export const useClockActions = () => {
       
       if (clockAction === 'in') {
         // Check if there's already an active session for today
-        // Important: Include the manager_initiated field in our check to avoid filtering out non-manager sessions
+        // Include both manager-initiated and regular sessions in our check
         const { data: existingRecord, error: checkError } = await supabase
           .from('attendance')
           .select('id, active_session')
           .eq('employee_id', selectedEmployee)
           .eq('date', today)
           .eq('active_session', true)
-          .maybeSingle(); // Use maybeSingle instead of single to prevent errors when no record is found
+          .maybeSingle();
           
         if (checkError) {
           console.error('Error checking for existing active session:', checkError);
@@ -97,13 +97,14 @@ export const useClockActions = () => {
           description: `Employee clocked in at ${format(now, 'h:mm a')}`,
         });
       } else {
-        // Find active session
+        // Find active session - check for any active session regardless of who initiated it
         const { data: activeSession, error: findError } = await supabase
           .from('attendance')
           .select('*')
           .eq('employee_id', selectedEmployee)
+          .eq('date', today)
           .eq('active_session', true)
-          .maybeSingle(); // Use maybeSingle here too
+          .maybeSingle();
           
         if (findError) {
           console.error('Error finding active session:', findError);

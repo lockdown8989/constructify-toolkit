@@ -19,7 +19,7 @@ export const useStatusCheck = (
         const today = new Date().toISOString().split('T')[0];
         
         // Check if there's an active session for today
-        // Only consider self-initiated sessions (where manager_initiated is null or false)
+        // For personal time clock, only consider self-initiated sessions (not manager initiated)
         const { data, error } = await supabase
           .from('attendance')
           .select('*')
