@@ -31,7 +31,7 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
         <SidebarNavLink
           to="/dashboard"
           icon={LayoutDashboard}
-          label="Dashboard"
+          label="Overview"
           isActive={isActive("/dashboard")}
           isCollapsed={isCollapsed}
         />

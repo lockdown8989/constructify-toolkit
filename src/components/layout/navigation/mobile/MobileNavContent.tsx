@@ -10,6 +10,7 @@ import WorkflowSection from "./WorkflowSection";
 import ClockingControls from "./ClockingControls";
 import ManagerSection from "./ManagerSection";
 import CommonSection from "./CommonSection";
+import MobileNavLink from "./MobileNavLink";
 
 interface MobileNavContentProps {
   isAuthenticated: boolean;
@@ -20,7 +21,6 @@ interface MobileNavContentProps {
 const MobileNavContent = ({ isAuthenticated, onClose, handleHomeClick }: MobileNavContentProps) => {
   const { isAdmin, isHR, isManager } = useAuth();
   const hasManagerialAccess = isManager || isAdmin || isHR;
-  const isEmployee = isAuthenticated && !hasManagerialAccess;
   const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
   const isClockingEnabled = !hasManagerialAccess && isAuthenticated;
   
@@ -46,9 +46,18 @@ const MobileNavContent = ({ isAuthenticated, onClose, handleHomeClick }: MobileN
             <span>Home</span>
           </div>
           
+          {isAuthenticated && (
+            <MobileNavLink
+              to="/dashboard"
+              icon={Home}
+              label="Overview"
+              onClick={onClose}
+            />
+          )}
+          
           <CommonSection 
             isAuthenticated={isAuthenticated} 
-            isEmployee={isEmployee} 
+            isEmployee={isAuthenticated && !hasManagerialAccess} 
             hasManagerialAccess={hasManagerialAccess} 
             onClose={onClose} 
           />
