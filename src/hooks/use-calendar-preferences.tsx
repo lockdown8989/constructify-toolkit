@@ -1,91 +1,162 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { CalendarPreferences } from '@/types/calendar';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/integrations/supabase/client';
+import { ViewType } from '@/components/schedule/types/calendar-types';
+import { useToast } from './use-toast';
 
-export function useCalendarPreferences() {
+// Hook to manage calendar preferences for the user
+export const useCalendarPreferences = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const isMobile = useIsMobile();
+  const [loading, setLoading] = useState(true);
+  const [viewType, setViewType] = useState<ViewType>('week');
+  const [showWeekends, setShowWeekends] = useState(true);
+  const [employeeId, setEmployeeId] = useState<string | null>(null);
 
-  const { data: preferences, isLoading } = useQuery({
-    queryKey: ['calendar-preferences'],
-    queryFn: async () => {
-      if (!user) return null;
-
-      const { data: employee } = await supabase
-        .from('employees')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!employee) return null;
-
-      const { data } = await supabase
-        .from('calendar_preferences')
-        .select('*')
-        .eq('employee_id', employee.id)
-        .maybeSingle();
-
-      // Set default mobile view settings if not present
-      if (data && !data.mobile_view_settings) {
-        data.mobile_view_settings = {
-          font_size: 'medium',
-          compact_view: true,
-          days_visible: 3,
-          auto_refresh: true
-        };
-      }
-
-      return data;
-    },
-    enabled: !!user
-  });
-
-  const updatePreferences = useMutation({
-    mutationFn: async (newPreferences: Partial<CalendarPreferences>) => {
-      if (!user || !preferences?.id) {
-        throw new Error('No preferences found');
-      }
-
-      const { data, error } = await supabase
-        .from('calendar_preferences')
-        .update({
-          ...newPreferences,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', preferences.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['calendar-preferences'] });
-      toast({
-        title: "Preferences updated",
-        description: "Your calendar preferences have been saved."
-      });
-    },
-    onError: (error) => {
-      console.error('Error updating preferences:', error);
-      toast({
-        title: "Failed to update preferences",
-        description: "Please try again later.",
-        variant: "destructive"
-      });
+  // Fetch employee ID
+  useEffect(() => {
+    if (user) {
+      const getEmployeeId = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('employees')
+            .select('id')
+            .eq('user_id', user.id)
+            .single();
+            
+          if (error) {
+            console.error('Error fetching employee ID:', error);
+            return;
+          }
+          
+          if (data) {
+            setEmployeeId(data.id);
+          }
+        } catch (err) {
+          console.error('Error in getEmployeeId:', err);
+        }
+      };
+      
+      getEmployeeId();
     }
-  });
+  }, [user]);
+
+  // Fetch calendar preferences
+  useEffect(() => {
+    if (employeeId) {
+      const fetchPreferences = async () => {
+        try {
+          setLoading(true);
+          
+          const { data, error } = await supabase
+            .from('calendar_preferences')
+            .select('*')
+            .eq('employee_id', employeeId)
+            .single();
+            
+          if (error && error.code !== 'PGRST116') {
+            // PGRST116 is "not found" which is expected for new users
+            console.error('Error fetching calendar preferences:', error);
+          }
+          
+          if (data) {
+            // Apply preferences
+            setViewType(data.default_view as ViewType);
+            setShowWeekends(data.show_weekends);
+          } else {
+            // Create default preferences if none exist
+            await createDefaultPreferences(employeeId);
+          }
+        } catch (err) {
+          console.error('Error in fetchPreferences:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchPreferences();
+    }
+  }, [employeeId]);
+
+  // Create default preferences for new users
+  const createDefaultPreferences = async (employeeId: string) => {
+    try {
+      const { error } = await supabase
+        .from('calendar_preferences')
+        .insert({
+          employee_id: employeeId,
+          default_view: 'week',
+          show_weekends: true,
+          color_scheme: 'default',
+          visible_hours: { start: 8, end: 20 },
+          mobile_view_settings: {
+            font_size: 'medium',
+            compact_view: true,
+            days_visible: 3,
+            auto_refresh: true
+          }
+        });
+        
+      if (error) {
+        console.error('Error creating default preferences:', error);
+      }
+    } catch (err) {
+      console.error('Error in createDefaultPreferences:', err);
+    }
+  };
+
+  // Save preferences when view type changes
+  const updateViewType = async (newViewType: ViewType) => {
+    setViewType(newViewType);
+    
+    if (employeeId) {
+      try {
+        const { error } = await supabase
+          .from('calendar_preferences')
+          .update({ default_view: newViewType })
+          .eq('employee_id', employeeId);
+          
+        if (error) {
+          console.error('Error updating view type:', error);
+          toast({
+            title: "Preferences Not Saved",
+            description: "There was an error saving your calendar preferences.",
+            variant: "destructive"
+          });
+        }
+      } catch (err) {
+        console.error('Error in updateViewType:', err);
+      }
+    }
+  };
+
+  // Toggle weekend visibility
+  const toggleWeekends = async () => {
+    const newValue = !showWeekends;
+    setShowWeekends(newValue);
+    
+    if (employeeId) {
+      try {
+        const { error } = await supabase
+          .from('calendar_preferences')
+          .update({ show_weekends: newValue })
+          .eq('employee_id', employeeId);
+          
+        if (error) {
+          console.error('Error updating weekend visibility:', error);
+        }
+      } catch (err) {
+        console.error('Error in toggleWeekends:', err);
+      }
+    }
+  };
 
   return {
-    preferences,
-    isLoading,
-    updatePreferences: updatePreferences.mutate,
-    isMobile
+    loading,
+    viewType,
+    showWeekends,
+    updateViewType,
+    toggleWeekends
   };
-}
+};

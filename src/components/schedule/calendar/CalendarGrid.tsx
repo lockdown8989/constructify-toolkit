@@ -12,7 +12,7 @@ interface CalendarGridProps {
   handleShiftClick: (shift: any) => void;
   handleEmployeeAddShift: (employeeId: string, date: Date) => void;
   isLoading: boolean;
-  onDateClick?: (date: Date) => void; // Added this optional prop
+  onDateClick?: (date: Date) => void;
 }
 
 const CalendarGrid: React.FC<CalendarGridProps> = ({

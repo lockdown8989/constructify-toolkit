@@ -50,8 +50,8 @@ export interface ShiftCalendarState {
   employees: any[];
   isMobile: boolean;
   allEmployeeSchedules: any[];
-  handleNextPeriod: () => void; // Added this to match what's used in component
-  handlePreviousPeriod: () => void; // Added this to match what's used in component
+  handleNextPeriod: () => void;
+  handlePreviousPeriod: () => void;
   handleToday: () => void;
   handleAddShift: (date: Date) => void;
   handleSwapShift: (date: Date) => void;
@@ -69,5 +69,22 @@ export interface ShiftCalendarProps {
     handleSwapShiftSubmit: () => void;
     handleEmployeeShiftSubmit: () => void;
     handleEmployeeAddShift: (employeeId: string, date: Date) => void;
+  };
+}
+
+// Define calendar preference settings
+export interface CalendarPreferences {
+  default_view: ViewType;
+  show_weekends: boolean;
+  color_scheme: string;
+  visible_hours: {
+    start: number;
+    end: number;
+  };
+  mobile_view_settings: {
+    font_size: 'small' | 'medium' | 'large';
+    compact_view: boolean;
+    days_visible: number;
+    auto_refresh: boolean;
   };
 }

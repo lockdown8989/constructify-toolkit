@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { format, addDays, startOfWeek } from 'date-fns';
+import { format, startOfWeek, addDays } from 'date-fns';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
 import { Check, ChevronLeft, ChevronRight, RefreshCw, ArrowLeft } from 'lucide-react';
 import WeeklyCalendarView from '@/components/schedule/WeeklyCalendarView';
@@ -12,6 +13,9 @@ import { useToast } from '@/hooks/use-toast';
 import { OpenShiftType } from '@/types/supabase/schedules';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import ViewSelector, { ViewType } from './components/ViewSelector';
+import MonthlyView from './views/MonthlyView';
+import DailyView from './views/DailyView';
 
 const EmployeeScheduleView: React.FC = () => {
   const location = useLocation();
@@ -42,6 +46,18 @@ const EmployeeScheduleView: React.FC = () => {
   const [openShifts, setOpenShifts] = useState<OpenShiftType[]>([]);
   const [isAddShiftDialogOpen, setIsAddShiftDialogOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [viewType, setViewType] = useState<ViewType>('week');
+  
+  // Check location state for view preference
+  useEffect(() => {
+    if (location.state?.view) {
+      setViewType(location.state.view);
+    }
+    
+    if (location.state?.selectedDate) {
+      setCurrentDate(new Date(location.state.selectedDate));
+    }
+  }, [location.state]);
   
   // Fetch open shifts that can be dropped
   useEffect(() => {
@@ -89,6 +105,11 @@ const EmployeeScheduleView: React.FC = () => {
         setActiveTab('my-shifts');
       }
     }
+  };
+  
+  // Handle View Type Changes
+  const handleViewChange = (view: ViewType) => {
+    setViewType(view);
   };
   
   // Function for add shift functionality
@@ -208,10 +229,24 @@ const EmployeeScheduleView: React.FC = () => {
     }
   };
 
-  // Function to handle previous/next month navigation
-  const handleMonthChange = (increment: number) => {
+  // Function to handle date click from calendar views
+  const handleDateClick = (date: Date) => {
+    setCurrentDate(date);
+    if (viewType !== 'day') {
+      setViewType('day');
+    }
+  };
+
+  // Function to handle previous/next navigation
+  const handleDateNavigation = (increment: number) => {
     const newDate = new Date(currentDate);
-    newDate.setMonth(newDate.getMonth() + increment);
+    if (viewType === 'month') {
+      newDate.setMonth(newDate.getMonth() + increment);
+    } else if (viewType === 'week') {
+      newDate.setDate(newDate.getDate() + (increment * 7));
+    } else {
+      newDate.setDate(newDate.getDate() + increment);
+    }
     setCurrentDate(newDate);
   };
 
@@ -238,28 +273,90 @@ const EmployeeScheduleView: React.FC = () => {
           </Button>
           <h2 className="text-xl font-semibold">Your Schedule</h2>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={refreshSchedules}
-          className="flex items-center gap-1"
-        >
-          <RefreshCw className="h-3.5 w-3.5" />
-          <span>Refresh</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={refreshSchedules}
+            className="flex items-center gap-1"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            <span>Refresh</span>
+          </Button>
+        </div>
       </div>
       
-      <WeeklyCalendarView
-        startDate={currentDate}
-        onDateChange={setCurrentDate}
-        schedules={schedules}
-        onShiftDrop={handleShiftDrop}
-        highlightedShiftId={droppedShiftId}
-        onAddShift={handleAddShift}
-        onAddEmployeeShift={handleAddEmployeeShift}
-      />
+      {/* Calendar Controls */}
+      <div className="flex flex-wrap justify-between items-center px-4 mb-4 gap-y-2">
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleDateNavigation(-1)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <div className="text-sm font-medium">
+            {viewType === 'month' 
+              ? format(currentDate, 'MMMM yyyy')
+              : viewType === 'week'
+                ? `Week of ${format(startOfWeek(currentDate, { weekStartsOn: 1 }), 'MMM d, yyyy')}`
+                : format(currentDate, 'EEEE, MMMM d, yyyy')
+            }
+          </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleDateNavigation(1)}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentDate(new Date())}
+          >
+            Today
+          </Button>
+        </div>
+        
+        <ViewSelector view={viewType} onChange={handleViewChange} />
+      </div>
       
-      <div className="border-t border-gray-200 my-2" />
+      {/* Calendar View based on selected view type */}
+      <div className="px-4">
+        {viewType === 'month' ? (
+          <MonthlyView 
+            currentDate={currentDate} 
+            schedules={schedules} 
+            onDateClick={handleDateClick}
+          />
+        ) : viewType === 'week' ? (
+          <WeeklyCalendarView
+            startDate={currentDate}
+            onDateChange={setCurrentDate}
+            schedules={schedules}
+            onShiftDrop={handleShiftDrop}
+            highlightedShiftId={droppedShiftId}
+            onAddShift={handleAddShift}
+            onAddEmployeeShift={handleAddEmployeeShift}
+          />
+        ) : (
+          <DailyView 
+            date={currentDate}
+            schedules={schedules}
+            onShiftClick={(shift) => {
+              setSelectedScheduleId(shift.id);
+              setIsInfoDialogOpen(true);
+            }}
+          />
+        )}
+      </div>
+      
+      <div className="border-t border-gray-200 my-4" />
 
       <ScheduleTabs
         activeTab={activeTab}
