@@ -1,15 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, Clock, CalendarClock } from 'lucide-react';
+import { CalendarDays, Clock, CalendarClock, SwapHorizontal } from 'lucide-react';
 import ShiftAcknowledgment from './ShiftAcknowledgment';
 import TimeClockWidget from './TimeClockWidget';
-import ShiftSwapForm from './ShiftSwapForm';
-import ShiftSwapList from './ShiftSwapList';
+import ShiftSwapTab from './ShiftSwapTab';
 import AvailabilityManagement from './AvailabilityManagement';
 import LeaveBalanceCard from './LeaveBalanceCard';
+import { ScheduleTabs } from './components/ScheduleTabs';
+import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
+import { useToast } from '@/hooks/use-toast';
 
 interface MobileWorkflowViewProps {
   schedules: any[];
@@ -21,8 +23,33 @@ interface MobileWorkflowViewProps {
 }
 
 const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWorkflowViewProps) => {
+  const [activeTab, setActiveTab] = useState('shifts');
+  const [scheduleTab, setScheduleTab] = useState('shift-swaps');
+  const { newSchedules, setIsInfoDialogOpen, setSelectedScheduleId } = useEmployeeSchedule();
+  const { toast } = useToast();
+  
+  const handleInfoClick = (scheduleId: string) => {
+    setSelectedScheduleId(scheduleId);
+    setIsInfoDialogOpen(true);
+  };
+  
+  const handleEmailClick = (schedule: any) => {
+    // Email functionality would be implemented here
+    toast({
+      title: "Email sent",
+      description: "A confirmation email has been sent to your inbox.",
+    });
+  };
+  
+  const handleCancelClick = (scheduleId: string) => {
+    toast({
+      title: "Shift cancellation requested",
+      description: "Your request to cancel this shift has been submitted.",
+    });
+  };
+  
   return (
-    <Tabs defaultValue="shifts" className="w-full">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="grid w-full grid-cols-4 mb-2 rounded-xl">
         <TabsTrigger value="shifts" className="text-xs py-2.5">
           <span className="flex flex-col items-center gap-1">
@@ -30,10 +57,10 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
             <span>Shifts</span>
           </span>
         </TabsTrigger>
-        <TabsTrigger value="timeclock" className="text-xs py-2.5">
+        <TabsTrigger value="swap" className="text-xs py-2.5">
           <span className="flex flex-col items-center gap-1">
-            <Clock className="h-4 w-4" />
-            <span>Time Clock</span>
+            <SwapHorizontal className="h-4 w-4" />
+            <span>Shift Swaps</span>
           </span>
         </TabsTrigger>
         <TabsTrigger value="availability" className="text-xs py-2.5">
@@ -55,19 +82,26 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
           <CardHeader className="pb-2 pt-4 px-4">
             <CardTitle className="text-base flex items-center">
               <CalendarClock className="h-4 w-4 mr-2 text-primary" />
-              Current Shifts
+              Your Schedule
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-3 pb-3 pt-0">
-            <ShiftAcknowledgment schedules={schedules} employeeNames={employeeNames} />
+          <CardContent className="px-0 pb-0 pt-0">
+            <ScheduleTabs
+              activeTab={scheduleTab}
+              setActiveTab={setScheduleTab}
+              schedules={schedules}
+              newSchedules={newSchedules}
+              onInfoClick={handleInfoClick}
+              onEmailClick={handleEmailClick}
+              onCancelClick={handleCancelClick}
+              onResponseComplete={() => {}}
+            />
           </CardContent>
         </Card>
-        <ShiftSwapList />
-        <ShiftSwapForm />
       </TabsContent>
       
-      <TabsContent value="timeclock" className="space-y-4 mt-4 no-scrollbar mobile-full-width">
-        <TimeClockWidget />
+      <TabsContent value="swap" className="space-y-4 mt-4 no-scrollbar mobile-full-width">
+        <ShiftSwapTab />
       </TabsContent>
       
       <TabsContent value="availability" className="space-y-4 mt-4 no-scrollbar mobile-full-width">

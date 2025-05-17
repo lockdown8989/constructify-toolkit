@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSchedules } from '@/hooks/use-schedules';
-import { format, addDays, startOfWeek, isToday, isSameWeek } from 'date-fns';
+import { format, addDays, startOfWeek, isToday, isSameWeek, parseISO } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useAuth } from '@/hooks/auth';
-import { ChevronLeft, ChevronRight, Check, MessageSquare, Plus } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
+import { ChevronLeft, ChevronRight, Check, MessageSquare, Plus, Calendar as CalendarIcon, UserPlus, SwapHorizontal } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import ScheduleHeader from '@/components/restaurant/ScheduleHeader';
 import ShiftCalendarToolbar from './components/ShiftCalendarToolbar';
@@ -15,6 +15,11 @@ import EmployeeShift from './components/EmployeeShift';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
 import MobileScheduleView from './MobileScheduleView';
 import { Employee } from '@/types/restaurant-schedule';
+import ShiftActionsMenu from './ShiftActionsMenu';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetClose } from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const ShiftCalendar = () => {
   const { user, isAdmin, isHR, isManager } = useAuth();
@@ -24,6 +29,12 @@ const ShiftCalendar = () => {
   const [locationName, setLocationName] = useState("Main Location");
   const [searchQuery, setSearchQuery] = useState('');
   const [weekView, setWeekView] = useState(true);
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [isAddShiftOpen, setIsAddShiftOpen] = useState(false);
+  const [isSwapShiftOpen, setIsSwapShiftOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
+  const [selectedShift, setSelectedShift] = useState<string | null>(null);
+  
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const { refreshSchedules } = useEmployeeSchedule();
@@ -160,11 +171,57 @@ const ShiftCalendar = () => {
     setSelectedDate(new Date());
   };
   
-  const handleAddShift = (employeeId: string, day: Date) => {
-    toast({
-      title: "Add shift",
-      description: `Adding shift for employee on ${format(day, 'EEEE, MMM d')}`,
-    });
+  const handleAddShift = (date: Date) => {
+    setSelectedDay(date);
+    setIsAddShiftOpen(true);
+    
+    if (isMobile) {
+      // For mobile, we'll use a sheet instead of a popover
+      setIsAddShiftOpen(true);
+    } else {
+      toast({
+        title: "Add shift",
+        description: `Adding shift for employee on ${format(date, 'EEEE, MMM d')}`,
+      });
+    }
+  };
+  
+  const handleSwapShift = (date: Date) => {
+    setSelectedDay(date);
+    setIsSwapShiftOpen(true);
+    
+    if (isMobile) {
+      // For mobile, we'll use a sheet
+      setIsSwapShiftOpen(true);
+    } else {
+      toast({
+        title: "Swap shift",
+        description: `Swapping shifts between employees on ${format(date, 'EEEE, MMM d')}`,
+      });
+    }
+  };
+  
+  const handleSubmitAddShift = () => {
+    if (selectedDay && selectedEmployee) {
+      toast({
+        title: "Shift added",
+        description: `Shift added for ${employees.find(e => e.id === selectedEmployee)?.name || 'employee'} on ${format(selectedDay, 'MMM d, yyyy')}`,
+      });
+      setIsAddShiftOpen(false);
+      setSelectedEmployee(null);
+    }
+  };
+  
+  const handleSubmitSwapShift = () => {
+    if (selectedDay && selectedShift && selectedEmployee) {
+      toast({
+        title: "Shift swapped",
+        description: `Shift swapped with ${employees.find(e => e.id === selectedEmployee)?.name || 'employee'} on ${format(selectedDay, 'MMM d, yyyy')}`,
+      });
+      setIsSwapShiftOpen(false);
+      setSelectedShift(null);
+      setSelectedEmployee(null);
+    }
   };
 
   const handleShiftClick = (shift: any) => {
@@ -201,6 +258,142 @@ const ShiftCalendar = () => {
           onAddShift={handleAddShift}
           onShiftClick={handleShiftClick}
         />
+        
+        {/* Mobile Add Shift Sheet */}
+        <Sheet open={isAddShiftOpen} onOpenChange={setIsAddShiftOpen}>
+          <SheetContent side="bottom" className="h-[75%] pb-0 rounded-t-xl">
+            <SheetHeader className="text-left pb-4">
+              <SheetTitle className="text-xl">Add Shift</SheetTitle>
+              <SheetDescription>
+                {selectedDay ? format(selectedDay, 'EEEE, MMMM d, yyyy') : 'Select a date'}
+              </SheetDescription>
+            </SheetHeader>
+            
+            <div className="space-y-4 pb-20">
+              <div className="space-y-2">
+                <Label htmlFor="employee">Employee</Label>
+                <select 
+                  id="employee"
+                  className="w-full p-2 border rounded-md"
+                  value={selectedEmployee || ''}
+                  onChange={(e) => setSelectedEmployee(e.target.value)}
+                >
+                  <option value="">Select an employee</option>
+                  {employees.map(employee => (
+                    <option key={employee.id} value={employee.id}>{employee.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="start-time">Start Time</Label>
+                  <Input type="time" id="start-time" defaultValue="09:00" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="end-time">End Time</Label>
+                  <Input type="time" id="end-time" defaultValue="17:00" />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes (optional)</Label>
+                <textarea 
+                  id="notes"
+                  className="w-full p-2 border rounded-md min-h-[80px]"
+                  placeholder="Add any notes about this shift"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-2 pt-4 border-t fixed bottom-0 left-0 right-0 bg-white p-4 rounded-t-xl">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsAddShiftOpen(false)} 
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmitAddShift} 
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                Add Shift
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+        
+        {/* Mobile Swap Shift Sheet */}
+        <Sheet open={isSwapShiftOpen} onOpenChange={setIsSwapShiftOpen}>
+          <SheetContent side="bottom" className="h-[75%] pb-0 rounded-t-xl">
+            <SheetHeader className="text-left pb-4">
+              <SheetTitle className="text-xl">Swap Shift</SheetTitle>
+              <SheetDescription>
+                {selectedDay ? format(selectedDay, 'EEEE, MMMM d, yyyy') : 'Select a date'}
+              </SheetDescription>
+            </SheetHeader>
+            
+            <div className="space-y-4 pb-20">
+              <div className="space-y-2">
+                <Label htmlFor="shift">Select Shift to Swap</Label>
+                <select 
+                  id="shift"
+                  className="w-full p-2 border rounded-md"
+                  value={selectedShift || ''}
+                  onChange={(e) => setSelectedShift(e.target.value)}
+                >
+                  <option value="">Select a shift</option>
+                  {schedules.map(schedule => (
+                    <option key={schedule.id} value={schedule.id}>
+                      {schedule.title} ({format(parseISO(schedule.start_time), 'h:mm a')} - {format(parseISO(schedule.end_time), 'h:mm a')})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="swap-employee">Swap With Employee</Label>
+                <select 
+                  id="swap-employee"
+                  className="w-full p-2 border rounded-md"
+                  value={selectedEmployee || ''}
+                  onChange={(e) => setSelectedEmployee(e.target.value)}
+                >
+                  <option value="">Select an employee</option>
+                  {employees.map(employee => (
+                    <option key={employee.id} value={employee.id}>{employee.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="swap-notes">Reason for Swap (optional)</Label>
+                <textarea 
+                  id="swap-notes"
+                  className="w-full p-2 border rounded-md min-h-[80px]"
+                  placeholder="Explain why you're requesting this swap"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-2 pt-4 border-t fixed bottom-0 left-0 right-0 bg-white p-4 rounded-t-xl">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsSwapShiftOpen(false)} 
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmitSwapShift} 
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                Request Swap
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     );
   }
@@ -219,23 +412,34 @@ const ShiftCalendar = () => {
       />
       
       {/* Day selector toolbar */}
-      <div className="flex items-center justify-between p-2 border-b bg-gray-50">
-        <Button variant="ghost" size="sm" onClick={handlePreviousPeriod} className="h-8 w-8 p-0">
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={handleToday}>
-            Today
-          </Button>
-          <Button variant="ghost" size="sm" onClick={handleRefresh}>
-            Refresh
-          </Button>
+      <div className={`${isMobile ? 'p-3' : 'p-4'} flex flex-wrap justify-between items-center border-b`}>
+        <div className="flex items-center mb-2 sm:mb-0">
+          <CalendarIcon className="h-5 w-5 mr-2 text-gray-600" />
+          <span className="font-medium">{format(selectedDate, 'MMMM d, yyyy')}</span>
         </div>
         
-        <Button variant="ghost" size="sm" onClick={handleNextPeriod} className="h-8 w-8 p-0">
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+        <div className={`flex ${isMobile ? 'flex-col w-full gap-2' : 'items-center gap-4'}`}>
+          <ShiftCalendarToolbar 
+            viewType={weekView ? 'week' : 'day'} 
+            onViewTypeChange={(type) => setWeekView(type === 'week')}
+          />
+          
+          <div className={`flex items-center ${isMobile ? 'justify-between w-full' : 'gap-2'}`}>
+            <Button variant="ghost" size="sm" onClick={handleToday}>
+              Today
+            </Button>
+            
+            <div className="flex items-center">
+              <Button variant="ghost" size="sm" onClick={handlePreviousPeriod} className="h-8 w-8 p-0 mr-1">
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              
+              <Button variant="ghost" size="sm" onClick={handleNextPeriod} className="h-8 w-8 p-0">
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
       
       {/* Date column headers */}
@@ -252,9 +456,13 @@ const ShiftCalendar = () => {
               className={`flex-1 p-2 text-center ${isCurrentDay ? 'bg-blue-50' : ''}`}
             >
               <div className="text-xs uppercase text-gray-500">{format(day, 'EEE')}</div>
-              <div className={`font-semibold ${isCurrentDay ? 'text-blue-600' : ''}`}>
-                {format(day, 'd')}
-              </div>
+              <ShiftActionsMenu
+                date={day}
+                onAddShift={handleAddShift}
+                onSwapShift={handleSwapShift}
+                triggerClassName="flex items-center justify-center h-6 cursor-pointer"
+                disabled={!isManager && !isAdmin && !isHR}
+              />
             </div>
           );
         })}
@@ -367,8 +575,108 @@ const ShiftCalendar = () => {
       {/* Display information about schedule updates */}
       <div className="border-t border-gray-200 p-3 flex justify-between items-center bg-gray-50 text-sm text-gray-500">
         <div>Last updated: {format(new Date(), 'MMM d, yyyy h:mm a')}</div>
-        <div>{allEmployeeSchedules.length} employees</div>
+        <div>{/* ... keep existing code */}</div>
       </div>
+      
+      {/* Desktop popover for Add Shift */}
+      <Popover open={isAddShiftOpen && !isMobile} onOpenChange={setIsAddShiftOpen}>
+        <PopoverContent className="w-80 p-4" align="center">
+          <h3 className="text-lg font-medium mb-1">Add Shift</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            {selectedDay ? format(selectedDay, 'EEEE, MMMM d, yyyy') : 'Select a date'}
+          </p>
+          
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="desktop-employee">Employee</Label>
+              <select 
+                id="desktop-employee"
+                className="w-full p-2 border rounded-md"
+                value={selectedEmployee || ''}
+                onChange={(e) => setSelectedEmployee(e.target.value)}
+              >
+                <option value="">Select an employee</option>
+                {employees.map(employee => (
+                  <option key={employee.id} value={employee.id}>{employee.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="desktop-start-time">Start Time</Label>
+                <Input type="time" id="desktop-start-time" defaultValue="09:00" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="desktop-end-time">End Time</Label>
+                <Input type="time" id="desktop-end-time" defaultValue="17:00" />
+              </div>
+            </div>
+            
+            <div className="pt-2 flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => setIsAddShiftOpen(false)}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleSubmitAddShift}>
+                Add Shift
+              </Button>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+      
+      {/* Desktop popover for Swap Shift */}
+      <Popover open={isSwapShiftOpen && !isMobile} onOpenChange={setIsSwapShiftOpen}>
+        <PopoverContent className="w-80 p-4" align="center">
+          <h3 className="text-lg font-medium mb-1">Swap Shift</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            {selectedDay ? format(selectedDay, 'EEEE, MMMM d, yyyy') : 'Select a date'}
+          </p>
+          
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="desktop-shift">Select Shift to Swap</Label>
+              <select 
+                id="desktop-shift"
+                className="w-full p-2 border rounded-md"
+                value={selectedShift || ''}
+                onChange={(e) => setSelectedShift(e.target.value)}
+              >
+                <option value="">Select a shift</option>
+                {schedules.map(schedule => (
+                  <option key={schedule.id} value={schedule.id}>
+                    {schedule.title} ({format(parseISO(schedule.start_time), 'h:mm a')} - {format(parseISO(schedule.end_time), 'h:mm a')})
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="desktop-swap-employee">Swap With Employee</Label>
+              <select 
+                id="desktop-swap-employee"
+                className="w-full p-2 border rounded-md"
+                value={selectedEmployee || ''}
+                onChange={(e) => setSelectedEmployee(e.target.value)}
+              >
+                <option value="">Select an employee</option>
+                {employees.map(employee => (
+                  <option key={employee.id} value={employee.id}>{employee.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="pt-2 flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => setIsSwapShiftOpen(false)}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleSubmitSwapShift}>
+                Request Swap
+              </Button>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };

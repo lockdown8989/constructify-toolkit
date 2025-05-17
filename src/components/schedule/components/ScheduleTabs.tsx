@@ -33,7 +33,7 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
   const [calendarDays, setCalendarDays] = useState<(Date | null)[]>([]);
   
   const tabs = [
-    { id: 'my-shifts', label: 'My Shifts' },
+    { id: 'my-shifts', label: 'Shift Swaps' }, // Renamed from "My Shifts" to "Shift Swaps"
     { id: 'open-shifts', label: 'Open Shifts' },
     { id: 'pending', label: 'Pending' },
     { id: 'completed', label: 'Completed' }
