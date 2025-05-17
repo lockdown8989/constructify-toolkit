@@ -1,4 +1,5 @@
-import { LeaveCalendar } from "@/hooks/leave/leave-types";
+
+import { LeaveCalendar, AuditLogEntry } from "@/hooks/leave/leave-types";
 
 // Calculate business days (excluding weekends) between two dates
 export function calculateLeaveDays(startDateStr: string, endDateStr: string): number {

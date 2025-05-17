@@ -17,6 +17,7 @@ import SwapShiftPopover from './desktop/SwapShiftPopover';
 import AddShiftFAB from './calendar/AddShiftFAB';
 import AddEmployeeShiftDialog from './components/AddEmployeeShiftDialog';
 import ShiftCalendarToolbar from './components/ShiftCalendarToolbar';
+import { Employee } from '@/types/restaurant-schedule';
 
 const ShiftCalendar = () => {
   const {
@@ -44,7 +45,7 @@ const ShiftCalendar = () => {
     setSelectedEmployee,
     selectedShift,
     setSelectedShift,
-    employees,
+    employees: employeesData,
     isMobile,
     allEmployeeSchedules,
     handleNextPeriod,
@@ -58,6 +59,15 @@ const ShiftCalendar = () => {
     handleSubmitSwapShift,
     handleShiftClick
   } = useShiftCalendarState();
+
+  // Convert employees to the expected format with role and hourlyRate
+  const employees: Employee[] = employeesData.map(emp => ({
+    id: emp.id,
+    name: emp.name,
+    role: emp.job_title || 'Employee', // Use job_title as role or default to 'Employee'
+    hourlyRate: emp.hourly_rate || 0,
+    avatarUrl: emp.avatar
+  }));
 
   // Check if the current user has manager access
   const hasManagerAccess = isAdmin || isManager || isHR;
@@ -97,7 +107,7 @@ const ShiftCalendar = () => {
           employees={employees}
           selectedEmployee={selectedEmployee}
           setSelectedEmployee={setSelectedEmployee}
-          handleSubmit={handleSubmitAddShift}
+          handleSubmit={(formData) => handleSubmitAddShift(formData)}
         />
         
         {/* Mobile Swap Shift Sheet */}
@@ -108,7 +118,7 @@ const ShiftCalendar = () => {
           employees={employees}
           selectedEmployee={selectedEmployee}
           setSelectedEmployee={setSelectedEmployee}
-          handleSubmit={handleSubmitSwapShift}
+          handleSubmit={(formData) => handleSubmitSwapShift(formData)}
           schedules={schedules}
           selectedShift={selectedShift}
           setSelectedShift={setSelectedShift}
@@ -122,7 +132,7 @@ const ShiftCalendar = () => {
           employees={employees}
           selectedEmployee={selectedEmployee}
           setSelectedEmployee={setSelectedEmployee}
-          handleSubmit={handleSubmitEmployeeShift}
+          handleSubmit={(formData) => handleSubmitEmployeeShift(formData)}
         />
 
         {/* FAB for mobile view - positioned at bottom right */}
@@ -209,7 +219,7 @@ const ShiftCalendar = () => {
             isHR={isHR}
             handleAddShift={handleAddShift}
             handleShiftClick={handleShiftClick}
-            handleEmployeeAddShift={handleAddEmployeeShift}
+            handleEmployeeAddShift={(employeeId, date) => handleAddEmployeeShift(date)}
             isLoading={isLoading}
           />
         </div>
@@ -226,7 +236,7 @@ const ShiftCalendar = () => {
         employees={employees}
         selectedEmployee={selectedEmployee}
         setSelectedEmployee={setSelectedEmployee}
-        handleSubmit={handleSubmitAddShift}
+        handleSubmit={(formData) => handleSubmitAddShift(formData)}
       />
       
       {/* Desktop popover for Swap Shift */}
@@ -237,7 +247,7 @@ const ShiftCalendar = () => {
         employees={employees}
         selectedEmployee={selectedEmployee}
         setSelectedEmployee={setSelectedEmployee}
-        handleSubmit={handleSubmitSwapShift}
+        handleSubmit={(formData) => handleSubmitSwapShift(formData)}
         schedules={schedules}
         selectedShift={selectedShift}
         setSelectedShift={setSelectedShift}
@@ -251,7 +261,7 @@ const ShiftCalendar = () => {
         employees={employees}
         selectedEmployee={selectedEmployee}
         setSelectedEmployee={setSelectedEmployee}
-        handleSubmit={handleSubmitEmployeeShift}
+        handleSubmit={(formData) => handleSubmitEmployeeShift(formData)}
       />
       
       {/* FAB for desktop view - positioned at bottom right */}

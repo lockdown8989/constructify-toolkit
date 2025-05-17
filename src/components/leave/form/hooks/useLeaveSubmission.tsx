@@ -5,6 +5,7 @@ import { useAddLeaveRequest } from "@/hooks/leave";
 import { useQueryClient } from "@tanstack/react-query";
 import { calculateBusinessDays } from "@/utils/leave-utils";
 import type { FormStatus } from "./useFormState";
+import { AuditLogEntry } from "@/hooks/leave/leave-types";
 
 /**
  * Hook to handle leave request submission
@@ -53,12 +54,14 @@ export const useLeaveSubmission = (
     const formattedStartDate = format(startDate, "yyyy-MM-dd");
     const formattedEndDate = format(endDate, "yyyy-MM-dd");
     
-    const initialAuditLog = [{
+    const initialAuditLog: AuditLogEntry[] = [{
       action: 'REQUEST_CREATED',
       timestamp: new Date().toISOString(),
       details: `Request created for ${leaveDays} business days`,
       user_id: userId,
-      employee_name: employeeName
+      employee_name: employeeName,
+      status: 'Pending',
+      reviewer_name: employeeName
     }];
     
     try {
