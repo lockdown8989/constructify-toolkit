@@ -13,6 +13,8 @@ import { Employee } from '@/types/restaurant-schedule';
 import { useShiftCalendarState } from '@/components/schedule/hooks/useShiftCalendarState';
 import { ShiftCalendarProps } from '../types/calendar-types';
 import DateActionMenu from '../calendar/DateActionMenu';
+import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
 
 const DesktopCalendarView: React.FC<ShiftCalendarProps> = ({
   shiftState,
@@ -65,7 +67,7 @@ const DesktopCalendarView: React.FC<ShiftCalendarProps> = ({
   const employees: Employee[] = shiftState.employees.map(emp => ({
     id: emp.id,
     name: emp.name,
-    role: emp.job_title || 'Employee', // Use job_title as role or default to 'Employee'
+    role: emp.job_title || 'Employee',
     hourlyRate: emp.hourly_rate || 0,
     avatarUrl: emp.avatar
   }));
@@ -79,19 +81,74 @@ const DesktopCalendarView: React.FC<ShiftCalendarProps> = ({
     setIsDateMenuOpen(true);
   };
 
-  // Handle add shift from mini menu
-  const handleAddShiftFromMenu = () => {
+  // Handle add shift from mini menu with Supabase integration
+  const handleAddShiftFromMenu = async () => {
     if (selectedCalendarDate) {
-      handleAddShift(selectedCalendarDate);
-      setIsDateMenuOpen(false);
+      try {
+        // Log the action in Supabase (optional)
+        await supabase.from('calendar_actions').insert({
+          action_type: 'add_shift',
+          date: selectedCalendarDate.toISOString(),
+          platform: 'desktop',
+          initiated_by: (await supabase.auth.getUser()).data.user?.id
+        }).maybeSingle();
+        
+        // Proceed with the normal flow
+        handleAddShift(selectedCalendarDate);
+        setIsDateMenuOpen(false);
+      } catch (error) {
+        console.error('Error logging calendar action:', error);
+        // Continue with the action anyway
+        handleAddShift(selectedCalendarDate);
+        setIsDateMenuOpen(false);
+      }
     }
   };
 
-  // Handle add employee shift from mini menu
-  const handleAddEmployeeFromMenu = () => {
+  // Handle add employee shift from mini menu with Supabase integration
+  const handleAddEmployeeFromMenu = async () => {
     if (selectedCalendarDate) {
-      shiftState.handleAddEmployeeShift(selectedCalendarDate);
-      setIsDateMenuOpen(false);
+      try {
+        // Log the action in Supabase (optional)
+        await supabase.from('calendar_actions').insert({
+          action_type: 'add_employee_shift',
+          date: selectedCalendarDate.toISOString(),
+          platform: 'desktop',
+          initiated_by: (await supabase.auth.getUser()).data.user?.id
+        }).maybeSingle();
+        
+        // Also add notification for managers about this action
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          const { data: employeeData } = await supabase
+            .from('employees')
+            .select('name')
+            .eq('user_id', userData.user.id)
+            .maybeSingle();
+            
+          const managerName = employeeData?.name || 'A manager';
+          const dateString = format(selectedCalendarDate, 'MMMM d, yyyy');
+          
+          // Notify other managers
+          await supabase.from('notifications').insert({
+            user_id: userData.user.id,
+            title: 'Calendar Action',
+            message: `${managerName} initiated adding an employee shift on ${dateString}`,
+            type: 'info',
+            related_entity: 'calendar',
+            related_id: selectedCalendarDate.toISOString()
+          });
+        }
+        
+        // Proceed with the normal flow
+        shiftState.handleAddEmployeeShift(selectedCalendarDate);
+        setIsDateMenuOpen(false);
+      } catch (error) {
+        console.error('Error logging calendar action:', error);
+        // Continue with the action anyway
+        shiftState.handleAddEmployeeShift(selectedCalendarDate);
+        setIsDateMenuOpen(false);
+      }
     }
   };
 
@@ -187,7 +244,6 @@ const DesktopCalendarView: React.FC<ShiftCalendarProps> = ({
         handleSubmit={handleAddShiftSubmit}
       />
       
-      {/* Desktop popover for Swap Shift */}
       <SwapShiftPopover
         isOpen={isSwapShiftOpen}
         onOpenChange={setIsSwapShiftOpen}
@@ -201,7 +257,6 @@ const DesktopCalendarView: React.FC<ShiftCalendarProps> = ({
         setSelectedShift={setSelectedShift}
       />
       
-      {/* Desktop dialog for Add Employee Shift */}
       <AddEmployeeShiftDialog
         isOpen={isAddEmployeeShiftOpen}
         onOpenChange={setIsAddEmployeeShiftOpen}

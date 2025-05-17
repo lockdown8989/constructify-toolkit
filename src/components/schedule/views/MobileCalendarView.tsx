@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,9 @@ import WeekNavigation from '@/components/schedule/components/WeekNavigation';
 import { Employee } from '@/types/restaurant-schedule';
 import { ShiftCalendarProps } from '../types/calendar-types';
 import DateActionMenu from '../calendar/DateActionMenu';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
   shiftState,
@@ -19,6 +21,7 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
 }) => {
   const [isDateMenuOpen, setIsDateMenuOpen] = useState(false);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
+  const { toast } = useToast();
 
   const {
     isAdmin,
@@ -74,19 +77,74 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
     setIsDateMenuOpen(true);
   };
 
-  // Handle add shift from mini menu
-  const handleAddShiftFromMenu = () => {
+  // Handle add shift from mini menu with Supabase integration
+  const handleAddShiftFromMenu = async () => {
     if (selectedCalendarDate) {
-      handleAddShift(selectedCalendarDate);
-      setIsDateMenuOpen(false);
+      try {
+        // Log the action in Supabase (optional)
+        await supabase.from('calendar_actions').insert({
+          action_type: 'add_shift',
+          date: selectedCalendarDate.toISOString(),
+          platform: 'mobile',
+          initiated_by: (await supabase.auth.getUser()).data.user?.id
+        }).maybeSingle();
+        
+        // Proceed with the normal flow
+        handleAddShift(selectedCalendarDate);
+        setIsDateMenuOpen(false);
+      } catch (error) {
+        console.error('Error logging calendar action:', error);
+        // Continue with the action anyway
+        handleAddShift(selectedCalendarDate);
+        setIsDateMenuOpen(false);
+      }
     }
   };
 
-  // Handle add employee shift from mini menu
-  const handleAddEmployeeFromMenu = () => {
+  // Handle add employee shift from mini menu with Supabase integration
+  const handleAddEmployeeFromMenu = async () => {
     if (selectedCalendarDate) {
-      shiftState.handleAddEmployeeShift(selectedCalendarDate);
-      setIsDateMenuOpen(false);
+      try {
+        // Log the action in Supabase (optional)
+        await supabase.from('calendar_actions').insert({
+          action_type: 'add_employee_shift',
+          date: selectedCalendarDate.toISOString(),
+          platform: 'mobile',
+          initiated_by: (await supabase.auth.getUser()).data.user?.id
+        }).maybeSingle();
+        
+        // Also add notification for managers about this action
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          const { data: employeeData } = await supabase
+            .from('employees')
+            .select('name')
+            .eq('user_id', userData.user.id)
+            .maybeSingle();
+            
+          const managerName = employeeData?.name || 'A manager';
+          const dateString = format(selectedCalendarDate, 'MMMM d, yyyy');
+          
+          // Notify other managers
+          await supabase.from('notifications').insert({
+            user_id: userData.user.id,
+            title: 'Calendar Action',
+            message: `${managerName} initiated adding an employee shift on ${dateString}`,
+            type: 'info',
+            related_entity: 'calendar',
+            related_id: selectedCalendarDate.toISOString()
+          });
+        }
+        
+        // Proceed with the normal flow
+        shiftState.handleAddEmployeeShift(selectedCalendarDate);
+        setIsDateMenuOpen(false);
+      } catch (error) {
+        console.error('Error logging calendar action:', error);
+        // Continue with the action anyway
+        shiftState.handleAddEmployeeShift(selectedCalendarDate);
+        setIsDateMenuOpen(false);
+      }
     }
   };
 

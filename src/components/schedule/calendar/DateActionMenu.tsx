@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Film, UserPlus, X } from 'lucide-react';
+import { Calendar, UserPlus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 interface DateActionMenuProps {
   isOpen: boolean;
@@ -9,7 +10,7 @@ interface DateActionMenuProps {
   onAddShift: () => void;
   onAddEmployee: () => void;
   hasManagerAccess: boolean;
-  selectedDate?: Date;
+  selectedDate?: Date | null;
 }
 
 const DateActionMenu: React.FC<DateActionMenuProps> = ({
@@ -30,13 +31,8 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {selectedDate && (
-          <div className="text-center mb-3 text-sm text-gray-500">
-            {selectedDate.toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              month: 'long', 
-              day: 'numeric',
-              year: 'numeric'
-            })}
+          <div className="text-center mb-3 text-sm font-medium text-gray-600">
+            {format(selectedDate, 'EEEE, MMMM d, yyyy')}
           </div>
         )}
         
@@ -49,7 +45,7 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
             onClick={onAddShift}
           >
             <div className="w-12 h-12 border border-gray-300 rounded-lg flex items-center justify-center mr-4 bg-blue-50">
-              <Film className="h-6 w-6 text-blue-600" />
+              <Calendar className="h-6 w-6 text-blue-600" />
             </div>
             <div className="text-xl font-semibold text-gray-800">Add shift</div>
           </div>

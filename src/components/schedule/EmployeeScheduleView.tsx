@@ -22,7 +22,7 @@ const EmployeeScheduleView: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAdmin, isHR, isManager } = useAuth();
+  const { isAdmin, isHR, isManager, user } = useAuth();
   const hasManagerAccess = isAdmin || isHR || isManager;
   
   const {
@@ -108,14 +108,11 @@ const EmployeeScheduleView: React.FC = () => {
   };
 
   const handleResponseComplete = () => {
-    // Refresh schedules data after a response
     refreshSchedules();
     
-    // If we were in the pending tab and there are no more pending shifts,
-    // switch to the my-shifts tab
     if (activeTab === 'pending') {
       const pendingShifts = schedules.filter(s => s.status === 'pending');
-      if (pendingShifts.length <= 1) { // Using <= 1 because the current item is still in the array
+      if (pendingShifts.length <= 1) {
         setActiveTab('my-shifts');
       }
     }
@@ -126,25 +123,82 @@ const EmployeeScheduleView: React.FC = () => {
     setViewType(view);
   };
   
-  // Function for add shift functionality
-  const handleAddShift = (day: Date) => {
+  // Function for add shift functionality with Supabase integration
+  const handleAddShift = async (day: Date) => {
     if (hasManagerAccess) {
-      setSelectedDay(day);
-      navigate('/shift-calendar', { state: { selectedDate: day } });
+      try {
+        await supabase.from('calendar_actions').insert({
+          action_type: 'add_shift',
+          date: day.toISOString(),
+          platform: 'employee_view',
+          initiated_by: user?.id
+        }).maybeSingle();
+        
+        setSelectedDay(day);
+        navigate('/shift-calendar', { state: { selectedDate: day } });
+      } catch (error) {
+        console.error('Error logging calendar action:', error);
+        setSelectedDay(day);
+        navigate('/shift-calendar', { state: { selectedDate: day } });
+      }
     }
   };
 
-  // Function for add employee shift functionality
-  const handleAddEmployeeShift = (day: Date) => {
+  // Function for add employee shift functionality with Supabase integration
+  const handleAddEmployeeShift = async (day: Date) => {
     if (hasManagerAccess) {
-      setSelectedDay(day);
-      navigate('/shift-calendar', { state: { selectedDate: day, addEmployeeShift: true } });
+      try {
+        await supabase.from('calendar_actions').insert({
+          action_type: 'add_employee_shift',
+          date: day.toISOString(),
+          platform: 'employee_view',
+          initiated_by: user?.id
+        }).maybeSingle();
+        
+        if (user?.id) {
+          const { data: employeeData } = await supabase
+            .from('employees')
+            .select('name')
+            .eq('user_id', user.id)
+            .maybeSingle();
+            
+          const managerName = employeeData?.name || 'A manager';
+          const dateString = format(day, 'MMMM d, yyyy');
+          
+          const { data: managers } = await supabase
+            .from('user_roles')
+            .select('user_id')
+            .in('role', ['admin', 'manager', 'hr'])
+            .neq('user_id', user.id);
+            
+          if (managers) {
+            const notifications = managers.map(manager => ({
+              user_id: manager.user_id,
+              title: 'Calendar Action',
+              message: `${managerName} initiated adding an employee shift on ${dateString}`,
+              type: 'info',
+              related_entity: 'calendar',
+              related_id: day.toISOString()
+            }));
+            
+            if (notifications.length > 0) {
+              await supabase.from('notifications').insert(notifications);
+            }
+          }
+        }
+        
+        setSelectedDay(day);
+        navigate('/shift-calendar', { state: { selectedDate: day, addEmployeeShift: true } });
+      } catch (error) {
+        console.error('Error logging calendar action:', error);
+        setSelectedDay(day);
+        navigate('/shift-calendar', { state: { selectedDate: day, addEmployeeShift: true } });
+      }
     }
   };
   
   // Function to handle shift drag start
   const handleShiftDragStart = (e: React.DragEvent, shift: OpenShiftType) => {
-    // Set the data to be transferred
     e.dataTransfer.setData('shiftId', shift.id);
     e.dataTransfer.effectAllowed = 'move';
   };
@@ -157,7 +211,6 @@ const EmployeeScheduleView: React.FC = () => {
   // Function to handle shift drops
   const handleShiftDrop = async (shiftId: string) => {
     try {
-      // Get employee ID for the current user
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -184,7 +237,6 @@ const EmployeeScheduleView: React.FC = () => {
         return;
       }
       
-      // Create an assignment record
       const { data, error } = await supabase
         .from('open_shift_assignments')
         .insert([{
@@ -205,13 +257,11 @@ const EmployeeScheduleView: React.FC = () => {
         return;
       }
       
-      // Update the open shift status
       await supabase
         .from('open_shifts')
         .update({ status: 'assigned' })
         .eq('id', shiftId);
         
-      // Set the dropped shift ID to highlight it
       setDroppedShiftId(shiftId);
       
       toast({
@@ -219,10 +269,8 @@ const EmployeeScheduleView: React.FC = () => {
         description: "The shift has been added to your schedule.",
       });
       
-      // Refresh schedules to show the new shift
       refreshSchedules();
       
-      // Also refresh open shifts
       const { data: updatedOpenShifts } = await supabase
         .from('open_shifts')
         .select('*')
@@ -243,11 +291,24 @@ const EmployeeScheduleView: React.FC = () => {
     }
   };
 
-  // Function to handle date click from calendar views
-  const handleDateClick = (date: Date) => {
+  // Function to handle date click from calendar views with Supabase integration
+  const handleDateClick = async (date: Date) => {
     setCurrentDate(date);
     setSelectedDay(date);
     setIsDateMenuOpen(true);
+    
+    try {
+      if (user?.id) {
+        await supabase.from('calendar_actions').insert({
+          action_type: 'view_date',
+          date: date.toISOString(),
+          platform: 'employee_view',
+          initiated_by: user.id
+        }).maybeSingle();
+      }
+    } catch (error) {
+      console.error('Error logging calendar view action:', error);
+    }
   };
 
   // Function to handle previous/next navigation
@@ -394,14 +455,14 @@ const EmployeeScheduleView: React.FC = () => {
         setIsCancelDialogOpen={setIsCancelDialogOpen}
       />
 
-      {/* Date Action Menu */}
+      {/* Date Action Menu with enhanced functionality */}
       <DateActionMenu
         isOpen={isDateMenuOpen}
         onClose={() => setIsDateMenuOpen(false)}
         onAddShift={() => selectedDay && handleAddShift(selectedDay)}
         onAddEmployee={() => selectedDay && handleAddEmployeeShift(selectedDay)}
         hasManagerAccess={hasManagerAccess}
-        selectedDate={selectedDay || undefined}
+        selectedDate={selectedDay}
       />
     </div>
   );
