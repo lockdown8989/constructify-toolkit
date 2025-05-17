@@ -11,11 +11,15 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { OpenShiftType } from '@/types/supabase/schedules';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
 
 const EmployeeScheduleView: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAdmin, isHR, isManager } = useAuth();
+  const hasManagerAccess = isAdmin || isHR || isManager;
+  
   const {
     currentDate,
     setCurrentDate,
@@ -36,7 +40,9 @@ const EmployeeScheduleView: React.FC = () => {
   // State to track if a shift was just dropped
   const [droppedShiftId, setDroppedShiftId] = useState<string | null>(null);
   const [openShifts, setOpenShifts] = useState<OpenShiftType[]>([]);
-
+  const [isAddShiftDialogOpen, setIsAddShiftDialogOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  
   // Fetch open shifts that can be dropped
   useEffect(() => {
     const fetchOpenShifts = async () => {
@@ -82,6 +88,22 @@ const EmployeeScheduleView: React.FC = () => {
       if (pendingShifts.length <= 1) { // Using <= 1 because the current item is still in the array
         setActiveTab('my-shifts');
       }
+    }
+  };
+  
+  // Function for add shift functionality
+  const handleAddShift = (day: Date) => {
+    if (hasManagerAccess) {
+      setSelectedDay(day);
+      navigate('/shift-calendar', { state: { selectedDate: day } });
+    }
+  };
+
+  // Function for add employee shift functionality
+  const handleAddEmployeeShift = (day: Date) => {
+    if (hasManagerAccess) {
+      setSelectedDay(day);
+      navigate('/shift-calendar', { state: { selectedDate: day, addEmployeeShift: true } });
     }
   };
   
@@ -233,6 +255,8 @@ const EmployeeScheduleView: React.FC = () => {
         schedules={schedules}
         onShiftDrop={handleShiftDrop}
         highlightedShiftId={droppedShiftId}
+        onAddShift={handleAddShift}
+        onAddEmployeeShift={handleAddEmployeeShift}
       />
       
       <div className="border-t border-gray-200 my-2" />

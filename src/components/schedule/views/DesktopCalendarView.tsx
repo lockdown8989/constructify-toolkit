@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import ScheduleHeader from '@/components/restaurant/ScheduleHeader';
 import DayColumns from '@/components/schedule/calendar/DayColumns';
@@ -12,11 +12,15 @@ import AddEmployeeShiftDialog from '@/components/schedule/components/AddEmployee
 import { Employee } from '@/types/restaurant-schedule';
 import { useShiftCalendarState } from '@/components/schedule/hooks/useShiftCalendarState';
 import { ShiftCalendarProps } from '../types/calendar-types';
+import DateActionMenu from '../calendar/DateActionMenu';
 
 const DesktopCalendarView: React.FC<ShiftCalendarProps> = ({
   shiftState,
   handleSubmitters
 }) => {
+  const [isDateMenuOpen, setIsDateMenuOpen] = useState(false);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
+  
   const {
     isAdmin,
     isHR,
@@ -68,6 +72,28 @@ const DesktopCalendarView: React.FC<ShiftCalendarProps> = ({
 
   // Check if the current user has manager access
   const hasManagerAccess = isAdmin || isManager || isHR;
+
+  // Handle date cell click to open menu
+  const handleDateCellClick = (date: Date) => {
+    setSelectedCalendarDate(date);
+    setIsDateMenuOpen(true);
+  };
+
+  // Handle add shift from mini menu
+  const handleAddShiftFromMenu = () => {
+    if (selectedCalendarDate) {
+      handleAddShift(selectedCalendarDate);
+      setIsDateMenuOpen(false);
+    }
+  };
+
+  // Handle add employee shift from mini menu
+  const handleAddEmployeeFromMenu = () => {
+    if (selectedCalendarDate) {
+      shiftState.handleAddEmployeeShift(selectedCalendarDate);
+      setIsDateMenuOpen(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow overflow-hidden relative">
@@ -126,6 +152,7 @@ const DesktopCalendarView: React.FC<ShiftCalendarProps> = ({
         isManager={isManager}
         isAdmin={isAdmin}
         isHR={isHR}
+        onDateClick={handleDateCellClick}
       />
       
       {/* Main grid */}
@@ -141,6 +168,7 @@ const DesktopCalendarView: React.FC<ShiftCalendarProps> = ({
             handleShiftClick={handleShiftClick}
             handleEmployeeAddShift={handleEmployeeAddShift}
             isLoading={isLoading}
+            onDateClick={handleDateCellClick}
           />
         </div>
       </div>
@@ -182,6 +210,15 @@ const DesktopCalendarView: React.FC<ShiftCalendarProps> = ({
         selectedEmployee={selectedEmployee}
         setSelectedEmployee={setSelectedEmployee}
         handleSubmit={handleEmployeeShiftSubmit}
+      />
+
+      {/* Date Action Menu */}
+      <DateActionMenu 
+        isOpen={isDateMenuOpen}
+        onClose={() => setIsDateMenuOpen(false)}
+        onAddShift={handleAddShiftFromMenu}
+        onAddEmployee={handleAddEmployeeFromMenu}
+        hasManagerAccess={hasManagerAccess}
       />
     </div>
   );

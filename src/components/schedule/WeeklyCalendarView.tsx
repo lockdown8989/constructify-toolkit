@@ -1,11 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { addDays, format, startOfWeek, subDays, isSameDay, isWithinInterval } from 'date-fns';
+import { addDays, format, startOfWeek, subDays, isSameDay, isWithinInterval, isToday } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Schedule } from '@/hooks/use-schedules';
 import ShiftDetailCard from './ShiftDetailCard';
 import { cn } from '@/lib/utils';
+import DateActionMenu from './calendar/DateActionMenu';
+import { useAuth } from '@/hooks/use-auth';
 
 interface WeeklyCalendarViewProps {
   startDate: Date;
@@ -13,6 +15,8 @@ interface WeeklyCalendarViewProps {
   schedules: Schedule[];
   onShiftDrop?: (shiftId: string) => void;
   highlightedShiftId?: string | null;
+  onAddShift?: (date: Date) => void;
+  onAddEmployeeShift?: (date: Date) => void;
 }
 
 const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
@@ -20,12 +24,17 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
   onDateChange,
   schedules,
   onShiftDrop,
-  highlightedShiftId
+  highlightedShiftId,
+  onAddShift,
+  onAddEmployeeShift
 }) => {
   const [weekDays, setWeekDays] = useState<Date[]>([]);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [daySchedules, setDaySchedules] = useState<Schedule[]>([]);
   const [isDraggingOver, setIsDraggingOver] = useState<number | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAdmin, isManager, isHR } = useAuth();
+  const hasManagerAccess = isAdmin || isManager || isHR;
 
   // Generate week days whenever the start date changes
   useEffect(() => {
@@ -68,6 +77,27 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
   const handleDayClick = (day: Date) => {
     setSelectedDay(day);
     onDateChange(day);
+    
+    // Only open menu if manager access and functions provided
+    if (hasManagerAccess && onAddShift && onAddEmployeeShift) {
+      setIsMenuOpen(true);
+    }
+  };
+
+  // Handle adding a shift via the menu
+  const handleAddShift = () => {
+    if (selectedDay && onAddShift) {
+      onAddShift(selectedDay);
+      setIsMenuOpen(false);
+    }
+  };
+
+  // Handle adding an employee shift via the menu
+  const handleAddEmployeeShift = () => {
+    if (selectedDay && onAddEmployeeShift) {
+      onAddEmployeeShift(selectedDay);
+      setIsMenuOpen(false);
+    }
   };
 
   // Handle drag events
@@ -121,7 +151,7 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
             return isSameDay(scheduleDate, day);
           });
           
-          const isToday = isSameDay(day, new Date());
+          const isTodayDate = isToday(day);
 
           return (
             <div
@@ -129,7 +159,8 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
               className={cn(
                 "flex flex-col items-center p-2 rounded-lg cursor-pointer transition-colors",
                 isSelected ? "bg-blue-100" : "hover:bg-gray-100",
-                isToday && "border-blue-500 border-2",
+                isTodayDate && !isSelected && "animate-pulse-slow border-blue-500 border-2",
+                isTodayDate && isSelected && "border-blue-500 border-2",
                 isDraggingOver === index && "bg-blue-50 border-dashed border-2 border-blue-400",
                 hasSchedule && !isSelected && "bg-gray-50"
               )}
@@ -140,8 +171,9 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
             >
               <div className="text-sm font-medium">{format(day, 'EEE')}</div>
               <div className={cn(
-                "flex items-center justify-center h-8 w-8 rounded-full",
-                isSelected ? "bg-blue-500 text-white" : "text-gray-700"
+                "flex items-center justify-center h-8 w-8 rounded-full transition-transform",
+                isTodayDate && "animate-[bounce_1s_ease-in-out]",
+                isSelected ? "bg-blue-500 text-white scale-110" : "text-gray-700"
               )}>
                 {format(day, 'd')}
               </div>
@@ -200,6 +232,15 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
           )}
         </div>
       </div>
+
+      {/* Date action menu */}
+      <DateActionMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        onAddShift={handleAddShift}
+        onAddEmployee={handleAddEmployeeShift}
+        hasManagerAccess={hasManagerAccess}
+      />
     </div>
   );
 };

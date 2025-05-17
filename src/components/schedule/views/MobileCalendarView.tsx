@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Plus, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ScheduleHeader from '@/components/restaurant/ScheduleHeader';
@@ -11,11 +11,15 @@ import ShiftCalendarToolbar from '@/components/schedule/components/ShiftCalendar
 import WeekNavigation from '@/components/schedule/components/WeekNavigation';
 import { Employee } from '@/types/restaurant-schedule';
 import { ShiftCalendarProps } from '../types/calendar-types';
+import DateActionMenu from '../calendar/DateActionMenu';
 
 const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
   shiftState,
   handleSubmitters
 }) => {
+  const [isDateMenuOpen, setIsDateMenuOpen] = useState(false);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
+
   const {
     isAdmin,
     isHR,
@@ -42,8 +46,8 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
     handleToday,
     handleAddShift,
     handleShiftClick,
-    handleNextPeriod, // Use correct property name
-    handlePreviousPeriod // Use correct property name
+    handleNextPeriod,
+    handlePreviousPeriod
   } = shiftState;
   
   const {
@@ -64,6 +68,28 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
   // Check if the current user has manager access
   const hasManagerAccess = isAdmin || isManager || isHR;
 
+  // Handle date cell click to open menu
+  const handleDateCellClick = (date: Date) => {
+    setSelectedCalendarDate(date);
+    setIsDateMenuOpen(true);
+  };
+
+  // Handle add shift from mini menu
+  const handleAddShiftFromMenu = () => {
+    if (selectedCalendarDate) {
+      handleAddShift(selectedCalendarDate);
+      setIsDateMenuOpen(false);
+    }
+  };
+
+  // Handle add employee shift from mini menu
+  const handleAddEmployeeFromMenu = () => {
+    if (selectedCalendarDate) {
+      shiftState.handleAddEmployeeShift(selectedCalendarDate);
+      setIsDateMenuOpen(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       <ScheduleHeader 
@@ -79,8 +105,8 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
       <div className="px-2 py-3 border-b">
         <WeekNavigation
           currentDate={selectedDate}
-          onPreviousWeek={handlePreviousPeriod} // Updated to use correct property
-          onNextWeek={handleNextPeriod} // Updated to use correct property
+          onPreviousWeek={handlePreviousPeriod}
+          onNextWeek={handleNextPeriod}
           onSelectToday={handleToday}
           isMobile={true}
           viewType={weekView ? 'week' : 'day'}
@@ -93,6 +119,7 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
         onAddShift={() => handleAddShift(new Date())}
         onShiftClick={handleShiftClick}
         selectedDate={selectedDate}
+        onDateClick={handleDateCellClick}
       />
       
       {/* Mobile Add Shift Sheet */}
@@ -129,6 +156,15 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
         selectedEmployee={selectedEmployee}
         setSelectedEmployee={setSelectedEmployee}
         handleSubmit={handleEmployeeShiftSubmit}
+      />
+
+      {/* Date Action Menu */}
+      <DateActionMenu 
+        isOpen={isDateMenuOpen}
+        onClose={() => setIsDateMenuOpen(false)}
+        onAddShift={handleAddShiftFromMenu}
+        onAddEmployee={handleAddEmployeeFromMenu}
+        hasManagerAccess={hasManagerAccess}
       />
 
       {/* FAB for mobile view - positioned at bottom right */}
