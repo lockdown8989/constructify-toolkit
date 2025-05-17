@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ViewType } from '@/components/schedule/types/calendar-types';
 import { useAuth } from '@/hooks/use-auth';
@@ -28,6 +28,8 @@ export const useCalendarPreferences = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { user } = useAuth();
   const { toast } = useToast();
+  const saveInProgress = useRef(false);
+  const toastDebounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch calendar preferences
   useEffect(() => {
@@ -104,11 +106,19 @@ export const useCalendarPreferences = () => {
     fetchPreferences();
   }, [user]);
 
-  // Update calendar preferences
+  // Update calendar preferences with debounce to prevent duplicate toasts
   const updatePreferences = async (updatedPrefs: Partial<CalendarPreferences>) => {
-    if (!preferences?.id) return;
-
+    if (!preferences?.id || saveInProgress.current) return;
+    
+    saveInProgress.current = true;
+    
     try {
+      // Clear any existing toast timeout
+      if (toastDebounceTimeout.current) {
+        clearTimeout(toastDebounceTimeout.current);
+        toastDebounceTimeout.current = null;
+      }
+      
       const { error } = await supabase
         .from('calendar_preferences')
         .update({ ...updatedPrefs, updated_at: new Date() })
@@ -125,17 +135,25 @@ export const useCalendarPreferences = () => {
       }
 
       setPreferences(prev => prev ? { ...prev, ...updatedPrefs } : null);
-      toast({
-        title: 'Preferences updated',
-        description: 'Your calendar preferences have been saved',
-      });
+      
+      // Debounce toast notification with a 1 second delay
+      toastDebounceTimeout.current = setTimeout(() => {
+        toast({
+          title: 'Preferences updated',
+          description: 'Your calendar preferences have been saved',
+        });
+      }, 1000);
     } catch (error) {
       console.error('Unexpected error updating preferences:', error);
+    } finally {
+      saveInProgress.current = false;
     }
   };
 
-  // Update just the default view
+  // Update just the default view with debouncing
   const setDefaultView = async (view: ViewType) => {
+    // Don't update if it's the same view to prevent unnecessary API calls
+    if (preferences?.default_view === view) return;
     await updatePreferences({ default_view: view });
   };
 

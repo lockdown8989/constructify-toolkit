@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Calendar, CalendarDays, CalendarRange } from 'lucide-react';
@@ -12,13 +12,20 @@ interface ViewSelectorProps {
 }
 
 const ViewSelector: React.FC<ViewSelectorProps> = ({ view, onChange }) => {
+  // Use useCallback to prevent unnecessary re-renders
+  const handleViewChange = useCallback((newView: ViewType) => {
+    if (view !== newView) {
+      onChange(newView);
+    }
+  }, [view, onChange]);
+  
   return (
     <div className="flex rounded-md border p-1 bg-white shadow-sm">
       <Button
         type="button"
         variant={view === 'day' ? 'default' : 'ghost'}
         size="sm"
-        onClick={() => onChange('day')}
+        onClick={() => handleViewChange('day')}
         className={cn(
           "rounded-sm transition-colors duration-200", 
           view !== 'day' && "hover:bg-muted/30",
@@ -32,7 +39,7 @@ const ViewSelector: React.FC<ViewSelectorProps> = ({ view, onChange }) => {
         type="button"
         variant={view === 'week' ? 'default' : 'ghost'}
         size="sm"
-        onClick={() => onChange('week')}
+        onClick={() => handleViewChange('week')}
         className={cn(
           "rounded-sm transition-colors duration-200", 
           view !== 'week' && "hover:bg-muted/30",
@@ -46,7 +53,7 @@ const ViewSelector: React.FC<ViewSelectorProps> = ({ view, onChange }) => {
         type="button"
         variant={view === 'month' ? 'default' : 'ghost'}
         size="sm"
-        onClick={() => onChange('month')}
+        onClick={() => handleViewChange('month')}
         className={cn(
           "rounded-sm transition-colors duration-200", 
           view !== 'month' && "hover:bg-muted/30",
