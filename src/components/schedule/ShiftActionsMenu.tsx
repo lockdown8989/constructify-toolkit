@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { ArrowLeftRight, UserPlus, Calendar, Clock } from 'lucide-react';
+import { ArrowLeftRight, UserPlus, Calendar, Clock, MoreVertical } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -19,6 +19,7 @@ interface ShiftActionsMenuProps {
   onOpenChange?: (open: boolean) => void;
   triggerClassName?: string;
   disabled?: boolean;
+  className?: string; // Added className prop
 }
 
 const ShiftActionsMenu: React.FC<ShiftActionsMenuProps> = ({
@@ -28,7 +29,8 @@ const ShiftActionsMenu: React.FC<ShiftActionsMenuProps> = ({
   isOpen,
   onOpenChange,
   triggerClassName,
-  disabled = false
+  disabled = false,
+  className
 }) => {
   const isMobile = useIsMobile();
   
@@ -43,11 +45,11 @@ const ShiftActionsMenu: React.FC<ShiftActionsMenuProps> = ({
   return (
     <Popover open={isOpen} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
-        <div className={cn("cursor-pointer", triggerClassName, disabled && "pointer-events-none opacity-50")}>
+        <div className={cn("cursor-pointer", triggerClassName, className, disabled && "pointer-events-none opacity-50")}>
           {/* This can be any children element */}
           <div className="w-full h-full flex items-center justify-center">
             {isMobile ? (
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <MoreVertical className="h-4 w-4 text-gray-500" />
             ) : (
               <div className="text-sm text-blue-600">{format(date, 'd')}</div>
             )}

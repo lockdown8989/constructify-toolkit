@@ -1,9 +1,8 @@
 
 import React from 'react';
 import { format, isSameDay } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { cn, getInitials } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getInitials } from '@/utils/format';
 import ShiftActionsMenu from '../ShiftActionsMenu';
 
 interface EmployeeRowProps {
@@ -83,9 +82,9 @@ const EmployeeRow: React.FC<EmployeeRowProps> = ({
                   
                   {hasManagerAccess && (
                     <ShiftActionsMenu
-                      shift={shift}
-                      onEdit={() => handleShiftClick(shift)}
-                      onDelete={() => console.log('Delete shift:', shift.id)}
+                      date={new Date(shift.start_time)}
+                      onAddShift={() => handleShiftClick(shift)}
+                      onSwapShift={() => console.log('Swap shift:', shift.id)}
                       className="ml-1"
                     />
                   )}
