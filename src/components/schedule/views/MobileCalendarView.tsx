@@ -1,0 +1,138 @@
+
+import React from 'react';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import ScheduleHeader from '@/components/restaurant/ScheduleHeader';
+import MobileScheduleView from '@/components/schedule/MobileScheduleView';
+import AddShiftDialog from '@/components/schedule/mobile/AddShiftDialog';
+import SwapShiftDialog from '@/components/schedule/mobile/SwapShiftDialog';
+import AddEmployeeShiftDialog from '@/components/schedule/components/AddEmployeeShiftDialog';
+import ShiftCalendarToolbar from '@/components/schedule/components/ShiftCalendarToolbar';
+import { Employee } from '@/types/restaurant-schedule';
+import { ShiftCalendarProps } from '../types/calendar-types';
+
+const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
+  shiftState,
+  handleSubmitters
+}) => {
+  const {
+    isAdmin,
+    isHR,
+    isManager,
+    schedules,
+    selectedDate,
+    locationName,
+    setLocationName,
+    searchQuery,
+    setSearchQuery,
+    weekView,
+    setWeekView,
+    selectedDay,
+    isAddShiftOpen,
+    setIsAddShiftOpen,
+    isSwapShiftOpen,
+    setIsSwapShiftOpen,
+    isAddEmployeeShiftOpen,
+    setIsAddEmployeeShiftOpen,
+    selectedEmployee,
+    setSelectedEmployee,
+    selectedShift,
+    setSelectedShift,
+    handleToday,
+    handleAddShift,
+    handleShiftClick
+  } = shiftState;
+  
+  const {
+    handleAddShiftSubmit,
+    handleSwapShiftSubmit,
+    handleEmployeeShiftSubmit
+  } = handleSubmitters;
+
+  // Convert employees to the expected format with role and hourlyRate
+  const employees: Employee[] = shiftState.employees.map(emp => ({
+    id: emp.id,
+    name: emp.name,
+    role: emp.job_title || 'Employee',
+    hourlyRate: emp.hourly_rate || 0,
+    avatarUrl: emp.avatar
+  }));
+
+  // Check if the current user has manager access
+  const hasManagerAccess = isAdmin || isManager || isHR;
+
+  return (
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <ScheduleHeader 
+        locationName={locationName} 
+        setLocationName={setLocationName}
+        onSearch={setSearchQuery}
+        searchQuery={searchQuery}
+        weekView={weekView}
+        setWeekView={setWeekView}
+      />
+      <div className="flex justify-between items-center p-4 border-b">
+        <ShiftCalendarToolbar
+          currentDate={selectedDate}
+          onDateChange={date => handleToday()}
+          onAddShift={() => handleAddShift(new Date())}
+          onAddEmployeeShift={() => hasManagerAccess && shiftState.handleAddEmployeeShift(new Date())}
+        />
+      </div>
+      <MobileScheduleView 
+        schedules={schedules}
+        employees={employees}
+        onAddShift={() => handleAddShift(new Date())}
+        onShiftClick={handleShiftClick}
+      />
+      
+      {/* Mobile Add Shift Sheet */}
+      <AddShiftDialog
+        isOpen={isAddShiftOpen}
+        onOpenChange={setIsAddShiftOpen}
+        selectedDay={selectedDay}
+        employees={employees}
+        selectedEmployee={selectedEmployee}
+        setSelectedEmployee={setSelectedEmployee}
+        handleSubmit={handleAddShiftSubmit}
+      />
+      
+      {/* Mobile Swap Shift Sheet */}
+      <SwapShiftDialog
+        isOpen={isSwapShiftOpen}
+        onOpenChange={setIsSwapShiftOpen}
+        selectedDay={selectedDay}
+        employees={employees}
+        selectedEmployee={selectedEmployee}
+        setSelectedEmployee={setSelectedEmployee}
+        handleSubmit={handleSwapShiftSubmit}
+        schedules={schedules}
+        selectedShift={selectedShift}
+        setSelectedShift={setSelectedShift}
+      />
+
+      {/* Mobile Add Employee Shift Dialog */}
+      <AddEmployeeShiftDialog
+        isOpen={isAddEmployeeShiftOpen}
+        onOpenChange={setIsAddEmployeeShiftOpen}
+        selectedDay={selectedDay}
+        employees={employees}
+        selectedEmployee={selectedEmployee}
+        setSelectedEmployee={setSelectedEmployee}
+        handleSubmit={handleEmployeeShiftSubmit}
+      />
+
+      {/* FAB for mobile view - positioned at bottom right */}
+      {hasManagerAccess && (
+        <Button
+          onClick={() => handleAddShift(new Date())}
+          className="fixed bottom-20 right-6 z-50 h-14 w-14 rounded-full shadow-lg bg-blue-500 hover:bg-blue-600 p-0 flex items-center justify-center"
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      )}
+    </div>
+  );
+};
+
+export default MobileCalendarView;
