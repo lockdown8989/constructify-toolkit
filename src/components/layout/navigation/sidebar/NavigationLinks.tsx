@@ -3,7 +3,7 @@ import React from 'react';
 import { 
   Home, FileText, User, Users, Calendar, 
   Workflow, DollarSign, Receipt, Clock, ClipboardCheck,
-  LayoutDashboard, Settings
+  LayoutDashboard
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SidebarNavLink from './SidebarNavLink';
@@ -131,16 +131,6 @@ const NavigationLinks: React.FC<NavigationLinksProps> = ({
                 isCollapsed={isCollapsed}
               />
             )}
-            
-            <SidebarDivider isCollapsed={isCollapsed} />
-            
-            <SidebarNavLink
-              to="/settings"
-              icon={Settings}
-              label="Settings"
-              isActive={isActive("/settings")}
-              isCollapsed={isCollapsed}
-            />
           </>
         )}
       </nav>
