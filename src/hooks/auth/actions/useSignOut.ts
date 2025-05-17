@@ -14,60 +14,28 @@ export const useSignOut = () => {
     try {
       console.log("Signing out user...");
       
-      // First check if we have a valid session
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('Session check error:', sessionError);
-        // Even with error, proceed with sign out attempt
-      }
-      
-      if (!sessionData?.session) {
-        console.log("No active session found, redirecting to auth page");
-        // Clear any local state
-        toast({
-          title: "Signed out",
-          description: "You have been successfully signed out.",
-        });
-        navigate('/auth');
-        return;
-      }
-      
-      // We have a session or have attempted to check, proceed with signout
+      // Sign out without checking for session first
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Sign out error:', error);
         
-        // If the error is about a missing session, just redirect the user
-        if (error.message?.includes('session') || error.name?.includes('Session')) {
-          toast({
-            title: "Signed out",
-            description: "You have been successfully signed out.",
-          });
-          navigate('/auth');
-          return;
-        }
-        
-        // For other errors, show the error but still try to clean up client-side
+        // Show error but still redirect the user
         toast({
-          title: "Sign out partially completed",
-          description: "You have been signed out but there was an issue: " + error.message,
+          title: "Sign out issue",
+          description: "There was an issue during sign out: " + error.message,
           variant: "destructive",
         });
-        
-        // Still redirect to auth page
-        setTimeout(() => navigate('/auth'), 1500);
-        return;
+      } else {
+        console.log("Sign out successful");
+        toast({
+          title: "Signed out",
+          description: "You have been successfully signed out.",
+        });
       }
       
-      console.log("Sign out successful");
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out.",
-      });
-      
-      // Navigate to auth page after sign out
+      // Always navigate to auth page regardless of errors
+      // This ensures the user can get back to a working state
       navigate('/auth');
     } catch (error) {
       console.error('Sign out error:', error);

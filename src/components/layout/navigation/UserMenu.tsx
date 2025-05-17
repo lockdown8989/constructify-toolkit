@@ -9,11 +9,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useAuth } from "@/hooks/auth"
+import { useAuth } from "@/hooks/use-auth"
 import { Settings, User as UserIcon, LogOut } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useLanguage } from "@/hooks/use-language"
 import { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
@@ -21,6 +22,7 @@ const UserMenu = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const { toast } = useToast();
   
   // Format display name from email or profile
   const getDisplayName = (): string => {
@@ -50,14 +52,33 @@ const UserMenu = () => {
     try {
       setIsSigningOut(true);
       console.log("Sign out initiated from UserMenu");
+      
       if (signOut) {
         await signOut();
+        // Add a toast notification for successful sign out
+        toast({
+          title: "Signed out",
+          description: "You have been successfully signed out.",
+        });
       } else {
         console.error("signOut function is not available");
-        navigate('/auth'); // Fallback redirect
+        // Fallback - navigate to auth page
+        toast({
+          title: "Sign out issue",
+          description: "There was an issue signing out. Please try again.",
+          variant: "destructive"
+        });
+        navigate('/auth');
       }
     } catch (error) {
       console.error("Error in handleSignOut:", error);
+      // Show error toast
+      toast({
+        title: "Sign out failed",
+        description: "There was an error signing out. Please try again.",
+        variant: "destructive",
+      });
+      
       // Final fallback - force navigation to auth page
       navigate('/auth');
     } finally {
