@@ -126,6 +126,7 @@ const EmployeeScheduleView: React.FC = () => {
   // Function for add shift functionality with Supabase integration
   const handleAddShift = async (day: Date) => {
     if (hasManagerAccess) {
+      console.log('Add shift from EmployeeScheduleView:', day);
       try {
         await supabase.from('calendar_actions').insert({
           action_type: 'add_shift',
@@ -134,12 +135,20 @@ const EmployeeScheduleView: React.FC = () => {
           initiated_by: user?.id
         }).maybeSingle();
         
-        setSelectedDay(day);
-        navigate('/shift-calendar', { state: { selectedDate: day } });
+        // Close the menu first to prevent state issues
+        setIsDateMenuOpen(false);
+        
+        // Navigate to shift calendar with a small delay
+        setTimeout(() => {
+          navigate('/shift-calendar', { state: { selectedDate: day } });
+        }, 100);
       } catch (error) {
         console.error('Error logging calendar action:', error);
-        setSelectedDay(day);
-        navigate('/shift-calendar', { state: { selectedDate: day } });
+        setIsDateMenuOpen(false);
+        
+        setTimeout(() => {
+          navigate('/shift-calendar', { state: { selectedDate: day } });
+        }, 100);
       }
     }
   };
@@ -147,6 +156,7 @@ const EmployeeScheduleView: React.FC = () => {
   // Function for add employee shift functionality with Supabase integration
   const handleAddEmployeeShift = async (day: Date) => {
     if (hasManagerAccess) {
+      console.log('Add employee shift from EmployeeScheduleView:', day);
       try {
         await supabase.from('calendar_actions').insert({
           action_type: 'add_employee_shift',
@@ -187,12 +197,30 @@ const EmployeeScheduleView: React.FC = () => {
           }
         }
         
-        setSelectedDay(day);
-        navigate('/shift-calendar', { state: { selectedDate: day, addEmployeeShift: true } });
+        // Close the menu first
+        setIsDateMenuOpen(false);
+        
+        // Navigate with a small delay to prevent state issues
+        setTimeout(() => {
+          navigate('/shift-calendar', { 
+            state: { 
+              selectedDate: day, 
+              addEmployeeShift: true 
+            } 
+          });
+        }, 100);
       } catch (error) {
         console.error('Error logging calendar action:', error);
-        setSelectedDay(day);
-        navigate('/shift-calendar', { state: { selectedDate: day, addEmployeeShift: true } });
+        setIsDateMenuOpen(false);
+        
+        setTimeout(() => {
+          navigate('/shift-calendar', { 
+            state: { 
+              selectedDate: day, 
+              addEmployeeShift: true 
+            } 
+          });
+        }, 100);
       }
     }
   };
@@ -455,7 +483,7 @@ const EmployeeScheduleView: React.FC = () => {
         setIsCancelDialogOpen={setIsCancelDialogOpen}
       />
 
-      {/* Date Action Menu with enhanced functionality */}
+      {/* Date Action Menu with improved functionality */}
       <DateActionMenu
         isOpen={isDateMenuOpen}
         onClose={() => setIsDateMenuOpen(false)}

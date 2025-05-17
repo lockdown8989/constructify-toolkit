@@ -23,6 +23,18 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
 }) => {
   if (!isOpen || !hasManagerAccess) return null;
   
+  // Function to handle adding a shift with click propagation stopped
+  const handleAddShift = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAddShift();
+  };
+  
+  // Function to handle adding an employee with click propagation stopped
+  const handleAddEmployee = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAddEmployee();
+  };
+  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
@@ -42,7 +54,7 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
               "flex items-center p-3 rounded-lg cursor-pointer transition-all duration-200",
               "hover:bg-gray-50 active:bg-gray-100 active:scale-[0.98]"
             )}
-            onClick={onAddShift}
+            onClick={handleAddShift}
           >
             <div className="w-12 h-12 border border-gray-300 rounded-lg flex items-center justify-center mr-4 bg-blue-50">
               <Calendar className="h-6 w-6 text-blue-600" />
@@ -55,7 +67,7 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
               "flex items-center p-3 rounded-lg cursor-pointer transition-all duration-200",
               "hover:bg-gray-50 active:bg-gray-100 active:scale-[0.98]"
             )}
-            onClick={onAddEmployee}
+            onClick={handleAddEmployee}
           >
             <div className="w-12 h-12 border border-gray-300 rounded-lg flex items-center justify-center mr-4 bg-green-50">
               <UserPlus className="h-6 w-6 text-green-600" />

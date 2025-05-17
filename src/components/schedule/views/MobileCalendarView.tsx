@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Plus, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -69,10 +70,11 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
   }));
 
   // Check if the current user has manager access
-  const hasManagerAccess = isAdmin || isManager || isHR;
+  const hasManagerAccess = shiftState.isAdmin || shiftState.isManager || shiftState.isHR;
 
   // Handle date cell click to open menu
   const handleDateCellClick = (date: Date) => {
+    console.log('Date cell clicked:', date);
     setSelectedCalendarDate(date);
     setIsDateMenuOpen(true);
   };
@@ -80,23 +82,36 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
   // Handle add shift from mini menu with Supabase integration
   const handleAddShiftFromMenu = async () => {
     if (selectedCalendarDate) {
+      console.log('Adding shift from menu for date:', selectedCalendarDate);
       try {
-        // Log the action in Supabase (optional)
+        // Log the action in Supabase
         await supabase.from('calendar_actions').insert({
           action_type: 'add_shift',
           date: selectedCalendarDate.toISOString(),
           platform: 'mobile',
           initiated_by: (await supabase.auth.getUser()).data.user?.id
-        }).maybeSingle();
+        });
         
-        // Proceed with the normal flow
-        handleAddShift(selectedCalendarDate);
+        // Close the menu first
         setIsDateMenuOpen(false);
+        
+        // Then proceed with the normal flow to avoid state issues
+        setTimeout(() => {
+          shiftState.handleAddShift(selectedCalendarDate);
+          toast({
+            title: "Opening add shift dialog",
+            description: `Adding shift for ${format(selectedCalendarDate, 'MMMM d, yyyy')}`,
+          });
+        }, 100);
       } catch (error) {
         console.error('Error logging calendar action:', error);
-        // Continue with the action anyway
-        handleAddShift(selectedCalendarDate);
+        // Close the menu
         setIsDateMenuOpen(false);
+        
+        // Continue with the action anyway
+        setTimeout(() => {
+          shiftState.handleAddShift(selectedCalendarDate);
+        }, 100);
       }
     }
   };
@@ -104,14 +119,15 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
   // Handle add employee shift from mini menu with Supabase integration
   const handleAddEmployeeFromMenu = async () => {
     if (selectedCalendarDate) {
+      console.log('Adding employee shift from menu for date:', selectedCalendarDate);
       try {
-        // Log the action in Supabase (optional)
+        // Log the action in Supabase
         await supabase.from('calendar_actions').insert({
           action_type: 'add_employee_shift',
           date: selectedCalendarDate.toISOString(),
           platform: 'mobile',
           initiated_by: (await supabase.auth.getUser()).data.user?.id
-        }).maybeSingle();
+        });
         
         // Also add notification for managers about this action
         const { data: userData } = await supabase.auth.getUser();
@@ -136,14 +152,26 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
           });
         }
         
-        // Proceed with the normal flow
-        shiftState.handleAddEmployeeShift(selectedCalendarDate);
+        // Close the menu first
         setIsDateMenuOpen(false);
+        
+        // Then proceed with the normal flow
+        setTimeout(() => {
+          shiftState.handleAddEmployeeShift(selectedCalendarDate);
+          toast({
+            title: "Opening add employee shift dialog",
+            description: `Adding employee shift for ${format(selectedCalendarDate, 'MMMM d, yyyy')}`,
+          });
+        }, 100);
       } catch (error) {
         console.error('Error logging calendar action:', error);
-        // Continue with the action anyway
-        shiftState.handleAddEmployeeShift(selectedCalendarDate);
+        // Close the menu
         setIsDateMenuOpen(false);
+        
+        // Continue with the action anyway
+        setTimeout(() => {
+          shiftState.handleAddEmployeeShift(selectedCalendarDate);
+        }, 100);
       }
     }
   };
