@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -53,7 +54,7 @@ const UserMenu = () => {
       console.log("Sign out initiated from UserMenu");
       
       if (signOut) {
-        // Let the signOut function handle all toasts
+        // Let the signOut function handle all toasts and navigation
         await signOut();
       } else {
         console.error("signOut function is not available");
@@ -67,13 +68,6 @@ const UserMenu = () => {
       }
     } catch (error) {
       console.error("Error in handleSignOut:", error);
-      // Show error toast
-      toast({
-        title: "Sign out failed",
-        description: "There was an error signing out. Please try again.",
-        variant: "destructive",
-      });
-      
       // Final fallback - force navigation to auth page
       navigate('/auth');
     } finally {

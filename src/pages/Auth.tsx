@@ -34,12 +34,16 @@ const Auth = () => {
       from
     });
   }, [user, isResetMode, isRecoveryMode, hasRecoveryToken, from]);
+  
+  // Check if this is a sign-out redirect
+  const isSignOut = searchParams.has("signout") || searchParams.get("action") === "signout";
 
   // If we have a token in the URL but not in reset mode, force reset mode
   const shouldShowReset = isResetMode || isRecoveryMode || hasRecoveryToken;
 
-  // Redirect authenticated users to dashboard if not in reset mode
-  if (user && !shouldShowReset) {
+  // Redirect authenticated users to dashboard unless they're in reset mode
+  // or just signed out (in which case we'll show the sign in form)
+  if (user && !shouldShowReset && !isSignOut) {
     return <Navigate to={from || "/dashboard"} replace />;
   }
 

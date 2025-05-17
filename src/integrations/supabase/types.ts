@@ -1229,6 +1229,10 @@ export type Database = {
           | { _user_id: string; _role: string }
         Returns: boolean
       }
+      safe_user_signout: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "hr" | "employee" | "employer"
