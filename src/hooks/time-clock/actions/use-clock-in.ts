@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useAttendanceMetadata } from '../use-attendance-metadata';
 import { getDeviceIdentifier } from '../utils/device-utils';
+import { debugTimeInfo } from '@/utils/timezone-utils';
 
 export const useClockIn = (
   setStatus: (status: 'clocked-in' | 'clocked-out' | 'on-break') => void,
@@ -23,13 +24,13 @@ export const useClockIn = (
     }
 
     try {
-      // Use UTC time to ensure consistency across timezones
+      // Use current time and preserve timezone information with ISO string
       const now = new Date();
       const today = now.toISOString().split('T')[0];
       const deviceIdentifier = getDeviceIdentifier();
       
-      console.log('Clock-in time (local):', now.toLocaleString());
-      console.log('Clock-in time (ISO):', now.toISOString());
+      // Log time information for debugging
+      debugTimeInfo('Clock-in time', now);
       
       // Check if there's already an active session for today
       const { data: existingRecord, error: checkError } = await supabase

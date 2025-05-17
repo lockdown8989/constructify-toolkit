@@ -21,6 +21,26 @@ export function dateToISOString(date: Date): string {
 }
 
 /**
+ * Convert a date to local ISO string format
+ * This keeps the local time but formats it as ISO
+ * @param date - The date to convert
+ * @returns Local ISO string
+ */
+export function dateToLocalISOString(date: Date): string {
+  const tzOffset = date.getTimezoneOffset() * 60000; // offset in milliseconds
+  return (new Date(date.getTime() - tzOffset)).toISOString().slice(0, -1);
+}
+
+/**
+ * Convert an ISO string to local Date object
+ * @param isoString - The ISO string to convert
+ * @returns Local date object
+ */
+export function isoStringToLocalDate(isoString: string): Date {
+  return new Date(isoString);
+}
+
+/**
  * Formats an ISO string date to a human-readable time format
  * @param isoString - The ISO string to format
  * @param format - Optional format pattern
@@ -50,6 +70,23 @@ export function formatTimeFromISO(isoString: string | null | undefined, format: 
 }
 
 /**
+ * Get local time display from ISO string
+ * @param isoString - The ISO string to format
+ * @returns Formatted local time string
+ */
+export function getLocalTimeDisplay(isoString: string | null | undefined): string {
+  if (!isoString) return '-';
+  
+  try {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch (error) {
+    console.error('Error formatting local time:', error);
+    return '-';
+  }
+}
+
+/**
  * Debug function to log time information
  * @param label - The label for the log
  * @param date - The date object to log
@@ -58,8 +95,10 @@ export function debugTimeInfo(label: string, date: Date): void {
   console.log(`${label}:`);
   console.log(`  - Local string: ${date.toLocaleString()}`);
   console.log(`  - ISO string: ${date.toISOString()}`);
+  console.log(`  - Local ISO string: ${dateToLocalISOString(date)}`);
   console.log(`  - Timezone offset: ${date.getTimezoneOffset()} minutes`);
   console.log(`  - UTC string: ${date.toUTCString()}`);
+  console.log(`  - Locale time string: ${date.toLocaleTimeString()}`);
 }
 
 /**

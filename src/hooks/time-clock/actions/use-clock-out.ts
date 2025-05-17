@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useAttendanceMetadata } from '../use-attendance-metadata';
+import { debugTimeInfo } from '@/utils/timezone-utils';
 
 export const useClockOut = (
   setStatus: (status: 'clocked-in' | 'clocked-out' | 'on-break') => void,
@@ -25,8 +26,8 @@ export const useClockOut = (
       console.log('Clocking out with record ID:', currentRecord);
 
       const now = new Date();
-      console.log('Clock-out time (local):', now.toLocaleString());
-      console.log('Clock-out time (ISO):', now.toISOString());
+      // Log time information for debugging
+      debugTimeInfo('Clock-out time', now);
       
       // Get check-in time to calculate duration
       const { data: checkInData, error: fetchError } = await supabase
@@ -40,7 +41,7 @@ export const useClockOut = (
         throw fetchError;
       }
       
-      // Parse check-in time preserving timezone information
+      // Parse check-in time from ISO string
       const checkInTime = new Date(checkInData.check_in);
       console.log('Check-in time from DB:', checkInData.check_in);
       console.log('Parsed check-in time:', checkInTime.toLocaleString());

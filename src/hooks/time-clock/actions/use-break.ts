@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { debugTimeInfo } from '@/utils/timezone-utils';
 
 export const useBreak = (
   setStatus: (status: 'clocked-in' | 'clocked-out' | 'on-break') => void
@@ -20,8 +21,8 @@ export const useBreak = (
 
     try {
       const now = new Date();
-      console.log('Break start time (local):', now.toLocaleString());
-      console.log('Break start time (ISO):', now.toISOString());
+      // Log time information for debugging
+      debugTimeInfo('Break start time', now);
       
       // Update the record with break start time using ISO string
       const { error } = await supabase
@@ -89,7 +90,8 @@ export const useBreak = (
       }
       
       const now = new Date();
-      console.log('Break end time (local):', now.toLocaleString());
+      // Log time information for debugging
+      debugTimeInfo('Break end time', now);
       console.log('Break start time from DB:', recordData.break_start);
       
       const breakStartTime = new Date(recordData.break_start);
