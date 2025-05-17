@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { format, addDays, subDays, isSameDay } from 'date-fns';
-import { Search, ChevronLeft, ChevronRight, Calendar, Send, Filter } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Calendar, Send, Filter, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -67,7 +66,10 @@ const ManagerScheduleView: React.FC = () => {
       {/* Header section */}
       <div className={`p-3 sm:p-4 flex flex-col sm:flex-row justify-between ${isMobile ? 'gap-2' : 'items-center'} border-b`}>
         <div className="flex items-center">
-          <h1 className="text-xl sm:text-2xl font-bold">Schedule</h1>
+          <h1 className="text-xl sm:text-2xl font-bold flex items-center">
+            <Users className="h-5 w-5 mr-2 text-primary" />
+            Employee Schedule
+          </h1>
         </div>
         
         <div className={`flex ${isMobile ? 'w-full' : 'w-auto'} items-center gap-2`}>
