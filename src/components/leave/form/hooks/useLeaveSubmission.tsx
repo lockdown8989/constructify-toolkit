@@ -59,7 +59,6 @@ export const useLeaveSubmission = (
       timestamp: new Date().toISOString(),
       status: 'Pending',
       reviewer_name: employeeName,
-      user_id: userId,
       employee_name: employeeName
     }];
     
