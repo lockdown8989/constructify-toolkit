@@ -13,7 +13,7 @@ interface ConfirmationDialogProps {
   employeeName: string;
   employeeAvatar?: string;
   isSubmitting?: boolean;
-  isManagerAction?: boolean;
+  isManagerAction: boolean;
 }
 
 const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
@@ -24,7 +24,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   employeeName,
   employeeAvatar,
   isSubmitting = false,
-  isManagerAction = true
+  isManagerAction = false
 }) => {
   const currentTime = format(new Date(), 'HH:mm:ss');
   

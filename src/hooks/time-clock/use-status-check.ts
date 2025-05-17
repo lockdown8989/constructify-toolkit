@@ -26,7 +26,7 @@ export const useStatusCheck = (
           .eq('date', today)
           .eq('active_session', true)
           // Only consider records that were NOT initiated by managers
-          .is('manager_initiated', null)
+          .is('manager_initiated', false)
           .maybeSingle();
           
         if (error) {

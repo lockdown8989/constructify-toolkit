@@ -24,5 +24,5 @@ export interface AttendanceRecord {
   device_identifier?: string | null;
   hourly_rate?: number | null;
   currency?: string;
-  manager_initiated?: boolean;  // New field to track if the attendance was initiated by a manager
+  manager_initiated?: boolean;  // Added field to track if the attendance was initiated by a manager
 }
