@@ -85,6 +85,18 @@ const AttendanceList = ({ employeeId, searchQuery = "", selectedDate = new Date(
 
   const filteredRecords = filterRecords();
 
+  // Format ISO date string to local time
+  const formatTimeDisplay = (isoString: string | null) => {
+    if (!isoString) return "-";
+    try {
+      const date = new Date(isoString);
+      return format(date, "hh:mm a");
+    } catch (e) {
+      console.error("Error formatting time:", e);
+      return "-";
+    }
+  };
+
   return (
     <div className="space-y-6">
       {filteredRecords.length === 0 ? (
@@ -110,11 +122,11 @@ const AttendanceList = ({ employeeId, searchQuery = "", selectedDate = new Date(
                 <div className="flex flex-col md:flex-row gap-2 md:gap-6 text-gray-600 text-sm">
                   <span className="flex items-center">
                     <Clock className="h-4 w-4 mr-1 text-blue-500" />
-                    Clock-in: {record.check_in ? format(new Date(record.check_in), "hh:mm a") : "-"}
+                    Clock-in: {formatTimeDisplay(record.check_in)}
                   </span>
                   <span className="flex items-center">
                     <Clock className="h-4 w-4 mr-1 text-red-500" />
-                    Clock-out: {record.check_out ? format(new Date(record.check_out), "hh:mm a") : "-"}
+                    Clock-out: {formatTimeDisplay(record.check_out)}
                   </span>
                   <span className="flex items-center">
                     <Clock className="h-4 w-4 mr-1 text-green-500" />
@@ -176,6 +188,12 @@ const AttendanceList = ({ employeeId, searchQuery = "", selectedDate = new Date(
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
+                  )}
+                  
+                  {record.manager_initiated && (
+                    <span className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
+                      Manager initiated
+                    </span>
                   )}
                 </div>
               </div>

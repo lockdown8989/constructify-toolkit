@@ -20,12 +20,14 @@ export const useBreak = (
 
     try {
       const now = new Date();
+      console.log('Break start time (local):', now.toLocaleString());
+      console.log('Break start time (ISO):', now.toISOString());
       
-      // Update the record with break start time
+      // Update the record with break start time using ISO string
       const { error } = await supabase
         .from('attendance')
         .update({
-          break_start: now.toISOString(),
+          break_start: now.toISOString(), // Store as ISO string to preserve timezone information
         })
         .eq('id', currentRecord);
 
@@ -87,7 +89,13 @@ export const useBreak = (
       }
       
       const now = new Date();
+      console.log('Break end time (local):', now.toLocaleString());
+      console.log('Break start time from DB:', recordData.break_start);
+      
       const breakStartTime = new Date(recordData.break_start);
+      console.log('Parsed break start time:', breakStartTime.toLocaleString());
+      
+      // Calculate break duration preserving timezone information
       const breakMinutes = Math.round((now.getTime() - breakStartTime.getTime()) / (1000 * 60));
       
       // Update the record with break end calculation

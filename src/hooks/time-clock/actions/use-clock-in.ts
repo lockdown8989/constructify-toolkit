@@ -23,9 +23,13 @@ export const useClockIn = (
     }
 
     try {
+      // Use UTC time to ensure consistency across timezones
       const now = new Date();
       const today = now.toISOString().split('T')[0];
       const deviceIdentifier = getDeviceIdentifier();
+      
+      console.log('Clock-in time (local):', now.toLocaleString());
+      console.log('Clock-in time (ISO):', now.toISOString());
       
       // Check if there's already an active session for today
       const { data: existingRecord, error: checkError } = await supabase
@@ -49,12 +53,12 @@ export const useClockIn = (
         return;
       }
       
-      // Insert new attendance record
+      // Insert new attendance record with ISO string time to preserve timezone
       const { data, error } = await supabase
         .from('attendance')
         .insert({
           employee_id: employeeId,
-          check_in: now.toISOString(),
+          check_in: now.toISOString(), // Store as ISO string to preserve timezone information
           date: today,
           status: 'Present',
           location,

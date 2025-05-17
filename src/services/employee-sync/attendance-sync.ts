@@ -31,6 +31,9 @@ export const recordClockIn = async (employeeId: string, deviceInfo?: string, loc
     const now = new Date();
     const today = now.toISOString().split('T')[0];
     
+    console.log('Recording clock in at (local):', now.toLocaleString());
+    console.log('Recording clock in at (ISO):', now.toISOString());
+    
     // Check if there's already a record for today
     const { data: existingRecord } = await supabase
       .from('attendance')
@@ -40,11 +43,11 @@ export const recordClockIn = async (employeeId: string, deviceInfo?: string, loc
       .single();
     
     if (existingRecord) {
-      // Update existing record
+      // Update existing record with ISO string time
       const { data, error } = await supabase
         .from('attendance')
         .update({
-          check_in: now.toISOString(),
+          check_in: now.toISOString(), // Use ISO string to preserve timezone
           device_info: deviceInfo,
           location: location,
           active_session: true,
@@ -56,13 +59,13 @@ export const recordClockIn = async (employeeId: string, deviceInfo?: string, loc
       
       return { success: true, record: data };
     } else {
-      // Create new record
+      // Create new record with ISO string time
       const { data, error } = await supabase
         .from('attendance')
         .insert({
           employee_id: employeeId,
           date: today,
-          check_in: now.toISOString(),
+          check_in: now.toISOString(), // Use ISO string to preserve timezone
           device_info: deviceInfo,
           location: location,
           active_session: true,
@@ -87,6 +90,9 @@ export const recordClockOut = async (employeeId: string) => {
     const now = new Date();
     const today = now.toISOString().split('T')[0];
     
+    console.log('Recording clock out at (local):', now.toLocaleString());
+    console.log('Recording clock out at (ISO):', now.toISOString());
+    
     // Find the active session for today
     const { data: activeSession } = await supabase
       .from('attendance')
@@ -97,18 +103,25 @@ export const recordClockOut = async (employeeId: string) => {
       .single();
       
     if (activeSession) {
-      // Calculate working minutes
+      // Calculate working minutes using exact timestamps
       const checkInTime = new Date(activeSession.check_in);
+      console.log('Check-in time from DB:', activeSession.check_in);
+      console.log('Parsed check-in time:', checkInTime.toLocaleString());
+      
       const workingMinutes = Math.round((now.getTime() - checkInTime.getTime()) / (1000 * 60));
       
       // Calculate overtime (if more than 8 hours / 480 minutes)
       const overtimeMinutes = Math.max(0, workingMinutes - 480);
       const regularMinutes = workingMinutes - overtimeMinutes;
       
+      console.log('Working minutes calculated:', workingMinutes);
+      console.log('Regular minutes:', regularMinutes);
+      console.log('Overtime minutes:', overtimeMinutes);
+      
       const { data, error } = await supabase
         .from('attendance')
         .update({
-          check_out: now.toISOString(),
+          check_out: now.toISOString(), // Use ISO string to preserve timezone
           active_session: false,
           working_minutes: regularMinutes,
           overtime_minutes: overtimeMinutes

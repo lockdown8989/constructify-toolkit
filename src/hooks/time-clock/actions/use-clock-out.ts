@@ -25,6 +25,8 @@ export const useClockOut = (
       console.log('Clocking out with record ID:', currentRecord);
 
       const now = new Date();
+      console.log('Clock-out time (local):', now.toLocaleString());
+      console.log('Clock-out time (ISO):', now.toISOString());
       
       // Get check-in time to calculate duration
       const { data: checkInData, error: fetchError } = await supabase
@@ -38,16 +40,20 @@ export const useClockOut = (
         throw fetchError;
       }
       
-      // Calculate working minutes
+      // Parse check-in time preserving timezone information
       const checkInTime = new Date(checkInData.check_in);
+      console.log('Check-in time from DB:', checkInData.check_in);
+      console.log('Parsed check-in time:', checkInTime.toLocaleString());
+      
+      // Calculate working minutes based on exact timestamps
       const workingMinutes = Math.round((now.getTime() - checkInTime.getTime()) / (1000 * 60));
       const overtimeMinutes = Math.max(0, workingMinutes - 480); // Over 8 hours
       
-      // Update the record with clock-out data
+      // Update the record with clock-out data using ISO string
       const { error } = await supabase
         .from('attendance')
         .update({
-          check_out: now.toISOString(),
+          check_out: now.toISOString(), // Store as ISO string to preserve timezone information
           active_session: false,
           working_minutes: workingMinutes - overtimeMinutes, // Regular minutes
           overtime_minutes: overtimeMinutes,

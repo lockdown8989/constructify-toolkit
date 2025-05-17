@@ -44,6 +44,9 @@ export const useClockActions = () => {
       const deviceIdentifier = getDeviceIdentifier();
       const deviceInfo = `Manager Dashboard - ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}`;
       
+      console.log(`Manager ${clockAction} action at (local):`, now.toLocaleString());
+      console.log(`Manager ${clockAction} action at (ISO):`, now.toISOString());
+      
       if (clockAction === 'in') {
         // Check if there's already an active session for today
         // Include both manager-initiated and regular sessions in our check
@@ -76,7 +79,7 @@ export const useClockActions = () => {
           .insert({
             employee_id: selectedEmployee,
             date: today,
-            check_in: now.toISOString(),
+            check_in: now.toISOString(), // Use ISO string to preserve timezone information
             active_session: true,
             attendance_status: 'Present',
             device_info: deviceInfo,
@@ -127,16 +130,20 @@ export const useClockActions = () => {
         
         // Calculate working minutes
         const checkInTime = new Date(activeSession.check_in);
+        console.log('Check-in time from DB:', activeSession.check_in);
+        console.log('Parsed check-in time:', checkInTime.toLocaleString());
+        
         const workingMinutes = Math.round((now.getTime() - checkInTime.getTime()) / (1000 * 60));
         const overtimeMinutes = Math.max(0, workingMinutes - 480); // Over 8 hours
         
         console.log('Clocking out record ID:', activeSession.id);
+        console.log('Working minutes calculated:', workingMinutes);
         
         // Clock out
         const { error: updateError } = await supabase
           .from('attendance')
           .update({
-            check_out: now.toISOString(),
+            check_out: now.toISOString(), // Use ISO string to preserve timezone information
             active_session: false,
             working_minutes: workingMinutes - overtimeMinutes,
             overtime_minutes: overtimeMinutes,
