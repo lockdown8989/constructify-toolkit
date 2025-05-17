@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 interface AddShiftButtonProps {
   onClick: () => void;
   hasManagerAccess: boolean;
+  className?: string;
 }
 
-const AddShiftButton: React.FC<AddShiftButtonProps> = ({ onClick, hasManagerAccess }) => {
+const AddShiftButton: React.FC<AddShiftButtonProps> = ({ onClick, hasManagerAccess, className = "" }) => {
   if (!hasManagerAccess) {
     return null;
   }
@@ -17,9 +18,10 @@ const AddShiftButton: React.FC<AddShiftButtonProps> = ({ onClick, hasManagerAcce
     <Button 
       onClick={onClick}
       size="sm" 
-      className="rounded-full h-10 w-10 p-0 bg-blue-500 hover:bg-blue-600 shadow-md"
+      className={`bg-blue-500 hover:bg-blue-600 text-white ${className}`}
     >
-      <Plus className="h-5 w-5" />
+      <Plus className="h-4 w-4 mr-1" />
+      Add Shift
     </Button>
   );
 };

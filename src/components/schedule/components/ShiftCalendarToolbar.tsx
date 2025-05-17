@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { 
   Popover,
@@ -13,15 +13,17 @@ import { Calendar } from '@/components/ui/calendar';
 interface ShiftCalendarToolbarProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
-  viewType?: string; // Added viewType prop
-  onViewChange?: (type: string) => void; // Added onViewChange prop
+  viewType?: string;
+  onViewChange?: (type: string) => void;
+  onAddShift?: () => void;
 }
 
 const ShiftCalendarToolbar: React.FC<ShiftCalendarToolbarProps> = ({
   currentDate,
   onDateChange,
   viewType,
-  onViewChange
+  onViewChange,
+  onAddShift
 }) => {
   const handleSelectToday = () => {
     onDateChange(new Date());
@@ -84,6 +86,18 @@ const ShiftCalendarToolbar: React.FC<ShiftCalendarToolbarProps> = ({
             Month
           </Button>
         </div>
+      )}
+      
+      {onAddShift && (
+        <Button
+          onClick={onAddShift}
+          variant="default"
+          size="sm"
+          className="bg-blue-500 hover:bg-blue-600 text-white"
+        >
+          <Plus className="h-4 w-4 mr-1" />
+          Add Shift
+        </Button>
       )}
     </div>
   );

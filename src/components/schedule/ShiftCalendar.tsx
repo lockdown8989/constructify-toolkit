@@ -69,7 +69,7 @@ const ShiftCalendar = () => {
         <MobileScheduleView 
           schedules={schedules}
           employees={employees}
-          onAddShift={handleAddShift}
+          onAddShift={() => handleAddShift(new Date())}
           onShiftClick={handleShiftClick}
         />
         
@@ -132,6 +132,7 @@ const ShiftCalendar = () => {
         handlePreviousPeriod={handlePreviousPeriod}
         handleNextPeriod={handleNextPeriod}
         handleToday={handleToday}
+        onAddShift={() => handleAddShift(new Date())}
       />
       
       {/* Date column headers */}
