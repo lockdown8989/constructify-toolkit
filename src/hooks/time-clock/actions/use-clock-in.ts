@@ -32,12 +32,19 @@ export const useClockIn = (
         .from('attendance')
         .select('id, active_session')
         .eq('employee_id', employeeId)
+        .eq('date', today)
         .eq('active_session', true)
+        .is('manager_initiated', false)  // Only check for employee-initiated sessions
         .maybeSingle();
         
       if (checkError) {
         console.error('Error checking for existing active session:', checkError);
-        throw checkError;
+        toast({
+          title: "Error",
+          description: "Failed to check for active sessions",
+          variant: "destructive",
+        });
+        return;
       }
         
       if (existingRecord?.active_session) {
@@ -62,7 +69,8 @@ export const useClockIn = (
           active_session: true,
           device_identifier: deviceIdentifier,
           notes: '',
-          attendance_status: 'Present'
+          attendance_status: 'Present',
+          manager_initiated: false  // Explicitly mark as employee-initiated
         })
         .select()
         .single();
