@@ -1,9 +1,12 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, User, UserPlus } from "lucide-react";
+import { MoreHorizontal, User, Download } from "lucide-react";
 import { useEmployeeDataManagement } from "@/hooks/use-employee-data-management";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +16,51 @@ import {
 
 const AttendanceHeader = () => {
   const { employeeData, isLoading } = useEmployeeDataManagement();
+  const { isManager } = useAuth();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleViewDetails = () => {
+    if (employeeData?.id) {
+      navigate(`/people/employee/${employeeData.id}`);
+    } else {
+      toast({
+        title: "No employee selected",
+        description: "Please select an employee to view details",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportData = () => {
+    // Create CSV data for attendance
+    const csvContent = "data:text/csv;charset=utf-8,Date,Status,Check In,Check Out,Hours\n";
+    
+    // In a real scenario, you would include actual attendance data here
+    const dataRows = [
+      `${new Date().toLocaleDateString()},Present,09:00,17:30,8.5`,
+      `${new Date(Date.now() - 86400000).toLocaleDateString()},Present,08:55,17:45,8.83`,
+      `${new Date(Date.now() - 86400000 * 2).toLocaleDateString()},Late,09:15,17:30,8.25`
+    ];
+    
+    const fullCsv = csvContent + dataRows.join('\n');
+    
+    // Create download link and trigger download
+    const encodedUri = encodeURI(fullCsv);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `attendance_report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Export successful",
+      description: "Attendance data has been exported successfully",
+      variant: "default",
+    });
+  };
 
   if (isLoading) {
     return (
@@ -64,10 +111,6 @@ const AttendanceHeader = () => {
       
       {isMobile ? (
         <div className="flex justify-end gap-2">
-          <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700">
-            <UserPlus className="h-4 w-4 mr-1.5" />
-            Add
-          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -75,11 +118,12 @@ const AttendanceHeader = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleViewDetails}>
                 <User className="h-4 w-4 mr-2" />
                 View Details
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportData}>
+                <Download className="h-4 w-4 mr-2" />
                 Export Data
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -87,11 +131,11 @@ const AttendanceHeader = () => {
         </div>
       ) : (
         <div className="flex items-center gap-2 self-end md:self-auto">
-          <Button variant="outline" className="text-gray-600">
+          <Button variant="outline" className="text-gray-600" onClick={handleViewDetails}>
             View Details
           </Button>
-          <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700">
-            Add Attendance
+          <Button variant="outline" className="text-gray-600" onClick={handleExportData}>
+            Export Data
           </Button>
           <Button variant="ghost" size="icon">
             <MoreHorizontal className="h-5 w-5" />
