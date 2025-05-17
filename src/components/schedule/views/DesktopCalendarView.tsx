@@ -219,6 +219,7 @@ const DesktopCalendarView: React.FC<ShiftCalendarProps> = ({
         onAddShift={handleAddShiftFromMenu}
         onAddEmployee={handleAddEmployeeFromMenu}
         hasManagerAccess={hasManagerAccess}
+        selectedDate={selectedCalendarDate}
       />
     </div>
   );

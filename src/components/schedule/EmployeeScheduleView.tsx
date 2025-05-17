@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format, startOfWeek, addDays } from 'date-fns';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
@@ -247,6 +246,7 @@ const EmployeeScheduleView: React.FC = () => {
   // Function to handle date click from calendar views
   const handleDateClick = (date: Date) => {
     setCurrentDate(date);
+    setSelectedDay(date);
     setIsDateMenuOpen(true);
   };
 

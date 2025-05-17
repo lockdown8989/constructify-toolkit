@@ -165,6 +165,7 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
         onAddShift={handleAddShiftFromMenu}
         onAddEmployee={handleAddEmployeeFromMenu}
         hasManagerAccess={hasManagerAccess}
+        selectedDate={selectedCalendarDate}
       />
 
       {/* FAB for mobile view - positioned at bottom right */}
