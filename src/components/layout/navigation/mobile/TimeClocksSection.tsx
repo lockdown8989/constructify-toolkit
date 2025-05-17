@@ -33,11 +33,12 @@ const TimeClocksSection = ({ onClose, isAuthenticated = true, hasManagerialAcces
         <MobileNavLink
           to="/manager-time-clock"
           icon={Clock}
-          label="Manager Time Clock"
+          label="⏰️IN AND OUT⏱️"
           onClick={() => {
             navigate('/manager-time-clock');
             onClose();
           }}
+          className="time-clock-nav-button"
         />
       )}
     </>
