@@ -61,7 +61,8 @@ const CommonSection = ({
         <>
           {(isEmployee || hasManagerialAccess) && (
             <MobileNavLink 
-              icon={<File className="h-5 w-5 text-neutral-600" />}
+              to="/documents"
+              icon={File}
               label="Documents"
               onClick={() => {
                 navigate('/documents');
@@ -71,7 +72,8 @@ const CommonSection = ({
           )}
           
           <MobileNavLink 
-            icon={<Settings className="h-5 w-5 text-neutral-600" />}
+            to="/settings"
+            icon={Settings}
             label="Settings"
             onClick={() => {
               navigate('/settings');
@@ -80,16 +82,16 @@ const CommonSection = ({
           />
           
           <MobileNavLink 
-            icon={<LogOut className="h-5 w-5 text-red-500" />}
+            to="/auth"
+            icon={LogOut}
             label={isSigningOut ? "Signing out..." : "Sign out"}
             onClick={handleSignOut}
-            disabled={isSigningOut}
-            className="text-red-500"
           />
         </>
       ) : (
         <MobileNavLink 
-          icon={<LogIn className="h-5 w-5 text-neutral-600" />}
+          to="/auth"
+          icon={LogIn}
           label="Sign in"
           onClick={() => {
             navigate('/auth');
