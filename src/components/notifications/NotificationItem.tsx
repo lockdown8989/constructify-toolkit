@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 import type { Notification } from '@/hooks/use-notifications';
 
 interface NotificationItemProps {
@@ -9,6 +10,8 @@ interface NotificationItemProps {
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onClick }) => {
+  const navigate = useNavigate();
+
   const getNotificationTimeAgo = (createdAt: string) => {
     try {
       return formatDistanceToNow(new Date(createdAt), { addSuffix: true });
@@ -33,10 +36,40 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onCli
     }
   };
 
+  const handleNotificationClick = () => {
+    // Mark as read first
+    onClick(notification.id);
+    
+    // Then navigate to the appropriate page based on the notification type
+    if (notification.related_entity) {
+      switch (notification.related_entity) {
+        case 'leave_calendar':
+          // Navigate to the leave management page with employee tab focus
+          navigate('/leave-management', { state: { initialView: 'employee' } });
+          break;
+        case 'schedules':
+          navigate('/schedule');
+          break;
+        case 'open_shifts':
+          navigate('/restaurant-schedule');
+          break;
+        case 'attendance':
+          navigate('/attendance');
+          break;
+        case 'payroll':
+          navigate('/payroll');
+          break;
+        default:
+          // For other types, just mark as read without navigation
+          break;
+      }
+    }
+  };
+
   return (
     <div 
       className={`p-4 border-b hover:bg-muted/50 cursor-pointer ${getNotificationBgColor(notification.type, notification.read)}`}
-      onClick={() => onClick(notification.id)}
+      onClick={handleNotificationClick}
     >
       <div className="flex justify-between items-start">
         <p className="font-medium">{notification.title}</p>

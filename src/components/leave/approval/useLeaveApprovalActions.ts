@@ -1,9 +1,8 @@
-
 import { useUpdateLeaveCalendar } from "@/hooks/use-leave-calendar";
 import { useUpdateEmployee } from "@/hooks/use-employees";
 import { useToast } from "@/hooks/use-toast";
 import { createAuditLog } from "../utils/leave-utils";
-import type { LeaveCalendar } from "@/hooks/leave/leave-types";
+import type { LeaveCalendar, AuditLogEntry } from "@/hooks/leave/leave-types";
 import { sendNotification } from "@/services/notifications/notification-sender";
 import { useAuth } from "@/hooks/use-auth";
 

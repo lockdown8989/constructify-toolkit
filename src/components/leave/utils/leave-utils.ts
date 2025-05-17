@@ -1,4 +1,3 @@
-
 import { LeaveCalendar } from "@/hooks/leave/leave-types";
 
 // Calculate business days (excluding weekends) between two dates
@@ -25,7 +24,7 @@ export function calculateLeaveDays(startDateStr: string, endDateStr: string): nu
 }
 
 // Create audit log entry for a leave request
-export function createAuditLog(leave: LeaveCalendar, newStatus: string, reviewerName: string): string {
+export function createAuditLog(leave: LeaveCalendar, newStatus: string, reviewerName: string): AuditLogEntry[] {
   // If the leave already has an audit log, parse it
   let auditLog = leave.audit_log ? [...leave.audit_log] : [];
   
@@ -35,11 +34,12 @@ export function createAuditLog(leave: LeaveCalendar, newStatus: string, reviewer
     action: `Status changed from ${leave.status} to ${newStatus}`,
     old_status: leave.status,
     new_status: newStatus,
+    status: newStatus,
     reviewer_name: reviewerName,
   });
   
-  // Return the JSON string of the updated audit log
-  return JSON.stringify(auditLog);
+  // Return the updated audit log array
+  return auditLog;
 }
 
 // Generate a unique ID for leave calendar items

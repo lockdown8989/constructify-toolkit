@@ -5,6 +5,8 @@ export interface AuditLogEntry {
   status: string;
   reviewer_name?: string;
   reviewer_id?: string;
+  old_status?: string;
+  new_status?: string;
 }
 
 export interface LeaveEvent {
