@@ -98,6 +98,8 @@ export const useClockActions = () => {
         });
       } else {
         // Find active session - check for any active session regardless of who initiated it
+        console.log('Finding active session for employee:', selectedEmployee);
+        
         const { data: activeSession, error: findError } = await supabase
           .from('attendance')
           .select('*')
@@ -110,6 +112,8 @@ export const useClockActions = () => {
           console.error('Error finding active session:', findError);
           throw new Error('Failed to find active session');
         }
+        
+        console.log('Active session search result:', activeSession);
           
         if (!activeSession) {
           toast({
@@ -125,6 +129,8 @@ export const useClockActions = () => {
         const checkInTime = new Date(activeSession.check_in);
         const workingMinutes = Math.round((now.getTime() - checkInTime.getTime()) / (1000 * 60));
         const overtimeMinutes = Math.max(0, workingMinutes - 480); // Over 8 hours
+        
+        console.log('Clocking out record ID:', activeSession.id);
         
         // Clock out
         const { error: updateError } = await supabase

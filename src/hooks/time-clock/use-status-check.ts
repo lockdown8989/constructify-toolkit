@@ -26,7 +26,7 @@ export const useStatusCheck = (
           .eq('employee_id', employeeId)
           .eq('date', today)
           .eq('active_session', true)
-          .is('manager_initiated', null)
+          .is('manager_initiated', false) // Explicitly look for non-manager initiated sessions
           .maybeSingle(); // Use maybeSingle to avoid errors when no record
           
         if (error) {
