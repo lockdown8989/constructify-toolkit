@@ -9,6 +9,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { useAccessControl } from '@/hooks/leave/useAccessControl';
 
 interface ShiftCalendarToolbarProps {
   currentDate: Date;
@@ -25,12 +26,13 @@ const ShiftCalendarToolbar: React.FC<ShiftCalendarToolbarProps> = ({
   onViewChange,
   onAddShift
 }) => {
+  const { hasManagerAccess } = useAccessControl();
   const handleSelectToday = () => {
     onDateChange(new Date());
   };
 
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Button 
         variant="outline" 
         size="sm"
@@ -63,7 +65,7 @@ const ShiftCalendarToolbar: React.FC<ShiftCalendarToolbarProps> = ({
       </Popover>
 
       {viewType && onViewChange && (
-        <div className="space-x-1">
+        <div className="flex space-x-1">
           <Button 
             variant={viewType === 'day' ? 'default' : 'outline'} 
             size="sm"
@@ -88,12 +90,12 @@ const ShiftCalendarToolbar: React.FC<ShiftCalendarToolbarProps> = ({
         </div>
       )}
       
-      {onAddShift && (
+      {hasManagerAccess && onAddShift && (
         <Button
           onClick={onAddShift}
           variant="default"
           size="sm"
-          className="bg-blue-500 hover:bg-blue-600 text-white"
+          className="bg-blue-500 hover:bg-blue-600 text-white ml-auto"
         >
           <Plus className="h-4 w-4 mr-1" />
           Add Shift

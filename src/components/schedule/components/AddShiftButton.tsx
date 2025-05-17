@@ -18,6 +18,7 @@ const AddShiftButton: React.FC<AddShiftButtonProps> = ({ onClick, hasManagerAcce
     <Button 
       onClick={onClick}
       size="sm" 
+      variant="default"
       className={`bg-blue-500 hover:bg-blue-600 text-white ${className}`}
     >
       <Plus className="h-4 w-4 mr-1" />

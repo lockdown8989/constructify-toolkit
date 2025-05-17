@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import ShiftCalendarToolbar from '../components/ShiftCalendarToolbar';
+import { useAccessControl } from '@/hooks/leave/useAccessControl';
 
 interface DateControlsProps {
   selectedDate: Date;
@@ -29,7 +30,7 @@ const DateControls: React.FC<DateControlsProps> = ({
   };
 
   return (
-    <div className="flex justify-between items-center p-4 border-b">
+    <div className="flex flex-wrap justify-between items-center p-4 border-b">
       <div className="flex items-center space-x-2">
         <Button variant="outline" size="icon" onClick={handlePreviousPeriod}>
           <ChevronLeft className="h-4 w-4" />
