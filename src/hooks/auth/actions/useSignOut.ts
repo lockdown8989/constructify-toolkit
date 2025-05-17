@@ -20,12 +20,22 @@ export const useSignOut = () => {
       if (error) {
         console.error('Sign out error:', error);
         
-        // Show error but still redirect the user
-        toast({
-          title: "Sign out issue",
-          description: "There was an issue during sign out: " + error.message,
-          variant: "destructive",
-        });
+        // If it's a missing session error, treat it as successful anyway
+        // (user is effectively signed out already)
+        if (error.message?.includes('missing') || error.message?.includes('session')) {
+          console.log("Session already missing, considering user signed out");
+          toast({
+            title: "Signed out",
+            description: "You have been successfully signed out.",
+          });
+        } else {
+          // Only show error for non-session related issues
+          toast({
+            title: "Sign out issue",
+            description: "There was an issue during sign out: " + error.message,
+            variant: "destructive",
+          });
+        }
       } else {
         console.log("Sign out successful");
         toast({
