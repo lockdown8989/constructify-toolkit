@@ -64,12 +64,12 @@ const UserMenu = () => {
           description: "There was an issue signing out. Please try again.",
           variant: "destructive"
         });
-        navigate('/auth');
+        navigate('/auth?signout=true');
       }
     } catch (error) {
       console.error("Error in handleSignOut:", error);
       // Final fallback - force navigation to auth page
-      navigate('/auth');
+      navigate('/auth?signout=true');
     } finally {
       setIsSigningOut(false);
     }

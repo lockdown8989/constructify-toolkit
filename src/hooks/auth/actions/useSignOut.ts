@@ -28,7 +28,9 @@ export const useSignOut = () => {
       }
       
       // Always attempt the regular sign out as well to clean up client state
-      const { error } = await supabase.auth.signOut();
+      // Force a logout by using the signOut method with scope: 'global'
+      // This will clear all auth state, local storage tokens, and cookies
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
       
       if (error) {
         console.log("Sign out error:", error);
@@ -57,9 +59,9 @@ export const useSignOut = () => {
         });
       }
       
-      // Always navigate to auth page regardless of errors
-      // This ensures the user can get back to a working state
-      navigate('/auth');
+      // Always navigate to auth page with signout parameter to force re-rendering
+      // This helps ensure the UI updates correctly
+      navigate('/auth?signout=true');
     } catch (error) {
       console.error('Sign out error:', error);
       
@@ -68,7 +70,7 @@ export const useSignOut = () => {
         title: "Session ended",
         description: "Your session has been ended."
       });
-      navigate('/auth');
+      navigate('/auth?signout=true');
     }
   };
 

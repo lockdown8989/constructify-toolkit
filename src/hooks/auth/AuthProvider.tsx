@@ -175,8 +175,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // We'll use the signOut from useAuthActions but enhance it with error handling
   const signOut = async () => {
     try {
+      // Clear any cached data that might be keeping the user logged in
+      resetRoles();
+      setUser(null);
+      setSession(null);
+      
+      console.log("AuthProvider: Calling authSignOut...");
       await authSignOut();
-      // No need to navigate here as the onAuthStateChange will handle it
+      
+      // Navigate to auth with signout parameter to ensure clean state
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out.",
+      });
     } catch (error) {
       console.error("Error signing out:", error);
       toast({
