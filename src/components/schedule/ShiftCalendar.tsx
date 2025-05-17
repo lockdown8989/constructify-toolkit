@@ -244,11 +244,12 @@ const ShiftCalendar = () => {
     });
   };
 
+  // FIX #1: Correct the handleEmployeeAddShift function to use the correct parameter
   const handleEmployeeAddShift = (date: Date) => {
     // Handle adding shift to a specific employee
     toast({
       title: "Adding shift",
-      description: `Adding shift for employee on ${format(day, 'MMM d')}`,
+      description: `Adding shift for employee on ${format(date, 'MMM d')}`,
     });
   };
 
@@ -431,6 +432,7 @@ const ShiftCalendar = () => {
         </div>
         
         <div className={`flex ${isMobile ? 'flex-col w-full gap-2' : 'items-center gap-4'}`}>
+          {/* FIX #2: Update the prop name to match the component's expected props */}
           <ShiftCalendarToolbar 
             viewType={weekView ? 'week' : 'day'}
             onViewChange={(type) => setWeekView(type === 'week')}
