@@ -6,12 +6,16 @@ import { useNavigate } from "react-router-dom";
 
 interface TimeClocksSectionProps {
   onClose: () => void;
+  isAuthenticated?: boolean;
+  hasManagerialAccess?: boolean;
 }
 
-const TimeClocksSection = ({ onClose }: TimeClocksSectionProps) => {
+const TimeClocksSection = ({ onClose, isAuthenticated = true, hasManagerialAccess = false }: TimeClocksSectionProps) => {
   const { isManager, isAdmin } = useAuth();
-  const hasManagerialAccess = isManager || isAdmin;
   const navigate = useNavigate();
+
+  // Use passed hasManagerialAccess if provided, otherwise fallback to local check
+  const showManagerTimeClock = hasManagerialAccess || isManager || isAdmin;
 
   return (
     <>
@@ -25,7 +29,7 @@ const TimeClocksSection = ({ onClose }: TimeClocksSectionProps) => {
         }}
       />
       
-      {hasManagerialAccess && (
+      {showManagerTimeClock && (
         <MobileNavLink
           to="/manager-time-clock"
           icon={Clock}
