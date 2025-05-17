@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSchedules } from '@/hooks/use-schedules';
 import { format, addDays, startOfWeek, isToday, isSameWeek, parseISO } from 'date-fns';
@@ -245,13 +244,18 @@ const ShiftCalendar = () => {
     });
   };
 
-  // FIX #1: Correct the handleEmployeeAddShift function to use the correct parameter
+  // Fix the handleEmployeeAddShift function to match the expected type signature
   const handleEmployeeAddShift = (employeeId: string, date: Date) => {
     // Handle adding shift to a specific employee
     toast({
       title: "Adding shift",
       description: `Adding shift for employee on ${format(date, 'MMM d')}`,
     });
+    
+    // We can then use both parameters to create a shift for the specific employee
+    setSelectedEmployee(employeeId);
+    setSelectedDay(date);
+    setIsAddShiftOpen(true);
   };
 
   // If on mobile, render the mobile schedule view
