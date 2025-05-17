@@ -13,12 +13,14 @@ import { useAuth } from "@/hooks/auth"
 import { Settings, User as UserIcon, LogOut } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useLanguage } from "@/hooks/use-language"
+import { useState } from "react"
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
   const { isAdmin, isManager, isHR } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const [isSigningOut, setIsSigningOut] = useState(false);
   
   // Format display name from email or profile
   const getDisplayName = (): string => {
@@ -35,11 +37,23 @@ const UserMenu = () => {
   };
   
   const handleSignOut = async () => {
-    console.log("Sign out initiated from UserMenu");
-    if (signOut) {
-      await signOut();
-    } else {
-      console.error("signOut function is not available");
+    if (isSigningOut) return; // Prevent multiple clicks
+    
+    try {
+      setIsSigningOut(true);
+      console.log("Sign out initiated from UserMenu");
+      if (signOut) {
+        await signOut();
+      } else {
+        console.error("signOut function is not available");
+        navigate('/auth'); // Fallback redirect
+      }
+    } catch (error) {
+      console.error("Error in handleSignOut:", error);
+      // Final fallback - force navigation to auth page
+      navigate('/auth');
+    } finally {
+      setIsSigningOut(false);
     }
   };
   
@@ -81,9 +95,13 @@ const UserMenu = () => {
           <span>{t('profile_settings')}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="text-red-500">
+        <DropdownMenuItem 
+          onClick={handleSignOut} 
+          className="text-red-500"
+          disabled={isSigningOut}
+        >
           <LogOut className="mr-2 h-4 w-4" />
-          <span>{t('sign_out')}</span>
+          <span>{isSigningOut ? t('signing_out') + "..." : t('sign_out')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
