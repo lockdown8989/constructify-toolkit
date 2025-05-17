@@ -69,6 +69,7 @@ export const useClockActions = () => {
         }
         
         // Clock in - create a new record
+        // IMPORTANT: Use manager_initiated=true to indicate this was triggered by a manager
         const { data, error } = await supabase
           .from('attendance')
           .insert({
@@ -80,7 +81,8 @@ export const useClockActions = () => {
             device_info: deviceInfo,
             device_identifier: deviceIdentifier,
             notes: 'Clocked in by manager',
-            status: 'Present'
+            status: 'Present',
+            manager_initiated: true // Add this flag to mark manager-initiated actions
           })
           .select();
           
@@ -132,7 +134,8 @@ export const useClockActions = () => {
             overtime_minutes: overtimeMinutes,
             device_info: deviceInfo,
             device_identifier: deviceIdentifier,
-            status: 'Present'
+            status: 'Present',
+            manager_initiated: true // Add this flag to mark manager-initiated actions
           })
           .eq('id', activeSession.id);
           

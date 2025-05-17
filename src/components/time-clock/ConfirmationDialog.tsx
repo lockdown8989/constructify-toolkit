@@ -13,6 +13,7 @@ interface ConfirmationDialogProps {
   employeeName: string;
   employeeAvatar?: string;
   isSubmitting?: boolean;
+  isManagerAction?: boolean;
 }
 
 const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
@@ -22,7 +23,8 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   action,
   employeeName,
   employeeAvatar,
-  isSubmitting = false
+  isSubmitting = false,
+  isManagerAction = true
 }) => {
   const currentTime = format(new Date(), 'HH:mm:ss');
   
@@ -84,6 +86,11 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             )}
             
             <h3 className="text-2xl font-semibold mb-2">Hi {employeeName || 'there'}</h3>
+            {isManagerAction && (
+              <div className="bg-blue-900 text-blue-200 text-xs px-2 py-1 rounded-full mb-2">
+                Manager Action
+              </div>
+            )}
             <p className="text-gray-400 mb-4 text-center">
               You're about to be {getActionText()} at 
             </p>

@@ -125,6 +125,7 @@ const ClockActions = ({
         employeeName={selectedEmployeeName}
         employeeAvatar={selectedEmployeeAvatar}
         isSubmitting={isProcessing || localProcessing}
+        isManagerAction={true}
       />
     </>
   );

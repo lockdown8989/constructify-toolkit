@@ -15,7 +15,12 @@ export const useSignOut = () => {
       console.log("Signing out user...");
       
       // First check if we have a valid session
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session check error:', sessionError);
+        // Even with error, proceed with sign out attempt
+      }
       
       if (!sessionData?.session) {
         console.log("No active session found, redirecting to auth page");
@@ -28,7 +33,7 @@ export const useSignOut = () => {
         return;
       }
       
-      // We have a session, proceed with signout
+      // We have a session or have attempted to check, proceed with signout
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -44,16 +49,18 @@ export const useSignOut = () => {
           return;
         }
         
+        // For other errors, show the error but still try to clean up client-side
         toast({
-          title: "Sign out failed",
-          description: error.message || "An error occurred while signing out. Please try again.",
+          title: "Sign out partially completed",
+          description: "You have been signed out but there was an issue: " + error.message,
           variant: "destructive",
         });
+        
+        // Still redirect to auth page
+        setTimeout(() => navigate('/auth'), 1500);
         return;
       }
       
-      // Even if there's no session, we want to reset the UI state
-      // and redirect the user to the authentication page
       console.log("Sign out successful");
       toast({
         title: "Signed out",

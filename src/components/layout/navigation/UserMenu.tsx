@@ -101,7 +101,7 @@ const UserMenu = () => {
           disabled={isSigningOut}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          <span>{isSigningOut ? t('signing_out') + "..." : t('sign_out')}</span>
+          <span>{isSigningOut ? t('sign_out') + "..." : t('sign_out')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
