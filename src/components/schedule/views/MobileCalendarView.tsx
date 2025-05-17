@@ -41,7 +41,9 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
     setSelectedShift,
     handleToday,
     handleAddShift,
-    handleShiftClick
+    handleShiftClick,
+    handleNextPeriod, // Use correct property name
+    handlePreviousPeriod // Use correct property name
   } = shiftState;
   
   const {
@@ -77,8 +79,8 @@ const MobileCalendarView: React.FC<ShiftCalendarProps> = ({
       <div className="px-2 py-3 border-b">
         <WeekNavigation
           currentDate={selectedDate}
-          onPreviousWeek={() => shiftState.handlePreviousWeek()}
-          onNextWeek={() => shiftState.handleNextWeek()}
+          onPreviousWeek={handlePreviousPeriod} // Updated to use correct property
+          onNextWeek={handleNextPeriod} // Updated to use correct property
           onSelectToday={handleToday}
           isMobile={true}
           viewType={weekView ? 'week' : 'day'}

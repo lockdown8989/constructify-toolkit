@@ -50,8 +50,8 @@ export interface ShiftCalendarState {
   employees: any[];
   isMobile: boolean;
   allEmployeeSchedules: any[];
-  handleNextPeriod: () => void;
-  handlePreviousPeriod: () => void;
+  handleNextPeriod: () => void; // Added this to match what's used in component
+  handlePreviousPeriod: () => void; // Added this to match what's used in component
   handleToday: () => void;
   handleAddShift: (date: Date) => void;
   handleSwapShift: (date: Date) => void;
