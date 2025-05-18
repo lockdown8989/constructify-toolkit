@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle, Mail, ArrowLeft } from "lucide-react";
+import { AlertCircle, Mail, ArrowLeft, CheckCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type ResetPasswordFormProps = {
   onBackToSignIn: () => void;
@@ -16,16 +17,25 @@ export const ResetPasswordForm = ({ onBackToSignIn }: ResetPasswordFormProps) =>
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { resetPassword } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
+    
+    if (!email || !email.trim()) {
+      setError("Please enter your email address");
+      setIsLoading(false);
+      return;
+    }
     
     try {
       const { error } = await resetPassword(email);
       if (error) {
+        setError(error.message);
         toast({
           title: "Error",
           description: error.message,
@@ -38,6 +48,8 @@ export const ResetPasswordForm = ({ onBackToSignIn }: ResetPasswordFormProps) =>
           description: "Check your email for a password reset link",
         });
       }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -57,6 +69,13 @@ export const ResetPasswordForm = ({ onBackToSignIn }: ResetPasswordFormProps) =>
       {!isSubmitted ? (
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="reset-email">Email Address</Label>
               <div className="relative">
@@ -91,8 +110,11 @@ export const ResetPasswordForm = ({ onBackToSignIn }: ResetPasswordFormProps) =>
       ) : (
         <CardFooter className="flex flex-col space-y-5 pt-4">
           <div className="bg-blue-50 p-4 rounded-md text-center">
-            <Mail className="h-10 w-10 mx-auto text-blue-500 mb-2" />
+            <CheckCircle className="h-10 w-10 mx-auto text-green-500 mb-2" />
             <p className="text-sm text-gray-700">
+              Reset link sent to <strong>{email}</strong>
+            </p>
+            <p className="text-sm text-gray-700 mt-2">
               If your email exists in our system, you'll receive a password reset link shortly.
               Please check your inbox and spam folder.
             </p>
