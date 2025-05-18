@@ -5,6 +5,7 @@ import { AuthError } from "@supabase/supabase-js";
 
 /**
  * Hook for handling password reset functionality
+ * Sends password reset emails from tampulseagent@gmail.com through Supabase
  */
 export const usePasswordReset = () => {
   const { toast } = useToast();
@@ -17,6 +18,7 @@ export const usePasswordReset = () => {
       
       console.log(`Sending password reset to ${email} with redirect to: ${resetRedirectUrl}`);
       
+      // Note: Email will be sent from tampulseagent@gmail.com as configured in Supabase
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: resetRedirectUrl,
       });
@@ -36,7 +38,8 @@ export const usePasswordReset = () => {
         await supabase.from('auth_events').insert({
           email: email,
           event_type: 'password_reset_requested',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          sender_email: 'tampulseagent@gmail.com' // Record the sender email
         });
         console.log('Password reset request logged in database');
       } catch (logError) {
@@ -46,7 +49,7 @@ export const usePasswordReset = () => {
       
       toast({
         title: "Password reset email sent",
-        description: "Check your email for the password reset link. If you don't see it, check your spam folder.",
+        description: "Check your email for the password reset link sent from tampulseagent@gmail.com. If you don't see it, check your spam folder.",
       });
       
       return { error: null };
@@ -81,7 +84,8 @@ export const usePasswordReset = () => {
         await supabase.from('auth_events').insert({
           email: data.user.email,
           event_type: 'password_reset_completed',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          sender_email: 'tampulseagent@gmail.com' // Record the sender email
         });
         console.log('Password update logged in database');
       } catch (logError) {

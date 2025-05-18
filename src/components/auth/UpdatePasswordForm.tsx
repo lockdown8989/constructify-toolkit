@@ -8,12 +8,14 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, AlertCircle, CheckCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const UpdatePasswordForm = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { updatePassword } = useAuth();
@@ -29,9 +31,11 @@ export const UpdatePasswordForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     
     // Validate password
     if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
       toast({
         title: "Password too short",
         description: "Password must be at least 6 characters long",
@@ -42,6 +46,7 @@ export const UpdatePasswordForm = () => {
     
     // Validate password confirmation
     if (password !== confirmPassword) {
+      setError("Passwords don't match");
       toast({
         title: "Passwords don't match",
         description: "Please make sure both passwords match",
@@ -55,7 +60,14 @@ export const UpdatePasswordForm = () => {
     try {
       const { error } = await updatePassword(password);
       
-      if (!error) {
+      if (error) {
+        setError(error.message);
+        toast({
+          title: "Password update failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
         setSuccess(true);
         toast({
           title: "Password updated successfully",
@@ -70,6 +82,7 @@ export const UpdatePasswordForm = () => {
       }
     } catch (err) {
       console.error("Error updating password:", err);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -85,11 +98,21 @@ export const UpdatePasswordForm = () => {
         <CardDescription className="text-center">
           Please enter a new secure password for your account
         </CardDescription>
+        <p className="text-xs text-center text-gray-500">
+          This reset was initiated from tampulseagent@gmail.com
+        </p>
       </CardHeader>
       
       {!success ? (
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="new-password">New Password</Label>
               <Input
