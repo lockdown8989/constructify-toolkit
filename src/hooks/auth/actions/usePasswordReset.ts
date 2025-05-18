@@ -19,7 +19,7 @@ export const usePasswordReset = () => {
       
       console.log(`Sending password reset to ${email} with redirect to: ${resetRedirectUrl}`);
       
-      // This will use the SMTP configuration from Supabase dashboard
+      // This will use the SMTP configuration from Supabase dashboard (tampulseagent@gmail.com)
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: resetRedirectUrl,
       });
@@ -40,7 +40,7 @@ export const usePasswordReset = () => {
           email: email,
           event_type: 'password_reset_requested',
           timestamp: new Date().toISOString(),
-          sender_email: 'noreply@supabase.io' // Will be replaced by configured SMTP sender
+          sender_email: 'tampulseagent@gmail.com' // Using the configured sender
         });
         console.log('Password reset request logged in database');
         
@@ -60,7 +60,7 @@ export const usePasswordReset = () => {
       
       toast({
         title: "Password reset email sent",
-        description: "Check your email for the password reset link. If you don't see it, check your spam folder.",
+        description: "Check your email for the password reset link from TeamPulse. If you don't see it, check your spam folder.",
       });
       
       return { error: null };
@@ -96,7 +96,7 @@ export const usePasswordReset = () => {
           email: data.user.email || '',
           event_type: 'password_reset_completed',
           timestamp: new Date().toISOString(),
-          sender_email: 'noreply@supabase.io' // Will be replaced by configured SMTP sender
+          sender_email: 'tampulseagent@gmail.com' // Using the configured sender
         });
         console.log('Password update logged in database');
       } catch (logError) {

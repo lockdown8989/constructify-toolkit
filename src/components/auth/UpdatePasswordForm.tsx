@@ -99,7 +99,7 @@ export const UpdatePasswordForm = () => {
           Please enter a new secure password for your account
         </CardDescription>
         <p className="text-xs text-center text-gray-500">
-          This reset was initiated from tampulseagent@gmail.com
+          This reset was initiated from TeamPulse &lt;tampulseagent@gmail.com&gt;
         </p>
       </CardHeader>
       
