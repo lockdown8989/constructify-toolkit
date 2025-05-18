@@ -91,7 +91,7 @@ export const ResetPasswordForm = ({ onBackToSignIn }: ResetPasswordFormProps) =>
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Reset link will be sent from tampulseagent@gmail.com
+                Reset link will be sent via configured SMTP server
               </p>
             </div>
           </CardContent>
@@ -118,7 +118,7 @@ export const ResetPasswordForm = ({ onBackToSignIn }: ResetPasswordFormProps) =>
               Reset link sent to <strong>{email}</strong>
             </p>
             <p className="text-sm text-gray-700 mt-2">
-              If your email exists in our system, you'll receive a password reset link from <strong>tampulseagent@gmail.com</strong> shortly.
+              If your email exists in our system, you'll receive a password reset link shortly.
               Please check your inbox and spam folder.
             </p>
           </div>

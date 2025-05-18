@@ -2,10 +2,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AuthError } from "@supabase/supabase-js";
+import { sendNotification } from "@/services/notifications/notification-sender";
 
 /**
  * Hook for handling password reset functionality
- * Sends password reset emails from tampulseagent@gmail.com through Supabase
+ * Uses configured SMTP settings in Supabase for sending emails
  */
 export const usePasswordReset = () => {
   const { toast } = useToast();
@@ -18,7 +19,7 @@ export const usePasswordReset = () => {
       
       console.log(`Sending password reset to ${email} with redirect to: ${resetRedirectUrl}`);
       
-      // Note: Email will be sent from tampulseagent@gmail.com as configured in Supabase
+      // This will use the SMTP configuration from Supabase dashboard
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: resetRedirectUrl,
       });
@@ -39,9 +40,19 @@ export const usePasswordReset = () => {
           email: email,
           event_type: 'password_reset_requested',
           timestamp: new Date().toISOString(),
-          sender_email: 'tampulseagent@gmail.com' // Record the sender email
+          sender_email: 'noreply@supabase.io' // Will be replaced by configured SMTP sender
         });
         console.log('Password reset request logged in database');
+        
+        // Notify system admins about the password reset request
+        await sendNotification({
+          user_id: (await supabase.auth.getUser()).data.user?.id || '',
+          title: "Password Reset Requested",
+          message: `A password reset was requested for ${email}`,
+          type: "info",
+          related_entity: 'auth',
+          related_id: email
+        });
       } catch (logError) {
         // Don't fail the reset if logging fails
         console.warn('Could not log password reset to database:', logError);
@@ -49,7 +60,7 @@ export const usePasswordReset = () => {
       
       toast({
         title: "Password reset email sent",
-        description: "Check your email for the password reset link sent from tampulseagent@gmail.com. If you don't see it, check your spam folder.",
+        description: "Check your email for the password reset link. If you don't see it, check your spam folder.",
       });
       
       return { error: null };
@@ -82,10 +93,10 @@ export const usePasswordReset = () => {
       // Log the password update in the database
       try {
         await supabase.from('auth_events').insert({
-          email: data.user.email,
+          email: data.user.email || '',
           event_type: 'password_reset_completed',
           timestamp: new Date().toISOString(),
-          sender_email: 'tampulseagent@gmail.com' // Record the sender email
+          sender_email: 'noreply@supabase.io' // Will be replaced by configured SMTP sender
         });
         console.log('Password update logged in database');
       } catch (logError) {
