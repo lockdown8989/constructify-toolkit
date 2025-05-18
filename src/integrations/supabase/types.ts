@@ -107,6 +107,36 @@ export type Database = {
           },
         ]
       }
+      auth_events: {
+        Row: {
+          additional_data: Json | null
+          created_at: string | null
+          email: string
+          event_type: string
+          id: string
+          sender_email: string | null
+          timestamp: string
+        }
+        Insert: {
+          additional_data?: Json | null
+          created_at?: string | null
+          email: string
+          event_type: string
+          id?: string
+          sender_email?: string | null
+          timestamp: string
+        }
+        Update: {
+          additional_data?: Json | null
+          created_at?: string | null
+          email?: string
+          event_type?: string
+          id?: string
+          sender_email?: string | null
+          timestamp?: string
+        }
+        Relationships: []
+      }
       availability_requests: {
         Row: {
           audit_log: Json | null
