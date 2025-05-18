@@ -7,6 +7,10 @@ import { sendNotification } from "@/services/notifications/notification-sender";
 /**
  * Hook for handling password reset functionality
  * Uses configured SMTP settings in Supabase for sending emails
+ * Note: For Gmail accounts, you may need to:
+ * 1. Enable 2FA on your Gmail account
+ * 2. Create an App Password: https://myaccount.google.com/apppasswords
+ * 3. Use that App Password instead of your regular password in Supabase SMTP settings
  */
 export const usePasswordReset = () => {
   const { toast } = useToast();
@@ -26,11 +30,23 @@ export const usePasswordReset = () => {
       
       if (error) {
         console.error('Password reset error:', error);
-        toast({
-          title: "Password reset failed",
-          description: error.message,
-          variant: "destructive",
-        });
+        
+        // Check for specific SMTP errors
+        if (error.message.includes('Username and Password not accepted') || 
+            error.message.includes('SMTP') || 
+            error.message.includes('sending')) {
+          toast({
+            title: "Email delivery issue",
+            description: "There's an issue with our email service. For Gmail SMTP, an App Password may be required instead of a regular password.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Password reset failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
         return { error };
       }
 

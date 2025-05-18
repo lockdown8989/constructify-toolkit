@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle, Mail, ArrowLeft, CheckCircle } from "lucide-react";
+import { AlertCircle, Mail, ArrowLeft, CheckCircle, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Link } from "react-router-dom";
 
 type ResetPasswordFormProps = {
   onBackToSignIn: () => void;
@@ -18,6 +19,7 @@ export const ResetPasswordForm = ({ onBackToSignIn }: ResetPasswordFormProps) =>
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSmtpHelp, setShowSmtpHelp] = useState(false);
   const { resetPassword } = useAuth();
   const { toast } = useToast();
 
@@ -35,7 +37,16 @@ export const ResetPasswordForm = ({ onBackToSignIn }: ResetPasswordFormProps) =>
     try {
       const { error } = await resetPassword(email);
       if (error) {
-        setError(error.message);
+        // Check if it's an SMTP error
+        if (error.message.includes('Username and Password not accepted') || 
+            error.message.includes('SMTP') || 
+            error.message.includes('sending')) {
+          setError("Email delivery issue. This may be due to SMTP configuration problems.");
+          setShowSmtpHelp(true);
+        } else {
+          setError(error.message);
+        }
+        
         toast({
           title: "Error",
           description: error.message,
@@ -73,6 +84,31 @@ export const ResetPasswordForm = ({ onBackToSignIn }: ResetPasswordFormProps) =>
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            {showSmtpHelp && (
+              <Alert className="bg-amber-50 border-amber-200 mb-4">
+                <div className="space-y-2">
+                  <p className="text-amber-800 text-sm">
+                    <strong>SMTP Configuration Note:</strong> Gmail requires using an App Password instead of your regular password for SMTP.
+                  </p>
+                  <ol className="list-decimal list-inside text-amber-800 text-sm space-y-1">
+                    <li>Enable 2-Factor Authentication on your Gmail account</li>
+                    <li>Generate an App Password in your Google Account settings</li>
+                    <li>Use that App Password in Supabase SMTP settings</li>
+                  </ol>
+                  <div className="flex items-center text-sm mt-2">
+                    <a 
+                      href="https://support.google.com/accounts/answer/185833" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 flex items-center hover:underline"
+                    >
+                      Learn how to create an App Password <ExternalLink className="ml-1 h-3 w-3" />
+                    </a>
+                  </div>
+                </div>
               </Alert>
             )}
             
