@@ -12,6 +12,7 @@ import LeaveBalanceCard from './LeaveBalanceCard';
 import { ScheduleTabs } from './components/ScheduleTabs';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface MobileWorkflowViewProps {
   schedules: any[];
@@ -27,6 +28,7 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
   const [scheduleTab, setScheduleTab] = useState('shift-swaps');
   const { newSchedules, setIsInfoDialogOpen, setSelectedScheduleId } = useEmployeeSchedule();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const handleInfoClick = (scheduleId: string) => {
     setSelectedScheduleId(scheduleId);
@@ -46,6 +48,11 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
       title: "Shift cancellation requested",
       description: "Your request to cancel this shift has been submitted.",
     });
+  };
+  
+  const handleLeaveRequestClick = () => {
+    // Redirect to Leave Management page with employee view selected
+    navigate('/leave-management', { state: { initialView: 'employee' } });
   };
   
   return (
@@ -119,7 +126,7 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
               To submit a leave request, please visit the Leave Management page.
             </p>
             <Button 
-              onClick={() => window.location.href = '/leave'}
+              onClick={handleLeaveRequestClick}
               className="w-full active-touch-state"
             >
               <CalendarDays className="mr-2 h-4 w-4" />
