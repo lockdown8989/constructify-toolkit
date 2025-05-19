@@ -51,8 +51,13 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
   };
   
   const handleLeaveRequestClick = () => {
-    // Redirect to Leave Management page with employee view selected
-    navigate('/leave-management', { state: { initialView: 'employee' } });
+    // Redirect to Leave Management page with employee view selected and form=true parameter
+    navigate('/leave-management', { 
+      state: { 
+        initialView: 'employee',
+        showLeaveRequestForm: true 
+      } 
+    });
   };
   
   return (
@@ -130,7 +135,7 @@ const MobileWorkflowView = ({ schedules, employeeNames, leaveBalance }: MobileWo
               className="w-full active-touch-state"
             >
               <CalendarDays className="mr-2 h-4 w-4" />
-              Go to Leave Management
+              Request Leave
             </Button>
           </CardContent>
         </Card>
