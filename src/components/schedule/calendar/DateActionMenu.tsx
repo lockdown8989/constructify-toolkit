@@ -1,16 +1,25 @@
 
 import React from 'react';
-import { Calendar, UserPlus, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Calendar, UserPlus } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface DateActionMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddShift: () => void;
-  onAddEmployee: () => void;
-  hasManagerAccess: boolean;
-  selectedDate?: Date | null;
+  onAddShift?: () => void;
+  onAddEmployee?: () => void;
+  hasManagerAccess?: boolean;
+  selectedDate?: Date;
 }
 
 const DateActionMenu: React.FC<DateActionMenuProps> = ({
@@ -18,79 +27,81 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
   onClose,
   onAddShift,
   onAddEmployee,
-  hasManagerAccess,
+  hasManagerAccess = false,
   selectedDate
 }) => {
-  if (!isOpen || !hasManagerAccess) return null;
-  
-  // Function to handle adding a shift with click propagation stopped
-  const handleAddShift = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onAddShift();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Function to log calendar actions
+  const logCalendarAction = async (actionType: string) => {
+    if (!user) return;
+    
+    try {
+      await supabase.from('calendar_actions').insert({
+        action_type: actionType,
+        date: selectedDate?.toISOString(),
+        initiator_id: user.id,
+        details: {
+          date_selected: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null,
+          platform: window.innerWidth < 768 ? 'mobile' : 'desktop'
+        }
+      });
+      
+      console.log(`Calendar action logged: ${actionType}`);
+    } catch (error) {
+      console.error('Error logging calendar action:', error);
+    }
   };
-  
-  // Function to handle adding an employee with click propagation stopped
-  const handleAddEmployee = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onAddEmployee();
+
+  // Handle add shift with logging
+  const handleAddShift = async () => {
+    if (onAddShift) {
+      await logCalendarAction('open_add_shift_dialog');
+      onAddShift();
+    }
   };
-  
+
+  // Handle add employee with logging
+  const handleAddEmployee = async () => {
+    if (onAddEmployee) {
+      await logCalendarAction('open_add_employee_dialog');
+      onAddEmployee();
+    }
+  };
+
+  const dateString = selectedDate 
+    ? format(selectedDate, 'EEEE, MMMM d, yyyy')
+    : 'Selected Date';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
-      <div 
-        className="relative bg-white rounded-lg shadow-lg p-4 w-80 max-w-[90%] animate-scale-in"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {selectedDate && (
-          <div className="text-center mb-3 text-sm font-medium text-gray-600">
-            {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-          </div>
-        )}
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{dateString}</DialogTitle>
+        </DialogHeader>
         
-        <div className="space-y-4">
-          <div 
-            className={cn(
-              "flex items-center p-3 rounded-lg cursor-pointer transition-all duration-200",
-              "hover:bg-gray-50 active:bg-gray-100 active:scale-[0.98]"
-            )}
+        <div className="grid gap-4 py-4">
+          <Button
             onClick={handleAddShift}
+            className="flex items-center gap-2"
+            disabled={!hasManagerAccess}
           >
-            <div className="w-12 h-12 border border-gray-300 rounded-lg flex items-center justify-center mr-4 bg-blue-50">
-              <Calendar className="h-6 w-6 text-blue-600" />
-            </div>
-            <div className="text-xl font-semibold text-gray-800">Add shift</div>
-          </div>
+            <Calendar className="h-5 w-5" />
+            Add shift
+          </Button>
           
-          <div 
-            className={cn(
-              "flex items-center p-3 rounded-lg cursor-pointer transition-all duration-200",
-              "hover:bg-gray-50 active:bg-gray-100 active:scale-[0.98]"
-            )}
+          <Button
             onClick={handleAddEmployee}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+            disabled={!hasManagerAccess}
           >
-            <div className="w-12 h-12 border border-gray-300 rounded-lg flex items-center justify-center mr-4 bg-green-50">
-              <UserPlus className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="text-xl font-semibold text-gray-800">Add employee</div>
-          </div>
+            <UserPlus className="h-5 w-5" />
+            Add employee
+          </Button>
         </div>
-        
-        {/* Close button */}
-        <button
-          className={cn(
-            "absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-16",
-            "w-14 h-14 bg-gray-600 hover:bg-gray-700 active:bg-gray-800",
-            "rounded-full flex items-center justify-center text-white cursor-pointer",
-            "transition-colors shadow-lg"
-          )}
-          onClick={onClose}
-          aria-label="Close menu"
-        >
-          <X className="h-6 w-6" />
-        </button>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
