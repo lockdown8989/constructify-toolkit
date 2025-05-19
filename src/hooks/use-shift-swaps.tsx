@@ -160,6 +160,11 @@ export function useUpdateShiftSwap() {
         title: "Success",
         description: "Shift swap updated successfully",
       });
+      
+      // If the swap was approved, update the schedules
+      if (data.status === 'Approved') {
+        handleApprovedShiftSwap(data);
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -169,6 +174,114 @@ export function useUpdateShiftSwap() {
       });
     }
   });
+}
+
+// Helper function to handle approved shift swaps
+async function handleApprovedShiftSwap(swapData: ShiftSwap) {
+  try {
+    // Get the schedules involved in the swap
+    const { data: requesterSchedule, error: requesterError } = await supabase
+      .from('schedules')
+      .select('*')
+      .eq('id', swapData.requester_schedule_id)
+      .single();
+      
+    if (requesterError) throw requesterError;
+    
+    // If there's a specific recipient schedule, swap them
+    if (swapData.recipient_schedule_id) {
+      const { data: recipientSchedule, error: recipientError } = await supabase
+        .from('schedules')
+        .select('*')
+        .eq('id', swapData.recipient_schedule_id)
+        .single();
+        
+      if (recipientError) throw recipientError;
+      
+      // Swap the employee IDs for both schedules
+      await supabase
+        .from('schedules')
+        .update({ 
+          employee_id: swapData.recipient_id,
+          status: 'confirmed',
+          updated_at: new Date().toISOString(),
+          notes: (requesterSchedule.notes || '') + ' (Swapped via shift swap request)'
+        })
+        .eq('id', swapData.requester_schedule_id);
+        
+      await supabase
+        .from('schedules')
+        .update({ 
+          employee_id: swapData.requester_id,
+          status: 'confirmed',
+          updated_at: new Date().toISOString(),
+          notes: (recipientSchedule.notes || '') + ' (Swapped via shift swap request)'
+        })
+        .eq('id', swapData.recipient_schedule_id);
+    } else {
+      // If no specific recipient schedule, just reassign the requester schedule
+      await supabase
+        .from('schedules')
+        .update({ 
+          employee_id: swapData.recipient_id,
+          status: 'confirmed',
+          updated_at: new Date().toISOString(),
+          notes: (requesterSchedule.notes || '') + ' (Assigned via shift swap request)'
+        })
+        .eq('id', swapData.requester_schedule_id);
+    }
+    
+    // Mark the swap as completed
+    await supabase
+      .from('shift_swaps')
+      .update({ 
+        status: 'Completed',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', swapData.id);
+      
+    // Create notifications for both employees
+    // Get requester and recipient employee details to get user_ids
+    const { data: employees } = await supabase
+      .from('employees')
+      .select('id, user_id, name')
+      .in('id', [swapData.requester_id, swapData.recipient_id]);
+      
+    if (employees && employees.length === 2) {
+      const requester = employees.find(e => e.id === swapData.requester_id);
+      const recipient = employees.find(e => e.id === swapData.recipient_id);
+      
+      if (requester?.user_id) {
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: requester.user_id,
+            title: 'Shift Swap Approved',
+            message: `Your shift swap request with ${recipient?.name || 'a colleague'} has been approved`,
+            type: 'success',
+            related_entity: 'shift_swaps',
+            related_id: swapData.id
+          });
+      }
+      
+      if (recipient?.user_id) {
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: recipient.user_id,
+            title: 'New Shift Assignment',
+            message: `A shift has been assigned to you via a swap with ${requester?.name || 'a colleague'}`,
+            type: 'info',
+            related_entity: 'shift_swaps',
+            related_id: swapData.id
+          });
+      }
+    }
+    
+  } catch (error) {
+    console.error('Error handling approved shift swap:', error);
+    throw error;
+  }
 }
 
 // Delete a shift swap

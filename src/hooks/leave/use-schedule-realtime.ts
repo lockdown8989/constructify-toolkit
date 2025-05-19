@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,7 +24,10 @@ export const useScheduleRealtime = () => {
           table: 'shift_swaps'
         },
         async (payload) => {
+          console.log('Shift swap change detected:', payload);
           queryClient.invalidateQueries({ queryKey: ['shift_swaps'] });
+          queryClient.invalidateQueries({ queryKey: ['shift-swaps'] });
+          queryClient.invalidateQueries({ queryKey: ['schedules'] }); // Also refresh schedules
           
           const { data: pendingShifts } = await supabase
             .from('shift_swaps')
@@ -42,64 +44,27 @@ export const useScheduleRealtime = () => {
                 description: "A shift swap request has been approved.",
               });
               
-              if (payload.new.requester_id && user.id !== payload.new.requester_id) {
-                await sendNotification({
-                  user_id: payload.new.requester_id,
-                  title: "Shift swap approved",
-                  message: "Your shift swap request has been approved.",
-                  type: "success",
-                  related_entity: "shift_swaps",
-                  related_id: payload.new.id
-                });
-              }
-              
-              if (payload.new.recipient_id && user.id !== payload.new.recipient_id) {
-                await sendNotification({
-                  user_id: payload.new.recipient_id,
-                  title: "New shift assigned",
-                  message: "A shift has been assigned to you through a swap.",
-                  type: "info",
-                  related_entity: "shift_swaps",
-                  related_id: payload.new.id
-                });
-              }
+              // Refresh schedules to reflect the changes in the calendar
+              queryClient.invalidateQueries({ queryKey: ['schedules'] });
             } else if (oldStatus === 'Pending' && newStatus === 'Rejected') {
               toast({
                 title: "Shift swap rejected",
                 description: "A shift swap request has been rejected.",
               });
+            } else if (newStatus === 'Completed') {
+              toast({
+                title: "Shift swap completed",
+                description: "The shift swap has been completed and is now reflected in the schedule.",
+              });
               
-              if (payload.new.requester_id && user.id !== payload.new.requester_id) {
-                await sendNotification({
-                  user_id: payload.new.requester_id,
-                  title: "Shift swap rejected",
-                  message: "Your shift swap request has been rejected.",
-                  type: "warning",
-                  related_entity: "shift_swaps",
-                  related_id: payload.new.id
-                });
-              }
+              // Refresh schedules to reflect the changes in the calendar
+              queryClient.invalidateQueries({ queryKey: ['schedules'] });
             }
           } else if (payload.eventType === 'INSERT') {
             toast({
               title: "New shift swap request",
               description: "A new shift swap request has been submitted.",
             });
-            
-            const managerIds = await getManagerUserIds();
-            
-            for (const managerId of managerIds) {
-              if (managerId !== user.id) {
-                await sendNotification({
-                  user_id: managerId,
-                  title: "New shift swap request",
-                  message: "A new shift swap request requires your review.",
-                  type: "info",
-                  related_entity: "shift_swaps",
-                  related_id: payload.new.id
-                });
-              }
-            }
           }
         }
       )
@@ -175,6 +140,25 @@ export const useScheduleRealtime = () => {
                 });
               }
             }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'schedules'
+        },
+        async (payload) => {
+          console.log('Schedule change detected:', payload);
+          queryClient.invalidateQueries({ queryKey: ['schedules'] });
+          
+          if (payload.eventType === 'UPDATE' && payload.old.employee_id !== payload.new.employee_id) {
+            toast({
+              title: "Schedule updated",
+              description: "A shift has been reassigned to a different employee.",
+            });
           }
         }
       )

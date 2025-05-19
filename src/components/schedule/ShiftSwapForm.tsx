@@ -22,7 +22,7 @@ import { useLocation } from 'react-router-dom';
 const ShiftSwapForm = () => {
   const { user } = useAuth();
   const { data: schedules = [] } = useSchedules();
-  const { data: employees = [] } = useEmployees();
+  const { data: allEmployees = [] } = useEmployees(); // Fetch ALL employees
   const { mutate: createShiftSwap, isPending } = useCreateShiftSwap();
   const { toast } = useToast();
   const location = useLocation();
@@ -47,7 +47,7 @@ const ShiftSwapForm = () => {
   
   // Filter potential recipients (excluding the current user)
   const potentialRecipients = user 
-    ? employees.filter(employee => employee.id !== user.id)
+    ? allEmployees.filter(employee => employee.id !== user.id && employee.status === 'Active')
     : [];
   
   // Filter schedules for selected recipient
