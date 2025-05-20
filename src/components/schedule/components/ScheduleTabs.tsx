@@ -43,8 +43,8 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
       case 'my-shifts':
         return schedule.status === 'confirmed';
       case 'open-shifts':
-        // This would filter for open shifts if we had that data
-        return schedule.status === 'open';
+        // Fix the error by checking if status is a string 'open' instead of enum comparison
+        return schedule.status === 'open' || schedule.shift_type === 'open_shift';
       case 'pending':
         return schedule.status === 'pending';
       case 'completed':

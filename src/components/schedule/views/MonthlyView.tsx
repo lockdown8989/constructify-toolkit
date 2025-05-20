@@ -3,12 +3,71 @@ import React from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { Schedule } from '@/hooks/use-schedules';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { getInitials } from '@/lib/utils';
 
 interface MonthlyViewProps {
   currentDate: Date;
   schedules: Schedule[];
   onDateClick?: (date: Date) => void;
 }
+
+interface ShiftEmployeeProps {
+  employeeId: string | null | undefined;
+  size?: 'xs' | 'sm' | 'md';
+}
+
+const ShiftEmployee: React.FC<ShiftEmployeeProps> = ({ employeeId, size = 'xs' }) => {
+  const { data: employee } = useQuery({
+    queryKey: ['employee', employeeId],
+    queryFn: async () => {
+      if (!employeeId) return null;
+      const { data } = await supabase
+        .from('employees')
+        .select('name, avatar')
+        .eq('id', employeeId)
+        .single();
+      return data;
+    },
+    enabled: !!employeeId,
+  });
+
+  if (!employee) return null;
+
+  const sizeClass = {
+    xs: 'h-4 w-4',
+    sm: 'h-6 w-6',
+    md: 'h-8 w-8',
+  }[size];
+
+  return (
+    <Avatar className={sizeClass}>
+      <AvatarImage src={employee.avatar} alt={employee.name} />
+      <AvatarFallback className="text-[10px]">{getInitials(employee.name)}</AvatarFallback>
+    </Avatar>
+  );
+};
+
+// Function to group schedules by time blocks for display
+const groupSchedulesByTimeBlocks = (daySchedules: Schedule[]): Record<string, Schedule[]> => {
+  const groups: Record<string, Schedule[]> = {};
+  
+  daySchedules.forEach(schedule => {
+    const startTime = format(new Date(schedule.start_time), 'HH:mm');
+    const endTime = format(new Date(schedule.end_time), 'HH:mm');
+    const key = `${startTime}-${endTime}`;
+    
+    if (!groups[key]) {
+      groups[key] = [];
+    }
+    
+    groups[key].push(schedule);
+  });
+  
+  return groups;
+};
 
 const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate, schedules, onDateClick }) => {
   // Get month boundaries
@@ -80,6 +139,10 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate, schedules, onDat
               const isCurrentMonth = isSameMonth(day, currentDate);
               const isDayToday = isToday(day);
               
+              // Group schedules by time blocks for this day
+              const groupedSchedules = groupSchedulesByTimeBlocks(daySchedules);
+              const timeBlocks = Object.keys(groupedSchedules).slice(0, 3); // Limit to 3 time blocks for display
+              
               return (
                 <div
                   key={dayIndex}
@@ -99,30 +162,45 @@ const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate, schedules, onDat
                     {format(day, 'd')}
                   </div>
                   
-                  {/* Schedule pills - limited to 3 visible items */}
+                  {/* Schedule blocks - time block style */}
                   <div className="space-y-1 mt-1">
-                    {daySchedules.slice(0, 3).map((schedule, i) => (
-                      <div
-                        key={i}
-                        className={cn(
-                          "text-xs p-1 rounded truncate",
-                          schedule.status === 'pending' ? "bg-amber-100 text-amber-800" : 
-                          schedule.status === 'confirmed' ? "bg-green-100 text-green-800" : 
-                          "bg-blue-100 text-blue-800"
-                        )}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Handle shift click
-                        }}
-                      >
-                        {format(new Date(schedule.start_time), 'h:mm a')} - {schedule.title || 'Shift'}
-                      </div>
-                    ))}
+                    {timeBlocks.map((timeBlock, i) => {
+                      const blockSchedules = groupedSchedules[timeBlock];
+                      const [startTime, endTime] = timeBlock.split('-');
+                      
+                      return (
+                        <div
+                          key={timeBlock}
+                          className="p-1 rounded-md bg-cyan-500 text-white text-[10px]"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium truncate">
+                              {startTime.substring(0, 5)}
+                            </span>
+                            <div className="flex -space-x-1">
+                              {blockSchedules.map((schedule, idx) => (
+                                idx < 2 && (
+                                  <ShiftEmployee 
+                                    key={schedule.id} 
+                                    employeeId={schedule.employee_id} 
+                                  />
+                                )
+                              ))}
+                              {blockSchedules.length > 2 && (
+                                <div className="h-4 w-4 bg-gray-200 rounded-full flex items-center justify-center text-[8px] text-gray-700">
+                                  +{blockSchedules.length - 2}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                     
-                    {/* More indicator if there are additional events */}
-                    {daySchedules.length > 3 && (
-                      <div className="text-xs text-center text-gray-500 font-medium">
-                        +{daySchedules.length - 3} more
+                    {/* More indicator if there are additional time blocks */}
+                    {Object.keys(groupedSchedules).length > 3 && (
+                      <div className="text-[10px] text-center text-gray-500 font-medium">
+                        +{Object.keys(groupedSchedules).length - 3} more
                       </div>
                     )}
                   </div>
