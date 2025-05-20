@@ -8,6 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getInitials } from '@/lib/utils';
+import { Clock, MapPin } from 'lucide-react';
 
 interface DayViewProps {
   currentDate: Date;
@@ -104,13 +105,30 @@ const DayViewComponent: React.FC<DayViewProps> = ({
             return (
               <div 
                 key={timeBlock}
-                className="rounded-xl overflow-hidden shadow-sm bg-cyan-500 text-white"
+                className={`rounded-xl overflow-hidden shadow-sm ${
+                  firstSchedule.status === 'pending' ? 'bg-amber-500' : 
+                  firstSchedule.status === 'confirmed' ? 'bg-cyan-500' : 
+                  'bg-blue-500'
+                } text-white`}
               >
                 <div className="p-4">
-                  <div className="text-2xl font-bold">
-                    {format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}
+                  <div className="flex justify-between items-center">
+                    <div className="text-2xl font-bold">
+                      {format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}
+                    </div>
+                    <div className="text-sm px-2 py-1 bg-white/25 rounded-full">
+                      {firstSchedule.status}
+                    </div>
                   </div>
+                  
                   <div className="text-xl mt-1">{firstSchedule.title}</div>
+                  
+                  {firstSchedule.location && (
+                    <div className="flex items-center mt-2 text-sm">
+                      <MapPin size={14} className="mr-1" />
+                      {firstSchedule.location}
+                    </div>
+                  )}
                   
                   {/* Show employees assigned to this shift */}
                   <div className="mt-4 flex -space-x-2">
@@ -140,17 +158,30 @@ const DayViewComponent: React.FC<DayViewProps> = ({
               return (
                 <div
                   key={schedule.id}
-                  className={`absolute left-0 right-4 rounded px-2 py-1 ${getEventColor(index)}`}
+                  className={`absolute left-0 right-4 rounded-lg px-2 py-1 ${getEventColor(index)} shadow-md`}
                   style={{ top: `${top}px`, height: `${height}px` }}
                 >
                   <div className="font-medium text-sm truncate">{schedule.title}</div>
-                  <div className="text-xs opacity-80">
+                  <div className="flex items-center text-xs opacity-80">
+                    <Clock size={10} className="mr-1" />
                     {format(new Date(schedule.start_time), 'h:mm a')} - {format(new Date(schedule.end_time), 'h:mm a')}
                   </div>
+                  {schedule.employee_id && (
+                    <div className="mt-1">
+                      <ShiftEmployee employeeId={schedule.employee_id} />
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
+        </div>
+      )}
+      
+      {filteredSchedules.length === 0 && (
+        <div className="p-10 text-center text-gray-500">
+          <p className="mb-2">No shifts scheduled for this day</p>
+          <p className="text-sm">Click "Add Open Shift" or "Add Employee Shift" to schedule something</p>
         </div>
       )}
     </div>

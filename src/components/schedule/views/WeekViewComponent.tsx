@@ -5,7 +5,8 @@ import { Schedule } from '@/hooks/use-schedules';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { getInitials } from '@/lib/utils';
+import { getInitials, cn } from '@/lib/utils';
+import { Clock, MapPin } from 'lucide-react';
 
 interface WeekViewProps {
   currentDate: Date;
@@ -84,44 +85,71 @@ const WeekViewComponent: React.FC<WeekViewProps> = ({
 
         // Group schedules by time slots
         const groupedSchedules = groupDaySchedulesByTimeSlots(daySchedules);
-        const timeSlots = Object.keys(groupedSchedules);
+        const timeSlots = Object.keys(groupedSchedules).sort();
 
         return (
           <div 
             key={dayIndex} 
-            className="border rounded-md bg-white p-2 overflow-hidden flex flex-col"
+            className="border rounded-md bg-white p-2 overflow-hidden flex flex-col h-[320px]"
           >
-            <div className="text-center py-1 font-medium text-sm">
-              {format(day, 'EEE')}
-              <div className="text-xs text-gray-500">{format(day, 'MMM d')}</div>
+            <div className="text-center py-1 font-medium">
+              <div className={cn(
+                "text-base",
+                isSameDay(day, new Date()) && "text-blue-600 font-bold"
+              )}>
+                {format(day, 'EEE')}
+              </div>
+              <div className={cn(
+                "text-sm text-gray-500",
+                isSameDay(day, new Date()) && "text-blue-500 font-semibold"
+              )}>
+                {format(day, 'MMM d')}
+              </div>
             </div>
             
-            <div className="flex-1 overflow-auto space-y-2">
+            <div className="flex-1 overflow-auto space-y-2 pt-2">
               {timeSlots.length > 0 ? (
                 timeSlots.map(timeSlot => {
                   const slotSchedules = groupedSchedules[timeSlot];
+                  const firstSchedule = slotSchedules[0];
                   const [startTime, endTime] = timeSlot.split('-');
+                  const scheduleStatus = firstSchedule.status || 'confirmed';
                   
                   return (
                     <div 
                       key={timeSlot}
-                      className="bg-cyan-500 text-white p-2 rounded-lg text-xs"
+                      className={cn(
+                        "p-2 rounded-lg text-white text-xs",
+                        scheduleStatus === 'pending' ? 'bg-amber-500' :
+                        scheduleStatus === 'confirmed' ? 'bg-cyan-500' :
+                        scheduleStatus === 'completed' ? 'bg-green-500' :
+                        'bg-blue-500'
+                      )}
                     >
                       <div className="font-medium">
-                        {startTime.replace(':', '')} - {endTime.replace(':', '')}
+                        {startTime} - {endTime}
                       </div>
-                      <div className="mt-1 font-bold">{slotSchedules[0].title}</div>
+                      <div className="mt-1 font-bold truncate">{slotSchedules[0].title}</div>
+                      
+                      {firstSchedule.location && (
+                        <div className="flex items-center mt-1 text-xs text-white/90">
+                          <MapPin size={10} className="mr-1" />
+                          <span className="truncate">{firstSchedule.location}</span>
+                        </div>
+                      )}
                       
                       {/* Show employee avatars */}
-                      <div className="mt-2 flex gap-1">
-                        {slotSchedules.map(schedule => (
-                          <ShiftEmployee 
-                            key={schedule.id} 
-                            employeeId={schedule.employee_id}
-                            size="sm" 
-                          />
-                        ))}
-                      </div>
+                      {slotSchedules.some(s => s.employee_id) && (
+                        <div className="mt-2 flex gap-1">
+                          {slotSchedules.map(schedule => schedule.employee_id && (
+                            <ShiftEmployee 
+                              key={schedule.id} 
+                              employeeId={schedule.employee_id}
+                              size="sm" 
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })

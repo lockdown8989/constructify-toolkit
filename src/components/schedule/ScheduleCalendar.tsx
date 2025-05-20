@@ -11,12 +11,17 @@ import AddShiftSheet from './components/AddShiftSheet';
 import { useCalendarState } from './hooks/useCalendarState';
 import { getEventPosition, getEventColor } from './utilities/eventUtils';
 import WeekNavigation from './components/WeekNavigation';
+import { Button } from '@/components/ui/button';
+import { PlusCircle, UserPlus } from 'lucide-react';
+import NewScheduleDialog from './components/NewScheduleDialog';
+import { useEmployees } from '@/hooks/use-employees';
 
 const ScheduleCalendar = () => {
   const { data: schedules = [] } = useSchedules();
   const { isAdmin, isManager, isHR } = useAuth();
   const isMobile = useIsMobile();
   const hasManagerAccess = isAdmin || isManager || isHR;
+  const { data: employeeList = [] } = useEmployees({});
   
   const {
     currentDate,
@@ -32,6 +37,14 @@ const ScheduleCalendar = () => {
     handleSubmitAddShift
   } = useCalendarState();
 
+  // State for the new employee shift dialog
+  const [isAddEmployeeShiftOpen, setIsAddEmployeeShiftOpen] = React.useState(false);
+
+  // Function to handle adding an employee shift
+  const handleAddEmployeeShift = () => {
+    setIsAddEmployeeShiftOpen(true);
+  };
+
   return (
     <div className="space-y-4">
       <div className={`flex ${isMobile ? 'flex-col gap-2' : 'justify-between items-center'}`}>
@@ -45,12 +58,28 @@ const ScheduleCalendar = () => {
           isToday={isCurrentDateToday}
         />
         
-        {/* Add shift button for managers */}
-        {!isMobile && (
-          <AddShiftButton 
-            onClick={handleAddShift} 
-            hasManagerAccess={hasManagerAccess} 
-          />
+        {/* Manager Actions */}
+        {!isMobile && hasManagerAccess && (
+          <div className="flex space-x-2">
+            <Button 
+              size="sm"
+              variant="outline" 
+              className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white"
+              onClick={handleAddShift}
+            >
+              <PlusCircle size={16} />
+              Add Open Shift
+            </Button>
+            <Button 
+              size="sm"
+              variant="outline" 
+              className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white"
+              onClick={handleAddEmployeeShift}
+            >
+              <UserPlus size={16} />
+              Add Employee Shift
+            </Button>
+          </div>
         )}
       </div>
       
@@ -92,18 +121,29 @@ const ScheduleCalendar = () => {
         isMobile={isMobile}
       />
       
-      {/* Mobile FAB */}
+      {/* Add employee shift dialog */}
+      <NewScheduleDialog
+        isOpen={isAddEmployeeShiftOpen}
+        onClose={() => setIsAddEmployeeShiftOpen(false)}
+        employees={employeeList}
+      />
+      
+      {/* Mobile FAB for managers */}
       {isMobile && hasManagerAccess && (
-        <div className="fixed bottom-20 right-6 z-50">
+        <div className="fixed bottom-20 right-6 z-50 flex flex-col gap-2">
+          <button
+            onClick={handleAddEmployeeShift}
+            className="h-14 w-14 rounded-full bg-green-500 text-white shadow-lg flex items-center justify-center hover:bg-green-600 active-touch-state"
+            aria-label="Add employee shift"
+          >
+            <UserPlus size={24} />
+          </button>
           <button
             onClick={handleAddShift}
             className="h-14 w-14 rounded-full bg-blue-500 text-white shadow-lg flex items-center justify-center hover:bg-blue-600 active-touch-state"
-            aria-label="Add shift"
+            aria-label="Add open shift"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-plus">
-              <path d="M5 12h14"></path>
-              <path d="M12 5v14"></path>
-            </svg>
+            <PlusCircle size={24} />
           </button>
         </div>
       )}
