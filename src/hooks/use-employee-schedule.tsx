@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSchedules } from '@/hooks/use-schedules';
 import { useToast } from '@/hooks/use-toast';
@@ -143,7 +144,51 @@ export const useEmployeeSchedule = () => {
       }
     };
     
+    // Also subscribe to open shift assignments to catch newly assigned shifts
+    const setupOpenShiftSubscription = async () => {
+      try {
+        const { data: employee } = await supabase
+          .from('employees')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (employee) {
+          const openShiftChannel = supabase
+            .channel('open_shift_assignments')
+            .on(
+              'postgres_changes',
+              {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'open_shift_assignments',
+                filter: `employee_id=eq.${employee.id}`
+              },
+              (payload) => {
+                console.log('Open shift assignment detected:', payload);
+                refreshSchedules();
+                
+                toast({
+                  title: "New shift assigned",
+                  description: "You've been assigned a new open shift.",
+                });
+                
+                // Switch to my-shifts tab to show the new assignment
+                setActiveTab('my-shifts');
+              }
+            )
+            .subscribe();
+            
+          console.log('Subscribed to open shift assignments for employee:', employee.id);
+          return () => { supabase.removeChannel(openShiftChannel); };
+        }
+      } catch (error) {
+        console.error('Error setting up open shift subscription:', error);
+      }
+    };
+    
     getEmployeeId();
+    setupOpenShiftSubscription();
   }, [user, toast]);
 
   return {

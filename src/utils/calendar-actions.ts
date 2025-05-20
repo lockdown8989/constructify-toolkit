@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { sendNotification } from '@/services/notifications';
 import { format } from 'date-fns';
@@ -366,7 +365,7 @@ export async function assignOpenShiftToEmployee(
     
     if (updateError) throw updateError;
     
-    // Create schedule entry for the employee
+    // Create schedule entry for the employee - this is what will show in "My Schedule"
     const { data: schedule, error: scheduleError } = await supabase
       .from('schedules')
       .insert({
@@ -376,7 +375,7 @@ export async function assignOpenShiftToEmployee(
         end_time: openShift.end_time,
         location: openShift.location,
         notes: openShift.notes,
-        status: 'confirmed',
+        status: 'confirmed', // Mark as confirmed so it shows up immediately
         created_platform: window.innerWidth < 768 ? 'mobile' : 'desktop',
         last_modified_platform: window.innerWidth < 768 ? 'mobile' : 'desktop'
       })

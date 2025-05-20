@@ -20,6 +20,11 @@ export const useShiftAssignment = () => {
 
         // Use the utility function that handles all the logic
         const result = await assignOpenShiftToEmployee(openShiftId, employeeId);
+        
+        // Make sure to invalidate both schedules and open-shifts queries
+        queryClient.invalidateQueries({ queryKey: ['open-shifts'] });
+        queryClient.invalidateQueries({ queryKey: ['schedules'] });
+        
         return result;
       } catch (error) {
         console.error('Shift Assignment Error:', error);
