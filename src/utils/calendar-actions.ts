@@ -14,6 +14,8 @@ export async function createShiftAssignment(
     endTime: string | Date;
     location?: string;
     notes?: string;
+    includeBreak?: boolean;
+    breakDuration?: number;
   }
 ) {
   try {
@@ -43,7 +45,12 @@ export async function createShiftAssignment(
         notes: shiftDetails.notes,
         status: 'pending',
         created_platform: window.innerWidth < 768 ? 'mobile' : 'desktop',
-        last_modified_platform: window.innerWidth < 768 ? 'mobile' : 'desktop'
+        last_modified_platform: window.innerWidth < 768 ? 'mobile' : 'desktop',
+        mobile_friendly_view: {
+          font_size: 'medium',
+          compact_view: window.innerWidth < 768,
+          high_contrast: false
+        }
       })
       .select()
       .single();
@@ -61,7 +68,9 @@ export async function createShiftAssignment(
       details: {
         shift_id: data.id,
         employee_id: employeeId,
-        title: shiftDetails.title
+        title: shiftDetails.title,
+        include_break: shiftDetails.includeBreak || false,
+        break_duration: shiftDetails.breakDuration || 0
       }
     });
     
@@ -110,6 +119,9 @@ export async function createEmployeeWithShift(
     startTime: string | Date;
     endTime: string | Date;
     location?: string;
+    notes?: string;
+    includeBreak?: boolean;
+    breakDuration?: number;
   }
 ) {
   try {
@@ -146,7 +158,8 @@ export async function createEmployeeWithShift(
       details: {
         employee_id: employee.id,
         name: employeeDetails.name,
-        job_title: employeeDetails.job_title
+        job_title: employeeDetails.job_title,
+        created_platform: window.innerWidth < 768 ? 'mobile' : 'desktop'
       }
     });
     
@@ -156,7 +169,10 @@ export async function createEmployeeWithShift(
         title: shiftDetails.title,
         startTime: shiftDetails.startTime,
         endTime: shiftDetails.endTime,
-        location: shiftDetails.location
+        location: shiftDetails.location,
+        notes: shiftDetails.notes,
+        includeBreak: shiftDetails.includeBreak,
+        breakDuration: shiftDetails.breakDuration
       });
     }
     
@@ -221,5 +237,186 @@ export async function recordCalendarAction(
   } catch (error) {
     console.error('Error recording calendar action:', error);
     return null;
+  }
+}
+
+/**
+ * Creates a new open shift available for assignment
+ */
+export async function createOpenShift(
+  shiftDetails: {
+    title: string;
+    startTime: string | Date;
+    endTime: string | Date;
+    role?: string;
+    location?: string;
+    notes?: string;
+    expirationDate?: string | Date;
+  }
+) {
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      throw new Error('User not authenticated');
+    }
+    
+    // Format dates if they're Date objects
+    const startTime = typeof shiftDetails.startTime === 'string' 
+      ? shiftDetails.startTime 
+      : shiftDetails.startTime.toISOString();
+    
+    const endTime = typeof shiftDetails.endTime === 'string'
+      ? shiftDetails.endTime
+      : shiftDetails.endTime.toISOString();
+    
+    const expirationDate = shiftDetails.expirationDate 
+      ? (typeof shiftDetails.expirationDate === 'string' 
+         ? shiftDetails.expirationDate 
+         : shiftDetails.expirationDate.toISOString())
+      : undefined;
+      
+    // Create open shift
+    const { data, error } = await supabase
+      .from('open_shifts')
+      .insert({
+        title: shiftDetails.title,
+        role: shiftDetails.role || shiftDetails.title,
+        start_time: startTime,
+        end_time: endTime,
+        location: shiftDetails.location,
+        notes: shiftDetails.notes,
+        expiration_date: expirationDate,
+        created_by: userData.user.id,
+        status: 'open',
+        created_platform: window.innerWidth < 768 ? 'mobile' : 'desktop',
+        last_modified_platform: window.innerWidth < 768 ? 'mobile' : 'desktop'
+      })
+      .select()
+      .single();
+      
+    if (error) {
+      console.error('Error creating open shift:', error);
+      throw error;
+    }
+    
+    // Log action in calendar_actions table
+    await recordCalendarAction('create_open_shift', startTime, {
+      shift_id: data.id,
+      title: shiftDetails.title,
+      role: shiftDetails.role
+    });
+    
+    return data;
+  } catch (error) {
+    console.error('Error in createOpenShift:', error);
+    throw error;
+  }
+}
+
+/**
+ * Assigns an open shift to an employee
+ */
+export async function assignOpenShiftToEmployee(
+  openShiftId: string,
+  employeeId: string
+) {
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      throw new Error('User not authenticated');
+    }
+    
+    // Get open shift data
+    const { data: openShift, error: shiftError } = await supabase
+      .from('open_shifts')
+      .select('*')
+      .eq('id', openShiftId)
+      .single();
+    
+    if (shiftError) {
+      throw new Error('Open shift not found');
+    }
+    
+    if (openShift.status !== 'open') {
+      throw new Error('This shift is no longer available');
+    }
+    
+    // Create assignment record
+    const { data: assignment, error: assignError } = await supabase
+      .from('open_shift_assignments')
+      .insert({
+        open_shift_id: openShiftId,
+        employee_id: employeeId,
+        assigned_by: userData.user.id,
+        status: 'confirmed'
+      })
+      .select()
+      .single();
+    
+    if (assignError) throw assignError;
+    
+    // Update open shift status to assigned
+    const { error: updateError } = await supabase
+      .from('open_shifts')
+      .update({ 
+        status: 'assigned',
+        last_modified_platform: window.innerWidth < 768 ? 'mobile' : 'desktop'
+      })
+      .eq('id', openShiftId);
+    
+    if (updateError) throw updateError;
+    
+    // Create schedule entry for the employee
+    const { data: schedule, error: scheduleError } = await supabase
+      .from('schedules')
+      .insert({
+        employee_id: employeeId,
+        title: openShift.title,
+        start_time: openShift.start_time,
+        end_time: openShift.end_time,
+        location: openShift.location,
+        notes: openShift.notes,
+        status: 'confirmed',
+        created_platform: window.innerWidth < 768 ? 'mobile' : 'desktop',
+        last_modified_platform: window.innerWidth < 768 ? 'mobile' : 'desktop'
+      })
+      .select()
+      .single();
+    
+    if (scheduleError) throw scheduleError;
+    
+    // Log the assignment action
+    await recordCalendarAction('assign_open_shift', openShift.start_time, {
+      shift_id: openShiftId,
+      employee_id: employeeId,
+      assigned_by: userData.user.id,
+      schedule_id: schedule.id
+    });
+    
+    // Notify employee
+    const { data: employee } = await supabase
+      .from('employees')
+      .select('user_id, name')
+      .eq('id', employeeId)
+      .single();
+    
+    if (employee?.user_id) {
+      await sendNotification({
+        user_id: employee.user_id,
+        title: 'Shift Assigned',
+        message: `You have been assigned a shift: ${openShift.title} on ${format(new Date(openShift.start_time), 'EEEE, MMMM d')} from ${format(new Date(openShift.start_time), 'h:mm a')} to ${format(new Date(openShift.end_time), 'h:mm a')}.`,
+        type: 'info',
+        related_entity: 'schedules',
+        related_id: schedule.id
+      });
+    }
+    
+    return {
+      assignment,
+      schedule
+    };
+  } catch (error) {
+    console.error('Error in assignOpenShiftToEmployee:', error);
+    throw error;
   }
 }

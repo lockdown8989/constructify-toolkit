@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { recordCalendarAction } from '@/utils/calendar-actions';
 
 interface AddShiftFABProps {
   onClick: () => void;
@@ -22,14 +23,9 @@ const AddShiftFAB: React.FC<AddShiftFABProps> = ({ onClick, isVisible = true }) 
       
       // Log the FAB interaction
       if (user) {
-        await supabase.from('calendar_actions').insert({
-          action_type: 'fab_add_shift_clicked',
-          date: new Date().toISOString(),
-          initiator_id: user.id,
-          details: {
-            platform: window.innerWidth < 768 ? 'mobile' : 'desktop',
-            timestamp: Date.now()
-          }
+        await recordCalendarAction('fab_add_shift_clicked', new Date(), {
+          platform: window.innerWidth < 768 ? 'mobile' : 'desktop',
+          timestamp: Date.now()
         });
       }
       
