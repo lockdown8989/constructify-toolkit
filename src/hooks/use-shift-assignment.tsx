@@ -44,7 +44,7 @@ export const useShiftAssignment = () => {
           throw new Error(`Failed to create shift assignment: ${assignmentError.message}`);
         }
 
-        // Create schedule entry
+        // Create schedule entry to show in "My Schedule"
         const { data: scheduleData, error: scheduleError } = await supabase
           .from('schedules')
           .insert({
@@ -52,7 +52,9 @@ export const useShiftAssignment = () => {
             title: openShift.title,
             start_time: openShift.start_time,
             end_time: openShift.end_time,
-            status: 'confirmed'
+            status: 'confirmed',
+            location: openShift.location || 'Main Location',
+            calendar_id: openShift.id // Reference to original open shift
           })
           .select()
           .single();
@@ -72,7 +74,7 @@ export const useShiftAssignment = () => {
           throw new Error(`Failed to fetch employee details: ${employeeError.message}`);
         }
 
-        // Send detailed notification
+        // Send detailed notification to employee
         if (employee.user_id) {
           await sendNotification({
             user_id: employee.user_id,
