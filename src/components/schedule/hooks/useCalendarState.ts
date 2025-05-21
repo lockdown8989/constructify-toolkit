@@ -64,7 +64,8 @@ export function useCalendarState() {
         end_time: formData.end_time,
         location: formData.location,
         notes: formData.notes,
-        status: 'pending' // Use 'pending' status which is valid
+        status: 'pending', // Use 'pending' status which is valid
+        shift_type: 'open_shift' // Adding the shift_type property
       });
       
       toast({
