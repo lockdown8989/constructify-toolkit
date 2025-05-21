@@ -118,7 +118,7 @@ const ScheduleCalendar = () => {
         />
       )}
       
-      {/* Add shift sheet dialog */}
+      {/* Add shift sheet dialog - Note the correct passing of handleSubmitAddShift */}
       <AddShiftSheet 
         isOpen={isAddSheetOpen}
         onOpenChange={setIsAddSheetOpen}

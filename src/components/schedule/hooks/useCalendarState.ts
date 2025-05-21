@@ -57,15 +57,14 @@ export function useCalendarState() {
         return;
       }
       
-      // Create open shift
+      // Create open shift - only include properties that exist in the Schedule type
       await createSchedule.mutateAsync({
         title: formData.title,
         start_time: formData.start_time,
         end_time: formData.end_time,
         location: formData.location,
         notes: formData.notes,
-        status: 'pending', // Changed from 'open' to 'pending' to match allowed types
-        shift_type: 'open_shift'
+        status: 'pending' // Use 'pending' status which is valid
       });
       
       toast({

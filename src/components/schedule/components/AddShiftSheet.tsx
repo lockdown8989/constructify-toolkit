@@ -6,11 +6,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 
 interface AddShiftSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (formData: any) => void; // Updated to accept formData
+  onSubmit: (formData: any) => void; 
   currentDate: Date;
   isMobile: boolean;
 }
@@ -52,27 +53,54 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
 
   // Handle form submission
   const handleSubmit = () => {
-    // Create ISO format datetime strings
-    const startDateTime = new Date(`${formData.date}T${formData.start_time}`);
-    const endDateTime = new Date(`${formData.date}T${formData.end_time}`);
+    // Validate required fields
+    if (!formData.title) {
+      toast({
+        title: "Missing information",
+        description: "Please enter a shift title",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    // Submit the processed form data
-    onSubmit({
-      ...formData,
-      start_time: startDateTime.toISOString(),
-      end_time: endDateTime.toISOString()
-    });
-    
-    // Reset form
-    setFormData({
-      title: '',
-      role: '',
-      date: format(currentDate, 'yyyy-MM-dd'),
-      start_time: '09:00',
-      end_time: '17:00',
-      notes: '',
-      location: ''
-    });
+    try {
+      // Create ISO format datetime strings
+      const startDateTime = new Date(`${formData.date}T${formData.start_time}`);
+      const endDateTime = new Date(`${formData.date}T${formData.end_time}`);
+      
+      // Check for valid dates
+      if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+        throw new Error("Invalid date format");
+      }
+      
+      // Submit the processed form data
+      onSubmit({
+        title: formData.title,
+        role: formData.role,
+        start_time: startDateTime.toISOString(),
+        end_time: endDateTime.toISOString(),
+        notes: formData.notes,
+        location: formData.location
+      });
+      
+      // Reset form
+      setFormData({
+        title: '',
+        role: '',
+        date: format(currentDate, 'yyyy-MM-dd'),
+        start_time: '09:00',
+        end_time: '17:00',
+        notes: '',
+        location: ''
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      toast({
+        title: "Error",
+        description: "There was an error processing the date and time",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
