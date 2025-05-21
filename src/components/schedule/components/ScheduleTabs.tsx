@@ -43,9 +43,8 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
       case 'my-shifts':
         return schedule.status === 'confirmed';
       case 'open-shifts':
-        // Fix the type error by checking string values instead of comparing to enum
-        return schedule.status === 'open' || 
-              (schedule as any).shift_type === 'open_shift';
+        // Check if shift_type is 'open_shift' instead of comparing status
+        return (schedule as any).shift_type === 'open_shift';
       case 'pending':
         return schedule.status === 'pending';
       case 'completed':

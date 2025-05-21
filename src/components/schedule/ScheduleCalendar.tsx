@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, UserPlus } from 'lucide-react';
 import NewScheduleDialog from './components/NewScheduleDialog';
 import { useEmployees } from '@/hooks/use-employees';
+import { ViewType } from './types/calendar-types';
 
 const ScheduleCalendar = () => {
   const { data: schedules = [] } = useSchedules();
@@ -45,13 +46,18 @@ const ScheduleCalendar = () => {
     setIsAddEmployeeShiftOpen(true);
   };
 
+  // Function to handle view type changes
+  const handleViewChange = (newView: ViewType) => {
+    setView(newView);
+  };
+
   return (
     <div className="space-y-4">
       <div className={`flex ${isMobile ? 'flex-col gap-2' : 'justify-between items-center'}`}>
         <CalendarHeader 
           currentDate={currentDate}
           view={view}
-          setView={setView}
+          setView={handleViewChange}
           handlePrevious={handlePrevious}
           handleNext={handleNext}
           handleToday={handleToday}

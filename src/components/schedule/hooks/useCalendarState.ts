@@ -1,12 +1,13 @@
 
-import { useState, useEffect } from 'react';
-import { addDays, format, subDays, isToday } from 'date-fns';
+import { useState } from 'react';
+import { addDays, isToday } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { ViewType } from '../types/calendar-types';
 import { useCreateSchedule } from '@/hooks/use-schedules';
 
 export function useCalendarState() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'day' | 'week'>('week');
+  const [view, setView] = useState<ViewType>('day');
   const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
   const { toast } = useToast();
   const { createSchedule } = useCreateSchedule();
@@ -15,23 +16,35 @@ export function useCalendarState() {
   
   // Navigation functions
   const handlePrevious = () => {
-    setCurrentDate(prevDate => subDays(prevDate, view === 'day' ? 1 : 7));
+    if (view === 'day') {
+      setCurrentDate(prev => addDays(prev, -1));
+    } else if (view === 'week') {
+      setCurrentDate(prev => addDays(prev, -7));
+    } else {
+      // Month view - we'll still move by week for now
+      setCurrentDate(prev => addDays(prev, -30));
+    }
   };
-  
+
   const handleNext = () => {
-    setCurrentDate(prevDate => addDays(prevDate, view === 'day' ? 1 : 7));
+    if (view === 'day') {
+      setCurrentDate(prev => addDays(prev, 1));
+    } else if (view === 'week') {
+      setCurrentDate(prev => addDays(prev, 7));
+    } else {
+      // Month view - we'll still move by week for now
+      setCurrentDate(prev => addDays(prev, 30));
+    }
   };
-  
+
   const handleToday = () => {
     setCurrentDate(new Date());
   };
   
-  // Open add sheet for the current date
   const handleAddShift = () => {
     setIsAddSheetOpen(true);
   };
   
-  // Handle add shift form submission
   const handleSubmitAddShift = async (formData: any) => {
     try {
       // Add validation
@@ -51,7 +64,7 @@ export function useCalendarState() {
         end_time: formData.end_time,
         location: formData.location,
         notes: formData.notes,
-        status: 'open',
+        status: 'pending', // Changed from 'open' to 'pending' to match allowed types
         shift_type: 'open_shift'
       });
       
@@ -71,7 +84,7 @@ export function useCalendarState() {
       });
     }
   };
-  
+
   return {
     currentDate,
     setCurrentDate,
