@@ -13,6 +13,7 @@ interface OpenShiftBlockProps {
   handleAssignOpenShift?: (openShiftId: string, employeeId?: string) => void;
   compact?: boolean;
   position?: number;
+  status?: 'completed' | 'pending' | 'confirmed';
 }
 
 const OpenShiftBlock = ({ 
@@ -20,7 +21,8 @@ const OpenShiftBlock = ({
   employeeId,
   handleAssignOpenShift,
   compact = false,
-  position 
+  position,
+  status
 }: OpenShiftBlockProps) => {
   const { user } = useAuth();
   
@@ -52,11 +54,32 @@ const OpenShiftBlock = ({
     return formatDistanceStrict(start, end, { unit: 'hour' });
   };
 
+  // Determine the color based on status
+  const getStatusColor = () => {
+    if (status === 'completed') return 'bg-blue-500';
+    if (status === 'pending') return 'bg-amber-500';
+    return 'bg-blue-500'; // default
+  };
+
+  // Determine the status label
+  const getStatusLabel = () => {
+    if (status === 'completed') return 'COMPLETED';
+    if (status === 'pending') return 'PENDING';
+    return '';
+  };
+
+  const showStatusLabel = status === 'completed' || status === 'pending';
+
   return (
     <Card className={`mb-3 overflow-hidden border border-gray-200 rounded-lg ${isExpired ? 'opacity-60' : ''}`}>
+      {showStatusLabel && (
+        <div className="text-xs font-semibold px-3 py-1 text-green-500">
+          {getStatusLabel()}
+        </div>
+      )}
       <div className="flex">
         {/* Left sidebar with day/date */}
-        <div className="bg-blue-500 text-white p-3 flex flex-col items-center justify-center min-w-[70px]">
+        <div className={`${getStatusColor()} text-white p-3 flex flex-col items-center justify-center min-w-[70px]`}>
           <div className="text-xl font-medium">{getShiftDay()}</div>
           <div className="text-3xl font-bold">{getShiftDate()}</div>
           <div className="text-sm">{getShiftMonth()}</div>
@@ -104,7 +127,7 @@ const OpenShiftBlock = ({
                 <Mail className="h-5 w-5" />
               </button>
               
-              {employeeId && user && !isExpired && (
+              {employeeId && user && !isExpired && !status && (
                 <OpenShiftResponseActions 
                   shift={openShift}
                   employeeId={employeeId}

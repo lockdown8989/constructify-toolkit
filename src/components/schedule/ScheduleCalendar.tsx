@@ -1,159 +1,151 @@
-
-import React from 'react';
-import { useSchedules } from '@/hooks/use-schedules';
-import { useAuth } from '@/hooks/use-auth';
-import { useIsMobile } from '@/hooks/use-mobile';
-import CalendarHeader from './components/CalendarHeader';
-import DayViewComponent from './views/DayViewComponent';
-import WeekViewComponent from './views/WeekViewComponent';
-import AddShiftButton from './components/AddShiftButton';
-import AddShiftSheet from './components/AddShiftSheet';
-import { useCalendarState } from './hooks/useCalendarState';
-import { getEventPosition, getEventColor } from './utilities/eventUtils';
-import WeekNavigation from './components/WeekNavigation';
+import React, { useEffect, useState } from 'react';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, UserPlus } from 'lucide-react';
-import NewScheduleDialog from './components/NewScheduleDialog';
-import { useEmployees } from '@/hooks/use-employees';
-import { ViewType } from './types/calendar-types';
+import { Card, CardContent } from '@/components/ui/card';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { useNavigate } from 'react-router-dom';
+import { useShiftCalendarState } from './hooks/useShiftCalendarState';
 
-const ScheduleCalendar = () => {
-  const { data: schedules = [] } = useSchedules();
-  const { isAdmin, isManager, isHR } = useAuth();
-  const isMobile = useIsMobile();
-  const hasManagerAccess = isAdmin || isManager || isHR;
-  const { data: employeeList = [] } = useEmployees({});
-  
-  const {
-    currentDate,
-    view,
-    setView,
-    isCurrentDateToday,
-    isAddSheetOpen,
-    setIsAddSheetOpen,
-    handlePrevious,
-    handleNext,
-    handleToday,
-    handleAddShift,
-    handleSubmitAddShift
-  } = useCalendarState();
+interface DayProps {
+  day: Date;
+  month: number;
+  year: number;
+  schedules: any[];
+}
 
-  // State for the new employee shift dialog
-  const [isAddEmployeeShiftOpen, setIsAddEmployeeShiftOpen] = React.useState(false);
-
-  // Function to handle adding an employee shift
-  const handleAddEmployeeShift = () => {
-    setIsAddEmployeeShiftOpen(true);
-  };
-
-  // Function to handle view type changes
-  const handleViewChange = (newView: ViewType) => {
-    setView(newView);
-  };
+const Day: React.FC<DayProps> = ({ day, month, year, schedules }) => {
+  const isToday = isSameDay(day, new Date());
+  const dayOfMonth = format(day, 'd');
+  const isCurrentMonth = isSameMonth(day, new Date(year, month));
+  const daySchedules = schedules.filter(schedule => isSameDay(new Date(schedule.start_time), day));
 
   return (
-    <div className="space-y-4">
-      <div className={`flex ${isMobile ? 'flex-col gap-2' : 'justify-between items-center'}`}>
-        <CalendarHeader 
-          currentDate={currentDate}
-          view={view}
-          setView={handleViewChange}
-          handlePrevious={handlePrevious}
-          handleNext={handleNext}
-          handleToday={handleToday}
-          isToday={isCurrentDateToday}
-        />
-        
-        {/* Manager Actions */}
-        {!isMobile && hasManagerAccess && (
-          <div className="flex space-x-2">
-            <Button 
-              size="sm"
-              variant="outline" 
-              className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white"
-              onClick={handleAddShift}
+    <div className="w-full border-t border-l">
+      <div className="p-1.5 text-sm">
+        <div className="flex items-center justify-end">
+          <span className={cn(
+            "text-sm font-medium",
+            !isCurrentMonth && "text-gray-400",
+            isToday && "text-blue-500"
+          )}>
+            {dayOfMonth}
+          </span>
+        </div>
+        {daySchedules.map(schedule => (
+          <div key={schedule.id} className="mt-1">
+            <span className="text-xs">{schedule.title}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+interface WeekProps {
+  weekStart: Date;
+  month: number;
+  year: number;
+  schedules: any[];
+}
+
+const Week: React.FC<WeekProps> = ({ weekStart, month, year, schedules }) => {
+  const days = eachDayOfInterval({
+    start: weekStart,
+    end: addMonths(weekStart, 1),
+  }).slice(0, 7);
+
+  return (
+    <div className="w-full flex">
+      {days.map(day => (
+        <Day key={day.toISOString()} day={day} month={month} year={year} schedules={schedules} />
+      ))}
+    </div>
+  );
+};
+
+interface ScheduleCalendarProps {
+  schedules: any[];
+}
+
+const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ schedules }) => {
+  const { month, year, handleNextMonth, handlePrevMonth } = useShiftCalendarState();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const monthStart = startOfMonth(new Date(year, month));
+  const monthEnd = endOfMonth(new Date(year, month));
+  const startDate = startOfWeek(monthStart);
+  const endDate = endOfWeek(monthEnd);
+
+  const calendarWeeks = eachDayOfInterval({ start: startDate, end: endDate });
+
+  const weeks: Date[] = [];
+  for (let i = 0; i < calendarWeeks.length; i += 7) {
+    weeks.push(calendarWeeks[i]);
+  }
+
+  return (
+    <Card className="border-0 shadow-md rounded-xl overflow-hidden">
+      <CardContent className="p-0">
+        <div className="md:flex items-center justify-between p-4 md:p-6 border-b">
+          <div className="flex items-center">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handlePrevMonth}
+              className="mr-2"
             >
-              <PlusCircle size={16} />
-              Add Open Shift
+              <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button 
-              size="sm"
-              variant="outline" 
-              className="flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white"
-              onClick={handleAddEmployeeShift}
+            <h2 className="text-lg font-semibold">
+              {format(new Date(year, month), 'MMMM yyyy')}
+            </h2>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleNextMonth}
+              className="ml-2"
             >
-              <UserPlus size={16} />
-              Add Employee Shift
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-        )}
-      </div>
-      
-      {isMobile && (
-        <div className="mb-2">
-          <WeekNavigation
-            currentDate={currentDate}
-            onPreviousWeek={handlePrevious}
-            onNextWeek={handleNext}
-            onSelectToday={handleToday}
-            isMobile={true}
-            viewType={view}
-          />
+          {user && (
+            <Button onClick={() => navigate('/shift-calendar')} className="ml-auto">
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              Full Schedule
+            </Button>
+          )}
         </div>
-      )}
-      
-      {view === 'day' ? (
-        <DayViewComponent
-          currentDate={currentDate}
-          schedules={schedules}
-          currentTimeTop={0} // This will be calculated inside the TimeIndicator component
-          getEventPosition={getEventPosition}
-          getEventColor={getEventColor}
-        />
-      ) : (
-        <WeekViewComponent 
-          currentDate={currentDate}
-          schedules={schedules}
-          getEventColor={getEventColor}
-        />
-      )}
-      
-      {/* Add shift sheet dialog - passing the correct submit handler and current date */}
-      <AddShiftSheet 
-        isOpen={isAddSheetOpen}
-        onOpenChange={setIsAddSheetOpen}
-        onSubmit={handleSubmitAddShift}
-        currentDate={currentDate}
-        isMobile={isMobile}
-      />
-      
-      {/* Add employee shift dialog - improved with new interface */}
-      <NewScheduleDialog
-        isOpen={isAddEmployeeShiftOpen}
-        onClose={() => setIsAddEmployeeShiftOpen(false)}
-        employees={employeeList}
-      />
-      
-      {/* Mobile FAB for managers */}
-      {isMobile && hasManagerAccess && (
-        <div className="fixed bottom-20 right-6 z-50 flex flex-col gap-2">
-          <button
-            onClick={handleAddEmployeeShift}
-            className="h-14 w-14 rounded-full bg-green-500 text-white shadow-lg flex items-center justify-center hover:bg-green-600 active-touch-state"
-            aria-label="Add employee shift"
-          >
-            <UserPlus size={24} />
-          </button>
-          <button
-            onClick={handleAddShift}
-            className="h-14 w-14 rounded-full bg-blue-500 text-white shadow-lg flex items-center justify-center hover:bg-blue-600 active-touch-state"
-            aria-label="Add open shift"
-          >
-            <PlusCircle size={24} />
-          </button>
+
+        <div className="grid grid-cols-7 border-b">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            <div key={day} className="p-2 text-center text-xs font-medium uppercase text-gray-500 border-t border-r">
+              {day}
+            </div>
+          ))}
         </div>
-      )}
-    </div>
+
+        <div className="flex flex-col">
+          {weeks.map(weekStart => (
+            <Week key={weekStart.toISOString()} weekStart={weekStart} month={month} year={year} schedules={schedules} />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -106,6 +106,42 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
                   employeeId={schedule.employee_id}
                 />
               ))
+            ) : activeTab === 'completed' ? (
+              // Use OpenShiftBlock with status 'completed' for completed shifts
+              filteredSchedules.map(schedule => (
+                <OpenShiftBlock
+                  key={schedule.id}
+                  openShift={{
+                    id: schedule.id,
+                    title: schedule.title || '',
+                    role: schedule.shift_type || '',
+                    start_time: schedule.start_time,
+                    end_time: schedule.end_time,
+                    location: schedule.location || '',
+                    notes: schedule.notes
+                  }}
+                  employeeId={schedule.employee_id}
+                  status="completed"
+                />
+              ))
+            ) : activeTab === 'pending' ? (
+              // Use OpenShiftBlock with status 'pending' for pending shifts
+              filteredSchedules.map(schedule => (
+                <OpenShiftBlock
+                  key={schedule.id}
+                  openShift={{
+                    id: schedule.id,
+                    title: schedule.title || '',
+                    role: schedule.shift_type || '',
+                    start_time: schedule.start_time,
+                    end_time: schedule.end_time,
+                    location: schedule.location || '',
+                    notes: schedule.notes
+                  }}
+                  employeeId={schedule.employee_id}
+                  status="pending"
+                />
+              ))
             ) : (
               // Use ShiftDetailCard for other types of shifts
               filteredSchedules.map(schedule => (
