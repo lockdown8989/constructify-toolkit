@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { AlertCircle } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import OpenShiftBlock from '@/components/restaurant/OpenShiftBlock';
 
 interface ScheduleTabsProps {
   activeTab: string;
@@ -54,7 +55,7 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
     }
   });
 
-  // Debug log filtered schedules
+  // Log the filtered schedules
   console.log(`Filtered schedules for tab ${activeTab}:`, filteredSchedules.length);
 
   return (
@@ -67,7 +68,7 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex-1 py-2 text-sm font-medium border-b-2 transition-colors relative",
+                "flex-1 py-3 text-sm font-medium border-b-2 transition-colors relative",
                 activeTab === tab.id
                   ? "border-blue-500 text-blue-600"
                   : "border-transparent text-gray-500 hover:text-gray-700"
@@ -86,18 +87,38 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
 
       {/* Shift Cards */}
       <Tabs value={activeTab} defaultValue={activeTab}>
-        <TabsContent value={activeTab} className="flex-1 overflow-y-auto p-4 space-y-3">
+        <TabsContent value={activeTab} className="flex-1 overflow-y-auto p-3 space-y-3">
           {filteredSchedules.length > 0 ? (
-            filteredSchedules.map(schedule => (
-              <ShiftDetailCard
-                key={schedule.id}
-                schedule={schedule}
-                onInfoClick={() => onInfoClick(schedule.id)}
-                onEmailClick={() => onEmailClick(schedule)}
-                onCancelClick={() => onCancelClick(schedule.id)}
-                onResponseComplete={onResponseComplete}
-              />
-            ))
+            activeTab === 'open-shifts' ? (
+              // Use OpenShiftBlock for open shifts
+              filteredSchedules.map(schedule => (
+                <OpenShiftBlock
+                  key={schedule.id}
+                  openShift={{
+                    id: schedule.id,
+                    title: schedule.title || '',
+                    role: schedule.shift_type || '',
+                    start_time: schedule.start_time,
+                    end_time: schedule.end_time,
+                    location: schedule.location || '',
+                    notes: schedule.notes
+                  }}
+                  employeeId={schedule.employee_id}
+                />
+              ))
+            ) : (
+              // Use ShiftDetailCard for other types of shifts
+              filteredSchedules.map(schedule => (
+                <ShiftDetailCard
+                  key={schedule.id}
+                  schedule={schedule}
+                  onInfoClick={() => onInfoClick(schedule.id)}
+                  onEmailClick={() => onEmailClick(schedule)}
+                  onCancelClick={() => onCancelClick(schedule.id)}
+                  onResponseComplete={onResponseComplete}
+                />
+              ))
+            )
           ) : (
             <div className="text-center py-8 text-gray-500 flex flex-col items-center">
               <AlertCircle className="h-6 w-6 mb-2 text-gray-400" />

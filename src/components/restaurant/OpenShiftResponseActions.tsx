@@ -46,12 +46,12 @@ const OpenShiftResponseActions = ({
   };
 
   return (
-    <div className={`flex gap-2 ${className}`}>
+    <div className={`${className}`}>
       <Button
         onClick={() => handleResponse('confirmed')}
         variant="default"
         size="sm"
-        className="bg-green-500 hover:bg-green-600"
+        className="bg-green-500 hover:bg-green-600 text-white rounded-full px-5"
         disabled={loading !== null}
       >
         {loading === 'confirmed' ? (
@@ -59,21 +59,7 @@ const OpenShiftResponseActions = ({
         ) : (
           <Check className="w-4 h-4 mr-1" />
         )}
-        Accept
-      </Button>
-      <Button
-        onClick={() => handleResponse('rejected')}
-        variant="outline"
-        size="sm"
-        className="border-red-500 text-red-500 hover:bg-red-50"
-        disabled={loading !== null}
-      >
-        {loading === 'rejected' ? (
-          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-        ) : (
-          <X className="w-4 h-4 mr-1" />
-        )}
-        Decline
+        accept
       </Button>
     </div>
   );

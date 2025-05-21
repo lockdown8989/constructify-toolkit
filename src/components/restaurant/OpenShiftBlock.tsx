@@ -4,8 +4,8 @@ import { OpenShift } from '@/types/restaurant-schedule';
 import { useAuth } from '@/hooks/use-auth';
 import OpenShiftResponseActions from './OpenShiftResponseActions';
 import { Card } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
-import { format, isAfter, parseISO } from 'date-fns';
+import { AlertCircle, Clock, User, MapPin, Mail } from 'lucide-react';
+import { format, isAfter, parseISO, formatDistanceStrict } from 'date-fns';
 
 interface OpenShiftBlockProps {
   openShift: OpenShift;
@@ -29,65 +29,91 @@ const OpenShiftBlock = ({
     ? isAfter(new Date(), parseISO(openShift.expiration_date))
     : false;
 
-  // Display remaining time until expiration
-  const getRemainingTime = () => {
-    if (!openShift.expiration_date) return null;
-    
-    const now = new Date();
-    const expiration = parseISO(openShift.expiration_date);
-    
-    if (isAfter(now, expiration)) {
-      return 'Expired';
-    }
-    
-    const diffMs = expiration.getTime() - now.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
-    if (diffDays > 0) {
-      return `Expires in ${diffDays}d ${diffHours}h`;
-    } else {
-      return `Expires in ${diffHours}h`;
-    }
+  // Get day and date for the shift
+  const getShiftDay = () => {
+    const date = new Date(openShift.start_time);
+    return format(date, 'EEE').toUpperCase();
+  };
+
+  const getShiftDate = () => {
+    const date = new Date(openShift.start_time);
+    return format(date, 'd');
+  };
+
+  const getShiftMonth = () => {
+    const date = new Date(openShift.start_time);
+    return format(date, 'MMM').toUpperCase();
+  };
+
+  // Calculate shift duration
+  const calculateDuration = () => {
+    const start = new Date(openShift.start_time);
+    const end = new Date(openShift.end_time);
+    return formatDistanceStrict(start, end, { unit: 'hour' });
   };
 
   return (
-    <Card className={`p-3 mb-2 ${isExpired ? 'bg-gray-100 border-gray-200' : 'bg-orange-50 border-orange-200'}`}>
-      <div className="flex justify-between items-start">
-        <div>
-          <h4 className={`font-medium text-sm ${isExpired ? 'text-gray-500' : ''}`}>{openShift.title}</h4>
-          <p className="text-xs text-gray-600">
-            {new Date(openShift.start_time).toLocaleTimeString([], { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            })} - {new Date(openShift.end_time).toLocaleTimeString([], { 
-              hour: '2-digit', 
-              minute: '2-digit' 
-            })}
-          </p>
-          {openShift.role && (
-            <p className="text-xs text-gray-500">Role: {openShift.role}</p>
-          )}
-          
-          {openShift.expiration_date && (
-            <p className={`text-xs mt-1 flex items-center ${isExpired ? 'text-red-500' : 'text-amber-600'}`}>
-              <AlertCircle className="h-3 w-3 mr-1" />
-              {getRemainingTime()}
-            </p>
-          )}
+    <Card className={`mb-3 overflow-hidden border border-gray-200 rounded-lg ${isExpired ? 'opacity-60' : ''}`}>
+      <div className="flex">
+        {/* Left sidebar with day/date */}
+        <div className="bg-blue-500 text-white p-3 flex flex-col items-center justify-center min-w-[70px]">
+          <div className="text-xl font-medium">{getShiftDay()}</div>
+          <div className="text-3xl font-bold">{getShiftDate()}</div>
+          <div className="text-sm">{getShiftMonth()}</div>
         </div>
         
-        {employeeId && user && !isExpired && (
-          <OpenShiftResponseActions 
-            shift={openShift}
-            employeeId={employeeId}
-          />
-        )}
+        {/* Main content */}
+        <div className="flex-1 p-3">
+          <div className="grid grid-cols-[1fr,auto] gap-2">
+            <div>
+              {/* Time and Duration */}
+              <div className="flex items-center">
+                <span className="text-xl font-bold">
+                  {format(new Date(openShift.start_time), 'HH:mm')}
+                </span>
+                <span className="mx-2 text-xl">→</span>
+                <span className="text-xl font-bold">
+                  {format(new Date(openShift.end_time), 'HH:mm')}
+                </span>
+              </div>
+              
+              <div className="flex items-center text-sm text-gray-600 mt-1">
+                <Clock className="h-3.5 w-3.5 mr-1" />
+                {calculateDuration()}
+              </div>
+              
+              {/* Role */}
+              {openShift.role && (
+                <div className="flex items-center text-sm text-gray-600 mt-1">
+                  <User className="h-3.5 w-3.5 mr-1" />
+                  {openShift.role}
+                </div>
+              )}
+              
+              {/* Location */}
+              {openShift.location && (
+                <div className="flex items-center text-sm text-gray-600 mt-1">
+                  <MapPin className="h-3.5 w-3.5 mr-1" />
+                  {openShift.location}
+                </div>
+              )}
+            </div>
+            
+            <div className="flex flex-col justify-between items-end">
+              <button className="text-gray-500 p-1">
+                <Mail className="h-5 w-5" />
+              </button>
+              
+              {employeeId && user && !isExpired && (
+                <OpenShiftResponseActions 
+                  shift={openShift}
+                  employeeId={employeeId}
+                />
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-      
-      {openShift.notes && (
-        <p className="text-xs text-gray-600 mt-2">{openShift.notes}</p>
-      )}
     </Card>
   );
 };
