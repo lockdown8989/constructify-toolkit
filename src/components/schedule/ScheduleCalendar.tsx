@@ -118,7 +118,7 @@ const ScheduleCalendar = () => {
         />
       )}
       
-      {/* Add shift sheet dialog - Note the correct passing of handleSubmitAddShift */}
+      {/* Add shift sheet dialog - passing the correct submit handler and current date */}
       <AddShiftSheet 
         isOpen={isAddSheetOpen}
         onOpenChange={setIsAddSheetOpen}
@@ -127,7 +127,7 @@ const ScheduleCalendar = () => {
         isMobile={isMobile}
       />
       
-      {/* Add employee shift dialog */}
+      {/* Add employee shift dialog - improved with new interface */}
       <NewScheduleDialog
         isOpen={isAddEmployeeShiftOpen}
         onClose={() => setIsAddEmployeeShiftOpen(false)}
