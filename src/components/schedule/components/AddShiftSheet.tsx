@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 interface AddShiftSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: () => void;
+  onSubmit: (formData: any) => void; // Updated to accept formData
   currentDate: Date;
   isMobile: boolean;
 }
@@ -22,6 +22,59 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
   currentDate,
   isMobile
 }) => {
+  // Form state
+  const [formData, setFormData] = useState({
+    title: '',
+    role: '',
+    date: format(currentDate, 'yyyy-MM-dd'),
+    start_time: '09:00',
+    end_time: '17:00',
+    notes: '',
+    location: ''
+  });
+
+  // Update date when currentDate changes
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      date: format(currentDate, 'yyyy-MM-dd')
+    }));
+  }, [currentDate]);
+
+  // Handle form changes
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id.replace('shift-', '')]: value
+    }));
+  };
+
+  // Handle form submission
+  const handleSubmit = () => {
+    // Create ISO format datetime strings
+    const startDateTime = new Date(`${formData.date}T${formData.start_time}`);
+    const endDateTime = new Date(`${formData.date}T${formData.end_time}`);
+    
+    // Submit the processed form data
+    onSubmit({
+      ...formData,
+      start_time: startDateTime.toISOString(),
+      end_time: endDateTime.toISOString()
+    });
+    
+    // Reset form
+    setFormData({
+      title: '',
+      role: '',
+      date: format(currentDate, 'yyyy-MM-dd'),
+      start_time: '09:00',
+      end_time: '17:00',
+      notes: '',
+      location: ''
+    });
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className={cn(
@@ -29,19 +82,19 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
         "overflow-y-auto"
       )} side={isMobile ? "bottom" : "right"}>
         <SheetHeader className="pb-4">
-          <SheetTitle>Add New Shift</SheetTitle>
-          <SheetDescription>Create a new shift on the schedule</SheetDescription>
+          <SheetTitle>Add New Open Shift</SheetTitle>
+          <SheetDescription>Create a new open shift on the schedule</SheetDescription>
         </SheetHeader>
         
         <div className="space-y-4 pb-20">
           <div className="space-y-2">
-            <Label htmlFor="employee">Employee</Label>
-            <select className="w-full p-2 border rounded-md">
-              <option value="">Select an employee</option>
-              <option value="emp1">Courtney Henry</option>
-              <option value="emp2">Alex Jackson</option>
-              <option value="emp3">Leslie Alexander</option>
-            </select>
+            <Label htmlFor="shift-title">Shift Title</Label>
+            <Input 
+              id="shift-title" 
+              placeholder="e.g., Morning Shift"
+              value={formData.title}
+              onChange={handleChange}
+            />
           </div>
           
           <div className="space-y-2">
@@ -49,24 +102,40 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
             <Input 
               type="date" 
               id="shift-date" 
-              defaultValue={format(currentDate, 'yyyy-MM-dd')} 
+              value={formData.date}
+              onChange={handleChange}
             />
           </div>
           
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="start-time">Start Time</Label>
-              <Input type="time" id="start-time" defaultValue="09:00" />
+              <Label htmlFor="shift-start_time">Start Time</Label>
+              <Input 
+                type="time" 
+                id="shift-start_time" 
+                value={formData.start_time}
+                onChange={handleChange}
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="end-time">End Time</Label>
-              <Input type="time" id="end-time" defaultValue="17:00" />
+              <Label htmlFor="shift-end_time">End Time</Label>
+              <Input 
+                type="time" 
+                id="shift-end_time" 
+                value={formData.end_time}
+                onChange={handleChange}
+              />
             </div>
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="shift-role">Role</Label>
-            <select className="w-full p-2 border rounded-md">
+            <select 
+              id="shift-role" 
+              className="w-full p-2 border rounded-md"
+              value={formData.role}
+              onChange={handleChange}
+            >
               <option value="">Select a role</option>
               <option value="waitstaff">Waiting Staff</option>
               <option value="chef">Chef</option>
@@ -76,11 +145,23 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Label htmlFor="shift-location">Location</Label>
+            <Input 
+              id="shift-location" 
+              placeholder="e.g., Main Office"
+              value={formData.location}
+              onChange={handleChange}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="shift-notes">Notes (Optional)</Label>
             <textarea 
-              id="notes"
+              id="shift-notes"
               className="w-full p-2 border rounded-md min-h-[80px]"
               placeholder="Add any notes about this shift"
+              value={formData.notes}
+              onChange={handleChange}
             />
           </div>
         </div>
@@ -97,7 +178,7 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
             Cancel
           </Button>
           <Button 
-            onClick={onSubmit} 
+            onClick={handleSubmit} 
             className="flex-1"
           >
             Add Shift
