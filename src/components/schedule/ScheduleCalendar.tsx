@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate } from 'react-router-dom';
@@ -14,16 +14,29 @@ interface DayProps {
   month: number;
   year: number;
   schedules: any[];
+  onDayClick?: (date: Date) => void;
 }
 
-const Day: React.FC<DayProps> = ({ day, month, year, schedules }) => {
+const Day: React.FC<DayProps> = ({ day, month, year, schedules, onDayClick }) => {
   const isToday = isSameDay(day, new Date());
   const dayOfMonth = format(day, 'd');
   const isCurrentMonth = isSameMonth(day, new Date(year, month));
   const daySchedules = schedules.filter(schedule => isSameDay(new Date(schedule.start_time), day));
+  
+  const handleClick = () => {
+    if (onDayClick) {
+      onDayClick(day);
+    }
+  };
 
   return (
-    <div className="w-full border-t border-l">
+    <div 
+      className={cn(
+        "w-full border-t border-l cursor-pointer hover:bg-blue-50 transition-colors",
+        isToday && "bg-blue-50"
+      )}
+      onClick={handleClick}
+    >
       <div className="p-1.5 text-sm">
         <div className="flex items-center justify-end">
           <span className={cn(
@@ -35,7 +48,17 @@ const Day: React.FC<DayProps> = ({ day, month, year, schedules }) => {
           </span>
         </div>
         {daySchedules.map(schedule => (
-          <div key={schedule.id} className="mt-1">
+          <div 
+            key={schedule.id}
+            className={cn(
+              "mt-1 px-1 py-0.5 rounded text-xs",
+              schedule.shift_type === 'open_shift' ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"
+            )}
+          >
+            <div className="flex items-center">
+              <Clock className="h-3 w-3 mr-1" />
+              <span>{format(new Date(schedule.start_time), 'h:mm a')}</span>
+            </div>
             <span className="text-xs">{schedule.title}</span>
           </div>
         ))}
@@ -49,9 +72,10 @@ interface WeekProps {
   month: number;
   year: number;
   schedules: any[];
+  onDayClick?: (date: Date) => void;
 }
 
-const Week: React.FC<WeekProps> = ({ weekStart, month, year, schedules }) => {
+const Week: React.FC<WeekProps> = ({ weekStart, month, year, schedules, onDayClick }) => {
   const days = eachDayOfInterval({
     start: weekStart,
     end: addMonths(weekStart, 1),
@@ -60,7 +84,14 @@ const Week: React.FC<WeekProps> = ({ weekStart, month, year, schedules }) => {
   return (
     <div className="w-full flex">
       {days.map(day => (
-        <Day key={day.toISOString()} day={day} month={month} year={year} schedules={schedules} />
+        <Day 
+          key={day.toISOString()} 
+          day={day} 
+          month={month} 
+          year={year} 
+          schedules={schedules}
+          onDayClick={onDayClick}
+        />
       ))}
     </div>
   );
@@ -68,9 +99,10 @@ const Week: React.FC<WeekProps> = ({ weekStart, month, year, schedules }) => {
 
 interface ScheduleCalendarProps {
   schedules: any[];
+  onDayClick?: (date: Date) => void;
 }
 
-const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ schedules }) => {
+const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ schedules, onDayClick }) => {
   const { month, year, handleNextMonth, handlePrevMonth } = useShiftCalendarState();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -98,6 +130,12 @@ const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ schedules }) => {
   for (let i = 0; i < calendarWeeks.length; i += 7) {
     weeks.push(calendarWeeks[i]);
   }
+
+  const handleCalendarDayClick = (date: Date) => {
+    if (onDayClick) {
+      onDayClick(date);
+    }
+  };
 
   return (
     <Card className="border-0 shadow-md rounded-xl overflow-hidden">
@@ -142,7 +180,14 @@ const ScheduleCalendar: React.FC<ScheduleCalendarProps> = ({ schedules }) => {
 
         <div className="flex flex-col">
           {weeks.map(weekStart => (
-            <Week key={weekStart.toISOString()} weekStart={weekStart} month={month} year={year} schedules={schedules} />
+            <Week 
+              key={weekStart.toISOString()} 
+              weekStart={weekStart} 
+              month={month} 
+              year={year} 
+              schedules={schedules}
+              onDayClick={handleCalendarDayClick}
+            />
           ))}
         </div>
       </CardContent>

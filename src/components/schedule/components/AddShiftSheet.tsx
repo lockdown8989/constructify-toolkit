@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { Clock, CalendarDays, MapPin, FileText } from 'lucide-react';
+import { Clock, CalendarDays, MapPin, FileText, Calendar } from 'lucide-react';
 
 interface AddShiftSheetProps {
   isOpen: boolean;
@@ -35,6 +35,10 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
     location: ''
   });
 
+  // Duration state
+  const [duration, setDuration] = useState('8h 0m');
+  const [publishToCalendar, setPublishToCalendar] = useState(true);
+
   // Update date when currentDate changes
   useEffect(() => {
     setFormData(prev => ({
@@ -42,6 +46,11 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
       date: format(currentDate, 'yyyy-MM-dd')
     }));
   }, [currentDate]);
+
+  // Update duration when start or end time changes
+  useEffect(() => {
+    setDuration(calculateDuration());
+  }, [formData.start_time, formData.end_time]);
 
   // Handle form changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -115,7 +124,8 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
         start_time: startDateTime.toISOString(),
         end_time: endDateTime.toISOString(),
         notes: formData.notes,
-        location: formData.location
+        location: formData.location,
+        published: publishToCalendar
       });
       
       // Reset form
@@ -128,6 +138,7 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
         notes: '',
         location: ''
       });
+      setPublishToCalendar(true);
     } catch (error) {
       console.error("Error formatting date:", error);
       toast({
@@ -138,8 +149,57 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
     }
   };
 
+  // Handle direct duration editing
+  const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const durationMatch = value.match(/^(\d+)h\s*(\d*)m?$/);
+    
+    if (durationMatch) {
+      const hours = parseInt(durationMatch[1]);
+      const minutes = durationMatch[2] ? parseInt(durationMatch[2]) : 0;
+      
+      if (hours >= 0 && minutes >= 0 && minutes < 60) {
+        // Parse current start time
+        const startParts = formData.start_time.split(':');
+        if (startParts.length === 2) {
+          const startHour = parseInt(startParts[0]);
+          const startMinute = parseInt(startParts[1]);
+          
+          // Calculate new end time
+          let endHour = startHour + hours;
+          let endMinute = startMinute + minutes;
+          
+          // Adjust for minute overflow
+          if (endMinute >= 60) {
+            endHour += Math.floor(endMinute / 60);
+            endMinute %= 60;
+          }
+          
+          // Handle day wrap
+          if (endHour >= 24) {
+            endHour %= 24;
+          }
+          
+          // Format the new end time
+          const newEndTime = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+          
+          setFormData(prev => ({
+            ...prev,
+            end_time: newEndTime
+          }));
+          
+          setDuration(`${hours}h ${minutes}m`);
+          return;
+        }
+      }
+    }
+    
+    // If the input doesn't match the expected format, just set the raw value and let validation handle it
+    setDuration(value);
+  };
+
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
+    <Sheet open={isOpen} onOpenChange={() => onOpenChange(false)}>
       <SheetContent className={cn(
         isMobile ? "h-[85%] rounded-t-xl pb-0" : "max-w-md",
         "overflow-y-auto"
@@ -186,9 +246,16 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
                 <Clock className="h-4 w-4 text-green-500" />
                 <span className="text-sm font-medium text-green-700">Shift Hours</span>
               </div>
-              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                Duration: {calculateDuration()}
-              </span>
+              <div className="flex items-center">
+                <Label htmlFor="duration" className="text-xs mr-2 text-green-700">Duration:</Label>
+                <Input 
+                  id="duration"
+                  value={duration}
+                  onChange={handleDurationChange}
+                  className="w-20 h-7 px-2 py-1 text-xs bg-white text-green-800"
+                  placeholder="0h 0m"
+                />
+              </div>
             </div>
             
             <div className="grid grid-cols-2 gap-3">
@@ -255,6 +322,22 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
               onChange={handleChange}
             />
           </div>
+          
+          <div className="flex items-center space-x-2 py-2 px-3 bg-blue-50 rounded-lg border border-blue-100">
+            <input
+              type="checkbox"
+              id="publishToCalendar"
+              checked={publishToCalendar}
+              onChange={() => setPublishToCalendar(!publishToCalendar)}
+              className="rounded text-blue-500 focus:ring-blue-500"
+            />
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-blue-500" />
+              <Label htmlFor="publishToCalendar" className="text-sm text-blue-700 cursor-pointer">
+                Publish to Calendar
+              </Label>
+            </div>
+          </div>
         </div>
         
         <div className={cn(
@@ -272,7 +355,7 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
             onClick={handleSubmit} 
             className="flex-1 bg-blue-500 hover:bg-blue-600"
           >
-            Add Shift
+            {publishToCalendar ? "Publish Shift" : "Create Shift"}
           </Button>
         </div>
       </SheetContent>

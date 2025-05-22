@@ -149,8 +149,9 @@ export const useShiftCalendarState = () => {
           notes: formData.notes,
           location: formData.location,
           status: 'pending',
-          published: true,
-          shift_type: 'open_shift' // Add this to properly categorize it as an open shift
+          published: Boolean(formData.published),
+          shift_type: 'open_shift', // Add this to properly categorize it as an open shift
+          role: formData.role || undefined
         })
         .select()
         .single();
@@ -159,10 +160,26 @@ export const useShiftCalendarState = () => {
         throw error;
       }
       
-      toast({
-        title: "Shift created",
-        description: "The open shift has been created successfully"
-      });
+      // If published to calendar, also create a calendar entry
+      if (formData.published) {
+        // Sync with calendar
+        await supabase.rpc('sync_open_shift_to_calendar', {
+          shift_id: data.id
+        }).catch(err => {
+          console.error('Error syncing to calendar:', err);
+          // Continue even if calendar sync fails
+        });
+        
+        toast({
+          title: "Shift published",
+          description: "The open shift has been published to the calendar"
+        });
+      } else {
+        toast({
+          title: "Shift created",
+          description: "The open shift has been created successfully"
+        });
+      }
       
       setIsAddShiftOpen(false);
       refetch();
