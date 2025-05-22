@@ -141,7 +141,7 @@ export const useShiftCalendarState = () => {
       
       // Create new schedule with shift_type as open_shift
       const { data, error } = await supabase
-        .from('schedules')
+        .from('open_shifts')
         .insert({
           title: formData.title,
           start_time: formData.start_time,
@@ -149,8 +149,9 @@ export const useShiftCalendarState = () => {
           notes: formData.notes,
           location: formData.location,
           status: 'pending',
-          published: Boolean(formData.published),
-          shift_type: 'open_shift', // Add this to properly categorize it as an open shift
+          created_by: user?.id,
+          created_platform: isMobile ? 'mobile' : 'desktop',
+          last_modified_platform: isMobile ? 'mobile' : 'desktop',
           role: formData.role || undefined
         })
         .select()
@@ -162,23 +163,34 @@ export const useShiftCalendarState = () => {
       
       // If published to calendar, also create a calendar entry
       if (formData.published) {
-        // Sync with calendar - using .then().catch() pattern instead of .catch()
-        await supabase.rpc('sync_open_shift_to_calendar', {
-          shift_id: data.id
-        }).then(
-          result => {
-            console.log('Calendar sync successful', result);
-          },
-          err => {
-            console.error('Error syncing to calendar:', err);
-            // Continue even if calendar sync fails
+        try {
+          // Sync with calendar using the RPC function
+          const { data: syncResult, error: syncError } = await supabase.rpc('sync_open_shift_to_calendar', {
+            shift_id: data.id
+          });
+          
+          if (syncError) {
+            console.error('Error syncing to calendar:', syncError);
+            toast({
+              title: "Warning",
+              description: "Shift was created but could not be published to calendar",
+              variant: "warning"
+            });
+          } else {
+            console.log('Calendar sync successful:', syncResult);
+            toast({
+              title: "Shift published",
+              description: "The open shift has been published to the calendar"
+            });
           }
-        );
-        
-        toast({
-          title: "Shift published",
-          description: "The open shift has been published to the calendar"
-        });
+        } catch (syncErr) {
+          console.error('Exception syncing to calendar:', syncErr);
+          toast({
+            title: "Warning",
+            description: "Shift was created but could not be published to calendar",
+            variant: "warning"
+          });
+        }
       } else {
         toast({
           title: "Shift created",
@@ -262,7 +274,7 @@ export const useShiftCalendarState = () => {
         .from('employees')
         .select('user_id, name')
         .eq('id', selectedEmployee)
-        .single();
+        .maybeSingle();
         
       if (employee?.user_id) {
         const { error: notificationError } = await supabase

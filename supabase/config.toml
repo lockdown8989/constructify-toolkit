@@ -7,3 +7,7 @@ default_extensions = ["pgcrypto", "uuid-ossp", "pg_net", "pg_cron"]
 [[functions]]
 name = "clean-shift-history"
 verify_jwt = true
+
+[[functions]]
+name = "sync-open-shift-to-calendar"
+verify_jwt = true
