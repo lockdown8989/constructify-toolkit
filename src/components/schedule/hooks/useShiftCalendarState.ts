@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/auth';
 import { useEmployees } from '@/hooks/use-employees';
 import { useSchedules } from '@/hooks/use-schedules';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { addDays, format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { addDays, format, subDays, startOfDay, endOfDay, addMonths, subMonths } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,6 +21,10 @@ export const useShiftCalendarState = () => {
   const [visibleDays, setVisibleDays] = useState<Date[]>([]);
   const [locationName, setLocationName] = useState('Main Location');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Add month and year properties
+  const [month, setMonth] = useState(new Date().getMonth());
+  const [year, setYear] = useState(new Date().getFullYear());
   
   // State for shift management
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
@@ -42,6 +46,12 @@ export const useShiftCalendarState = () => {
     
     setVisibleDays(days);
   }, [selectedDate, weekView]);
+
+  // Sync month and year with selected date
+  useEffect(() => {
+    setMonth(selectedDate.getMonth());
+    setYear(selectedDate.getFullYear());
+  }, [selectedDate]);
 
   // Filter schedules based on visible days
   const filteredSchedules = schedules.filter(schedule => {
@@ -82,6 +92,21 @@ export const useShiftCalendarState = () => {
     setSelectedDate(new Date());
   };
 
+  // Month navigation functions
+  const handleNextMonth = () => {
+    const newDate = addMonths(new Date(year, month), 1);
+    setMonth(newDate.getMonth());
+    setYear(newDate.getFullYear());
+    setSelectedDate(newDate);
+  };
+
+  const handlePrevMonth = () => {
+    const newDate = subMonths(new Date(year, month), 1);
+    setMonth(newDate.getMonth());
+    setYear(newDate.getFullYear());
+    setSelectedDate(newDate);
+  };
+
   // Shift management functions
   const handleAddShift = (day: Date) => {
     setSelectedDay(day);
@@ -101,6 +126,7 @@ export const useShiftCalendarState = () => {
     }
   };
 
+  // Function to add a new open shift
   const handleSubmitAddShift = async (formData: any) => {
     try {
       // Basic validation
@@ -113,7 +139,7 @@ export const useShiftCalendarState = () => {
         return;
       }
       
-      // Create new schedule
+      // Create new schedule with shift_type as open_shift
       const { data, error } = await supabase
         .from('schedules')
         .insert({
@@ -123,7 +149,8 @@ export const useShiftCalendarState = () => {
           notes: formData.notes,
           location: formData.location,
           status: 'pending',
-          published: true
+          published: true,
+          shift_type: 'open_shift' // Add this to properly categorize it as an open shift
         })
         .select()
         .single();
@@ -134,7 +161,7 @@ export const useShiftCalendarState = () => {
       
       toast({
         title: "Shift created",
-        description: "The shift has been created successfully"
+        description: "The open shift has been created successfully"
       });
       
       setIsAddShiftOpen(false);
@@ -266,6 +293,8 @@ export const useShiftCalendarState = () => {
     schedules: filteredSchedules,
     isLoading,
     selectedDate,
+    month,
+    year,
     visibleDays,
     locationName,
     setLocationName,
@@ -296,6 +325,8 @@ export const useShiftCalendarState = () => {
     handleSubmitAddShift,
     handleSubmitEmployeeShift,
     handleSubmitSwapShift,
-    handleShiftClick
+    handleShiftClick,
+    handleNextMonth,
+    handlePrevMonth
   };
 };
