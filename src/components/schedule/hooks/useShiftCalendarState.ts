@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useEmployees } from '@/hooks/use-employees';
@@ -174,7 +173,7 @@ export const useShiftCalendarState = () => {
             toast({
               title: "Warning",
               description: "Shift was created but could not be published to calendar",
-              variant: "warning"
+              variant: "destructive"
             });
           } else {
             console.log('Calendar sync successful:', syncResult);
@@ -188,7 +187,7 @@ export const useShiftCalendarState = () => {
           toast({
             title: "Warning",
             description: "Shift was created but could not be published to calendar",
-            variant: "warning"
+            variant: "destructive"
           });
         }
       } else {
