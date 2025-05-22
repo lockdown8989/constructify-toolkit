@@ -162,13 +162,18 @@ export const useShiftCalendarState = () => {
       
       // If published to calendar, also create a calendar entry
       if (formData.published) {
-        // Sync with calendar
+        // Sync with calendar - using .then().catch() pattern instead of .catch()
         await supabase.rpc('sync_open_shift_to_calendar', {
           shift_id: data.id
-        }).catch(err => {
-          console.error('Error syncing to calendar:', err);
-          // Continue even if calendar sync fails
-        });
+        }).then(
+          result => {
+            console.log('Calendar sync successful', result);
+          },
+          err => {
+            console.error('Error syncing to calendar:', err);
+            // Continue even if calendar sync fails
+          }
+        );
         
         toast({
           title: "Shift published",
