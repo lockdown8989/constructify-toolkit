@@ -148,6 +148,7 @@ export const useShiftCalendarState = () => {
 
   // Function to add a new open shift
   const handleSubmitAddShift = async (formData: any) => {
+    console.log('Submitting add shift form with data:', formData);
     try {
       // Basic validation
       if (!formData.title || !formData.start_time || !formData.end_time) {
@@ -180,6 +181,8 @@ export const useShiftCalendarState = () => {
       if (error) {
         throw error;
       }
+      
+      console.log('Successfully created open shift:', data);
       
       // If published to calendar, also create a calendar entry
       if (formData.published) {
@@ -384,6 +387,9 @@ export const useShiftCalendarState = () => {
     handleShiftClick,
     handleNextMonth,
     handlePrevMonth,
-    handleEmployeeAddShift // Make sure to expose this function
+    handleEmployeeAddShift,
+    user,
+    toast,
+    refetch
   };
 };

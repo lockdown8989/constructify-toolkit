@@ -38,7 +38,8 @@ const DesktopCalendarView: React.FC<DesktopCalendarViewProps> = ({ shiftState, h
     selectedDate: selectedDate?.toISOString(),
     visibleDaysCount: visibleDays?.length,
     schedulesCount: schedules?.length,
-    handlersAvailable: !!handleSubmitters
+    handlersAvailable: !!handleSubmitters,
+    handleEmployeeAddShift: !!handleSubmitters.handleEmployeeAddShift
   });
   
   return (

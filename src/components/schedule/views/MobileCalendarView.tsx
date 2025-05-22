@@ -27,7 +27,8 @@ const MobileCalendarView: React.FC<MobileCalendarViewProps> = ({ shiftState, han
   console.log('MobileCalendarView rendered', { 
     visibleDaysCount: visibleDays?.length,
     employeesCount: allEmployeeSchedules?.length,
-    handlersAvailable: !!handleSubmitters
+    handlersAvailable: !!handleSubmitters,
+    handleEmployeeAddShift: !!handleSubmitters.handleEmployeeAddShift
   });
   
   return (
@@ -80,7 +81,7 @@ const MobileCalendarView: React.FC<MobileCalendarViewProps> = ({ shiftState, han
                         className="bg-gray-50 p-2 rounded text-sm"
                         onClick={() => handleSubmitters.handleEmployeeAddShift(empSchedule.employeeId, new Date(shift.start_time))}
                       >
-                        {format(new Date(shift.start_time), 'ha')} - {format(new Date(shift.end_time), 'ha')}
+                        {format(new Date(shift.start_time), 'h:mm a')} - {format(new Date(shift.end_time), 'h:mm a')}
                       </div>
                     ))}
                   </div>
