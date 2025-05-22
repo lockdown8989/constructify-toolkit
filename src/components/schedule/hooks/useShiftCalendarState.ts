@@ -383,6 +383,7 @@ export const useShiftCalendarState = () => {
     handleSubmitSwapShift,
     handleShiftClick,
     handleNextMonth,
-    handlePrevMonth
+    handlePrevMonth,
+    handleEmployeeAddShift // Make sure to expose this function
   };
 };

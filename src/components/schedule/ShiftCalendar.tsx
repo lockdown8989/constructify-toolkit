@@ -7,6 +7,17 @@ import DesktopCalendarView from './views/DesktopCalendarView';
 import AddShiftFAB from './calendar/AddShiftFAB';
 import AddShiftSheet from './components/AddShiftSheet';
 
+// Define a proper type for the handlers
+interface ShiftSubmitters {
+  handleAddShiftSubmit: (formData: any) => void;
+  handleEmployeeShiftSubmit: (formData: any) => void;
+  handleSwapShiftSubmit: (formData: any) => void;
+  handleAddShiftClose: () => void;
+  handleEmployeeShiftClose: () => void;
+  handleSwapShiftClose: () => void;
+  handleEmployeeAddShift: (employeeId: string, date: Date) => void;
+}
+
 const ShiftCalendar = () => {
   const shiftState = useShiftCalendarState();
   const { 
@@ -18,12 +29,11 @@ const ShiftCalendar = () => {
     isAddShiftOpen, 
     setIsAddShiftOpen, 
     selectedDay, 
-    handleSubmitAddShift,
-    handleEmployeeAddShift
+    handleSubmitAddShift
   } = shiftState;
   
   // Get handlers for the calendar
-  const handleSubmitters = createShiftCalendarHandlers(shiftState);
+  const handleSubmitters = createShiftCalendarHandlers(shiftState) as ShiftSubmitters;
 
   // Log for debugging
   console.log('ShiftCalendar component rendered', { 
