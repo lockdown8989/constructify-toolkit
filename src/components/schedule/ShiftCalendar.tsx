@@ -18,11 +18,19 @@ const ShiftCalendar = () => {
     isAddShiftOpen, 
     setIsAddShiftOpen, 
     selectedDay, 
-    handleSubmitAddShift 
+    handleSubmitAddShift,
+    handleEmployeeAddShift
   } = shiftState;
   
   // Get handlers for the calendar
   const handleSubmitters = createShiftCalendarHandlers(shiftState);
+
+  // Log for debugging
+  console.log('ShiftCalendar component rendered', { 
+    isAddShiftOpen, 
+    selectedDay: selectedDay?.toISOString() || 'none',
+    handlersCreated: !!handleSubmitters
+  });
 
   // If on mobile, render the mobile schedule view
   if (isMobile) {

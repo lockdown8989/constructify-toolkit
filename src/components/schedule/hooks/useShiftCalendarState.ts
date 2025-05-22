@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useEmployees } from '@/hooks/use-employees';
@@ -131,6 +130,20 @@ export const useShiftCalendarState = () => {
     if (employees.length > 0) {
       setSelectedEmployee(employees[0].id);
     }
+  };
+
+  // Handle adding shift to a specific employee
+  const handleEmployeeAddShift = (employeeId: string, date: Date) => {
+    console.log(`handleEmployeeAddShift called for employee ${employeeId} on date ${format(date, 'yyyy-MM-dd')}`);
+    
+    toast({
+      title: "Adding shift",
+      description: `Adding shift for employee on ${format(date, 'MMM d')}`,
+    });
+    
+    setSelectedEmployee(employeeId);
+    setSelectedDay(date);
+    setIsAddEmployeeShiftOpen(true);
   };
 
   // Function to add a new open shift

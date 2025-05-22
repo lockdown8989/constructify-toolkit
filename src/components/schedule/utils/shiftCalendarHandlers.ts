@@ -10,7 +10,8 @@ export const createShiftCalendarHandlers = (shiftState: any) => {
     handleSubmitSwapShift,
     setIsAddShiftOpen,
     setIsSwapShiftOpen,
-    setIsAddEmployeeShiftOpen
+    setIsAddEmployeeShiftOpen,
+    handleEmployeeAddShift
   } = shiftState;
   
   // Handler for submitting the add shift form
@@ -43,6 +44,12 @@ export const createShiftCalendarHandlers = (shiftState: any) => {
   const handleSwapShiftClose = () => {
     setIsSwapShiftOpen(false);
   };
+
+  // Pass through the handleEmployeeAddShift function from state
+  const handleEmployeeAddShiftLocal = (employeeId: string, date: Date) => {
+    console.log(`Adding shift for employee ${employeeId} on date ${format(date, 'yyyy-MM-dd')}`);
+    handleEmployeeAddShift(employeeId, date);
+  };
   
   return {
     handleAddShiftSubmit,
@@ -50,6 +57,7 @@ export const createShiftCalendarHandlers = (shiftState: any) => {
     handleSwapShiftSubmit,
     handleAddShiftClose,
     handleEmployeeShiftClose,
-    handleSwapShiftClose
+    handleSwapShiftClose,
+    handleEmployeeAddShift: handleEmployeeAddShiftLocal
   };
 };
