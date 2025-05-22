@@ -1,36 +1,55 @@
 
-import { ShiftCalendarState } from '../types/calendar-types';
+import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-export const createShiftCalendarHandlers = (shiftState: ShiftCalendarState) => {
+export const createShiftCalendarHandlers = (shiftState: any) => {
   const {
     handleSubmitAddShift,
-    handleSubmitSwapShift,
     handleSubmitEmployeeShift,
-    handleAddEmployeeShift
+    handleSubmitSwapShift,
+    setIsAddShiftOpen,
+    setIsSwapShiftOpen,
+    setIsAddEmployeeShiftOpen
   } = shiftState;
   
-  // Create wrapper functions that properly handle the component prop types
-  const handleAddShiftSubmit = () => {
-    handleSubmitAddShift({});
+  // Handler for submitting the add shift form
+  const handleAddShiftSubmit = (formData: any) => {
+    console.log('Submitting add shift form:', formData);
+    handleSubmitAddShift(formData);
   };
   
-  const handleSwapShiftSubmit = () => {
-    handleSubmitSwapShift({});
+  // Handler for submitting the employee shift form
+  const handleEmployeeShiftSubmit = (formData: any) => {
+    handleSubmitEmployeeShift(formData);
   };
   
-  const handleEmployeeShiftSubmit = () => {
-    handleSubmitEmployeeShift({});
+  // Handler for submitting the swap shift form
+  const handleSwapShiftSubmit = (formData: any) => {
+    handleSubmitSwapShift(formData);
   };
   
-  // Wrapper for handleAddEmployeeShift to adapt to expected signature
-  const handleEmployeeAddShift = (employeeId: string, date: Date) => {
-    handleAddEmployeeShift(date);
+  // Handler for closing the add shift dialog
+  const handleAddShiftClose = () => {
+    setIsAddShiftOpen(false);
   };
-
+  
+  // Handler for closing the employee shift dialog
+  const handleEmployeeShiftClose = () => {
+    setIsAddEmployeeShiftOpen(false);
+  };
+  
+  // Handler for closing the swap shift dialog
+  const handleSwapShiftClose = () => {
+    setIsSwapShiftOpen(false);
+  };
+  
   return {
     handleAddShiftSubmit,
-    handleSwapShiftSubmit,
     handleEmployeeShiftSubmit,
-    handleEmployeeAddShift
+    handleSwapShiftSubmit,
+    handleAddShiftClose,
+    handleEmployeeShiftClose,
+    handleSwapShiftClose
   };
 };

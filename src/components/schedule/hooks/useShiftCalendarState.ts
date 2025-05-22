@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useEmployees } from '@/hooks/use-employees';
@@ -108,8 +109,15 @@ export const useShiftCalendarState = () => {
 
   // Shift management functions
   const handleAddShift = (day: Date) => {
+    console.log(`Opening add shift dialog for date: ${format(day, 'yyyy-MM-dd')}`);
     setSelectedDay(day);
     setIsAddShiftOpen(true);
+    console.log(`Dialog state set to: ${isAddShiftOpen}`);
+    
+    toast({
+      title: "Add shift",
+      description: `Adding shift for ${format(day, 'EEEE, MMM d')}`,
+    });
   };
 
   const handleSwapShift = (day: Date) => {
@@ -197,6 +205,7 @@ export const useShiftCalendarState = () => {
         });
       }
       
+      // Important: Reset isAddShiftOpen state and refetch schedules
       setIsAddShiftOpen(false);
       refetch();
     } catch (error) {
@@ -297,6 +306,7 @@ export const useShiftCalendarState = () => {
         description: `Successfully assigned shift to ${employee?.name || 'employee'}`
       });
       
+      // Reset the dialog state
       setIsAddEmployeeShiftOpen(false);
       refetch();
     } catch (error) {

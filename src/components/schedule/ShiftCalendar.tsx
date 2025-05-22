@@ -1,21 +1,44 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useShiftCalendarState } from './hooks/useShiftCalendarState';
 import { createShiftCalendarHandlers } from './utils/shiftCalendarHandlers';
 import MobileCalendarView from './views/MobileCalendarView';
 import DesktopCalendarView from './views/DesktopCalendarView';
 import AddShiftFAB from './calendar/AddShiftFAB';
+import AddShiftSheet from './components/AddShiftSheet';
 
 const ShiftCalendar = () => {
   const shiftState = useShiftCalendarState();
-  const { isMobile, isAdmin, isManager, isHR, handleAddShift } = shiftState;
+  const { 
+    isMobile, 
+    isAdmin, 
+    isManager, 
+    isHR, 
+    handleAddShift, 
+    isAddShiftOpen, 
+    setIsAddShiftOpen, 
+    selectedDay, 
+    handleSubmitAddShift 
+  } = shiftState;
   
   // Get handlers for the calendar
   const handleSubmitters = createShiftCalendarHandlers(shiftState);
 
   // If on mobile, render the mobile schedule view
   if (isMobile) {
-    return <MobileCalendarView shiftState={shiftState} handleSubmitters={handleSubmitters} />;
+    return (
+      <>
+        <MobileCalendarView shiftState={shiftState} handleSubmitters={handleSubmitters} />
+        {/* Include AddShiftSheet for mobile */}
+        <AddShiftSheet
+          isOpen={isAddShiftOpen}
+          onOpenChange={setIsAddShiftOpen}
+          onSubmit={handleSubmitAddShift}
+          currentDate={selectedDay || new Date()}
+          isMobile={isMobile}
+        />
+      </>
+    );
   }
 
   // Desktop view
@@ -27,6 +50,15 @@ const ShiftCalendar = () => {
       <AddShiftFAB
         onClick={() => handleAddShift(new Date())}
         isVisible={isAdmin || isManager || isHR}
+      />
+      
+      {/* Include AddShiftSheet for desktop */}
+      <AddShiftSheet
+        isOpen={isAddShiftOpen}
+        onOpenChange={setIsAddShiftOpen}
+        onSubmit={handleSubmitAddShift}
+        currentDate={selectedDay || new Date()}
+        isMobile={false}
       />
     </>
   );
