@@ -1,225 +1,91 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { sendNotification } from '@/services/notifications';
 import { format } from 'date-fns';
 
+interface ShiftData {
+  title: string;
+  startTime: string;
+  endTime: string;
+  location?: string;
+  notes?: string;
+}
+
 /**
- * Creates a new shift assignment for a given employee and date
+ * Creates a shift assignment for a specific employee
  */
-export async function createShiftAssignment(
-  employeeId: string,
-  shiftDetails: {
-    title: string;
-    startTime: string | Date;
-    endTime: string | Date;
-    location?: string;
-    notes?: string;
+export const createShiftAssignment = async (employeeId: string, shiftData: ShiftData) => {
+  if (!employeeId) {
+    throw new Error("Employee ID is required");
   }
-) {
-  try {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) {
-      throw new Error('User not authenticated');
-    }
+
+  // Create schedule entry first
+  const { data: scheduleData, error: scheduleError } = await supabase
+    .from('schedules')
+    .insert({
+      employee_id: employeeId,
+      title: shiftData.title,
+      start_time: shiftData.startTime,
+      end_time: shiftData.endTime,
+      location: shiftData.location || null,
+      notes: shiftData.notes || null,
+      status: 'pending',
+      published: true
+    })
+    .select()
+    .single();
+  
+  if (scheduleError) {
+    console.error('Error creating schedule:', scheduleError);
+    throw scheduleError;
+  }
+  
+  // Get employee information for notification
+  const { data: employee } = await supabase
+    .from('employees')
+    .select('user_id, name')
+    .eq('id', employeeId)
+    .maybeSingle();
+  
+  // Send notification to employee if we have their user_id
+  if (employee?.user_id) {
+    const startTimeFormat = format(new Date(shiftData.startTime), 'MMM dd, yyyy HH:mm');
     
-    // Format dates if they're Date objects
-    const startTime = typeof shiftDetails.startTime === 'string' 
-      ? shiftDetails.startTime 
-      : shiftDetails.startTime.toISOString();
-    
-    const endTime = typeof shiftDetails.endTime === 'string'
-      ? shiftDetails.endTime
-      : shiftDetails.endTime.toISOString();
-      
-    // Insert into schedules table
-    const { data, error } = await supabase
-      .from('schedules')
+    const { error: notificationError } = await supabase
+      .from('notifications')
       .insert({
-        employee_id: employeeId,
-        title: shiftDetails.title,
-        start_time: startTime,
-        end_time: endTime,
-        location: shiftDetails.location,
-        notes: shiftDetails.notes,
-        status: 'pending',
-        created_platform: window.innerWidth < 768 ? 'mobile' : 'desktop',
-        last_modified_platform: window.innerWidth < 768 ? 'mobile' : 'desktop'
-      })
-      .select()
-      .single();
-      
-    if (error) {
-      console.error('Error creating shift:', error);
-      throw error;
-    }
-    
-    // Log action in calendar_actions table
-    await supabase.from('calendar_actions').insert({
-      action_type: 'create_shift',
-      date: startTime,
-      initiator_id: userData.user.id,
-      details: {
-        shift_id: data.id,
-        employee_id: employeeId,
-        title: shiftDetails.title
-      }
-    });
-    
-    // Notify the employee
-    const { data: employee } = await supabase
-      .from('employees')
-      .select('user_id, name')
-      .eq('id', employeeId)
-      .single();
-      
-    if (employee?.user_id) {
-      const formattedDate = format(new Date(startTime), 'EEEE, MMMM d, yyyy');
-      const formattedStartTime = format(new Date(startTime), 'h:mm a');
-      const formattedEndTime = format(new Date(endTime), 'h:mm a');
-      
-      await sendNotification({
         user_id: employee.user_id,
-        title: 'New Shift Assigned',
-        message: `You have been assigned a new shift "${shiftDetails.title}" on ${formattedDate} from ${formattedStartTime} to ${formattedEndTime}.`,
+        title: 'New Shift Assignment',
+        message: `You have been assigned to: ${shiftData.title} starting at ${startTimeFormat}`,
         type: 'info',
         related_entity: 'schedules',
-        related_id: data.id
+        related_id: scheduleData.id
       });
-    }
-    
-    return data;
-  } catch (error) {
-    console.error('Error in createShiftAssignment:', error);
-    throw error;
-  }
-}
-
-/**
- * Creates a new employee and assigns initial shifts
- */
-export async function createEmployeeWithShift(
-  employeeDetails: {
-    name: string;
-    job_title: string;
-    department?: string;
-    salary?: number;
-    hourly_rate?: number;
-  },
-  shiftDetails?: {
-    title: string;
-    startTime: string | Date;
-    endTime: string | Date;
-    location?: string;
-  }
-) {
-  try {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) {
-      throw new Error('User not authenticated');
-    }
-    
-    // Create the employee
-    const { data: employee, error: employeeError } = await supabase
-      .from('employees')
-      .insert({
-        name: employeeDetails.name,
-        job_title: employeeDetails.job_title,
-        department: employeeDetails.department || 'General',
-        salary: employeeDetails.salary || 0,
-        hourly_rate: employeeDetails.hourly_rate || 0,
-        status: 'Active',
-        site: 'Main'
-      })
-      .select()
-      .single();
       
-    if (employeeError) {
-      console.error('Error creating employee:', employeeError);
-      throw employeeError;
+    if (notificationError) {
+      console.error('Error sending notification:', notificationError);
+      // Don't throw here, as the shift was created successfully
     }
-    
-    // Log the employee creation action
-    await supabase.from('calendar_actions').insert({
-      action_type: 'create_employee',
-      date: new Date().toISOString(),
-      initiator_id: userData.user.id,
-      details: {
-        employee_id: employee.id,
-        name: employeeDetails.name,
-        job_title: employeeDetails.job_title
-      }
-    });
-    
-    // If shift details are provided, create a shift for the new employee
-    if (shiftDetails) {
-      await createShiftAssignment(employee.id, {
-        title: shiftDetails.title,
-        startTime: shiftDetails.startTime,
-        endTime: shiftDetails.endTime,
-        location: shiftDetails.location
-      });
-    }
-    
-    return employee;
-  } catch (error) {
-    console.error('Error in createEmployeeWithShift:', error);
-    throw error;
   }
-}
+  
+  return scheduleData;
+};
 
 /**
- * Get calendar actions for a specific date range
+ * Records shift-related actions for analytics
  */
-export async function getCalendarActions(startDate: Date, endDate: Date) {
+export const recordShiftAction = async (userId: string, actionType: string, details: any) => {
+  if (!userId) return;
+  
   try {
-    const { data, error } = await supabase
-      .from('calendar_actions')
-      .select('*')
-      .gte('date', startDate.toISOString())
-      .lte('date', endDate.toISOString())
-      .order('date', { ascending: false });
-      
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    console.error('Error fetching calendar actions:', error);
-    return [];
-  }
-}
-
-/**
- * Record an action taken by user on calendar
- */
-export async function recordCalendarAction(
-  actionType: string,
-  date: Date | string,
-  details: Record<string, any> = {}
-) {
-  try {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) return null;
-    
-    const dateString = typeof date === 'string' ? date : date.toISOString();
-    
-    const { data, error } = await supabase
-      .from('calendar_actions')
+    await supabase
+      .from('shift_actions')
       .insert({
+        user_id: userId,
         action_type: actionType,
-        date: dateString,
-        initiator_id: userData.user.id,
-        details: {
-          ...details,
-          platform: window.innerWidth < 768 ? 'mobile' : 'desktop',
-          timestamp: Date.now()
-        }
-      })
-      .select()
-      .single();
-      
-    if (error) throw error;
-    return data;
+        details,
+        created_at: new Date().toISOString()
+      });
   } catch (error) {
-    console.error('Error recording calendar action:', error);
-    return null;
+    console.error('Failed to record shift action:', error);
   }
-}
+};

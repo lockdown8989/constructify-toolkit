@@ -114,8 +114,19 @@ export const useShiftCalendarState = () => {
     // Record this action for analytics
     recordCalendarAction('open_add_shift_dialog', day);
     
+    // First set the selected day
     setSelectedDay(day);
+    
+    // Then set the dialog to open state
     setIsAddShiftOpen(true);
+    
+    // Log after state updates to verify
+    setTimeout(() => {
+      console.log('Dialog state after update:', {
+        isOpen: isAddShiftOpen,
+        selectedDay: day.toISOString()
+      });
+    }, 100);
     
     toast({
       title: "Add shift",
@@ -145,9 +156,21 @@ export const useShiftCalendarState = () => {
       description: `Adding shift for employee on ${format(date, 'MMM d')}`,
     });
     
+    // First set the employee and day
     setSelectedEmployee(employeeId);
     setSelectedDay(date);
+    
+    // Then open the dialog
     setIsAddEmployeeShiftOpen(true);
+    
+    // Verify the state was updated correctly
+    setTimeout(() => {
+      console.log('Employee shift dialog state after update:', {
+        isOpen: isAddEmployeeShiftOpen,
+        employeeId,
+        selectedDay: date.toISOString()
+      });
+    }, 100);
   };
 
   // Enhanced function for creating a new shift

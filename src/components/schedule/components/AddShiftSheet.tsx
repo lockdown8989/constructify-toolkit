@@ -29,6 +29,9 @@ interface AddShiftSheetProps {
 }
 
 const AddShiftSheet: React.FC<AddShiftSheetProps> = ({ isOpen, onOpenChange, onSubmit, currentDate, isMobile }) => {
+  // Log props for debugging
+  console.log('AddShiftSheet rendered with props:', { isOpen, currentDate, isMobile });
+  
   const [formData, setFormData] = useState({
     title: '',
     role: '',
@@ -52,20 +55,28 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({ isOpen, onOpenChange, onS
     
     setFormData(prev => ({
       ...prev,
+      title: prev.title || '', // Keep existing title if any
       start_time: `${dateStr}T${String(defaultStartHour).padStart(2, '0')}:00:00`,
       end_time: `${dateStr}T${String(defaultEndHour).padStart(2, '0')}:00:00`
     }));
     
     // Reset form errors when opening the sheet
     if (isOpen) {
+      console.log('Sheet is open, resetting form errors');
       setFormErrors({});
     }
   }, [currentDate, isOpen]);
+
+  // Debug when isOpen changes
+  useEffect(() => {
+    console.log(`AddShiftSheet isOpen changed to: ${isOpen}`);
+  }, [isOpen]);
 
   const handleChange = (field: string, value: any) => {
     // Clear the error for this field when user changes it
     setFormErrors(prev => ({ ...prev, [field]: undefined }));
     setFormData(prev => ({ ...prev, [field]: value }));
+    console.log(`Form field ${field} changed to:`, value);
   };
 
   const validateForm = () => {
@@ -108,6 +119,8 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({ isOpen, onOpenChange, onS
     setIsSubmitting(true);
     
     try {
+      console.log('Submitting form with data:', formData);
+      
       // Submit the form data
       onSubmit(formData);
       
