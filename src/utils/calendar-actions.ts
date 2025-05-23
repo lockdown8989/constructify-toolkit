@@ -18,6 +18,8 @@ export const createShiftAssignment = async (employeeId: string, shiftData: Shift
     throw new Error("Employee ID is required");
   }
 
+  console.log(`Creating shift assignment for employee ${employeeId}`, shiftData);
+
   // Create schedule entry first
   const { data: scheduleData, error: scheduleError } = await supabase
     .from('schedules')
@@ -67,6 +69,7 @@ export const createShiftAssignment = async (employeeId: string, shiftData: Shift
     }
   }
   
+  console.log('Shift assignment created successfully:', scheduleData);
   return scheduleData;
 };
 
@@ -75,6 +78,8 @@ export const createShiftAssignment = async (employeeId: string, shiftData: Shift
  */
 export const createEmployeeWithShift = async (employeeData: any, shiftData: ShiftData) => {
   try {
+    console.log('Creating employee with shift:', { employeeData, shiftData });
+    
     // First create the employee
     const { data: newEmployee, error: employeeError } = await supabase
       .from('employees')
@@ -97,6 +102,8 @@ export const createEmployeeWithShift = async (employeeData: any, shiftData: Shif
     // Then assign the shift to this employee
     const scheduleData = await createShiftAssignment(newEmployee.id, shiftData);
     
+    console.log('Employee with shift created successfully:', { employee: newEmployee, schedule: scheduleData });
+    
     return {
       employee: newEmployee,
       schedule: scheduleData
@@ -114,6 +121,8 @@ export const recordShiftAction = async (userId: string, actionType: string, deta
   if (!userId) return;
   
   try {
+    console.log(`Recording shift action: ${actionType}`, details);
+    
     await supabase
       .from('shift_actions')
       .insert({
@@ -122,6 +131,8 @@ export const recordShiftAction = async (userId: string, actionType: string, deta
         details,
         created_at: new Date().toISOString()
       });
+      
+    console.log(`Shift action recorded: ${actionType}`);
   } catch (error) {
     console.error('Failed to record shift action:', error);
   }

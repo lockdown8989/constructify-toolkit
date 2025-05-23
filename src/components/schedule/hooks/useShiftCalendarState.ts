@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useEmployees } from '@/hooks/use-employees';
@@ -32,6 +33,9 @@ export const useShiftCalendarState = () => {
   const [isAddEmployeeShiftOpen, setIsAddEmployeeShiftOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   const [selectedShift, setSelectedShift] = useState<any | null>(null);
+  
+  // New state for date action menu
+  const [isDateActionMenuOpen, setIsDateActionMenuOpen] = useState(false);
   
   // Update visible days when the selected date or view changes
   useEffect(() => {
@@ -110,8 +114,7 @@ export const useShiftCalendarState = () => {
   const handleAddShift = (day: Date) => {
     console.log(`Opening add shift dialog for date: ${format(day, 'yyyy-MM-dd')}`);
     setSelectedDay(day);
-    setIsAddShiftOpen(true);
-    console.log(`Dialog state set to: ${isAddShiftOpen}`);
+    setIsDateActionMenuOpen(true); // Open the date action menu first
     
     toast({
       title: "Add shift",
@@ -187,20 +190,31 @@ export const useShiftCalendarState = () => {
       // If published to calendar, also create a calendar entry
       if (formData.published) {
         try {
-          // Sync with calendar using the RPC function
-          const { data: syncResult, error: syncError } = await supabase.rpc('sync_open_shift_to_calendar', {
-            shift_id: data.id
-          });
-          
-          if (syncError) {
-            console.error('Error syncing to calendar:', syncError);
+          // Create a schedule entry directly
+          const { data: scheduleData, error: scheduleError } = await supabase
+            .from('schedules')
+            .insert({
+              title: formData.title,
+              start_time: formData.start_time,
+              end_time: formData.end_time,
+              notes: formData.notes || null,
+              location: formData.location || null,
+              status: 'pending',
+              color: '#FFAB91', // Default color for open shifts
+              shift_type: 'open_shift',
+              published: true
+            })
+            .select();
+            
+          if (scheduleError) {
+            console.error('Error syncing to calendar:', scheduleError);
             toast({
               title: "Warning",
               description: "Shift was created but could not be published to calendar",
               variant: "destructive"
             });
           } else {
-            console.log('Calendar sync successful:', syncResult);
+            console.log('Calendar sync successful:', scheduleData);
             toast({
               title: "Shift published",
               description: "The open shift has been published to the calendar"
@@ -390,6 +404,9 @@ export const useShiftCalendarState = () => {
     handleEmployeeAddShift,
     user,
     toast,
-    refetch
+    refetch,
+    // New properties for DateActionMenu
+    isDateActionMenuOpen,
+    setIsDateActionMenuOpen
   };
 };

@@ -43,6 +43,8 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
     if (!user) return;
     
     try {
+      console.log(`Logging calendar action: ${actionType}`);
+      
       await supabase.from('calendar_actions').insert({
         action_type: actionType,
         date: selectedDate?.toISOString(),
@@ -65,6 +67,8 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
       setIsProcessing(true);
       await logCalendarAction('open_add_shift_dialog');
 
+      console.log('Add shift button clicked, selectedDate:', selectedDate);
+
       if (selectedDate) {
         // Format time to be at the start of business hours (9 AM)
         const startTime = new Date(selectedDate);
@@ -75,6 +79,11 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
         endTime.setHours(startTime.getHours() + 8);
 
         // If direct API call is needed before opening dialog
+        console.log('Preparing add shift operation:', {
+          start_time: startTime.toISOString(),
+          end_time: endTime.toISOString()
+        });
+        
         await supabase.from('calendar_actions').insert({
           action_type: 'prepare_add_shift',
           date: selectedDate.toISOString(),
@@ -87,6 +96,7 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
       }
       
       if (onAddShift) {
+        console.log('Calling onAddShift callback');
         onAddShift();
       }
       
@@ -113,6 +123,8 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
       setIsProcessing(true);
       await logCalendarAction('open_add_employee_dialog');
       
+      console.log('Add employee button clicked, selectedDate:', selectedDate);
+      
       // Prepare data for future employee creation
       if (selectedDate) {
         // Record the intent in database
@@ -128,6 +140,7 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
       }
       
       if (onAddEmployee) {
+        console.log('Calling onAddEmployee callback');
         onAddEmployee();
       }
       

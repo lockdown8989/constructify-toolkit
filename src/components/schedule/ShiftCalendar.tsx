@@ -6,6 +6,7 @@ import MobileCalendarView from './views/MobileCalendarView';
 import DesktopCalendarView from './views/DesktopCalendarView';
 import AddShiftFAB from './calendar/AddShiftFAB';
 import AddShiftSheet from './components/AddShiftSheet';
+import DateActionMenu from './calendar/DateActionMenu';
 
 // Define a proper type for the handlers
 interface ShiftSubmitters {
@@ -30,33 +31,44 @@ const ShiftCalendar = () => {
     setIsAddShiftOpen, 
     selectedDay, 
     handleSubmitAddShift,
-    handleEmployeeAddShift
+    handleEmployeeAddShift,
+    isDateActionMenuOpen,
+    setIsDateActionMenuOpen
   } = shiftState;
   
   // Get handlers for the calendar
   const handleSubmitters = createShiftCalendarHandlers(shiftState) as ShiftSubmitters;
 
-  // For debugging - remove these console logs in production
+  // For debugging - logs to help troubleshoot
   useEffect(() => {
-    if (isAddShiftOpen) {
-      console.log('ShiftCalendar: Dialog should be open now', { 
-        isAddShiftOpen, 
-        selectedDay: selectedDay?.toISOString() || 'none'
-      });
-    }
-  }, [isAddShiftOpen, selectedDay]);
+    console.log('ShiftCalendar: State update', { 
+      isAddShiftOpen, 
+      selectedDay: selectedDay?.toISOString() || 'none',
+      isDateActionMenuOpen
+    });
+  }, [isAddShiftOpen, selectedDay, isDateActionMenuOpen]);
 
   // If on mobile, render the mobile schedule view
   if (isMobile) {
     return (
       <>
         <MobileCalendarView shiftState={shiftState} handleSubmitters={handleSubmitters} />
+        
         <AddShiftSheet
           isOpen={isAddShiftOpen}
           onOpenChange={setIsAddShiftOpen}
           onSubmit={handleSubmitAddShift}
           currentDate={selectedDay || new Date()}
           isMobile={true}
+        />
+        
+        <DateActionMenu
+          isOpen={isDateActionMenuOpen}
+          onClose={() => setIsDateActionMenuOpen(false)}
+          onAddShift={() => setIsAddShiftOpen(true)}
+          onAddEmployee={() => console.log('Add employee clicked from mobile')}
+          hasManagerAccess={isAdmin || isManager || isHR}
+          selectedDate={selectedDay}
         />
       </>
     );
@@ -80,6 +92,16 @@ const ShiftCalendar = () => {
         onSubmit={handleSubmitAddShift}
         currentDate={selectedDay || new Date()}
         isMobile={false}
+      />
+      
+      {/* Date action menu for desktop */}
+      <DateActionMenu
+        isOpen={isDateActionMenuOpen}
+        onClose={() => setIsDateActionMenuOpen(false)}
+        onAddShift={() => setIsAddShiftOpen(true)}
+        onAddEmployee={() => console.log('Add employee clicked from desktop')}
+        hasManagerAccess={isAdmin || isManager || isHR}
+        selectedDate={selectedDay}
       />
     </>
   );
