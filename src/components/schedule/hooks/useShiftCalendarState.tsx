@@ -1,239 +1,145 @@
-
 import { useState, useEffect } from 'react';
-import { addDays, startOfWeek, format } from 'date-fns';
+import { addDays, format, subDays, startOfDay, endOfDay, addMonths, subMonths } from 'date-fns';
 import { useSchedules } from '@/hooks/use-schedules';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
+import { useEmployees } from '@/hooks/use-employees';
 import { useIsMobile } from '@/hooks/use-mobile';
-
-// Sample employee data for demo - in real app this would come from a hook/API
-const DEFAULT_EMPLOYEES = [
-  { id: "emp1", name: "Courtney Henry", role: "Front of house", hourlyRate: 15 },
-  { id: "emp2", name: "Alex Jackson", role: "Waiting Staff", hourlyRate: 12 },
-  { id: "emp3", name: "Esther Howarde", role: "Waiting Staff", hourlyRate: 12 },
-  { id: "emp4", name: "Guy Hawkins", role: "Waiting Staff", hourlyRate: 12 },
-  { id: "emp5", name: "Jacob Jones", role: "Marketing", hourlyRate: 18 },
-  { id: "emp6", name: "Jerome Bell", role: "Waiting Staff", hourlyRate: 12 },
-  { id: "emp7", name: "Leslie Alexander", role: "Chef", hourlyRate: 20 },
-  { id: "emp8", name: "Marvin McKinney", role: "Chef", hourlyRate: 22 }
-];
+import { supabase } from '@/integrations/supabase/client';
+import { createShiftAssignment } from '@/utils/calendar-actions';
 
 export const useShiftCalendarState = () => {
+  // Keep existing state properties
   const { user, isAdmin, isHR, isManager } = useAuth();
   const { data: schedules = [], isLoading, refetch } = useSchedules();
+  const { data: employees = [] } = useEmployees({});
+  const isMobile = useIsMobile();
+  const { toast } = useToast();
+  
+  // State for calendar view
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [visibleDays, setVisibleDays] = useState<Date[]>([]);
-  const [locationName, setLocationName] = useState("Main Location");
-  const [searchQuery, setSearchQuery] = useState('');
   const [weekView, setWeekView] = useState(true);
+  const [visibleDays, setVisibleDays] = useState<Date[]>([]);
+  const [locationName, setLocationName] = useState('Main Location');
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Month and year state
+  const [month, setMonth] = useState(new Date().getMonth());
+  const [year, setYear] = useState(new Date().getFullYear());
+  
+  // State for shift management
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [isAddShiftOpen, setIsAddShiftOpen] = useState(false);
   const [isSwapShiftOpen, setIsSwapShiftOpen] = useState(false);
+  const [isAddEmployeeShiftOpen, setIsAddEmployeeShiftOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
-  const [selectedShift, setSelectedShift] = useState<string | null>(null);
+  const [selectedShift, setSelectedShift] = useState<any | null>(null);
   
-  const [employees, setEmployees] = useState(DEFAULT_EMPLOYEES);
-  
-  const isMobile = useIsMobile();
-  const { toast } = useToast();
-  const { refreshSchedules } = useEmployeeSchedule();
-  
-  // Calculate visible days based on the view type
+  // Keep existing useEffect for updating visible days and month/year syncing
   useEffect(() => {
-    const startOfCurrentWeek = startOfWeek(selectedDate, { weekStartsOn: 1 }); // Start from Monday
     const days = [];
+    const dayCount = weekView ? 7 : 1;
+    const startDay = weekView ? subDays(selectedDate, selectedDate.getDay() - 1) : selectedDate;
     
-    if (weekView) {
-      // For week view, show 7 days or fewer on mobile
-      const daysToShow = isMobile ? 4 : 7;
-      
-      for (let i = 0; i < daysToShow; i++) {
-        days.push(addDays(startOfCurrentWeek, i));
-      }
-    } else {
-      // For day view, only show the selected date
-      days.push(selectedDate);
+    for (let i = 0; i < dayCount; i++) {
+      days.push(addDays(startDay, i));
     }
     
     setVisibleDays(days);
-  }, [selectedDate, isMobile, weekView]);
-  
-  // Filter and group employees and their schedules
-  const processSchedules = () => {
-    const filteredSchedules = schedules.filter(schedule => {
-      // Apply search filter
-      if (searchQuery) {
-        const title = schedule.title?.toLowerCase() || '';
-        return title.includes(searchQuery.toLowerCase());
-      }
-      return true;
-    });
+  }, [selectedDate, weekView]);
+
+  // Sync month and year with selected date
+  useEffect(() => {
+    setMonth(selectedDate.getMonth());
+    setYear(selectedDate.getFullYear());
+  }, [selectedDate]);
+
+  // Filter schedules based on visible days
+  const filteredSchedules = schedules.filter(schedule => {
+    const scheduleDate = new Date(schedule.start_time);
     
-    // Group by employee
-    const groupedSchedules = filteredSchedules.reduce((groups: Record<string, any>, schedule) => {
-      const employeeId = schedule.employee_id;
-      
-      if (!groups[employeeId]) {
-        groups[employeeId] = {
-          employeeId,
-          employeeName: '', // Will be filled later
-          shifts: []
-        };
-      }
-      
-      // Only include shifts for visible days if in week view
-      if (weekView) {
-        const scheduleDate = new Date(schedule.start_time);
-        const isVisible = visibleDays.some(day => 
-          day.getDate() === scheduleDate.getDate() &&
-          day.getMonth() === scheduleDate.getMonth() &&
-          day.getFullYear() === scheduleDate.getFullYear()
-        );
-        
-        if (isVisible) {
-          groups[employeeId].shifts.push(schedule);
-        }
-      } else {
-        // For day view, only include shifts for the selected date
-        const scheduleDate = new Date(schedule.start_time);
-        const selectedDateCopy = new Date(selectedDate);
-        
-        if (scheduleDate.getDate() === selectedDateCopy.getDate() &&
-            scheduleDate.getMonth() === selectedDateCopy.getMonth() &&
-            scheduleDate.getFullYear() === selectedDateCopy.getFullYear()) {
-          groups[employeeId].shifts.push(schedule);
-        }
-      }
-      
-      return groups;
-    }, {});
+    // Filter by visible days
+    const isVisible = visibleDays.some(day => 
+      scheduleDate.getDate() === day.getDate() && 
+      scheduleDate.getMonth() === day.getMonth() && 
+      scheduleDate.getFullYear() === day.getFullYear()
+    );
     
-    // Add employee names
-    const employeeSchedules = Object.values(groupedSchedules).map((group: any) => {
-      // Try to find employee name from the schedule if available
-      const anySchedule = group.shifts[0];
-      if (anySchedule?.title) {
-        const titleParts = anySchedule.title.split(' - ');
-        if (titleParts.length > 1) {
-          group.employeeName = titleParts[0];
-          group.role = titleParts[1];
-        } else {
-          group.employeeName = anySchedule.title;
-        }
-      }
-      
-      return group;
-    });
+    return isVisible;
+  });
+
+  // Group schedules by employee
+  const allEmployeeSchedules = employees.map(employee => {
+    const employeeSchedules = filteredSchedules.filter(schedule => 
+      schedule.employee_id === employee.id
+    );
     
-    // Add yourself at the top
-    const currentUserSchedule = {
-      employeeId: user?.id || 'current',
-      employeeName: 'You',
-      isCurrentUser: true,
-      shifts: schedules.filter(s => s.employee_id === user?.id)
+    return {
+      employee,
+      schedules: employeeSchedules
     };
-    
-    // Get all employees with schedules, with current user first if they have shifts
-    const currentUserHasShifts = currentUserSchedule.shifts.length > 0;
-    return currentUserHasShifts 
-      ? [currentUserSchedule, ...employeeSchedules.filter((e: any) => e.employeeId !== user?.id)]
-      : [...employeeSchedules];
-  };
-  
-  const allEmployeeSchedules = processSchedules();
-  
+  });
+
+  // Calendar navigation functions - keep existing methods
   const handleNextPeriod = () => {
-    if (weekView) {
-      setSelectedDate(addDays(selectedDate, 7));
-    } else {
-      setSelectedDate(addDays(selectedDate, 1));
-    }
+    setSelectedDate(prevDate => addDays(prevDate, weekView ? 7 : 1));
   };
-  
+
   const handlePreviousPeriod = () => {
-    if (weekView) {
-      setSelectedDate(addDays(selectedDate, -7));
-    } else {
-      setSelectedDate(addDays(selectedDate, -1));
-    }
+    setSelectedDate(prevDate => subDays(prevDate, weekView ? 7 : 1));
   };
 
   const handleToday = () => {
     setSelectedDate(new Date());
   };
-  
-  const handleAddShift = (date: Date) => {
-    setSelectedDay(date);
+
+  // Month navigation functions - keep existing methods
+  const handleNextMonth = () => {
+    const newDate = addMonths(new Date(year, month), 1);
+    setMonth(newDate.getMonth());
+    setYear(newDate.getFullYear());
+    setSelectedDate(newDate);
+  };
+
+  const handlePrevMonth = () => {
+    const newDate = subMonths(new Date(year, month), 1);
+    setMonth(newDate.getMonth());
+    setYear(newDate.getFullYear());
+    setSelectedDate(newDate);
+  };
+
+  // Updated Shift management functions
+  const handleAddShift = (day: Date) => {
+    console.log(`Opening add shift dialog for date: ${format(day, 'yyyy-MM-dd')}`);
+    // Record this action for analytics
+    recordCalendarAction('open_add_shift_dialog', day);
+    
+    setSelectedDay(day);
     setIsAddShiftOpen(true);
     
-    if (isMobile) {
-      // For mobile, we'll use a sheet instead of a popover
-      setIsAddShiftOpen(true);
-    } else {
-      toast({
-        title: "Add shift",
-        description: `Adding shift for employee on ${format(date, 'EEEE, MMM d')}`,
-      });
-    }
+    toast({
+      title: "Add shift",
+      description: `Adding shift for ${format(day, 'EEEE, MMM d')}`,
+    });
   };
-  
-  const handleSwapShift = (date: Date) => {
-    setSelectedDay(date);
+
+  const handleSwapShift = (day: Date) => {
+    setSelectedDay(day);
     setIsSwapShiftOpen(true);
-    
-    if (isMobile) {
-      // For mobile, we'll use a sheet
-      setIsSwapShiftOpen(true);
-    } else {
-      toast({
-        title: "Swap shift",
-        description: `Swapping shifts between employees on ${format(date, 'EEEE, MMM d')}`,
-      });
-    }
   };
-  
-  const handleSubmitAddShift = () => {
-    if (selectedDay && selectedEmployee) {
-      toast({
-        title: "Shift added",
-        description: `Shift added for ${employees.find(e => e.id === selectedEmployee)?.name || 'employee'} on ${format(selectedDay, 'MMM d, yyyy')}`,
-      });
-      setIsAddShiftOpen(false);
-      setSelectedEmployee(null);
-    }
-  };
-  
-  const handleSubmitSwapShift = () => {
-    if (selectedDay && selectedShift && selectedEmployee) {
-      toast({
-        title: "Shift swapped",
-        description: `Shift swapped with ${employees.find(e => e.id === selectedEmployee)?.name || 'employee'} on ${format(selectedDay, 'MMM d, yyyy')}`,
-      });
-      setIsSwapShiftOpen(false);
-      setSelectedShift(null);
-      setSelectedEmployee(null);
+
+  const handleAddEmployeeShift = (day: Date) => {
+    setSelectedDay(day);
+    setIsAddEmployeeShiftOpen(true);
+    if (employees.length > 0) {
+      setSelectedEmployee(employees[0].id);
     }
   };
 
-  const handleShiftClick = (shift: any) => {
-    toast({
-      title: "Shift details",
-      description: `${shift.title} (${format(new Date(shift.start_time), 'h:mm a')} - ${format(new Date(shift.end_time), 'h:mm a')})`,
-    });
-  };
-
-  const handleRefresh = () => {
-    refetch();
-    refreshSchedules();
-    toast({
-      title: "Schedule refreshed",
-      description: "The schedule has been updated with the latest information.",
-    });
-  };
-
-  // Handle adding shift to a specific employee
+  // Updated handler for adding shift to a specific employee
   const handleEmployeeAddShift = (employeeId: string, date: Date) => {
+    console.log(`handleEmployeeAddShift called for employee ${employeeId} on date ${format(date, 'yyyy-MM-dd')}`);
+    
     toast({
       title: "Adding shift",
       description: `Adding shift for employee on ${format(date, 'MMM d')}`,
@@ -241,49 +147,341 @@ export const useShiftCalendarState = () => {
     
     setSelectedEmployee(employeeId);
     setSelectedDay(date);
-    setIsAddShiftOpen(true);
+    setIsAddEmployeeShiftOpen(true);
+  };
+
+  // Enhanced function for creating a new shift
+  const handleSubmitAddShift = async (formData: any) => {
+    console.log('Submitting add shift form with data:', formData);
+    try {
+      // Basic validation
+      if (!formData.title || !formData.start_time || !formData.end_time) {
+        toast({
+          title: "Missing fields",
+          description: "Please fill all required fields",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Determine if it's an employee-specific shift or an open shift
+      if (formData.employee_id) {
+        // If employee is selected, create a direct assignment
+        try {
+          await createShiftAssignment(formData.employee_id, {
+            title: formData.title,
+            startTime: formData.start_time,
+            endTime: formData.end_time,
+            location: formData.location,
+            notes: formData.notes
+          });
+          
+          toast({
+            title: "Shift assigned",
+            description: `Successfully assigned shift to employee`
+          });
+          
+          recordCalendarAction('create_employee_shift', new Date(formData.start_time), {
+            employee_id: formData.employee_id,
+            title: formData.title
+          });
+        } catch (error) {
+          console.error('Error creating employee shift:', error);
+          toast({
+            title: "Error",
+            description: "Failed to create employee shift",
+            variant: "destructive"
+          });
+          return;
+        }
+      } else {
+        // Create an open shift
+        const { data, error } = await supabase
+          .from('open_shifts')
+          .insert({
+            title: formData.title,
+            start_time: formData.start_time,
+            end_time: formData.end_time,
+            notes: formData.notes,
+            location: formData.location,
+            status: 'pending',
+            created_by: user?.id,
+            created_platform: isMobile ? 'mobile' : 'desktop',
+            last_modified_platform: isMobile ? 'mobile' : 'desktop',
+            role: formData.role || undefined
+          })
+          .select()
+          .single();
+        
+        if (error) {
+          console.error('Error creating open shift:', error);
+          toast({
+            title: "Error",
+            description: "Failed to create open shift",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        console.log('Successfully created open shift:', data);
+        
+        // If published to calendar, also create a calendar entry
+        if (formData.published) {
+          try {
+            // Create a corresponding schedule entry
+            const { data: scheduleData, error: scheduleError } = await supabase
+              .from('schedules')
+              .insert({
+                title: formData.title,
+                start_time: formData.start_time,
+                end_time: formData.end_time,
+                notes: formData.notes,
+                location: formData.location,
+                status: 'pending',
+                published: true,
+                shift_type: 'open_shift',
+                color: '#FFAB91'  // Default color for open shifts
+              })
+              .select()
+              .single();
+              
+            if (scheduleError) {
+              console.error('Error publishing to calendar:', scheduleError);
+              toast({
+                title: "Warning",
+                description: "Shift was created but could not be published to calendar",
+                variant: "destructive"
+              });
+            } else {
+              console.log('Calendar entry created successfully:', scheduleData);
+              toast({
+                title: "Shift published",
+                description: "The open shift has been published to the calendar"
+              });
+              
+              recordCalendarAction('publish_shift_to_calendar', new Date(formData.start_time), {
+                shift_id: data.id,
+                schedule_id: scheduleData.id
+              });
+            }
+          } catch (syncErr) {
+            console.error('Exception publishing to calendar:', syncErr);
+            toast({
+              title: "Warning",
+              description: "Shift was created but could not be published to calendar",
+              variant: "destructive"
+            });
+          }
+        } else {
+          toast({
+            title: "Shift created",
+            description: "The open shift has been created successfully"
+          });
+          
+          recordCalendarAction('create_open_shift', new Date(formData.start_time), {
+            shift_id: data.id,
+            title: formData.title
+          });
+        }
+      }
+      
+      // Important: Reset isAddShiftOpen state and refetch schedules
+      setIsAddShiftOpen(false);
+      refetch();
+    } catch (error) {
+      console.error('Error creating shift:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create shift",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Keep existing functions for submitting employee shifts and swap shifts
+  const handleSubmitEmployeeShift = async (formData: any) => {
+    try {
+      if (!selectedEmployee || !formData.title || !formData.start_time || !formData.end_time) {
+        toast({
+          title: "Missing fields",
+          description: "Please select an employee and fill all required fields",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Create the employee schedule
+      const { data: scheduleData, error: scheduleError } = await supabase
+        .from('schedules')
+        .insert({
+          employee_id: selectedEmployee,
+          title: formData.title,
+          start_time: formData.start_time,
+          end_time: formData.end_time,
+          notes: formData.notes,
+          location: formData.location,
+          status: 'pending',
+          published: true
+        })
+        .select()
+        .single();
+      
+      if (scheduleError) throw scheduleError;
+      
+      // Create an open shift reference
+      const { data: openShiftData, error: openShiftError } = await supabase
+        .from('open_shifts')
+        .insert({
+          title: formData.title,
+          start_time: formData.start_time,
+          end_time: formData.end_time,
+          notes: formData.notes,
+          location: formData.location,
+          status: 'pending',
+          created_by: user?.id,
+          created_platform: isMobile ? 'mobile' : 'desktop'
+        })
+        .select()
+        .single();
+      
+      if (openShiftError) throw openShiftError;
+      
+      // Create shift assignment connecting open shift to schedule
+      const { error: assignmentError } = await supabase
+        .from('open_shift_assignments')
+        .insert({
+          open_shift_id: openShiftData.id,
+          employee_id: selectedEmployee,
+          assigned_by: user?.id,
+          status: 'pending'
+        });
+      
+      if (assignmentError) throw assignmentError;
+      
+      // Notify the employee
+      const { data: employee } = await supabase
+        .from('employees')
+        .select('user_id, name')
+        .eq('id', selectedEmployee)
+        .maybeSingle();
+        
+      if (employee?.user_id) {
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
+            user_id: employee.user_id,
+            title: 'New Shift Assignment',
+            message: `You have been assigned a new shift: ${formData.title} starting at ${format(new Date(formData.start_time), 'MMM dd, yyyy HH:mm')}`,
+            type: 'info',
+            related_entity: 'schedules',
+            related_id: scheduleData.id
+          });
+          
+        if (notificationError) {
+          console.error('Error sending notification:', notificationError);
+        }
+      }
+      
+      toast({
+        title: "Shift assigned",
+        description: `Successfully assigned shift to ${employee?.name || 'employee'}`
+      });
+      
+      // Reset the dialog state
+      setIsAddEmployeeShiftOpen(false);
+      refetch();
+    } catch (error) {
+      console.error('Error assigning shift:', error);
+      toast({
+        title: "Error",
+        description: "Failed to assign shift",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSubmitSwapShift = async (formData: any) => {
+    // Implementation for shift swapping
+    console.log('Swap shift form submitted:', formData);
+  };
+
+  // Helper function to record calendar actions
+  const recordCalendarAction = async (actionType: string, date: Date, details = {}) => {
+    console.log(`Calendar action logged: ${actionType}`);
+    
+    try {
+      // If user is authenticated, record the action
+      if (user) {
+        await supabase.from('calendar_actions').insert({
+          action_type: actionType,
+          date: date.toISOString(),
+          initiator_id: user.id,
+          details: {
+            ...details,
+            platform: isMobile ? 'mobile' : 'desktop',
+            timestamp: Date.now()
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to record calendar action:', error);
+    }
+  };
+
+  // Handle click on an existing shift
+  const handleShiftClick = (shift: any) => {
+    setSelectedShift(shift);
+    
+    toast({
+      title: "Shift details",
+      description: `${shift.title} (${format(new Date(shift.start_time), 'h:mm a')} - ${format(new Date(shift.end_time), 'h:mm a')})`,
+    });
   };
 
   return {
-    user,
     isAdmin,
     isHR,
     isManager,
-    schedules,
+    schedules: filteredSchedules,
     isLoading,
-    refetch,
     selectedDate,
+    month,
+    year,
     visibleDays,
     locationName,
     setLocationName,
     searchQuery,
     setSearchQuery,
-    weekView, 
+    weekView,
     setWeekView,
     selectedDay,
-    setSelectedDay,
     isAddShiftOpen,
     setIsAddShiftOpen,
     isSwapShiftOpen,
     setIsSwapShiftOpen,
+    isAddEmployeeShiftOpen,
+    setIsAddEmployeeShiftOpen,
     selectedEmployee,
     setSelectedEmployee,
     selectedShift,
     setSelectedShift,
     employees,
     isMobile,
-    allEmployeeSchedules,
     handleNextPeriod,
     handlePreviousPeriod,
     handleToday,
     handleAddShift,
     handleSwapShift,
+    handleAddEmployeeShift,
     handleSubmitAddShift,
+    handleSubmitEmployeeShift,
     handleSubmitSwapShift,
     handleShiftClick,
-    handleRefresh,
+    handleNextMonth,
+    handlePrevMonth,
     handleEmployeeAddShift,
+    user,
     toast,
-    refreshSchedules
+    refetch
   };
 };

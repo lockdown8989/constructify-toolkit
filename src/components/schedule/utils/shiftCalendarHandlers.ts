@@ -17,12 +17,27 @@ export const createShiftCalendarHandlers = (shiftState: any) => {
   // Handler for submitting the add shift form
   const handleAddShiftSubmit = (formData: any) => {
     console.log('Submitting add shift form:', formData);
+    
+    // Validate form data
+    if (!formData.title || !formData.start_time || !formData.end_time) {
+      console.error("Form validation failed: Missing required fields");
+      return;
+    }
+    
+    // Submit the form data to create a new shift
     handleSubmitAddShift(formData);
   };
   
   // Handler for submitting the employee shift form
   const handleEmployeeShiftSubmit = (formData: any) => {
     console.log('Submitting employee shift form:', formData);
+    
+    // Validate form data
+    if (!formData.title || !formData.start_time || !formData.end_time || !formData.employee_id) {
+      console.error("Form validation failed: Missing required fields for employee shift");
+      return;
+    }
+    
     handleSubmitEmployeeShift(formData);
   };
   

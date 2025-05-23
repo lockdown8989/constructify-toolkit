@@ -30,7 +30,7 @@ const ShiftCalendar = () => {
     setIsAddShiftOpen, 
     selectedDay, 
     handleSubmitAddShift,
-    handleEmployeeAddShift // Make sure this is properly destructured
+    handleEmployeeAddShift
   } = shiftState;
   
   // Get handlers for the calendar
