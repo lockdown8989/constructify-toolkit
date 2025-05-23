@@ -36,26 +36,27 @@ const ShiftCalendar = () => {
   // Get handlers for the calendar
   const handleSubmitters = createShiftCalendarHandlers(shiftState) as ShiftSubmitters;
 
-  // Log for debugging
-  console.log('ShiftCalendar component rendered', { 
-    isAddShiftOpen, 
-    selectedDay: selectedDay?.toISOString() || 'none',
-    handlersCreated: !!handleSubmitters,
-    handleEmployeeAddShift: !!handleEmployeeAddShift
-  });
+  // For debugging - remove these console logs in production
+  useEffect(() => {
+    if (isAddShiftOpen) {
+      console.log('ShiftCalendar: Dialog should be open now', { 
+        isAddShiftOpen, 
+        selectedDay: selectedDay?.toISOString() || 'none'
+      });
+    }
+  }, [isAddShiftOpen, selectedDay]);
 
   // If on mobile, render the mobile schedule view
   if (isMobile) {
     return (
       <>
         <MobileCalendarView shiftState={shiftState} handleSubmitters={handleSubmitters} />
-        {/* Include AddShiftSheet for mobile */}
         <AddShiftSheet
           isOpen={isAddShiftOpen}
           onOpenChange={setIsAddShiftOpen}
           onSubmit={handleSubmitAddShift}
           currentDate={selectedDay || new Date()}
-          isMobile={isMobile}
+          isMobile={true}
         />
       </>
     );
