@@ -71,6 +71,43 @@ export const createShiftAssignment = async (employeeId: string, shiftData: Shift
 };
 
 /**
+ * Creates a new employee record and immediately assigns them a shift
+ */
+export const createEmployeeWithShift = async (employeeData: any, shiftData: ShiftData) => {
+  try {
+    // First create the employee
+    const { data: newEmployee, error: employeeError } = await supabase
+      .from('employees')
+      .insert({
+        name: employeeData.name,
+        job_title: employeeData.jobTitle || 'Employee',
+        department: employeeData.department || 'General',
+        site: employeeData.site || 'Main Office',
+        salary: employeeData.salary || 0,
+        manager_id: employeeData.managerId || null
+      })
+      .select()
+      .single();
+    
+    if (employeeError) {
+      console.error('Error creating employee:', employeeError);
+      throw employeeError;
+    }
+    
+    // Then assign the shift to this employee
+    const scheduleData = await createShiftAssignment(newEmployee.id, shiftData);
+    
+    return {
+      employee: newEmployee,
+      schedule: scheduleData
+    };
+  } catch (error) {
+    console.error('Error in createEmployeeWithShift:', error);
+    throw error;
+  }
+};
+
+/**
  * Records shift-related actions for analytics
  */
 export const recordShiftAction = async (userId: string, actionType: string, details: any) => {

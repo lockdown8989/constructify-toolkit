@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -156,6 +157,9 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{dateString}</DialogTitle>
+          <DialogDescription>
+            Choose an action for this date
+          </DialogDescription>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
