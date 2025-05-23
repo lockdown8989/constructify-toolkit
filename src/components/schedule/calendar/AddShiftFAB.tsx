@@ -15,6 +15,7 @@ const AddShiftFAB: React.FC<AddShiftFABProps> = ({ onClick, isVisible }) => {
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log('AddShiftFAB clicked, calling onClick handler');
     onClick();
   };
   
@@ -24,8 +25,9 @@ const AddShiftFAB: React.FC<AddShiftFABProps> = ({ onClick, isVisible }) => {
         <TooltipTrigger asChild>
           <Button
             onClick={handleClick}
-            className="fixed bottom-6 right-6 rounded-full h-14 w-14 p-0 shadow-lg"
+            className="fixed bottom-6 right-6 rounded-full h-14 w-14 p-0 shadow-lg bg-blue-600 hover:bg-blue-700"
             variant="default"
+            data-testid="add-shift-fab"
           >
             <Plus className="h-6 w-6" />
             <span className="sr-only">Add Shift</span>

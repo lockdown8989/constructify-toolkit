@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/use-employees';
-import { createShiftAssignment, createEmployeeWithShift } from '@/utils/calendar-actions';
+import { createShiftAssignment } from '@/utils/calendar-actions';
 
 interface DateActionMenuProps {
   isOpen: boolean;
@@ -38,13 +37,11 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
   const { data: employees = [] } = useEmployees({});
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  // Function to log calendar actions
+  // Function to log calendar actions - keep this for analytics
   const logCalendarAction = async (actionType: string) => {
     if (!user) return;
     
-    try {
-      console.log(`Logging calendar action: ${actionType}`);
-      
+    try {      
       await supabase.from('calendar_actions').insert({
         action_type: actionType,
         date: selectedDate?.toISOString(),
@@ -54,8 +51,6 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
           platform: window.innerWidth < 768 ? 'mobile' : 'desktop'
         }
       });
-      
-      console.log(`Calendar action logged: ${actionType}`);
     } catch (error) {
       console.error('Error logging calendar action:', error);
     }
@@ -65,10 +60,10 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
   const handleAddShift = async () => {
     try {
       setIsProcessing(true);
+      
+      // Log the action but don't show a toast message
       await logCalendarAction('open_add_shift_dialog');
-
-      console.log('Add shift button clicked, selectedDate:', selectedDate);
-
+      
       if (selectedDate) {
         // Format time to be at the start of business hours (9 AM)
         const startTime = new Date(selectedDate);
@@ -78,12 +73,7 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
         const endTime = new Date(startTime);
         endTime.setHours(startTime.getHours() + 8);
 
-        // If direct API call is needed before opening dialog
-        console.log('Preparing add shift operation:', {
-          start_time: startTime.toISOString(),
-          end_time: endTime.toISOString()
-        });
-        
+        // Record the intent in database without showing a toast
         await supabase.from('calendar_actions').insert({
           action_type: 'prepare_add_shift',
           date: selectedDate.toISOString(),
@@ -96,14 +86,8 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
       }
       
       if (onAddShift) {
-        console.log('Calling onAddShift callback');
-        onAddShift();
+        onAddShift(); // Call the parent component's handler to open the dialog
       }
-      
-      toast({
-        title: "Add Shift",
-        description: "Opening shift creation dialog",
-      });
     } catch (error) {
       console.error('Error in handleAddShift:', error);
       toast({
@@ -121,13 +105,12 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
   const handleAddEmployee = async () => {
     try {
       setIsProcessing(true);
+      
+      // Log the action but don't show a toast message
       await logCalendarAction('open_add_employee_dialog');
       
-      console.log('Add employee button clicked, selectedDate:', selectedDate);
-      
-      // Prepare data for future employee creation
       if (selectedDate) {
-        // Record the intent in database
+        // Record the intent in database without showing a toast
         await supabase.from('calendar_actions').insert({
           action_type: 'prepare_add_employee',
           date: selectedDate.toISOString(),
@@ -140,14 +123,8 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
       }
       
       if (onAddEmployee) {
-        console.log('Calling onAddEmployee callback');
         onAddEmployee();
       }
-      
-      toast({
-        title: "Add Employee",
-        description: "Opening employee creation dialog",
-      });
     } catch (error) {
       console.error('Error in handleAddEmployee:', error);
       toast({

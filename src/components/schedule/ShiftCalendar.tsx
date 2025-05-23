@@ -26,7 +26,7 @@ const ShiftCalendar = () => {
     isAdmin, 
     isManager, 
     isHR, 
-    handleAddShift, 
+    handleAddShift,
     isAddShiftOpen, 
     setIsAddShiftOpen, 
     selectedDay, 
@@ -65,7 +65,10 @@ const ShiftCalendar = () => {
         <DateActionMenu
           isOpen={isDateActionMenuOpen}
           onClose={() => setIsDateActionMenuOpen(false)}
-          onAddShift={() => setIsAddShiftOpen(true)}
+          onAddShift={() => {
+            console.log('DateActionMenu: Opening AddShiftSheet');
+            setIsAddShiftOpen(true);
+          }}
           onAddEmployee={() => console.log('Add employee clicked from mobile')}
           hasManagerAccess={isAdmin || isManager || isHR}
           selectedDate={selectedDay}
@@ -81,7 +84,10 @@ const ShiftCalendar = () => {
       
       {/* FAB for desktop view - positioned at bottom right */}
       <AddShiftFAB
-        onClick={() => handleAddShift(new Date())}
+        onClick={() => {
+          console.log('FAB clicked, setting selectedDay to current date');
+          handleAddShift(new Date());
+        }}
         isVisible={isAdmin || isManager || isHR}
       />
       
@@ -98,7 +104,10 @@ const ShiftCalendar = () => {
       <DateActionMenu
         isOpen={isDateActionMenuOpen}
         onClose={() => setIsDateActionMenuOpen(false)}
-        onAddShift={() => setIsAddShiftOpen(true)}
+        onAddShift={() => {
+          console.log('DateActionMenu: Opening AddShiftSheet from desktop');
+          setIsAddShiftOpen(true);
+        }}
         onAddEmployee={() => console.log('Add employee clicked from desktop')}
         hasManagerAccess={isAdmin || isManager || isHR}
         selectedDate={selectedDay}

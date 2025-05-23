@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { useEmployees } from '@/hooks/use-employees';
@@ -34,7 +33,7 @@ export const useShiftCalendarState = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   const [selectedShift, setSelectedShift] = useState<any | null>(null);
   
-  // New state for date action menu
+  // State for date action menu
   const [isDateActionMenuOpen, setIsDateActionMenuOpen] = useState(false);
   
   // Update visible days when the selected date or view changes
@@ -110,16 +109,13 @@ export const useShiftCalendarState = () => {
     setSelectedDate(newDate);
   };
 
-  // Shift management functions
+  // Shift management functions - updated for direct dialog opening
   const handleAddShift = (day: Date) => {
     console.log(`Opening add shift dialog for date: ${format(day, 'yyyy-MM-dd')}`);
     setSelectedDay(day);
-    setIsDateActionMenuOpen(true); // Open the date action menu first
-    
-    toast({
-      title: "Add shift",
-      description: `Adding shift for ${format(day, 'EEEE, MMM d')}`,
-    });
+
+    // Open the action menu first for better UX
+    setIsDateActionMenuOpen(true);
   };
 
   const handleSwapShift = (day: Date) => {
@@ -138,11 +134,6 @@ export const useShiftCalendarState = () => {
   // Handle adding shift to a specific employee
   const handleEmployeeAddShift = (employeeId: string, date: Date) => {
     console.log(`handleEmployeeAddShift called for employee ${employeeId} on date ${format(date, 'yyyy-MM-dd')}`);
-    
-    toast({
-      title: "Adding shift",
-      description: `Adding shift for employee on ${format(date, 'MMM d')}`,
-    });
     
     setSelectedEmployee(employeeId);
     setSelectedDay(date);
@@ -405,7 +396,7 @@ export const useShiftCalendarState = () => {
     user,
     toast,
     refetch,
-    // New properties for DateActionMenu
+    // Date action menu state
     isDateActionMenuOpen,
     setIsDateActionMenuOpen
   };
