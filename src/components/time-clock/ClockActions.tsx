@@ -52,7 +52,7 @@ const ClockActions = ({
     setIsPinDialogOpen(true);
   };
 
-  const handleShiftCompletion = (actionType: 'finish' | 'break') => {
+  const handleShiftCompletion = async (actionType: 'finish' | 'break') => {
     setPendingAction(actionType === 'finish' ? 'out' : 'break');
     setIsShiftCompletionOpen(false);
     setIsPinDialogOpen(true);
@@ -133,8 +133,8 @@ const ClockActions = ({
       <ShiftCompletionDialog
         isOpen={isShiftCompletionOpen}
         onClose={() => setIsShiftCompletionOpen(false)}
-        onFinishShift={() => handleShiftCompletion('finish')}
-        onGoOnBreak={() => handleShiftCompletion('break')}
+        onFinishShift={async () => handleShiftCompletion('finish')}
+        onGoOnBreak={async () => handleShiftCompletion('break')}
         employeeName={selectedEmployeeName}
         employeeAvatar={selectedEmployeeAvatar}
         isSubmitting={localProcessing}
@@ -146,7 +146,7 @@ const ClockActions = ({
         onClose={() => setIsPinDialogOpen(false)}
         onSuccess={handlePinSuccess}
         employeeName={selectedEmployeeName}
-        action={pendingAction || 'in'}
+        action={pendingAction === 'break' ? 'out' : (pendingAction || 'in')}
       />
 
       {/* Confirmation Dialog */}
@@ -154,7 +154,7 @@ const ClockActions = ({
         isOpen={isConfirmationOpen}
         onClose={() => setIsConfirmationOpen(false)}
         onConfirm={handleConfirmAction}
-        action={pendingAction || 'in'}
+        action={pendingAction === 'break' ? 'break' : (pendingAction || 'in')}
         employeeName={selectedEmployeeName}
         employeeAvatar={selectedEmployeeAvatar}
         isSubmitting={isProcessing || localProcessing}
