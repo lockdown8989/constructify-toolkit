@@ -3,8 +3,8 @@ import React from 'react';
 import { Employee } from '@/components/dashboard/salary-table/types';
 import CurrentDateTime from '@/components/dashboard/CurrentDateTime';
 import DashboardStatsSection from '@/components/dashboard/DashboardStatsSection';
-import DashboardProgressSection from '@/components/dashboard/DashboardProgressSection';
 import DashboardMainContent from '@/components/dashboard/DashboardMainContent';
+import AttendanceOverview from '@/components/dashboard/AttendanceOverview';
 
 interface ManagerDashboardProps {
   firstName: string;
@@ -23,7 +23,6 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
   firstName,
   employeeCount,
   hiredCount,
-  interviewStats,
   salaryEmployees
 }) => {
   return (
@@ -33,8 +32,8 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
         <CurrentDateTime className="md:w-auto w-full mt-4 md:mt-0" />
       </div>
       
-      {/* Progress Bars - Only show for managers */}
-      <DashboardProgressSection interviewStats={interviewStats} />
+      {/* Replace Progress Bars with Real-time Attendance Overview */}
+      <AttendanceOverview />
       
       {/* Stats */}
       <DashboardStatsSection 
