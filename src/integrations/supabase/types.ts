@@ -137,6 +137,59 @@ export type Database = {
         }
         Relationships: []
       }
+      availability_patterns: {
+        Row: {
+          created_at: string | null
+          day_of_week: number
+          effective_from: string | null
+          effective_until: string | null
+          employee_id: string
+          end_time: string
+          id: string
+          is_available: boolean | null
+          max_hours: number | null
+          preferences: Json | null
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week: number
+          effective_from?: string | null
+          effective_until?: string | null
+          employee_id: string
+          end_time: string
+          id?: string
+          is_available?: boolean | null
+          max_hours?: number | null
+          preferences?: Json | null
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number
+          effective_from?: string | null
+          effective_until?: string | null
+          employee_id?: string
+          end_time?: string
+          id?: string
+          is_available?: boolean | null
+          max_hours?: number | null
+          preferences?: Json | null
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_patterns_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       availability_requests: {
         Row: {
           audit_log: Json | null
@@ -478,6 +531,44 @@ export type Database = {
           stage?: string
         }
         Relationships: []
+      }
+      labor_costs: {
+        Row: {
+          base_cost: number
+          break_cost: number | null
+          calculated_at: string | null
+          id: string
+          overtime_cost: number | null
+          schedule_id: string
+          total_cost: number
+        }
+        Insert: {
+          base_cost: number
+          break_cost?: number | null
+          calculated_at?: string | null
+          id?: string
+          overtime_cost?: number | null
+          schedule_id: string
+          total_cost: number
+        }
+        Update: {
+          base_cost?: number
+          break_cost?: number | null
+          calculated_at?: string | null
+          id?: string
+          overtime_cost?: number | null
+          schedule_id?: string
+          total_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "labor_costs_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leave_calendar: {
         Row: {
@@ -953,6 +1044,57 @@ export type Database = {
           },
         ]
       }
+      schedule_conflicts: {
+        Row: {
+          conflict_details: Json
+          conflict_type: string
+          created_at: string | null
+          id: string
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          schedule_id: string
+          severity: string | null
+        }
+        Insert: {
+          conflict_details: Json
+          conflict_type: string
+          created_at?: string | null
+          id?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          schedule_id: string
+          severity?: string | null
+        }
+        Update: {
+          conflict_details?: Json
+          conflict_type?: string
+          created_at?: string | null
+          id?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          schedule_id?: string
+          severity?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_conflicts_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_conflicts_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schedule_templates: {
         Row: {
           color: string | null
@@ -1000,18 +1142,24 @@ export type Database = {
       }
       schedules: {
         Row: {
+          break_duration: number | null
           calendar_id: string | null
           color: string | null
+          cost_center: string | null
+          coworkers: string[] | null
           created_at: string
           created_platform: string | null
           drag_disabled: boolean | null
           employee_id: string | null
           end_time: string
+          estimated_cost: number | null
+          hourly_rate: number | null
           id: string
           last_dragged_at: string | null
           last_dragged_by: string | null
           last_modified_platform: string | null
           location: string | null
+          manager_id: string | null
           mobile_friendly_view: Json | null
           mobile_notification_sent: boolean | null
           notes: string | null
@@ -1019,6 +1167,7 @@ export type Database = {
           published: boolean | null
           recurrence_pattern: Json | null
           recurring: boolean | null
+          requirements: Json | null
           shift_type: string | null
           start_time: string
           status: Database["public"]["Enums"]["shift_status"] | null
@@ -1026,18 +1175,24 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          break_duration?: number | null
           calendar_id?: string | null
           color?: string | null
+          cost_center?: string | null
+          coworkers?: string[] | null
           created_at?: string
           created_platform?: string | null
           drag_disabled?: boolean | null
           employee_id?: string | null
           end_time: string
+          estimated_cost?: number | null
+          hourly_rate?: number | null
           id?: string
           last_dragged_at?: string | null
           last_dragged_by?: string | null
           last_modified_platform?: string | null
           location?: string | null
+          manager_id?: string | null
           mobile_friendly_view?: Json | null
           mobile_notification_sent?: boolean | null
           notes?: string | null
@@ -1045,6 +1200,7 @@ export type Database = {
           published?: boolean | null
           recurrence_pattern?: Json | null
           recurring?: boolean | null
+          requirements?: Json | null
           shift_type?: string | null
           start_time: string
           status?: Database["public"]["Enums"]["shift_status"] | null
@@ -1052,18 +1208,24 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          break_duration?: number | null
           calendar_id?: string | null
           color?: string | null
+          cost_center?: string | null
+          coworkers?: string[] | null
           created_at?: string
           created_platform?: string | null
           drag_disabled?: boolean | null
           employee_id?: string | null
           end_time?: string
+          estimated_cost?: number | null
+          hourly_rate?: number | null
           id?: string
           last_dragged_at?: string | null
           last_dragged_by?: string | null
           last_modified_platform?: string | null
           location?: string | null
+          manager_id?: string | null
           mobile_friendly_view?: Json | null
           mobile_notification_sent?: boolean | null
           notes?: string | null
@@ -1071,6 +1233,7 @@ export type Database = {
           published?: boolean | null
           recurrence_pattern?: Json | null
           recurring?: boolean | null
+          requirements?: Json | null
           shift_type?: string | null
           start_time?: string
           status?: Database["public"]["Enums"]["shift_status"] | null
@@ -1083,6 +1246,48 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedules_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_requirements: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_mandatory: boolean | null
+          requirement_type: string
+          requirement_value: string
+          schedule_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_mandatory?: boolean | null
+          requirement_type: string
+          requirement_value: string
+          schedule_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_mandatory?: boolean | null
+          requirement_type?: string
+          requirement_value?: string
+          schedule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_requirements_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
             referencedColumns: ["id"]
           },
         ]
@@ -1148,6 +1353,59 @@ export type Database = {
             columns: ["requester_schedule_id"]
             isOneToOne: false
             referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_templates: {
+        Row: {
+          break_duration: number | null
+          created_at: string | null
+          created_by: string | null
+          days_of_week: number[]
+          end_time: string
+          id: string
+          location: string | null
+          name: string
+          requirements: Json | null
+          role: string | null
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          break_duration?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          days_of_week: number[]
+          end_time: string
+          id?: string
+          location?: string | null
+          name: string
+          requirements?: Json | null
+          role?: string | null
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          break_duration?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          days_of_week?: number[]
+          end_time?: string
+          id?: string
+          location?: string | null
+          name?: string
+          requirements?: Json | null
+          role?: string | null
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
         ]
@@ -1249,9 +1507,26 @@ export type Database = {
         }
         Returns: number
       }
+      calculate_labor_cost: {
+        Args: {
+          p_schedule_id: string
+          p_hourly_rate: number
+          p_start_time: string
+          p_end_time: string
+          p_break_duration?: number
+        }
+        Returns: number
+      }
       delete_user: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      detect_schedule_conflicts: {
+        Args: { p_schedule_id: string }
+        Returns: {
+          conflict_type: string
+          details: Json
+        }[]
       }
       has_role: {
         Args:
