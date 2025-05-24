@@ -13,7 +13,6 @@ export const useClockActions = () => {
 
   const handleSelectEmployee = (employeeId: string) => {
     setSelectedEmployee(employeeId);
-    // Reset action when selecting a new employee
     setAction(null);
   };
 
@@ -49,7 +48,6 @@ export const useClockActions = () => {
       
       if (clockAction === 'in') {
         // Check if there's already an active session for today
-        // Include both manager-initiated and regular sessions in our check
         const { data: existingRecord, error: checkError } = await supabase
           .from('attendance')
           .select('id, active_session')
@@ -79,7 +77,7 @@ export const useClockActions = () => {
           .insert({
             employee_id: selectedEmployee,
             date: today,
-            check_in: now.toISOString(), // Use ISO string to preserve timezone information
+            check_in: now.toISOString(),
             active_session: true,
             attendance_status: 'Present',
             device_info: deviceInfo,
@@ -100,9 +98,7 @@ export const useClockActions = () => {
           description: `Employee clocked in at ${format(now, 'h:mm a')}`,
         });
       } else {
-        // Find active session - check for any active session regardless of who initiated it
-        console.log('Finding active session for employee:', selectedEmployee);
-        
+        // Find active session
         const { data: activeSession, error: findError } = await supabase
           .from('attendance')
           .select('*')
@@ -115,8 +111,6 @@ export const useClockActions = () => {
           console.error('Error finding active session:', findError);
           throw new Error('Failed to find active session');
         }
-        
-        console.log('Active session search result:', activeSession);
           
         if (!activeSession) {
           toast({
@@ -130,20 +124,14 @@ export const useClockActions = () => {
         
         // Calculate working minutes
         const checkInTime = new Date(activeSession.check_in);
-        console.log('Check-in time from DB:', activeSession.check_in);
-        console.log('Parsed check-in time:', checkInTime.toLocaleString());
-        
         const workingMinutes = Math.round((now.getTime() - checkInTime.getTime()) / (1000 * 60));
-        const overtimeMinutes = Math.max(0, workingMinutes - 480); // Over 8 hours
-        
-        console.log('Clocking out record ID:', activeSession.id);
-        console.log('Working minutes calculated:', workingMinutes);
+        const overtimeMinutes = Math.max(0, workingMinutes - 480);
         
         // Clock out
         const { error: updateError } = await supabase
           .from('attendance')
           .update({
-            check_out: now.toISOString(), // Use ISO string to preserve timezone information
+            check_out: now.toISOString(),
             active_session: false,
             working_minutes: workingMinutes - overtimeMinutes,
             overtime_minutes: overtimeMinutes,
@@ -165,7 +153,6 @@ export const useClockActions = () => {
         });
       }
 
-      // Reset action after successful operation with a delay for visual feedback
       setTimeout(() => {
         setAction(null);
         setIsProcessing(false);
@@ -178,10 +165,89 @@ export const useClockActions = () => {
         description: error.message || "There was an error processing the clock action",
         variant: "destructive",
       });
-      // Reset action state immediately on error
       setAction(null);
       setIsProcessing(false);
-      throw error; // Rethrow to allow handling in the component
+      throw error;
+    }
+  };
+
+  const handleBreakAction = async (breakAction: 'start' | 'end') => {
+    if (!selectedEmployee) {
+      toast({
+        title: "No employee selected",
+        description: "Please select an employee first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      const deviceInfo = `Manager Dashboard - ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}`;
+      
+      // Find active session
+      const { data: activeSession, error: findError } = await supabase
+        .from('attendance')
+        .select('*')
+        .eq('employee_id', selectedEmployee)
+        .eq('date', today)
+        .eq('active_session', true)
+        .maybeSingle();
+        
+      if (findError) {
+        console.error('Error finding active session:', findError);
+        throw new Error('Failed to find active session');
+      }
+        
+      if (!activeSession) {
+        toast({
+          title: "No active session",
+          description: "This employee is not clocked in",
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      if (breakAction === 'start') {
+        // Start break
+        const { error: updateError } = await supabase
+          .from('attendance')
+          .update({
+            break_start: now.toISOString(),
+            device_info: deviceInfo,
+            notes: (activeSession.notes || '') + ` | Break started by manager at ${format(now, 'h:mm a')}`
+          })
+          .eq('id', activeSession.id);
+          
+        if (updateError) {
+          console.error('Error starting break:', updateError);
+          throw new Error('Failed to start break: ' + updateError.message);
+        }
+        
+        toast({
+          title: "Break Started",
+          description: `Employee started break at ${format(now, 'h:mm a')}`,
+        });
+      }
+
+      setTimeout(() => {
+        setAction(null);
+        setIsProcessing(false);
+      }, 2000);
+      
+    } catch (error: any) {
+      console.error('Error with break action:', error);
+      toast({
+        title: "Error",
+        description: error.message || "There was an error processing the break action",
+        variant: "destructive",
+      });
+      setAction(null);
+      setIsProcessing(false);
+      throw error;
     }
   };
 
@@ -191,6 +257,7 @@ export const useClockActions = () => {
     isProcessing,
     handleSelectEmployee,
     handleClockAction,
+    handleBreakAction,
     setSelectedEmployee,
     setAction
   };

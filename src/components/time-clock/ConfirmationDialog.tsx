@@ -32,7 +32,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
     switch (action) {
       case 'in': return 'clocked in';
       case 'out': return 'clocked out';
-      case 'break': return 'on break';
+      case 'break': return 'going on break';
       default: return '';
     }
   };
@@ -58,10 +58,8 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   const handleConfirm = async () => {
     try {
       await onConfirm();
-      // onClose will be called by the parent component on success
     } catch (error) {
       console.error('Error in confirmation:', error);
-      // Always close the dialog on error to prevent getting stuck
       onClose();
     }
   };
@@ -107,7 +105,11 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
               Cancel
             </Button>
             <Button 
-              className={`w-full ${action === 'in' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-red-600 hover:bg-red-700'}`}
+              className={`w-full ${
+                action === 'in' ? 'bg-emerald-500 hover:bg-emerald-600' : 
+                action === 'break' ? 'bg-amber-500 hover:bg-amber-600' :
+                'bg-red-600 hover:bg-red-700'
+              }`}
               onClick={handleConfirm}
               disabled={isSubmitting}
             >

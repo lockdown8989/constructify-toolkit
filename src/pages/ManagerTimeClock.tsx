@@ -29,7 +29,8 @@ const ManagerTimeClock = () => {
     action,
     isProcessing,
     handleSelectEmployee,
-    handleClockAction
+    handleClockAction,
+    handleBreakAction
   } = useClockActions();
 
   // Update selected employee data when selection changes
@@ -127,6 +128,7 @@ const ManagerTimeClock = () => {
             selectedEmployeeName={selectedEmployeeData?.name || ''}
             selectedEmployeeAvatar={selectedEmployeeData?.avatar}
             onClockAction={handleClockAction}
+            onBreakAction={handleBreakAction}
             isProcessing={isProcessing}
           />
         </div>

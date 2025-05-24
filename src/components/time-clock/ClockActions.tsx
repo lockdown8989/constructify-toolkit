@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import PinCodeVerification from './PinCodeVerification';
 import ConfirmationDialog from './ConfirmationDialog';
+import ShiftCompletionDialog from './ShiftCompletionDialog';
 import { useToast } from '@/hooks/use-toast';
 
 interface ClockActionsProps {
@@ -11,6 +12,7 @@ interface ClockActionsProps {
   selectedEmployeeName: string;
   selectedEmployeeAvatar?: string;
   onClockAction: (action: 'in' | 'out') => Promise<void>;
+  onBreakAction?: (action: 'start' | 'end') => Promise<void>;
   isProcessing?: boolean;
 }
 
@@ -20,11 +22,13 @@ const ClockActions = ({
   selectedEmployeeName,
   selectedEmployeeAvatar,
   onClockAction,
+  onBreakAction,
   isProcessing
 }: ClockActionsProps) => {
   const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'in' | 'out' | null>(null);
+  const [isShiftCompletionOpen, setIsShiftCompletionOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'in' | 'out' | 'break' | null>(null);
   const [localProcessing, setLocalProcessing] = useState(false);
   const { toast } = useToast();
 
@@ -38,7 +42,19 @@ const ClockActions = ({
       return;
     }
     
+    // For clock out, show the shift completion dialog instead of going straight to PIN
+    if (clickAction === 'out') {
+      setIsShiftCompletionOpen(true);
+      return;
+    }
+    
     setPendingAction(clickAction);
+    setIsPinDialogOpen(true);
+  };
+
+  const handleShiftCompletion = (actionType: 'finish' | 'break') => {
+    setPendingAction(actionType === 'finish' ? 'out' : 'break');
+    setIsShiftCompletionOpen(false);
     setIsPinDialogOpen(true);
   };
 
@@ -53,18 +69,28 @@ const ClockActions = ({
     if (pendingAction && !isProcessing && !localProcessing) {
       try {
         setLocalProcessing(true);
-        await onClockAction(pendingAction);
-        setIsConfirmationOpen(false);
         
-        // Show success toast
-        toast({
-          title: pendingAction === 'in' ? "Clocked In" : "Clocked Out",
-          description: `Employee has been successfully clocked ${pendingAction}`,
-          variant: "default",
-        });
+        if (pendingAction === 'break') {
+          if (onBreakAction) {
+            await onBreakAction('start');
+            toast({
+              title: "Break Started",
+              description: "Employee has started their break",
+              variant: "default",
+            });
+          }
+        } else {
+          await onClockAction(pendingAction);
+          toast({
+            title: pendingAction === 'in' ? "Clocked In" : "Clocked Out",
+            description: `Employee has been successfully clocked ${pendingAction}`,
+            variant: "default",
+          });
+        }
+        
+        setIsConfirmationOpen(false);
       } catch (error) {
         console.error('Error in clock action:', error);
-        // Dialog will be closed by ConfirmationDialog on error
       } finally {
         setLocalProcessing(false);
       }
@@ -91,7 +117,7 @@ const ClockActions = ({
                 onClick={() => handleActionClick('out')}
                 disabled={isProcessing || localProcessing}
               >
-                {(isProcessing || localProcessing) && pendingAction === 'out' ? 'Processing...' : 'OUT'}
+                {(isProcessing || localProcessing) && (pendingAction === 'out' || pendingAction === 'break') ? 'Processing...' : 'OUT'}
               </Button>
             </div>
           </>
@@ -102,6 +128,17 @@ const ClockActions = ({
           </div>
         )}
       </div>
+
+      {/* Shift Completion Dialog */}
+      <ShiftCompletionDialog
+        isOpen={isShiftCompletionOpen}
+        onClose={() => setIsShiftCompletionOpen(false)}
+        onFinishShift={() => handleShiftCompletion('finish')}
+        onGoOnBreak={() => handleShiftCompletion('break')}
+        employeeName={selectedEmployeeName}
+        employeeAvatar={selectedEmployeeAvatar}
+        isSubmitting={localProcessing}
+      />
 
       {/* PIN Verification Dialog */}
       <PinCodeVerification
