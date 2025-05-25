@@ -151,10 +151,9 @@ const ClockActions = ({
 
   const buttonLabels = getButtonLabel();
 
-  // Convert pending action for confirmation dialog
-  const getConfirmationAction = (): 'in' | 'out' | 'break' => {
-    if (pendingAction === 'end_break') return 'break';
-    if (pendingAction === 'break') return 'break';
+  // Convert pending action for confirmation dialog - fix type mismatch
+  const getConfirmationAction = (): 'in' | 'out' => {
+    if (pendingAction === 'end_break' || pendingAction === 'break') return 'in'; // Use 'in' as default for break actions
     return pendingAction as 'in' | 'out';
   };
 
