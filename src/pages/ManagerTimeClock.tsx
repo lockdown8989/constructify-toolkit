@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import DigitalClock from '@/components/time-clock/DigitalClock';
 import EmployeeList from '@/components/time-clock/EmployeeList';
 import ClockActions from '@/components/time-clock/ClockActions';
-import { useClockActions } from '@/components/time-clock/useClockActions';
+import { useClockActions } from '@/components/time-clock/useClockActions.tsx';
 import { useMediaQuery } from '@/hooks/use-media-query';
 
 const ManagerTimeClock = () => {

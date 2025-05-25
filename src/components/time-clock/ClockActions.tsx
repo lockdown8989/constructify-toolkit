@@ -1,11 +1,10 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import PinCodeVerification from './PinCodeVerification';
 import ConfirmationDialog from './ConfirmationDialog';
 import ShiftCompletionDialog from './ShiftCompletionDialog';
 import { useToast } from '@/hooks/use-toast';
-import type { EmployeeStatus } from './useClockActions';
+import type { EmployeeStatus } from './useClockActions.tsx';
 
 interface ClockActionsProps {
   selectedEmployee: string | null;
