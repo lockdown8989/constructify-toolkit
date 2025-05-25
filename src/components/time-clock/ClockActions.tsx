@@ -67,9 +67,8 @@ const ClockActions = ({
     }
 
     if (employeeStatus?.onBreak) {
-      // End break
-      setPendingAction('end_break');
-      setIsPinDialogOpen(true);
+      // End break - show dialog asking if they want to finish break or finish shift
+      setIsShiftCompletionOpen(true);
     } else if (employeeStatus?.isClockedIn) {
       // Start break
       setPendingAction('break');
@@ -81,7 +80,13 @@ const ClockActions = ({
     if (actionType === 'finish') {
       setPendingAction('out');
     } else {
-      setPendingAction('break');
+      if (employeeStatus?.onBreak) {
+        // If already on break, end the break
+        setPendingAction('end_break');
+      } else {
+        // Start break
+        setPendingAction('break');
+      }
     }
     setIsShiftCompletionOpen(false);
     setIsPinDialogOpen(true);
@@ -162,6 +167,27 @@ const ClockActions = ({
     return pendingAction as 'in' | 'out';
   };
 
+  // Get appropriate dialog title and message based on employee status
+  const getShiftCompletionProps = () => {
+    if (employeeStatus?.onBreak) {
+      return {
+        finishText: "FINISH SHIFT",
+        breakText: "FINISH BREAK",
+        title: "What would you like to do?",
+        subtitle: "You are currently on a break"
+      };
+    } else {
+      return {
+        finishText: "FINISHED MY SHIFT", 
+        breakText: "GOING ON A BREAK",
+        title: "What would you like to do?",
+        subtitle: "Choose your next action"
+      };
+    }
+  };
+
+  const shiftProps = getShiftCompletionProps();
+
   return (
     <>
       <div className="w-full max-w-lg text-center">
@@ -229,7 +255,7 @@ const ClockActions = ({
         )}
       </div>
 
-      {/* Shift Completion Dialog */}
+      {/* Enhanced Shift Completion Dialog */}
       <ShiftCompletionDialog
         isOpen={isShiftCompletionOpen}
         onClose={() => setIsShiftCompletionOpen(false)}
