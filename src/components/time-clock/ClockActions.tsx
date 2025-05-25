@@ -162,8 +162,9 @@ const ClockActions = ({
     return pendingAction as 'in' | 'out';
   };
 
-  const getPinAction = (): 'in' | 'out' | 'break' => {
-    if (pendingAction === 'end_break' || pendingAction === 'break') return 'break';
+  // Fix the pin action type issue by creating a proper type conversion
+  const getPinAction = (): 'in' | 'out' => {
+    if (pendingAction === 'end_break' || pendingAction === 'break') return 'in'; // Convert break actions to 'in' for PIN dialog
     return pendingAction as 'in' | 'out';
   };
 
