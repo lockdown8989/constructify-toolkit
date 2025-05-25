@@ -151,6 +151,18 @@ const ClockActions = ({
 
   const buttonLabels = getButtonLabel();
 
+  // Convert pending action for confirmation dialog
+  const getConfirmationAction = (): 'in' | 'out' | 'break' => {
+    if (pendingAction === 'end_break') return 'break';
+    if (pendingAction === 'break') return 'break';
+    return pendingAction as 'in' | 'out';
+  };
+
+  const getPinAction = (): 'in' | 'out' | 'break' => {
+    if (pendingAction === 'end_break' || pendingAction === 'break') return 'break';
+    return pendingAction as 'in' | 'out';
+  };
+
   return (
     <>
       <div className="w-full max-w-lg text-center">
@@ -235,7 +247,7 @@ const ClockActions = ({
         onClose={() => setIsPinDialogOpen(false)}
         onSuccess={handlePinSuccess}
         employeeName={selectedEmployeeName}
-        action={pendingAction === 'break' || pendingAction === 'end_break' ? 'break' : (pendingAction === 'out' ? 'out' : 'in')}
+        action={getPinAction()}
       />
 
       {/* Confirmation Dialog */}
@@ -243,7 +255,7 @@ const ClockActions = ({
         isOpen={isConfirmationOpen}
         onClose={() => setIsConfirmationOpen(false)}
         onConfirm={handleConfirmAction}
-        action={pendingAction === 'break' || pendingAction === 'end_break' ? 'break' : (pendingAction || 'in')}
+        action={getConfirmationAction()}
         employeeName={selectedEmployeeName}
         employeeAvatar={selectedEmployeeAvatar}
         isSubmitting={isProcessing || localProcessing}
