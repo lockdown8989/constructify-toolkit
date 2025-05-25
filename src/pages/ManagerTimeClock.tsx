@@ -28,6 +28,7 @@ const ManagerTimeClock = () => {
     selectedEmployee,
     action,
     isProcessing,
+    employeeStatus,
     handleSelectEmployee,
     handleClockAction,
     handleBreakAction
@@ -127,6 +128,7 @@ const ManagerTimeClock = () => {
             action={action}
             selectedEmployeeName={selectedEmployeeData?.name || ''}
             selectedEmployeeAvatar={selectedEmployeeData?.avatar}
+            employeeStatus={employeeStatus}
             onClockAction={handleClockAction}
             onBreakAction={handleBreakAction}
             isProcessing={isProcessing}

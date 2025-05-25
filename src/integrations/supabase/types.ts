@@ -15,6 +15,7 @@ export type Database = {
           attendance_status:
             | Database["public"]["Enums"]["attendance_status_type"]
             | null
+          break_end: string | null
           break_minutes: number | null
           break_start: string | null
           check_in: string | null
@@ -31,6 +32,7 @@ export type Database = {
           manager_initiated: boolean | null
           month_start_date: string | null
           notes: string | null
+          on_break: boolean | null
           overtime_approved_at: string | null
           overtime_approved_by: string | null
           overtime_minutes: number | null
@@ -44,6 +46,7 @@ export type Database = {
           attendance_status?:
             | Database["public"]["Enums"]["attendance_status_type"]
             | null
+          break_end?: string | null
           break_minutes?: number | null
           break_start?: string | null
           check_in?: string | null
@@ -60,6 +63,7 @@ export type Database = {
           manager_initiated?: boolean | null
           month_start_date?: string | null
           notes?: string | null
+          on_break?: boolean | null
           overtime_approved_at?: string | null
           overtime_approved_by?: string | null
           overtime_minutes?: number | null
@@ -73,6 +77,7 @@ export type Database = {
           attendance_status?:
             | Database["public"]["Enums"]["attendance_status_type"]
             | null
+          break_end?: string | null
           break_minutes?: number | null
           break_start?: string | null
           check_in?: string | null
@@ -89,6 +94,7 @@ export type Database = {
           manager_initiated?: boolean | null
           month_start_date?: string | null
           notes?: string | null
+          on_break?: boolean | null
           overtime_approved_at?: string | null
           overtime_approved_by?: string | null
           overtime_minutes?: number | null
@@ -1528,6 +1534,20 @@ export type Database = {
           details: Json
         }[]
       }
+      end_employee_break: {
+        Args: { p_attendance_id: string }
+        Returns: boolean
+      }
+      get_employee_attendance_status: {
+        Args: { p_employee_id: string }
+        Returns: {
+          attendance_id: string
+          is_clocked_in: boolean
+          on_break: boolean
+          check_in_time: string
+          break_start_time: string
+        }[]
+      }
       has_role: {
         Args:
           | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
@@ -1537,6 +1557,10 @@ export type Database = {
       safe_user_signout: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      start_employee_break: {
+        Args: { p_attendance_id: string }
+        Returns: boolean
       }
     }
     Enums: {
