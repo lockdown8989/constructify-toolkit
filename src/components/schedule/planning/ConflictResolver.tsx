@@ -4,44 +4,28 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useShiftPlanning } from '@/hooks/use-shift-planning';
-import { AlertTriangle, CheckCircle, Clock, Users, Calendar } from 'lucide-react';
-import { format } from 'date-fns';
+import { AlertTriangle, CheckCircle, Clock, User, Calendar } from 'lucide-react';
 
 const ConflictResolver: React.FC = () => {
   const { scheduleConflicts, resolveConflict, conflictsLoading } = useShiftPlanning();
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'bg-red-500';
-      case 'high': return 'bg-orange-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      case 'critical': return 'bg-red-500 text-white';
+      case 'high': return 'bg-orange-500 text-white';
+      case 'medium': return 'bg-yellow-500 text-white';
+      case 'low': return 'bg-blue-500 text-white';
+      default: return 'bg-gray-500 text-white';
     }
   };
 
-  const getConflictIcon = (type: string) => {
-    switch (type) {
-      case 'overlap': return <Calendar className="h-4 w-4" />;
-      case 'availability': return <Clock className="h-4 w-4" />;
-      case 'overtime': return <AlertTriangle className="h-4 w-4" />;
-      case 'skills': return <Users className="h-4 w-4" />;
-      default: return <AlertTriangle className="h-4 w-4" />;
-    }
-  };
-
-  const getConflictDescription = (conflict: any) => {
-    switch (conflict.conflict_type) {
-      case 'overlap':
-        return `Schedule overlaps with another shift from ${conflict.conflict_details.overlap_start} to ${conflict.conflict_details.overlap_end}`;
-      case 'availability':
-        return `Employee not available during this time period`;
-      case 'overtime':
-        return `This shift would result in overtime hours`;
-      case 'skills':
-        return `Employee doesn't meet the required skills for this shift`;
+  const getSeverityIcon = (severity: string) => {
+    switch (severity) {
+      case 'critical':
+      case 'high':
+        return <AlertTriangle className="h-4 w-4" />;
       default:
-        return 'Unknown conflict type';
+        return <Clock className="h-4 w-4" />;
     }
   };
 
@@ -53,76 +37,134 @@ const ConflictResolver: React.FC = () => {
     }
   };
 
-  if (conflictsLoading) {
-    return <div className="text-center py-8">Loading conflicts...</div>;
-  }
+  const formatConflictType = (type: string) => {
+    return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Schedule Conflicts</h2>
         <div className="flex items-center gap-2">
-          <Badge variant="destructive">{scheduleConflicts.length} unresolved</Badge>
+          <Badge variant="destructive">
+            {scheduleConflicts.length} Active Conflicts
+          </Badge>
         </div>
       </div>
 
-      {scheduleConflicts.length === 0 ? (
+      {conflictsLoading ? (
+        <div className="text-center py-8">Loading conflicts...</div>
+      ) : scheduleConflicts.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
-            <h3 className="text-lg font-semibold text-green-700">No Conflicts Detected!</h3>
-            <p className="text-gray-600">All schedules are properly aligned with employee availability and requirements.</p>
+          <CardContent className="text-center py-12">
+            <CheckCircle className="h-16 w-16 mx-auto text-green-600 mb-4" />
+            <h3 className="text-xl font-semibold text-green-600 mb-2">No Conflicts Detected!</h3>
+            <p className="text-gray-500">All schedules are properly organized with no conflicts.</p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
           {scheduleConflicts.map((conflict) => (
-            <Card key={conflict.id} className="border-l-4 border-red-500">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+            <Card key={conflict.id} className="border-l-4 border-l-red-500">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    {getConflictIcon(conflict.conflict_type)}
-                    <span className="capitalize">{conflict.conflict_type} Conflict</span>
-                    <Badge className={`${getSeverityColor(conflict.severity)} text-white`}>
-                      {conflict.severity}
+                    <Badge className={getSeverityColor(conflict.severity)}>
+                      {getSeverityIcon(conflict.severity)}
+                      <span className="ml-1">{conflict.severity.toUpperCase()}</span>
                     </Badge>
+                    <CardTitle className="text-lg">
+                      {formatConflictType(conflict.conflict_type)} Conflict
+                    </CardTitle>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {format(new Date(conflict.created_at), 'MMM dd, yyyy HH:mm')}
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-gray-700">{getConflictDescription(conflict)}</p>
-                
-                {/* Conflict Details */}
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <h4 className="font-medium mb-2">Details:</h4>
-                  <pre className="text-sm text-gray-600 whitespace-pre-wrap">
-                    {JSON.stringify(conflict.conflict_details, null, 2)}
-                  </pre>
-                </div>
-
-                {/* Resolution Actions */}
-                <div className="flex gap-2">
                   <Button 
                     size="sm" 
                     onClick={() => handleResolveConflict(conflict.id)}
                     disabled={resolveConflict.isPending}
                   >
-                    {resolveConflict.isPending ? 'Resolving...' : 'Mark as Resolved'}
+                    Resolve
                   </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium mb-1">Conflict Details:</p>
+                    <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                      {typeof conflict.conflict_details === 'object' ? (
+                        <pre className="whitespace-pre-wrap text-xs">
+                          {JSON.stringify(conflict.conflict_details, null, 2)}
+                        </pre>
+                      ) : (
+                        conflict.conflict_details
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Detected: {new Date(conflict.created_at).toLocaleDateString()}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {new Date(conflict.created_at).toLocaleTimeString()}
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {conflict.conflict_type}
+                  </Badge>
+                </div>
+
+                {/* Action buttons for specific conflict types */}
+                <div className="flex gap-2 pt-2 border-t">
                   <Button size="sm" variant="outline">
                     View Schedule
                   </Button>
                   <Button size="sm" variant="outline">
                     Suggest Fix
                   </Button>
+                  {conflict.severity === 'critical' && (
+                    <Button size="sm" variant="destructive">
+                      Auto-Resolve
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Conflict Summary */}
+      {scheduleConflicts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Conflict Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {['critical', 'high', 'medium', 'low'].map((severity) => {
+                const count = scheduleConflicts.filter(c => c.severity === severity).length;
+                return (
+                  <div key={severity} className="text-center">
+                    <div className={`text-2xl font-bold ${
+                      severity === 'critical' ? 'text-red-600' :
+                      severity === 'high' ? 'text-orange-600' :
+                      severity === 'medium' ? 'text-yellow-600' : 'text-blue-600'
+                    }`}>
+                      {count}
+                    </div>
+                    <div className="text-sm text-gray-500 capitalize">{severity}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

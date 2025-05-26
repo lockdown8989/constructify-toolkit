@@ -25,8 +25,10 @@ interface OpenShift {
   end_time: string;
   location?: string;
   status: 'draft' | 'published' | 'assigned';
-  applications: number;
+  applications_count?: number;
   requirements?: string[];
+  priority?: string;
+  department?: string;
 }
 
 interface OpenShiftManagerProps {
@@ -56,8 +58,10 @@ const OpenShiftManager: React.FC<OpenShiftManagerProps> = ({
       end_time: '2025-05-26T17:00:00Z',
       location: 'Main Floor',
       status: 'published',
-      applications: 3,
-      requirements: ['Customer Service', 'Cash Handling']
+      applications_count: 3,
+      requirements: ['Customer Service', 'Cash Handling'],
+      priority: 'high',
+      department: 'Restaurant'
     },
     {
       id: '2',
@@ -67,8 +71,10 @@ const OpenShiftManager: React.FC<OpenShiftManagerProps> = ({
       end_time: '2025-05-27T01:00:00Z',
       location: 'Kitchen',
       status: 'published',
-      applications: 1,
-      requirements: ['Food Safety', 'Team Work']
+      applications_count: 1,
+      requirements: ['Food Safety', 'Team Work'],
+      priority: 'normal',
+      department: 'Kitchen'
     },
     {
       id: '3',
@@ -78,8 +84,10 @@ const OpenShiftManager: React.FC<OpenShiftManagerProps> = ({
       end_time: '2025-05-31T18:00:00Z',
       location: 'All Areas',
       status: 'draft',
-      applications: 0,
-      requirements: ['Leadership', 'Problem Solving']
+      applications_count: 0,
+      requirements: ['Leadership', 'Problem Solving'],
+      priority: 'high',
+      department: 'Management'
     }
   ];
 
@@ -87,13 +95,32 @@ const OpenShiftManager: React.FC<OpenShiftManagerProps> = ({
   const draftShifts = openShifts.filter(shift => shift.status === 'draft');
   const assignedShifts = openShifts.filter(shift => shift.status === 'assigned');
 
+  const getPriorityColor = (priority?: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'normal': return 'bg-blue-100 text-blue-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   const ShiftCard = ({ shift }: { shift: OpenShift }) => (
     <Card className="mb-3">
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-3">
-          <div>
-            <h4 className="font-medium">{shift.title}</h4>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <h4 className="font-medium">{shift.title}</h4>
+              {shift.priority && (
+                <Badge className={getPriorityColor(shift.priority)} variant="secondary">
+                  {shift.priority}
+                </Badge>
+              )}
+            </div>
             <p className="text-sm text-gray-600">{shift.role}</p>
+            {shift.department && (
+              <p className="text-xs text-gray-500">{shift.department}</p>
+            )}
           </div>
           <Badge 
             variant={shift.status === 'published' ? 'default' : 
@@ -119,7 +146,7 @@ const OpenShiftManager: React.FC<OpenShiftManagerProps> = ({
           
           <div className="flex items-center text-gray-600">
             <Users className="h-4 w-4 mr-2" />
-            {shift.applications} applications
+            {shift.applications_count || 0} applications
           </div>
         </div>
 
@@ -147,14 +174,14 @@ const OpenShiftManager: React.FC<OpenShiftManagerProps> = ({
             </Button>
           )}
           
-          {shift.status === 'published' && shift.applications > 0 && (
+          {shift.status === 'published' && (shift.applications_count || 0) > 0 && (
             <Button 
               size="sm" 
               onClick={() => onAssignShift(shift.id)}
               variant="outline"
             >
               <Eye className="h-3 w-3 mr-1" />
-              View Applications
+              View Applications ({shift.applications_count})
             </Button>
           )}
           

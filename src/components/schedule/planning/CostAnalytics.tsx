@@ -2,184 +2,165 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useShiftPlanning } from '@/hooks/use-shift-planning';
-import { DollarSign, TrendingUp, Clock, AlertCircle } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { DollarSign, TrendingUp, Clock, Users } from 'lucide-react';
 
 const CostAnalytics: React.FC = () => {
   const { laborCosts, costsLoading } = useShiftPlanning();
 
-  if (costsLoading) {
-    return <div className="text-center py-8">Loading cost analytics...</div>;
-  }
-
-  // Calculate metrics
-  const totalCosts = laborCosts.reduce((sum, cost) => sum + cost.total_cost, 0);
-  const totalBaseCosts = laborCosts.reduce((sum, cost) => sum + cost.base_cost, 0);
-  const totalOvertimeCosts = laborCosts.reduce((sum, cost) => sum + cost.overtime_cost, 0);
-  const avgCostPerShift = laborCosts.length > 0 ? totalCosts / laborCosts.length : 0;
-  const overtimePercentage = totalCosts > 0 ? (totalOvertimeCosts / totalCosts) * 100 : 0;
-
-  // Prepare chart data
-  const costBreakdown = [
-    { name: 'Regular Hours', value: totalBaseCosts, color: '#3b82f6' },
-    { name: 'Overtime', value: totalOvertimeCosts, color: '#ef4444' },
-    { name: 'Break Time', value: laborCosts.reduce((sum, cost) => sum + cost.break_cost, 0), color: '#10b981' }
-  ];
-
-  // Daily cost trend (mock data for demonstration)
-  const dailyCosts = [
-    { day: 'Mon', cost: 1200 },
-    { day: 'Tue', cost: 1350 },
-    { day: 'Wed', cost: 1180 },
-    { day: 'Thu', cost: 1420 },
-    { day: 'Fri', cost: 1680 },
-    { day: 'Sat', cost: 1950 },
-    { day: 'Sun', cost: 1100 }
-  ];
+  // Calculate totals
+  const totalLaborCost = laborCosts.reduce((sum, cost) => sum + cost.total_cost, 0);
+  const totalOvertimeCost = laborCosts.reduce((sum, cost) => sum + cost.overtime_cost, 0);
+  const totalBaseCost = laborCosts.reduce((sum, cost) => sum + cost.base_cost, 0);
+  const overtimePercentage = totalLaborCost > 0 ? (totalOvertimeCost / totalLaborCost) * 100 : 0;
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Cost Analytics</h2>
-
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Labor Costs</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${totalCosts.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              This period
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overtime Costs</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">${totalOvertimeCosts.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              {overtimePercentage.toFixed(1)}% of total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Cost Per Shift</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${avgCostPerShift.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              Per scheduled shift
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cost Efficiency</CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">87%</div>
-            <p className="text-xs text-muted-foreground">
-              Budget utilization
-            </p>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Cost Analytics</h2>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Daily Cost Trend */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Daily Cost Trends</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={dailyCosts}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="day" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`$${value}`, 'Cost']} />
-                <Bar dataKey="cost" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {costsLoading ? (
+        <div className="text-center py-8">Loading cost analytics...</div>
+      ) : (
+        <>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Labor Cost</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${totalLaborCost.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">
+                  Across all schedules
+                </p>
+              </CardContent>
+            </Card>
 
-        {/* Cost Breakdown */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Cost Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={costBreakdown}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={(entry) => `${entry.name}: $${entry.value.toFixed(0)}`}
-                >
-                  {costBreakdown.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => `$${value}`} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Base Cost</CardTitle>
+                <Clock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${totalBaseCost.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">
+                  Regular hours cost
+                </p>
+              </CardContent>
+            </Card>
 
-      {/* Detailed Cost Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Cost Calculations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Schedule ID</th>
-                  <th className="text-left p-2">Base Cost</th>
-                  <th className="text-left p-2">Overtime</th>
-                  <th className="text-left p-2">Break Cost</th>
-                  <th className="text-left p-2">Total Cost</th>
-                  <th className="text-left p-2">Calculated</th>
-                </tr>
-              </thead>
-              <tbody>
-                {laborCosts.slice(0, 10).map((cost) => (
-                  <tr key={cost.id} className="border-b">
-                    <td className="p-2 font-mono text-xs">{cost.schedule_id.slice(0, 8)}...</td>
-                    <td className="p-2">${cost.base_cost.toFixed(2)}</td>
-                    <td className="p-2 text-red-600">${cost.overtime_cost.toFixed(2)}</td>
-                    <td className="p-2">${cost.break_cost.toFixed(2)}</td>
-                    <td className="p-2 font-semibold">${cost.total_cost.toFixed(2)}</td>
-                    <td className="p-2 text-gray-500">
-                      {new Date(cost.calculated_at).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Overtime Cost</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-orange-600">${totalOvertimeCost.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">
+                  {overtimePercentage.toFixed(1)}% of total cost
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Efficiency Score</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {Math.max(0, 100 - overtimePercentage).toFixed(0)}%
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Cost optimization
+                </p>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Detailed Cost Breakdown */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Cost Breakdown by Schedule</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {laborCosts.length === 0 ? (
+                <div className="text-center py-8">
+                  <DollarSign className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-500">No cost data available</p>
+                  <p className="text-sm text-gray-400 mt-2">
+                    Labor costs will appear here once schedules are created and calculated
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {laborCosts.map((cost) => (
+                    <div key={cost.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="font-medium">Schedule ID: {cost.schedule_id.slice(0, 8)}...</div>
+                        <div className="text-sm text-gray-500">
+                          Calculated: {new Date(cost.calculated_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="text-right space-y-1">
+                        <div className="font-bold">${cost.total_cost.toFixed(2)}</div>
+                        <div className="text-xs text-gray-500">
+                          Base: ${cost.base_cost.toFixed(2)} | 
+                          OT: ${cost.overtime_cost.toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Cost Optimization Tips */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Cost Optimization Tips</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {overtimePercentage > 20 && (
+                  <div className="flex items-start gap-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                    <TrendingUp className="h-5 w-5 text-orange-600 mt-0.5" />
+                    <div>
+                      <div className="font-medium text-orange-800">High Overtime Costs</div>
+                      <div className="text-sm text-orange-700">
+                        Consider hiring additional staff or redistributing shifts to reduce overtime expenses.
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <Clock className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <div className="font-medium text-blue-800">Schedule Optimization</div>
+                    <div className="text-sm text-blue-700">
+                      Use shift templates to standardize schedules and reduce planning time.
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <Users className="h-5 w-5 text-green-600 mt-0.5" />
+                  <div>
+                    <div className="font-medium text-green-800">Cross-Training Benefits</div>
+                    <div className="text-sm text-green-700">
+                      Cross-train employees to provide more scheduling flexibility and reduce coverage gaps.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   );
 };

@@ -538,6 +538,57 @@ export type Database = {
         }
         Relationships: []
       }
+      labor_analytics: {
+        Row: {
+          calculated_at: string | null
+          calculated_by: string | null
+          coverage_percentage: number | null
+          created_at: string | null
+          department: string | null
+          id: string
+          overtime_cost: number | null
+          overtime_hours: number | null
+          total_employees: number | null
+          total_labor_cost: number | null
+          total_scheduled_hours: number | null
+          updated_at: string | null
+          week_end_date: string
+          week_start_date: string
+        }
+        Insert: {
+          calculated_at?: string | null
+          calculated_by?: string | null
+          coverage_percentage?: number | null
+          created_at?: string | null
+          department?: string | null
+          id?: string
+          overtime_cost?: number | null
+          overtime_hours?: number | null
+          total_employees?: number | null
+          total_labor_cost?: number | null
+          total_scheduled_hours?: number | null
+          updated_at?: string | null
+          week_end_date: string
+          week_start_date: string
+        }
+        Update: {
+          calculated_at?: string | null
+          calculated_by?: string | null
+          coverage_percentage?: number | null
+          created_at?: string | null
+          department?: string | null
+          id?: string
+          overtime_cost?: number | null
+          overtime_hours?: number | null
+          total_employees?: number | null
+          total_labor_cost?: number | null
+          total_scheduled_hours?: number | null
+          updated_at?: string | null
+          week_end_date?: string
+          week_start_date?: string
+        }
+        Relationships: []
+      }
       labor_costs: {
         Row: {
           base_cost: number
@@ -730,9 +781,12 @@ export type Database = {
       }
       open_shifts: {
         Row: {
+          applications_count: number | null
+          auto_assign: boolean | null
           created_at: string | null
           created_by: string | null
           created_platform: string | null
+          department: string | null
           drag_disabled: boolean | null
           end_time: string
           expiration_date: string | null
@@ -741,19 +795,25 @@ export type Database = {
           last_dragged_by: string | null
           last_modified_platform: string | null
           location: string | null
+          minimum_experience: string | null
           mobile_friendly_view: Json | null
           mobile_notification_sent: boolean | null
           notes: string | null
+          notification_sent: boolean | null
           position_order: number | null
+          priority: string | null
           role: string | null
           start_time: string
           status: string
           title: string
         }
         Insert: {
+          applications_count?: number | null
+          auto_assign?: boolean | null
           created_at?: string | null
           created_by?: string | null
           created_platform?: string | null
+          department?: string | null
           drag_disabled?: boolean | null
           end_time: string
           expiration_date?: string | null
@@ -762,19 +822,25 @@ export type Database = {
           last_dragged_by?: string | null
           last_modified_platform?: string | null
           location?: string | null
+          minimum_experience?: string | null
           mobile_friendly_view?: Json | null
           mobile_notification_sent?: boolean | null
           notes?: string | null
+          notification_sent?: boolean | null
           position_order?: number | null
+          priority?: string | null
           role?: string | null
           start_time: string
           status?: string
           title: string
         }
         Update: {
+          applications_count?: number | null
+          auto_assign?: boolean | null
           created_at?: string | null
           created_by?: string | null
           created_platform?: string | null
+          department?: string | null
           drag_disabled?: boolean | null
           end_time?: string
           expiration_date?: string | null
@@ -783,10 +849,13 @@ export type Database = {
           last_dragged_by?: string | null
           last_modified_platform?: string | null
           location?: string | null
+          minimum_experience?: string | null
           mobile_friendly_view?: Json | null
           mobile_notification_sent?: boolean | null
           notes?: string | null
+          notification_sent?: boolean | null
           position_order?: number | null
+          priority?: string | null
           role?: string | null
           start_time?: string
           status?: string
@@ -1101,6 +1170,93 @@ export type Database = {
           },
         ]
       }
+      schedule_conflicts_log: {
+        Row: {
+          affected_employees: string[] | null
+          affected_schedules: string[] | null
+          auto_detected: boolean | null
+          conflict_type: string
+          created_at: string | null
+          description: string
+          detected_at: string | null
+          id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          affected_employees?: string[] | null
+          affected_schedules?: string[] | null
+          auto_detected?: boolean | null
+          conflict_type: string
+          created_at?: string | null
+          description: string
+          detected_at?: string | null
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          affected_employees?: string[] | null
+          affected_schedules?: string[] | null
+          auto_detected?: boolean | null
+          conflict_type?: string
+          created_at?: string | null
+          description?: string
+          detected_at?: string | null
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      schedule_publications: {
+        Row: {
+          created_at: string | null
+          employees_notified: string[] | null
+          id: string
+          notes: string | null
+          publication_date: string | null
+          published_by: string
+          schedules_count: number | null
+          week_end_date: string
+          week_start_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          employees_notified?: string[] | null
+          id?: string
+          notes?: string | null
+          publication_date?: string | null
+          published_by: string
+          schedules_count?: number | null
+          week_end_date: string
+          week_start_date: string
+        }
+        Update: {
+          created_at?: string | null
+          employees_notified?: string[] | null
+          id?: string
+          notes?: string | null
+          publication_date?: string | null
+          published_by?: string
+          schedules_count?: number | null
+          week_end_date?: string
+          week_start_date?: string
+        }
+        Relationships: []
+      }
       schedule_templates: {
         Row: {
           color: string | null
@@ -1148,6 +1304,9 @@ export type Database = {
       }
       schedules: {
         Row: {
+          approval_required: boolean | null
+          approved_at: string | null
+          approved_by: string | null
           break_duration: number | null
           calendar_id: string | null
           color: string | null
@@ -1161,6 +1320,7 @@ export type Database = {
           estimated_cost: number | null
           hourly_rate: number | null
           id: string
+          labor_cost_calculated: boolean | null
           last_dragged_at: string | null
           last_dragged_by: string | null
           last_modified_platform: string | null
@@ -1171,16 +1331,22 @@ export type Database = {
           notes: string | null
           position_order: number | null
           published: boolean | null
+          published_at: string | null
+          published_by: string | null
           recurrence_pattern: Json | null
           recurring: boolean | null
           requirements: Json | null
           shift_type: string | null
           start_time: string
           status: Database["public"]["Enums"]["shift_status"] | null
+          template_id: string | null
           title: string
           updated_at: string | null
         }
         Insert: {
+          approval_required?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
           break_duration?: number | null
           calendar_id?: string | null
           color?: string | null
@@ -1194,6 +1360,7 @@ export type Database = {
           estimated_cost?: number | null
           hourly_rate?: number | null
           id?: string
+          labor_cost_calculated?: boolean | null
           last_dragged_at?: string | null
           last_dragged_by?: string | null
           last_modified_platform?: string | null
@@ -1204,16 +1371,22 @@ export type Database = {
           notes?: string | null
           position_order?: number | null
           published?: boolean | null
+          published_at?: string | null
+          published_by?: string | null
           recurrence_pattern?: Json | null
           recurring?: boolean | null
           requirements?: Json | null
           shift_type?: string | null
           start_time: string
           status?: Database["public"]["Enums"]["shift_status"] | null
+          template_id?: string | null
           title: string
           updated_at?: string | null
         }
         Update: {
+          approval_required?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
           break_duration?: number | null
           calendar_id?: string | null
           color?: string | null
@@ -1227,6 +1400,7 @@ export type Database = {
           estimated_cost?: number | null
           hourly_rate?: number | null
           id?: string
+          labor_cost_calculated?: boolean | null
           last_dragged_at?: string | null
           last_dragged_by?: string | null
           last_modified_platform?: string | null
@@ -1237,12 +1411,15 @@ export type Database = {
           notes?: string | null
           position_order?: number | null
           published?: boolean | null
+          published_at?: string | null
+          published_by?: string | null
           recurrence_pattern?: Json | null
           recurring?: boolean | null
           requirements?: Json | null
           shift_type?: string | null
           start_time?: string
           status?: Database["public"]["Enums"]["shift_status"] | null
+          template_id?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -1259,6 +1436,70 @@ export type Database = {
             columns: ["manager_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedules_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_applications: {
+        Row: {
+          application_date: string | null
+          created_at: string | null
+          employee_id: string
+          id: string
+          message: string | null
+          open_shift_id: string
+          priority_score: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          application_date?: string | null
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          message?: string | null
+          open_shift_id: string
+          priority_score?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          application_date?: string | null
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          message?: string | null
+          open_shift_id?: string
+          priority_score?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_applications_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_applications_open_shift_id_fkey"
+            columns: ["open_shift_id"]
+            isOneToOne: false
+            referencedRelation: "open_shifts"
             referencedColumns: ["id"]
           },
         ]
@@ -1523,6 +1764,10 @@ export type Database = {
         }
         Returns: number
       }
+      calculate_weekly_labor_analytics: {
+        Args: { start_date: string; end_date: string; dept?: string }
+        Returns: undefined
+      }
       delete_user: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -1554,6 +1799,14 @@ export type Database = {
           | { _user_id: string; _role: string }
         Returns: boolean
       }
+      publish_weekly_schedule: {
+        Args: {
+          start_date: string
+          end_date: string
+          notification_message?: string
+        }
+        Returns: Json
+      }
       safe_user_signout: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -1564,7 +1817,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "hr" | "employee" | "employer"
+      app_role: "admin" | "hr" | "employee" | "employer" | "manager"
       attendance_report_status: "pending" | "sent" | "acknowledged"
       attendance_status_type:
         | "Pending"
@@ -1695,7 +1948,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "hr", "employee", "employer"],
+      app_role: ["admin", "hr", "employee", "employer", "manager"],
       attendance_report_status: ["pending", "sent", "acknowledged"],
       attendance_status_type: [
         "Pending",
