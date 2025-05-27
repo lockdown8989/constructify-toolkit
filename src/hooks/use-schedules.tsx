@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -14,7 +15,8 @@ export interface Schedule {
   notes?: string;
   status?: 'confirmed' | 'pending' | 'completed' | 'rejected';
   location?: string;
-  shift_type?: string; // Added this property
+  shift_type?: string;
+  published?: boolean; // Added this property to match the database schema
   mobile_friendly_view?: {
     font_size: 'small' | 'medium' | 'large';
     compact_view: boolean;
