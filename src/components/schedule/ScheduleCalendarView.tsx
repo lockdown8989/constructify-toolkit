@@ -3,7 +3,7 @@ import React from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Send } from 'lucide-react';
 import { Schedule } from '@/hooks/use-schedules';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useScheduleCalendar } from '@/hooks/use-schedule-calendar';
@@ -12,6 +12,7 @@ import { ShiftAssignmentDialog } from './ShiftAssignmentDialog';
 import { OpenShiftType } from '@/types/supabase/schedules';
 import ScheduleNotifications from './components/ScheduleNotifications';
 import ScheduleList from './components/ScheduleList';
+import { useToast } from '@/hooks/use-toast';
 
 interface ScheduleCalendarViewProps {
   date: Date | undefined;
@@ -35,6 +36,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
   isHR
 }) => {
   const isMobile = useIsMobile();
+  const { toast } = useToast();
   const { newSchedules, pendingSchedules } = useScheduleCalendar(schedules);
   const shiftAssignment = useShiftAssignmentDialog();
 
@@ -43,11 +45,45 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
       shiftAssignment.openDialog(openShift);
     }
   };
+
+  const handlePublishShifts = () => {
+    const unpublishedShifts = schedules.filter(s => !s.published);
+    
+    if (unpublishedShifts.length === 0) {
+      toast({
+        title: "No unpublished shifts",
+        description: "All shifts are already published to employees.",
+        variant: "default"
+      });
+      return;
+    }
+
+    toast({
+      title: "Publishing shifts",
+      description: `Publishing ${unpublishedShifts.length} shifts to employees...`,
+    });
+
+    // TODO: Implement actual publishing logic with Supabase
+    // This would typically update the published status and send notifications
+  };
   
   return (
     <>
       <div className="bg-white rounded-3xl p-4 sm:p-6 card-shadow">
-        <h2 className="text-lg sm:text-xl font-medium mb-4">Company Calendar</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg sm:text-xl font-medium">Schedule Calendar</h2>
+          
+          {(isAdmin || isHR) && (
+            <Button 
+              onClick={handlePublishShifts}
+              className="bg-green-600 hover:bg-green-700 text-white"
+              size={isMobile ? "sm" : "default"}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Publish Shifts
+            </Button>
+          )}
+        </div>
         
         <ScheduleNotifications 
           newSchedules={Object.keys(newSchedules).map(id => 

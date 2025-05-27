@@ -29,7 +29,7 @@ const ManagerSection = ({ hasManagerialAccess, onClose }: ManagerSectionProps) =
       <MobileNavLink
         to="/shift-calendar"
         icon={Calendar}
-        label="📆 Employee Schedule"
+        label="📆 Schedule Calendar"
         onClick={onClose}
       />
       
