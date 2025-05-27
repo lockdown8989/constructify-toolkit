@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useEmployees } from "@/hooks/use-employees";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Clock, CalendarDays, MapPin, Send } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AddShiftSheetProps {
   isOpen: boolean;
@@ -94,7 +95,7 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
     return errors;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -111,16 +112,52 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Submit the form data with published status
-      const shiftData = {
-        ...formData,
-        published: true, // Always publish manager-created shifts
-        status: 'confirmed',
-        created_by_manager: true
-      };
-      
-      onSubmit(shiftData);
-      
+      // If no employee is selected, create as open shift
+      if (!formData.employee_id) {
+        // Create open shift
+        const { data: openShiftData, error: openShiftError } = await supabase
+          .from('open_shifts')
+          .insert({
+            title: formData.title,
+            role: formData.role || null,
+            start_time: formData.start_time,
+            end_time: formData.end_time,
+            location: formData.location || null,
+            notes: formData.notes || null,
+            status: 'open',
+            department: formData.department || null,
+            priority: 'normal',
+            created_platform: 'desktop',
+            mobile_notification_sent: false
+          })
+          .select()
+          .single();
+
+        if (openShiftError) throw openShiftError;
+
+        toast({
+          title: "Open shift published successfully",
+          description: "The shift has been created and is now available for employees to claim.",
+          variant: "default"
+        });
+      } else {
+        // Create regular schedule for assigned employee
+        const shiftData = {
+          ...formData,
+          published: true,
+          status: 'confirmed',
+          created_by_manager: true
+        };
+        
+        onSubmit(shiftData);
+        
+        toast({
+          title: "Shift published successfully",
+          description: "The shift has been created and published to the employee.",
+          variant: "default"
+        });
+      }
+
       // Reset form
       setFormData({
         title: '',
@@ -135,11 +172,14 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
         shift_type: 'regular'
       });
       
+      // Close the sheet
+      onOpenChange(false);
+      
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error("Error creating shift:", error);
       toast({
         title: "Error",
-        description: "Failed to add shift. Please try again.",
+        description: "Failed to create shift. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -177,16 +217,17 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
           
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="employee" className="text-right">
-              Employee
+              Assign to
             </Label>
             <Select 
               value={formData.employee_id}
               onValueChange={(value) => handleChange('employee_id', value)}
             >
               <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Select an employee (optional)" />
+                <SelectValue placeholder="Leave empty for open shift" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Create as Open Shift</SelectItem>
                 {employees.map(employee => (
                   <SelectItem key={employee.id} value={employee.id}>
                     {employee.name}
@@ -299,7 +340,12 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="text-sm font-medium text-green-700">Auto-Publish to Employees</h4>
-                <p className="text-xs text-green-600">This shift will be immediately visible to employees</p>
+                <p className="text-xs text-green-600">
+                  {!formData.employee_id 
+                    ? "This shift will be published as an open shift for employees to claim"
+                    : "This shift will be immediately visible to the assigned employee"
+                  }
+                </p>
               </div>
               <div className="flex items-center">
                 <Switch
@@ -331,7 +377,8 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
             className="bg-green-600 hover:bg-green-700 text-white"
           >
             <Send className="h-4 w-4 mr-2" />
-            {isSubmitting ? "Publishing..." : "Publish Shift"}
+            {isSubmitting ? "Publishing..." : 
+             !formData.employee_id ? "Publish Open Shift" : "Publish Shift"}
           </Button>
         </SheetFooter>
       </SheetContent>

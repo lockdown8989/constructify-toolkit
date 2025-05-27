@@ -15,6 +15,7 @@ import ScheduleList from './components/ScheduleList';
 import { useToast } from '@/hooks/use-toast';
 import AddShiftSheet from './components/AddShiftSheet';
 import DateActionDialog from './components/DateActionDialog';
+import { useOpenShifts } from '@/hooks/use-open-shifts';
 
 interface ScheduleCalendarViewProps {
   date: Date | undefined;
@@ -41,6 +42,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
   const { toast } = useToast();
   const { newSchedules, pendingSchedules } = useScheduleCalendar(schedules);
   const shiftAssignment = useShiftAssignmentDialog();
+  const { openShifts, isLoading: openShiftsLoading } = useOpenShifts();
   
   const [isAddShiftOpen, setIsAddShiftOpen] = useState(false);
   const [isDateActionOpen, setIsDateActionOpen] = useState(false);
@@ -108,6 +110,9 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
 
       // Close the sheet
       setIsAddShiftOpen(false);
+      
+      // Refresh the page to show new open shifts
+      window.location.reload();
     } catch (error) {
       console.error('Error creating shift:', error);
       toast({
