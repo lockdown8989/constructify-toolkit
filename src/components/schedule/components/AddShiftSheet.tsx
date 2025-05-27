@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import {
@@ -18,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useEmployees } from "@/hooks/use-employees";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Clock, CalendarDays, MapPin } from "lucide-react";
+import { AlertCircle, Clock, CalendarDays, MapPin, Send } from "lucide-react";
 
 interface AddShiftSheetProps {
   isOpen: boolean;
@@ -28,10 +27,13 @@ interface AddShiftSheetProps {
   isMobile: boolean;
 }
 
-const AddShiftSheet: React.FC<AddShiftSheetProps> = ({ isOpen, onOpenChange, onSubmit, currentDate, isMobile }) => {
-  // Log props for debugging
-  console.log('AddShiftSheet rendered with props:', { isOpen, currentDate, isMobile });
-  
+const AddShiftSheet: React.FC<AddShiftSheetProps> = ({ 
+  isOpen, 
+  onOpenChange, 
+  onSubmit, 
+  currentDate, 
+  isMobile 
+}) => {
   const [formData, setFormData] = useState({
     title: '',
     role: '',
@@ -39,8 +41,10 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({ isOpen, onOpenChange, onS
     end_time: '',
     notes: '',
     location: '',
-    published: true,
-    employee_id: ''
+    published: true, // Default to published for manager-created shifts
+    employee_id: '',
+    department: '',
+    shift_type: 'regular'
   });
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,28 +59,19 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({ isOpen, onOpenChange, onS
     
     setFormData(prev => ({
       ...prev,
-      title: prev.title || '', // Keep existing title if any
+      title: prev.title || '',
       start_time: `${dateStr}T${String(defaultStartHour).padStart(2, '0')}:00:00`,
       end_time: `${dateStr}T${String(defaultEndHour).padStart(2, '0')}:00:00`
     }));
     
-    // Reset form errors when opening the sheet
     if (isOpen) {
-      console.log('Sheet is open, resetting form errors');
       setFormErrors({});
     }
   }, [currentDate, isOpen]);
 
-  // Debug when isOpen changes
-  useEffect(() => {
-    console.log(`AddShiftSheet isOpen changed to: ${isOpen}`);
-  }, [isOpen]);
-
   const handleChange = (field: string, value: any) => {
-    // Clear the error for this field when user changes it
     setFormErrors(prev => ({ ...prev, [field]: undefined }));
     setFormData(prev => ({ ...prev, [field]: value }));
-    console.log(`Form field ${field} changed to:`, value);
   };
 
   const validateForm = () => {
@@ -100,9 +95,6 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({ isOpen, onOpenChange, onS
   };
 
   const handleSubmit = () => {
-    console.log("Validating form data:", formData);
-    
-    // Validate form
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -119,17 +111,15 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({ isOpen, onOpenChange, onS
     setIsSubmitting(true);
     
     try {
-      console.log('Submitting form with data:', formData);
+      // Submit the form data with published status
+      const shiftData = {
+        ...formData,
+        published: true, // Always publish manager-created shifts
+        status: 'confirmed',
+        created_by_manager: true
+      };
       
-      // Submit the form data
-      onSubmit(formData);
-      
-      // Show success message
-      toast({
-        title: "Shift added",
-        description: `Shift has been successfully added to the schedule.`,
-        variant: "default"
-      });
+      onSubmit(shiftData);
       
       // Reset form
       setFormData({
@@ -140,11 +130,11 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({ isOpen, onOpenChange, onS
         notes: '',
         location: '',
         published: true,
-        employee_id: ''
+        employee_id: '',
+        department: '',
+        shift_type: 'regular'
       });
       
-      // Close the sheet
-      onOpenChange(false);
     } catch (error) {
       console.error("Error submitting form:", error);
       toast({
@@ -159,11 +149,14 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({ isOpen, onOpenChange, onS
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[80vh]" : ""}>
+      <SheetContent side={isMobile ? "bottom" : "right"} className={isMobile ? "h-[90vh]" : ""}>
         <SheetHeader>
-          <SheetTitle>Add New Shift</SheetTitle>
+          <SheetTitle className="flex items-center gap-2">
+            <Send className="h-5 w-5 text-green-600" />
+            Create Published Shift
+          </SheetTitle>
           <SheetDescription>
-            Create a new shift for {format(currentDate, 'MMMM d, yyyy')}
+            Create a new shift for {format(currentDate, 'MMMM d, yyyy')} that will be published to employees
           </SheetDescription>
         </SheetHeader>
         
@@ -211,9 +204,30 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({ isOpen, onOpenChange, onS
               id="role"
               value={formData.role}
               onChange={(e) => handleChange('role', e.target.value)}
-              placeholder="e.g. Front Desk, Cook"
+              placeholder="e.g. Sales Associate"
               className="col-span-3"
             />
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="department" className="text-right">
+              Department
+            </Label>
+            <Select 
+              value={formData.department}
+              onValueChange={(value) => handleChange('department', value)}
+            >
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Sales">Sales</SelectItem>
+                <SelectItem value="Customer Service">Customer Service</SelectItem>
+                <SelectItem value="Marketing">Marketing</SelectItem>
+                <SelectItem value="Operations">Operations</SelectItem>
+                <SelectItem value="HR">HR</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="bg-blue-50 p-3 rounded-md border border-blue-100">
@@ -281,19 +295,19 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({ isOpen, onOpenChange, onS
             />
           </div>
           
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="published" className="text-right">
-              Publish to Calendar
-            </Label>
-            <div className="col-span-3 flex items-center">
-              <Switch
-                id="published"
-                checked={formData.published}
-                onCheckedChange={(checked) => handleChange('published', checked)}
-              />
-              <span className="ml-2 text-sm text-gray-500">
-                {formData.published ? "Will appear on calendar" : "Draft only"}
-              </span>
+          <div className="bg-green-50 p-3 rounded-md border border-green-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-medium text-green-700">Auto-Publish to Employees</h4>
+                <p className="text-xs text-green-600">This shift will be immediately visible to employees</p>
+              </div>
+              <div className="flex items-center">
+                <Switch
+                  id="published"
+                  checked={formData.published}
+                  onCheckedChange={(checked) => handleChange('published', checked)}
+                />
+              </div>
             </div>
           </div>
           
@@ -314,9 +328,10 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({ isOpen, onOpenChange, onS
           <Button 
             onClick={handleSubmit} 
             disabled={isSubmitting}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-green-600 hover:bg-green-700 text-white"
           >
-            {isSubmitting ? "Adding..." : "Add Shift"}
+            <Send className="h-4 w-4 mr-2" />
+            {isSubmitting ? "Publishing..." : "Publish Shift"}
           </Button>
         </SheetFooter>
       </SheetContent>

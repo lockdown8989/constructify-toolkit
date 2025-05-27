@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import { OpenShiftType } from '@/types/supabase/schedules';
 import ScheduleNotifications from './components/ScheduleNotifications';
 import ScheduleList from './components/ScheduleList';
 import { useToast } from '@/hooks/use-toast';
+import AddShiftSheet from './components/AddShiftSheet';
+import DateActionDialog from './components/DateActionDialog';
 
 interface ScheduleCalendarViewProps {
   date: Date | undefined;
@@ -39,6 +41,10 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
   const { toast } = useToast();
   const { newSchedules, pendingSchedules } = useScheduleCalendar(schedules);
   const shiftAssignment = useShiftAssignmentDialog();
+  
+  const [isAddShiftOpen, setIsAddShiftOpen] = useState(false);
+  const [isDateActionOpen, setIsDateActionOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const handleOpenShiftClick = (openShift: OpenShiftType) => {
     if (isAdmin || isHR) {
@@ -65,6 +71,51 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
 
     // TODO: Implement actual publishing logic with Supabase
     // This would typically update the published status and send notifications
+  };
+
+  const handleDateClick = (clickedDate: Date) => {
+    if (isAdmin || isHR) {
+      setSelectedDate(clickedDate);
+      setIsDateActionOpen(true);
+    }
+  };
+
+  const handleAddShift = () => {
+    if (selectedDate) {
+      setIsAddShiftOpen(true);
+      setIsDateActionOpen(false);
+    }
+  };
+
+  const handleSubmitShift = async (formData: any) => {
+    try {
+      // Create the shift with published status set to true by default
+      const shiftData = {
+        ...formData,
+        published: true, // Ensure shift is published when created
+        created_at: new Date().toISOString(),
+        status: 'confirmed'
+      };
+
+      // Call the original onAddSchedule function with the data
+      onAddSchedule();
+
+      toast({
+        title: "Shift published successfully",
+        description: "The shift has been created and published to employees.",
+        variant: "default"
+      });
+
+      // Close the sheet
+      setIsAddShiftOpen(false);
+    } catch (error) {
+      console.error('Error creating shift:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create and publish shift. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   return (
@@ -96,12 +147,13 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
           mode="single"
           selected={date}
           onSelect={setDate}
+          onDayClick={handleDateClick}
           className="w-full"
           disabled={false}
           classNames={{
             day_today: "bg-black text-white",
             day_selected: "bg-teampulse-accent text-black",
-            cell: "text-center p-0 relative [&:has([aria-selected])]:bg-teampulse-accent/10 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+            cell: "text-center p-0 relative [&:has([aria-selected])]:bg-teampulse-accent/10 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 cursor-pointer hover:bg-gray-100",
             head_cell: "text-gray-500 text-xs sm:text-sm w-9 font-normal",
             nav_button: "h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100",
             caption: "text-sm sm:text-base",
@@ -132,7 +184,24 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
         )}
       </div>
 
-      {/* Add ShiftAssignmentDialog */}
+      {/* Date Action Dialog */}
+      <DateActionDialog
+        isOpen={isDateActionOpen}
+        onClose={() => setIsDateActionOpen(false)}
+        selectedDate={selectedDate}
+        onAddShift={handleAddShift}
+      />
+
+      {/* Add Shift Sheet */}
+      <AddShiftSheet
+        isOpen={isAddShiftOpen}
+        onOpenChange={setIsAddShiftOpen}
+        onSubmit={handleSubmitShift}
+        currentDate={selectedDate || new Date()}
+        isMobile={isMobile}
+      />
+
+      {/* Shift Assignment Dialog */}
       <ShiftAssignmentDialog
         isOpen={shiftAssignment.isOpen}
         onClose={shiftAssignment.closeDialog}
