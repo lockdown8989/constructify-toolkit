@@ -17,6 +17,7 @@ import MonthlyView from './views/MonthlyView';
 import DailyView from './views/DailyView';
 import { useCalendarPreferences } from '@/hooks/use-calendar-preferences';
 import DateActionMenu from './calendar/DateActionMenu';
+import PublishedShiftsList from './components/PublishedShiftsList';
 
 const EmployeeScheduleView: React.FC = () => {
   const location = useLocation();
@@ -135,10 +136,8 @@ const EmployeeScheduleView: React.FC = () => {
           initiated_by: user?.id
         }).maybeSingle();
         
-        // Close the menu first to prevent state issues
         setIsDateMenuOpen(false);
         
-        // Navigate to shift calendar with a small delay
         setTimeout(() => {
           navigate('/shift-calendar', { state: { selectedDate: day } });
         }, 100);
@@ -197,10 +196,8 @@ const EmployeeScheduleView: React.FC = () => {
           }
         }
         
-        // Close the menu first
         setIsDateMenuOpen(false);
         
-        // Navigate with a small delay to prevent state issues
         setTimeout(() => {
           navigate('/shift-calendar', { 
             state: { 
@@ -428,9 +425,18 @@ const EmployeeScheduleView: React.FC = () => {
         <ViewSelector view={viewType} onChange={handleViewChange} />
       </div>
       
-      {/* Calendar View based on selected view type */}
+      {/* Calendar View or Published Shifts List */}
       <div className="px-4">
-        {viewType === 'month' ? (
+        {viewType === 'list' ? (
+          <PublishedShiftsList 
+            schedules={schedules}
+            currentDate={currentDate}
+            onShiftClick={(shift) => {
+              setSelectedScheduleId(shift.id);
+              setIsInfoDialogOpen(true);
+            }}
+          />
+        ) : viewType === 'month' ? (
           <MonthlyView 
             currentDate={currentDate} 
             schedules={schedules} 

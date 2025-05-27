@@ -1,10 +1,9 @@
 
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { Calendar, CalendarDays, CalendarRange } from 'lucide-react';
+import { Calendar, CalendarDays, List } from 'lucide-react';
 
-export type ViewType = 'day' | 'week' | 'month';
+export type ViewType = 'day' | 'week' | 'month' | 'list';
 
 interface ViewSelectorProps {
   view: ViewType;
@@ -12,56 +11,40 @@ interface ViewSelectorProps {
 }
 
 const ViewSelector: React.FC<ViewSelectorProps> = ({ view, onChange }) => {
-  // Use useCallback to prevent unnecessary re-renders
-  const handleViewChange = useCallback((newView: ViewType) => {
-    if (view !== newView) {
-      onChange(newView);
-    }
-  }, [view, onChange]);
-  
   return (
-    <div className="flex rounded-md border p-1 bg-white shadow-sm">
+    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
       <Button
-        type="button"
         variant={view === 'day' ? 'default' : 'ghost'}
         size="sm"
-        onClick={() => handleViewChange('day')}
-        className={cn(
-          "rounded-sm transition-colors duration-200", 
-          view !== 'day' && "hover:bg-muted/30",
-          view === 'day' && "animate-scale-in"
-        )}
+        onClick={() => onChange('day')}
+        className="h-8 px-3"
       >
-        <Calendar className="h-4 w-4 mr-1" />
-        <span>Daily</span>
+        Daily
       </Button>
       <Button
-        type="button"
         variant={view === 'week' ? 'default' : 'ghost'}
         size="sm"
-        onClick={() => handleViewChange('week')}
-        className={cn(
-          "rounded-sm transition-colors duration-200", 
-          view !== 'week' && "hover:bg-muted/30",
-          view === 'week' && "animate-scale-in"
-        )}
+        onClick={() => onChange('week')}
+        className="h-8 px-3"
       >
-        <CalendarDays className="h-4 w-4 mr-1" />
-        <span>Weekly</span>
+        Weekly
       </Button>
       <Button
-        type="button"
         variant={view === 'month' ? 'default' : 'ghost'}
         size="sm"
-        onClick={() => handleViewChange('month')}
-        className={cn(
-          "rounded-sm transition-colors duration-200", 
-          view !== 'month' && "hover:bg-muted/30",
-          view === 'month' && "animate-scale-in"
-        )}
+        onClick={() => onChange('month')}
+        className="h-8 px-3"
       >
-        <CalendarRange className="h-4 w-4 mr-1" />
-        <span>Monthly</span>
+        Monthly
+      </Button>
+      <Button
+        variant={view === 'list' ? 'default' : 'ghost'}
+        size="sm"
+        onClick={() => onChange('list')}
+        className="h-8 px-3 flex items-center gap-1"
+      >
+        <List className="h-3 w-3" />
+        List
       </Button>
     </div>
   );
