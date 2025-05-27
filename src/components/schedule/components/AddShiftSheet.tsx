@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import {
@@ -42,7 +43,7 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
     end_time: '',
     notes: '',
     location: '',
-    published: true, // Default to published for manager-created shifts
+    published: true, // Always published for manager-created shifts
     employee_id: '',
     department: '',
     shift_type: 'regular'
@@ -114,16 +115,16 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
     try {
       // If no employee is selected, create as open shift
       if (!formData.employee_id) {
-        // Create open shift
+        // Create open shift that employees can claim
         const { data: openShiftData, error: openShiftError } = await supabase
           .from('open_shifts')
           .insert({
             title: formData.title,
-            role: formData.role || null,
+            role: formData.role || formData.title,
             start_time: formData.start_time,
             end_time: formData.end_time,
             location: formData.location || null,
-            notes: formData.notes || null,
+            notes: formData.notes || 'Available for pickup',
             status: 'open',
             department: formData.department || null,
             priority: 'normal',
@@ -136,23 +137,34 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
         if (openShiftError) throw openShiftError;
 
         toast({
-          title: "Open shift published successfully",
-          description: "The shift has been created and is now available for employees to claim.",
+          title: "Published Shift Created",
+          description: "The shift has been published and is now available for employees to claim.",
           variant: "default"
         });
       } else {
-        // Create regular schedule for assigned employee
-        const shiftData = {
-          ...formData,
-          published: true,
-          status: 'confirmed',
-          created_by_manager: true
-        };
-        
-        onSubmit(shiftData);
+        // Create regular schedule for assigned employee - also published
+        const { data: scheduleData, error: scheduleError } = await supabase
+          .from('schedules')
+          .insert({
+            employee_id: formData.employee_id,
+            title: formData.title,
+            start_time: formData.start_time,
+            end_time: formData.end_time,
+            notes: formData.notes,
+            location: formData.location,
+            published: true, // Always published
+            status: 'confirmed',
+            shift_type: formData.shift_type,
+            created_platform: 'desktop',
+            mobile_notification_sent: false
+          })
+          .select()
+          .single();
+
+        if (scheduleError) throw scheduleError;
         
         toast({
-          title: "Shift published successfully",
+          title: "Shift Published Successfully",
           description: "The shift has been created and published to the employee.",
           variant: "default"
         });
@@ -174,6 +186,11 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
       
       // Close the sheet
       onOpenChange(false);
+      
+      // Refresh the parent component
+      if (onSubmit) {
+        onSubmit({ success: true });
+      }
       
     } catch (error) {
       console.error("Error creating shift:", error);
@@ -330,7 +347,7 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
               id="notes"
               value={formData.notes}
               onChange={(e) => handleChange('notes', e.target.value)}
-              placeholder="Any additional information"
+              placeholder="Available for pickup"
               className="col-span-3"
               rows={3}
             />

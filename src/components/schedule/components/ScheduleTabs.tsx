@@ -9,6 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import OpenShiftBlock from '@/components/restaurant/OpenShiftBlock';
 import PublishedShiftCard from './PublishedShiftCard';
 import { useOpenShifts } from '@/hooks/use-open-shifts';
+import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface ScheduleTabsProps {
   activeTab: string;
@@ -31,7 +34,9 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
   onCancelClick,
   onResponseComplete,
 }) => {
-  const { openShifts = [] } = useOpenShifts();
+  const { openShifts = [], assignShift } = useOpenShifts();
+  const { user } = useAuth();
+  const { toast } = useToast();
   
   const tabs = [
     { id: 'my-shifts', label: 'Shift Swaps' },
@@ -61,6 +66,54 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
 
   // Filter open shifts for the open-shifts tab
   const availableOpenShifts = openShifts.filter(shift => shift.status === 'open');
+
+  const handleClaimShift = async (shiftId: string) => {
+    try {
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to claim shifts.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Get employee ID
+      const { data: employee } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!employee) {
+        toast({
+          title: "Employee Record Not Found",
+          description: "Could not find your employee record.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Use the assignShift mutation from useOpenShifts hook
+      assignShift.mutate({ 
+        openShiftId: shiftId, 
+        employeeId: employee.id 
+      });
+
+      // Refresh callback
+      if (onResponseComplete) {
+        onResponseComplete();
+      }
+
+    } catch (error) {
+      console.error('Error claiming shift:', error);
+      toast({
+        title: "Error",
+        description: "Failed to claim shift. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   console.log(`Filtered schedules for tab ${activeTab}:`, filteredSchedules.length);
   console.log(`Available open shifts:`, availableOpenShifts.length);
@@ -101,7 +154,7 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
       <Tabs value={activeTab} defaultValue={activeTab}>
         <TabsContent value={activeTab} className="flex-1 overflow-y-auto p-3 space-y-3">
           {activeTab === 'open-shifts' ? (
-            // Show both published open shifts and available open shifts
+            // Show published open shifts that employees can claim
             <>
               {availableOpenShifts.length > 0 ? (
                 availableOpenShifts.map(shift => (
@@ -118,10 +171,8 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
                       published: true,
                       status: 'open'
                     }}
-                    onClick={() => {
-                      // Handle open shift click - could open assignment dialog
-                      console.log('Open shift clicked:', shift.id);
-                    }}
+                    onClaim={() => handleClaimShift(shift.id)}
+                    showClaimButton={true}
                   />
                 ))
               ) : filteredSchedules.length > 0 ? (

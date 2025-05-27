@@ -91,28 +91,18 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
 
   const handleSubmitShift = async (formData: any) => {
     try {
-      // Create the shift with published status set to true by default
-      const shiftData = {
-        ...formData,
-        published: true, // Ensure shift is published when created
-        created_at: new Date().toISOString(),
-        status: 'confirmed'
-      };
-
-      // Call the original onAddSchedule function with the data
-      onAddSchedule();
-
       toast({
-        title: "Shift published successfully",
-        description: "The shift has been created and published to employees.",
+        title: "Shift Published Successfully",
+        description: "The shift has been created and is now available to employees.",
         variant: "default"
       });
 
       // Close the sheet
       setIsAddShiftOpen(false);
       
-      // Refresh the page to show new open shifts
-      window.location.reload();
+      // Refresh the parent component to show new shifts
+      onAddSchedule();
+      
     } catch (error) {
       console.error('Error creating shift:', error);
       toast({

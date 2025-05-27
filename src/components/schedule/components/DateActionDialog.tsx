@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Calendar, UserPlus, X } from "lucide-react";
+import { CalendarPlus, UserPlus, X } from "lucide-react";
 
 interface DateActionDialogProps {
   isOpen: boolean;
@@ -55,7 +55,7 @@ const DateActionDialog: React.FC<DateActionDialogProps> = ({
             className="w-full h-14 bg-gray-800 hover:bg-gray-900 text-white rounded-2xl"
             size="lg"
           >
-            <Calendar className="h-5 w-5 mr-3" />
+            <CalendarPlus className="h-5 w-5 mr-3" />
             Add shift
           </Button>
           

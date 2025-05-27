@@ -3,6 +3,7 @@ import React from 'react';
 import { format } from 'date-fns';
 import { MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface PublishedShiftCardProps {
@@ -18,9 +19,16 @@ interface PublishedShiftCardProps {
     status?: string;
   };
   onClick?: () => void;
+  onClaim?: () => void;
+  showClaimButton?: boolean;
 }
 
-const PublishedShiftCard: React.FC<PublishedShiftCardProps> = ({ shift, onClick }) => {
+const PublishedShiftCard: React.FC<PublishedShiftCardProps> = ({ 
+  shift, 
+  onClick, 
+  onClaim,
+  showClaimButton = false 
+}) => {
   const startTime = new Date(shift.start_time);
   const endTime = new Date(shift.end_time);
   const hours = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60) * 10) / 10;
@@ -49,12 +57,13 @@ const PublishedShiftCard: React.FC<PublishedShiftCardProps> = ({ shift, onClick 
   return (
     <div 
       className={cn(
-        "p-4 rounded-lg border-l-4 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer",
+        "p-4 rounded-lg border-l-4 bg-white shadow-sm hover:shadow-md transition-shadow",
         shift.department?.toLowerCase() === 'sales' ? 'border-l-blue-500' : 
         shift.department?.toLowerCase() === 'customer service' ? 'border-l-orange-400' :
-        'border-l-gray-400'
+        'border-l-gray-400',
+        onClick && !showClaimButton ? 'cursor-pointer' : ''
       )}
-      onClick={onClick}
+      onClick={!showClaimButton ? onClick : undefined}
     >
       {/* Header with date and status */}
       <div className="flex items-center justify-between mb-3">
@@ -111,10 +120,26 @@ const PublishedShiftCard: React.FC<PublishedShiftCardProps> = ({ shift, onClick 
 
       {/* Location */}
       {shift.location && (
-        <div className="flex items-center gap-2 text-gray-600">
+        <div className="flex items-center gap-2 text-gray-600 mb-3">
           <MapPin className="h-4 w-4" />
           <span className="text-sm">{shift.location}</span>
         </div>
+      )}
+
+      {/* Availability status */}
+      <div className="text-sm text-gray-500 italic mb-3">
+        Available for pickup
+      </div>
+
+      {/* Claim Button */}
+      {showClaimButton && onClaim && (
+        <Button 
+          onClick={onClaim}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          size="lg"
+        >
+          Claim Shift
+        </Button>
       )}
     </div>
   );
