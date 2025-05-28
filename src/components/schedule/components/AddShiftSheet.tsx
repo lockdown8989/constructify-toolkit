@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import {
@@ -113,9 +112,8 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
     setIsSubmitting(true);
     
     try {
-      // If no employee is selected, create as open shift
+      // If no employee is selected, create as published open shift
       if (!formData.employee_id) {
-        // Create open shift that employees can claim
         const { data: openShiftData, error: openShiftError } = await supabase
           .from('open_shifts')
           .insert({
@@ -125,7 +123,7 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
             end_time: formData.end_time,
             location: formData.location || null,
             notes: formData.notes || 'Available for pickup',
-            status: 'open',
+            status: 'open', // Available for claiming
             department: formData.department || null,
             priority: 'normal',
             created_platform: 'desktop',
@@ -137,7 +135,7 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
         if (openShiftError) throw openShiftError;
 
         toast({
-          title: "Published Shift Created",
+          title: "Open Shift Published",
           description: "The shift has been published and is now available for employees to claim.",
           variant: "default"
         });
@@ -164,8 +162,8 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
         if (scheduleError) throw scheduleError;
         
         toast({
-          title: "Shift Published Successfully",
-          description: "The shift has been created and published to the employee.",
+          title: "Shift Assigned & Published",
+          description: "The shift has been assigned and published to the employee.",
           variant: "default"
         });
       }

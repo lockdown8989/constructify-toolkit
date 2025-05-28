@@ -1,411 +1,163 @@
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { Session, User } from '@supabase/supabase-js';
 
-export type UserRole = 'admin' | 'hr' | 'manager' | 'employee';
+export type UserRole = 'employee' | 'employer' | 'admin' | 'hr' | 'manager';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
   isAdmin: boolean;
-  isHR: boolean;
   isManager: boolean;
-  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  isHR: boolean;
+  isEmployee: boolean;
+  userRole: UserRole | null;
   signOut: () => Promise<void>;
-  signUp: (email: string, password: string, userData: any) => Promise<{ success: boolean; error?: string }>;
-  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
-  updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
-const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  session: null,
+  isLoading: true,
+  isAdmin: false,
+  isManager: false,
+  isHR: false,
+  isEmployee: false,
+  userRole: null,
+  signOut: async () => {},
+});
 
-export const useAuth = () => useContext(AuthContext);
-
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export function AuthProvider({ children }: AuthProviderProps) {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isHR, setIsHR] = useState(false);
-  const [isManager, setIsManager] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  // Check if a user has a specific role
-  const checkUserRole = async (userId: string, role: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('role', role);
-
-      if (error) {
-        console.error("Error checking role:", error);
-        return false;
-      }
-
-      return data && data.length > 0;
-    } catch (error) {
-      console.error("Exception in checkUserRole:", error);
-      return false;
-    }
-  };
-
-  // Fetch and set user roles
-  const fetchUserRoles = async (userId: string) => {
-    try {
-      console.log("Fetching roles for user:", userId);
-
-      const [isAdminRole, isHRRole, isManagerRole] = await Promise.all([
-        checkUserRole(userId, 'admin'),
-        checkUserRole(userId, 'hr'),
-        checkUserRole(userId, 'manager')
-      ]);
-
-      setIsAdmin(isAdminRole);
-      setIsHR(isHRRole);
-      setIsManager(isManagerRole);
-
-      console.log("User roles:", { isAdmin: isAdminRole, isHR: isHRRole, isManager: isManagerRole });
-    } catch (error) {
-      console.error("Error fetching user roles:", error);
-    }
-  };
-
-  // Setup user after authentication
-  const setupUser = async (session: Session | null) => {
-    if (session?.user) {
-      setUser(session.user);
-      setSession(session);
-      await fetchUserRoles(session.user.id);
-      
-      // Check if employee record exists, create if not
-      await ensureEmployeeRecord(session.user);
-    } else {
-      setUser(null);
-      setSession(null);
-      setIsAdmin(false);
-      setIsHR(false);
-      setIsManager(false);
-    }
-  };
-
-  // Create employee record if not exists
-  const ensureEmployeeRecord = async (user: User) => {
-    try {
-      // Check if employee record exists
-      const { data: existingEmployee, error: checkError } = await supabase
-        .from('employees')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (checkError) {
-        console.error("Error checking employee record:", checkError);
-        return;
-      }
-
-      // If employee record doesn't exist, create it
-      if (!existingEmployee) {
-        console.log("Creating employee record for user:", user.id);
-        
-        // Get user profile for name
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('first_name, last_name')
-          .eq('id', user.id)
-          .single();
-          
-        const fullName = profile ? 
-          `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : 
-          user.email?.split('@')[0] || 'New Employee';
-          
-        // Check user roles
-        const [isAdminRole, isHRRole, isManagerRole] = await Promise.all([
-          checkUserRole(user.id, 'admin'),
-          checkUserRole(user.id, 'hr'),
-          checkUserRole(user.id, 'manager')
-        ]);
-        
-        // Determine department based on role
-        let department = 'General';
-        if (isAdminRole) department = 'Administration';
-        else if (isHRRole) department = 'HR';
-        else if (isManagerRole) department = 'Management';
-        
-        // Create employee record
-        const { error: insertError } = await supabase
-          .from('employees')
-          .insert({
-            user_id: user.id,
-            name: fullName,
-            job_title: isManagerRole ? 'Manager' : 'Employee',
-            department: department,
-            site: 'Main Office',
-            salary: 50000,
-            status: 'Active',
-            annual_leave_days: 20,
-            sick_leave_days: 10
-          });
-          
-        if (insertError) {
-          console.error("Error creating employee record:", insertError);
-        } else {
-          console.log("Successfully created employee record");
-        }
-      }
-    } catch (error) {
-      console.error("Error in ensureEmployeeRecord:", error);
-    }
-  };
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        setIsLoading(true);
+    let isMounted = true;
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!isMounted) return;
         
-        // Get initial session
-        const { data: { session } } = await supabase.auth.getSession();
-        await setupUser(session);
+        console.log('Auth state changed:', event, session?.user?.email);
+        setSession(session);
+        setUser(session?.user ?? null);
         
-        // Listen for auth changes
-        const { data: { subscription } } = await supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log("Auth state change:", event, session?.user?.id);
-            await setupUser(session);
+        if (session?.user) {
+          // Fetch user role separately to avoid infinite recursion
+          setTimeout(async () => {
+            try {
+              const { data: roleData } = await supabase
+                .from('user_roles')
+                .select('role')
+                .eq('user_id', session.user.id)
+                .single();
+              
+              if (isMounted) {
+                setUserRole(roleData?.role || 'employee');
+              }
+            } catch (error) {
+              console.error('Error fetching user role:', error);
+              if (isMounted) {
+                setUserRole('employee');
+              }
+            }
+          }, 0);
+        } else {
+          if (isMounted) {
+            setUserRole(null);
+          }
+        }
+        
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    );
+
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
+      
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        // Fetch user role
+        setTimeout(async () => {
+          try {
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', session.user.id)
+              .single();
             
-            if (event === 'SIGNED_IN' && session) {
-              // Navigate to dashboard after sign in
-              navigate('/dashboard');
-            } else if (event === 'SIGNED_OUT') {
-              // Navigate to root (/) instead of /landing to avoid 404
-              navigate('/');
+            if (isMounted) {
+              setUserRole(roleData?.role || 'employee');
+            }
+          } catch (error) {
+            console.error('Error fetching user role:', error);
+            if (isMounted) {
+              setUserRole('employee');
             }
           }
-        );
-        
-        return () => {
-          subscription.unsubscribe();
-        };
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-      } finally {
+        }, 0);
+      }
+      
+      if (isMounted) {
         setIsLoading(false);
       }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
     };
-
-    initAuth();
-  }, [navigate]);
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        console.error("Sign in error:", error.message);
-        toast({
-          title: "Sign in failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return { success: false, error: error.message };
-      }
-
-      // Setup user roles after successful sign in
-      await setupUser(data.session);
-      
-      toast({
-        title: "Signed in successfully",
-        description: "Welcome back!",
-      });
-      
-      return { success: true };
-    } catch (error) {
-      console.error("Exception in signIn:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
-      return { success: false, error: errorMessage };
-    }
-  };
-
-  const signUp = async (email: string, password: string, userData: any) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: userData,
-        }
-      });
-
-      if (error) {
-        console.error("Sign up error:", error.message);
-        toast({
-          title: "Sign up failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return { success: false, error: error.message };
-      }
-
-      // Create user role based on userData.role
-      if (data.user) {
-        try {
-          const { error: roleError } = await supabase
-            .from('user_roles')
-            .insert({
-              user_id: data.user.id,
-              role: userData.role || 'employee'
-            });
-            
-          if (roleError) {
-            console.error("Error setting user role:", roleError);
-          } else {
-            console.log(`Role '${userData.role || 'employee'}' assigned to user ${data.user.id}`);
-          }
-          
-          // Sign in automatically after signup
-          if (data.session) {
-            await setupUser(data.session);
-          } else {
-            const { data: signInData } = await supabase.auth.signInWithPassword({
-              email,
-              password
-            });
-            
-            if (signInData.session) {
-              await setupUser(signInData.session);
-            }
-          }
-        } catch (roleError) {
-          console.error("Exception setting user role:", roleError);
-        }
-      }
-
-      toast({
-        title: "Account created successfully",
-        description: "Welcome to HR Manager!",
-      });
-      
-      // Navigate to dashboard after successful signup
-      navigate('/dashboard');
-      
-      return { success: true };
-    } catch (error) {
-      console.error("Exception in signUp:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
-      return { success: false, error: errorMessage };
-    }
-  };
+  }, []);
 
   const signOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      setIsAdmin(false);
-      setIsHR(false);
-      setIsManager(false);
-      // Navigate to root path instead of /landing
-      navigate('/');
-    } catch (error) {
-      console.error("Sign out error:", error);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error);
+      throw error;
     }
   };
 
-  const resetPassword = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/update-password`,
-      });
-
-      if (error) {
-        toast({
-          title: "Password reset failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return { success: false, error: error.message };
-      }
-
-      toast({
-        title: "Password reset email sent",
-        description: "Check your email for the password reset link",
-      });
-      return { success: true };
-    } catch (error) {
-      console.error("Password reset error:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
-      return { success: false, error: errorMessage };
-    }
-  };
-
-  const updatePassword = async (newPassword: string) => {
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      if (error) {
-        toast({
-          title: "Password update failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return { success: false, error: error.message };
-      }
-
-      toast({
-        title: "Password updated",
-        description: "Your password has been updated successfully",
-      });
-      navigate('/dashboard');
-      return { success: true };
-    } catch (error) {
-      console.error("Password update error:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
-      return { success: false, error: errorMessage };
-    }
-  };
+  const isAdmin = userRole === 'admin';
+  const isManager = userRole === 'manager';
+  const isHR = userRole === 'hr';
+  const isEmployee = userRole === 'employee';
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        isLoading,
-        isAdmin,
-        isHR,
-        isManager,
-        signIn,
-        signUp,
-        signOut,
-        resetPassword,
-        updatePassword,
-      }}
-    >
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      isLoading, 
+      isAdmin, 
+      isManager, 
+      isHR, 
+      isEmployee,
+      userRole, 
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export const isAuthenticated = async (): Promise<boolean> => {
-  try {
-    const { data } = await supabase.auth.getSession();
-    return !!data.session;
-  } catch (error) {
-    console.error("Error checking authentication:", error);
-    return false;
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
+  return context;
+};
+
+export const isAuthenticated = () => {
+  const { user } = useAuth();
+  return !!user;
 };
