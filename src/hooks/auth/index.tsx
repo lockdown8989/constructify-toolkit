@@ -128,9 +128,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const isAdmin = userRole === 'admin';
-  const isManager = userRole === 'manager';
+  const isManager = userRole === 'manager' || userRole === 'employer';
   const isHR = userRole === 'hr';
-  const isEmployee = userRole === 'employee';
+  const isEmployee = userRole === 'employee' || (!isAdmin && !isManager && !isHR && !!user);
 
   return (
     <AuthContext.Provider value={{ 

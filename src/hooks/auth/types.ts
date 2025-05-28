@@ -22,6 +22,7 @@ export interface AuthContextType {
   isAdmin: boolean;
   isHR: boolean;
   isManager: boolean;
+  isEmployee: boolean;
   isAuthenticated?: boolean;
   signIn?: (email: string, password: string) => Promise<any>;
   signUp?: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;

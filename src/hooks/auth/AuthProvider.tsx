@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -14,6 +15,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const { isAdmin, isHR, isManager, fetchUserRoles, resetRoles } = useRoles(user);
   const { signIn, signUp, resetPassword, updatePassword, signOut: authSignOut, deleteAccount: authDeleteAccount } = useAuthActions();
+
+  // Calculate isEmployee - someone who is authenticated but not admin, HR, or manager
+  const isEmployee = !!user && !isAdmin && !isHR && !isManager;
 
   useEffect(() => {
     const setupAuth = async () => {
@@ -221,6 +225,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isAdmin,
     isHR,
     isManager,
+    isEmployee,
     isAuthenticated,
     signIn,
     signUp,
