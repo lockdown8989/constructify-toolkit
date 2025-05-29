@@ -15,6 +15,9 @@ import ScheduleList from './components/ScheduleList';
 import { useToast } from '@/hooks/use-toast';
 import AddShiftSheet from './components/AddShiftSheet';
 import DateActionDialog from './components/DateActionDialog';
+import ScheduleDateContextMenu from './components/ScheduleDateContextMenu';
+import ScheduleDatePopover from './components/ScheduleDatePopover';
+import { useShiftActions } from '@/hooks/use-shift-actions';
 import { useOpenShifts } from '@/hooks/use-open-shifts';
 
 interface ScheduleCalendarViewProps {
@@ -43,13 +46,16 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
   const { newSchedules, pendingSchedules } = useScheduleCalendar(schedules);
   const shiftAssignment = useShiftAssignmentDialog();
   const { openShifts, isLoading: openShiftsLoading } = useOpenShifts();
+  const shiftActions = useShiftActions();
   
   const [isAddShiftOpen, setIsAddShiftOpen] = useState(false);
   const [isDateActionOpen, setIsDateActionOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
+  const isManager = isAdmin || isHR;
+
   const handleOpenShiftClick = (openShift: OpenShiftType) => {
-    if (isAdmin || isHR) {
+    if (isManager) {
       shiftAssignment.openDialog(openShift);
     }
   };
@@ -76,7 +82,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
   };
 
   const handleDateClick = (clickedDate: Date) => {
-    if (isAdmin || isHR) {
+    if (isManager) {
       setSelectedDate(clickedDate);
       setIsDateActionOpen(true);
     }
@@ -112,6 +118,58 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
       });
     }
   };
+
+  // Custom day content to add context menu and popover
+  const renderDay = (day: Date) => {
+    const daySchedules = schedules.filter(schedule => {
+      const scheduleDate = new Date(schedule.start_time);
+      return format(scheduleDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
+    });
+
+    const hasSchedules = daySchedules.length > 0;
+
+    const dayContent = (
+      <div className={`relative w-full h-full flex items-center justify-center ${
+        hasSchedules ? 'font-bold' : ''
+      }`}>
+        {format(day, 'd')}
+        {hasSchedules && (
+          <div className="absolute bottom-0 right-0 w-2 h-2 bg-blue-500 rounded-full"></div>
+        )}
+      </div>
+    );
+
+    if (!isManager) {
+      return hasSchedules ? (
+        <ScheduleDatePopover
+          date={day}
+          schedules={schedules}
+          employeeNames={employeeNames}
+        >
+          {dayContent}
+        </ScheduleDatePopover>
+      ) : dayContent;
+    }
+
+    return (
+      <ScheduleDatePopover
+        date={day}
+        schedules={schedules}
+        employeeNames={employeeNames}
+      >
+        <ScheduleDateContextMenu
+          date={day}
+          schedules={schedules}
+          isManager={isManager}
+          onEditShift={shiftActions.handleEditShift}
+          onAddShift={shiftActions.handleAddShift}
+          onDeleteShift={shiftActions.handleDeleteShift}
+        >
+          {dayContent}
+        </ScheduleDateContextMenu>
+      </ScheduleDatePopover>
+    );
+  };
   
   return (
     <>
@@ -119,7 +177,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg sm:text-xl font-medium">Schedule Calendar</h2>
           
-          {(isAdmin || isHR) && (
+          {isManager && (
             <Button 
               onClick={handlePublishShifts}
               className="bg-green-600 hover:bg-green-700 text-white"
@@ -145,6 +203,9 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
           onDayClick={handleDateClick}
           className="w-full"
           disabled={false}
+          components={{
+            Day: ({ date: dayDate }) => renderDay(dayDate)
+          }}
           classNames={{
             day_today: "bg-black text-white",
             day_selected: "bg-teampulse-accent text-black",
@@ -166,7 +227,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
           newSchedules={newSchedules}
         />
         
-        {(isAdmin || isHR) && (
+        {isManager && (
           <Button 
             variant="outline" 
             size={isMobile ? "sm" : "default"} 
@@ -189,10 +250,13 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
 
       {/* Add Shift Sheet */}
       <AddShiftSheet
-        isOpen={isAddShiftOpen}
-        onOpenChange={setIsAddShiftOpen}
+        isOpen={isAddShiftOpen || shiftActions.isAddShiftOpen}
+        onOpenChange={(open) => {
+          setIsAddShiftOpen(open);
+          if (!open) shiftActions.closeAddShiftDialog();
+        }}
         onSubmit={handleSubmitShift}
-        currentDate={selectedDate || new Date()}
+        currentDate={selectedDate || shiftActions.selectedDate || new Date()}
         isMobile={isMobile}
       />
 
