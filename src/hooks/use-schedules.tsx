@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -17,6 +16,7 @@ export interface Schedule {
   location?: string;
   shift_type?: string;
   published?: boolean;
+  published_at?: string;
   is_draft?: boolean;
   draft_notes?: string | null;
   can_be_edited?: boolean;
@@ -121,7 +121,6 @@ export function useSchedules() {
   };
 }
 
-// Add the useCreateSchedule hook to export the createSchedule mutation separately
 export function useCreateSchedule() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -179,6 +178,8 @@ export function useUpdateSchedule() {
           is_draft: schedule.is_draft,
           draft_notes: schedule.draft_notes,
           can_be_edited: schedule.can_be_edited,
+          published: schedule.published,
+          published_at: schedule.published_at,
           updated_at: new Date().toISOString()
         })
         .eq('id', schedule.id)
@@ -206,7 +207,6 @@ export function useUpdateSchedule() {
   };
 }
 
-// Add hook to check if a shift can be edited using the database function
 export function useCanEditShift() {
   return useMutation({
     mutationFn: async (shiftId: string) => {
