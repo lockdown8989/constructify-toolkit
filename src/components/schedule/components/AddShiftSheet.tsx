@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import {
@@ -17,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useEmployees } from "@/hooks/use-employees";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Clock, CalendarDays, MapPin, Send } from "lucide-react";
+import { AlertCircle, Clock, CalendarDays, MapPin, Send, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface AddShiftSheetProps {
@@ -42,13 +43,14 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
     end_time: '',
     notes: '',
     location: '',
-    published: true, // Always published for manager-created shifts
+    published: true,
     employee_id: '',
     department: '',
     shift_type: 'regular'
   });
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const { toast } = useToast();
   const { data: employees = [] } = useEmployees({});
 
@@ -67,6 +69,7 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
     
     if (isOpen) {
       setFormErrors({});
+      setShowSuccessAnimation(false);
     }
   }, [currentDate, isOpen]);
 
@@ -112,6 +115,9 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
     setIsSubmitting(true);
     
     try {
+      // Show success animation
+      setShowSuccessAnimation(true);
+      
       // If no employee is selected, create as published open shift
       if (!formData.employee_id) {
         const { data: openShiftData, error: openShiftError } = await supabase
@@ -123,7 +129,7 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
             end_time: formData.end_time,
             location: formData.location || null,
             notes: formData.notes || 'Available for pickup',
-            status: 'open', // Available for claiming
+            status: 'open',
             department: formData.department || null,
             priority: 'normal',
             created_platform: 'desktop',
@@ -135,12 +141,12 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
         if (openShiftError) throw openShiftError;
 
         toast({
-          title: "Open Shift Published",
-          description: "The shift has been published and is now available for employees to claim.",
+          title: "🎉 Open Shift Created!",
+          description: "The shift has been published and is now available for employees to claim in the Open Shifts section.",
           variant: "default"
         });
       } else {
-        // Create regular schedule for assigned employee - also published
+        // Create regular schedule for assigned employee
         const { data: scheduleData, error: scheduleError } = await supabase
           .from('schedules')
           .insert({
@@ -150,7 +156,7 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
             end_time: formData.end_time,
             notes: formData.notes,
             location: formData.location,
-            published: true, // Always published
+            published: true,
             status: 'confirmed',
             shift_type: formData.shift_type,
             created_platform: 'desktop',
@@ -162,33 +168,38 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
         if (scheduleError) throw scheduleError;
         
         toast({
-          title: "Shift Assigned & Published",
+          title: "✅ Shift Assigned!",
           description: "The shift has been assigned and published to the employee.",
           variant: "default"
         });
       }
 
-      // Reset form
-      setFormData({
-        title: '',
-        role: '',
-        start_time: '',
-        end_time: '',
-        notes: '',
-        location: '',
-        published: true,
-        employee_id: '',
-        department: '',
-        shift_type: 'regular'
-      });
-      
-      // Close the sheet
-      onOpenChange(false);
-      
-      // Refresh the parent component
-      if (onSubmit) {
-        onSubmit({ success: true });
-      }
+      // Wait for animation to complete
+      setTimeout(() => {
+        // Reset form
+        setFormData({
+          title: '',
+          role: '',
+          start_time: '',
+          end_time: '',
+          notes: '',
+          location: '',
+          published: true,
+          employee_id: '',
+          department: '',
+          shift_type: 'regular'
+        });
+        
+        // Close the sheet
+        onOpenChange(false);
+        
+        // Refresh the parent component
+        if (onSubmit) {
+          onSubmit({ success: true });
+        }
+        
+        setShowSuccessAnimation(false);
+      }, 1500);
       
     } catch (error) {
       console.error("Error creating shift:", error);
@@ -197,6 +208,7 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
         description: "Failed to create shift. Please try again.",
         variant: "destructive"
       });
+      setShowSuccessAnimation(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -214,6 +226,17 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
             Create a new shift for {format(currentDate, 'MMMM d, yyyy')} that will be published to employees
           </SheetDescription>
         </SheetHeader>
+        
+        {showSuccessAnimation && (
+          <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl animate-scale-in">
+              <div className="flex items-center gap-3">
+                <Sparkles className="h-6 w-6 text-green-500 animate-pulse" />
+                <span className="text-lg font-medium">Shift Created Successfully!</span>
+              </div>
+            </div>
+          </div>
+        )}
         
         <div className="grid gap-4 py-4 overflow-y-auto" style={{ maxHeight: "calc(100% - 140px)" }}>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -389,7 +412,7 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
           <Button 
             onClick={handleSubmit} 
             disabled={isSubmitting}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="bg-green-600 hover:bg-green-700 text-white transition-all duration-200"
           >
             <Send className="h-4 w-4 mr-2" />
             {isSubmitting ? "Publishing..." : 

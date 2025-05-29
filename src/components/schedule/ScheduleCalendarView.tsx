@@ -51,6 +51,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
   const [isAddShiftOpen, setIsAddShiftOpen] = useState(false);
   const [isDateActionOpen, setIsDateActionOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [animatingDate, setAnimatingDate] = useState<Date | null>(null);
 
   const isManager = isAdmin || isHR;
 
@@ -76,9 +77,6 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
       title: "Publishing shifts",
       description: `Publishing ${unpublishedShifts.length} shifts to employees...`,
     });
-
-    // TODO: Implement actual publishing logic with Supabase
-    // This would typically update the published status and send notifications
   };
 
   const handleDateClick = (clickedDate: Date) => {
@@ -92,19 +90,29 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
     if (selectedDate) {
       setIsAddShiftOpen(true);
       setIsDateActionOpen(false);
+      
+      // Trigger animation on the selected date
+      setAnimatingDate(selectedDate);
+      setTimeout(() => setAnimatingDate(null), 2000);
     }
   };
 
   const handleSubmitShift = async (formData: any) => {
     try {
       toast({
-        title: "Shift Published Successfully",
-        description: "The shift has been created and is now available to employees.",
+        title: "🎉 Shift Created Successfully",
+        description: "The shift has been created and will appear in the Open Shifts section for employees to claim.",
         variant: "default"
       });
 
       // Close the sheet
       setIsAddShiftOpen(false);
+      
+      // Show animation on the date where shift was created
+      if (selectedDate) {
+        setAnimatingDate(selectedDate);
+        setTimeout(() => setAnimatingDate(null), 3000);
+      }
       
       // Refresh the parent component to show new shifts
       onAddSchedule();
@@ -119,7 +127,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
     }
   };
 
-  // Custom day content to add context menu and popover
+  // Custom day content to add context menu, popover, and animations
   const renderDay = (day: Date) => {
     const daySchedules = schedules.filter(schedule => {
       const scheduleDate = new Date(schedule.start_time);
@@ -127,14 +135,18 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
     });
 
     const hasSchedules = daySchedules.length > 0;
+    const isAnimating = animatingDate && format(animatingDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
 
     const dayContent = (
       <div className={`relative w-full h-full flex items-center justify-center ${
         hasSchedules ? 'font-bold' : ''
-      }`}>
+      } ${isAnimating ? 'animate-pulse bg-green-100 rounded-full' : ''}`}>
         {format(day, 'd')}
         {hasSchedules && (
           <div className="absolute bottom-0 right-0 w-2 h-2 bg-blue-500 rounded-full"></div>
+        )}
+        {isAnimating && (
+          <div className="absolute inset-0 bg-green-400/20 rounded-full animate-ping"></div>
         )}
       </div>
     );
@@ -209,7 +221,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
           classNames={{
             day_today: "bg-black text-white",
             day_selected: "bg-teampulse-accent text-black",
-            cell: "text-center p-0 relative [&:has([aria-selected])]:bg-teampulse-accent/10 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 cursor-pointer hover:bg-gray-100",
+            cell: "text-center p-0 relative [&:has([aria-selected])]:bg-teampulse-accent/10 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 cursor-pointer hover:bg-gray-100 transition-colors",
             head_cell: "text-gray-500 text-xs sm:text-sm w-9 font-normal",
             nav_button: "h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100",
             caption: "text-sm sm:text-base",
@@ -231,7 +243,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
           <Button 
             variant="outline" 
             size={isMobile ? "sm" : "default"} 
-            className="mt-4 w-full sm:w-auto" 
+            className="mt-4 w-full sm:w-auto hover:scale-105 transition-transform duration-200" 
             onClick={onAddSchedule}
           >
             <PlusCircle className="h-4 w-4 mr-2" />

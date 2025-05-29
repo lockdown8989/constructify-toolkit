@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Schedule } from '@/hooks/use-schedules';
 import ShiftDetailCard from '../ShiftDetailCard';
 import { cn } from '@/lib/utils';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Sparkles } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import OpenShiftBlock from '@/components/restaurant/OpenShiftBlock';
@@ -58,8 +58,6 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
     }
   });
 
-  console.log(`Filtered schedules for tab ${activeTab}:`, filteredSchedules.length);
-
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Tabs */}
@@ -82,6 +80,9 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
                   {pendingShiftsCount}
                 </Badge>
               )}
+              {tab.id === 'open-shifts' && (
+                <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-green-500 animate-pulse" />
+              )}
             </button>
           ))}
         </div>
@@ -91,8 +92,18 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
       <Tabs value={activeTab} defaultValue={activeTab}>
         <TabsContent value={activeTab} className="flex-1 overflow-y-auto p-3 space-y-3">
           {activeTab === 'open-shifts' ? (
-            // Show published open shifts that employees can claim
-            <PublishedShiftsView />
+            <div className="space-y-3">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                <div className="flex items-center gap-2 text-green-700">
+                  <Sparkles className="h-4 w-4" />
+                  <span className="text-sm font-medium">Available Open Shifts</span>
+                </div>
+                <p className="text-xs text-green-600 mt-1">
+                  These shifts are ready for you to claim
+                </p>
+              </div>
+              <PublishedShiftsView />
+            </div>
           ) : filteredSchedules.length > 0 ? (
             activeTab === 'completed' ? (
               filteredSchedules.map(schedule => (
@@ -146,6 +157,9 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
               <p>No {activeTab.replace('-', ' ')} found</p>
               {activeTab === 'pending' && (
                 <p className="text-sm mt-2">When managers assign you shifts that need confirmation, they'll appear here</p>
+              )}
+              {activeTab === 'open-shifts' && (
+                <p className="text-sm mt-2">When managers publish open shifts, they'll appear here for you to claim</p>
               )}
             </div>
           )}

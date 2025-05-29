@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CalendarPlus, UserPlus, X } from "lucide-react";
+import { useToast } from '@/hooks/use-toast';
 
 interface DateActionDialogProps {
   isOpen: boolean;
@@ -25,7 +26,29 @@ const DateActionDialog: React.FC<DateActionDialogProps> = ({
   onAddShift,
   onAddEmployee
 }) => {
+  const { toast } = useToast();
+
   if (!selectedDate) return null;
+
+  const handleAddShift = () => {
+    onAddShift();
+    toast({
+      title: "Creating Shift",
+      description: `Setting up a new shift for ${format(selectedDate, 'MMMM d, yyyy')}`,
+      variant: "default"
+    });
+  };
+
+  const handleAddEmployee = () => {
+    if (onAddEmployee) {
+      onAddEmployee();
+      toast({
+        title: "Adding Employee",
+        description: `Assigning employee for ${format(selectedDate, 'MMMM d, yyyy')}`,
+        variant: "default"
+      });
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -51,8 +74,8 @@ const DateActionDialog: React.FC<DateActionDialogProps> = ({
         
         <div className="flex flex-col gap-3 mt-6">
           <Button
-            onClick={onAddShift}
-            className="w-full h-14 bg-gray-800 hover:bg-gray-900 text-white rounded-2xl"
+            onClick={handleAddShift}
+            className="w-full h-14 bg-gray-800 hover:bg-gray-900 text-white rounded-2xl transition-all duration-200 hover:scale-105"
             size="lg"
           >
             <CalendarPlus className="h-5 w-5 mr-3" />
@@ -61,8 +84,8 @@ const DateActionDialog: React.FC<DateActionDialogProps> = ({
           
           {onAddEmployee && (
             <Button
-              onClick={onAddEmployee}
-              className="w-full h-14 bg-green-600 hover:bg-green-700 text-white rounded-2xl"
+              onClick={handleAddEmployee}
+              className="w-full h-14 bg-green-600 hover:bg-green-700 text-white rounded-2xl transition-all duration-200 hover:scale-105"
               size="lg"
             >
               <UserPlus className="h-5 w-5 mr-3" />
