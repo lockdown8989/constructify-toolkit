@@ -1,14 +1,16 @@
 
 import React, { useState } from 'react';
-import { format } from 'date-fns';
-import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Info, Mail, X, Check } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { Schedule } from '@/hooks/use-schedules';
+import { format, isToday, isTomorrow, isYesterday, isAfter, isBefore } from 'date-fns';
+import { MapPin, Clock, User, Building, MessageCircle, CheckCircle, X, Edit, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
+import { Schedule } from '@/hooks/use-schedules';
+import ShiftResponseActions from './ShiftResponseActions';
 import { useToast } from '@/hooks/use-toast';
+import { useUpdateSchedule, useCanEditShift } from '@/hooks/use-schedules';
+import DraftShiftIndicator from './components/DraftShiftIndicator';
 
 interface ShiftDetailCardProps {
   schedule: Schedule;
@@ -18,160 +20,221 @@ interface ShiftDetailCardProps {
   onResponseComplete?: () => void;
 }
 
-const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
-  schedule,
-  onInfoClick,
-  onEmailClick,
+const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({ 
+  schedule, 
+  onInfoClick, 
+  onEmailClick, 
   onCancelClick,
-  onResponseComplete
+  onResponseComplete 
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { updateSchedule, isUpdating } = useUpdateSchedule();
+  const { mutate: checkCanEdit } = useCanEditShift();
+  const [isEditing, setIsEditing] = useState(false);
+  
+  const startTime = new Date(schedule.start_time);
+  const endTime = new Date(schedule.end_time);
+  const now = new Date();
+  const hours = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60) * 10) / 10;
+  
+  const formatDateLabel = (date: Date) => {
+    if (isToday(date)) return 'Today';
+    if (isTomorrow(date)) return 'Tomorrow';
+    if (isYesterday(date)) return 'Yesterday';
+    return format(date, 'EEE, MMM d');
+  };
 
-  // Format dates
-  const startDate = new Date(schedule.start_time);
-  const endDate = new Date(schedule.end_time);
-  
-  // Calculate shift duration
-  const durationHours = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
-  
-  const handleResponse = async (accept: boolean) => {
-    try {
-      setIsSubmitting(true);
-      
-      const { data, error } = await supabase
-        .from('schedules')
-        .update({
-          status: accept ? 'confirmed' : 'rejected',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', schedule.id)
-        .select();
-        
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: accept ? "Shift Accepted" : "Shift Declined",
-        description: accept ? 
-          "You have successfully accepted the shift." : 
-          "You have declined the shift.",
-        variant: accept ? "default" : "destructive",
-      });
-      
-      if (onResponseComplete) {
-        onResponseComplete();
-      }
-      
-    } catch (error) {
-      console.error('Error responding to shift:', error);
-      toast({
-        title: "Error",
-        description: "Failed to respond to shift request. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'confirmed': return 'bg-green-500';
+      case 'pending': return 'bg-orange-500';
+      case 'completed': return 'bg-blue-500';
+      case 'rejected': 
+      case 'employee_rejected': return 'bg-red-500';
+      case 'employee_accepted': return 'bg-emerald-500';
+      default: return 'bg-gray-500';
     }
   };
 
+  const getDepartmentColor = (department?: string) => {
+    switch (department?.toLowerCase()) {
+      case 'sales': return 'bg-blue-500';
+      case 'customer service': return 'bg-orange-400';
+      case 'marketing': return 'bg-purple-500';
+      case 'operations': return 'bg-green-500';
+      case 'hr': return 'bg-pink-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  const handleEdit = () => {
+    checkCanEdit(schedule.id, {
+      onSuccess: (canEdit) => {
+        if (canEdit) {
+          setIsEditing(true);
+        } else {
+          toast({
+            title: "Cannot Edit",
+            description: "This shift cannot be edited at this time.",
+            variant: "destructive"
+          });
+        }
+      },
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to check edit permissions.",
+          variant: "destructive"
+        });
+      }
+    });
+  };
+
+  const handlePublish = () => {
+    if (schedule.is_draft) {
+      updateSchedule({
+        ...schedule,
+        is_draft: false,
+        published: true,
+        published_at: new Date().toISOString()
+      });
+      
+      toast({
+        title: "Shift Published",
+        description: "The shift has been published and is now visible to employees.",
+      });
+    }
+  };
+
+  const isExpired = isBefore(endTime, now);
+  const canShowActions = schedule.status === 'pending' && !isExpired;
+
   return (
     <Card className={cn(
-      "overflow-hidden",
-      schedule.status === 'pending' ? "border-amber-300" : "",
-      schedule.status === 'confirmed' ? "border-green-300" : "",
-      schedule.status === 'rejected' ? "border-red-300" : ""
+      "p-4 border-l-4 bg-white shadow-sm hover:shadow-md transition-shadow",
+      schedule.is_draft ? "border-l-orange-500 bg-orange-50" : "border-l-green-500"
     )}>
-      <div className="p-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-medium text-lg">{schedule.title}</h3>
-            <div className="flex items-center text-gray-600 mt-1">
-              <Calendar className="h-4 w-4 mr-1" />
-              <span>{format(startDate, 'EEEE, MMMM d, yyyy')}</span>
-            </div>
-            <div className="flex items-center text-gray-600 mt-1">
-              <Clock className="h-4 w-4 mr-1" />
-              <span>
-                {format(startDate, 'h:mm a')} - {format(endDate, 'h:mm a')}
-                <span className="text-gray-500 ml-1">({durationHours.toFixed(1)} hrs)</span>
-              </span>
-            </div>
+      {/* Header with date and status */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="text-lg font-semibold">
+            {formatDateLabel(startTime)}
           </div>
-          
-          <Badge className={cn(
-            "text-xs",
-            schedule.status === 'pending' ? "bg-amber-100 text-amber-800 border-amber-200" : 
-            schedule.status === 'confirmed' ? "bg-green-100 text-green-800 border-green-200" : 
-            schedule.status === 'rejected' ? "bg-red-100 text-red-800 border-red-200" : 
-            "bg-gray-100 text-gray-800 border-gray-200"
-          )}>
-            {schedule.status === 'pending' ? 'Needs Response' : 
-             schedule.status === 'confirmed' ? 'Confirmed' :
-             schedule.status === 'rejected' ? 'Rejected' :
-             schedule.status}
+          <DraftShiftIndicator 
+            isDraft={schedule.is_draft}
+            canBeEdited={schedule.can_be_edited}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          {schedule.can_be_edited && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleEdit}
+              disabled={isUpdating}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          )}
+          {schedule.is_draft && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePublish}
+              disabled={isUpdating}
+              className="text-green-600 border-green-200 hover:bg-green-50"
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              Publish
+            </Button>
+          )}
+          <Badge className={cn("text-white", getStatusColor(schedule.status))}>
+            {schedule.status || 'confirmed'}
           </Badge>
         </div>
+      </div>
+
+      {/* Time and Hours */}
+      <div className="grid grid-cols-3 gap-4 mb-3">
+        <div>
+          <div className="text-sm text-gray-500">Start</div>
+          <div className="text-lg font-semibold">
+            {format(startTime, 'hh:mm a')}
+          </div>
+        </div>
+        <div>
+          <div className="text-sm text-gray-500">End</div>
+          <div className="text-lg font-semibold">
+            {format(endTime, 'hh:mm a')}
+          </div>
+        </div>
+        <div>
+          <div className="text-sm text-gray-500">Hours</div>
+          <div className="text-lg font-semibold">{hours}</div>
+        </div>
+      </div>
+
+      {/* Shift Details */}
+      <div className="space-y-2 mb-3">
+        <div className="text-lg font-medium">{schedule.title}</div>
         
         {schedule.location && (
-          <div className="mt-2 text-sm text-gray-600">
-            Location: {schedule.location}
+          <div className="flex items-center gap-2 text-gray-600">
+            <MapPin className="h-4 w-4" />
+            <span className="text-sm">{schedule.location}</span>
           </div>
         )}
-        
+
         {schedule.notes && (
-          <div className="mt-2 text-sm text-gray-600">
-            Notes: {schedule.notes}
+          <div className="flex items-start gap-2 text-gray-600">
+            <MessageCircle className="h-4 w-4 mt-0.5" />
+            <span className="text-sm">{schedule.notes}</span>
           </div>
         )}
-        
-        {/* Response buttons for pending shifts */}
-        {schedule.status === 'pending' && (
-          <div className="mt-4 flex justify-end space-x-2">
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="border-green-500 text-green-600 hover:bg-green-50"
-              onClick={() => handleResponse(true)}
-              disabled={isSubmitting}
-            >
-              <Check className="h-4 w-4 mr-1" />
-              Accept
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="border-red-500 text-red-600 hover:bg-red-50"
-              onClick={() => handleResponse(false)}
-              disabled={isSubmitting}
-            >
-              <X className="h-4 w-4 mr-1" />
-              Decline
-            </Button>
+
+        {schedule.draft_notes && schedule.is_draft && (
+          <div className="flex items-start gap-2 text-orange-600">
+            <FileText className="h-4 w-4 mt-0.5" />
+            <span className="text-sm italic">Draft notes: {schedule.draft_notes}</span>
           </div>
         )}
-        
-        {/* Action buttons for confirmed shifts */}
-        {schedule.status === 'confirmed' && (
-          <div className="mt-4 flex justify-end space-x-2">
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              onClick={onInfoClick}
-            >
-              <Info className="h-4 w-4 mr-1" />
-              Details
-            </Button>
-            <Button 
-              size="sm" 
-              variant="ghost"
-              onClick={onEmailClick}
-            >
-              <Mail className="h-4 w-4 mr-1" />
-              Contact
-            </Button>
-          </div>
+      </div>
+
+      {/* Action Buttons */}
+      {canShowActions && (
+        <ShiftResponseActions
+          schedule={schedule}
+          onResponseComplete={onResponseComplete}
+        />
+      )}
+
+      {/* Info and Actions */}
+      <div className="flex gap-2 mt-3">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onInfoClick}
+          className="flex-1"
+        >
+          View Details
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onEmailClick}
+          className="flex-1"
+        >
+          Contact Manager
+        </Button>
+        {(schedule.status === 'pending' || schedule.is_draft) && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onCancelClick}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         )}
       </div>
     </Card>

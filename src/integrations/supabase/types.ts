@@ -1309,17 +1309,20 @@ export type Database = {
           approved_by: string | null
           break_duration: number | null
           calendar_id: string | null
+          can_be_edited: boolean | null
           color: string | null
           cost_center: string | null
           coworkers: string[] | null
           created_at: string
           created_platform: string | null
+          draft_notes: string | null
           drag_disabled: boolean | null
           employee_id: string | null
           end_time: string
           estimated_cost: number | null
           hourly_rate: number | null
           id: string
+          is_draft: boolean | null
           labor_cost_calculated: boolean | null
           last_dragged_at: string | null
           last_dragged_by: string | null
@@ -1349,17 +1352,20 @@ export type Database = {
           approved_by?: string | null
           break_duration?: number | null
           calendar_id?: string | null
+          can_be_edited?: boolean | null
           color?: string | null
           cost_center?: string | null
           coworkers?: string[] | null
           created_at?: string
           created_platform?: string | null
+          draft_notes?: string | null
           drag_disabled?: boolean | null
           employee_id?: string | null
           end_time: string
           estimated_cost?: number | null
           hourly_rate?: number | null
           id?: string
+          is_draft?: boolean | null
           labor_cost_calculated?: boolean | null
           last_dragged_at?: string | null
           last_dragged_by?: string | null
@@ -1389,17 +1395,20 @@ export type Database = {
           approved_by?: string | null
           break_duration?: number | null
           calendar_id?: string | null
+          can_be_edited?: boolean | null
           color?: string | null
           cost_center?: string | null
           coworkers?: string[] | null
           created_at?: string
           created_platform?: string | null
+          draft_notes?: string | null
           drag_disabled?: boolean | null
           employee_id?: string | null
           end_time?: string
           estimated_cost?: number | null
           hourly_rate?: number | null
           id?: string
+          is_draft?: boolean | null
           labor_cost_calculated?: boolean | null
           last_dragged_at?: string | null
           last_dragged_by?: string | null
@@ -1767,6 +1776,10 @@ export type Database = {
       calculate_weekly_labor_analytics: {
         Args: { start_date: string; end_date: string; dept?: string }
         Returns: undefined
+      }
+      can_edit_shift: {
+        Args: { shift_id: string }
+        Returns: boolean
       }
       delete_user: {
         Args: Record<PropertyKey, never>

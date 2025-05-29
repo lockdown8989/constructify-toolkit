@@ -151,6 +151,10 @@ export interface Schedule {
   mobile_notification_sent: boolean;
   created_platform: string;
   last_modified_platform: string;
+  // New draft and editing fields
+  is_draft?: boolean;
+  draft_notes?: string | null;
+  can_be_edited?: boolean;
 }
 
 export interface ShiftSwap {

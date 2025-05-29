@@ -16,7 +16,10 @@ export interface Schedule {
   status?: 'confirmed' | 'pending' | 'completed' | 'rejected';
   location?: string;
   shift_type?: string;
-  published?: boolean; // Added this property to match the database schema
+  published?: boolean;
+  is_draft?: boolean;
+  draft_notes?: string | null;
+  can_be_edited?: boolean;
   mobile_friendly_view?: {
     font_size: 'small' | 'medium' | 'large';
     compact_view: boolean;
@@ -64,6 +67,8 @@ export function useSchedules() {
         return data?.map(schedule => ({
           ...schedule,
           status: schedule.status || 'confirmed',
+          is_draft: schedule.is_draft ?? true,
+          can_be_edited: schedule.can_be_edited ?? true,
           mobile_friendly_view: schedule.mobile_friendly_view || {
             font_size: 'medium',
             compact_view: false,
@@ -90,7 +95,9 @@ export function useSchedules() {
           updated_at: new Date().toISOString(),
           created_platform: isMobile ? 'mobile' : 'desktop',
           last_modified_platform: isMobile ? 'mobile' : 'desktop',
-          status: schedule.status || 'confirmed'
+          status: schedule.status || 'confirmed',
+          is_draft: schedule.is_draft ?? true,
+          can_be_edited: schedule.can_be_edited ?? true
         }])
         .select()
         .single();
@@ -132,7 +139,9 @@ export function useCreateSchedule() {
           updated_at: new Date().toISOString(),
           created_platform: isMobile ? 'mobile' : 'desktop',
           last_modified_platform: isMobile ? 'mobile' : 'desktop',
-          status: schedule.status || 'confirmed'
+          status: schedule.status || 'confirmed',
+          is_draft: schedule.is_draft ?? true,
+          can_be_edited: schedule.can_be_edited ?? true
         }])
         .select()
         .single();
@@ -167,6 +176,9 @@ export function useUpdateSchedule() {
           notes: schedule.notes,
           status: schedule.status,
           location: schedule.location,
+          is_draft: schedule.is_draft,
+          draft_notes: schedule.draft_notes,
+          can_be_edited: schedule.can_be_edited,
           updated_at: new Date().toISOString()
         })
         .eq('id', schedule.id)
@@ -192,4 +204,18 @@ export function useUpdateSchedule() {
     isUpdating: mutation.isPending,
     error: mutation.error
   };
+}
+
+// Add hook to check if a shift can be edited using the database function
+export function useCanEditShift() {
+  return useMutation({
+    mutationFn: async (shiftId: string) => {
+      const { data, error } = await supabase.rpc('can_edit_shift', {
+        shift_id: shiftId
+      });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 }
