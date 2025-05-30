@@ -80,7 +80,7 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
             />
           )}
           
-          {userRole === "employee" && (
+          {(userRole === "employee" || userRole === "payroll") && (
             <ManagerIdInput 
               managerId={managerId}
               onGenerateManagerId={generateManagerId}

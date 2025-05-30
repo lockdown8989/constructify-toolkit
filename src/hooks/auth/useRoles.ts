@@ -7,6 +7,7 @@ export const useRoles = (user: User | null) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isHR, setIsHR] = useState(false);
   const [isManager, setIsManager] = useState(false);
+  const [isPayroll, setIsPayroll] = useState(false);
   const [rolesLoaded, setRolesLoaded] = useState(false);
 
   // Automatically fetch roles when user changes
@@ -38,6 +39,7 @@ export const useRoles = (user: User | null) => {
         // Check each role
         setIsAdmin(userRoles.includes('admin'));
         setIsHR(userRoles.includes('hr'));
+        setIsPayroll(userRoles.includes('payroll'));
         
         // Check for 'employer' role which corresponds to manager in the UI
         const hasEmployerRole = userRoles.includes('employer');
@@ -48,6 +50,7 @@ export const useRoles = (user: User | null) => {
         setIsAdmin(false);
         setIsHR(false);
         setIsManager(false);
+        setIsPayroll(false);
       }
       
       setRolesLoaded(true);
@@ -61,6 +64,7 @@ export const useRoles = (user: User | null) => {
     setIsAdmin(false);
     setIsHR(false);
     setIsManager(false);
+    setIsPayroll(false);
     setRolesLoaded(false);
   };
 
@@ -68,6 +72,7 @@ export const useRoles = (user: User | null) => {
     isAdmin,
     isHR,
     isManager,
+    isPayroll,
     fetchUserRoles,
     resetRoles,
     rolesLoaded

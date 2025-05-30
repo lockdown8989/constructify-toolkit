@@ -2,8 +2,8 @@
 import { User, Session } from '@supabase/supabase-js';
 
 // Define the user role types - IMPORTANT: Database uses 'employer' while UI uses 'manager'
-export type UserRole = 'admin' | 'hr' | 'employee' | 'manager';
-export type DatabaseRole = 'admin' | 'hr' | 'employee' | 'employer';
+export type UserRole = 'admin' | 'hr' | 'employee' | 'manager' | 'payroll';
+export type DatabaseRole = 'admin' | 'hr' | 'employee' | 'employer' | 'payroll';
 
 // Map UI roles to database roles
 export const mapUIRoleToDBRole = (role: UserRole): DatabaseRole => {
@@ -23,6 +23,7 @@ export interface AuthContextType {
   isHR: boolean;
   isManager: boolean;
   isEmployee: boolean;
+  isPayroll: boolean;
   isAuthenticated?: boolean;
   signIn?: (email: string, password: string) => Promise<any>;
   signUp?: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;

@@ -60,15 +60,15 @@ export const useSignUpSubmit = ({
         return;
       }
       
-      // Require manager ID for employees - this validation is now stricter
-      if (userRole === 'employee' && !managerId) {
-        setSignUpError("Manager ID is required for employee accounts");
+      // Require manager ID for employees and payroll users
+      if ((userRole === 'employee' || userRole === 'payroll') && !managerId) {
+        setSignUpError("Manager ID is required for employee and payroll accounts");
         setIsLoading(false);
         return;
       }
       
-      // Validate manager ID format for employees
-      if (userRole === 'employee' && managerId && !managerId.startsWith('MGR-')) {
+      // Validate manager ID format for employees and payroll users
+      if ((userRole === 'employee' || userRole === 'payroll') && managerId && !managerId.startsWith('MGR-')) {
         setSignUpError("Invalid Manager ID format. Manager IDs must start with 'MGR-'");
         setIsLoading(false);
         return;
@@ -147,12 +147,17 @@ export const useSignUpSubmit = ({
         console.log("Role assignment result:", roleSuccess);
         console.log("Employee record creation result:", employeeSuccess);
         
-        // Show appropriate success message
+        // Show appropriate success message based on role
         if (userRole === 'manager') {
           toast({
             title: "Success",
-            description: `Account created with manager role. Your Manager ID is ${managerId}. Share this with your employees to connect them to your account.`,
+            description: `Manager account created. Your Manager ID is ${managerId}. Share this with your employees to connect them to your account.`,
             duration: 6000,
+          });
+        } else if (userRole === 'payroll' && managerId) {
+          toast({
+            title: "Success", 
+            description: `Payroll account created and linked to manager with ID ${managerId}.`,
           });
         } else if (userRole === 'employee' && managerId) {
           toast({
@@ -177,9 +182,8 @@ export const useSignUpSubmit = ({
           });
         }
         
-        // Sign in automatically after successful registration
+        // Sign in automatically after successful registration for manager accounts
         if (userRole === 'manager') {
-          // For manager accounts, sign in automatically and redirect to dashboard
           const { error: signInError } = await supabase.auth.signInWithPassword({
             email,
             password
