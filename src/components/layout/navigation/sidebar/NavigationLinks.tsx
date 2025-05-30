@@ -44,7 +44,7 @@ const NavigationLinks = () => {
         />
       )}
 
-      <SidebarDivider />
+      <SidebarDivider isCollapsed={false} />
 
       {/* Employee Management - For Managers/HR/Admin */}
       {hasManagerialAccess && (
@@ -99,7 +99,7 @@ const NavigationLinks = () => {
         />
       )}
 
-      <SidebarDivider />
+      <SidebarDivider isCollapsed={false} />
 
       {/* Employee Workflow - For employees */}
       {isEmployee && (
@@ -121,7 +121,7 @@ const NavigationLinks = () => {
         />
       )}
 
-      <SidebarDivider />
+      <SidebarDivider isCollapsed={false} />
 
       {/* Profile */}
       <SidebarNavLink

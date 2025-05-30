@@ -37,6 +37,9 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
         throw new Error("User not authenticated");
       }
 
+      // Store the old manager ID for updating connected employees
+      const oldManagerId = managerId;
+
       // Check if the user already has an employee record
       const { data: existingEmployee, error: checkError } = await supabase
         .from("employees")
@@ -51,28 +54,70 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
       
       if (existingEmployee) {
         console.log("Existing employee record found, updating manager ID");
-        // Only update if the manager_id is null or user explicitly wants to regenerate
-        if (!existingEmployee.manager_id || managerId) {
-          const { error } = await supabase
-            .from("employees")
-            .update({ 
-              manager_id: newManagerId,
-              job_title: 'Manager'
-            })
-            .eq("user_id", userData.user.id);
+        // Update the manager's own record
+        const { error } = await supabase
+          .from("employees")
+          .update({ 
+            manager_id: newManagerId,
+            job_title: 'Manager'
+          })
+          .eq("user_id", userData.user.id);
 
-          if (error) {
-            console.error("Error updating manager ID:", error);
-            throw new Error("Failed to update manager ID");
+        if (error) {
+          console.error("Error updating manager ID:", error);
+          throw new Error("Failed to update manager ID");
+        }
+
+        // If there was an old manager ID, update all employees who were connected to it
+        if (oldManagerId) {
+          console.log(`Updating all employees connected to old manager ID: ${oldManagerId}`);
+          const { data: connectedEmployees, error: updateError } = await supabase
+            .from("employees")
+            .update({ manager_id: newManagerId })
+            .eq("manager_id", oldManagerId)
+            .neq("user_id", userData.user.id) // Don't update the manager's own record again
+            .select("name, user_id");
+
+          if (updateError) {
+            console.error("Error updating connected employees:", updateError);
+            toast({
+              title: "Partial Success",
+              description: "Manager ID updated but some employees may need to reconnect manually.",
+              variant: "default",
+            });
+          } else if (connectedEmployees && connectedEmployees.length > 0) {
+            console.log(`Successfully updated ${connectedEmployees.length} connected employees`);
+            
+            // Send notifications to updated employees
+            const notifications = connectedEmployees
+              .filter(emp => emp.user_id) // Only send to employees with user accounts
+              .map(emp => ({
+                user_id: emp.user_id,
+                title: "Manager ID Updated",
+                message: `Your manager has updated their ID to ${newManagerId}. Your connection has been automatically maintained.`,
+                type: "info",
+                related_entity: "profile",
+              }));
+
+            if (notifications.length > 0) {
+              await supabase.from("notifications").insert(notifications);
+            }
+
+            toast({
+              title: "Success",
+              description: `Manager ID updated to ${newManagerId}. ${connectedEmployees.length} connected employees have been automatically updated.`,
+            });
+          } else {
+            toast({
+              title: "Success",
+              description: `Manager ID updated to ${newManagerId}.`,
+            });
           }
         } else {
-          console.log("Manager ID already exists, not updating");
           toast({
-            title: "Manager ID already exists",
-            description: existingEmployee.manager_id,
+            title: "Success",
+            description: `Manager ID generated: ${newManagerId}`,
           });
-          setIsRegenerating(false);
-          return;
         }
       } else {
         // Create new employee record
@@ -96,7 +141,7 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
             department: 'Management',
             site: 'Main Office',
             manager_id: newManagerId,
-            status: 'Present', // Changed from 'Active' to 'Present' to match allowed values
+            status: 'Present',
             lifecycle: 'Employed',
             salary: 0,
             user_id: userData.user.id
@@ -106,12 +151,12 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
           console.error("Error creating manager record:", error);
           throw new Error("Failed to create manager record: " + error.message);
         }
+
+        toast({
+          title: "Success",
+          description: `Manager ID generated: ${newManagerId}`,
+        });
       }
-      
-      toast({
-        title: "Success",
-        description: `Manager ID generated: ${newManagerId}`,
-      });
       
       // Reload the page after a short delay to reflect the changes
       setTimeout(() => {
@@ -162,7 +207,7 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
             </Button>
           </div>
           <p className="text-sm text-blue-600 mt-1">
-            Share this ID with your employees to connect them to your account
+            Share this ID with your employees to connect them to your account. When you refresh this ID, all connected employees will be automatically updated.
           </p>
         </>
       ) : (
