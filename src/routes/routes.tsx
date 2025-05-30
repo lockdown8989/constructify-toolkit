@@ -1,118 +1,187 @@
 
-import { createBrowserRouter } from "react-router-dom";
-import Index from "@/pages/Index";
-import About from "@/pages/About";
-import Dashboard from "@/pages/Dashboard";
-import People from "@/pages/People";
-import EmployeeWorkflow from "@/pages/EmployeeWorkflow";
-import LeaveManagement from "@/pages/LeaveManagement";
-import Salary from "@/pages/Salary";
-import Payroll from "@/pages/Payroll";
-import Attendance from "@/pages/Attendance";
-import RestaurantSchedule from "@/pages/RestaurantSchedule";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import Auth from "@/pages/Auth";
-import NotFound from "@/pages/NotFound";
-import TimeClock from "@/pages/TimeClock";
-import ManagerTimeClock from "@/pages/ManagerTimeClock";
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { AuthProvider } from '@/hooks/auth';
+import AppLayout from '@/components/layout/AppLayout';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Index />,
-  },
-  {
-    path: "/about",
-    element: <About />,
-  },
-  {
-    path: "/auth",
-    element: <Auth />,
-  },
-  {
-    path: "/dashboard",
-    element: (
-      <ProtectedRoute>
-        <Dashboard />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/people",
-    element: (
-      <ProtectedRoute>
-        <People />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/employee-workflow",
-    element: (
-      <ProtectedRoute>
-        <EmployeeWorkflow />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/leave-management",
-    element: (
-      <ProtectedRoute>
-        <LeaveManagement />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/salary",
-    element: (
-      <ProtectedRoute>
-        <Salary />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/payroll",
-    element: (
-      <ProtectedRoute>
-        <Payroll />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/attendance",
-    element: (
-      <ProtectedRoute>
-        <Attendance />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/shift-calendar",
-    element: (
-      <ProtectedRoute>
-        <RestaurantSchedule />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/time-clock",
-    element: (
-      <ProtectedRoute>
-        <TimeClock />
-      </ProtectedRoute>
-    ),
-  },
-    {
-    path: "/manager-time-clock",
-    element: (
-      <ProtectedRoute>
-        <ManagerTimeClock />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "*",
-    element: <NotFound />,
-  },
-]);
+// Import pages
+import Index from '@/pages/Index';
+import Dashboard from '@/pages/Dashboard';
+import Auth from '@/pages/Auth';
+import TimeClock from '@/pages/TimeClock';
+import ManagerTimeClock from '@/pages/ManagerTimeClock';
+import Schedule from '@/pages/Schedule';
+import ScheduleRequests from '@/pages/ScheduleRequests';
+import LeaveManagement from '@/pages/LeaveManagement';
+import People from '@/pages/People';
+import Attendance from '@/pages/Attendance';
+import Salary from '@/pages/Salary';
+import Payroll from '@/pages/Payroll';
+import PayrollDashboard from '@/pages/PayrollDashboard';
+import EmployeeWorkflow from '@/pages/EmployeeWorkflow';
+import RestaurantSchedule from '@/pages/RestaurantSchedule';
+import Settings from '@/pages/Settings';
+import ProfileSettings from '@/pages/ProfileSettings';
+import Profile from '@/pages/Profile';
+import Hiring from '@/pages/Hiring';
+import About from '@/pages/About';
+import NotFound from '@/pages/NotFound';
 
-export default router;
+const AppRoutes = () => {
+  return (
+    <AuthProvider>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/about" element={<About />} />
+
+        {/* Protected routes with layout */}
+        <Route element={<AppLayout />}>
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payroll-dashboard"
+            element={
+              <ProtectedRoute requiredRole="payroll">
+                <PayrollDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/time-clock"
+            element={
+              <ProtectedRoute>
+                <TimeClock />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/manager-time-clock"
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <ManagerTimeClock />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/schedule"
+            element={
+              <ProtectedRoute>
+                <Schedule />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/schedule-requests"
+            element={
+              <ProtectedRoute>
+                <ScheduleRequests />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leave"
+            element={
+              <ProtectedRoute>
+                <LeaveManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/people"
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <People />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/attendance"
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <Attendance />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/salary"
+            element={
+              <ProtectedRoute>
+                <Salary />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payroll"
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager', 'payroll']}>
+                <Payroll />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/employee-workflow"
+            element={
+              <ProtectedRoute>
+                <EmployeeWorkflow />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/restaurant-schedule"
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <RestaurantSchedule />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile-settings"
+            element={
+              <ProtectedRoute>
+                <ProfileSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/hiring"
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <Hiring />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
+
+        {/* 404 route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AuthProvider>
+  );
+};
+
+export default AppRoutes;

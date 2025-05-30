@@ -1,139 +1,144 @@
 
 import React from 'react';
-import { 
-  LayoutDashboard, FileText, User, Users, Calendar, 
-  Workflow, DollarSign, Receipt, Clock, ClipboardCheck
-} from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useLocation } from 'react-router-dom';
+import { useAuth } from '@/hooks/auth';
 import SidebarNavLink from './SidebarNavLink';
 import SidebarDivider from './SidebarDivider';
+import { 
+  Home, 
+  Users, 
+  Calendar, 
+  FileText, 
+  DollarSign, 
+  ClipboardList, 
+  Clock, 
+  User, 
+  Settings,
+  UserCheck,
+  Calculator
+} from 'lucide-react';
 
-interface NavigationLinksProps {
-  isAuthenticated: boolean;
-  isCollapsed: boolean;
-  hasManagerialAccess: boolean;
-  currentPath: string;
-}
-
-const NavigationLinks: React.FC<NavigationLinksProps> = ({
-  isAuthenticated,
-  isCollapsed,
-  hasManagerialAccess,
-  currentPath
-}) => {
-  const isActive = (path: string) => currentPath === path;
+const NavigationLinks = () => {
+  const location = useLocation();
+  const { isAdmin, isHR, isManager, isEmployee, isPayroll } = useAuth();
+  
+  const hasManagerialAccess = isManager || isAdmin || isHR;
 
   return (
-    <ScrollArea className="h-full">
-      <nav className={`grid gap-1 py-3 ${isCollapsed ? "px-2" : "px-3"}`}>
-        {/* Common Links */}
+    <nav className="px-3 space-y-1">
+      {/* Dashboard */}
+      <SidebarNavLink
+        to="/dashboard"
+        icon={<Home className="w-5 h-5" />}
+        label="Dashboard"
+        isActive={location.pathname === "/dashboard"}
+      />
+
+      {/* Payroll users get a special payroll dashboard */}
+      {isPayroll && (
         <SidebarNavLink
-          to="/dashboard"
-          icon={LayoutDashboard}
-          label="Dashboard"
-          isActive={isActive("/dashboard")}
-          isCollapsed={isCollapsed}
+          to="/payroll-dashboard"
+          icon={<Calculator className="w-5 h-5" />}
+          label="Payroll Dashboard"
+          isActive={location.pathname === "/payroll-dashboard"}
         />
-        
+      )}
+
+      <SidebarDivider />
+
+      {/* Employee Management - For Managers/HR/Admin */}
+      {hasManagerialAccess && (
+        <>
+          <SidebarNavLink
+            to="/people"
+            icon={<Users className="w-5 h-5" />}
+            label="People"
+            isActive={location.pathname === "/people"}
+          />
+          
+          <SidebarNavLink
+            to="/attendance"
+            icon={<UserCheck className="w-5 h-5" />}
+            label="Attendance"
+            isActive={location.pathname === "/attendance"}
+          />
+        </>
+      )}
+
+      {/* Schedule Management */}
+      <SidebarNavLink
+        to="/schedule"
+        icon={<Calendar className="w-5 h-5" />}
+        label="Schedule"
+        isActive={location.pathname === "/schedule"}
+      />
+
+      {/* Leave Management */}
+      <SidebarNavLink
+        to="/leave"
+        icon={<FileText className="w-5 h-5" />}
+        label="Leave"
+        isActive={location.pathname === "/leave"}
+      />
+
+      {/* Salary - All users can see their salary */}
+      <SidebarNavLink
+        to="/salary"
+        icon={<DollarSign className="w-5 h-5" />}
+        label="Salary"
+        isActive={location.pathname === "/salary"}
+      />
+
+      {/* Payroll - For Managers/HR/Admin/Payroll */}
+      {(hasManagerialAccess || isPayroll) && (
         <SidebarNavLink
-          to="/about"
-          icon={FileText}
-          label="About"
-          isActive={isActive("/about")}
-          isCollapsed={isCollapsed}
+          to="/payroll"
+          icon={<Calculator className="w-5 h-5" />}
+          label="Payroll"
+          isActive={location.pathname === "/payroll"}
         />
-        
+      )}
+
+      <SidebarDivider />
+
+      {/* Employee Workflow - For employees */}
+      {isEmployee && (
         <SidebarNavLink
-          to="/contact"
-          icon={User}
-          label="Contact"
-          isActive={isActive("/contact")}
-          isCollapsed={isCollapsed}
+          to="/employee-workflow"
+          icon={<ClipboardList className="w-5 h-5" />}
+          label="Workflow"
+          isActive={location.pathname === "/employee-workflow"}
         />
-        
-        {isAuthenticated && (
-          <>
-            <SidebarDivider isCollapsed={isCollapsed} />
-            
-            {hasManagerialAccess && (
-              <>
-                <SidebarNavLink
-                  to="/attendance"
-                  icon={ClipboardCheck}
-                  label="📊 Attendance"
-                  isActive={isActive("/attendance")}
-                  isCollapsed={isCollapsed}
-                />
-                
-                {/* Add Manager Time Clock button with custom styling */}
-                <SidebarNavLink
-                  to="/manager-time-clock"
-                  icon={Clock}
-                  label="⏰️IN AND OUT⏱️"
-                  isActive={isActive("/manager-time-clock")}
-                  isCollapsed={isCollapsed}
-                  className="time-clock-nav-button"
-                />
-              </>
-            )}
-            
-            <SidebarNavLink
-              to="/employee-workflow"
-              icon={Clock}
-              label={hasManagerialAccess ? "📋 Employee Shifts" : "📋 My Schedule"}
-              isActive={isActive("/employee-workflow")}
-              isCollapsed={isCollapsed}
-            />
-            
-            {hasManagerialAccess && (
-              <>
-                <SidebarNavLink
-                  to="/people"
-                  icon={Users}
-                  label="📍 Team Members"
-                  isActive={isActive("/people")}
-                  isCollapsed={isCollapsed}
-                />
-                
-                <SidebarNavLink
-                  to="/shift-calendar"
-                  icon={Calendar}
-                  label="📆 Schedule Calendar"
-                  isActive={isActive("/shift-calendar")}
-                  isCollapsed={isCollapsed}
-                />
-              </>
-            )}
-            
-            <SidebarNavLink
-              to="/leave-management"
-              icon={Calendar}
-              label="📑 Leave Management"
-              isActive={isActive("/leave-management")}
-              isCollapsed={isCollapsed}
-            />
-            
-            <SidebarNavLink
-              to="/salary"
-              icon={DollarSign}
-              label="💰 Salary"
-              isActive={isActive("/salary")}
-              isCollapsed={isCollapsed}
-            />
-            
-            {hasManagerialAccess && (
-              <SidebarNavLink
-                to="/payroll"
-                icon={Receipt}
-                label="📝 Payroll"
-                isActive={isActive("/payroll")}
-                isCollapsed={isCollapsed}
-              />
-            )}
-          </>
-        )}
-      </nav>
-    </ScrollArea>
+      )}
+
+      {/* Restaurant Schedule - For Managers */}
+      {hasManagerialAccess && (
+        <SidebarNavLink
+          to="/restaurant-schedule"
+          icon={<Clock className="w-5 h-5" />}
+          label="Restaurant Schedule"
+          isActive={location.pathname === "/restaurant-schedule"}
+        />
+      )}
+
+      <SidebarDivider />
+
+      {/* Profile */}
+      <SidebarNavLink
+        to="/profile"
+        icon={<User className="w-5 h-5" />}
+        label="Profile"
+        isActive={location.pathname === "/profile"}
+      />
+
+      {/* Settings */}
+      <SidebarNavLink
+        to="/settings"
+        icon={<Settings className="w-5 h-5" />}
+        label="Settings"
+        isActive={location.pathname === "/settings"}
+      />
+    </nav>
   );
 };
 

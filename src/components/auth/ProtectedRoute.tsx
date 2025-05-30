@@ -1,67 +1,60 @@
 
-import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/use-auth";
-import { Loader2 } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
-import { useEffect } from "react";
+import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/auth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'admin' | 'hr' | 'manager';
+  requiredRole?: 'admin' | 'hr' | 'manager' | 'employee' | 'payroll';
+  requiredRoles?: ('admin' | 'hr' | 'manager' | 'employee' | 'payroll')[];
 }
 
-const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const { user, isLoading, isAdmin, isHR, isManager } = useAuth();
-  const location = useLocation();
-
-  useEffect(() => {
-    // Log for debugging
-    if (requiredRole && user) {
-      console.log("Protected route check:", { 
-        requiredRole, 
-        isAdmin, 
-        isHR, 
-        isManager, 
-        hasAccess: checkAccess() 
-      });
-    }
-  }, [user, isAdmin, isHR, isManager, requiredRole]);
-
-  // Function to check if user has required role
-  const checkAccess = () => {
-    if (!requiredRole) return true;
-    
-    if (requiredRole === 'admin' && isAdmin) return true;
-    if (requiredRole === 'hr' && (isHR || isAdmin)) return true;
-    if (requiredRole === 'manager' && (isManager || isAdmin || isHR)) return true;
-    
-    return false;
-  };
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+  children, 
+  requiredRole, 
+  requiredRoles 
+}) => {
+  const { user, isLoading, isAdmin, isHR, isManager, isEmployee, isPayroll } = useAuth();
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
-          <p className="text-gray-600">Loading...</p>
-        </div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
   }
 
-  // If no user is found, redirect to auth page
   if (!user) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <Navigate to="/auth" replace />;
   }
 
-  // Check for required role
-  if (requiredRole && !checkAccess()) {
-    toast({
-      title: "Access Restricted",
-      description: `You need ${requiredRole} permissions to access this page.`,
-      variant: "destructive",
-    });
-    return <Navigate to="/dashboard" replace />;
+  // Check single required role
+  if (requiredRole) {
+    const hasRequiredRole = 
+      (requiredRole === 'admin' && isAdmin) ||
+      (requiredRole === 'hr' && isHR) ||
+      (requiredRole === 'manager' && isManager) ||
+      (requiredRole === 'employee' && isEmployee) ||
+      (requiredRole === 'payroll' && isPayroll);
+
+    if (!hasRequiredRole) {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+
+  // Check multiple required roles (user needs at least one)
+  if (requiredRoles && requiredRoles.length > 0) {
+    const hasAnyRequiredRole = requiredRoles.some(role => 
+      (role === 'admin' && isAdmin) ||
+      (role === 'hr' && isHR) ||
+      (role === 'manager' && isManager) ||
+      (role === 'employee' && isEmployee) ||
+      (role === 'payroll' && isPayroll)
+    );
+
+    if (!hasAnyRequiredRole) {
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return <>{children}</>;

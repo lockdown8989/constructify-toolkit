@@ -1,10 +1,7 @@
 
 import React from 'react';
-import { 
-  LayoutDashboard, FileText, User, Calendar, DollarSign
-} from "lucide-react";
-import MobileNavLink from "./MobileNavLink";
-import MobileNavDivider from "./MobileNavDivider";
+import { Home, Users, Calendar, FileText, DollarSign, ClipboardList, Clock, User, Settings, UserCheck, Calculator } from 'lucide-react';
+import MobileNavLink from './MobileNavLink';
 
 interface CommonSectionProps {
   isAuthenticated: boolean;
@@ -21,68 +18,112 @@ const CommonSection: React.FC<CommonSectionProps> = ({
 }) => {
   return (
     <>
-      <MobileNavLink
-        to="/dashboard"
-        icon={LayoutDashboard}
-        label="Dashboard"
-        onClick={onClose}
-      />
-      
-      <MobileNavLink
-        to="/about"
-        icon={FileText}
-        label="About"
-        onClick={onClose}
-      />
-      
-      <MobileNavLink
-        to="/contact"
-        icon={User}
-        label="Contact"
-        onClick={onClose}
-      />
-      
       {isAuthenticated && (
+        <MobileNavLink 
+          to="/dashboard" 
+          icon={<Home className="w-5 h-5" />} 
+          label="Dashboard" 
+          onClick={onClose} 
+        />
+      )}
+
+      {/* Employee Management - For Managers/HR/Admin */}
+      {hasManagerialAccess && (
         <>
-          {isEmployee && (
-            <>
-              <MobileNavDivider />
-              
-              <MobileNavLink
-                to="/employee-workflow"
-                icon={Calendar}
-                label="My Schedule"
-                onClick={onClose}
-              />
-              
-              <MobileNavLink
-                to="/leave-management"
-                icon={Calendar}
-                label="Leave Management"
-                onClick={onClose}
-              />
-              
-              <MobileNavLink
-                to="/salary"
-                icon={DollarSign}
-                label="💰 Salary"
-                onClick={onClose}
-                className="salary-nav-button"
-              />
-            </>
-          )}
+          <MobileNavLink 
+            to="/people" 
+            icon={<Users className="w-5 h-5" />} 
+            label="People" 
+            onClick={onClose} 
+          />
           
-          {/* Add the salary button for both employees and managers */}
-          {hasManagerialAccess && (
-            <MobileNavLink
-              to="/salary"
-              icon={DollarSign}
-              label="💰 Salary"
-              onClick={onClose}
-              className="salary-nav-button"
-            />
-          )}
+          <MobileNavLink 
+            to="/attendance" 
+            icon={<UserCheck className="w-5 h-5" />} 
+            label="Attendance" 
+            onClick={onClose} 
+          />
         </>
+      )}
+
+      {/* Schedule Management */}
+      {isAuthenticated && (
+        <MobileNavLink 
+          to="/schedule" 
+          icon={<Calendar className="w-5 h-5" />} 
+          label="Schedule" 
+          onClick={onClose} 
+        />
+      )}
+
+      {/* Leave Management */}
+      {isAuthenticated && (
+        <MobileNavLink 
+          to="/leave" 
+          icon={<FileText className="w-5 h-5" />} 
+          label="Leave" 
+          onClick={onClose} 
+        />
+      )}
+
+      {/* Salary - All users can see their salary */}
+      {isAuthenticated && (
+        <MobileNavLink 
+          to="/salary" 
+          icon={<DollarSign className="w-5 h-5" />} 
+          label="Salary" 
+          onClick={onClose} 
+        />
+      )}
+
+      {/* Payroll - For Managers/HR/Admin/Payroll */}
+      {hasManagerialAccess && (
+        <MobileNavLink 
+          to="/payroll" 
+          icon={<Calculator className="w-5 h-5" />} 
+          label="Payroll" 
+          onClick={onClose} 
+        />
+      )}
+
+      {/* Employee Workflow - For employees */}
+      {isEmployee && (
+        <MobileNavLink 
+          to="/employee-workflow" 
+          icon={<ClipboardList className="w-5 h-5" />} 
+          label="Workflow" 
+          onClick={onClose} 
+        />
+      )}
+
+      {/* Restaurant Schedule - For Managers */}
+      {hasManagerialAccess && (
+        <MobileNavLink 
+          to="/restaurant-schedule" 
+          icon={<Clock className="w-5 h-5" />} 
+          label="Restaurant Schedule" 
+          onClick={onClose} 
+        />
+      )}
+
+      {/* Profile */}
+      {isAuthenticated && (
+        <MobileNavLink 
+          to="/profile" 
+          icon={<User className="w-5 h-5" />} 
+          label="Profile" 
+          onClick={onClose} 
+        />
+      )}
+
+      {/* Settings */}
+      {isAuthenticated && (
+        <MobileNavLink 
+          to="/settings" 
+          icon={<Settings className="w-5 h-5" />} 
+          label="Settings" 
+          onClick={onClose} 
+        />
       )}
     </>
   );
