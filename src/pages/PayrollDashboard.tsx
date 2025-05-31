@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { usePayroll } from '@/hooks/use-payroll';
 import { useToast } from '@/hooks/use-toast';
+import type { Employee } from '@/components/dashboard/salary-table/types';
 
 const PayrollDashboard = () => {
   const { user, isPayroll } = useAuth();
@@ -35,7 +35,7 @@ const PayrollDashboard = () => {
   }
 
   // Fetch employees data
-  const { data: employees = [], isLoading } = useQuery({
+  const { data: dbEmployees = [], isLoading } = useQuery({
     queryKey: ['employees-payroll'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -55,6 +55,20 @@ const PayrollDashboard = () => {
       return data || [];
     }
   });
+
+  // Transform database employees to match the Employee interface expected by usePayroll
+  const employees: Employee[] = dbEmployees.map(emp => ({
+    id: emp.id,
+    name: emp.name,
+    title: emp.job_title, // Map job_title to title
+    salary: emp.salary || 0,
+    status: Math.random() > 0.2 ? 'Paid' : 'Pending' as 'Paid' | 'Absent' | 'Pending', // Random status for demo
+    paymentDate: format(new Date(), 'yyyy-MM-dd'), // Add current date as payment date
+    department: emp.department,
+    avatar: "/lovable-uploads/ff00229e-c65b-41be-aef7-572c8937cac0.png",
+    site: emp.department, // Use department as site for now
+    user_id: emp.user_id
+  }));
 
   // Fetch payroll statistics
   const { data: payrollStats } = useQuery({
@@ -91,16 +105,16 @@ const PayrollDashboard = () => {
     handleExportPayroll,
   } = usePayroll(employees);
 
-  // Transform employees data for the table
+  // Transform employees data for the table display
   const employeesData = employees.map(emp => ({
     id: emp.id,
     name: emp.name,
     email: `${emp.name.toLowerCase().replace(/\s+/g, '.')}@stellia.com`,
-    position: emp.job_title,
-    salary: `$${emp.salary?.toFixed(2) || '0.00'}`,
-    status: Math.random() > 0.2 ? 'Paid' : 'Pending', // Random status for demo
+    position: emp.title,
+    salary: `$${(typeof emp.salary === 'number' ? emp.salary : parseInt(emp.salary.toString().replace(/\$|,/g, '') || '0')).toFixed(2)}`,
+    status: emp.status,
     overtime: Math.random() > 0.5 ? `${Math.floor(Math.random() * 20)}hrs` : '-',
-    avatar: "/lovable-uploads/ff00229e-c65b-41be-aef7-572c8937cac0.png"
+    avatar: emp.avatar
   }));
 
   const filteredEmployees = employeesData.filter(employee =>
