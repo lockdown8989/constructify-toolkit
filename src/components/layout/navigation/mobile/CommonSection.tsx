@@ -21,7 +21,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       {isAuthenticated && (
         <MobileNavLink 
           to="/dashboard" 
-          icon={<Home className="w-5 h-5" />} 
+          icon={Home} 
           label="Dashboard" 
           onClick={onClose} 
         />
@@ -32,14 +32,14 @@ const CommonSection: React.FC<CommonSectionProps> = ({
         <>
           <MobileNavLink 
             to="/people" 
-            icon={<Users className="w-5 h-5" />} 
+            icon={Users} 
             label="People" 
             onClick={onClose} 
           />
           
           <MobileNavLink 
             to="/attendance" 
-            icon={<UserCheck className="w-5 h-5" />} 
+            icon={UserCheck} 
             label="Attendance" 
             onClick={onClose} 
           />
@@ -50,7 +50,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       {isAuthenticated && (
         <MobileNavLink 
           to="/schedule" 
-          icon={<Calendar className="w-5 h-5" />} 
+          icon={Calendar} 
           label="Schedule" 
           onClick={onClose} 
         />
@@ -60,7 +60,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       {isAuthenticated && (
         <MobileNavLink 
           to="/leave" 
-          icon={<FileText className="w-5 h-5" />} 
+          icon={FileText} 
           label="Leave" 
           onClick={onClose} 
         />
@@ -70,7 +70,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       {isAuthenticated && (
         <MobileNavLink 
           to="/salary" 
-          icon={<DollarSign className="w-5 h-5" />} 
+          icon={DollarSign} 
           label="Salary" 
           onClick={onClose} 
         />
@@ -80,7 +80,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       {hasManagerialAccess && (
         <MobileNavLink 
           to="/payroll" 
-          icon={<Calculator className="w-5 h-5" />} 
+          icon={Calculator} 
           label="Payroll" 
           onClick={onClose} 
         />
@@ -90,7 +90,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       {isEmployee && (
         <MobileNavLink 
           to="/employee-workflow" 
-          icon={<ClipboardList className="w-5 h-5" />} 
+          icon={ClipboardList} 
           label="Workflow" 
           onClick={onClose} 
         />
@@ -100,7 +100,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       {hasManagerialAccess && (
         <MobileNavLink 
           to="/restaurant-schedule" 
-          icon={<Clock className="w-5 h-5" />} 
+          icon={Clock} 
           label="Restaurant Schedule" 
           onClick={onClose} 
         />
@@ -110,7 +110,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       {isAuthenticated && (
         <MobileNavLink 
           to="/profile" 
-          icon={<User className="w-5 h-5" />} 
+          icon={User} 
           label="Profile" 
           onClick={onClose} 
         />
@@ -120,7 +120,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       {isAuthenticated && (
         <MobileNavLink 
           to="/settings" 
-          icon={<Settings className="w-5 h-5" />} 
+          icon={Settings} 
           label="Settings" 
           onClick={onClose} 
         />

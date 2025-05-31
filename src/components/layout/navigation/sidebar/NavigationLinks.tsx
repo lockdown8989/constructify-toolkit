@@ -29,18 +29,20 @@ const NavigationLinks = () => {
       {/* Dashboard */}
       <SidebarNavLink
         to="/dashboard"
-        icon={<Home className="w-5 h-5" />}
+        icon={Home}
         label="Dashboard"
         isActive={location.pathname === "/dashboard"}
+        isCollapsed={false}
       />
 
       {/* Payroll users get a special payroll dashboard */}
       {isPayroll && (
         <SidebarNavLink
           to="/payroll-dashboard"
-          icon={<Calculator className="w-5 h-5" />}
+          icon={Calculator}
           label="Payroll Dashboard"
           isActive={location.pathname === "/payroll-dashboard"}
+          isCollapsed={false}
         />
       )}
 
@@ -51,16 +53,18 @@ const NavigationLinks = () => {
         <>
           <SidebarNavLink
             to="/people"
-            icon={<Users className="w-5 h-5" />}
+            icon={Users}
             label="People"
             isActive={location.pathname === "/people"}
+            isCollapsed={false}
           />
           
           <SidebarNavLink
             to="/attendance"
-            icon={<UserCheck className="w-5 h-5" />}
+            icon={UserCheck}
             label="Attendance"
             isActive={location.pathname === "/attendance"}
+            isCollapsed={false}
           />
         </>
       )}
@@ -68,34 +72,38 @@ const NavigationLinks = () => {
       {/* Schedule Management */}
       <SidebarNavLink
         to="/schedule"
-        icon={<Calendar className="w-5 h-5" />}
+        icon={Calendar}
         label="Schedule"
         isActive={location.pathname === "/schedule"}
+        isCollapsed={false}
       />
 
       {/* Leave Management */}
       <SidebarNavLink
         to="/leave"
-        icon={<FileText className="w-5 h-5" />}
+        icon={FileText}
         label="Leave"
         isActive={location.pathname === "/leave"}
+        isCollapsed={false}
       />
 
       {/* Salary - All users can see their salary */}
       <SidebarNavLink
         to="/salary"
-        icon={<DollarSign className="w-5 h-5" />}
+        icon={DollarSign}
         label="Salary"
         isActive={location.pathname === "/salary"}
+        isCollapsed={false}
       />
 
       {/* Payroll - For Managers/HR/Admin/Payroll */}
       {(hasManagerialAccess || isPayroll) && (
         <SidebarNavLink
           to="/payroll"
-          icon={<Calculator className="w-5 h-5" />}
+          icon={Calculator}
           label="Payroll"
           isActive={location.pathname === "/payroll"}
+          isCollapsed={false}
         />
       )}
 
@@ -105,9 +113,10 @@ const NavigationLinks = () => {
       {isEmployee && (
         <SidebarNavLink
           to="/employee-workflow"
-          icon={<ClipboardList className="w-5 h-5" />}
+          icon={ClipboardList}
           label="Workflow"
           isActive={location.pathname === "/employee-workflow"}
+          isCollapsed={false}
         />
       )}
 
@@ -115,9 +124,10 @@ const NavigationLinks = () => {
       {hasManagerialAccess && (
         <SidebarNavLink
           to="/restaurant-schedule"
-          icon={<Clock className="w-5 h-5" />}
+          icon={Clock}
           label="Restaurant Schedule"
           isActive={location.pathname === "/restaurant-schedule"}
+          isCollapsed={false}
         />
       )}
 
@@ -126,17 +136,19 @@ const NavigationLinks = () => {
       {/* Profile */}
       <SidebarNavLink
         to="/profile"
-        icon={<User className="w-5 h-5" />}
+        icon={User}
         label="Profile"
         isActive={location.pathname === "/profile"}
+        isCollapsed={false}
       />
 
       {/* Settings */}
       <SidebarNavLink
         to="/settings"
-        icon={<Settings className="w-5 h-5" />}
+        icon={Settings}
         label="Settings"
         isActive={location.pathname === "/settings"}
+        isCollapsed={false}
       />
     </nav>
   );
