@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { DollarSign, TrendingUp, Users, Download, Settings, Filter, Grid, List, Search } from 'lucide-react';
+import { DollarSign, TrendingUp, Users, Download, Settings, Filter, Grid, List, Search, Calendar, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
 const PayrollDashboard = () => {
@@ -94,23 +94,23 @@ const PayrollDashboard = () => {
   };
 
   return (
-    <div className="container py-6 animate-fade-in">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-100 rounded-lg">
-            <DollarSign className="h-6 w-6 text-blue-600" />
+            <Calendar className="h-6 w-6 text-blue-600" />
           </div>
-          <h1 className="text-2xl font-bold">Payroll</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Payroll</h1>
         </div>
         
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             <Settings className="h-4 w-4 mr-2" />
             Payroll Settings
           </Button>
           <Select defaultValue="26 Jan 2024 — 25 Feb 2024">
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -119,65 +119,68 @@ const PayrollDashboard = () => {
               <SelectItem value="26 Nov 2023 — 25 Dec 2023">26 Nov 2023 — 25 Dec 2023</SelectItem>
             </SelectContent>
           </Select>
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" />
             Export CSV
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-6">
         {/* Stats Cards */}
-        <div className="space-y-4">
-          <Card>
+        <div className="xl:col-span-1 space-y-4">
+          {/* Monthly Payroll Card */}
+          <Card className="bg-white border-0 shadow-sm">
             <CardContent className="p-6">
-              <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                <DollarSign className="h-4 w-4" />
+              <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                <Clock className="h-4 w-4" />
                 Monthly Payroll
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold">$3,230,250</span>
-                <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">+12.5%</span>
+              <div className="flex items-center gap-3 mb-1">
+                <span className="text-3xl font-bold text-gray-900">$3,230,250</span>
+                <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">+12.5%</span>
               </div>
-              <p className="text-xs text-gray-500">.00</p>
+              <p className="text-sm text-gray-500">.00</p>
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Overtime Card */}
+          <Card className="bg-white border-0 shadow-sm">
             <CardContent className="p-6">
-              <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                <TrendingUp className="h-4 w-4" />
+              <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                <Clock className="h-4 w-4" />
                 Overtime
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold">$220,500</span>
-                <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">-5.3%</span>
+              <div className="flex items-center gap-3 mb-1">
+                <span className="text-3xl font-bold text-gray-900">$220,500</span>
+                <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded-full">-5.3%</span>
               </div>
-              <p className="text-xs text-gray-500">.00</p>
+              <p className="text-sm text-gray-500">.00</p>
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Bonuses Card */}
+          <Card className="bg-white border-0 shadow-sm">
             <CardContent className="p-6">
-              <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                <TrendingUp className="h-4 w-4" />
+              <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                <DollarSign className="h-4 w-4" />
                 Bonuses & Incentives
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold">$150,000</span>
-                <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">-12.3%</span>
+              <div className="flex items-center gap-3 mb-1">
+                <span className="text-3xl font-bold text-gray-900">$150,000</span>
+                <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded-full">-12.3%</span>
               </div>
-              <p className="text-xs text-gray-500">.00</p>
+              <p className="text-sm text-gray-500">.00</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Chart Section */}
-        <div className="lg:col-span-3">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
+        <div className="xl:col-span-3">
+          <Card className="bg-white border-0 shadow-sm">
+            <CardHeader className="pb-4">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
                   <TrendingUp className="h-5 w-5" />
                   Overview
                 </CardTitle>
@@ -186,6 +189,7 @@ const PayrollDashboard = () => {
                     variant={timeView === 'Day' ? 'default' : 'outline'} 
                     size="sm"
                     onClick={() => setTimeView('Day')}
+                    className="text-sm"
                   >
                     Day
                   </Button>
@@ -193,6 +197,7 @@ const PayrollDashboard = () => {
                     variant={timeView === 'Week' ? 'default' : 'outline'} 
                     size="sm"
                     onClick={() => setTimeView('Week')}
+                    className="text-sm"
                   >
                     Week
                   </Button>
@@ -200,6 +205,7 @@ const PayrollDashboard = () => {
                     variant={timeView === 'Month' ? 'default' : 'outline'} 
                     size="sm"
                     onClick={() => setTimeView('Month')}
+                    className="text-sm"
                   >
                     Month
                   </Button>
@@ -213,16 +219,16 @@ const PayrollDashboard = () => {
                   {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'].map((month, index) => (
                     <div key={month} className="flex flex-col items-center">
                       <div className="flex flex-col items-center space-y-1">
-                        <div className="w-8 bg-blue-600 rounded-t" style={{ height: `${60 + index * 10}px` }}></div>
-                        <div className="w-8 bg-blue-300 rounded-t" style={{ height: `${40 + index * 5}px` }}></div>
-                        <div className="w-8 bg-purple-400 rounded-t" style={{ height: `${20 + index * 3}px` }}></div>
+                        <div className="w-6 md:w-8 bg-blue-600 rounded-t" style={{ height: `${60 + index * 10}px` }}></div>
+                        <div className="w-6 md:w-8 bg-blue-300 rounded-t" style={{ height: `${40 + index * 5}px` }}></div>
+                        <div className="w-6 md:w-8 bg-purple-400 rounded-t" style={{ height: `${20 + index * 3}px` }}></div>
                       </div>
                       <span className="text-xs text-gray-600 mt-2">{month}</span>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="flex items-center justify-center gap-6 mt-4">
+              <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 mt-4">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
                   <span className="text-sm text-gray-600">Monthly Payroll</span>
@@ -242,23 +248,23 @@ const PayrollDashboard = () => {
       </div>
 
       {/* Employee Table */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
+      <Card className="bg-white border-0 shadow-sm">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
               <Users className="h-5 w-5" />
               Employee
             </CardTitle>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
               <Button variant="outline" size="sm">
                 <Filter className="h-4 w-4 mr-2" />
                 Filter
               </Button>
-              <div className="relative">
+              <div className="relative w-full sm:w-auto">
                 <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <Input 
                   placeholder="Search employees"
-                  className="pl-10 w-64"
+                  className="pl-10 w-full sm:w-64"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -286,22 +292,22 @@ const PayrollDashboard = () => {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b">
+                <tr className="border-b border-gray-200">
                   <th className="text-left py-3 px-4">
                     <input type="checkbox" className="rounded border-gray-300" />
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Employee</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Position</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Salary</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Recurring</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Overtime</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Actions</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Employee</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Position</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Salary</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Recurring</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Overtime</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Status</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600 text-sm">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {employees.map((employee) => (
-                  <tr key={employee.id} className="border-b hover:bg-gray-50">
+                  <tr key={employee.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="py-3 px-4">
                       <input type="checkbox" className="rounded border-gray-300" />
                     </td>
@@ -313,15 +319,15 @@ const PayrollDashboard = () => {
                           </span>
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{employee.name}</p>
-                          <p className="text-sm text-gray-500">{employee.email}</p>
+                          <p className="font-medium text-gray-900 text-sm">{employee.name}</p>
+                          <p className="text-xs text-gray-500">{employee.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-gray-600">{employee.position}</td>
-                    <td className="py-3 px-4 font-medium">{employee.salary}</td>
-                    <td className="py-3 px-4 text-gray-600">Recurring</td>
-                    <td className="py-3 px-4 text-gray-600">{employee.overtime}</td>
+                    <td className="py-3 px-4 text-gray-600 text-sm">{employee.position}</td>
+                    <td className="py-3 px-4 font-medium text-sm">{employee.salary}</td>
+                    <td className="py-3 px-4 text-gray-600 text-sm">Recurring</td>
+                    <td className="py-3 px-4 text-gray-600 text-sm">{employee.overtime}</td>
                     <td className="py-3 px-4">{getStatusBadge(employee.status)}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
