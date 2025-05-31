@@ -51,12 +51,7 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ isAuthenticated }) => {
           onBreakEnd={handleBreakEnd}
         />
         
-        <NavigationLinks 
-          isAuthenticated={isAuthenticated}
-          isCollapsed={isCollapsed}
-          hasManagerialAccess={hasManagerialAccess}
-          currentPath={location.pathname}
-        />
+        <NavigationLinks />
       </div>
     </div>
   );
