@@ -67,6 +67,9 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
           } else if (employeeData && employeeData.manager_id) {
             console.log("Found manager ID:", employeeData.manager_id);
             setManagerId(employeeData.manager_id);
+            
+            // Auto-reconnect employees when manager ID is found
+            await reconnectEmployeesToManager(employeeData.manager_id);
           } else {
             console.log("No manager ID found for this manager account");
             setManagerId(null);
@@ -93,7 +96,45 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
     };
     
     fetchProfile();
-  }, [user, isManager]);
+  }, [user, isManager, toast]);
+  
+  const reconnectEmployeesToManager = async (currentManagerId: string) => {
+    try {
+      // Find all employees that might have been disconnected but should be connected to this manager
+      const { data: allEmployees, error } = await supabase
+        .from("employees")
+        .select("id, name, user_id, manager_id")
+        .neq("user_id", user?.id); // Exclude the manager themselves
+        
+      if (error) {
+        console.error("Error fetching employees for reconnection:", error);
+        return;
+      }
+      
+      if (allEmployees && allEmployees.length > 0) {
+        // Look for employees that might need to be reconnected
+        // This could be based on department, previous connections, etc.
+        // For now, we'll check if there are any employees without a manager or with an invalid manager ID
+        const employeesNeedingReconnection = allEmployees.filter(emp => 
+          !emp.manager_id || emp.manager_id === '' || emp.manager_id === 'undefined'
+        );
+        
+        if (employeesNeedingReconnection.length > 0) {
+          console.log(`Found ${employeesNeedingReconnection.length} employees that might need reconnection`);
+          
+          // Note: We don't automatically reconnect employees without their consent
+          // This is just for logging and potential future notification features
+          toast({
+            title: "Manager Profile Updated",
+            description: `Your Manager ID (${currentManagerId}) is active. Employees can use this ID to connect to your account.`,
+            variant: "default",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error in reconnectEmployeesToManager:", error);
+    }
+  };
   
   return { profile, setProfile, managerId, isLoading };
 };

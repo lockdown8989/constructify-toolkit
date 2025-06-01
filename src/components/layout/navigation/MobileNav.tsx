@@ -10,8 +10,8 @@ import {
 import { Menu } from "lucide-react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useState } from "react"
-
-import { MobileNavHeader, MobileNavContent } from "./mobile"
+import { useAuth } from '@/hooks/use-auth'
+import MobileNavContent from './mobile/MobileNavContent'
 
 interface MobileNavProps {
   isAuthenticated: boolean;
@@ -21,6 +21,8 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const { isAdmin, isHR, isManager, isEmployee, isPayroll } = useAuth();
+  const hasManagerialAccess = isManager || isAdmin || isHR;
   
   const handleBack = () => {
     if (location.pathname !== '/') {
@@ -51,11 +53,13 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
         onBack={handleBack}
         backButtonLabel="Back"
       >
-        <MobileNavHeader onClose={handleClose} />
         <MobileNavContent 
-          isAuthenticated={isAuthenticated} 
+          isOpen={isOpen}
           onClose={handleClose}
-          handleHomeClick={handleHomeClick}
+          isAuthenticated={isAuthenticated}
+          isEmployee={isEmployee}
+          hasManagerialAccess={hasManagerialAccess}
+          isPayroll={isPayroll}
         />
       </SheetContent>
     </Sheet>
