@@ -89,6 +89,7 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
                 handleClockOut={handleClockOut}
                 handleBreakStart={handleBreakStart}
                 handleBreakEnd={handleBreakEnd}
+                onClose={onClose}
               />
             </div>
           )}
