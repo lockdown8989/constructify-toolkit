@@ -73,6 +73,8 @@ function App() {
                       <EmployeeScheduleView />
                     </ProtectedRoute>
                   } />
+                  {/* Add redirect from /leave to /leave-management */}
+                  <Route path="/leave" element={<Navigate to="/leave-management" replace />} />
                   <Route path="/leave-management" element={
                     <ProtectedRoute>
                       <LeaveManagement />
