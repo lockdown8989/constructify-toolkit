@@ -7,10 +7,12 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ManagerIdFieldProps {
   managerId: string | null;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isManager: boolean;
+  isEditable?: boolean;
 }
 
-export const ManagerIdField = ({ managerId, isManager }: ManagerIdFieldProps) => {
+export const ManagerIdField = ({ managerId, onChange, isManager, isEditable = false }: ManagerIdFieldProps) => {
   const { toast } = useToast();
   
   const copyManagerId = () => {
@@ -34,10 +36,12 @@ export const ManagerIdField = ({ managerId, isManager }: ManagerIdFieldProps) =>
       <div className="flex">
         <Input
           id="manager_id"
+          name="manager_id"
           value={managerId || ""}
-          disabled
-          className="bg-gray-100"
-          placeholder={isManager && !managerId ? "Loading or generating ID..." : "Not available"}
+          onChange={onChange}
+          disabled={!isEditable}
+          className={`${!isEditable ? 'bg-gray-100' : ''} ${isManager ? 'font-mono' : ''}`}
+          placeholder={isManager && !managerId ? "Loading or generating ID..." : isEditable ? "Enter your manager's ID (e.g., MGR-12345)" : "Not available"}
         />
         {isManager && managerId && (
           <Button 
@@ -59,9 +63,11 @@ export const ManagerIdField = ({ managerId, isManager }: ManagerIdFieldProps) =>
         </p>
       ) : (
         <p className="text-xs text-gray-500">
-          {managerId 
-            ? "This is the ID of your manager's account" 
-            : "No manager connected to your account"}
+          {isEditable
+            ? "Enter your manager's ID to connect to their account"
+            : managerId 
+              ? "This is the ID of your manager's account" 
+              : "No manager connected to your account"}
         </p>
       )}
     </div>

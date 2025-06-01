@@ -6,9 +6,12 @@ import { Mail } from "lucide-react";
 
 interface EmailFieldProps {
   user: User | null;
+  email: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  isEditable?: boolean;
 }
 
-export const EmailField = ({ user }: EmailFieldProps) => {
+export const EmailField = ({ user, email, onChange, isEditable = false }: EmailFieldProps) => {
   return (
     <div className="space-y-2">
       <Label htmlFor="email" className="text-sm font-medium">
@@ -18,13 +21,17 @@ export const EmailField = ({ user }: EmailFieldProps) => {
         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
         <Input
           id="email"
-          value={user?.email || ""}
-          disabled
-          className="bg-gray-50 pl-10"
+          name="email"
+          value={email}
+          onChange={onChange}
+          disabled={!isEditable}
+          className={`pl-10 ${!isEditable ? 'bg-gray-50' : ''}`}
         />
       </div>
       <p className="text-xs text-muted-foreground">
-        This email is associated with your account and cannot be changed
+        {isEditable 
+          ? "You can update your email address" 
+          : "This email is associated with your account and cannot be changed"}
       </p>
     </div>
   );

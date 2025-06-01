@@ -33,10 +33,20 @@ export const ProfileForm = ({ user, isManager, managerId }: ProfileFormProps) =>
           onChange={handleChange}
         />
         
-        <EmailField user={user} />
+        <EmailField 
+          user={user} 
+          email={profile.email}
+          onChange={handleChange}
+          isEditable={true}
+        />
         
         {/* Manager ID field (shown for employees or as backup for managers) */}
-        <ManagerIdField managerId={managerId} isManager={isManager} />
+        <ManagerIdField 
+          managerId={profile.manager_id || managerId} 
+          onChange={handleChange}
+          isManager={isManager}
+          isEditable={!isManager}
+        />
       </CardContent>
       
       <CardFooter>
