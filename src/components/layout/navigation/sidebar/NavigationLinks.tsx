@@ -35,17 +35,6 @@ const NavigationLinks = () => {
         isCollapsed={false}
       />
 
-      {/* Payroll users get a special payroll dashboard */}
-      {isPayroll && (
-        <SidebarNavLink
-          to="/payroll-dashboard"
-          icon={Calculator}
-          label="Payroll Dashboard"
-          isActive={location.pathname === "/payroll-dashboard"}
-          isCollapsed={false}
-        />
-      )}
-
       <SidebarDivider isCollapsed={false} />
 
       {/* Employee Management - For Managers/HR/Admin */}
@@ -80,15 +69,15 @@ const NavigationLinks = () => {
 
       {/* Leave Management */}
       <SidebarNavLink
-        to="/leave"
+        to="/leave-management"
         icon={FileText}
         label="Leave"
-        isActive={location.pathname === "/leave"}
+        isActive={location.pathname === "/leave-management"}
         isCollapsed={false}
       />
 
-      {/* Salary - Only for Payroll users or employees viewing their own */}
-      {(isPayroll || isEmployee) && (
+      {/* Salary - Only for Payroll users */}
+      {isPayroll && (
         <SidebarNavLink
           to="/salary"
           icon={DollarSign}

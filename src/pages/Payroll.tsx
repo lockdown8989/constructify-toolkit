@@ -18,7 +18,7 @@ const PayrollPage = () => {
   const isMobile = useIsMobile();
   const { isPayroll } = useAuth();
   
-  // Redirect if not payroll user
+  // Only allow payroll users to access this page
   if (!isPayroll) {
     return (
       <div className="container py-6">

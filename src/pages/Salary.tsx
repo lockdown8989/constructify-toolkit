@@ -31,30 +31,20 @@ const SalaryPage = () => {
   const isTablet = useIsTablet();
 
   const { data: employees = [], isLoading } = useEmployees();
-  const { user, isManager, isAdmin, isHR, isPayroll } = useAuth();
+  const { user, isPayroll } = useAuth();
 
-  // Check if user has payroll access or is viewing their own salary
-  const hasPayrollAccess = isPayroll;
-  const isEmployee = user && !isManager && !isAdmin && !isHR && !isPayroll;
-  
-  // If user is not payroll and not an employee, deny access
-  if (!hasPayrollAccess && !isEmployee) {
+  // Only allow payroll users to access this page
+  if (!isPayroll) {
     return (
       <div className="container py-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
-          <p className="text-gray-600 mt-2">You don't have permission to access salary information.</p>
+          <p className="text-gray-600 mt-2">This page is only accessible to payroll users.</p>
         </div>
       </div>
     );
   }
-  
-  // If user is a regular employee, show the simplified salary overview
-  if (isEmployee) {
-    return <SalaryOverview />;
-  }
 
-  // Only payroll users reach this point
   React.useEffect(() => {
     if (employees.length > 0) {
       const firstEmployee = employees[0];

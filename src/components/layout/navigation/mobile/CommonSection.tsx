@@ -29,16 +29,6 @@ const CommonSection: React.FC<CommonSectionProps> = ({
         />
       )}
 
-      {/* Payroll users get a special payroll dashboard */}
-      {isPayroll && (
-        <MobileNavLink 
-          to="/payroll-dashboard" 
-          icon={Calculator} 
-          label="Payroll Dashboard" 
-          onClick={onClose} 
-        />
-      )}
-
       {/* Employee Management - For Managers/HR/Admin */}
       {hasManagerialAccess && (
         <>
@@ -71,15 +61,15 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       {/* Leave Management */}
       {isAuthenticated && (
         <MobileNavLink 
-          to="/leave" 
+          to="/leave-management" 
           icon={FileText} 
           label="Leave" 
           onClick={onClose} 
         />
       )}
 
-      {/* Salary - Only for Payroll users or employees viewing their own */}
-      {(isPayroll || isEmployee) && (
+      {/* Salary - Only for Payroll users */}
+      {isPayroll && (
         <MobileNavLink 
           to="/salary" 
           icon={DollarSign} 

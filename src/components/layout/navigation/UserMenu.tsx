@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast"
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
-  const { isAdmin, isManager, isHR } = useAuth();
+  const { isAdmin, isManager, isHR, isPayroll } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -43,6 +43,7 @@ const UserMenu = () => {
     if (isAdmin) return '(admin)';
     if (isHR) return '(HR)';
     if (isManager) return '(manager)';
+    if (isPayroll) return '(payroll)';
     return '(employee)';
   };
   
