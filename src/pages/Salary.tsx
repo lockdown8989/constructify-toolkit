@@ -31,23 +31,38 @@ const SalaryPage = () => {
   const isTablet = useIsTablet();
 
   const { data: employees = [], isLoading } = useEmployees();
-  const { user, isManager, isAdmin, isHR } = useAuth();
+  const { user, isManager, isAdmin, isHR, isPayroll } = useAuth();
 
-  // If user is a regular employee, show the simplified salary overview
-  const isEmployee = user && !isManager && !isAdmin && !isHR;
+  // Check if user has payroll access or is viewing their own salary
+  const hasPayrollAccess = isPayroll;
+  const isEmployee = user && !isManager && !isAdmin && !isHR && !isPayroll;
   
+  // If user is not payroll and not an employee, deny access
+  if (!hasPayrollAccess && !isEmployee) {
+    return (
+      <div className="container py-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
+          <p className="text-gray-600 mt-2">You don't have permission to access salary information.</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // If user is a regular employee, show the simplified salary overview
   if (isEmployee) {
     return <SalaryOverview />;
   }
 
+  // Only payroll users reach this point
   React.useEffect(() => {
-    if (isEmployee && employees.length > 0) {
-      const ownEmployee = employees.find(emp => emp.user_id === user?.id);
-      if (ownEmployee) {
-        setSelectedEmployee(ownEmployee.id);
+    if (employees.length > 0) {
+      const firstEmployee = employees[0];
+      if (firstEmployee) {
+        setSelectedEmployee(firstEmployee.id);
       }
     }
-  }, [isEmployee, employees, user?.id]);
+  }, [employees]);
 
   const handlePreviousMonth = () => {
     setSelectedMonth(prev => subMonths(prev, 1));
@@ -65,14 +80,13 @@ const SalaryPage = () => {
 
   return (
     <div className="container py-6 animate-fade-in">
-      <h1 className="text-2xl font-bold mb-6">Salary</h1>
+      <h1 className="text-2xl font-bold mb-6">Salary Management</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left sidebar - Employee list */}
         <div className={cn(
           "lg:col-span-3",
-          selectedEmployee && (isMobile || isTablet) && "hidden",
-          isEmployee && "hidden lg:block" // Hide the list for regular employees on mobile, show on desktop
+          selectedEmployee && (isMobile || isTablet) && "hidden"
         )}>
           <Card className="rounded-3xl overflow-hidden">
             <div className="p-4">
@@ -133,8 +147,7 @@ const SalaryPage = () => {
         {/* Main content - Calendar and Stats */}
         <div className={cn(
           "lg:col-span-6",
-          selectedEmployee && (isMobile || isTablet) && "hidden",
-          isEmployee && !selectedEmployeeData && "hidden" // Hide for regular employees if no selection
+          selectedEmployee && (isMobile || isTablet) && "hidden"
         )}>
           <SalaryStatsSection />
           
@@ -167,7 +180,7 @@ const SalaryPage = () => {
             
             <SalaryCalendarView
               month={selectedMonth}
-              employees={isEmployee ? employees.filter(emp => emp.user_id === user?.id) : employees}
+              employees={employees}
             />
           </Card>
         </div>

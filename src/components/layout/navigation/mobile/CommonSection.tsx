@@ -7,6 +7,7 @@ interface CommonSectionProps {
   isAuthenticated: boolean;
   isEmployee: boolean;
   hasManagerialAccess: boolean;
+  isPayroll: boolean;
   onClose: () => void;
 }
 
@@ -14,6 +15,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
   isAuthenticated, 
   isEmployee, 
   hasManagerialAccess, 
+  isPayroll,
   onClose 
 }) => {
   return (
@@ -23,6 +25,16 @@ const CommonSection: React.FC<CommonSectionProps> = ({
           to="/dashboard" 
           icon={Home} 
           label="Dashboard" 
+          onClick={onClose} 
+        />
+      )}
+
+      {/* Payroll users get a special payroll dashboard */}
+      {isPayroll && (
+        <MobileNavLink 
+          to="/payroll-dashboard" 
+          icon={Calculator} 
+          label="Payroll Dashboard" 
           onClick={onClose} 
         />
       )}
@@ -66,8 +78,8 @@ const CommonSection: React.FC<CommonSectionProps> = ({
         />
       )}
 
-      {/* Salary - All users can see their salary */}
-      {isAuthenticated && (
+      {/* Salary - Only for Payroll users or employees viewing their own */}
+      {(isPayroll || isEmployee) && (
         <MobileNavLink 
           to="/salary" 
           icon={DollarSign} 
@@ -76,8 +88,8 @@ const CommonSection: React.FC<CommonSectionProps> = ({
         />
       )}
 
-      {/* Payroll - For Managers/HR/Admin/Payroll */}
-      {hasManagerialAccess && (
+      {/* Payroll - Only for Payroll users */}
+      {isPayroll && (
         <MobileNavLink 
           to="/payroll" 
           icon={Calculator} 

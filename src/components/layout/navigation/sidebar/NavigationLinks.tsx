@@ -87,17 +87,19 @@ const NavigationLinks = () => {
         isCollapsed={false}
       />
 
-      {/* Salary - All users can see their salary */}
-      <SidebarNavLink
-        to="/salary"
-        icon={DollarSign}
-        label="Salary"
-        isActive={location.pathname === "/salary"}
-        isCollapsed={false}
-      />
+      {/* Salary - Only for Payroll users or employees viewing their own */}
+      {(isPayroll || isEmployee) && (
+        <SidebarNavLink
+          to="/salary"
+          icon={DollarSign}
+          label="Salary"
+          isActive={location.pathname === "/salary"}
+          isCollapsed={false}
+        />
+      )}
 
-      {/* Payroll - For Managers/HR/Admin/Payroll */}
-      {(hasManagerialAccess || isPayroll) && (
+      {/* Payroll - Only for Payroll users */}
+      {isPayroll && (
         <SidebarNavLink
           to="/payroll"
           icon={Calculator}

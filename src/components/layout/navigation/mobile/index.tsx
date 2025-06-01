@@ -1,11 +1,27 @@
 
-// Re-export all mobile navigation components
-export { default as MobileNavLink } from "./MobileNavLink";
-export { default as MobileNavDivider } from "./MobileNavDivider";
-export { default as ClockingControls } from "./ClockingControls";
-export { default as CommonSection } from "./CommonSection";
-export { default as ManagerSection } from "./ManagerSection";
-export { default as TimeClocksSection } from "./TimeClocksSection";
-export { default as WorkflowSection } from "./WorkflowSection";
-export { default as MobileNavHeader } from "./MobileNavHeader";
-export { default as MobileNavContent } from "./MobileNavContent";
+import React from 'react';
+import { useAuth } from '@/hooks/auth';
+import MobileNavContent from './MobileNavContent';
+
+interface MobileNavProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
+  const { isAdmin, isHR, isManager, isEmployee, isPayroll, isAuthenticated } = useAuth();
+  const hasManagerialAccess = isManager || isAdmin || isHR;
+
+  return (
+    <MobileNavContent 
+      isOpen={isOpen}
+      onClose={onClose}
+      isAuthenticated={isAuthenticated}
+      isEmployee={isEmployee}
+      hasManagerialAccess={hasManagerialAccess}
+      isPayroll={isPayroll}
+    />
+  );
+};
+
+export default MobileNav;

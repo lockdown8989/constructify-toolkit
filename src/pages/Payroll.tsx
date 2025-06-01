@@ -1,5 +1,6 @@
 
 import React, { useEffect } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 import { PayrollStatsGrid } from '@/components/payroll/stats/PayrollStatsGrid';
 import { PayrollActions } from '@/components/payroll/actions/PayrollActions';
 import { PayrollHistoryTabs } from '@/components/payroll/history/PayrollHistoryTabs';
@@ -15,6 +16,19 @@ import { FileText } from 'lucide-react';
 
 const PayrollPage = () => {
   const isMobile = useIsMobile();
+  const { isPayroll } = useAuth();
+  
+  // Redirect if not payroll user
+  if (!isPayroll) {
+    return (
+      <div className="container py-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
+          <p className="text-gray-600 mt-2">This page is only accessible to payroll users.</p>
+        </div>
+      </div>
+    );
+  }
   
   // Fetch employees data
   const { data: employees, isLoading, error, refetch } = useQuery({

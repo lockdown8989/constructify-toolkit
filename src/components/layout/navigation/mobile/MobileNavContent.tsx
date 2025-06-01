@@ -1,76 +1,91 @@
 
-import { Home } from "lucide-react";
-import { useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/auth";
-import { useTimeClock } from "@/hooks/time-clock";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import MobileNavDivider from "./MobileNavDivider";
-import TimeClocksSection from "./TimeClocksSection";
-import WorkflowSection from "./WorkflowSection";
-import ClockingControls from "./ClockingControls";
-import ManagerSection from "./ManagerSection";
-import CommonSection from "./CommonSection";
+import React from 'react';
+import { X } from 'lucide-react';
+import { useAuth } from '@/hooks/auth';
+import MobileNavHeader from './MobileNavHeader';
+import TimeClocksSection from './TimeClocksSection';
+import CommonSection from './CommonSection';
+import ManagerSection from './ManagerSection';
+import WorkflowSection from './WorkflowSection';
+import ClockingControls from './ClockingControls';
+import MobileNavDivider from './MobileNavDivider';
 
 interface MobileNavContentProps {
-  isAuthenticated: boolean;
+  isOpen: boolean;
   onClose: () => void;
-  handleHomeClick: () => void;
+  isAuthenticated: boolean;
+  isEmployee: boolean;
+  hasManagerialAccess: boolean;
+  isPayroll: boolean;
 }
 
-const MobileNavContent = ({ isAuthenticated, onClose, handleHomeClick }: MobileNavContentProps) => {
-  const { isAdmin, isHR, isManager } = useAuth();
-  const hasManagerialAccess = isManager || isAdmin || isHR;
-  const isEmployee = isAuthenticated && !hasManagerialAccess;
-  const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
-  const isClockingEnabled = !hasManagerialAccess && isAuthenticated;
+const MobileNavContent: React.FC<MobileNavContentProps> = ({
+  isOpen,
+  onClose,
+  isAuthenticated,
+  isEmployee,
+  hasManagerialAccess,
+  isPayroll
+}) => {
+  const { user } = useAuth();
   
+  if (!isOpen) return null;
+
   return (
-    <>
-      <ClockingControls 
-        isClockingEnabled={isClockingEnabled}
-        status={status}
-        handleClockIn={handleClockIn}
-        handleClockOut={handleClockOut}
-        handleBreakStart={handleBreakStart}
-        handleBreakEnd={handleBreakEnd}
-        onClose={onClose}
-      />
-      
-      <ScrollArea className="h-[calc(100vh-80px)]">
-        <nav className="grid gap-1 px-2 py-2">
-          {/* Home button removed from here */}
+    <div className="fixed inset-0 z-50 lg:hidden">
+      <div className="fixed inset-0 bg-black bg-opacity-25" onClick={onClose} />
+      <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-xl">
+        <div className="flex h-full flex-col">
+          <MobileNavHeader />
           
-          <CommonSection 
-            isAuthenticated={isAuthenticated} 
-            isEmployee={isEmployee} 
-            hasManagerialAccess={hasManagerialAccess} 
-            onClose={onClose} 
-          />
-          
-          {isAuthenticated && (
-            <>
-              <MobileNavDivider />
-              
-              <ManagerSection 
-                hasManagerialAccess={hasManagerialAccess} 
-                onClose={onClose} 
-              />
-              
-              <TimeClocksSection 
-                hasManagerialAccess={hasManagerialAccess} 
+          <div className="flex-1 overflow-y-auto px-3 py-4">
+            <div className="space-y-2">
+              <CommonSection 
                 isAuthenticated={isAuthenticated}
-                onClose={onClose} 
+                isEmployee={isEmployee}
+                hasManagerialAccess={hasManagerialAccess}
+                isPayroll={isPayroll}
+                onClose={onClose}
               />
               
-              <WorkflowSection 
-                hasManagerialAccess={hasManagerialAccess} 
-                onClose={onClose} 
-              />
-            </>
+              {hasManagerialAccess && (
+                <>
+                  <MobileNavDivider />
+                  <ManagerSection onClose={onClose} />
+                </>
+              )}
+              
+              {isEmployee && (
+                <>
+                  <MobileNavDivider />
+                  <WorkflowSection onClose={onClose} />
+                </>
+              )}
+              
+              {isAuthenticated && !hasManagerialAccess && (
+                <>
+                  <MobileNavDivider />
+                  <TimeClocksSection onClose={onClose} />
+                </>
+              )}
+            </div>
+          </div>
+
+          {isAuthenticated && !hasManagerialAccess && (
+            <div className="border-t p-4">
+              <ClockingControls />
+            </div>
           )}
-        </nav>
-      </ScrollArea>
-    </>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-lg p-2 hover:bg-gray-100"
+        >
+          <X className="h-6 w-6" />
+        </button>
+      </div>
+    </div>
   );
 };
 
