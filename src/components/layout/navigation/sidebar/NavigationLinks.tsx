@@ -76,26 +76,27 @@ const NavigationLinks = () => {
         isCollapsed={false}
       />
 
-      {/* Salary - Only for Payroll users */}
+      {/* Payroll Section - Only for Payroll users */}
       {isPayroll && (
-        <SidebarNavLink
-          to="/salary"
-          icon={DollarSign}
-          label="Salary"
-          isActive={location.pathname === "/salary"}
-          isCollapsed={false}
-        />
-      )}
+        <>
+          <SidebarDivider isCollapsed={false} />
+          
+          <SidebarNavLink
+            to="/salary"
+            icon={DollarSign}
+            label="Salary"
+            isActive={location.pathname === "/salary"}
+            isCollapsed={false}
+          />
 
-      {/* Payroll - Only for Payroll users */}
-      {isPayroll && (
-        <SidebarNavLink
-          to="/payroll"
-          icon={Calculator}
-          label="Payroll"
-          isActive={location.pathname === "/payroll"}
-          isCollapsed={false}
-        />
+          <SidebarNavLink
+            to="/payroll"
+            icon={Calculator}
+            label="Payroll"
+            isActive={location.pathname === "/payroll"}
+            isCollapsed={false}
+          />
+        </>
       )}
 
       <SidebarDivider isCollapsed={false} />

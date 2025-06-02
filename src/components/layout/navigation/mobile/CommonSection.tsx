@@ -68,24 +68,23 @@ const CommonSection: React.FC<CommonSectionProps> = ({
         />
       )}
 
-      {/* Salary - Only for Payroll users */}
+      {/* Payroll Section - Only for Payroll users */}
       {isPayroll && (
-        <MobileNavLink 
-          to="/salary" 
-          icon={DollarSign} 
-          label="Salary" 
-          onClick={onClose} 
-        />
-      )}
+        <>
+          <MobileNavLink 
+            to="/salary" 
+            icon={DollarSign} 
+            label="Salary" 
+            onClick={onClose} 
+          />
 
-      {/* Payroll - Only for Payroll users */}
-      {isPayroll && (
-        <MobileNavLink 
-          to="/payroll" 
-          icon={Calculator} 
-          label="Payroll" 
-          onClick={onClose} 
-        />
+          <MobileNavLink 
+            to="/payroll" 
+            icon={Calculator} 
+            label="Payroll" 
+            onClick={onClose} 
+          />
+        </>
       )}
 
       {/* Employee Workflow - For employees */}

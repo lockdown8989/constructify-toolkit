@@ -13,8 +13,9 @@ import { useAuth } from "@/hooks/use-auth"
 import { Settings, User as UserIcon, LogOut } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useLanguage } from "@/hooks/use-language"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
+import { supabase } from "@/integrations/supabase/client"
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
@@ -22,13 +23,47 @@ const UserMenu = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
   const { toast } = useToast();
   
-  // Format display name from email or profile
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, position')
+            .eq('id', user.id)
+            .single();
+          
+          if (error) {
+            console.log('Profile not found, using email fallback');
+          } else {
+            setProfile(data);
+          }
+        } catch (err) {
+          console.log('Error fetching profile:', err);
+        }
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+  
+  // Format display name from profile or email
   const getDisplayName = (): string => {
     if (!user) return '';
     
-    // Get name from metadata if available
+    // Use profile data if available
+    if (profile?.first_name && profile?.last_name) {
+      return `${profile.first_name} ${profile.last_name}`;
+    }
+    if (profile?.first_name) {
+      return profile.first_name;
+    }
+    
+    // Get name from user metadata if available
     const firstName = user.user_metadata?.first_name;
     const lastName = user.user_metadata?.last_name;
     if (firstName && lastName) return `${firstName} ${lastName}`;
@@ -45,6 +80,12 @@ const UserMenu = () => {
     if (isManager) return '(manager)';
     if (isPayroll) return '(payroll)';
     return '(employee)';
+  };
+
+  // Get user position from profile
+  const getUserPosition = (): string => {
+    if (profile?.position) return profile.position;
+    return getUserRoleDisplay().replace(/[()]/g, ''); // Remove parentheses from role
   };
   
   const handleSignOut = async () => {
@@ -102,8 +143,14 @@ const UserMenu = () => {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
           <div className="font-normal text-muted-foreground text-xs">{t('signed_in_as')}</div>
-          <div className="font-medium text-foreground truncate">
-            {user.email} <span className="ml-1 text-sm text-muted-foreground">{getUserRoleDisplay()}</span>
+          <div className="font-medium text-foreground">
+            {getDisplayName()}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {getUserPosition()}
+          </div>
+          <div className="text-xs text-muted-foreground truncate">
+            {user.email}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
