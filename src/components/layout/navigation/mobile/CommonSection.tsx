@@ -18,6 +18,9 @@ const CommonSection: React.FC<CommonSectionProps> = ({
   isPayroll,
   onClose 
 }) => {
+  // Debug log to check payroll role in mobile nav
+  console.log("CommonSection - isPayroll:", isPayroll);
+
   return (
     <>
       {isAuthenticated && (

@@ -45,6 +45,10 @@ export const useRoles = (user: User | null) => {
         const hasEmployerRole = userRoles.includes('employer');
         console.log("Has employer/manager role:", hasEmployerRole);
         setIsManager(hasEmployerRole);
+        
+        // Log payroll role specifically
+        const hasPayrollRole = userRoles.includes('payroll');
+        console.log("Has payroll role:", hasPayrollRole);
       } else {
         console.log("No roles found for user");
         setIsAdmin(false);

@@ -25,6 +25,9 @@ const NavigationLinks = () => {
   
   const hasManagerialAccess = isManager || isAdmin || isHR;
 
+  // Debug log to check payroll role
+  console.log("NavigationLinks - isPayroll:", isPayroll);
+
   return (
     <nav className="px-3 space-y-1">
       {/* Dashboard */}
