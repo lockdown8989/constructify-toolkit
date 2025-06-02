@@ -19,6 +19,7 @@ import Schedule from "@/pages/Schedule";
 import LeaveManagement from "@/pages/LeaveManagement";
 import Payroll from "@/pages/Payroll";
 import Salary from "@/pages/Salary";
+import Payslips from "@/pages/Payslips";
 import People from "@/pages/People";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
@@ -88,6 +89,11 @@ function App() {
                   <Route path="/salary" element={
                     <ProtectedRoute>
                       <Salary />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/payslips" element={
+                    <ProtectedRoute>
+                      <Payslips />
                     </ProtectedRoute>
                   } />
                   <Route path="/people" element={

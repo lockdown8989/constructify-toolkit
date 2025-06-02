@@ -15,7 +15,8 @@ import {
   User, 
   Settings,
   UserCheck,
-  Calculator
+  Calculator,
+  Wallet
 } from 'lucide-react';
 
 const NavigationLinks = () => {
@@ -82,6 +83,14 @@ const NavigationLinks = () => {
           <SidebarDivider isCollapsed={false} />
           
           <SidebarNavLink
+            to="/payroll"
+            icon={Calculator}
+            label="Payroll"
+            isActive={location.pathname === "/payroll"}
+            isCollapsed={false}
+          />
+
+          <SidebarNavLink
             to="/salary"
             icon={DollarSign}
             label="Salary"
@@ -90,10 +99,10 @@ const NavigationLinks = () => {
           />
 
           <SidebarNavLink
-            to="/payroll"
-            icon={Calculator}
-            label="Payroll"
-            isActive={location.pathname === "/payroll"}
+            to="/payslips"
+            icon={Wallet}
+            label="Payslips"
+            isActive={location.pathname === "/payslips"}
             isCollapsed={false}
           />
         </>

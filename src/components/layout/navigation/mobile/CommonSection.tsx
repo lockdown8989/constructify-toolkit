@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Home, Users, Calendar, FileText, DollarSign, ClipboardList, Clock, User, Settings, UserCheck, Calculator } from 'lucide-react';
+import { Home, Users, Calendar, FileText, DollarSign, ClipboardList, Clock, User, Settings, UserCheck, Calculator, Wallet } from 'lucide-react';
 import MobileNavLink from './MobileNavLink';
 
 interface CommonSectionProps {
@@ -72,6 +72,13 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       {isPayroll && (
         <>
           <MobileNavLink 
+            to="/payroll" 
+            icon={Calculator} 
+            label="Payroll" 
+            onClick={onClose} 
+          />
+
+          <MobileNavLink 
             to="/salary" 
             icon={DollarSign} 
             label="Salary" 
@@ -79,9 +86,9 @@ const CommonSection: React.FC<CommonSectionProps> = ({
           />
 
           <MobileNavLink 
-            to="/payroll" 
-            icon={Calculator} 
-            label="Payroll" 
+            to="/payslips" 
+            icon={Wallet} 
+            label="Payslips" 
             onClick={onClose} 
           />
         </>
