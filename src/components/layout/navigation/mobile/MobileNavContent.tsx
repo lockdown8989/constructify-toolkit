@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { X } from 'lucide-react';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/hooks/use-auth';
 import { useTimeClock } from '@/hooks/time-clock';
 import MobileNavHeader from './MobileNavHeader';
 import TimeClocksSection from './TimeClocksSection';
