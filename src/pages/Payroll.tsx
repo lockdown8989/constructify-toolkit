@@ -10,13 +10,16 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import ErrorDisplay from '@/components/people/ErrorDisplay';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { FileText } from 'lucide-react';
+import { FileText, Download, Calculator } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const PayrollPage = () => {
   const isMobile = useIsMobile();
   const { isPayroll } = useAuth();
+  const { toast } = useToast();
   
   // Only allow payroll users to access this page
   if (!isPayroll) {
@@ -57,6 +60,30 @@ const PayrollPage = () => {
     handleExportPayroll,
   } = usePayroll(initialEmployees);
 
+  const generatePayslipsForSelected = async () => {
+    if (selectedEmployees.size === 0) {
+      toast({
+        title: "No employees selected",
+        description: "Please select employees to generate payslips for.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "Generating Payslips",
+      description: `Generating payslips for ${selectedEmployees.size} employee(s)...`,
+    });
+
+    // Simulate payslip generation process
+    setTimeout(() => {
+      toast({
+        title: "Payslips Generated",
+        description: `Successfully generated payslips for ${selectedEmployees.size} employee(s).`,
+      });
+    }, 2000);
+  };
+
   // Calculate statistics
   const paidEmployees = initialEmployees.filter(e => e.status === 'Paid').length;
   const pendingEmployees = initialEmployees.filter(e => e.status === 'Pending').length;
@@ -71,10 +98,10 @@ const PayrollPage = () => {
       <div className="container py-6 animate-fade-in">
         <header className="mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <FileText className="h-6 w-6" />
-            <h1 className="text-2xl font-bold">Payslip Management</h1>
+            <Calculator className="h-6 w-6" />
+            <h1 className="text-2xl font-bold">Payroll Management</h1>
           </div>
-          <p className="text-muted-foreground">Process and manage employee payslips</p>
+          <p className="text-muted-foreground">Process and manage employee payroll</p>
         </header>
         
         <Card className="p-6 mb-6">
@@ -97,8 +124,8 @@ const PayrollPage = () => {
       <div className="container py-6 animate-fade-in">
         <header className="mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <FileText className="h-6 w-6" />
-            <h1 className="text-2xl font-bold">Payslip Management</h1>
+            <Calculator className="h-6 w-6" />
+            <h1 className="text-2xl font-bold">Payroll Management</h1>
           </div>
         </header>
         <ErrorDisplay 
@@ -114,10 +141,10 @@ const PayrollPage = () => {
     <div className="container py-6 animate-fade-in">
       <header className="mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <FileText className="h-6 w-6" />
-          <h1 className="text-2xl font-bold">Payslip Management</h1>
+          <Calculator className="h-6 w-6" />
+          <h1 className="text-2xl font-bold">Payroll Management</h1>
         </div>
-        <p className="text-muted-foreground">Process and manage employee payslips</p>
+        <p className="text-muted-foreground">Process and manage employee payroll</p>
       </header>
       
       <div className={`grid grid-cols-1 ${!isMobile ? 'md:grid-cols-4' : ''} gap-6 mb-6`}>
@@ -144,6 +171,20 @@ const PayrollPage = () => {
             onSelectAll={handleSelectAll}
             onClearAll={handleClearAll}
           />
+          
+          {/* Additional Payslip Generation Button */}
+          <Card className="p-4 mt-4">
+            <h3 className="font-medium mb-2">Payslip Generation</h3>
+            <Button
+              onClick={generatePayslipsForSelected}
+              disabled={selectedEmployees.size === 0}
+              className="w-full"
+              variant="outline"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Generate Payslips ({selectedEmployees.size})
+            </Button>
+          </Card>
         </div>
       </div>
       

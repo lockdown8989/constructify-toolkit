@@ -5,7 +5,7 @@ import SalaryOverview from '@/components/salary/SalaryOverview';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Calendar, ChevronLeft, ChevronRight, Search, Shield } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Search, Shield, DollarSign } from 'lucide-react';
 import { format, addMonths, subMonths } from 'date-fns';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
@@ -70,7 +70,13 @@ const SalaryPage = () => {
 
   return (
     <div className="container py-6 animate-fade-in">
-      <h1 className="text-2xl font-bold mb-6">Salary Management</h1>
+      <header className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <DollarSign className="h-6 w-6" />
+          <h1 className="text-2xl font-bold">Salary Management</h1>
+        </div>
+        <p className="text-muted-foreground">Manage employee salaries and compensation</p>
+      </header>
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left sidebar - Employee list */}

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/hooks/use-auth';
 import SidebarNavLink from './SidebarNavLink';
 import SidebarDivider from './SidebarDivider';
 import { 
