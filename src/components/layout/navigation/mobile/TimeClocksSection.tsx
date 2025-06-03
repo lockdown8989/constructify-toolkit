@@ -19,7 +19,18 @@ const TimeClocksSection = ({ onClose, isAuthenticated = true, hasManagerialAcces
 
   return (
     <>
-      {/* Clock In/Out button removed */}
+      {/* Clock In/Out button for all authenticated users */}
+      {isAuthenticated && (
+        <MobileNavLink
+          to="/time-clock"
+          icon={Clock}
+          label="Clock In/Out"
+          onClick={() => {
+            navigate('/time-clock');
+            onClose();
+          }}
+        />
+      )}
       
       {showManagerTimeClock && (
         <MobileNavLink
