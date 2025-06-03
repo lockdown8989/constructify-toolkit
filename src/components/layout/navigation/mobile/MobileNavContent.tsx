@@ -51,6 +51,18 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
                 onClose={onClose}
               />
               
+              {/* Time Clock section - Show for all authenticated users */}
+              {isAuthenticated && (
+                <>
+                  <MobileNavDivider />
+                  <TimeClocksSection 
+                    onClose={onClose}
+                    isAuthenticated={isAuthenticated}
+                    hasManagerialAccess={hasManagerialAccess}
+                  />
+                </>
+              )}
+              
               {hasManagerialAccess && (
                 <>
                   <MobileNavDivider />
@@ -68,13 +80,6 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
                     hasManagerialAccess={hasManagerialAccess}
                     onClose={onClose} 
                   />
-                </>
-              )}
-              
-              {isAuthenticated && !hasManagerialAccess && (
-                <>
-                  <MobileNavDivider />
-                  <TimeClocksSection onClose={onClose} />
                 </>
               )}
             </div>
