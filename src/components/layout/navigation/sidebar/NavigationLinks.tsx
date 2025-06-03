@@ -80,25 +80,14 @@ const NavigationLinks = () => {
         isCollapsed={false}
       />
 
-      {/* Time Clock - For all authenticated users */}
+      {/* Manager Time Clock with IN/OUT buttons - For all authenticated users */}
       <SidebarNavLink
-        to="/time-clock"
+        to="/manager-time-clock"
         icon={Clock}
         label="Time Clock"
-        isActive={location.pathname === "/time-clock"}
+        isActive={location.pathname === "/manager-time-clock"}
         isCollapsed={false}
       />
-
-      {/* Manager Time Clock - For Managers */}
-      {hasManagerialAccess && (
-        <SidebarNavLink
-          to="/manager-time-clock"
-          icon={Clock}
-          label="Manager Clock"
-          isActive={location.pathname === "/manager-time-clock"}
-          isCollapsed={false}
-        />
-      )}
 
       {/* Payroll Section - Only for Payroll users */}
       {isPayroll && (

@@ -14,25 +14,10 @@ const TimeClocksSection = ({ onClose, isAuthenticated = true, hasManagerialAcces
   const { isManager, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  // Use passed hasManagerialAccess if provided, otherwise fallback to local check
-  const showManagerTimeClock = hasManagerialAccess || isManager || isAdmin;
-
   return (
     <>
-      {/* Clock In/Out button for all authenticated users */}
+      {/* Manager Time Clock with IN/OUT buttons - For all authenticated users */}
       {isAuthenticated && (
-        <MobileNavLink
-          to="/time-clock"
-          icon={Clock}
-          label="Clock In/Out"
-          onClick={() => {
-            navigate('/time-clock');
-            onClose();
-          }}
-        />
-      )}
-      
-      {showManagerTimeClock && (
         <MobileNavLink
           to="/manager-time-clock"
           icon={Clock}

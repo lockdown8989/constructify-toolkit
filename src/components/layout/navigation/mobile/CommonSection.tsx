@@ -71,16 +71,6 @@ const CommonSection: React.FC<CommonSectionProps> = ({
         />
       )}
 
-      {/* Time Clock - For all authenticated users */}
-      {isAuthenticated && (
-        <MobileNavLink 
-          to="/time-clock" 
-          icon={Clock} 
-          label="Time Clock" 
-          onClick={onClose} 
-        />
-      )}
-
       {/* Payroll Section - Only for Payroll users */}
       {isPayroll && (
         <>
