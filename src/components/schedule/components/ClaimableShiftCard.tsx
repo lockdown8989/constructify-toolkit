@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { PublishedShift } from '@/hooks/use-published-shifts';
+import { useAuth } from '@/hooks/use-auth';
 
 interface ClaimableShiftCardProps {
   shift: PublishedShift;
@@ -21,6 +22,7 @@ const ClaimableShiftCard: React.FC<ClaimableShiftCardProps> = ({
   isClaimingShift,
   canClaim
 }) => {
+  const { isEmployee, isManager, isAdmin, isHR } = useAuth();
   const startTime = new Date(shift.start_time);
   const endTime = new Date(shift.end_time);
   const hours = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60) * 10) / 10;
@@ -34,6 +36,16 @@ const ClaimableShiftCard: React.FC<ClaimableShiftCardProps> = ({
       case 'hr': return 'bg-pink-500';
       default: return 'bg-gray-500';
     }
+  };
+
+  const getAccessMessage = () => {
+    if (isManager || isAdmin || isHR) {
+      return "Managers assign shifts to employees";
+    }
+    if (!isEmployee) {
+      return "Only employees can claim shifts";
+    }
+    return null;
   };
 
   return (
@@ -104,7 +116,7 @@ const ClaimableShiftCard: React.FC<ClaimableShiftCardProps> = ({
       </div>
 
       {/* Claim Button - Only show for employees */}
-      {canClaim && (
+      {canClaim && isEmployee && (
         <Button 
           onClick={() => onClaim(shift.id)}
           disabled={isClaimingShift}
@@ -117,7 +129,7 @@ const ClaimableShiftCard: React.FC<ClaimableShiftCardProps> = ({
 
       {!canClaim && (
         <div className="text-center text-sm text-gray-500 py-2">
-          Only employees can claim shifts
+          {getAccessMessage()}
         </div>
       )}
     </Card>

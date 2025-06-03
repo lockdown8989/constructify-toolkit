@@ -44,20 +44,36 @@ export function usePublishedShifts() {
   // Claim shift mutation (only for employees)
   const claimShift = useMutation({
     mutationFn: async (shiftId: string) => {
-      if (!user || !isEmployee) {
-        throw new Error('Only employees can claim shifts');
+      if (!user) {
+        throw new Error('You must be logged in to claim shifts');
       }
+
+      if (!isEmployee) {
+        throw new Error('Only employees can claim shifts. Please contact your manager if you need employee access.');
+      }
+
+      console.log('Attempting to claim shift for user:', user.id);
 
       // Get employee record
       const { data: employee, error: empError } = await supabase
         .from('employees')
-        .select('id')
+        .select('id, name')
         .eq('user_id', user.id)
         .single();
 
-      if (empError || !employee) {
-        throw new Error('Employee record not found');
+      if (empError) {
+        console.error('Employee lookup error:', empError);
+        if (empError.code === 'PGRST116') {
+          throw new Error('Your account is not set up as an employee. Please contact your manager to create your employee profile.');
+        }
+        throw new Error(`Failed to find employee record: ${empError.message}`);
       }
+
+      if (!employee) {
+        throw new Error('Your account is not linked to an employee record. Please contact your manager.');
+      }
+
+      console.log('Found employee record:', employee);
 
       // Check if shift is still available
       const { data: shift, error: shiftError } = await supabase
@@ -67,9 +83,16 @@ export function usePublishedShifts() {
         .eq('status', 'open')
         .single();
 
-      if (shiftError || !shift) {
-        throw new Error('Shift is no longer available');
+      if (shiftError) {
+        console.error('Shift lookup error:', shiftError);
+        throw new Error(`Failed to find shift: ${shiftError.message}`);
       }
+
+      if (!shift) {
+        throw new Error('This shift is no longer available');
+      }
+
+      console.log('Found available shift:', shift);
 
       // Create assignment record
       const { data: assignment, error: assignError } = await supabase
@@ -83,9 +106,14 @@ export function usePublishedShifts() {
         .select()
         .single();
 
-      if (assignError) throw assignError;
+      if (assignError) {
+        console.error('Assignment creation error:', assignError);
+        throw new Error(`Failed to create assignment: ${assignError.message}`);
+      }
 
-      // Update open shift status to claimed
+      console.log('Created assignment:', assignment);
+
+      // Update open shift status to assigned
       const { error: updateError } = await supabase
         .from('open_shifts')
         .update({ 
@@ -94,7 +122,10 @@ export function usePublishedShifts() {
         })
         .eq('id', shiftId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Shift update error:', updateError);
+        throw new Error(`Failed to update shift status: ${updateError.message}`);
+      }
 
       // Create schedule entry for the employee
       const { data: scheduleData, error: scheduleError } = await supabase
@@ -108,12 +139,19 @@ export function usePublishedShifts() {
           notes: shift.notes,
           status: 'confirmed',
           published: true,
-          shift_type: 'claimed_shift'
+          shift_type: 'claimed_shift',
+          created_platform: 'web',
+          last_modified_platform: 'web'
         })
         .select()
         .single();
 
-      if (scheduleError) throw scheduleError;
+      if (scheduleError) {
+        console.error('Schedule creation error:', scheduleError);
+        throw new Error(`Failed to create schedule entry: ${scheduleError.message}`);
+      }
+
+      console.log('Created schedule entry:', scheduleData);
 
       return { assignment, schedule: scheduleData };
     },
@@ -129,9 +167,10 @@ export function usePublishedShifts() {
       });
     },
     onError: (error) => {
+      console.error('Shift claim error:', error);
       toast({
         title: "Failed to Claim Shift",
-        description: error instanceof Error ? error.message : "Please try again.",
+        description: error instanceof Error ? error.message : "Please try again or contact your manager.",
         variant: "destructive"
       });
     }
