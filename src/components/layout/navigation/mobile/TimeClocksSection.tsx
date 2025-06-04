@@ -10,13 +10,13 @@ interface TimeClocksSectionProps {
   hasManagerialAccess?: boolean;
 }
 
-const TimeClocksSection = ({ onClose, isAuthenticated = true }: TimeClocksSectionProps) => {
+const TimeClocksSection = ({ onClose, isAuthenticated = true, hasManagerialAccess = false }: TimeClocksSectionProps) => {
   const navigate = useNavigate();
 
   return (
     <>
-      {/* Time Clock with IN/OUT buttons - For all authenticated users */}
-      {isAuthenticated && (
+      {/* Time Clock with IN/OUT buttons - Only for managers, not payroll users */}
+      {isAuthenticated && hasManagerialAccess && (
         <MobileNavLink
           to="/manager-time-clock"
           icon={Clock}

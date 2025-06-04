@@ -13,7 +13,7 @@ import { useClockActions } from '@/components/time-clock/useClockActions.tsx';
 import { useMediaQuery } from '@/hooks/use-media-query';
 
 const ManagerTimeClock = () => {
-  const { isManager, isAdmin, isHR } = useAuth();
+  const { isManager, isAdmin, isHR, isPayroll } = useAuth();
   const navigate = useNavigate();
   const { data: employees = [], isLoading } = useEmployees();
   const { toast } = useToast();
@@ -50,7 +50,7 @@ const ManagerTimeClock = () => {
     }
   }, [selectedEmployee, employees]);
 
-  // Redirect if not a manager
+  // Redirect if not a manager (payroll users should not access this page)
   useEffect(() => {
     if (!isManager && !isAdmin && !isHR) {
       toast({
@@ -60,7 +60,17 @@ const ManagerTimeClock = () => {
       });
       navigate('/dashboard');
     }
-  }, [isManager, isAdmin, isHR, navigate, toast]);
+    
+    // Specifically block payroll users from accessing manager time clock
+    if (isPayroll) {
+      toast({
+        title: "Access Denied",
+        description: "Payroll users cannot access the manager time clock",
+        variant: "destructive",
+      });
+      navigate('/dashboard');
+    }
+  }, [isManager, isAdmin, isHR, isPayroll, navigate, toast]);
 
   const handleExitFullscreen = () => {
     navigate('/dashboard');

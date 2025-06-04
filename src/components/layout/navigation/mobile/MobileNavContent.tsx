@@ -30,7 +30,8 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
 }) => {
   const { user } = useAuth();
   const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
-  const isClockingEnabled = !hasManagerialAccess && isAuthenticated;
+  // Only show clocking controls for employees (not managers or payroll users)
+  const isClockingEnabled = !hasManagerialAccess && !isPayroll && isAuthenticated;
   
   if (!isOpen) return null;
 
@@ -51,8 +52,8 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
                 onClose={onClose}
               />
               
-              {/* Time Clock section - Show for all authenticated users */}
-              {isAuthenticated && (
+              {/* Time Clock section - Only for managers (not payroll users) */}
+              {isAuthenticated && hasManagerialAccess && !isPayroll && (
                 <>
                   <MobileNavDivider />
                   <TimeClocksSection 
@@ -63,7 +64,7 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
                 </>
               )}
               
-              {hasManagerialAccess && (
+              {hasManagerialAccess && !isPayroll && (
                 <>
                   <MobileNavDivider />
                   <ManagerSection 
@@ -73,7 +74,7 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
                 </>
               )}
               
-              {isEmployee && (
+              {isEmployee && !isPayroll && (
                 <>
                   <MobileNavDivider />
                   <WorkflowSection 
@@ -85,7 +86,8 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
             </div>
           </div>
 
-          {isAuthenticated && !hasManagerialAccess && (
+          {/* Only show clocking controls for regular employees */}
+          {isClockingEnabled && (
             <div className="border-t p-4">
               <ClockingControls 
                 isClockingEnabled={isClockingEnabled}
