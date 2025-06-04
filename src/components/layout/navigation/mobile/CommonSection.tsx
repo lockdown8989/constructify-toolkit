@@ -20,6 +20,8 @@ const CommonSection: React.FC<CommonSectionProps> = ({
 }) => {
   // Debug log to check payroll role in mobile nav
   console.log("CommonSection - isPayroll:", isPayroll);
+  console.log("CommonSection - isAuthenticated:", isAuthenticated);
+  console.log("CommonSection - hasManagerialAccess:", hasManagerialAccess);
 
   return (
     <>
@@ -33,7 +35,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       )}
 
       {/* Employee Management - For Managers/HR/Admin */}
-      {hasManagerialAccess && (
+      {hasManagerialAccess && !isPayroll && (
         <>
           <MobileNavLink 
             to="/people" 
@@ -72,13 +74,14 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       )}
 
       {/* Payroll Section - Only for Payroll users */}
-      {isPayroll && (
+      {isAuthenticated && isPayroll && (
         <>
           <MobileNavLink 
             to="/payroll" 
             icon={Calculator} 
             label="Payroll" 
             onClick={onClose} 
+            className="salary-nav-button"
           />
 
           <MobileNavLink 
@@ -86,6 +89,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
             icon={DollarSign} 
             label="Salary" 
             onClick={onClose} 
+            className="salary-nav-button"
           />
 
           <MobileNavLink 
@@ -93,12 +97,13 @@ const CommonSection: React.FC<CommonSectionProps> = ({
             icon={Wallet} 
             label="Payslips" 
             onClick={onClose} 
+            className="salary-nav-button"
           />
         </>
       )}
 
-      {/* Employee Workflow - For employees */}
-      {isEmployee && (
+      {/* Employee Workflow - For employees (not payroll users) */}
+      {isEmployee && !isPayroll && (
         <MobileNavLink 
           to="/employee-workflow" 
           icon={ClipboardList} 
@@ -107,8 +112,8 @@ const CommonSection: React.FC<CommonSectionProps> = ({
         />
       )}
 
-      {/* Restaurant Schedule - For Managers */}
-      {hasManagerialAccess && (
+      {/* Restaurant Schedule - For Managers (not payroll users) */}
+      {hasManagerialAccess && !isPayroll && (
         <MobileNavLink 
           to="/restaurant-schedule" 
           icon={Clock} 

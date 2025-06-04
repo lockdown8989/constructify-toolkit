@@ -27,6 +27,7 @@ const NavigationLinks = () => {
 
   // Debug log to check payroll role
   console.log("NavigationLinks - isPayroll:", isPayroll);
+  console.log("NavigationLinks - hasManagerialAccess:", hasManagerialAccess);
 
   return (
     <nav className="px-3 space-y-1">
@@ -41,8 +42,8 @@ const NavigationLinks = () => {
 
       <SidebarDivider isCollapsed={false} />
 
-      {/* Employee Management - For Managers/HR/Admin */}
-      {hasManagerialAccess && (
+      {/* Employee Management - For Managers/HR/Admin (not payroll users) */}
+      {hasManagerialAccess && !isPayroll && (
         <>
           <SidebarNavLink
             to="/people"
