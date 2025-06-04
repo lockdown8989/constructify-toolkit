@@ -1,10 +1,12 @@
 
 import React from 'react';
-import { Employee } from '@/components/dashboard/salary-table/types';
 import CurrentDateTime from '@/components/dashboard/CurrentDateTime';
 import DashboardStatsSection from '@/components/dashboard/DashboardStatsSection';
-import DashboardMainContent from '@/components/dashboard/DashboardMainContent';
 import AttendanceOverview from '@/components/dashboard/AttendanceOverview';
+import ManagerTab from '@/components/leave/tabs/ManagerTab';
+import AttendanceReport from '@/components/dashboard/attendance-report';
+import HiringStatistics from '@/components/dashboard/HiringStatistics';
+import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
 
 interface ManagerDashboardProps {
   firstName: string;
@@ -16,14 +18,12 @@ interface ManagerDashboardProps {
     projectTime: number;
     output: number;
   };
-  salaryEmployees: Employee[];
 }
 
 const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
   firstName,
   employeeCount,
   hiredCount,
-  salaryEmployees
 }) => {
   return (
     <div className="max-w-[1800px] mx-auto">
@@ -32,7 +32,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
         <CurrentDateTime className="md:w-auto w-full mt-4 md:mt-0" />
       </div>
       
-      {/* Replace Progress Bars with Real-time Attendance Overview */}
+      {/* Real-time Attendance Overview */}
       <AttendanceOverview />
       
       {/* Stats */}
@@ -42,8 +42,26 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
         isManager={true} 
       />
       
-      {/* Main Content */}
-      <DashboardMainContent isManager={true} salaryEmployees={salaryEmployees} />
+      {/* Manager-specific content without salary information */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column - Leave Management */}
+        <div className="lg:col-span-4">
+          <ManagerTab />
+        </div>
+        
+        {/* Middle Column - Attendance Report */}
+        <div className="lg:col-span-4">
+          <AttendanceReport className="mb-6" />
+        </div>
+        
+        {/* Right Column - Statistics */}
+        <div className="lg:col-span-4">
+          <div className="grid grid-cols-1 gap-6">
+            <HiringStatistics />
+            <EmployeeComposition />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
