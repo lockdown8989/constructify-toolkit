@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import PinCodeVerification from './PinCodeVerification';
 import ConfirmationDialog from './ConfirmationDialog';
@@ -32,7 +33,27 @@ const ClockActions = ({
   const [isShiftCompletionOpen, setIsShiftCompletionOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'in' | 'out' | 'break' | 'end_break' | null>(null);
   const [localProcessing, setLocalProcessing] = useState(false);
+  const [lastAction, setLastAction] = useState<'in' | 'out' | null>(null);
   const { toast } = useToast();
+
+  // Persist last action in localStorage
+  useEffect(() => {
+    if (selectedEmployee) {
+      const storageKey = `timeClockAction_${selectedEmployee}`;
+      const stored = localStorage.getItem(storageKey);
+      if (stored && (stored === 'in' || stored === 'out')) {
+        setLastAction(stored);
+      }
+    }
+  }, [selectedEmployee]);
+
+  // Save action to localStorage when it changes
+  useEffect(() => {
+    if (selectedEmployee && lastAction) {
+      const storageKey = `timeClockAction_${selectedEmployee}`;
+      localStorage.setItem(storageKey, lastAction);
+    }
+  }, [selectedEmployee, lastAction]);
 
   const handleActionClick = (clickAction: 'in' | 'out') => {
     if (!selectedEmployee) {
@@ -52,6 +73,7 @@ const ClockActions = ({
     
     // For clock in or if employee is not clocked in
     setPendingAction(clickAction);
+    setLastAction(clickAction);
     setIsPinDialogOpen(true);
   };
 
@@ -78,6 +100,7 @@ const ClockActions = ({
   const handleShiftCompletion = async (actionType: 'finish' | 'break') => {
     if (actionType === 'finish') {
       setPendingAction('out');
+      setLastAction('out');
     } else {
       if (employeeStatus?.onBreak) {
         // If already on break, end the break
@@ -155,15 +178,14 @@ const ClockActions = ({
 
   const buttonLabels = getButtonLabel();
 
-  // Convert pending action for confirmation dialog - fix type mismatch
+  // Convert pending action for confirmation dialog
   const getConfirmationAction = (): 'in' | 'out' => {
-    if (pendingAction === 'end_break' || pendingAction === 'break') return 'in'; // Use 'in' as default for break actions
+    if (pendingAction === 'end_break' || pendingAction === 'break') return 'in';
     return pendingAction as 'in' | 'out';
   };
 
-  // Fix the pin action type issue by creating a proper type conversion
   const getPinAction = (): 'in' | 'out' => {
-    if (pendingAction === 'end_break' || pendingAction === 'break') return 'in'; // Convert break actions to 'in' for PIN dialog
+    if (pendingAction === 'end_break' || pendingAction === 'break') return 'in';
     return pendingAction as 'in' | 'out';
   };
 
@@ -190,10 +212,10 @@ const ClockActions = ({
 
   return (
     <>
-      <div className="w-full max-w-lg text-center">
+      <div className="w-full max-w-lg text-center px-4">
         {selectedEmployee ? (
           <>
-            <h3 className="text-xl mb-2 font-semibold">{selectedEmployeeName}</h3>
+            <h3 className="text-lg sm:text-xl mb-2 font-semibold break-words">{selectedEmployeeName}</h3>
             
             {/* Status indicator */}
             <div className="mb-4">
@@ -210,18 +232,30 @@ const ClockActions = ({
                     : 'Clocked In'
                   : 'Clocked Out'}
               </span>
+              
+              {/* Show last action indicator */}
+              {lastAction && (
+                <div className="mt-2 text-xs text-gray-500">
+                  Last action: {lastAction.toUpperCase()}
+                </div>
+              )}
             </div>
             
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            {/* Mobile-friendly button layout */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
               <Button 
-                className={`py-8 text-3xl rounded-md ${action === 'in' ? 'animate-pulse' : ''} bg-emerald-500 hover:bg-emerald-600`}
+                className={`py-6 sm:py-8 text-xl sm:text-3xl rounded-md touch-target min-h-[60px] ${
+                  lastAction === 'in' ? 'ring-2 ring-emerald-400 ring-offset-2' : ''
+                } ${action === 'in' ? 'animate-pulse' : ''} bg-emerald-500 hover:bg-emerald-600`}
                 onClick={() => handleActionClick('in')}
                 disabled={isProcessing || localProcessing || employeeStatus?.isClockedIn}
               >
                 {(isProcessing || localProcessing) && pendingAction === 'in' ? 'Processing...' : buttonLabels.in}
               </Button>
               <Button 
-                className={`py-8 text-3xl rounded-md ${action === 'out' ? 'animate-pulse' : ''} bg-red-600 hover:bg-red-700`}
+                className={`py-6 sm:py-8 text-xl sm:text-3xl rounded-md touch-target min-h-[60px] ${
+                  lastAction === 'out' ? 'ring-2 ring-red-400 ring-offset-2' : ''
+                } ${action === 'out' ? 'animate-pulse' : ''} bg-red-600 hover:bg-red-700`}
                 onClick={() => handleActionClick('out')}
                 disabled={isProcessing || localProcessing || !employeeStatus?.isClockedIn}
               >
@@ -232,7 +266,7 @@ const ClockActions = ({
             {/* Break button - only show if employee is clocked in */}
             {employeeStatus?.isClockedIn && (
               <Button 
-                className={`w-full py-6 text-xl rounded-md ${
+                className={`w-full py-4 sm:py-6 text-lg sm:text-xl rounded-md touch-target min-h-[50px] ${
                   employeeStatus.onBreak 
                     ? 'bg-blue-600 hover:bg-blue-700' 
                     : 'bg-orange-500 hover:bg-orange-600'
@@ -246,11 +280,23 @@ const ClockActions = ({
                 }
               </Button>
             )}
+
+            {/* Break reminder for mobile */}
+            {employeeStatus?.onBreak && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="text-yellow-800 text-sm font-medium">
+                  ⏰ Break in Progress
+                </div>
+                <div className="text-yellow-700 text-xs mt-1">
+                  Don't forget to end your break when finished
+                </div>
+              </div>
+            )}
           </>
         ) : (
-          <div className="text-center text-gray-400">
-            <h3 className="text-xl mb-4">No Employee Selected</h3>
-            <p>Please select an employee from the list</p>
+          <div className="text-center text-gray-400 px-4">
+            <h3 className="text-lg sm:text-xl mb-4">No Employee Selected</h3>
+            <p className="text-sm sm:text-base">Please select an employee from the list</p>
           </div>
         )}
       </div>

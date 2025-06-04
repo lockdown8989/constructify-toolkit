@@ -19,6 +19,7 @@ const ManagerTimeClock = () => {
   const { toast } = useToast();
   const isLandscape = useMediaQuery('(orientation: landscape)');
   const isMobile = useMediaQuery('(max-width: 640px)');
+  const isTablet = useMediaQuery('(max-width: 1024px)');
   const [selectedEmployeeData, setSelectedEmployeeData] = useState<{
     name: string;
     avatar?: string;
@@ -66,60 +67,62 @@ const ManagerTimeClock = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black text-white z-50 flex flex-col landscape:flex-row">
-      {/* Header - only visible in portrait mode */}
-      <div className="p-4 flex items-center justify-between border-b border-gray-800 portrait:flex landscape:hidden">
+    <div className="fixed inset-0 bg-black text-white z-50 flex flex-col">
+      {/* Header - responsive */}
+      <div className="p-3 sm:p-4 flex items-center justify-between border-b border-gray-800">
         <div className="flex items-center">
-          <h1 className="text-xl font-bold tracking-wide">TeamPulse</h1>
+          <h1 className="text-lg sm:text-xl font-bold tracking-wide">TeamPulse</h1>
         </div>
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={handleExitFullscreen}
-          className="text-white hover:bg-gray-800"
+          className="text-white hover:bg-gray-800 touch-target"
         >
-          <X className="h-6 w-6" />
+          <X className="h-5 w-5 sm:h-6 sm:w-6" />
         </Button>
       </div>
 
-      {/* Main content */}
-      <div className="flex flex-1 flex-col md:flex-row landscape:flex-row">
+      {/* Main content - responsive layout */}
+      <div className="flex flex-1 overflow-hidden">
         {/* Left side - Employee selection */}
-        <div className={`${isLandscape ? 'w-1/3' : 'w-full'} border-r border-gray-800 p-4 overflow-auto landscape:max-h-screen`}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Select Employee</h2>
-            
-            {/* Exit button for landscape mode */}
-            <div className="portrait:hidden landscape:flex">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handleExitFullscreen}
-                className="text-white hover:bg-gray-800"
-              >
-                <X className="h-6 w-6" />
-              </Button>
-            </div>
+        <div className={`${
+          isMobile 
+            ? 'w-full' 
+            : isTablet 
+              ? 'w-2/5' 
+              : 'w-1/3'
+        } border-r border-gray-800 flex flex-col`}>
+          <div className="p-3 sm:p-4 border-b border-gray-800">
+            <h2 className="text-base sm:text-lg font-semibold">Select Employee</h2>
           </div>
           
-          <EmployeeList
-            employees={employees}
-            selectedEmployee={selectedEmployee}
-            isLoading={isLoading}
-            onSelectEmployee={handleSelectEmployee}
-          />
+          <div className="flex-1 overflow-auto">
+            <EmployeeList
+              employees={employees}
+              selectedEmployee={selectedEmployee}
+              isLoading={isLoading}
+              onSelectEmployee={handleSelectEmployee}
+            />
+          </div>
         </div>
 
         {/* Right side - Clock actions */}
-        <div className={`${isLandscape ? 'w-2/3' : 'w-full'} p-4 flex flex-col items-center justify-center`}>
+        <div className={`${
+          isMobile 
+            ? 'hidden' 
+            : isTablet 
+              ? 'w-3/5' 
+              : 'w-2/3'
+        } flex flex-col items-center justify-center p-4 overflow-auto`}>
           {/* Company logo/header */}
-          <div className="text-center mb-6">
-            <div className="text-lg uppercase tracking-wider">TeamPulse</div>
-            <p className="text-sm text-gray-400">{new Date().toLocaleDateString()}</p>
+          <div className="text-center mb-4 sm:mb-6">
+            <div className="text-base sm:text-lg uppercase tracking-wider">TeamPulse</div>
+            <p className="text-xs sm:text-sm text-gray-400">{new Date().toLocaleDateString()}</p>
           </div>
           
           {/* Large digital clock */}
-          <div className="text-center mb-10">
+          <div className="text-center mb-6 sm:mb-10">
             <DigitalClock />
           </div>
 
@@ -134,6 +137,47 @@ const ManagerTimeClock = () => {
             isProcessing={isProcessing}
           />
         </div>
+
+        {/* Mobile overlay for clock actions */}
+        {isMobile && selectedEmployee && (
+          <div className="absolute inset-0 bg-black bg-opacity-90 flex flex-col z-10">
+            <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Time Clock</h2>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => handleSelectEmployee('')}
+                className="text-white hover:bg-gray-800"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-auto">
+              {/* Company logo/header */}
+              <div className="text-center mb-4">
+                <div className="text-base uppercase tracking-wider">TeamPulse</div>
+                <p className="text-xs text-gray-400">{new Date().toLocaleDateString()}</p>
+              </div>
+              
+              {/* Digital clock */}
+              <div className="text-center mb-6">
+                <DigitalClock />
+              </div>
+
+              <ClockActions
+                selectedEmployee={selectedEmployee}
+                action={action}
+                selectedEmployeeName={selectedEmployeeData?.name || ''}
+                selectedEmployeeAvatar={selectedEmployeeData?.avatar}
+                employeeStatus={employeeStatus}
+                onClockAction={handleClockAction}
+                onBreakAction={handleBreakAction}
+                isProcessing={isProcessing}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

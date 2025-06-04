@@ -16,8 +16,28 @@ export const useTimeClock = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [elapsedTime, setElapsedTime] = useState(0);
   const [breakTime, setBreakTime] = useState(0);
+  const [lastAction, setLastAction] = useState<'in' | 'out' | null>(null);
   const { employeeData } = useEmployeeDataManagement();
   const { toast } = useToast();
+
+  // Persist last action in localStorage
+  useEffect(() => {
+    if (employeeData?.id) {
+      const storageKey = `timeClockAction_${employeeData.id}`;
+      const stored = localStorage.getItem(storageKey);
+      if (stored && (stored === 'in' || stored === 'out')) {
+        setLastAction(stored);
+      }
+    }
+  }, [employeeData?.id]);
+
+  // Save action to localStorage when it changes
+  useEffect(() => {
+    if (employeeData?.id && lastAction) {
+      const storageKey = `timeClockAction_${employeeData.id}`;
+      localStorage.setItem(storageKey, lastAction);
+    }
+  }, [employeeData?.id, lastAction]);
 
   // Initialize auto-clockout
   useAutoClockout(
@@ -31,13 +51,70 @@ export const useTimeClock = () => {
   // Check initial status
   useStatusCheck(employeeData?.id, setCurrentRecord, setStatus);
 
-  // Get time clock actions
+  // Get time clock actions with state persistence
   const {
-    handleClockIn,
-    handleClockOut,
-    handleBreakStart,
-    handleBreakEnd
+    handleClockIn: originalHandleClockIn,
+    handleClockOut: originalHandleClockOut,
+    handleBreakStart: originalHandleBreakStart,
+    handleBreakEnd: originalHandleBreakEnd
   } = useTimeClockActions(setStatus, setCurrentRecord);
+
+  // Wrap actions to persist state
+  const handleClockIn = async () => {
+    await originalHandleClockIn(employeeData?.id);
+    setLastAction('in');
+    
+    // Show break reminder after successful clock in
+    setTimeout(() => {
+      toast({
+        title: "Reminder",
+        description: "Remember to take breaks during your shift and end them when finished",
+        variant: "default",
+      });
+    }, 3000);
+  };
+
+  const handleClockOut = async () => {
+    // Check if currently on break
+    if (status === 'on-break') {
+      toast({
+        title: "End Break First",
+        description: "Please end your current break before clocking out",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    await originalHandleClockOut(currentRecord);
+    setLastAction('out');
+    
+    // Clear the stored action on clock out
+    if (employeeData?.id) {
+      const storageKey = `timeClockAction_${employeeData.id}`;
+      localStorage.removeItem(storageKey);
+    }
+  };
+
+  const handleBreakStart = async () => {
+    await originalHandleBreakStart(currentRecord);
+    
+    // Set reminder to end break
+    toast({
+      title: "Break Started",
+      description: "Remember to end your break when you're ready to continue working",
+      variant: "default",
+    });
+  };
+
+  const handleBreakEnd = async () => {
+    await originalHandleBreakEnd(currentRecord);
+    
+    toast({
+      title: "Break Ended",
+      description: "Welcome back! Continue with your shift",
+      variant: "default",
+    });
+  };
 
   // Define refresh function for attendance sync
   const refreshAttendanceData = async () => {
@@ -137,14 +214,29 @@ export const useTimeClock = () => {
     fetchAttendanceData();
   }, [currentRecord, status, breakTime]);
 
+  // Show break reminder if on break for too long
+  useEffect(() => {
+    if (status === 'on-break') {
+      const reminderTimeout = setTimeout(() => {
+        toast({
+          title: "Break Reminder",
+          description: "You've been on break for a while. Don't forget to end your break when ready!",
+          variant: "default",
+        });
+      }, 30 * 60 * 1000); // 30 minutes
+
+      return () => clearTimeout(reminderTimeout);
+    }
+  }, [status, toast]);
+
   return {
     // Status and actions
     status,
     setStatus,
-    handleClockIn: () => handleClockIn(employeeData?.id),
-    handleClockOut: () => handleClockOut(currentRecord),
-    handleBreakStart: () => handleBreakStart(currentRecord),
-    handleBreakEnd: () => handleBreakEnd(currentRecord),
+    handleClockIn,
+    handleClockOut,
+    handleBreakStart,
+    handleBreakEnd,
     
     // Additional state needed by TimeClockWidget
     timelog,
@@ -156,6 +248,7 @@ export const useTimeClock = () => {
     breakTime,
     setBreakTime,
     currentRecord,
+    lastAction,
     
     // Employee data
     employeeId: employeeData?.id

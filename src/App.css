@@ -1,17 +1,56 @@
 
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+/* ... keep existing code ... */
 
-/* Add this to the end of your main CSS file */
-.droppable-area.drag-over {
-  background-color: rgba(59, 130, 246, 0.1);
+/* Touch-friendly button targets for mobile */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
 }
 
-.droppable-highlight {
-  opacity: 0;
+/* Mobile-friendly time clock interface */
+@media (max-width: 640px) {
+  .time-clock-button {
+    padding: 1rem;
+    font-size: 1.25rem;
+    min-height: 60px;
+  }
+  
+  .time-clock-break-button {
+    padding: 0.75rem;
+    font-size: 1.125rem;
+    min-height: 50px;
+  }
 }
 
-.drag-over .droppable-highlight {
-  opacity: 0.5;
+/* Responsive text sizing */
+@media (max-width: 480px) {
+  .time-clock-title {
+    font-size: 1.125rem;
+  }
+  
+  .time-clock-status {
+    font-size: 0.875rem;
+  }
+  
+  .time-clock-reminder {
+    font-size: 0.75rem;
+  }
+}
+
+/* High contrast mode for accessibility */
+@media (prefers-contrast: high) {
+  .time-clock-button {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none;
+  }
+  
+  .ring-2 {
+    transition: none;
+  }
 }
