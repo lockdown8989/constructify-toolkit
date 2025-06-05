@@ -1,15 +1,15 @@
 
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/hooks/use-auth";
 
 interface DesktopNavProps {
   isAuthenticated: boolean;
 }
 
 const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated }) => {
-  const { isAdmin, isManager, isHR } = useAuth();
-  const hasManagerAccess = isAdmin || isManager || isHR;
+  const { isAdmin, isManager, isHR, isPayroll } = useAuth();
+  const hasManagerAccess = (isAdmin || isManager || isHR) && !isPayroll;
 
   // Only show navigation links if the user is authenticated
   if (!isAuthenticated) {
@@ -60,7 +60,8 @@ const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated }) => {
           People
         </NavLink>
       )}
-      {hasManagerAccess && (
+      {/* Payroll button only for payroll users, not managers */}
+      {isPayroll && (
         <NavLink
           to="/payroll"
           className={({ isActive }) =>
