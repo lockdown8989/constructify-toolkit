@@ -41,17 +41,6 @@ const Dashboard = () => {
     ? employees.filter(emp => emp.user_id !== user?.id).length 
     : 1;
   
-  // Transform employees data for the SalaryTable
-  const salaryEmployees = employees.slice(0, 3).map(emp => ({
-    id: emp.id,
-    name: emp.name,
-    avatar: emp.avatar || `https://randomuser.me/api/portraits//${Math.random() > 0.5 ? 'women' : 'men'}/${Math.floor(Math.random() * 99)}.jpg`,
-    title: emp.job_title,
-    salary: `$${emp.salary.toLocaleString()}`,
-    status: emp.status === 'Active' ? 'Paid' as const : emp.status === 'Leave' ? 'Absent' as const : 'Pending' as const,
-    paymentDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-  }));
-  
   // Get interview statistics - only show for managers
   const interviewStats = hasManagerAccess ? {
     interviews: interviews.filter(i => i.stage === 'Interview').reduce((acc, i) => acc + i.progress, 0) / 
@@ -88,7 +77,6 @@ const Dashboard = () => {
             employeeCount={employeeCount}
             hiredCount={interviews.filter(i => i.stage === 'Hired').length}
             interviewStats={interviewStats}
-            salaryEmployees={salaryEmployees}
           />
         ) : (
           <EmployeeDashboard firstName={firstName} />
