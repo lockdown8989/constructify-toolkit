@@ -22,7 +22,9 @@ const MobileNav = ({ isAuthenticated }: MobileNavProps) => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const { isAdmin, isHR, isManager, isEmployee, isPayroll } = useAuth();
-  const hasManagerialAccess = isManager || isAdmin || isHR;
+  
+  // Exclude payroll users from managerial access
+  const hasManagerialAccess = (isManager || isAdmin || isHR) && !isPayroll;
   
   const handleBack = () => {
     if (location.pathname !== '/') {

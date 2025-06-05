@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useTimeClock } from "@/hooks/time-clock";
 
 import SidebarHeader from './sidebar/SidebarHeader';
@@ -14,13 +14,18 @@ interface DesktopSidebarProps {
 }
 
 const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ isAuthenticated }) => {
-  const { isAdmin, isHR, isManager } = useAuth();
-  const hasManagerialAccess = isManager || isAdmin || isHR;
+  const { isAdmin, isHR, isManager, isPayroll } = useAuth();
+  
+  // Exclude payroll users from managerial access
+  const hasManagerialAccess = (isManager || isAdmin || isHR) && !isPayroll;
+  
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
-  const isClockingEnabled = !hasManagerialAccess && isAuthenticated;
+  
+  // Only regular employees (not managers or payroll users) get clocking controls
+  const isClockingEnabled = !hasManagerialAccess && !isPayroll && isAuthenticated;
   
   const handleHomeClick = () => {
     navigate('/dashboard');
