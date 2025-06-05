@@ -98,10 +98,10 @@ const NavigationLinks = () => {
           <SidebarDivider isCollapsed={false} />
           
           <SidebarNavLink
-            to="/payroll"
+            to="/payroll-dashboard"
             icon={Calculator}
             label="Payroll"
-            isActive={location.pathname === "/payroll"}
+            isActive={location.pathname === "/payroll-dashboard"}
             isCollapsed={false}
           />
 

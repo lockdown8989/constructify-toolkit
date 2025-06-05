@@ -34,7 +34,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
         />
       )}
 
-      {/* Employee Management - For Managers/HR/Admin */}
+      {/* Employee Management - For Managers/HR/Admin (not payroll users) */}
       {hasManagerialAccess && !isPayroll && (
         <>
           <MobileNavLink 
@@ -77,7 +77,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       {isAuthenticated && isPayroll && (
         <>
           <MobileNavLink 
-            to="/payroll" 
+            to="/payroll-dashboard" 
             icon={Calculator} 
             label="Payroll" 
             onClick={onClose} 

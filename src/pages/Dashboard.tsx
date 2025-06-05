@@ -7,11 +7,12 @@ import { useAttendanceSync } from '@/hooks/use-attendance-sync';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard';
 import ManagerDashboard from '@/components/dashboard/ManagerDashboard';
+import PayrollDashboard from '@/components/dashboard/PayrollDashboard';
 import { Loader2 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 const Dashboard = () => {
-  const { isManager, isAdmin, isHR, isLoading: authLoading, user } = useAuth();
+  const { isManager, isAdmin, isHR, isPayroll, isLoading: authLoading, user } = useAuth();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
   
@@ -23,26 +24,26 @@ const Dashboard = () => {
                    user?.email?.split('@')[0] || 
                    'User';
 
-  // Determine if the user has manager-level access (manager, admin, or HR)
-  const hasManagerAccess = isManager || isAdmin || isHR;
+  // Determine if the user has manager-level access (manager, admin, or HR, but not payroll)
+  const hasManagerAccess = (isManager || isAdmin || isHR) && !isPayroll;
                    
   useEffect(() => {
-    console.log("Dashboard user roles:", { isManager, isAdmin, isHR, hasManagerAccess });
+    console.log("Dashboard user roles:", { isManager, isAdmin, isHR, isPayroll, hasManagerAccess });
     
     if (user && !authLoading) {
       // Log the current user information for debugging
       console.log("Current user:", user.id, user.email);
       console.log("User metadata:", user.user_metadata);
     }
-  }, [user, isManager, isAdmin, isHR, authLoading, hasManagerAccess]);
+  }, [user, isManager, isAdmin, isHR, isPayroll, authLoading, hasManagerAccess]);
   
   // Count employees excluding the manager themselves
-  const employeeCount = hasManagerAccess 
+  const employeeCount = hasManagerAccess || isPayroll
     ? employees.filter(emp => emp.user_id !== user?.id).length 
     : 1;
   
-  // Get interview statistics - only show for managers
-  const interviewStats = hasManagerAccess ? {
+  // Get interview statistics - only show for managers and payroll
+  const interviewStats = hasManagerAccess || isPayroll ? {
     interviews: interviews.filter(i => i.stage === 'Interview').reduce((acc, i) => acc + i.progress, 0) / 
                 Math.max(interviews.filter(i => i.stage === 'Interview').length, 1),
     hired: interviews.filter(i => i.stage === 'Hired').reduce((acc, i) => acc + i.progress, 0) / 
@@ -71,7 +72,13 @@ const Dashboard = () => {
   return (
     <Tabs defaultValue="dashboard">
       <TabsContent value="dashboard" className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
-        {hasManagerAccess ? (
+        {isPayroll ? (
+          <PayrollDashboard 
+            firstName={firstName}
+            employeeCount={employeeCount}
+            hiredCount={interviews.filter(i => i.stage === 'Hired').length}
+          />
+        ) : hasManagerAccess ? (
           <ManagerDashboard 
             firstName={firstName}
             employeeCount={employeeCount}
