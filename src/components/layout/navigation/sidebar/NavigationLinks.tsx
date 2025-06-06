@@ -23,7 +23,8 @@ const NavigationLinks = () => {
   const location = useLocation();
   const { isAdmin, isHR, isManager, isEmployee, isPayroll } = useAuth();
   
-  const hasManagerialAccess = isManager || isAdmin || isHR;
+  // Exclude payroll users from managerial access
+  const hasManagerialAccess = (isManager || isAdmin || isHR) && !isPayroll;
 
   // Debug log to check payroll role
   console.log("NavigationLinks - isPayroll:", isPayroll);
@@ -43,7 +44,7 @@ const NavigationLinks = () => {
       <SidebarDivider isCollapsed={false} />
 
       {/* Employee Management - For Managers/HR/Admin (not payroll users) */}
-      {hasManagerialAccess && !isPayroll && (
+      {hasManagerialAccess && (
         <>
           <SidebarNavLink
             to="/people"
@@ -82,7 +83,7 @@ const NavigationLinks = () => {
       />
 
       {/* Manager Time Clock with IN/OUT buttons - Only for managers (not payroll users) */}
-      {hasManagerialAccess && !isPayroll && (
+      {hasManagerialAccess && (
         <SidebarNavLink
           to="/manager-time-clock"
           icon={Clock}
@@ -98,10 +99,10 @@ const NavigationLinks = () => {
           <SidebarDivider isCollapsed={false} />
           
           <SidebarNavLink
-            to="/payroll-dashboard"
+            to="/payroll"
             icon={Calculator}
             label="Payroll"
-            isActive={location.pathname === "/payroll-dashboard"}
+            isActive={location.pathname === "/payroll"}
             isCollapsed={false}
           />
 
@@ -137,7 +138,7 @@ const NavigationLinks = () => {
       )}
 
       {/* Restaurant Schedule - For Managers (not payroll users) */}
-      {hasManagerialAccess && !isPayroll && (
+      {hasManagerialAccess && (
         <SidebarNavLink
           to="/restaurant-schedule"
           icon={Clock}
