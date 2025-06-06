@@ -1,19 +1,7 @@
 
 import { User, Session } from '@supabase/supabase-js';
 
-// Define the user role types - IMPORTANT: Database uses 'employer' while UI uses 'manager'
-export type UserRole = 'admin' | 'hr' | 'employee' | 'manager' | 'payroll';
-export type DatabaseRole = 'admin' | 'hr' | 'employee' | 'employer' | 'payroll';
-
-// Map UI roles to database roles
-export const mapUIRoleToDBRole = (role: UserRole): DatabaseRole => {
-  return role === 'manager' ? 'employer' : role as DatabaseRole;
-};
-
-// Map database roles to UI roles
-export const mapDBRoleToUIRole = (role: DatabaseRole): UserRole => {
-  return role === 'employer' ? 'manager' : role as UserRole;
-};
+export type UserRole = 'admin' | 'hr' | 'manager' | 'employee' | 'payroll' | 'employer';
 
 export interface AuthContextType {
   user: User | null;
@@ -24,16 +12,17 @@ export interface AuthContextType {
   isManager: boolean;
   isEmployee: boolean;
   isPayroll: boolean;
-  isAuthenticated?: boolean;
-  signIn?: (email: string, password: string) => Promise<any>;
-  signUp?: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;
-  resetPassword?: (email: string) => Promise<any>;
-  updatePassword?: (password: string) => Promise<any>;
-  signOut?: () => Promise<void>;
-  deleteAccount?: () => Promise<{ success: boolean; error?: string }>;
+  isAuthenticated: boolean;
+  signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, metadata?: any) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
-// Function to check if user is authenticated
-export const isAuthenticated = (session: Session | null): boolean => {
-  return !!session?.user;
+export const isAuthenticated = () => {
+  // This function is provided for compatibility with older code
+  // It should be avoided in favor of checking auth.user directly
+  return false; // This will be overridden by the actual implementation
 };

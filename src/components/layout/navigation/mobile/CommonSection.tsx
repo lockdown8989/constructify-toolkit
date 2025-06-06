@@ -35,7 +35,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       )}
 
       {/* Employee Management - For Managers/HR/Admin only (excluding payroll users) */}
-      {hasManagerialAccess && !isPayroll && (
+      {hasManagerialAccess && (
         <>
           <MobileNavLink 
             to="/people" 
@@ -73,7 +73,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
         />
       )}
 
-      {/* Payroll Section - Only for Payroll users (not managers) */}
+      {/* Payroll Section - Only for Payroll users */}
       {isAuthenticated && isPayroll && (
         <>
           <MobileNavLink 
@@ -113,7 +113,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
       )}
 
       {/* Restaurant Schedule - For Managers only (not payroll users) */}
-      {hasManagerialAccess && !isPayroll && (
+      {hasManagerialAccess && (
         <MobileNavLink 
           to="/restaurant-schedule" 
           icon={Clock} 
