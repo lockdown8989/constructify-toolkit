@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AuthContextType } from './types';
 import { useAuthActions } from './useAuthActions';
 import { useRoles } from './useRoles';
+import { SessionTimeoutWarning } from '@/components/auth/SessionTimeoutWarning';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -20,18 +21,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Use auth actions hook
   const authActions = useAuthActions();
 
-  // Debug log to check all roles
-  useEffect(() => {
-    if (user && rolesLoaded) {
-      console.log("AuthProvider - All roles:", { isAdmin, isHR, isManager, isPayroll, isEmployee });
-    }
-  }, [user, rolesLoaded, isAdmin, isHR, isManager, isPayroll, isEmployee]);
-
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -44,7 +37,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -80,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider value={value}>
       {children}
+      {session?.user && <SessionTimeoutWarning />}
     </AuthContext.Provider>
   );
 };

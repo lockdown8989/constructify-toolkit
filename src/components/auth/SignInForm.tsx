@@ -4,7 +4,7 @@ import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription }
 import { Button } from "@/components/ui/button";
 import { useSignInForm } from "./hooks/useSignInForm";
 import { SignInFields } from "./components/SignInFields";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Clock } from "lucide-react";
 
 type SignInFormProps = {
   onSignIn: (email: string, password: string) => Promise<any>;
@@ -17,10 +17,18 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
     password,
     isLoading,
     errorMessage,
+    canAttempt,
+    attemptsRemaining,
+    remainingBlockTime,
     handleEmailChange,
     handlePasswordChange,
     handleSubmit
   } = useSignInForm({ onSignIn });
+
+  const formatBlockTime = (seconds: number) => {
+    const minutes = Math.ceil(seconds / 60);
+    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+  };
 
   return (
     <Card className="w-full">
@@ -31,10 +39,28 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
       
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          {!canAttempt && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md flex gap-2 items-start">
+              <Clock className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+              <div className="text-sm text-red-700">
+                <p className="font-medium">Account temporarily locked</p>
+                <p>Too many failed attempts. Try again in {formatBlockTime(remainingBlockTime)}.</p>
+              </div>
+            </div>
+          )}
+          
           {errorMessage && (
             <div className="p-3 bg-destructive/10 rounded-md flex gap-2 items-start">
               <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
               <div className="text-sm text-destructive">{errorMessage}</div>
+            </div>
+          )}
+          
+          {canAttempt && attemptsRemaining <= 3 && attemptsRemaining > 0 && (
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+              <p className="text-sm text-yellow-800">
+                {attemptsRemaining} attempt{attemptsRemaining !== 1 ? 's' : ''} remaining before temporary lockout.
+              </p>
             </div>
           )}
           
@@ -45,15 +71,14 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
             onPasswordChange={handlePasswordChange}
             onForgotPassword={onForgotPassword}
           />
-          
-          <div className="text-xs text-gray-500">
-            <p>Don't have an account yet? Click the "Sign Up" tab above to create one.</p>
-            <p className="mt-1">For testing: Make sure your account exists in the Supabase Auth service.</p>
-          </div>
         </CardContent>
         
         <CardFooter>
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isLoading || !canAttempt}
+          >
             {isLoading ? "Signing in..." : "Sign In"}
           </Button>
         </CardFooter>

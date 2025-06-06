@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthLimiting } from "@/hooks/auth/useAuthLimiting";
+import { useInputSanitization } from "@/hooks/auth/useInputSanitization";
 
 type SignInFormProps = {
   onSignIn: (email: string, password: string) => Promise<any>;
@@ -12,49 +14,67 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { 
+    canAttempt, 
+    attemptsRemaining, 
+    remainingBlockTime, 
+    recordFailedAttempt, 
+    recordSuccessfulAuth 
+  } = useAuthLimiting();
+  const { sanitizeEmail, validateEmail } = useInputSanitization();
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-    // Clear error when user starts typing again
+    const sanitized = sanitizeEmail(e.target.value);
+    setEmail(sanitized);
     if (errorMessage) setErrorMessage(null);
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
-    // Clear error when user starts typing again
     if (errorMessage) setErrorMessage(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!canAttempt) {
+      const minutes = Math.ceil(remainingBlockTime / 60);
+      setErrorMessage(`Too many failed attempts. Please try again in ${minutes} minutes.`);
+      return;
+    }
+    
     setIsLoading(true);
     setErrorMessage(null);
     
     try {
-      console.log("Attempting to sign in with:", email);
-      
+      // Input validation
       if (!email || !password) {
         setErrorMessage("Email and password are required");
         setIsLoading(false);
         return;
       }
       
-      // For debugging - remove email/password whitespace
-      const trimmedEmail = email.trim();
-      const result = await onSignIn(trimmedEmail, password);
+      if (!validateEmail(email)) {
+        setErrorMessage("Please enter a valid email address");
+        setIsLoading(false);
+        return;
+      }
       
-      console.log("Sign in result:", result);
+      const result = await onSignIn(email, password);
       
       if (result.error) {
-        console.error("Authentication error:", result.error.message);
+        recordFailedAttempt();
         
-        // Provide more specific error messages based on error code
+        // Generic error messages for security
         if (result.error.message === "Invalid login credentials") {
-          setErrorMessage("Invalid email or password. Please check your credentials and try again.");
+          setErrorMessage(`Invalid credentials. ${attemptsRemaining - 1} attempts remaining.`);
+        } else if (result.error.message.includes("Email not confirmed")) {
+          setErrorMessage("Please check your email and verify your account before signing in.");
         } else {
-          setErrorMessage(result.error.message || "Invalid login credentials");
+          setErrorMessage("Sign in failed. Please check your credentials and try again.");
         }
         
         setIsLoading(false);
@@ -62,22 +82,21 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
       }
       
       if (result.data?.user) {
-        console.log("Sign in successful, user:", result.data.user.email);
+        recordSuccessfulAuth();
         toast({
-          title: "Success",
-          description: "Signed in successfully",
+          title: "Welcome back",
+          description: "You have been signed in successfully",
         });
         
-        // Add a slight delay before redirecting to ensure toast is shown
         setTimeout(() => {
           navigate("/dashboard");
         }, 500);
       } else {
-        setErrorMessage("Something went wrong during sign in");
+        setErrorMessage("Sign in failed. Please try again.");
       }
     } catch (error) {
-      console.error("Sign in error:", error);
-      setErrorMessage(error instanceof Error ? error.message : "An unexpected error occurred during sign in");
+      recordFailedAttempt();
+      setErrorMessage("An unexpected error occurred. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -88,6 +107,9 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
     password,
     isLoading,
     errorMessage,
+    canAttempt,
+    attemptsRemaining,
+    remainingBlockTime,
     handleEmailChange,
     handlePasswordChange,
     handleSubmit

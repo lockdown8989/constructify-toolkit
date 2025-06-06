@@ -1,19 +1,14 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { AuthError } from "@supabase/supabase-js";
 
 /**
- * Hook for handling sign in functionality
+ * Hook for handling sign in functionality with enhanced security
  */
 export const useSignIn = () => {
-  const { toast } = useToast();
-
   const signIn = async (email: string, password: string) => {
     try {
-      console.log("Attempting to sign in:", email);
-      
-      // Make sure email and password are strings and not empty
+      // Input validation
       if (!email || !password) {
         return {
           error: {
@@ -23,11 +18,17 @@ export const useSignIn = () => {
         };
       }
       
-      // Ensure email has no whitespace
-      const trimmedEmail = email.trim();
+      // Ensure email has no whitespace and is properly formatted
+      const trimmedEmail = email.trim().toLowerCase();
       
-      // Log the exact credentials being sent (without the password)
-      console.log(`Signing in with email: "${trimmedEmail}"`);
+      if (trimmedEmail.length > 254) {
+        return {
+          error: {
+            message: "Email address is too long"
+          } as AuthError,
+          data: undefined
+        };
+      }
       
       const { data, error } = await supabase.auth.signInWithPassword({ 
         email: trimmedEmail, 
@@ -35,17 +36,15 @@ export const useSignIn = () => {
       });
       
       if (error) {
-        console.error('Sign in error:', error);
+        // Don't log sensitive authentication details in production
         return { error, data: undefined };
       } else {
-        console.log("Sign in successful:", data.user?.email);
         return { error: null, data };
       }
     } catch (error) {
-      console.error('Sign in error:', error);
       return { 
         error: {
-          message: error instanceof Error ? error.message : "An unexpected error occurred"
+          message: error instanceof Error ? "Sign in failed" : "An unexpected error occurred"
         } as AuthError, 
         data: undefined 
       };

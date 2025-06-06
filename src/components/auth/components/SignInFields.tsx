@@ -2,14 +2,17 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Mail, Lock } from "lucide-react";
+import { useInputSanitization } from "@/hooks/auth/useInputSanitization";
 
-type SignInFieldsProps = {
+interface SignInFieldsProps {
   email: string;
   password: string;
   onEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onPasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onForgotPassword: () => void;
-};
+}
 
 export const SignInFields: React.FC<SignInFieldsProps> = ({
   email,
@@ -18,39 +21,60 @@ export const SignInFields: React.FC<SignInFieldsProps> = ({
   onPasswordChange,
   onForgotPassword
 }) => {
+  const { sanitizeEmail } = useInputSanitization();
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = sanitizeEmail(e.target.value);
+    onEmailChange({ ...e, target: { ...e.target, value: sanitized } });
+  };
+
   return (
     <>
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="name@example.com"
-          value={email}
-          onChange={onEmailChange}
-          required
-        />
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+          <Input
+            id="email"
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={handleEmailChange}
+            className="pl-10"
+            required
+            autoComplete="email"
+            maxLength={254}
+          />
+        </div>
       </div>
       
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          value={password}
-          onChange={onPasswordChange}
-          required
-        />
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+          <Input
+            id="password"
+            type="password"
+            placeholder="Enter your password"
+            value={password}
+            onChange={onPasswordChange}
+            className="pl-10"
+            required
+            autoComplete="current-password"
+            maxLength={128}
+          />
+        </div>
       </div>
       
-      <div className="text-right">
-        <button 
+      <div className="flex justify-end">
+        <Button
           type="button"
+          variant="link"
+          className="px-0 text-sm"
           onClick={onForgotPassword}
-          className="text-sm text-gray-600 hover:text-gray-900 hover:underline"
         >
-          Forgot password?
-        </button>
+          Forgot your password?
+        </Button>
       </div>
     </>
   );
