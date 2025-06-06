@@ -14,10 +14,10 @@ export interface AuthContextType {
   isPayroll: boolean;
   isAuthenticated: boolean;
   signOut: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, metadata?: any) => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  updatePassword: (password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ error: any; data?: any }>;
+  signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any; data?: any }>;
+  resetPassword: (email: string) => Promise<{ error: any; data?: any }>;
+  updatePassword: (password: string) => Promise<{ error: any; data?: any }>;
   deleteAccount: () => Promise<void>;
 }
 
@@ -25,4 +25,17 @@ export const isAuthenticated = () => {
   // This function is provided for compatibility with older code
   // It should be avoided in favor of checking auth.user directly
   return false; // This will be overridden by the actual implementation
+};
+
+// Add the missing mapUIRoleToDBRole function
+export const mapUIRoleToDBRole = (role: UserRole): string => {
+  const roleMap: Record<UserRole, string> = {
+    'admin': 'admin',
+    'hr': 'hr',
+    'manager': 'employer', // 'manager' in UI maps to 'employer' in DB
+    'employee': 'employee',
+    'payroll': 'payroll',
+    'employer': 'employer'
+  };
+  return roleMap[role] || 'employee'; // Default to employee if role not found
 };

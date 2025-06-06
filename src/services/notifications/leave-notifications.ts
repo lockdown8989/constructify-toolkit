@@ -21,7 +21,7 @@ export const notifyManagersAboutLeaveRequest = async (
     const { data: managerRoles, error: roleError } = await supabase
       .from('user_roles')
       .select('user_id')
-      .eq('role', 'employer'); // Use the database role value 'employer' not 'manager'
+      .eq('role', mapUIRoleToDBRole('manager')); // Now uses the mapping function
       
     if (roleError) {
       console.error("Error fetching managers:", roleError);
