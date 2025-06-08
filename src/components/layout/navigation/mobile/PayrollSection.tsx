@@ -8,6 +8,9 @@ interface PayrollSectionProps {
 }
 
 const PayrollSection: React.FC<PayrollSectionProps> = ({ onClose }) => {
+  // Debug log to ensure this component is being rendered
+  console.log("PayrollSection component rendered");
+  
   return (
     <>
       <MobileNavLink 

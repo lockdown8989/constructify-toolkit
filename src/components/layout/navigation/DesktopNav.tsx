@@ -11,6 +11,11 @@ const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated }) => {
   const { isAdmin, isManager, isHR, isPayroll } = useAuth();
   const hasManagerAccess = (isAdmin || isManager || isHR) && !isPayroll;
 
+  // Debug log to check payroll role in desktop nav
+  console.log("DesktopNav - isPayroll:", isPayroll);
+  console.log("DesktopNav - isAuthenticated:", isAuthenticated);
+  console.log("DesktopNav - hasManagerAccess:", hasManagerAccess);
+
   // Only show navigation links if the user is authenticated
   if (!isAuthenticated) {
     return null;
@@ -62,14 +67,32 @@ const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated }) => {
       )}
       {/* Payroll button only for payroll users */}
       {isPayroll && (
-        <NavLink
-          to="/payroll"
-          className={({ isActive }) =>
-            `nav-link ${isActive ? "active" : ""}`
-          }
-        >
-          Payroll
-        </NavLink>
+        <>
+          <NavLink
+            to="/payroll"
+            className={({ isActive }) =>
+              `nav-link ${isActive ? "active" : ""}`
+            }
+          >
+            Payroll
+          </NavLink>
+          <NavLink
+            to="/salary"
+            className={({ isActive }) =>
+              `nav-link ${isActive ? "active" : ""}`
+            }
+          >
+            Salary
+          </NavLink>
+          <NavLink
+            to="/payslips"
+            className={({ isActive }) =>
+              `nav-link ${isActive ? "active" : ""}`
+            }
+          >
+            Payslips
+          </NavLink>
+        </>
       )}
     </nav>
   );

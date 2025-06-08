@@ -76,7 +76,10 @@ const CommonSection: React.FC<CommonSectionProps> = ({
 
       {/* Payroll Section - Only for Payroll users */}
       {isAuthenticated && isPayroll && (
-        <PayrollSection onClose={onClose} />
+        <>
+          {console.log("Rendering PayrollSection - isPayroll is true")}
+          <PayrollSection onClose={onClose} />
+        </>
       )}
 
       {/* Employee Workflow - For employees only (not payroll users) */}

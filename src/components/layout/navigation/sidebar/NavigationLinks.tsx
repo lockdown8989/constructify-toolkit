@@ -96,6 +96,7 @@ const NavigationLinks = () => {
       {/* Payroll Section - Only for Payroll users */}
       {isPayroll && (
         <>
+          {console.log("Rendering payroll sidebar links - isPayroll is true")}
           <SidebarDivider isCollapsed={false} />
           
           <SidebarNavLink
