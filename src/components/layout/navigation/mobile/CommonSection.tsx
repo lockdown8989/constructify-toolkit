@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Home, Users, Calendar, FileText, DollarSign, ClipboardList, Clock, User, Settings, UserCheck, Calculator, Wallet } from 'lucide-react';
+import { Home, Users, Calendar, FileText, ClipboardList, Clock, User, Settings, UserCheck } from 'lucide-react';
 import MobileNavLink from './MobileNavLink';
+import PayrollSection from './PayrollSection';
 
 interface CommonSectionProps {
   isAuthenticated: boolean;
@@ -75,31 +76,7 @@ const CommonSection: React.FC<CommonSectionProps> = ({
 
       {/* Payroll Section - Only for Payroll users */}
       {isAuthenticated && isPayroll && (
-        <>
-          <MobileNavLink 
-            to="/payroll" 
-            icon={Calculator} 
-            label="Payroll" 
-            onClick={onClose} 
-            className="salary-nav-button"
-          />
-
-          <MobileNavLink 
-            to="/salary" 
-            icon={DollarSign} 
-            label="Salary" 
-            onClick={onClose} 
-            className="salary-nav-button"
-          />
-
-          <MobileNavLink 
-            to="/payslips" 
-            icon={Wallet} 
-            label="Payslips" 
-            onClick={onClose} 
-            className="salary-nav-button"
-          />
-        </>
+        <PayrollSection onClose={onClose} />
       )}
 
       {/* Employee Workflow - For employees only (not payroll users) */}

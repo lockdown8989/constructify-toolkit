@@ -62,32 +62,14 @@ const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated }) => {
       )}
       {/* Payroll button only for payroll users */}
       {isPayroll && (
-        <>
-          <NavLink
-            to="/payroll"
-            className={({ isActive }) =>
-              `nav-link ${isActive ? "active" : ""}`
-            }
-          >
-            Payroll
-          </NavLink>
-          <NavLink
-            to="/salary"
-            className={({ isActive }) =>
-              `nav-link ${isActive ? "active" : ""}`
-            }
-          >
-            Salary
-          </NavLink>
-          <NavLink
-            to="/payslips"
-            className={({ isActive }) =>
-              `nav-link ${isActive ? "active" : ""}`
-            }
-          >
-            Payslips
-          </NavLink>
-        </>
+        <NavLink
+          to="/payroll"
+          className={({ isActive }) =>
+            `nav-link ${isActive ? "active" : ""}`
+          }
+        >
+          Payroll
+        </NavLink>
       )}
     </nav>
   );
