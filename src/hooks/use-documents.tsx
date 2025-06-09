@@ -35,7 +35,7 @@ export function useEmployeeDocuments(employeeId: string | undefined) {
       const docsWithUrls = await Promise.all(docs.map(async (doc) => {
         if (doc.path) {
           const { data } = supabase.storage
-            .from('documents')
+            .from('employee-documents')
             .getPublicUrl(doc.path);
             
           return {
@@ -70,7 +70,7 @@ export function useUploadDocument() {
       try {
         console.log("Starting document upload:", { documentType, employeeId, fileName: file.name });
         
-        // First check if documents bucket exists
+        // First check if employee-documents bucket exists
         await checkStorageBucket();
         
         // Format file path
@@ -83,7 +83,7 @@ export function useUploadDocument() {
         
         // Upload file
         const { error: uploadError } = await supabase.storage
-          .from('documents')
+          .from('employee-documents')
           .upload(filePath, file, {
             cacheControl: '3600',
             upsert: true
@@ -102,7 +102,7 @@ export function useUploadDocument() {
         
         // Get public URL
         const { data: urlData } = supabase.storage
-          .from('documents')
+          .from('employee-documents')
           .getPublicUrl(filePath);
           
         console.log("File public URL:", urlData.publicUrl);
@@ -153,15 +153,17 @@ export function useUploadDocument() {
   });
 }
 
-// Helper function to check if documents bucket exists
+// Helper function to check if employee-documents bucket exists
 async function checkStorageBucket() {
   try {
-    // First check if the bucket exists using the edge function
-    const { error } = await supabase.functions.invoke('check-storage-bucket');
+    // Try to list files in the bucket to check if it exists
+    const { error } = await supabase.storage
+      .from('employee-documents')
+      .list('', { limit: 1 });
     
     if (error) {
       console.error('Error checking storage bucket:', error);
-      throw new Error('Failed to check storage bucket');
+      throw new Error('Failed to access employee-documents bucket');
     }
   } catch (error) {
     console.error('Failed to check storage bucket:', error);
@@ -177,7 +179,7 @@ export function useDeleteDocument() {
     mutationFn: async ({ id, path, employeeId }: { id: string; path?: string; employeeId: string }) => {
       if (path) {
         const { error: storageError } = await supabase.storage
-          .from('documents')
+          .from('employee-documents')
           .remove([path]);
           
         if (storageError) throw storageError;

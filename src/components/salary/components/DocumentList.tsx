@@ -18,7 +18,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
   const handleDownload = async (path: string, fileName: string) => {
     try {
       const { data, error } = await supabase.storage
-        .from('documents')
+        .from('employee-documents')
         .download(path);
         
       if (error) throw error;

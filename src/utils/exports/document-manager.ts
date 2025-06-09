@@ -32,12 +32,12 @@ export const uploadEmployeeDocument = async (
     }
 
     // Create folder path for employee documents
-    const folderPath = `documents/${employeeId}/${documentType}`;
+    const folderPath = `${employeeId}/${documentType}`;
     const filePath = `${folderPath}/${file.name}`;
 
     // Upload file to storage
     const { data, error } = await supabase.storage
-      .from('documents')
+      .from('employee-documents')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: true
