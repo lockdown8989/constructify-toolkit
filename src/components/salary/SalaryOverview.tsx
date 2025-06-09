@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { useSalaryStatistics } from '@/hooks/use-salary-statistics';
@@ -7,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, Download, FileText, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/utils/format';
 import { format } from 'date-fns';
-import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { generatePayslipPDF } from '@/utils/exports/payslip-generator';
@@ -15,12 +15,13 @@ import { useEmployees } from '@/hooks/use-employees';
 
 export const SalaryOverview = () => {
   const { user } = useAuth();
-  const { employeeId } = useEmployeeDataManagement();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { data: stats, isLoading, error, isError, refetch } = useSalaryStatistics(employeeId || user?.id);
+  // Pass undefined to let the hook determine the correct employee ID
+  const { data: stats, isLoading, error, isError, refetch } = useSalaryStatistics();
   const [isDownloading, setIsDownloading] = useState(false);
-  // Get employee data
+  
+  // Get employee data for current user
   const { data: employeeData } = useEmployees();
   const currentEmployee = employeeData?.find(emp => emp.user_id === user?.id);
 
@@ -33,7 +34,7 @@ export const SalaryOverview = () => {
   };
 
   const handleDownloadPDF = async () => {
-    if (!stats || !user) {
+    if (!stats || !user || !currentEmployee) {
       toast({
         title: "Cannot generate payslip",
         description: "Missing required salary or user information",
@@ -49,11 +50,11 @@ export const SalaryOverview = () => {
         format(new Date(), 'MMMM yyyy');
         
       const result = await generatePayslipPDF(
-        employeeId || user.id,
+        currentEmployee.id,
         {
-          name: currentEmployee?.name || 'Employee',
-          title: currentEmployee?.job_title || 'Employee',
-          department: currentEmployee?.department || 'General',
+          name: currentEmployee.name || 'Employee',
+          title: currentEmployee.job_title || 'Employee',
+          department: currentEmployee.department || 'General',
           salary: stats.base_salary?.toString() || '0',
           paymentDate: stats.payment_date || new Date().toISOString().split('T')[0],
           payPeriod: paymentDate,
@@ -79,6 +80,26 @@ export const SalaryOverview = () => {
       setIsDownloading(false);
     }
   };
+
+  // Show access denied if user doesn't have employee record
+  if (!currentEmployee && !isLoading) {
+    return (
+      <div className="container py-6 max-w-3xl mx-auto animate-fade-in">
+        <Card className="p-6 bg-red-50 border border-red-100">
+          <div className="flex flex-col items-center text-red-700 text-center py-4">
+            <AlertCircle className="h-8 w-8 mb-2" />
+            <h2 className="font-semibold text-lg mb-2">Access Denied</h2>
+            <p className="text-sm mb-4">
+              No employee record found for your account. Please contact HR.
+            </p>
+            <Button variant="outline" className="bg-white" onClick={() => navigate('/dashboard')}>
+              Back to Dashboard
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-6 max-w-3xl mx-auto animate-fade-in">

@@ -6,12 +6,15 @@ import { FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 
 interface DocumentListProps {
   employeeId?: string;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
+  const { user } = useAuth();
+  // Pass undefined to let the hook determine the correct employee ID for current user
   const { data: documents = [], isLoading } = useEmployeeDocuments(employeeId);
   const { toast } = useToast();
   

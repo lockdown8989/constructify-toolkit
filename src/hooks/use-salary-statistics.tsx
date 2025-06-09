@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 interface SalaryStatistics {
   id: string;
@@ -19,23 +20,47 @@ interface SalaryStatistics {
 
 export function useSalaryStatistics(employeeId?: string) {
   const { toast } = useToast();
+  const { user, isPayroll } = useAuth();
   
   return useQuery({
-    queryKey: ['salary-statistics', employeeId],
+    queryKey: ['salary-statistics', employeeId, user?.id],
     queryFn: async () => {
-      if (!employeeId) {
-        console.log("No employee ID provided to useSalaryStatistics");
+      // If no employeeId provided and user is not payroll, get their own employee record
+      let targetEmployeeId = employeeId;
+      
+      if (!targetEmployeeId && !isPayroll && user) {
+        console.log("Getting employee data for current user:", user.id);
+        const { data: employeeData, error: empError } = await supabase
+          .from('employees')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (empError) {
+          console.error('Error fetching employee data:', empError);
+          throw empError;
+        }
+        
+        if (!employeeData) {
+          throw new Error("Employee record not found for current user");
+        }
+        
+        targetEmployeeId = employeeData.id;
+      }
+      
+      if (!targetEmployeeId) {
+        console.log("No employee ID available");
         return null;
       }
       
-      console.log("Fetching salary statistics for employee:", employeeId);
+      console.log("Fetching salary statistics for employee:", targetEmployeeId);
       
       try {
         // Fetch the latest salary statistics directly without calculation
         const { data, error } = await supabase
           .from('salary_statistics')
           .select('*')
-          .eq('employee_id', employeeId)
+          .eq('employee_id', targetEmployeeId)
           .order('month', { ascending: false })
           .limit(1);
           
@@ -51,7 +76,7 @@ export function useSalaryStatistics(employeeId?: string) {
           const { data: employeeData, error: empError } = await supabase
             .from('employees')
             .select('salary')
-            .eq('id', employeeId)
+            .eq('id', targetEmployeeId)
             .single();
             
           if (empError) {
@@ -66,7 +91,7 @@ export function useSalaryStatistics(employeeId?: string) {
           // Create default salary statistics based on employee data
           const defaultStats: SalaryStatistics = {
             id: 'default',
-            employee_id: employeeId,
+            employee_id: targetEmployeeId,
             month: new Date().toISOString(),
             base_salary: employeeData.salary || 0,
             bonus: 0,
@@ -92,7 +117,7 @@ export function useSalaryStatistics(employeeId?: string) {
         throw error;
       }
     },
-    enabled: !!employeeId,
+    enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 2
   });

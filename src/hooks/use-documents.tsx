@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -16,15 +15,41 @@ export type DocumentModel = {
 };
 
 export function useEmployeeDocuments(employeeId: string | undefined) {
+  const { user, isPayroll } = useAuth();
+  
   return useQuery({
-    queryKey: ['employee-documents', employeeId],
+    queryKey: ['employee-documents', employeeId, user?.id],
     queryFn: async () => {
-      if (!employeeId) return [];
+      // If no employeeId provided and user is not payroll, get their own employee record
+      let targetEmployeeId = employeeId;
+      
+      if (!targetEmployeeId && !isPayroll && user) {
+        console.log("Getting employee data for current user:", user.id);
+        const { data: employeeData, error: empError } = await supabase
+          .from('employees')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (empError) {
+          console.error('Error fetching employee data:', empError);
+          return [];
+        }
+        
+        if (!employeeData) {
+          console.log("Employee record not found for current user");
+          return [];
+        }
+        
+        targetEmployeeId = employeeData.id;
+      }
+      
+      if (!targetEmployeeId) return [];
       
       const { data: docs, error } = await supabase
         .from('documents')
         .select('*')
-        .eq('employee_id', employeeId);
+        .eq('employee_id', targetEmployeeId);
         
       if (error) {
         console.error('Error fetching documents:', error);
@@ -48,7 +73,7 @@ export function useEmployeeDocuments(employeeId: string | undefined) {
       
       return docsWithUrls as DocumentModel[];
     },
-    enabled: !!employeeId
+    enabled: !!user
   });
 }
 
