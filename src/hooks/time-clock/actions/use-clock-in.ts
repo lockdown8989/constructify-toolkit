@@ -36,24 +36,39 @@ export const useClockIn = (
       debugTimeInfo('Clock-in time', now);
       console.log('Today date:', today);
       
-      // Check if there's already an active session for today
-      console.log('Checking for existing active session...');
-      const { data: existingRecord, error: checkError } = await supabase
+      // First, deactivate any existing active sessions for this employee to prevent conflicts
+      console.log('Deactivating any existing active sessions...');
+      const { error: deactivateError } = await supabase
+        .from('attendance')
+        .update({ active_session: false })
+        .eq('employee_id', employeeId)
+        .eq('active_session', true);
+        
+      if (deactivateError) {
+        console.error('Error deactivating existing sessions:', deactivateError);
+        // Continue anyway, don't throw error
+      }
+      
+      // Check if there's already a record for today (any record, active or not)
+      console.log('Checking for existing record for today...');
+      const { data: existingRecords, error: checkError } = await supabase
         .from('attendance')
         .select('id, active_session, check_in, check_out')
         .eq('employee_id', employeeId)
-        .eq('active_session', true)
-        .maybeSingle();
+        .eq('date', today)
+        .order('created_at', { ascending: false });
         
       if (checkError) {
-        console.error('Error checking for existing active session:', checkError);
-        throw new Error(`Failed to check for active sessions: ${checkError.message}`);
+        console.error('Error checking for existing records:', checkError);
+        throw new Error(`Failed to check for existing records: ${checkError.message}`);
       }
         
-      console.log('Existing record check result:', existingRecord);
-        
-      if (existingRecord?.active_session) {
-        console.log('User already has an active session:', existingRecord);
+      console.log('Existing records check result:', existingRecords);
+      
+      // Check if there's already an active session among the records
+      const activeRecord = existingRecords?.find(record => record.active_session);
+      if (activeRecord) {
+        console.log('User already has an active session:', activeRecord);
         toast({
           title: "Already clocked in",
           description: "You are already clocked in for today",

@@ -20,27 +20,30 @@ export const useStatusCheck = (
         
         // Check if there's an active session for today
         // For personal time clock, only consider self-initiated sessions (not manager initiated)
-        const { data, error } = await supabase
+        const { data: records, error } = await supabase
           .from('attendance')
           .select('*')
           .eq('employee_id', employeeId)
           .eq('date', today)
           .eq('active_session', true)
           .is('manager_initiated', false) // Explicitly look for non-manager initiated sessions
-          .maybeSingle(); // Use maybeSingle to avoid errors when no record
+          .order('created_at', { ascending: false });
           
         if (error) {
           console.error('Error checking time clock status:', error);
           return;
         }
         
-        if (data) {
+        // Get the most recent active session
+        const activeRecord = records && records.length > 0 ? records[0] : null;
+        
+        if (activeRecord) {
           // We have an active session
-          console.log('Active session found:', data);
-          setCurrentRecord(data.id);
+          console.log('Active session found:', activeRecord);
+          setCurrentRecord(activeRecord.id);
           
           // Check if on break
-          if (data.break_start && !data.check_out) {
+          if (activeRecord.break_start && !activeRecord.check_out) {
             setStatus('on-break');
           } else {
             setStatus('clocked-in');
@@ -49,9 +52,12 @@ export const useStatusCheck = (
           // No active session
           console.log('No active session found');
           setStatus('clocked-out');
+          setCurrentRecord(null);
         }
       } catch (err) {
         console.error('Error in checkCurrentStatus:', err);
+        setStatus('clocked-out');
+        setCurrentRecord(null);
       }
     };
     
