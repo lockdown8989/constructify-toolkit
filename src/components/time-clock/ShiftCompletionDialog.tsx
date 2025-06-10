@@ -2,16 +2,18 @@
 import React from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Home, Coffee } from 'lucide-react';
+import { Home, Coffee, Timer } from 'lucide-react';
 
 interface ShiftCompletionDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onFinishShift: () => Promise<void>;
   onGoOnBreak: () => Promise<void>;
+  onEndBreak?: () => Promise<void>;
   employeeName: string;
   employeeAvatar?: string;
   isSubmitting?: boolean;
+  isOnBreak?: boolean;
 }
 
 const ShiftCompletionDialog: React.FC<ShiftCompletionDialogProps> = ({
@@ -19,9 +21,11 @@ const ShiftCompletionDialog: React.FC<ShiftCompletionDialogProps> = ({
   onClose,
   onFinishShift,
   onGoOnBreak,
+  onEndBreak,
   employeeName,
   employeeAvatar,
-  isSubmitting = false
+  isSubmitting = false,
+  isOnBreak = false
 }) => {
   const handleFinishShift = async () => {
     try {
@@ -33,12 +37,16 @@ const ShiftCompletionDialog: React.FC<ShiftCompletionDialogProps> = ({
     }
   };
 
-  const handleGoOnBreak = async () => {
+  const handleBreakAction = async () => {
     try {
-      await onGoOnBreak();
+      if (isOnBreak && onEndBreak) {
+        await onEndBreak();
+      } else {
+        await onGoOnBreak();
+      }
       onClose();
     } catch (error) {
-      console.error('Error starting break:', error);
+      console.error('Error with break action:', error);
       onClose();
     }
   };
@@ -78,12 +86,25 @@ const ShiftCompletionDialog: React.FC<ShiftCompletionDialogProps> = ({
             </Button>
             
             <Button 
-              onClick={handleGoOnBreak}
-              className="h-20 bg-orange-500 hover:bg-orange-600 text-white text-xl font-bold flex items-center justify-center gap-4 rounded-xl"
+              onClick={handleBreakAction}
+              className={`h-20 text-white text-xl font-bold flex items-center justify-center gap-4 rounded-xl ${
+                isOnBreak 
+                  ? 'bg-blue-600 hover:bg-blue-700' 
+                  : 'bg-orange-500 hover:bg-orange-600'
+              }`}
               disabled={isSubmitting}
             >
-              <Coffee className="w-8 h-8" />
-              GOING ON A BREAK
+              {isOnBreak ? (
+                <>
+                  <Timer className="w-8 h-8" />
+                  END BREAK
+                </>
+              ) : (
+                <>
+                  <Coffee className="w-8 h-8" />
+                  GOING ON A BREAK
+                </>
+              )}
             </Button>
           </div>
           
