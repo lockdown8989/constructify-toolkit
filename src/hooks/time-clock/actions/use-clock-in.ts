@@ -15,6 +15,7 @@ export const useClockIn = (
 
   const handleClockIn = async (employeeId: string | undefined) => {
     if (!employeeId) {
+      console.error('Clock in failed: No employee ID provided');
       toast({
         title: "Error",
         description: "No employee ID provided",
@@ -24,6 +25,8 @@ export const useClockIn = (
     }
 
     try {
+      console.log('Starting clock in process for employee:', employeeId);
+      
       // Use current time and preserve timezone information with ISO string
       const now = new Date();
       const today = now.toISOString().split('T')[0];
@@ -31,21 +34,26 @@ export const useClockIn = (
       
       // Log time information for debugging
       debugTimeInfo('Clock-in time', now);
+      console.log('Today date:', today);
       
       // Check if there's already an active session for today
+      console.log('Checking for existing active session...');
       const { data: existingRecord, error: checkError } = await supabase
         .from('attendance')
-        .select('id, active_session')
+        .select('id, active_session, check_in, check_out')
         .eq('employee_id', employeeId)
         .eq('active_session', true)
         .maybeSingle();
         
       if (checkError) {
         console.error('Error checking for existing active session:', checkError);
-        throw checkError;
+        throw new Error(`Failed to check for active sessions: ${checkError.message}`);
       }
         
+      console.log('Existing record check result:', existingRecord);
+        
       if (existingRecord?.active_session) {
+        console.log('User already has an active session:', existingRecord);
         toast({
           title: "Already clocked in",
           description: "You are already clocked in for today",
@@ -54,33 +62,37 @@ export const useClockIn = (
         return;
       }
       
+      console.log('Creating new attendance record...');
+      
       // Insert new attendance record with ISO string time to preserve timezone
+      const insertData = {
+        employee_id: employeeId,
+        check_in: now.toISOString(), // Store as ISO string to preserve timezone information
+        date: today,
+        status: 'Present',
+        location,
+        device_info: deviceInfo,
+        active_session: true,
+        device_identifier: deviceIdentifier,
+        notes: '',
+        attendance_status: 'Present' as const,
+        manager_initiated: false
+      };
+      
+      console.log('Insert data:', insertData);
+      
       const { data, error } = await supabase
         .from('attendance')
-        .insert({
-          employee_id: employeeId,
-          check_in: now.toISOString(), // Store as ISO string to preserve timezone information
-          date: today,
-          status: 'Present',
-          location,
-          device_info: deviceInfo,
-          active_session: true,
-          device_identifier: deviceIdentifier,
-          notes: '',
-          attendance_status: 'Present'
-        })
+        .insert(insertData)
         .select()
         .single();
 
       if (error) {
-        console.error('Error clocking in:', error);
-        toast({
-          title: "Error Clocking In",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
+        console.error('Error inserting attendance record:', error);
+        throw new Error(`Failed to clock in: ${error.message}`);
       }
+
+      console.log('Successfully created attendance record:', data);
 
       setCurrentRecord(data.id);
       setStatus('clocked-in');
@@ -92,7 +104,7 @@ export const useClockIn = (
       console.error('Error clocking in:', error);
       toast({
         title: "Error",
-        description: "There was an unexpected error while clocking in",
+        description: error instanceof Error ? error.message : "There was an unexpected error while clocking in",
         variant: "destructive",
       });
     }

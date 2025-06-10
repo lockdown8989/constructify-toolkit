@@ -101,7 +101,7 @@ const DocumentAssignmentDialog: React.FC<DocumentAssignmentDialogProps> = ({
             />
             {selectedFile && (
               <p className="text-sm text-gray-600 mt-1">
-                Selected: {selectedFile.title || selectedFile.name}
+                Selected: {selectedFile.name}
               </p>
             )}
           </div>
