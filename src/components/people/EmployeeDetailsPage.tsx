@@ -60,7 +60,7 @@ const EmployeeDetailsPage = () => {
         <CardContent className="p-6">
           <EmployeeHeader
             employee={employee}
-            showControls={false}
+            onDelete={() => {}}
           />
         </CardContent>
       </Card>
