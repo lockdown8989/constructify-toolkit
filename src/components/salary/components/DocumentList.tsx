@@ -47,8 +47,13 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
     return <div>Loading documents...</div>;
   }
 
-  const contractDoc = documents.find(doc => doc.document_type === 'contract');
-  const payslipDoc = documents.find(doc => doc.document_type === 'payslip');
+  // Use category field (with fallback to document_type for backward compatibility)
+  const contractDoc = documents.find(doc => 
+    (doc.category || doc.document_type) === 'contract'
+  );
+  const payslipDoc = documents.find(doc => 
+    (doc.category || doc.document_type) === 'payslip'
+  );
 
   return (
     <div className="space-y-4">
@@ -63,10 +68,10 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
               </p>
             </div>
           </div>
-          {contractDoc && (
+          {contractDoc && contractDoc.path && (
             <Button 
               variant="outline"
-              onClick={() => handleDownload(contractDoc.path!, contractDoc.name)}
+              onClick={() => handleDownload(contractDoc.path!, contractDoc.title)}
             >
               Download
             </Button>
@@ -85,10 +90,10 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
               </p>
             </div>
           </div>
-          {payslipDoc && (
+          {payslipDoc && payslipDoc.path && (
             <Button 
               variant="outline"
-              onClick={() => handleDownload(payslipDoc.path!, payslipDoc.name)}
+              onClick={() => handleDownload(payslipDoc.path!, payslipDoc.title)}
             >
               Download
             </Button>

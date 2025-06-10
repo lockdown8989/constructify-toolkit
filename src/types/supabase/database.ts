@@ -32,15 +32,64 @@ export interface Database {
   public: {
     Tables: {
       employees: {
-        Row: Employee;
-        Insert: Omit<Employee, 'id'> & { id?: string };
-        Update: Partial<Employee>;
+        Row: Employee & {
+          role?: string;
+          email?: string;
+        };
+        Insert: Omit<Employee, 'id'> & { 
+          id?: string;
+          role?: string;
+          email?: string;
+        };
+        Update: Partial<Employee & {
+          role?: string;
+          email?: string;
+        }>;
         Relationships: [];
       };
       employee_composition: {
         Row: EmployeeComposition;
         Insert: Omit<EmployeeComposition, 'id'> & { id?: string };
         Update: Partial<EmployeeComposition>;
+        Relationships: [];
+      };
+      documents: {
+        Row: {
+          id: string;
+          employee_id: string;
+          title: string;
+          category: string;
+          document_type?: string;
+          url?: string;
+          path?: string;
+          size?: string;
+          uploaded_by?: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          employee_id: string;
+          title: string;
+          category: string;
+          document_type?: string;
+          url?: string;
+          path?: string;
+          size?: string;
+          uploaded_by?: string;
+          created_at?: string;
+        };
+        Update: Partial<{
+          id: string;
+          employee_id: string;
+          title: string;
+          category: string;
+          document_type?: string;
+          url?: string;
+          path?: string;
+          size?: string;
+          uploaded_by?: string;
+          created_at: string;
+        }>;
         Relationships: [];
       };
       open_shifts: {

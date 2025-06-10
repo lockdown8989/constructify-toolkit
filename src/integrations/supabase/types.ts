@@ -353,6 +353,7 @@ export type Database = {
       documents: {
         Row: {
           access_level: string
+          category: string
           created_at: string | null
           document_type: string
           employee_id: string | null
@@ -361,6 +362,7 @@ export type Database = {
           name: string
           path: string | null
           size: string | null
+          title: string
           updated_at: string | null
           uploaded_by: string | null
           uploaded_by_role: string | null
@@ -368,6 +370,7 @@ export type Database = {
         }
         Insert: {
           access_level?: string
+          category: string
           created_at?: string | null
           document_type: string
           employee_id?: string | null
@@ -376,6 +379,7 @@ export type Database = {
           name: string
           path?: string | null
           size?: string | null
+          title: string
           updated_at?: string | null
           uploaded_by?: string | null
           uploaded_by_role?: string | null
@@ -383,6 +387,7 @@ export type Database = {
         }
         Update: {
           access_level?: string
+          category?: string
           created_at?: string | null
           document_type?: string
           employee_id?: string | null
@@ -391,6 +396,7 @@ export type Database = {
           name?: string
           path?: string | null
           size?: string | null
+          title?: string
           updated_at?: string | null
           uploaded_by?: string | null
           uploaded_by_role?: string | null
@@ -435,6 +441,7 @@ export type Database = {
           annual_leave_days: number | null
           avatar: string | null
           department: string
+          email: string | null
           hourly_rate: number | null
           id: string
           job_title: string
@@ -442,6 +449,7 @@ export type Database = {
           location: string | null
           manager_id: string | null
           name: string
+          role: string | null
           salary: number
           sick_leave_days: number | null
           site: string
@@ -453,6 +461,7 @@ export type Database = {
           annual_leave_days?: number | null
           avatar?: string | null
           department: string
+          email?: string | null
           hourly_rate?: number | null
           id?: string
           job_title: string
@@ -460,6 +469,7 @@ export type Database = {
           location?: string | null
           manager_id?: string | null
           name: string
+          role?: string | null
           salary: number
           sick_leave_days?: number | null
           site: string
@@ -471,6 +481,7 @@ export type Database = {
           annual_leave_days?: number | null
           avatar?: string | null
           department?: string
+          email?: string | null
           hourly_rate?: number | null
           id?: string
           job_title?: string
@@ -478,6 +489,7 @@ export type Database = {
           location?: string | null
           manager_id?: string | null
           name?: string
+          role?: string | null
           salary?: number
           sick_leave_days?: number | null
           site?: string

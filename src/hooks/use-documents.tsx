@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -5,12 +6,14 @@ import { useAuth } from '@/hooks/use-auth';
 
 export type DocumentModel = {
   id: string;
-  name: string;
-  document_type: string;
+  title: string;
+  category: string;
+  document_type?: string; // Keep for backward compatibility
   url?: string;
   path?: string;
   size?: string;
   employee_id?: string;
+  uploaded_by?: string;
   created_at?: string;
 };
 
@@ -65,10 +68,15 @@ export function useEmployeeDocuments(employeeId: string | undefined) {
             
           return {
             ...doc,
-            url: data.publicUrl
+            url: data.publicUrl,
+            // Map category to document_type for backward compatibility
+            document_type: doc.category
           };
         }
-        return doc;
+        return {
+          ...doc,
+          document_type: doc.category
+        };
       }));
       
       return docsWithUrls as DocumentModel[];
@@ -132,13 +140,14 @@ export function useUploadDocument() {
           
         console.log("File public URL:", urlData.publicUrl);
         
-        // Save document metadata
+        // Save document metadata with new schema
         const { data, error: dbError } = await supabase
           .from('documents')
           .insert({
             employee_id: employeeId,
-            name: file.name,
-            document_type: documentType,
+            title: file.name,
+            category: documentType,
+            document_type: documentType, // Keep for backward compatibility
             path: filePath,
             url: urlData.publicUrl,
             size: sizeString,
@@ -188,7 +197,7 @@ async function checkStorageBucket() {
     
     if (error) {
       console.error('Error checking storage bucket:', error);
-      throw new Error('Failed to access employee-documents bucket');
+      throw new Error('Failed to access employee-documents bucket. Please create the bucket first.');
     }
   } catch (error) {
     console.error('Failed to check storage bucket:', error);

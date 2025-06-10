@@ -19,6 +19,7 @@ import Attendance from '@/pages/Attendance';
 import Salary from '@/pages/Salary';
 import Payroll from '@/pages/Payroll';
 import PayrollDashboard from '@/pages/PayrollDashboard';
+import Payslips from '@/pages/Payslips';
 import EmployeeWorkflow from '@/pages/EmployeeWorkflow';
 import RestaurantSchedule from '@/pages/RestaurantSchedule';
 import Settings from '@/pages/Settings';
@@ -124,6 +125,14 @@ const AppRoutes = () => {
             element={
               <ProtectedRoute requiredRoles={['admin', 'hr', 'manager', 'payroll']}>
                 <Payroll />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payslips"
+            element={
+              <ProtectedRoute requiredRole="payroll">
+                <Payslips />
               </ProtectedRoute>
             }
           />

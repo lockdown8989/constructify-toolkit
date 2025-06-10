@@ -1,225 +1,223 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { useEmployees } from '@/hooks/use-employees';
+import { useEmployeeDocuments, useUploadDocument, useDeleteDocument } from '@/hooks/use-documents';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Wallet, Download, FileText, Calendar, Search, Filter } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { FileText, Upload, Trash2, Download } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
-const PayslipsPage = () => {
-  const { isPayroll } = useAuth();
-  const { toast } = useToast();
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [searchQuery, setSearchQuery] = useState('');
+const Payslips = () => {
+  const { user, isPayroll } = useAuth();
+  const { data: employees = [] } = useEmployees();
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
+  const [documentType, setDocumentType] = useState<string>('payslip');
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
   
-  // Only allow payroll users to access this page
+  const { data: documents = [], isLoading } = useEmployeeDocuments(selectedEmployeeId);
+  const uploadDocument = useUploadDocument();
+  const deleteDocument = useDeleteDocument();
+  const { toast } = useToast();
+
+  // If user is not payroll, show access denied
   if (!isPayroll) {
     return (
-      <div className="container py-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
-          <p className="text-gray-600 mt-2">This page is only accessible to payroll users.</p>
-        </div>
+      <div className="container py-6 max-w-4xl mx-auto">
+        <Card className="p-6 text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
+          <p className="text-gray-600">You don't have permission to access this page.</p>
+        </Card>
       </div>
     );
   }
 
-  // Fetch payroll data for payslip generation
-  const { data: payrollData, isLoading } = useQuery({
-    queryKey: ['payroll-data', selectedMonth, selectedYear],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('payroll')
-        .select(`
-          *,
-          employees (
-            id,
-            name,
-            job_title,
-            department
-          )
-        `)
-        .gte('payment_date', `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-01`)
-        .lt('payment_date', `${selectedYear}-${String(selectedMonth + 2).padStart(2, '0')}-01`);
-        
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  const generatePayslip = async (payrollId: string, employeeName: string) => {
-    try {
+  const handleFileUpload = async () => {
+    if (!uploadFile || !selectedEmployeeId) {
       toast({
-        title: "Generating Payslip",
-        description: `Creating payslip for ${employeeName}...`,
+        title: "Missing information",
+        description: "Please select an employee and file to upload",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await uploadDocument.mutateAsync({
+        file: uploadFile,
+        employeeId: selectedEmployeeId,
+        documentType
       });
       
-      // In a real implementation, this would call a backend service to generate the PDF
-      // For now, we'll simulate the process
-      setTimeout(() => {
-        toast({
-          title: "Payslip Generated",
-          description: `Payslip for ${employeeName} has been generated successfully.`,
-        });
-      }, 2000);
+      setUploadFile(null);
+      // Reset file input
+      const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
     } catch (error) {
+      console.error('Upload failed:', error);
+    }
+  };
+
+  const handleDownload = async (path: string, title: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('employee-documents')
+        .download(path);
+        
+      if (error) throw error;
+      
+      const url = window.URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = title;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download error:', error);
       toast({
-        title: "Error",
-        description: "Failed to generate payslip. Please try again.",
-        variant: "destructive",
+        title: "Download failed",
+        description: "Could not download the document",
+        variant: "destructive"
       });
     }
   };
 
-  const filteredPayrollData = payrollData?.filter(item => 
-    item.employees?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.employees?.department?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const handleDelete = async (docId: string, path?: string) => {
+    if (!selectedEmployeeId) return;
+    
+    try {
+      await deleteDocument.mutateAsync({
+        id: docId,
+        path,
+        employeeId: selectedEmployeeId
+      });
+    } catch (error) {
+      console.error('Delete failed:', error);
+    }
+  };
 
   return (
-    <div className="container py-6 animate-fade-in">
-      <header className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <Wallet className="h-6 w-6" />
-          <h1 className="text-2xl font-bold">Payslips Management</h1>
-        </div>
-        <p className="text-muted-foreground">Generate and manage employee payslips</p>
-      </header>
+    <div className="container py-6 max-w-6xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Document Management</h1>
+        <p className="text-gray-600 mt-2">Upload and manage employee documents</p>
+      </div>
 
-      {/* Filters Section */}
-      <Card className="p-6 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search employees..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Upload Section */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">Upload Document</h2>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Select Employee</label>
+              <Select value={selectedEmployeeId} onValueChange={setSelectedEmployeeId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose an employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.name} - {employee.department}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Document Type</label>
+              <Select value={documentType} onValueChange={setDocumentType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="payslip">Payslip</SelectItem>
+                  <SelectItem value="contract">Contract</SelectItem>
+                  <SelectItem value="p60">P60</SelectItem>
+                  <SelectItem value="certificate">Certificate</SelectItem>
+                  <SelectItem value="general">General Document</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">File</label>
+              <Input
+                id="file-upload"
+                type="file"
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
               />
             </div>
-          </div>
-          
-          <div className="flex gap-2">
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-              className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {Array.from({ length: 12 }, (_, i) => (
-                <option key={i} value={i}>
-                  {format(new Date(0, i), 'MMMM')}
-                </option>
-              ))}
-            </select>
-            
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {Array.from({ length: 5 }, (_, i) => {
-                const year = new Date().getFullYear() - 2 + i;
-                return (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-        </div>
-      </Card>
 
-      {/* Payslips List */}
-      <Card className="p-6">
-        {isLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading payroll data...</p>
+            <Button 
+              onClick={handleFileUpload}
+              disabled={!uploadFile || !selectedEmployeeId || uploadDocument.isPending}
+              className="w-full"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {uploadDocument.isPending ? 'Uploading...' : 'Upload Document'}
+            </Button>
           </div>
-        ) : filteredPayrollData.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">No Payroll Data Found</h3>
-            <p className="text-muted-foreground">
-              No payroll data available for the selected period.
+        </Card>
+
+        {/* Employee Documents List */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">Employee Documents</h2>
+          
+          {!selectedEmployeeId ? (
+            <p className="text-gray-500 text-center py-8">
+              Select an employee to view their documents
             </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredPayrollData.map((payroll) => (
-                <Card key={payroll.id} className="p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between mb-3">
+          ) : isLoading ? (
+            <p className="text-gray-500 text-center py-8">Loading documents...</p>
+          ) : documents.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">No documents found</p>
+          ) : (
+            <div className="space-y-3">
+              {documents.map((doc) => (
+                <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <FileText className="h-5 w-5 text-blue-600" />
                     <div>
-                      <h4 className="font-medium text-lg">{payroll.employees?.name}</h4>
-                      <p className="text-sm text-muted-foreground">{payroll.employees?.job_title}</p>
-                      <p className="text-sm text-muted-foreground">{payroll.employees?.department}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-lg">${payroll.salary_paid}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(payroll.payment_date), 'MMM dd, yyyy')}
+                      <p className="font-medium">{doc.title}</p>
+                      <p className="text-sm text-gray-500">
+                        {doc.category || doc.document_type} • {doc.size}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-2 text-sm mb-4">
-                    <div>
-                      <span className="text-muted-foreground">Base Pay:</span>
-                      <span className="ml-1">${payroll.base_pay || 0}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Overtime:</span>
-                      <span className="ml-1">${payroll.overtime_pay || 0}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Tax:</span>
-                      <span className="ml-1">${payroll.tax_paid || 0}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Net:</span>
-                      <span className="ml-1 font-medium">${(payroll.salary_paid - (payroll.tax_paid || 0))}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2">
+                  <div className="flex items-center space-x-2">
+                    {doc.path && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDownload(doc.path!, doc.title)}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
-                      onClick={() => generatePayslip(payroll.id, payroll.employees?.name || 'Employee')}
-                      className="flex-1"
+                      variant="ghost"
                       size="sm"
+                      onClick={() => handleDelete(doc.id, doc.path)}
+                      disabled={deleteDocument.isPending}
                     >
-                      <Download className="w-4 h-4 mr-2" />
-                      Generate Payslip
+                      <Trash2 className="h-4 w-4 text-red-600" />
                     </Button>
                   </div>
-                  
-                  <div className="mt-2">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      payroll.payment_status === 'paid' 
-                        ? 'bg-green-100 text-green-800'
-                        : payroll.payment_status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {payroll.payment_status || 'pending'}
-                    </span>
-                  </div>
-                </Card>
+                </div>
               ))}
             </div>
-          </div>
-        )}
-      </Card>
+          )}
+        </Card>
+      </div>
     </div>
   );
 };
 
-export default PayslipsPage;
+export default Payslips;
