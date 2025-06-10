@@ -15,8 +15,11 @@ export const useStatusCheck = (
       try {
         console.log('Checking current time clock status for employee:', employeeId);
         
-        // Get today's date in the format YYYY-MM-DD
-        const today = new Date().toISOString().split('T')[0];
+        // Get today's date in the user's local timezone
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+        
+        console.log('Checking for date:', today, 'Current time:', now.toLocaleString());
         
         // Check if there's an active session for today
         // For personal time clock, only consider self-initiated sessions (not manager initiated)
@@ -27,12 +30,14 @@ export const useStatusCheck = (
           .eq('date', today)
           .eq('active_session', true)
           .is('manager_initiated', false) // Explicitly look for non-manager initiated sessions
-          .order('created_at', { ascending: false });
+          .order('check_in', { ascending: false }); // Order by check_in time instead of created_at
           
         if (error) {
           console.error('Error checking time clock status:', error);
           return;
         }
+        
+        console.log('Found records:', records);
         
         // Get the most recent active session
         const activeRecord = records && records.length > 0 ? records[0] : null;
@@ -44,8 +49,10 @@ export const useStatusCheck = (
           
           // Check if on break
           if (activeRecord.break_start && !activeRecord.check_out) {
+            console.log('Employee is on break');
             setStatus('on-break');
           } else {
+            console.log('Employee is clocked in');
             setStatus('clocked-in');
           }
         } else {

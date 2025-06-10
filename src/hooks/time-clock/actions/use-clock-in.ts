@@ -35,6 +35,7 @@ export const useClockIn = (
       // Log time information for debugging
       debugTimeInfo('Clock-in time', now);
       console.log('Today date:', today);
+      console.log('Current device time:', now.toLocaleString());
       
       // First, deactivate any existing active sessions for this employee to prevent conflicts
       console.log('Deactivating any existing active sessions...');
@@ -56,7 +57,7 @@ export const useClockIn = (
         .select('id, active_session, check_in, check_out')
         .eq('employee_id', employeeId)
         .eq('date', today)
-        .order('created_at', { ascending: false });
+        .order('check_in', { ascending: false }); // Use check_in instead of created_at
         
       if (checkError) {
         console.error('Error checking for existing records:', checkError);
@@ -95,6 +96,7 @@ export const useClockIn = (
       };
       
       console.log('Insert data:', insertData);
+      console.log('Inserting at device time:', now.toLocaleString());
       
       const { data, error } = await supabase
         .from('attendance')
@@ -108,6 +110,7 @@ export const useClockIn = (
       }
 
       console.log('Successfully created attendance record:', data);
+      console.log('Clock-in recorded at device time:', now.toLocaleString());
 
       setCurrentRecord(data.id);
       setStatus('clocked-in');

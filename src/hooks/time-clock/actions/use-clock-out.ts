@@ -28,11 +28,12 @@ export const useClockOut = (
       const now = new Date();
       // Log time information for debugging
       debugTimeInfo('Clock-out time', now);
+      console.log('Current device time:', now.toLocaleString());
       
       // Get check-in time to calculate duration
       const { data: checkInData, error: fetchError } = await supabase
         .from('attendance')
-        .select('check_in')
+        .select('check_in, break_minutes')
         .eq('id', currentRecord)
         .single();
         
@@ -45,10 +46,22 @@ export const useClockOut = (
       const checkInTime = new Date(checkInData.check_in);
       console.log('Check-in time from DB:', checkInData.check_in);
       console.log('Parsed check-in time:', checkInTime.toLocaleString());
+      console.log('Clock-out device time:', now.toLocaleString());
       
       // Calculate working minutes based on exact timestamps
-      const workingMinutes = Math.round((now.getTime() - checkInTime.getTime()) / (1000 * 60));
+      const totalMinutes = Math.round((now.getTime() - checkInTime.getTime()) / (1000 * 60));
+      const breakMinutes = checkInData.break_minutes || 0;
+      const workingMinutes = Math.max(0, totalMinutes - breakMinutes);
       const overtimeMinutes = Math.max(0, workingMinutes - 480); // Over 8 hours
+      const regularMinutes = workingMinutes - overtimeMinutes;
+      
+      console.log('Time calculation:', {
+        totalMinutes,
+        breakMinutes,
+        workingMinutes,
+        regularMinutes,
+        overtimeMinutes
+      });
       
       // Update the record with clock-out data using ISO string
       const { error } = await supabase
@@ -56,10 +69,12 @@ export const useClockOut = (
         .update({
           check_out: now.toISOString(), // Store as ISO string to preserve timezone information
           active_session: false,
-          working_minutes: workingMinutes - overtimeMinutes, // Regular minutes
+          working_minutes: regularMinutes, // Regular minutes
           overtime_minutes: overtimeMinutes,
           location,
-          device_info: deviceInfo
+          device_info: deviceInfo,
+          on_break: false, // Clear break status
+          break_start: null // Clear break start time
         })
         .eq('id', currentRecord);
 
@@ -72,6 +87,8 @@ export const useClockOut = (
         });
         return;
       }
+
+      console.log('Successfully clocked out at device time:', now.toLocaleString());
 
       setCurrentRecord(null);
       setStatus('clocked-out');

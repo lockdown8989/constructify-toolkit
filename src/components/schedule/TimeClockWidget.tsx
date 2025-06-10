@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Clock, Coffee, StopCircle, PauseCircle, Timer } from 'lucide-react';
+import { Clock, Coffee, StopCircle, PauseCircle, Timer, Activity } from 'lucide-react';
 import { useTimeClock } from '@/hooks/time-clock';
 import { formatDuration } from '@/utils/time-utils';
 
@@ -20,6 +20,34 @@ const TimeClockWidget = () => {
   useEffect(() => {
     console.log('TimeClockWidget rendered with status:', status);
   }, [status]);
+
+  const getStatusIndicator = () => {
+    switch (status) {
+      case 'clocked-in':
+        return (
+          <div className="flex items-center gap-2 p-3 bg-green-50 text-green-700 rounded-lg font-medium">
+            <Activity className="h-4 w-4 animate-pulse" />
+            Currently Clocked In
+          </div>
+        );
+      case 'on-break':
+        return (
+          <div className="flex items-center gap-2 p-3 bg-blue-50 text-blue-700 rounded-lg font-medium">
+            <Coffee className="h-4 w-4" />
+            Currently On Break
+          </div>
+        );
+      case 'clocked-out':
+        return (
+          <div className="flex items-center gap-2 p-3 bg-gray-100 text-gray-600 rounded-lg">
+            <Clock className="h-4 w-4" />
+            Clocked Out
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <Card>
@@ -90,23 +118,7 @@ const TimeClockWidget = () => {
           )}
         </div>
         
-        <div className="text-sm text-center text-gray-500">
-          {status === 'clocked-in' && (
-            <div className="p-2 bg-green-50 text-green-700 rounded-full font-medium">
-              Currently Clocked In
-            </div>
-          )}
-          {status === 'on-break' && (
-            <div className="p-2 bg-blue-50 text-blue-700 rounded-full font-medium">
-              Currently On Break
-            </div>
-          )}
-          {status === 'clocked-out' && (
-            <div className="p-2 bg-gray-100 text-gray-600 rounded-full">
-              Clocked Out
-            </div>
-          )}
-        </div>
+        {getStatusIndicator()}
       </CardContent>
     </Card>
   );

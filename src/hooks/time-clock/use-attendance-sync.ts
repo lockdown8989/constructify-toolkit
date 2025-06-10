@@ -28,16 +28,29 @@ export const useAttendanceSync = (onSync: SyncCallback) => {
         },
         (payload) => {
           console.log('Attendance record changed:', payload);
+          console.log('Change detected at device time:', new Date().toLocaleString());
           
           // Call the sync callback whenever an attendance record changes
           onSync();
           
           // Show toast for certain updates
-          if (payload.eventType === 'UPDATE' && payload.new?.status === 'Auto-logout') {
-            toast({
-              title: "Auto Clock-Out Detected",
-              description: "You were automatically clocked out from another device or session.",
-            });
+          if (payload.eventType === 'UPDATE') {
+            if (payload.new?.status === 'Auto-logout') {
+              toast({
+                title: "Auto Clock-Out Detected",
+                description: "You were automatically clocked out from another device or session.",
+              });
+            } else if (payload.new?.active_session === false && payload.old?.active_session === true) {
+              toast({
+                title: "Status Updated",
+                description: "Your clock-out was registered.",
+              });
+            } else if (payload.new?.active_session === true && payload.old?.active_session === false) {
+              toast({
+                title: "Status Updated",
+                description: "Your clock-in was registered.",
+              });
+            }
           }
         }
       )
@@ -61,11 +74,12 @@ export const useAttendanceSync = (onSync: SyncCallback) => {
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          // Track online status
+          // Track online status with current device time
           await presenceChannel.track({
             user_id: user.id,
             online_at: new Date().toISOString(),
-            employee_id: user.id
+            employee_id: user.id,
+            device_time: new Date().toLocaleString()
           });
         }
       });
