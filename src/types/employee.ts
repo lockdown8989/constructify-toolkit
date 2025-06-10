@@ -17,4 +17,6 @@ export interface Employee {
   user_id?: string;
   manager_id?: string;
   selected?: boolean;
+  email?: string;
+  role?: string;
 }

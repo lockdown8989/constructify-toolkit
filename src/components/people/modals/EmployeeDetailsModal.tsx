@@ -70,7 +70,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       job_title: uiEmployee.jobTitle,
       department: uiEmployee.department,
       site: uiEmployee.site,
-      salary: parseInt(uiEmployee.salary.replace(/[^0-9]/g, '')),
+      salary: parseFloat(uiEmployee.salary.replace(/[^0-9.]/g, '')),
       start_date: new Date(uiEmployee.startDate).toISOString().split('T')[0],
       lifecycle: uiEmployee.lifecycle,
       status: uiEmployee.status,
@@ -79,7 +79,10 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       annual_leave_days: uiEmployee.annual_leave_days || 25, 
       sick_leave_days: uiEmployee.sick_leave_days || 10,
       manager_id: uiEmployee.managerId || null,
-      user_id: uiEmployee.userId || null
+      user_id: uiEmployee.userId || null,
+      email: uiEmployee.email,
+      role: uiEmployee.role,
+      hourly_rate: uiEmployee.hourly_rate
     };
   };
 
@@ -94,7 +97,11 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
             onDelete={() => setIsDeleteDialogOpen(true)}
           />
           <div className="flex-1 overflow-auto">
-            <EmployeeInfoSection employee={employee} onBack={onClose} />
+            <EmployeeInfoSection 
+              employee={employee} 
+              isEditing={false}
+              onSave={() => {}}
+            />
           </div>
         </DialogContent>
       </Dialog>

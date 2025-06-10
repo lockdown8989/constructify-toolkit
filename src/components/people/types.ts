@@ -1,3 +1,4 @@
+
 import { Employee as DbEmployee } from '@/hooks/use-employees';
 
 export interface Employee {
@@ -20,6 +21,7 @@ export interface Employee {
   email?: string;
   phone?: string;
   hourly_rate?: number;
+  role?: string;
 }
 
 export interface PeopleTableProps {
@@ -68,6 +70,7 @@ export const mapDbEmployeeToUiEmployee = (dbEmployee: any): Employee => {
     sick_leave_days: dbEmployee.sick_leave_days,
     email: dbEmployee.email,
     phone: dbEmployee.phone,
-    hourly_rate: dbEmployee.hourly_rate
+    hourly_rate: dbEmployee.hourly_rate,
+    role: dbEmployee.role
   };
 };

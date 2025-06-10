@@ -17,7 +17,7 @@ import {
   X,
   FileText
 } from 'lucide-react';
-import { Employee } from '@/types/employee';
+import { Employee } from '@/components/people/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -52,9 +52,18 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
 
   const handleSave = async () => {
     try {
+      // Convert UI employee back to database format
       await updateEmployee.mutateAsync({
         id: employee.id,
-        ...editedEmployee
+        name: editedEmployee.name,
+        job_title: editedEmployee.jobTitle,
+        department: editedEmployee.department,
+        site: editedEmployee.site,
+        salary: parseFloat(editedEmployee.salary.replace(/[^0-9.]/g, '')),
+        status: editedEmployee.status,
+        email: editedEmployee.email,
+        role: editedEmployee.role,
+        start_date: new Date(editedEmployee.startDate).toISOString().split('T')[0]
       });
 
       toast({
@@ -183,12 +192,12 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
             {isEditing ? (
               <Input
                 id="job_title"
-                value={currentEmployee.job_title}
-                onChange={(e) => handleInputChange('job_title', e.target.value)}
+                value={currentEmployee.jobTitle}
+                onChange={(e) => handleInputChange('jobTitle', e.target.value)}
                 className="mt-1"
               />
             ) : (
-              <p className="text-gray-900 font-medium">{currentEmployee.job_title}</p>
+              <p className="text-gray-900 font-medium">{currentEmployee.jobTitle}</p>
             )}
           </div>
           
@@ -232,14 +241,18 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
               <Input
                 id="start_date"
                 type="date"
-                value={currentEmployee.start_date || ''}
-                onChange={(e) => handleInputChange('start_date', e.target.value)}
+                value={new Date(currentEmployee.startDate).toISOString().split('T')[0]}
+                onChange={(e) => handleInputChange('startDate', new Date(e.target.value).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long', 
+                  day: 'numeric'
+                }))}
                 className="mt-1"
               />
             ) : (
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-gray-500" />
-                <span>{currentEmployee.start_date ? new Date(currentEmployee.start_date).toLocaleDateString() : 'Not provided'}</span>
+                <span>{currentEmployee.startDate}</span>
               </div>
             )}
           </div>
@@ -272,15 +285,15 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
             {isEditing ? (
               <Input
                 id="salary"
-                type="number"
+                type="text"
                 value={currentEmployee.salary}
-                onChange={(e) => handleInputChange('salary', parseFloat(e.target.value))}
+                onChange={(e) => handleInputChange('salary', e.target.value)}
                 className="mt-1"
               />
             ) : (
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-gray-500" />
-                <span>£{currentEmployee.salary?.toLocaleString()}</span>
+                <span>{currentEmployee.salary}</span>
               </div>
             )}
           </div>

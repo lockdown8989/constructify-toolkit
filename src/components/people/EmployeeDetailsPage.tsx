@@ -8,13 +8,15 @@ import { useEmployees } from '@/hooks/use-employees';
 import EmployeeHeader from './modals/employee-details/EmployeeHeader';
 import EmployeeInfoSection from './modals/employee-details/EmployeeInfoSection';
 import DocumentsSection from './modals/employee-details/DocumentsSection';
+import { mapDbEmployeeToUiEmployee } from './types';
 
 const EmployeeDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: employees, isLoading } = useEmployees();
   
-  const employee = employees?.find(emp => emp.id === id);
+  const dbEmployee = employees?.find(emp => emp.id === id);
+  const employee = dbEmployee ? mapDbEmployeeToUiEmployee(dbEmployee) : null;
 
   if (isLoading) {
     return (
