@@ -21,7 +21,7 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
   // Use the validation hook
   const validation = useSignUpValidation(roleManager.userRole, roleManager.managerId);
   
-  // Use the submit hook
+  // Use the submit hook with rate limiting
   const { signUpError, handleSubmit } = useSignUpSubmit({
     onSignUp,
     email: formState.email,
@@ -33,7 +33,13 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
     managerId: roleManager.managerId,
     assignUserRole: roleAssigner.assignUserRole,
     createOrUpdateEmployeeRecord: employeeManager.createOrUpdateEmployeeRecord,
-    getFullName: formState.getFullName
+    getFullName: formState.getFullName,
+    canAttempt: formState.canAttempt,
+    attemptsRemaining: formState.attemptsRemaining,
+    remainingBlockTime: formState.remainingBlockTime,
+    recordFailedAttempt: formState.recordFailedAttempt,
+    recordSuccessfulAuth: formState.recordSuccessfulAuth,
+    validateForm: formState.validateForm
   });
 
   return {

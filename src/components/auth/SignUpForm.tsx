@@ -6,7 +6,7 @@ import { UserInfoFields } from "./components/UserInfoFields";
 import { AccountTypeSelector } from "./components/AccountTypeSelector";
 import { ManagerIdInput } from "./components/ManagerIdInput";
 import { useSignUp } from "./hooks/useSignUp";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Clock } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type SignUpFormProps = {
@@ -33,13 +33,16 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
     isValidatingManagerId,
     isManagerIdValid,
     managerName,
-    signUpError
+    signUpError,
+    canAttempt,
+    attemptsRemaining,
+    remainingBlockTime
   } = useSignUp({ onSignUp });
 
-  // Add extra logging for debugging
-  React.useEffect(() => {
-    console.log(`Manager ID in form: ${managerId}, validation status: ${isManagerIdValid}`);
-  }, [managerId, isManagerIdValid]);
+  const formatBlockTime = (seconds: number) => {
+    const minutes = Math.ceil(seconds / 60);
+    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+  };
 
   return (
     <Card>
@@ -50,11 +53,29 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
       
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          {!canAttempt && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md flex gap-2 items-start">
+              <Clock className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+              <div className="text-sm text-red-700">
+                <p className="font-medium">Account temporarily locked</p>
+                <p>Too many failed attempts. Try again in {formatBlockTime(remainingBlockTime)}.</p>
+              </div>
+            </div>
+          )}
+          
           {signUpError && (
             <Alert variant="destructive" className="p-3 bg-destructive/10 rounded-md flex gap-2 items-start">
               <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
               <AlertDescription className="text-sm text-destructive">{signUpError}</AlertDescription>
             </Alert>
+          )}
+          
+          {canAttempt && attemptsRemaining <= 3 && attemptsRemaining > 0 && (
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+              <p className="text-sm text-yellow-800">
+                {attemptsRemaining} attempt{attemptsRemaining !== 1 ? 's' : ''} remaining before temporary lockout.
+              </p>
+            </div>
           )}
           
           <UserInfoFields 
@@ -95,7 +116,11 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
         </CardContent>
         
         <CardFooter>
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isLoading || !canAttempt}
+          >
             {isLoading ? "Creating account..." : "Create Account"}
           </Button>
         </CardFooter>

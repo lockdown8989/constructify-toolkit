@@ -21,6 +21,12 @@ type UseSignUpSubmitProps = {
     managerId: string | null
   ) => Promise<boolean>;
   getFullName: () => string;
+  canAttempt: boolean;
+  attemptsRemaining: number;
+  remainingBlockTime: number;
+  recordFailedAttempt: () => void;
+  recordSuccessfulAuth: () => void;
+  validateForm: () => boolean;
 };
 
 export const useSignUpSubmit = ({
@@ -34,28 +40,34 @@ export const useSignUpSubmit = ({
   managerId,
   assignUserRole,
   createOrUpdateEmployeeRecord,
-  getFullName
+  getFullName,
+  canAttempt,
+  attemptsRemaining,
+  remainingBlockTime,
+  recordFailedAttempt,
+  recordSuccessfulAuth,
+  validateForm
 }: UseSignUpSubmitProps) => {
   const { toast } = useToast();
   const [signUpError, setSignUpError] = useState<string | null>(null);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!canAttempt) {
+      const minutes = Math.ceil(remainingBlockTime / 60);
+      setSignUpError(`Too many failed attempts. Please try again in ${minutes} minutes.`);
+      return;
+    }
+    
     setIsLoading(true);
     setSignUpError(null);
     
     try {
       console.log(`Attempting to sign up with role: ${userRole}, Manager ID: ${managerId}`);
       
-      // Validate required fields
-      if (!email || !password || !firstName || !lastName) {
-        setSignUpError("All fields are required");
-        setIsLoading(false);
-        return;
-      }
-      
-      if (password.length < 6) {
-        setSignUpError("Password must be at least 6 characters");
+      // Validate form first
+      if (!validateForm()) {
         setIsLoading(false);
         return;
       }
@@ -84,6 +96,7 @@ export const useSignUpSubmit = ({
       
       if (error) {
         console.error("Sign up error:", error);
+        recordFailedAttempt();
         
         // Provide more specific error messages
         if (error.message.includes("duplicate key") || error.message.includes("already registered")) {
@@ -106,7 +119,7 @@ export const useSignUpSubmit = ({
           
           return;
         } else {
-          setSignUpError(error.message || "Failed to create account. Please try again.");
+          setSignUpError(`${error.message || "Failed to create account. Please try again."} ${attemptsRemaining - 1} attempts remaining.`);
         }
         
         setIsLoading(false);
@@ -114,6 +127,7 @@ export const useSignUpSubmit = ({
       }
       
       if (requiresConfirmation) {
+        recordSuccessfulAuth();
         // Handle email confirmation case
         toast({
           title: "Email verification required",
@@ -146,6 +160,8 @@ export const useSignUpSubmit = ({
 
         console.log("Role assignment result:", roleSuccess);
         console.log("Employee record creation result:", employeeSuccess);
+        
+        recordSuccessfulAuth();
         
         // Show appropriate success message based on role
         if (userRole === 'manager') {
@@ -207,12 +223,14 @@ export const useSignUpSubmit = ({
           }, 3000);
         }
       } else {
+        recordFailedAttempt();
         setSignUpError("User created but session not established. Please try signing in.");
         setIsLoading(false);
       }
     } catch (error) {
       console.error("Sign up error:", error);
-      setSignUpError(error instanceof Error ? error.message : "An unexpected error occurred during sign up");
+      recordFailedAttempt();
+      setSignUpError(`${error instanceof Error ? error.message : "An unexpected error occurred during sign up"} ${attemptsRemaining - 1} attempts remaining.`);
       setIsLoading(false);
     }
   };
