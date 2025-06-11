@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -96,7 +97,7 @@ const ShiftCompletionDialog: React.FC<ShiftCompletionDialogProps> = ({
               {isOnBreak ? (
                 <>
                   <Timer className="w-8 h-8" />
-                  COMING FROM BREAK
+                  FINISH BREAK
                 </>
               ) : (
                 <>
