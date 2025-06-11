@@ -31,22 +31,28 @@ const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated }) => {
       >
         Dashboard
       </NavLink>
+      
+      {/* Restaurant Schedule - Only for managers */}
+      {hasManagerAccess && (
+        <NavLink
+          to="/restaurant-schedule"
+          className={({ isActive }) =>
+            `nav-link ${isActive ? "active" : ""}`
+          }
+        >
+          Restaurant Schedule
+        </NavLink>
+      )}
+      
       <NavLink
-        to="/overview"
+        to="/schedule"
         className={({ isActive }) =>
           `nav-link ${isActive ? "active" : ""}`
         }
       >
-        Overview
+        Schedule
       </NavLink>
-      <NavLink
-        to="/employee-schedule"
-        className={({ isActive }) =>
-          `nav-link ${isActive ? "active" : ""}`
-        }
-      >
-        Employee
-      </NavLink>
+      
       <NavLink
         to="/leave-management"
         className={({ isActive }) =>
@@ -55,6 +61,32 @@ const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated }) => {
       >
         Leave
       </NavLink>
+      
+      {/* Manager Time Clock with IN/OUT - Only for managers */}
+      {hasManagerAccess && (
+        <NavLink
+          to="/manager-time-clock"
+          className={({ isActive }) =>
+            `nav-link time-clock-nav-button ${isActive ? "active" : ""}`
+          }
+        >
+          IN AND OUT
+        </NavLink>
+      )}
+      
+      {/* Attendance - Only for managers */}
+      {hasManagerAccess && (
+        <NavLink
+          to="/attendance"
+          className={({ isActive }) =>
+            `nav-link ${isActive ? "active" : ""}`
+          }
+        >
+          Attendance
+        </NavLink>
+      )}
+      
+      {/* Team Members (People) - Only for managers */}
       {hasManagerAccess && (
         <NavLink
           to="/people"
@@ -62,9 +94,10 @@ const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated }) => {
             `nav-link ${isActive ? "active" : ""}`
           }
         >
-          People
+          Team Members
         </NavLink>
       )}
+      
       {/* Payroll button only for payroll users */}
       {isPayroll && (
         <>
@@ -79,7 +112,7 @@ const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated }) => {
           <NavLink
             to="/salary"
             className={({ isActive }) =>
-              `nav-link ${isActive ? "active" : ""}`
+              `nav-link salary-nav-button ${isActive ? "active" : ""}`
             }
           >
             Salary

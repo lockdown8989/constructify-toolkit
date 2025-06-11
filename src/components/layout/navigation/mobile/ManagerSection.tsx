@@ -1,5 +1,5 @@
 
-import { Users, Calendar, Receipt, ClipboardCheck } from "lucide-react";
+import { Users, Calendar, Receipt, ClipboardCheck, Clock, BarChart3 } from "lucide-react";
 import MobileNavLink from "./MobileNavLink";
 
 interface ManagerSectionProps {
@@ -12,6 +12,13 @@ const ManagerSection = ({ hasManagerialAccess, onClose }: ManagerSectionProps) =
   
   return (
     <>
+      <MobileNavLink
+        to="/restaurant-schedule"
+        icon={Clock}
+        label="🕐 Restaurant Schedule"
+        onClick={onClose}
+      />
+      
       <MobileNavLink
         to="/attendance"
         icon={ClipboardCheck}
@@ -27,16 +34,9 @@ const ManagerSection = ({ hasManagerialAccess, onClose }: ManagerSectionProps) =
       />
       
       <MobileNavLink
-        to="/shift-calendar"
+        to="/schedule"
         icon={Calendar}
         label="📆 Schedule Calendar"
-        onClick={onClose}
-      />
-      
-      <MobileNavLink
-        to="/payroll"
-        icon={Receipt}
-        label="📝 Payroll"
         onClick={onClose}
       />
     </>

@@ -16,7 +16,8 @@ import {
   Settings,
   UserCheck,
   Calculator,
-  Wallet
+  Wallet,
+  BarChart3
 } from 'lucide-react';
 
 const NavigationLinks = () => {
@@ -43,15 +44,24 @@ const NavigationLinks = () => {
 
       <SidebarDivider isCollapsed={false} />
 
-      {/* Employee Management - For Managers/HR/Admin (not payroll users) */}
+      {/* Manager-specific navigation - synchronized with mobile */}
       {hasManagerialAccess && (
         <>
           <SidebarNavLink
-            to="/people"
-            icon={Users}
-            label="People"
-            isActive={location.pathname === "/people"}
+            to="/restaurant-schedule"
+            icon={Clock}
+            label="Restaurant Schedule"
+            isActive={location.pathname === "/restaurant-schedule"}
             isCollapsed={false}
+          />
+          
+          <SidebarNavLink
+            to="/manager-time-clock"
+            icon={Clock}
+            label="IN AND OUT"
+            isActive={location.pathname === "/manager-time-clock"}
+            isCollapsed={false}
+            className="time-clock-nav-button"
           />
           
           <SidebarNavLink
@@ -61,17 +71,37 @@ const NavigationLinks = () => {
             isActive={location.pathname === "/attendance"}
             isCollapsed={false}
           />
+          
+          <SidebarNavLink
+            to="/people"
+            icon={Users}
+            label="Team Members"
+            isActive={location.pathname === "/people"}
+            isCollapsed={false}
+          />
+          
+          <SidebarNavLink
+            to="/schedule"
+            icon={Calendar}
+            label="Schedule Calendar"
+            isActive={location.pathname === "/schedule"}
+            isCollapsed={false}
+          />
+          
+          <SidebarDivider isCollapsed={false} />
         </>
       )}
 
-      {/* Schedule Management */}
-      <SidebarNavLink
-        to="/schedule"
-        icon={Calendar}
-        label="Schedule"
-        isActive={location.pathname === "/schedule"}
-        isCollapsed={false}
-      />
+      {/* Schedule Management - For all users */}
+      {!hasManagerialAccess && (
+        <SidebarNavLink
+          to="/schedule"
+          icon={Calendar}
+          label="Schedule"
+          isActive={location.pathname === "/schedule"}
+          isCollapsed={false}
+        />
+      )}
 
       {/* Leave Management */}
       <SidebarNavLink
@@ -81,17 +111,6 @@ const NavigationLinks = () => {
         isActive={location.pathname === "/leave-management"}
         isCollapsed={false}
       />
-
-      {/* Manager Time Clock with IN/OUT buttons - Only for managers (not payroll users) */}
-      {hasManagerialAccess && (
-        <SidebarNavLink
-          to="/manager-time-clock"
-          icon={Clock}
-          label="Time Clock"
-          isActive={location.pathname === "/manager-time-clock"}
-          isCollapsed={false}
-        />
-      )}
 
       {/* Payroll Section - Only for Payroll users */}
       {isPayroll && (
@@ -134,17 +153,6 @@ const NavigationLinks = () => {
           icon={ClipboardList}
           label="Workflow"
           isActive={location.pathname === "/employee-workflow"}
-          isCollapsed={false}
-        />
-      )}
-
-      {/* Restaurant Schedule - For Managers (not payroll users) */}
-      {hasManagerialAccess && (
-        <SidebarNavLink
-          to="/restaurant-schedule"
-          icon={Clock}
-          label="Restaurant Schedule"
-          isActive={location.pathname === "/restaurant-schedule"}
           isCollapsed={false}
         />
       )}

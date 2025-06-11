@@ -52,24 +52,20 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
                 onClose={onClose}
               />
               
-              {/* Time Clock section - Only for managers (not payroll users) */}
+              {/* Manager sections - synchronized with desktop */}
               {isAuthenticated && hasManagerialAccess && !isPayroll && (
-                <>
-                  <MobileNavDivider />
-                  <TimeClocksSection 
-                    onClose={onClose}
-                    isAuthenticated={isAuthenticated}
-                    hasManagerialAccess={hasManagerialAccess}
-                  />
-                </>
-              )}
-              
-              {hasManagerialAccess && !isPayroll && (
                 <>
                   <MobileNavDivider />
                   <ManagerSection 
                     hasManagerialAccess={hasManagerialAccess}
                     onClose={onClose} 
+                  />
+                  
+                  <MobileNavDivider />
+                  <TimeClocksSection 
+                    onClose={onClose}
+                    isAuthenticated={isAuthenticated}
+                    hasManagerialAccess={hasManagerialAccess}
                   />
                 </>
               )}
