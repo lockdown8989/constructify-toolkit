@@ -1,9 +1,9 @@
 
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Refresh, CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 type ManagerIdInputProps = {
   managerId: string;
@@ -11,92 +11,87 @@ type ManagerIdInputProps = {
   isReadOnly?: boolean;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isEmployeeView?: boolean;
-  isValid?: boolean;
+  isValid?: boolean | null;
   isChecking?: boolean;
   managerName?: string | null;
+  disabled?: boolean;
 };
 
-export const ManagerIdInput = ({ 
-  managerId, 
-  onGenerateManagerId, 
+export const ManagerIdInput = ({
+  managerId,
+  onGenerateManagerId,
   isReadOnly = true,
   onChange,
   isEmployeeView = false,
-  isValid,
+  isValid = null,
   isChecking = false,
-  managerName = null
+  managerName = null,
+  disabled = false
 }: ManagerIdInputProps) => {
-  const getBorderClass = () => {
-    if (isEmployeeView && managerId) {
-      if (isChecking) return "border-amber-500";
-      if (isValid === true) return "border-green-500";
-      if (isValid === false) return "border-red-500";
+  const getValidationIcon = () => {
+    if (isChecking) {
+      return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
     }
-    return "";
+    if (isValid === true) {
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    }
+    if (isValid === false) {
+      return <XCircle className="h-4 w-4 text-red-500" />;
+    }
+    return null;
   };
-
-  // For debugging
-  React.useEffect(() => {
-    if (isEmployeeView && managerId) {
-      console.log(`ManagerIdInput - ID: ${managerId}, valid: ${isValid}, checking: ${isChecking}`);
-    }
-  }, [isEmployeeView, managerId, isValid, isChecking]);
 
   return (
     <div className="space-y-2">
       <Label htmlFor="managerId">
-        {isEmployeeView ? "Manager ID (Required)" : "Your Manager ID"}
+        {isEmployeeView ? "Manager ID (Required)" : "Manager ID"}
       </Label>
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Input
             id="managerId"
+            type="text"
+            placeholder={isEmployeeView ? "Enter your manager's ID" : "Auto-generated"}
             value={managerId}
             onChange={onChange}
             readOnly={isReadOnly}
-            placeholder={isEmployeeView ? "Enter your manager's ID (e.g., MGR-12345)" : ""}
-            className={`${isReadOnly ? "bg-muted font-mono" : ""} ${getBorderClass()} pr-10`}
-            required={isEmployeeView}
+            disabled={disabled}
+            className={`${!isReadOnly ? 'pr-10' : ''} ${
+              isValid === false ? 'border-red-500' : 
+              isValid === true ? 'border-green-500' : ''
+            }`}
           />
-          {isEmployeeView && managerId && (
-            <div className="absolute inset-y-0 right-3 flex items-center">
-              {isChecking && <Loader2 className="h-4 w-4 animate-spin text-amber-500" />}
-              {!isChecking && isValid === true && <CheckCircle2 className="h-4 w-4 text-green-500" />}
-              {!isChecking && isValid === false && <AlertCircle className="h-4 w-4 text-red-500" />}
+          {!isReadOnly && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              {getValidationIcon()}
             </div>
           )}
         </div>
-        {!isEmployeeView && (
+        {isReadOnly && (
           <Button 
             type="button" 
             variant="outline" 
             onClick={onGenerateManagerId}
-            className="whitespace-nowrap"
+            disabled={disabled}
+            className="shrink-0"
           >
-            Generate New
+            <Refresh className="h-4 w-4" />
           </Button>
         )}
       </div>
-      
-      {isEmployeeView ? (
-        <>
-          <p className="text-xs text-gray-500 font-medium">
-            You must enter a valid Manager ID to connect to your manager's dashboard
-          </p>
-          {managerId && isValid === false && (
-            <p className="text-xs text-red-500">
-              This Manager ID could not be verified. Please check with your manager for the correct ID.
-            </p>
-          )}
-          {managerId && isValid === true && managerName && (
-            <p className="text-xs text-green-500">
-              Valid Manager ID verified. You will be connected to manager: {managerName}
-            </p>
-          )}
-        </>
-      ) : (
-        <p className="text-xs text-gray-500">
-          Share this ID with your employees so they can connect to your account
+      {isEmployeeView && managerName && (
+        <p className="text-sm text-green-600">
+          Manager found: {managerName}
+        </p>
+      )}
+      {isEmployeeView && isValid === false && managerId && (
+        <p className="text-sm text-red-600">
+          Manager ID not found. Please check with your manager.
+        </p>
+      )}
+      {!isEmployeeView && managerId && (
+        <p className="text-sm text-muted-foreground">
+          Share this ID with your employees so they can link to your account.
         </p>
       )}
     </div>

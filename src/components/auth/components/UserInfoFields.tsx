@@ -3,10 +3,8 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Mail, Lock } from "lucide-react";
-import { useInputSanitization } from "@/hooks/auth/useInputSanitization";
-import { PasswordStrengthIndicator } from "../PasswordStrengthIndicator";
 
-interface UserInfoFieldsProps {
+type UserInfoFieldsProps = {
   firstName: string;
   lastName: string;
   email: string;
@@ -15,9 +13,10 @@ interface UserInfoFieldsProps {
   onLastNameChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onPasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}
+  disabled?: boolean;
+};
 
-export const UserInfoFields: React.FC<UserInfoFieldsProps> = ({
+export const UserInfoFields = ({
   firstName,
   lastName,
   email,
@@ -25,58 +24,41 @@ export const UserInfoFields: React.FC<UserInfoFieldsProps> = ({
   onFirstNameChange,
   onLastNameChange,
   onEmailChange,
-  onPasswordChange
-}) => {
-  const { sanitizeEmail, sanitizeName } = useInputSanitization();
-
-  const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const sanitized = sanitizeName(e.target.value);
-    onFirstNameChange({ ...e, target: { ...e.target, value: sanitized } });
-  };
-
-  const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const sanitized = sanitizeName(e.target.value);
-    onLastNameChange({ ...e, target: { ...e.target, value: sanitized } });
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const sanitized = sanitizeEmail(e.target.value);
-    onEmailChange({ ...e, target: { ...e.target, value: sanitized } });
-  };
-
+  onPasswordChange,
+  disabled = false
+}: UserInfoFieldsProps) => {
   return (
-    <>
+    <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">First Name</Label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               id="firstName"
+              type="text"
               placeholder="First name"
               value={firstName}
-              onChange={handleFirstNameChange}
+              onChange={onFirstNameChange}
               className="pl-10"
+              disabled={disabled}
               required
-              autoComplete="given-name"
-              maxLength={50}
             />
           </div>
         </div>
-        
         <div className="space-y-2">
           <Label htmlFor="lastName">Last Name</Label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               id="lastName"
+              type="text"
               placeholder="Last name"
               value={lastName}
-              onChange={handleLastNameChange}
+              onChange={onLastNameChange}
               className="pl-10"
+              disabled={disabled}
               required
-              autoComplete="family-name"
-              maxLength={50}
             />
           </div>
         </div>
@@ -85,17 +67,16 @@ export const UserInfoFields: React.FC<UserInfoFieldsProps> = ({
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             id="email"
             type="email"
             placeholder="Enter your email"
             value={email}
-            onChange={handleEmailChange}
+            onChange={onEmailChange}
             className="pl-10"
+            disabled={disabled}
             required
-            autoComplete="email"
-            maxLength={254}
           />
         </div>
       </div>
@@ -103,7 +84,7 @@ export const UserInfoFields: React.FC<UserInfoFieldsProps> = ({
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             id="password"
             type="password"
@@ -111,13 +92,11 @@ export const UserInfoFields: React.FC<UserInfoFieldsProps> = ({
             value={password}
             onChange={onPasswordChange}
             className="pl-10"
+            disabled={disabled}
             required
-            autoComplete="new-password"
-            maxLength={128}
           />
         </div>
-        <PasswordStrengthIndicator password={password} />
       </div>
-    </>
+    </div>
   );
 };

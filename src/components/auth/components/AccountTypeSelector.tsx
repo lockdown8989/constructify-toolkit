@@ -1,39 +1,44 @@
 
 import React from "react";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { UserRole } from "../hooks/useUserRole";
 
 type AccountTypeSelectorProps = {
   userRole: UserRole;
-  onRoleChange: (value: string) => void;
+  onRoleChange: (role: UserRole) => void;
+  disabled?: boolean;
 };
 
-export const AccountTypeSelector = ({ userRole, onRoleChange }: AccountTypeSelectorProps) => {
-  const accountTypes = [
-    { id: "employee", label: "Employee" },
-    { id: "manager", label: "Manager" },
-    { id: "payroll", label: "Payroll" }
-  ];
-
+export const AccountTypeSelector = ({ userRole, onRoleChange, disabled = false }: AccountTypeSelectorProps) => {
   return (
     <div className="space-y-3">
-      <Label>Account Type</Label>
-      <div className="flex flex-wrap gap-4">
-        {accountTypes.map((type) => (
-          <div 
-            key={type.id}
-            className={`flex items-center border rounded-md px-4 py-2 cursor-pointer transition-colors ${userRole === type.id ? "bg-primary text-primary-foreground border-primary" : "border-input bg-background hover:bg-accent hover:text-accent-foreground"}`}
-            onClick={() => onRoleChange(type.id)}
-          >
-            <div className={`h-4 w-4 rounded-full border mr-2 flex items-center justify-center ${userRole === type.id ? "border-primary-foreground" : "border-primary"}`}>
-              {userRole === type.id && (
-                <div className="h-2 w-2 rounded-full bg-primary-foreground"></div>
-              )}
-            </div>
-            <Label htmlFor={type.id} className="cursor-pointer">{type.label}</Label>
-          </div>
-        ))}
-      </div>
+      <Label className="text-base font-medium">Account Type</Label>
+      <RadioGroup 
+        value={userRole} 
+        onValueChange={onRoleChange}
+        disabled={disabled}
+        className="flex flex-col space-y-2"
+      >
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="employee" id="employee" disabled={disabled} />
+          <Label htmlFor="employee" className={disabled ? "text-muted-foreground" : ""}>
+            Employee
+          </Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="manager" id="manager" disabled={disabled} />
+          <Label htmlFor="manager" className={disabled ? "text-muted-foreground" : ""}>
+            Manager
+          </Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="payroll" id="payroll" disabled={disabled} />
+          <Label htmlFor="payroll" className={disabled ? "text-muted-foreground" : ""}>
+            Payroll Administrator
+          </Label>
+        </div>
+      </RadioGroup>
     </div>
   );
 };
