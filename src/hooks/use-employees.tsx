@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/types/supabase';
@@ -26,9 +27,10 @@ export function useEmployees(filters?: Partial<{
       // For payroll users, admins, and HR - show all employees
       if (isPayroll || isAdmin || isHR) {
         console.log("Payroll/Admin/HR user, fetching all employee data");
-        // No restrictions for payroll users - they should see all employees
+        // No restrictions for these roles - they should see all employees
       } else if (isManager && user) {
         // For managers - show employees under their management
+        console.log("Manager user, fetching team data");
         const { data: managerData } = await supabase
           .from('employees')
           .select('manager_id')
@@ -38,9 +40,9 @@ export function useEmployees(filters?: Partial<{
         if (managerData && managerData.manager_id) {
           query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
         }
-      } else if (!isManager && user) {
+      } else if (!isManager && !isPayroll && !isAdmin && !isHR && user) {
         // For regular employees - show only their own data
-        console.log("Non-manager user, fetching own data only");
+        console.log("Regular employee user, fetching own data only");
         const { data: currentEmployeeData } = await supabase
           .from('employees')
           .select('*')
