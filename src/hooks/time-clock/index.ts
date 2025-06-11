@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
 import { useAutoClockout } from './use-auto-clockout';
 import { useTimeClockActions } from './use-time-clock-actions';
@@ -48,7 +48,7 @@ export const useTimeClock = () => {
     setCurrentRecord
   );
 
-  // Check initial status
+  // Check initial status and handle page refresh
   useStatusCheck(employeeData?.id, setCurrentRecord, setStatus);
 
   // Get time clock actions with state persistence
@@ -58,6 +58,54 @@ export const useTimeClock = () => {
     handleBreakStart: originalHandleBreakStart,
     handleBreakEnd: originalHandleBreakEnd
   } = useTimeClockActions(setStatus, setCurrentRecord);
+
+  // Define refresh function for attendance sync
+  const refreshAttendanceData = useCallback(async () => {
+    try {
+      if (!employeeData?.id) return;
+      
+      console.log('Refreshing attendance data for employee:', employeeData.id);
+      
+      // Re-check the current status from the database
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      
+      const { data: records, error } = await supabase
+        .from('attendance')
+        .select('*')
+        .eq('employee_id', employeeData.id)
+        .eq('date', today)
+        .eq('active_session', true)
+        .is('manager_initiated', false)
+        .order('check_in', { ascending: false });
+      
+      if (error) {
+        console.error('Error refreshing attendance data:', error);
+        return;
+      }
+      
+      const activeRecord = records && records.length > 0 ? records[0] : null;
+      
+      if (activeRecord) {
+        setCurrentRecord(activeRecord.id);
+        
+        // Check if on break
+        if (activeRecord.on_break === true || (activeRecord.break_start && !activeRecord.check_out)) {
+          setStatus('on-break');
+        } else {
+          setStatus('clocked-in');
+        }
+      } else {
+        setStatus('clocked-out');
+        setCurrentRecord(null);
+      }
+    } catch (err) {
+      console.error('Error in refreshAttendanceData:', err);
+    }
+  }, [employeeData?.id]);
+
+  // Handle real-time sync of attendance data
+  useAttendanceSync(refreshAttendanceData);
 
   // Wrap actions to persist state
   const handleClockIn = async () => {
@@ -115,49 +163,6 @@ export const useTimeClock = () => {
       variant: "default",
     });
   };
-
-  // Define refresh function for attendance sync
-  const refreshAttendanceData = async () => {
-    try {
-      if (!currentRecord) return;
-      
-      console.log('Refreshing attendance data for record:', currentRecord);
-      
-      const { data, error } = await supabase
-        .from('attendance')
-        .select('*')
-        .eq('id', currentRecord)
-        .single();
-      
-      if (error) {
-        console.error('Error refreshing attendance data:', error);
-        return;
-      }
-      
-      if (data) {
-        // Update status based on synced data
-        if (!data.active_session || data.check_out) {
-          setStatus('clocked-out');
-          setCurrentRecord(null);
-          if (!data.active_session) {
-            toast({
-              title: "Status Updated",
-              description: "Your clock-out was registered from another device.",
-            });
-          }
-        } else if (data.break_start) {
-          setStatus('on-break');
-        } else {
-          setStatus('clocked-in');
-        }
-      }
-    } catch (err) {
-      console.error('Error in refreshAttendanceData:', err);
-    }
-  };
-
-  // Handle real-time sync of attendance data
-  useAttendanceSync(refreshAttendanceData);
 
   // Update elapsed time based on current status
   useEffect(() => {

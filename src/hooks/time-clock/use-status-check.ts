@@ -47,8 +47,8 @@ export const useStatusCheck = (
           console.log('Active session found:', activeRecord);
           setCurrentRecord(activeRecord.id);
           
-          // Check if on break
-          if (activeRecord.break_start && !activeRecord.check_out) {
+          // Check if on break - look for break_start without break_end
+          if (activeRecord.on_break === true || (activeRecord.break_start && !activeRecord.check_out)) {
             console.log('Employee is on break');
             setStatus('on-break');
           } else {
@@ -56,6 +56,20 @@ export const useStatusCheck = (
             setStatus('clocked-in');
           }
         } else {
+          // No active session - check if there are any records for today that are not active
+          const { data: todayRecords, error: todayError } = await supabase
+            .from('attendance')
+            .select('*')
+            .eq('employee_id', employeeId)
+            .eq('date', today)
+            .order('check_in', { ascending: false });
+            
+          if (todayError) {
+            console.error('Error checking today records:', todayError);
+          }
+          
+          console.log('Today records:', todayRecords);
+          
           // No active session
           console.log('No active session found');
           setStatus('clocked-out');
@@ -68,6 +82,14 @@ export const useStatusCheck = (
       }
     };
     
+    // Check status immediately when component mounts
     checkCurrentStatus();
+    
+    // Set up a periodic check every 30 seconds to ensure status stays in sync
+    const intervalId = setInterval(checkCurrentStatus, 30000);
+    
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [employeeId, setCurrentRecord, setStatus]);
 };
