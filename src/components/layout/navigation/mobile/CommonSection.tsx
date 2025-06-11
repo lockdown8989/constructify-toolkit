@@ -1,8 +1,8 @@
 
-import React from 'react';
-import { Home, Users, Calendar, FileText, ClipboardList, Clock, User, Settings, UserCheck } from 'lucide-react';
-import MobileNavLink from './MobileNavLink';
-import PayrollSection from './PayrollSection';
+import { Home, Calendar, FileText, User, Settings } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import MobileNavLink from "./MobileNavLink";
+import PayrollSection from "./PayrollSection";
 
 interface CommonSectionProps {
   isAuthenticated: boolean;
@@ -12,50 +12,28 @@ interface CommonSectionProps {
   onClose: () => void;
 }
 
-const CommonSection: React.FC<CommonSectionProps> = ({ 
+const CommonSection = ({ 
   isAuthenticated, 
   isEmployee, 
   hasManagerialAccess, 
-  isPayroll,
+  isPayroll, 
   onClose 
-}) => {
-  // Debug log to check payroll role in mobile nav
+}: CommonSectionProps) => {
   console.log("CommonSection - isPayroll:", isPayroll);
-  console.log("CommonSection - isAuthenticated:", isAuthenticated);
-  console.log("CommonSection - hasManagerialAccess:", hasManagerialAccess);
+  
+  if (!isAuthenticated) return null;
 
   return (
     <>
-      {isAuthenticated && (
-        <MobileNavLink 
-          to="/dashboard" 
-          icon={Home} 
-          label="Dashboard" 
-          onClick={onClose} 
-        />
-      )}
+      <MobileNavLink 
+        to="/dashboard" 
+        icon={Home} 
+        label="Dashboard" 
+        onClick={onClose} 
+      />
 
-      {/* Employee Management - For Managers/HR/Admin only (excluding payroll users) */}
-      {hasManagerialAccess && (
-        <>
-          <MobileNavLink 
-            to="/people" 
-            icon={Users} 
-            label="People" 
-            onClick={onClose} 
-          />
-          
-          <MobileNavLink 
-            to="/attendance" 
-            icon={UserCheck} 
-            label="Attendance" 
-            onClick={onClose} 
-          />
-        </>
-      )}
-
-      {/* Schedule Management */}
-      {isAuthenticated && (
+      {/* Show schedule link for non-managers and non-payroll users */}
+      {!hasManagerialAccess && !isPayroll && (
         <MobileNavLink 
           to="/schedule" 
           icon={Calendar} 
@@ -64,63 +42,32 @@ const CommonSection: React.FC<CommonSectionProps> = ({
         />
       )}
 
-      {/* Leave Management */}
-      {isAuthenticated && (
-        <MobileNavLink 
-          to="/leave-management" 
-          icon={FileText} 
-          label="Leave" 
-          onClick={onClose} 
-        />
+      {/* Show leave management for all authenticated users */}
+      <MobileNavLink 
+        to="/leave-management" 
+        icon={FileText} 
+        label="Leave" 
+        onClick={onClose} 
+      />
+
+      {/* Payroll Section - Only for payroll users */}
+      {isPayroll && (
+        <PayrollSection onClose={onClose} />
       )}
 
-      {/* Payroll Section - Only for Payroll users */}
-      {isAuthenticated && isPayroll && (
-        <>
-          {console.log("Rendering PayrollSection - isPayroll is true")}
-          <PayrollSection onClose={onClose} />
-        </>
-      )}
+      <MobileNavLink 
+        to="/profile" 
+        icon={User} 
+        label="Profile" 
+        onClick={onClose} 
+      />
 
-      {/* Employee Workflow - For employees only (not payroll users) */}
-      {isEmployee && !isPayroll && (
-        <MobileNavLink 
-          to="/employee-workflow" 
-          icon={ClipboardList} 
-          label="Workflow" 
-          onClick={onClose} 
-        />
-      )}
-
-      {/* Restaurant Schedule - For Managers only (not payroll users) */}
-      {hasManagerialAccess && (
-        <MobileNavLink 
-          to="/restaurant-schedule" 
-          icon={Clock} 
-          label="Restaurant Schedule" 
-          onClick={onClose} 
-        />
-      )}
-
-      {/* Profile */}
-      {isAuthenticated && (
-        <MobileNavLink 
-          to="/profile" 
-          icon={User} 
-          label="Profile" 
-          onClick={onClose} 
-        />
-      )}
-
-      {/* Settings */}
-      {isAuthenticated && (
-        <MobileNavLink 
-          to="/settings" 
-          icon={Settings} 
-          label="Settings" 
-          onClick={onClose} 
-        />
-      )}
+      <MobileNavLink 
+        to="/settings" 
+        icon={Settings} 
+        label="Settings" 
+        onClick={onClose} 
+      />
     </>
   );
 };

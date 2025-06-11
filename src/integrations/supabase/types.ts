@@ -1843,6 +1843,10 @@ export type Database = {
         Args: { p_attendance_id: string }
         Returns: boolean
       }
+      sync_payroll_user_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "hr" | "employee" | "employer" | "manager" | "payroll"

@@ -30,8 +30,12 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
 }) => {
   const { user } = useAuth();
   const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
-  // Only show clocking controls for employees (not managers or payroll users)
-  const isClockingEnabled = !hasManagerialAccess && !isPayroll && isAuthenticated;
+  
+  // Only show clocking controls for employees who are not managers or payroll users
+  const isClockingEnabled = isEmployee && !hasManagerialAccess && !isPayroll && isAuthenticated;
+  
+  console.log("MobileNavContent - isPayroll:", isPayroll);
+  console.log("MobileNavContent - isClockingEnabled:", isClockingEnabled);
   
   if (!isOpen) return null;
 
@@ -52,7 +56,7 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
                 onClose={onClose}
               />
               
-              {/* Manager sections - synchronized with desktop */}
+              {/* Manager sections - only for managers who are not payroll users */}
               {isAuthenticated && hasManagerialAccess && !isPayroll && (
                 <>
                   <MobileNavDivider />
@@ -70,7 +74,8 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
                 </>
               )}
               
-              {isEmployee && !isPayroll && (
+              {/* Employee workflow - only for non-manager, non-payroll employees */}
+              {isEmployee && !hasManagerialAccess && !isPayroll && (
                 <>
                   <MobileNavDivider />
                   <WorkflowSection 
