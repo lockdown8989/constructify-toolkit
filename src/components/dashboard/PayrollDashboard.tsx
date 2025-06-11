@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useEmployees } from '@/hooks/use-employees';
-import CurrentDateTime from '@/components/dashboard/CurrentDateTime';
+import DashboardHeader from './DashboardHeader';
 import DashboardStatsSection from '@/components/dashboard/DashboardStatsSection';
 import SalaryTable from '@/components/salary/table/SalaryTable';
 import AttendanceReport from '@/components/dashboard/attendance-report';
@@ -49,10 +49,7 @@ const PayrollDashboard: React.FC<PayrollDashboardProps> = ({
 
   return (
     <div className="max-w-[1800px] mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-        <h1 className="text-2xl md:text-4xl font-bold">Hello {firstName}</h1>
-        <CurrentDateTime className="md:w-auto w-full mt-4 md:mt-0" />
-      </div>
+      <DashboardHeader firstName={firstName} />
       
       {/* Stats */}
       <DashboardStatsSection 

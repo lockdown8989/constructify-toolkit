@@ -14,16 +14,32 @@ export function useEmployees(filters?: Partial<{
   site: string;
   lifecycle: string;
 }>) {
-  const { user, isManager } = useAuth();
+  const { user, isManager, isPayroll, isAdmin, isHR } = useAuth();
   
   return useQuery({
-    queryKey: ['employees', filters, isManager, user?.id],
+    queryKey: ['employees', filters, isManager, isPayroll, isAdmin, isHR, user?.id],
     queryFn: async () => {
       let query = supabase
         .from('employees')
         .select('*');
       
-      if (!isManager && user) {
+      // For payroll users, admins, and HR - show all employees
+      if (isPayroll || isAdmin || isHR) {
+        console.log("Payroll/Admin/HR user, fetching all employee data");
+        // No restrictions for payroll users - they should see all employees
+      } else if (isManager && user) {
+        // For managers - show employees under their management
+        const { data: managerData } = await supabase
+          .from('employees')
+          .select('manager_id')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (managerData && managerData.manager_id) {
+          query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
+        }
+      } else if (!isManager && user) {
+        // For regular employees - show only their own data
         console.log("Non-manager user, fetching own data only");
         const { data: currentEmployeeData } = await supabase
           .from('employees')
@@ -36,16 +52,6 @@ export function useEmployees(filters?: Partial<{
         } else {
           console.log("No employee record found for user");
           return [];
-        }
-      } else if (isManager && user) {
-        const { data: managerData } = await supabase
-          .from('employees')
-          .select('manager_id')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (managerData && managerData.manager_id) {
-          query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
         }
       }
       
