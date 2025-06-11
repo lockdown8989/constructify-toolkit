@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AuthContextType } from './types';
 import { useAuthActions } from './useAuthActions';
 import { useRoles } from './useRoles';
+import { useAuthDebugger } from './useAuthDebugger';
 import { SessionTimeoutWarning } from '@/components/auth/SessionTimeoutWarning';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,37 +22,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Use auth actions hook
   const authActions = useAuthActions();
 
+  // Add debugging hook
+  useAuthDebugger({ user, session, isLoading });
+
   useEffect(() => {
+    console.log('🔄 AuthProvider: Setting up auth state listener');
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('🔐 Auth state change event:', {
+          event,
+          hasSession: !!session,
+          hasUser: !!session?.user,
+          userId: session?.user?.id,
+          timestamp: new Date().toISOString()
+        });
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         // Only set loading to false after roles are loaded or user is null
         if (!session?.user) {
+          console.log('📝 No user session, setting loading to false');
           setIsLoading(false);
         }
       }
     );
 
     // THEN check for existing session
+    console.log('🔄 AuthProvider: Checking for existing session');
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('📋 Initial session check:', {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        userId: session?.user?.id,
+        timestamp: new Date().toISOString()
+      });
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       // If no session, we can stop loading immediately
       if (!session?.user) {
+        console.log('📝 No initial session, setting loading to false');
         setIsLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('🔄 AuthProvider: Cleaning up auth subscription');
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Update loading state when roles are loaded
   useEffect(() => {
     if (user && rolesLoaded) {
+      console.log('📝 User and roles loaded, setting loading to false');
       setIsLoading(false);
     }
   }, [user, rolesLoaded]);
