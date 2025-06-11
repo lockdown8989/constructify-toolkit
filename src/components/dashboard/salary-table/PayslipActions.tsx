@@ -49,7 +49,7 @@ export const PayslipActions: React.FC<PayslipActionsProps> = ({
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onAttach(employee)}>
           <Check className="h-4 w-4 mr-2" />
-          Attach to Resume
+          Attach to Employee
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

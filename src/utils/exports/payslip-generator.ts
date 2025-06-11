@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import jsPDF from 'jspdf';
 
@@ -121,6 +122,24 @@ export const generatePayslipPDF = async (
       
       console.log('Created payroll record:', payrollRecord);
       
+      // Also create a document record for the payslip
+      const { error: docError } = await supabase
+        .from('documents')
+        .insert({
+          employee_id: employeeId,
+          title: filename,
+          category: 'payslip',
+          document_type: 'payslip',
+          size: `${(pdfBlob.size / 1024).toFixed(2)} KB`,
+          file_type: 'application/pdf',
+          access_level: 'private'
+        });
+      
+      if (docError) {
+        console.error('Error creating document record:', docError);
+        // Don't throw here as the payroll record was created successfully
+      }
+      
       return {
         success: true,
         path: `payroll/${filename}`,
@@ -149,7 +168,7 @@ export const attachPayslipToResume = async (
   employeeData: PayslipData
 ) => {
   try {
-    console.log("Attaching payslip to resume for employee:", employeeId);
+    console.log("Attaching payslip to employee account:", employeeId);
     
     // Generate the payslip and create payroll record
     const result = await generatePayslipPDF(employeeId, employeeData, true);
@@ -177,11 +196,11 @@ export const attachPayslipToResume = async (
       path: result.path
     };
   } catch (error) {
-    console.error('Error attaching payslip to resume:', error);
+    console.error('Error attaching payslip to employee:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
-      message: 'Failed to attach payslip to resume'
+      message: 'Failed to attach payslip to employee'
     };
   }
 };

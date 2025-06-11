@@ -70,7 +70,7 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
     setIsProcessing(prev => ({ ...prev, [employee.id]: true }));
     
     try {
-      console.log("Attaching payslip to resume for:", employee.name, employee.id);
+      console.log("Attaching payslip to employee account for:", employee.name, employee.id);
       
       const result = await attachPayslipToResume(employee.id, {
         name: employee.name,
@@ -94,7 +94,7 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
         });
       }
     } catch (error) {
-      console.error('Error attaching payslip to resume:', error);
+      console.error('Error attaching payslip to employee account:', error);
       toast({
         title: "Error attaching payslip",
         description: String(error),
