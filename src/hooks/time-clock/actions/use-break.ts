@@ -24,11 +24,12 @@ export const useBreak = (
       // Log time information for debugging
       debugTimeInfo('Break start time', now);
       
-      // Update the record with break start time using ISO string
+      // Update the record with break start time and set on_break flag
       const { error } = await supabase
         .from('attendance')
         .update({
           break_start: now.toISOString(), // Store as ISO string to preserve timezone information
+          on_break: true // Set the on_break flag for reliable status detection
         })
         .eq('id', currentRecord);
 
@@ -42,6 +43,7 @@ export const useBreak = (
         return;
       }
 
+      console.log('Break started successfully at:', now.toLocaleString());
       setStatus('on-break');
       toast({
         title: "Break Started",
@@ -71,7 +73,7 @@ export const useBreak = (
       // Get break start time to calculate duration
       const { data: recordData, error: fetchError } = await supabase
         .from('attendance')
-        .select('break_start')
+        .select('break_start, break_minutes')
         .eq('id', currentRecord)
         .single();
         
@@ -98,14 +100,16 @@ export const useBreak = (
       console.log('Parsed break start time:', breakStartTime.toLocaleString());
       
       // Calculate break duration preserving timezone information
-      const breakMinutes = Math.round((now.getTime() - breakStartTime.getTime()) / (1000 * 60));
+      const currentBreakMinutes = Math.round((now.getTime() - breakStartTime.getTime()) / (1000 * 60));
+      const totalBreakMinutes = (recordData.break_minutes || 0) + currentBreakMinutes;
       
       // Update the record with break end calculation
       const { error } = await supabase
         .from('attendance')
         .update({
           break_start: null,
-          break_minutes: breakMinutes
+          on_break: false, // Clear the on_break flag
+          break_minutes: totalBreakMinutes
         })
         .eq('id', currentRecord);
 
@@ -119,10 +123,11 @@ export const useBreak = (
         return;
       }
 
+      console.log('Break ended successfully. Duration:', currentBreakMinutes, 'minutes');
       setStatus('clocked-in');
       toast({
         title: "Break Ended",
-        description: `Break ended after ${breakMinutes} minutes`,
+        description: `Break ended after ${currentBreakMinutes} minutes`,
       });
     } catch (error) {
       console.error('Error in handleBreakEnd:', error);

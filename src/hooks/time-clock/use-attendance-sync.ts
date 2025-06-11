@@ -29,26 +29,55 @@ export const useAttendanceSync = (onSync: SyncCallback) => {
         (payload) => {
           console.log('Attendance record changed:', payload);
           console.log('Change detected at device time:', new Date().toLocaleString());
+          console.log('Payload details:', {
+            eventType: payload.eventType,
+            old: payload.old,
+            new: payload.new
+          });
           
           // Call the sync callback whenever an attendance record changes
-          onSync();
+          // Add a small delay to ensure database consistency
+          setTimeout(() => {
+            onSync();
+          }, 500);
           
           // Show toast for certain updates
           if (payload.eventType === 'UPDATE') {
-            if (payload.new?.status === 'Auto-logout') {
+            const newRecord = payload.new as any;
+            const oldRecord = payload.old as any;
+            
+            if (newRecord?.status === 'Auto-logout') {
               toast({
                 title: "Auto Clock-Out Detected",
                 description: "You were automatically clocked out from another device or session.",
               });
-            } else if (payload.new?.active_session === false && payload.old?.active_session === true) {
+            } else if (newRecord?.active_session === false && oldRecord?.active_session === true) {
               toast({
                 title: "Status Updated",
                 description: "Your clock-out was registered.",
               });
-            } else if (payload.new?.active_session === true && payload.old?.active_session === false) {
+            } else if (newRecord?.active_session === true && oldRecord?.active_session === false) {
               toast({
                 title: "Status Updated",
                 description: "Your clock-in was registered.",
+              });
+            } else if (newRecord?.break_start && !oldRecord?.break_start) {
+              toast({
+                title: "Break Started",
+                description: "Your break has been recorded.",
+              });
+            } else if (!newRecord?.break_start && oldRecord?.break_start && newRecord?.break_minutes !== oldRecord?.break_minutes) {
+              toast({
+                title: "Break Ended",
+                description: "Your break has been completed and recorded.",
+              });
+            }
+          } else if (payload.eventType === 'INSERT') {
+            const newRecord = payload.new as any;
+            if (newRecord?.active_session === true) {
+              toast({
+                title: "Clock-In Recorded",
+                description: "Your work session has started.",
               });
             }
           }

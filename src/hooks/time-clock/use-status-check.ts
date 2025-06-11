@@ -48,11 +48,15 @@ export const useStatusCheck = (
           setCurrentRecord(activeRecord.id);
           
           // Check if on break - look for break_start without break_end
-          if (activeRecord.on_break === true || (activeRecord.break_start && !activeRecord.check_out)) {
-            console.log('Employee is on break');
+          // Also check the on_break flag for more reliable status detection
+          if (activeRecord.break_start && !activeRecord.check_out) {
+            console.log('Employee is on break - break_start exists and no check_out');
+            setStatus('on-break');
+          } else if (activeRecord.on_break === true) {
+            console.log('Employee is on break - on_break flag is true');
             setStatus('on-break');
           } else {
-            console.log('Employee is clocked in');
+            console.log('Employee is clocked in - active session without break');
             setStatus('clocked-in');
           }
         } else {
@@ -71,7 +75,7 @@ export const useStatusCheck = (
           console.log('Today records:', todayRecords);
           
           // No active session
-          console.log('No active session found');
+          console.log('No active session found - employee is clocked out');
           setStatus('clocked-out');
           setCurrentRecord(null);
         }
@@ -85,8 +89,9 @@ export const useStatusCheck = (
     // Check status immediately when component mounts
     checkCurrentStatus();
     
-    // Set up a periodic check every 30 seconds to ensure status stays in sync
-    const intervalId = setInterval(checkCurrentStatus, 30000);
+    // Set up a more frequent check every 10 seconds to ensure status stays in sync
+    // This helps catch status changes made from other devices or sessions
+    const intervalId = setInterval(checkCurrentStatus, 10000);
     
     return () => {
       clearInterval(intervalId);
