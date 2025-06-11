@@ -139,11 +139,12 @@ export function useUploadDocument() {
           
         console.log("File public URL:", urlData.publicUrl);
         
-        // Save document metadata with new schema
+        // Save document metadata with new schema - fix the name field issue
         const { data, error: dbError } = await supabase
           .from('documents')
           .insert({
             employee_id: employeeId,
+            name: file.name, // Set the required name field
             title: file.name,
             category: documentType,
             document_type: documentType, // Keep for backward compatibility
