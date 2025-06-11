@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import jsPDF from 'jspdf';
 
@@ -11,6 +10,9 @@ interface PayslipData {
   payPeriod?: string;
   overtimeHours?: number;
   contractualHours?: number;
+  currency?: string;
+  employeeId?: string;
+  address?: string;
 }
 
 export const generatePayslipPDF = async (
@@ -63,22 +65,25 @@ export const generatePayslipPDF = async (
     const totalDeductions = taxDeduction + niDeduction + pensionDeduction;
     const netPay = grossPay - totalDeductions;
     
+    // Get currency symbol
+    const currencySymbol = employeeData.currency === 'GBP' ? '£' : '$';
+    
     // Payment breakdown
     doc.text('EARNINGS:', 20, 150);
-    doc.text(`Basic Salary: £${baseSalary.toFixed(2)}`, 30, 160);
+    doc.text(`Basic Salary: ${currencySymbol}${baseSalary.toFixed(2)}`, 30, 160);
     if (overtimeHours > 0) {
-      doc.text(`Overtime (${overtimeHours}h @ £${(hourlyRate * overtimeRate).toFixed(2)}/h): £${overtimePay.toFixed(2)}`, 30, 170);
+      doc.text(`Overtime (${overtimeHours}h @ ${currencySymbol}${(hourlyRate * overtimeRate).toFixed(2)}/h): ${currencySymbol}${overtimePay.toFixed(2)}`, 30, 170);
     }
-    doc.text(`Gross Pay: £${grossPay.toFixed(2)}`, 30, 180);
+    doc.text(`Gross Pay: ${currencySymbol}${grossPay.toFixed(2)}`, 30, 180);
     
     doc.text('DEDUCTIONS:', 20, 200);
-    doc.text(`Tax: £${taxDeduction.toFixed(2)}`, 30, 210);
-    doc.text(`National Insurance: £${niDeduction.toFixed(2)}`, 30, 220);
-    doc.text(`Pension: £${pensionDeduction.toFixed(2)}`, 30, 230);
-    doc.text(`Total Deductions: £${totalDeductions.toFixed(2)}`, 30, 240);
+    doc.text(`Tax: ${currencySymbol}${taxDeduction.toFixed(2)}`, 30, 210);
+    doc.text(`National Insurance: ${currencySymbol}${niDeduction.toFixed(2)}`, 30, 220);
+    doc.text(`Pension: ${currencySymbol}${pensionDeduction.toFixed(2)}`, 30, 230);
+    doc.text(`Total Deductions: ${currencySymbol}${totalDeductions.toFixed(2)}`, 30, 240);
     
     doc.setFontSize(14);
-    doc.text(`NET PAY: £${netPay.toFixed(2)}`, 20, 260);
+    doc.text(`NET PAY: ${currencySymbol}${netPay.toFixed(2)}`, 20, 260);
     
     // Generate filename
     const filename = `payslip_${employeeData.name.replace(/\s+/g, '_')}_${monthYear.replace(/\s+/g, '_')}.pdf`;
