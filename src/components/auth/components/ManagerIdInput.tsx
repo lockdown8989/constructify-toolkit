@@ -3,7 +3,7 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Refresh, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { RefreshCw, CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 type ManagerIdInputProps = {
   managerId: string;
@@ -75,7 +75,7 @@ export const ManagerIdInput = ({
             disabled={disabled}
             className="shrink-0"
           >
-            <Refresh className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" />
           </Button>
         )}
       </div>
