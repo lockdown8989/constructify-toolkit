@@ -103,9 +103,6 @@ export function useUploadDocument() {
       try {
         console.log("Starting document upload:", { documentType, employeeId, fileName: file.name });
         
-        // First check if employee-documents bucket exists
-        await checkStorageBucket();
-        
         // Format file path
         const fileExt = file.name.split('.').pop();
         const timestamp = new Date().getTime();
@@ -115,7 +112,7 @@ export function useUploadDocument() {
         console.log("Uploading file to path:", filePath);
         
         // Upload file
-        const { error: uploadError } = await supabase.storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
           .from('employee-documents')
           .upload(filePath, file, {
             cacheControl: '3600',
@@ -124,8 +121,10 @@ export function useUploadDocument() {
         
         if (uploadError) {
           console.error('Upload error:', uploadError);
-          throw uploadError;
+          throw new Error(`Upload failed: ${uploadError.message}`);
         }
+        
+        console.log('File uploaded successfully:', uploadData);
         
         // Get file size in KB or MB
         const sizeInBytes = file.size;
@@ -151,14 +150,19 @@ export function useUploadDocument() {
             path: filePath,
             url: urlData.publicUrl,
             size: sizeString,
-            uploaded_by: user?.id || null
+            uploaded_by: user?.id || null,
+            file_type: file.type || 'application/octet-stream'
           })
           .select()
           .single();
         
         if (dbError) {
           console.error('Database error:', dbError);
-          throw dbError;
+          // If database insert fails, clean up the uploaded file
+          await supabase.storage
+            .from('employee-documents')
+            .remove([filePath]);
+          throw new Error(`Database error: ${dbError.message}`);
         }
         
         console.log("Document metadata saved successfully:", data);
@@ -185,24 +189,6 @@ export function useUploadDocument() {
       });
     }
   });
-}
-
-// Helper function to check if employee-documents bucket exists
-async function checkStorageBucket() {
-  try {
-    // Try to list files in the bucket to check if it exists
-    const { error } = await supabase.storage
-      .from('employee-documents')
-      .list('', { limit: 1 });
-    
-    if (error) {
-      console.error('Error checking storage bucket:', error);
-      throw new Error('Failed to access employee-documents bucket. Please create the bucket first.');
-    }
-  } catch (error) {
-    console.error('Failed to check storage bucket:', error);
-    throw error;
-  }
 }
 
 export function useDeleteDocument() {
