@@ -41,40 +41,52 @@ export const useAttendanceSync = (onSync: SyncCallback) => {
             onSync();
           }, 500);
           
-          // Show toast for certain updates
+          // Show toast for certain updates based on current_status
           if (payload.eventType === 'UPDATE') {
             const newRecord = payload.new as any;
             const oldRecord = payload.old as any;
             
+            // Use current_status for more accurate notifications
+            if (newRecord?.current_status !== oldRecord?.current_status) {
+              switch (newRecord?.current_status) {
+                case 'clocked-in':
+                  if (oldRecord?.current_status === 'clocked-out') {
+                    toast({
+                      title: "Clocked In",
+                      description: "You have been clocked in successfully.",
+                    });
+                  } else if (oldRecord?.current_status === 'on-break') {
+                    toast({
+                      title: "Break Ended",
+                      description: "Your break has been completed and you're back to work.",
+                    });
+                  }
+                  break;
+                case 'clocked-out':
+                  toast({
+                    title: "Clocked Out",
+                    description: "You have been clocked out successfully.",
+                  });
+                  break;
+                case 'on-break':
+                  toast({
+                    title: "Break Started",
+                    description: "Your break has been recorded.",
+                  });
+                  break;
+              }
+            }
+            
+            // Handle auto-logout
             if (newRecord?.status === 'Auto-logout') {
               toast({
                 title: "Auto Clock-Out Detected",
                 description: "You were automatically clocked out from another device or session.",
               });
-            } else if (newRecord?.active_session === false && oldRecord?.active_session === true) {
-              toast({
-                title: "Status Updated",
-                description: "Your clock-out was registered.",
-              });
-            } else if (newRecord?.active_session === true && oldRecord?.active_session === false) {
-              toast({
-                title: "Status Updated",
-                description: "Your clock-in was registered.",
-              });
-            } else if (newRecord?.break_start && !oldRecord?.break_start) {
-              toast({
-                title: "Break Started",
-                description: "Your break has been recorded.",
-              });
-            } else if (!newRecord?.break_start && oldRecord?.break_start && newRecord?.break_minutes !== oldRecord?.break_minutes) {
-              toast({
-                title: "Break Ended",
-                description: "Your break has been completed and recorded.",
-              });
             }
           } else if (payload.eventType === 'INSERT') {
             const newRecord = payload.new as any;
-            if (newRecord?.active_session === true) {
+            if (newRecord?.current_status === 'clocked-in') {
               toast({
                 title: "Clock-In Recorded",
                 description: "Your work session has started.",

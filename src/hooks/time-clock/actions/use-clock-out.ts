@@ -63,18 +63,19 @@ export const useClockOut = (
         overtimeMinutes
       });
       
-      // Update the record with clock-out data using ISO string
+      // Update the record with clock-out data and proper current_status
       const { error } = await supabase
         .from('attendance')
         .update({
-          check_out: now.toISOString(), // Store as ISO string to preserve timezone information
+          check_out: now.toISOString(),
           active_session: false,
-          working_minutes: regularMinutes, // Regular minutes
+          current_status: 'clocked-out', // Explicitly set the current status
+          working_minutes: regularMinutes,
           overtime_minutes: overtimeMinutes,
           location,
           device_info: deviceInfo,
-          on_break: false, // Clear break status
-          break_start: null // Clear break start time
+          on_break: false,
+          break_start: null
         })
         .eq('id', currentRecord);
 

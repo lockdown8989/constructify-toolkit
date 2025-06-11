@@ -24,12 +24,13 @@ export const useBreak = (
       // Log time information for debugging
       debugTimeInfo('Break start time', now);
       
-      // Update the record with break start time and set on_break flag
+      // Update the record with break start time, set on_break flag and current_status
       const { error } = await supabase
         .from('attendance')
         .update({
-          break_start: now.toISOString(), // Store as ISO string to preserve timezone information
-          on_break: true // Set the on_break flag for reliable status detection
+          break_start: now.toISOString(),
+          on_break: true,
+          current_status: 'on-break' // Explicitly set the current status
         })
         .eq('id', currentRecord);
 
@@ -103,12 +104,13 @@ export const useBreak = (
       const currentBreakMinutes = Math.round((now.getTime() - breakStartTime.getTime()) / (1000 * 60));
       const totalBreakMinutes = (recordData.break_minutes || 0) + currentBreakMinutes;
       
-      // Update the record with break end calculation
+      // Update the record with break end calculation and current_status
       const { error } = await supabase
         .from('attendance')
         .update({
           break_start: null,
-          on_break: false, // Clear the on_break flag
+          on_break: false,
+          current_status: 'clocked-in', // Explicitly set back to clocked-in
           break_minutes: totalBreakMinutes
         })
         .eq('id', currentRecord);

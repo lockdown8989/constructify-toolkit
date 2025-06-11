@@ -20,6 +20,7 @@ export type Database = {
           break_start: string | null
           check_in: string | null
           check_out: string | null
+          current_status: string | null
           date: string | null
           device_identifier: string | null
           device_info: string | null
@@ -51,6 +52,7 @@ export type Database = {
           break_start?: string | null
           check_in?: string | null
           check_out?: string | null
+          current_status?: string | null
           date?: string | null
           device_identifier?: string | null
           device_info?: string | null
@@ -82,6 +84,7 @@ export type Database = {
           break_start?: string | null
           check_in?: string | null
           check_out?: string | null
+          current_status?: string | null
           date?: string | null
           device_identifier?: string | null
           device_info?: string | null

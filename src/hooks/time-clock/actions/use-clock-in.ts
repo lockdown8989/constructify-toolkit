@@ -41,7 +41,10 @@ export const useClockIn = (
       console.log('Deactivating any existing active sessions...');
       const { error: deactivateError } = await supabase
         .from('attendance')
-        .update({ active_session: false })
+        .update({ 
+          active_session: false,
+          current_status: 'clocked-out'
+        })
         .eq('employee_id', employeeId)
         .eq('active_session', true);
         
@@ -54,10 +57,10 @@ export const useClockIn = (
       console.log('Checking for existing record for today...');
       const { data: existingRecords, error: checkError } = await supabase
         .from('attendance')
-        .select('id, active_session, check_in, check_out')
+        .select('id, active_session, check_in, check_out, current_status')
         .eq('employee_id', employeeId)
         .eq('date', today)
-        .order('check_in', { ascending: false }); // Use check_in instead of created_at
+        .order('check_in', { ascending: false });
         
       if (checkError) {
         console.error('Error checking for existing records:', checkError);
@@ -80,19 +83,21 @@ export const useClockIn = (
       
       console.log('Creating new attendance record...');
       
-      // Insert new attendance record with ISO string time to preserve timezone
+      // Insert new attendance record with proper current_status
       const insertData = {
         employee_id: employeeId,
-        check_in: now.toISOString(), // Store as ISO string to preserve timezone information
+        check_in: now.toISOString(),
         date: today,
         status: 'Present',
         location,
         device_info: deviceInfo,
         active_session: true,
+        current_status: 'clocked-in', // Explicitly set the current status
         device_identifier: deviceIdentifier,
         notes: '',
         attendance_status: 'Present' as const,
-        manager_initiated: false
+        manager_initiated: false,
+        on_break: false
       };
       
       console.log('Insert data:', insertData);

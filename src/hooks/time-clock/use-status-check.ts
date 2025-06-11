@@ -21,16 +21,15 @@ export const useStatusCheck = (
         
         console.log('Checking for date:', today, 'Current time:', now.toLocaleString());
         
-        // Check if there's an active session for today
-        // For personal time clock, only consider self-initiated sessions (not manager initiated)
+        // Check if there's an active session for today using the new current_status column
         const { data: records, error } = await supabase
           .from('attendance')
           .select('*')
           .eq('employee_id', employeeId)
           .eq('date', today)
           .eq('active_session', true)
-          .is('manager_initiated', false) // Explicitly look for non-manager initiated sessions
-          .order('check_in', { ascending: false }); // Order by check_in time instead of created_at
+          .is('manager_initiated', false)
+          .order('check_in', { ascending: false });
           
         if (error) {
           console.error('Error checking time clock status:', error);
@@ -43,24 +42,28 @@ export const useStatusCheck = (
         const activeRecord = records && records.length > 0 ? records[0] : null;
         
         if (activeRecord) {
-          // We have an active session
           console.log('Active session found:', activeRecord);
           setCurrentRecord(activeRecord.id);
           
-          // Check if on break - look for break_start without break_end
-          // Also check the on_break flag for more reliable status detection
-          if (activeRecord.break_start && !activeRecord.check_out) {
-            console.log('Employee is on break - break_start exists and no check_out');
-            setStatus('on-break');
-          } else if (activeRecord.on_break === true) {
-            console.log('Employee is on break - on_break flag is true');
-            setStatus('on-break');
+          // Use the current_status column first, then fall back to existing logic
+          if (activeRecord.current_status) {
+            console.log('Using current_status from database:', activeRecord.current_status);
+            setStatus(activeRecord.current_status as TimeClockStatus);
           } else {
-            console.log('Employee is clocked in - active session without break');
-            setStatus('clocked-in');
+            // Fallback to existing logic if current_status is not set
+            if (activeRecord.break_start && !activeRecord.check_out) {
+              console.log('Employee is on break - break_start exists and no check_out');
+              setStatus('on-break');
+            } else if (activeRecord.on_break === true) {
+              console.log('Employee is on break - on_break flag is true');
+              setStatus('on-break');
+            } else {
+              console.log('Employee is clocked in - active session without break');
+              setStatus('clocked-in');
+            }
           }
         } else {
-          // No active session - check if there are any records for today that are not active
+          // No active session - check if there are any records for today
           const { data: todayRecords, error: todayError } = await supabase
             .from('attendance')
             .select('*')
@@ -89,9 +92,8 @@ export const useStatusCheck = (
     // Check status immediately when component mounts
     checkCurrentStatus();
     
-    // Set up a more frequent check every 10 seconds to ensure status stays in sync
-    // This helps catch status changes made from other devices or sessions
-    const intervalId = setInterval(checkCurrentStatus, 10000);
+    // Set up a more frequent check every 5 seconds for better responsiveness
+    const intervalId = setInterval(checkCurrentStatus, 5000);
     
     return () => {
       clearInterval(intervalId);
