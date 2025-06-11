@@ -18,18 +18,27 @@ export const PayslipList: React.FC<PayslipListProps> = ({ employeeId }) => {
   const { toast } = useToast();
   const [isDownloading, setIsDownloading] = useState<Record<string, boolean>>({});
   
-  const { data: payslips, isLoading, error } = useQuery({
+  const { data: payslips, isLoading, error, refetch } = useQuery({
     queryKey: ['employee-payslips', employeeId],
     queryFn: async () => {
+      console.log("Fetching payslips for employee:", employeeId);
+      
       const { data, error } = await supabase
         .from('payroll')
         .select('*')
         .eq('employee_id', employeeId)
         .order('payment_date', { ascending: false });
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching payslips:', error);
+        throw error;
+      }
+      
+      console.log("Fetched payslips:", data);
       return data || [];
-    }
+    },
+    refetchInterval: 30000, // Refetch every 30 seconds to get latest data
+    staleTime: 0 // Always consider data stale to ensure fresh fetches
   });
   
   const handleDownloadPayslip = async (payslipId: string, paymentDate: string) => {
@@ -85,6 +94,11 @@ export const PayslipList: React.FC<PayslipListProps> = ({ employeeId }) => {
     }
   };
   
+  // Force refetch when component mounts or employeeId changes
+  React.useEffect(() => {
+    refetch();
+  }, [employeeId, refetch]);
+  
   if (isLoading) {
     return (
       <Card className="p-4">
@@ -105,6 +119,14 @@ export const PayslipList: React.FC<PayslipListProps> = ({ employeeId }) => {
         <p className="text-sm text-red-500">
           Failed to load payslips. Please try again later.
         </p>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => refetch()}
+          className="mt-2"
+        >
+          Retry
+        </Button>
       </Card>
     );
   }
@@ -116,13 +138,30 @@ export const PayslipList: React.FC<PayslipListProps> = ({ employeeId }) => {
         <p className="text-sm text-gray-500">
           No payslips available yet.
         </p>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => refetch()}
+          className="mt-2"
+        >
+          Check for updates
+        </Button>
       </Card>
     );
   }
   
   return (
     <Card className="p-4">
-      <h3 className="text-lg font-medium mb-4">Recent Payslips</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-medium">Recent Payslips</h3>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => refetch()}
+        >
+          Refresh
+        </Button>
+      </div>
       <div className="space-y-2">
         {payslips.map((payslip) => {
           // Format the payment date
@@ -138,9 +177,11 @@ export const PayslipList: React.FC<PayslipListProps> = ({ employeeId }) => {
             >
               <div>
                 <h4 className="font-medium">{monthYear}</h4>
-                <p className="text-sm text-gray-500">
-                  Payment Date: {format(paymentDate, 'dd.MM.yyyy')}
-                </p>
+                <div className="text-sm text-gray-500 space-y-1">
+                  <p>Payment Date: {format(paymentDate, 'dd.MM.yyyy')}</p>
+                  <p>Net Pay: £{payslip.salary_paid?.toFixed(2) || '0.00'}</p>
+                  <p className="text-xs">Status: {payslip.payment_status || 'Processed'}</p>
+                </div>
               </div>
               <Button 
                 variant="ghost" 

@@ -70,18 +70,21 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
     setIsProcessing(prev => ({ ...prev, [employee.id]: true }));
     
     try {
+      console.log("Attaching payslip to resume for:", employee.name, employee.id);
+      
       const result = await attachPayslipToResume(employee.id, {
         name: employee.name,
         title: employee.title,
         salary: typeof employee.salary === 'number' ? employee.salary.toString() : employee.salary,
         department: employee.department,
-        paymentDate: employee.paymentDate
+        paymentDate: employee.paymentDate || new Date().toISOString().split('T')[0],
+        payPeriod: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
       });
       
       if (result.success) {
         toast({
-          title: "Payslip attached",
-          description: result.message,
+          title: "Payslip attached successfully",
+          description: `${employee.name} can now see their latest payslip in their account`,
         });
       } else {
         toast({
@@ -140,13 +143,13 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
               <th className="pb-4 font-medium">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filteredEmployees.map(employee => (
+          <tbody>
+            {filteredEmployees.map((employee) => (
               <TableRow
                 key={employee.id}
                 employee={employee}
                 isProcessing={isProcessing[employee.id] || false}
-                onSelectEmployee={onSelectEmployee || (() => {})}
+                onSelectEmployee={onSelectEmployee}
                 onStatusChange={handleStatusChange}
                 onDownloadPayslip={handleDownloadPayslip}
                 onAttachToResume={handleAttachToResume}
