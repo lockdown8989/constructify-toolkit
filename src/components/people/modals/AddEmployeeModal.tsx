@@ -17,6 +17,7 @@ interface AddEmployeeModalProps {
   departments: string[];
   sites: string[];
   employeeToEdit?: Employee;
+  defaultLocation?: string;
 }
 
 const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
@@ -25,6 +26,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   departments = [],
   sites = [],
   employeeToEdit,
+  defaultLocation,
 }) => {
   // Update the title and button text based on whether we're editing or adding
   const isEditMode = !!employeeToEdit;
@@ -38,6 +40,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   const { form, onSubmit, isSubmitting, error } = useEmployeeForm({
     onSuccess: () => onOpenChange(false),
     employeeToEdit,
+    defaultLocation,
   });
 
   const handleBackButtonClick = () => {
@@ -63,7 +66,9 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               <DialogDescription className="text-sm text-gray-500 mt-1">
                 {isEditMode 
                   ? "Edit the details of this team member."
-                  : "Enter the details of the new team member."}
+                  : defaultLocation 
+                    ? `Enter the details of the new team member for ${defaultLocation}.`
+                    : "Enter the details of the new team member."}
               </DialogDescription>
             </div>
           </div>

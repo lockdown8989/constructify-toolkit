@@ -50,19 +50,21 @@ const RestaurantSchedule = () => {
   const filteredEmployees = useMemo(() => {
     let filtered = employees;
     
-    // Filter by location
-    filtered = filtered.filter(employee => 
-      !employee.location || employee.location === locationName
-    );
+    // Filter by location - check if employee has location property and filter accordingly
+    filtered = filtered.filter(employee => {
+      const employeeLocation = (employee as any).location;
+      return !employeeLocation || employeeLocation === locationName;
+    });
     
     // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(employee =>
-        employee.name.toLowerCase().includes(query) ||
-        employee.role.toLowerCase().includes(query) ||
-        (employee.location && employee.location.toLowerCase().includes(query))
-      );
+      filtered = filtered.filter(employee => {
+        const employeeLocation = (employee as any).location;
+        return employee.name.toLowerCase().includes(query) ||
+               employee.role.toLowerCase().includes(query) ||
+               (employeeLocation && employeeLocation.toLowerCase().includes(query));
+      });
     }
     
     return filtered;

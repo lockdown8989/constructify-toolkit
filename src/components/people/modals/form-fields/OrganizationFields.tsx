@@ -4,6 +4,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { EmployeeFormValues } from '../employee-form-schema';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useLocations } from '@/hooks/use-locations';
 
 interface OrganizationFieldsProps {
   form: UseFormReturn<EmployeeFormValues>;
@@ -16,6 +17,8 @@ const OrganizationFields: React.FC<OrganizationFieldsProps> = ({
   departments = [],
   sites = []
 }) => {
+  const { data: locations = [] } = useLocations();
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
@@ -61,11 +64,11 @@ const OrganizationFields: React.FC<OrganizationFieldsProps> = ({
         name="site"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Location</FormLabel>
+            <FormLabel>Site/Office</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select location" />
+                  <SelectValue placeholder="Select site" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -87,6 +90,36 @@ const OrganizationFields: React.FC<OrganizationFieldsProps> = ({
                     <SelectItem value="New York">New York</SelectItem>
                   </>
                 )}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="location"
+        render={({ field }) => (
+          <FormItem className="md:col-span-2">
+            <FormLabel>Schedule Location</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select schedule location" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {locations.map((location) => (
+                  <SelectItem key={location.id} value={location.name}>
+                    {location.name}
+                    {location.address && (
+                      <span className="text-sm text-gray-500 ml-2">
+                        - {location.address}
+                      </span>
+                    )}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <FormMessage />
