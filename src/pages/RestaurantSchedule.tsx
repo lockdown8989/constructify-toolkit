@@ -23,6 +23,7 @@ const RestaurantSchedule = () => {
   const [syncingData, setSyncingData] = useState(false);
   const [locationName, setLocationName] = useState("Main Location");
   const [showEmployeePanel, setShowEmployeePanel] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   
   const { 
     employees,
@@ -45,6 +46,28 @@ const RestaurantSchedule = () => {
   const isMobile = useIsMobile();
   const { handleAddNote, handleAddBreak } = useShiftUtilities(updateShift);
   
+  // Filter employees based on search query and location
+  const filteredEmployees = useMemo(() => {
+    let filtered = employees;
+    
+    // Filter by location
+    filtered = filtered.filter(employee => 
+      !employee.location || employee.location === locationName
+    );
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(employee =>
+        employee.name.toLowerCase().includes(query) ||
+        employee.role.toLowerCase().includes(query) ||
+        (employee.location && employee.location.toLowerCase().includes(query))
+      );
+    }
+    
+    return filtered;
+  }, [employees, searchQuery, locationName]);
+
   // Create a callback to handle successful shift creation
   const handleShiftCreated = useCallback(() => {
     // Force a refresh of the schedule data
@@ -83,19 +106,19 @@ const RestaurantSchedule = () => {
     }, 1500);
   };
   
-  // Organize shifts by employee and day for the role sections
+  // Organize shifts by employee and day for the role sections (use filtered employees)
   const organizedShifts = useMemo(() => {
     const result: Record<string, Record<string, Shift[]>> = {};
     
-    // Initialize the structure
-    employees.forEach(employee => {
+    // Initialize the structure with filtered employees
+    filteredEmployees.forEach(employee => {
       result[employee.id] = {};
       days.forEach(day => {
         result[employee.id][day] = [];
       });
     });
     
-    // Populate with shifts
+    // Populate with shifts (only for filtered employees)
     shifts.forEach(shift => {
       if (result[shift.employeeId] && result[shift.employeeId][shift.day]) {
         result[shift.employeeId][shift.day].push(shift);
@@ -103,7 +126,7 @@ const RestaurantSchedule = () => {
     });
     
     return result;
-  }, [employees, shifts]);
+  }, [filteredEmployees, shifts]);
   
   // Handle assigning an open shift
   const handleAssignOpenShift = (openShiftId: string, employeeId?: string) => {
@@ -126,6 +149,10 @@ const RestaurantSchedule = () => {
   const toggleEmployeePanel = () => {
     setShowEmployeePanel(!showEmployeePanel);
   };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
   
   if (isLoadingEmployeeData) {
     return (
@@ -147,6 +174,8 @@ const RestaurantSchedule = () => {
           onSyncCalendar={syncWithCalendar}
           onSyncEmployeeData={syncEmployeeData}
           isSyncing={syncingData}
+          onSearch={handleSearch}
+          searchQuery={searchQuery}
         />
       </div>
       
@@ -161,19 +190,36 @@ const RestaurantSchedule = () => {
             {showEmployeePanel ? "Hide" : "Show"} Employees
             <LayoutGrid className="h-4 w-4" />
           </Button>
+          {searchQuery && (
+            <div className="text-sm text-gray-600">
+              Showing {filteredEmployees.length} of {employees.length} employees
+            </div>
+          )}
         </div>
         <OpenShiftActions addOpenShift={addOpenShift} />
       </div>
       
-      {employees.length === 0 && !isLoadingEmployeeData ? (
+      {filteredEmployees.length === 0 && !isLoadingEmployeeData ? (
         <Card className="p-8 text-center mb-6">
           <div className="flex flex-col items-center gap-2">
             <AlertCircle className="h-10 w-10 text-amber-500" />
-            <h3 className="text-lg font-semibold mt-2">No Employees Found</h3>
+            <h3 className="text-lg font-semibold mt-2">
+              {searchQuery ? "No employees found" : "No Employees Found"}
+            </h3>
             <p className="text-gray-600 max-w-md mx-auto mb-4">
-              There are no employees available to schedule. Add employees to get started with scheduling.
+              {searchQuery 
+                ? `No employees match "${searchQuery}" at ${locationName}. Try adjusting your search.`
+                : "There are no employees available to schedule. Add employees to get started with scheduling."
+              }
             </p>
-            <Button variant="default">Add Employees</Button>
+            {searchQuery && (
+              <Button variant="outline" onClick={() => setSearchQuery("")}>
+                Clear Search
+              </Button>
+            )}
+            {!searchQuery && (
+              <Button variant="default">Add Employees</Button>
+            )}
           </div>
         </Card>
       ) : (
@@ -181,7 +227,7 @@ const RestaurantSchedule = () => {
           {/* Employee list panel */}
           {showEmployeePanel && !isMobile && (
             <Card className="overflow-hidden h-fit bg-white rounded-xl shadow-sm">
-              <EmployeeList employees={employees} />
+              <EmployeeList employees={filteredEmployees} />
             </Card>
           )}
           
@@ -190,7 +236,7 @@ const RestaurantSchedule = () => {
             <WeeklyGrid 
               weekStats={weekStats}
               openShifts={openShifts as OpenShiftType[]} 
-              employees={employees}
+              employees={filteredEmployees}
               daysDisplayNames={isMobile 
                 ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] 
                 : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
@@ -209,6 +255,11 @@ const RestaurantSchedule = () => {
         <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
           <Calendar className="h-5 w-5" />
           Weekly Schedule by Role
+          {searchQuery && (
+            <span className="text-sm font-normal text-gray-500">
+              (Filtered by "{searchQuery}")
+            </span>
+          )}
         </h2>
         
         <RolesSectionList

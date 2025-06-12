@@ -1,11 +1,13 @@
-import React from 'react';
-import { ChevronDown, Calendar, Filter, Menu, Search } from 'lucide-react';
+
+import React, { useState } from 'react';
+import { Calendar, Filter, Menu, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ViewType } from '@/components/schedule/types/calendar-types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ViewMode } from '@/types/restaurant-schedule';
+import LocationSelector from './LocationSelector';
 
 interface ScheduleHeaderProps {
   locationName: string;
@@ -35,10 +37,13 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
   isSyncing = false
 }) => {
   const isMobile = useIsMobile();
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newQuery = e.target.value;
+    setLocalSearchQuery(newQuery);
     if (onSearch) {
-      onSearch(e.target.value);
+      onSearch(newQuery);
     }
   };
   
@@ -94,10 +99,10 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center p-3 sm:p-4 gap-3 border-b border-gray-200">
         <div className="flex items-center flex-grow">
           <span className="text-gray-500 mr-2 hidden sm:inline">Location:</span>
-          <div className="flex items-center cursor-pointer hover:bg-gray-50 px-2 py-1 rounded-md">
-            <span className="font-medium">{locationName}</span>
-            <ChevronDown className="h-4 w-4 ml-1 text-gray-500" />
-          </div>
+          <LocationSelector 
+            locationName={locationName}
+            setLocationName={setLocationName}
+          />
         </div>
         
         <div className="relative w-full sm:w-64">
@@ -105,7 +110,7 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
           <Input
             placeholder="Search employees..."
             className="pl-9 rounded-full border-gray-200"
-            value={searchQuery}
+            value={localSearchQuery}
             onChange={handleSearchChange}
           />
         </div>
