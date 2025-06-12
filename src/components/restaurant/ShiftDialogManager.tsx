@@ -25,10 +25,27 @@ const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: Shift
 
   const handleFormSubmit = async (formData: any) => {
     if (shiftDialog.mode === 'add' && shiftDialog.employeeId && shiftDialog.day) {
+      // Create a valid date object from the day and time
+      const today = new Date();
+      const dayMap: Record<string, number> = {
+        monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0
+      };
+      
+      // Get the date of the next occurrence of the day
+      const dayOfWeek = dayMap[shiftDialog.day.toLowerCase()];
+      const daysUntilNext = (dayOfWeek - today.getDay() + 7) % 7;
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() + daysUntilNext);
+      
+      // Create the shift for the UI immediately
       const newShift = {
         employeeId: shiftDialog.employeeId,
         day: shiftDialog.day,
-        ...formData
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        role: formData.role || 'Shift',
+        notes: formData.notes || '',
+        location: formData.location || ''
       };
       
       // Add shift to the UI immediately
@@ -55,18 +72,6 @@ const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: Shift
             .single();
 
           const managerName = managerError ? 'Manager' : (manager?.name || 'Manager');
-          
-          // Create a valid date object from the day and time
-          const today = new Date();
-          const dayMap: Record<string, number> = {
-            monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0
-          };
-          
-          // Get the date of the next occurrence of the day
-          const dayOfWeek = dayMap[shiftDialog.day.toLowerCase()];
-          const daysUntilNext = (dayOfWeek - today.getDay() + 7) % 7;
-          const targetDate = new Date(today);
-          targetDate.setDate(today.getDate() + daysUntilNext);
           
           // Set the hours and minutes from the time strings
           const startTimeParts = formData.startTime.split(':');
@@ -101,9 +106,10 @@ const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: Shift
             title: formData.role || 'Shift',
             start_time: startDate.toISOString(),
             end_time: endDate.toISOString(),
-            status: 'pending' as const,
+            status: 'confirmed' as const, // Set as confirmed instead of pending
             notes: formData.notes || '',
-            location: formData.location || ''
+            location: formData.location || '',
+            published: true // Ensure it's published and visible
           });
 
           console.log('Schedule created successfully:', scheduleData);
@@ -113,8 +119,8 @@ const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: Shift
             try {
               await sendNotification({
                 user_id: employee.user_id,
-                title: 'New Shift Request 📅',
-                message: `You've received a new shift request from ${managerName}. Please respond.`,
+                title: 'New Shift Assigned 📅',
+                message: `You've been assigned a new shift by ${managerName} for ${formData.role || 'Shift'}.`,
                 type: 'info',
                 related_entity: 'schedules',
                 related_id: scheduleData.id
@@ -126,7 +132,7 @@ const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: Shift
             }
           }
 
-          sonnerToast.success('Shift request sent to employee');
+          sonnerToast.success('Shift assigned to employee successfully');
           
           if (onResponseComplete) {
             onResponseComplete();

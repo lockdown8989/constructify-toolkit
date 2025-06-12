@@ -1,5 +1,5 @@
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useRestaurantSchedule } from '@/hooks/use-restaurant-schedule';
 import { Shift } from '@/types/restaurant-schedule';
 import { useToast } from '@/hooks/use-toast';
@@ -45,8 +45,23 @@ const RestaurantSchedule = () => {
   const isMobile = useIsMobile();
   const { handleAddNote, handleAddBreak } = useShiftUtilities(updateShift);
   
+  // Create a callback to handle successful shift creation
+  const handleShiftCreated = useCallback(() => {
+    // Force a refresh of the schedule data
+    syncWithCalendar();
+    
+    toast({
+      title: "Shift created successfully",
+      description: "The shift has been added to the schedule.",
+    });
+  }, [syncWithCalendar, toast]);
+  
   // Get the shift dialog manager with all its functions and component
-  const shiftDialog = ShiftDialogManager({ addShift, updateShift });
+  const shiftDialog = ShiftDialogManager({ 
+    addShift, 
+    updateShift, 
+    onResponseComplete: handleShiftCreated 
+  });
   
   const syncEmployeeData = () => {
     if (syncingData) return; // Prevent multiple clicks
