@@ -29,15 +29,16 @@ export const useEmployeeForm = ({
     defaultValues: {
       name: employeeToEdit?.name || '',
       email: employeeToEdit?.email || '',
-      phone: employeeToEdit?.phone || '',
+      phone: '',
       job_title: employeeToEdit?.job_title || '',
       department: employeeToEdit?.department || '',
       site: employeeToEdit?.site || '',
       location: employeeToEdit?.location || defaultLocation || '',
       salary: employeeToEdit?.salary || 0,
       hourly_rate: employeeToEdit?.hourly_rate || 0,
-      lifecycle: employeeToEdit?.lifecycle || 'active',
-      status: employeeToEdit?.status || 'active',
+      lifecycle: 'active',
+      status: 'active',
+      start_date: employeeToEdit?.start_date || new Date().toISOString().split('T')[0],
     },
   });
 
@@ -46,17 +47,32 @@ export const useEmployeeForm = ({
     setError(null);
 
     try {
+      const employeeData = {
+        name: values.name,
+        email: values.email,
+        job_title: values.job_title,
+        department: values.department,
+        site: values.site,
+        location: values.location,
+        salary: values.salary || 0,
+        hourly_rate: values.hourly_rate || 0,
+        start_date: values.start_date || new Date().toISOString().split('T')[0],
+        status: 'Active',
+        lifecycle: 'Active',
+        role: 'employee',
+      };
+
       if (employeeToEdit) {
         await updateEmployee.mutateAsync({
           id: employeeToEdit.id,
-          ...values,
+          ...employeeData,
         });
         toast({
           title: "Employee updated",
           description: "Employee information has been successfully updated.",
         });
       } else {
-        await addEmployee.mutateAsync(values);
+        await addEmployee.mutateAsync(employeeData);
         toast({
           title: "Employee added",
           description: "New employee has been successfully added to the team.",

@@ -25,97 +25,91 @@ const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: Shift
 
   const handleFormSubmit = async (formData: any) => {
     if (shiftDialog.mode === 'add' && shiftDialog.employeeId && shiftDialog.day) {
-      // Create a valid date object from the day and time
-      const today = new Date();
-      const dayMap: Record<string, number> = {
-        monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0
-      };
-      
-      // Get the date of the next occurrence of the day
-      const dayOfWeek = dayMap[shiftDialog.day.toLowerCase()];
-      const daysUntilNext = (dayOfWeek - today.getDay() + 7) % 7;
-      const targetDate = new Date(today);
-      targetDate.setDate(today.getDate() + daysUntilNext);
-      
-      // Create the shift for the UI immediately
-      const newShift = {
-        employeeId: shiftDialog.employeeId,
-        day: shiftDialog.day,
-        startTime: formData.startTime,
-        endTime: formData.endTime,
-        role: formData.role || 'Shift',
-        notes: formData.notes || '',
-        location: formData.location || ''
-      };
-      
-      // Add shift to the UI immediately
-      addShift(newShift);
+      try {
+        // Create a valid date object from the day and time
+        const today = new Date();
+        const dayMap: Record<string, number> = {
+          monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0
+        };
+        
+        // Get the date of the next occurrence of the day
+        const dayOfWeek = dayMap[shiftDialog.day.toLowerCase()];
+        const daysUntilNext = (dayOfWeek - today.getDay() + 7) % 7;
+        const targetDate = new Date(today);
+        targetDate.setDate(today.getDate() + daysUntilNext);
+        
+        // Set the hours and minutes from the time strings
+        const startTimeParts = formData.startTime.split(':');
+        const endTimeParts = formData.endTime.split(':');
+        
+        if (startTimeParts.length !== 2 || endTimeParts.length !== 2) {
+          sonnerToast.error('Invalid time format. Please use HH:MM format');
+          return;
+        }
+        
+        const startDate = new Date(targetDate);
+        startDate.setHours(parseInt(startTimeParts[0], 10), parseInt(startTimeParts[1], 10), 0, 0);
+        
+        const endDate = new Date(targetDate);
+        endDate.setHours(parseInt(endTimeParts[0], 10), parseInt(endTimeParts[1], 10), 0, 0);
+        
+        // If end time is earlier than start time, it must be the next day
+        if (endDate < startDate) {
+          endDate.setDate(endDate.getDate() + 1);
+        }
+        
+        console.log('Creating schedule with dates:', {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          employeeId: shiftDialog.employeeId,
+          role: formData.role || 'Shift'
+        });
+        
+        // Create the schedule in the database first
+        const scheduleData = await createSchedule.mutateAsync({
+          employee_id: shiftDialog.employeeId,
+          title: formData.role || 'Shift',
+          start_time: startDate.toISOString(),
+          end_time: endDate.toISOString(),
+          status: 'confirmed' as const,
+          notes: formData.notes || '',
+          location: formData.location || '',
+          published: true
+        });
 
-      if (user) {
-        try {
+        console.log('Schedule created successfully:', scheduleData);
+
+        // Create the shift for the UI
+        const newShift = {
+          employeeId: shiftDialog.employeeId,
+          day: shiftDialog.day,
+          startTime: formData.startTime,
+          endTime: formData.endTime,
+          role: formData.role || 'Shift',
+          notes: formData.notes || '',
+          location: formData.location || ''
+        };
+        
+        // Add shift to the UI
+        addShift(newShift);
+
+        // Send notification to employee if we have their user ID
+        if (user) {
           const { data: employee, error: employeeError } = await supabase
             .from('employees')
             .select('user_id, name')
             .eq('id', shiftDialog.employeeId)
             .single();
 
-          if (employeeError) {
-            console.error('Error fetching employee details:', employeeError);
-            sonnerToast.error('Could not find employee details');
-            return;
-          }
+          if (!employeeError && employee?.user_id) {
+            const { data: manager, error: managerError } = await supabase
+              .from('employees')
+              .select('name')
+              .eq('user_id', user.id)
+              .single();
 
-          const { data: manager, error: managerError } = await supabase
-            .from('employees')
-            .select('name')
-            .eq('user_id', user.id)
-            .single();
-
-          const managerName = managerError ? 'Manager' : (manager?.name || 'Manager');
-          
-          // Set the hours and minutes from the time strings
-          const startTimeParts = formData.startTime.split(':');
-          const endTimeParts = formData.endTime.split(':');
-          
-          if (startTimeParts.length !== 2 || endTimeParts.length !== 2) {
-            sonnerToast.error('Invalid time format. Please use HH:MM format');
-            return;
-          }
-          
-          const startDate = new Date(targetDate);
-          startDate.setHours(parseInt(startTimeParts[0], 10), parseInt(startTimeParts[1], 10), 0, 0);
-          
-          const endDate = new Date(targetDate);
-          endDate.setHours(parseInt(endTimeParts[0], 10), parseInt(endTimeParts[1], 10), 0, 0);
-          
-          // If end time is earlier than start time, it must be the next day
-          if (endDate < startDate) {
-            endDate.setDate(endDate.getDate() + 1);
-          }
-          
-          console.log('Creating schedule with dates:', {
-            startDate: startDate.toISOString(),
-            endDate: endDate.toISOString(),
-            employeeId: shiftDialog.employeeId,
-            role: formData.role || 'Shift'
-          });
-          
-          // Create the schedule in the database
-          const scheduleData = await createSchedule.mutateAsync({
-            employee_id: shiftDialog.employeeId,
-            title: formData.role || 'Shift',
-            start_time: startDate.toISOString(),
-            end_time: endDate.toISOString(),
-            status: 'confirmed' as const, // Set as confirmed instead of pending
-            notes: formData.notes || '',
-            location: formData.location || '',
-            published: true // Ensure it's published and visible
-          });
-
-          console.log('Schedule created successfully:', scheduleData);
-
-          // Send notification to employee if we have their user ID
-          if (employee?.user_id) {
+            const managerName = managerError ? 'Manager' : (manager?.name || 'Manager');
+            
             try {
               await sendNotification({
                 user_id: employee.user_id,
@@ -128,19 +122,18 @@ const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: Shift
               console.log('Notification sent to employee:', employee.user_id);
             } catch (notificationError) {
               console.error('Error sending notification:', notificationError);
-              // Continue execution even if notification fails
             }
           }
-
-          sonnerToast.success('Shift assigned to employee successfully');
-          
-          if (onResponseComplete) {
-            onResponseComplete();
-          }
-        } catch (error) {
-          console.error('Error adding shift:', error);
-          sonnerToast.error('Failed to save shift');
         }
+
+        sonnerToast.success('Shift created and assigned successfully');
+        
+        if (onResponseComplete) {
+          onResponseComplete();
+        }
+      } catch (error) {
+        console.error('Error adding shift:', error);
+        sonnerToast.error('Failed to save shift');
       }
     } else if (shiftDialog.mode === 'edit' && shiftDialog.currentShift) {
       const updatedShift = {

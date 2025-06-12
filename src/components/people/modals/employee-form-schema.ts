@@ -13,6 +13,7 @@ export const employeeFormSchema = z.object({
   hourly_rate: z.number().min(0, 'Hourly rate must be positive').optional(),
   lifecycle: z.enum(['active', 'inactive', 'terminated']).default('active'),
   status: z.enum(['active', 'inactive', 'pending', 'terminated']).default('active'),
+  start_date: z.string().optional(),
 });
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
