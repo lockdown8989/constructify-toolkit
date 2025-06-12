@@ -1,106 +1,85 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { employeeFormSchema, type EmployeeFormValues } from './employee-form-schema';
 import { useAddEmployee, useUpdateEmployee, Employee } from '@/hooks/use-employees';
-import { employeeFormSchema, EmployeeFormValues, validStatusForLifecycle } from './employee-form-schema';
+import { useToast } from '@/hooks/use-toast';
 
-interface UseEmployeeFormProps {
+export interface UseEmployeeFormProps {
   onSuccess: () => void;
   employeeToEdit?: Employee;
+  defaultLocation?: string;
 }
 
-export const useEmployeeForm = ({ onSuccess, employeeToEdit }: UseEmployeeFormProps) => {
+export const useEmployeeForm = ({ 
+  onSuccess, 
+  employeeToEdit, 
+  defaultLocation 
+}: UseEmployeeFormProps) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+
   const addEmployee = useAddEmployee();
   const updateEmployee = useUpdateEmployee();
-  const [error, setError] = useState<string | null>(null);
-  
-  const isEditMode = !!employeeToEdit;
-  
+
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),
-    defaultValues: isEditMode 
-      ? {
-          name: employeeToEdit.name,
-          job_title: employeeToEdit.job_title,
-          department: employeeToEdit.department,
-          site: employeeToEdit.site,
-          salary: employeeToEdit.salary,
-          hourly_rate: employeeToEdit.hourly_rate || 0,
-          lifecycle: employeeToEdit.lifecycle as any,
-          status: employeeToEdit.status as any,
-        }
-      : {
-          name: '',
-          job_title: '',
-          department: '',
-          site: '',
-          salary: 0,
-          hourly_rate: 0,
-          lifecycle: 'Employed',
-          status: 'Present',
-        },
+    defaultValues: {
+      name: employeeToEdit?.name || '',
+      email: employeeToEdit?.email || '',
+      phone: employeeToEdit?.phone || '',
+      job_title: employeeToEdit?.job_title || '',
+      department: employeeToEdit?.department || '',
+      site: employeeToEdit?.site || '',
+      location: employeeToEdit?.location || defaultLocation || '',
+      salary: employeeToEdit?.salary || 0,
+      hourly_rate: employeeToEdit?.hourly_rate || 0,
+      lifecycle: employeeToEdit?.lifecycle || 'active',
+      status: employeeToEdit?.status || 'active',
+    },
   });
 
-  // Watch for lifecycle changes to update status if needed
-  const lifecycle = form.watch('lifecycle');
-  const status = form.watch('status');
+  const onSubmit = form.handleSubmit(async (values) => {
+    setIsSubmitting(true);
+    setError(null);
 
-  useEffect(() => {
-    // Check if current status is valid for the selected lifecycle
-    const validStatuses = validStatusForLifecycle[lifecycle];
-    if (!validStatuses.includes(status as any)) {
-      // Set status to first valid option for this lifecycle
-      form.setValue('status', validStatuses[0]);
-    }
-  }, [lifecycle, status, form]);
-
-  const onSubmit = async (values: EmployeeFormValues) => {
     try {
-      const employeeData = {
-        name: values.name,
-        job_title: values.job_title,
-        department: values.department,
-        site: values.site,
-        salary: Number(values.salary),
-        hourly_rate: values.hourly_rate ? Number(values.hourly_rate) : undefined,
-        lifecycle: values.lifecycle,
-        status: values.status,
-      };
-
-      if (isEditMode) {
-        // Update existing employee
+      if (employeeToEdit) {
         await updateEmployee.mutateAsync({
           id: employeeToEdit.id,
-          ...employeeData,
+          ...values,
+        });
+        toast({
+          title: "Employee updated",
+          description: "Employee information has been successfully updated.",
         });
       } else {
-        // Add new employee
-        await addEmployee.mutateAsync({
-          ...employeeData,
-          start_date: new Date().toISOString().split('T')[0], // Format as YYYY-MM-DD
+        await addEmployee.mutateAsync(values);
+        toast({
+          title: "Employee added",
+          description: "New employee has been successfully added to the team.",
         });
       }
-      
-      form.reset();
       onSuccess();
-      setError(null);
-    } catch (error) {
-      console.error('Error saving employee:', error);
-      
-      // Check for duplicate employee error
-      if (error instanceof Error && error.message.includes('unique_employee_name')) {
-        setError(`An employee with the name "${values.name}" already exists. Please use a different name.`);
-      } else {
-        setError(error instanceof Error ? error.message : 'An error occurred while saving employee');
-      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setError(errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-  };
+  });
 
   return {
     form,
-    onSubmit: form.handleSubmit(onSubmit),
-    isSubmitting: isEditMode ? updateEmployee.isPending : addEmployee.isPending,
+    onSubmit,
+    isSubmitting,
     error,
   };
 };

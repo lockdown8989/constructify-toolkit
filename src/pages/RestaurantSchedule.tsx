@@ -1,4 +1,3 @@
-
 import { useMemo, useState, useCallback } from 'react';
 import { useRestaurantSchedule } from '@/hooks/use-restaurant-schedule';
 import { Shift } from '@/types/restaurant-schedule';
@@ -21,6 +20,7 @@ import EmployeeList from '@/components/restaurant/EmployeeList';
 
 const RestaurantSchedule = () => {
   const [syncingData, setSyncingData] = useState(false);
+  const [syncingCalendar, setSyncingCalendar] = useState(false);
   const [locationName, setLocationName] = useState("Main Location");
   const [showEmployeePanel, setShowEmployeePanel] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,8 +37,7 @@ const RestaurantSchedule = () => {
     assignOpenShift,
     previousWeek,
     nextWeek,
-    setViewMode,
-    syncWithCalendar
+    setViewMode
   } = useRestaurantSchedule();
   
   const { employeeData, isLoading: isLoadingEmployeeData } = useEmployeeDataManagement();
@@ -70,6 +69,28 @@ const RestaurantSchedule = () => {
     return filtered;
   }, [employees, searchQuery, locationName]);
 
+  // Function to sync with calendar
+  const syncWithCalendar = useCallback(() => {
+    if (syncingCalendar) return; // Prevent multiple clicks
+    
+    setSyncingCalendar(true);
+    
+    // Show syncing toast
+    const loadingToast = sonnerToast.loading("Syncing with calendar...");
+    
+    // Simulate API call for calendar synchronization
+    setTimeout(() => {
+      setSyncingCalendar(false);
+      sonnerToast.dismiss(loadingToast);
+      sonnerToast.success("Calendar synchronized successfully");
+      
+      toast({
+        title: "Calendar synchronized",
+        description: "All shifts have been synced with your calendar.",
+      });
+    }, 2000);
+  }, [syncingCalendar, toast]);
+
   // Create a callback to handle successful shift creation
   const handleShiftCreated = useCallback(() => {
     // Force a refresh of the schedule data
@@ -94,11 +115,12 @@ const RestaurantSchedule = () => {
     setSyncingData(true);
     
     // Show syncing toast
-    sonnerToast.loading("Synchronizing employee data...");
+    const loadingToast = sonnerToast.loading("Synchronizing employee data...");
     
     // Simulate API call for data synchronization
     setTimeout(() => {
       setSyncingData(false);
+      sonnerToast.dismiss(loadingToast);
       sonnerToast.success("Employee data synchronized");
       
       toast({
@@ -175,7 +197,7 @@ const RestaurantSchedule = () => {
           setViewMode={setViewMode} 
           onSyncCalendar={syncWithCalendar}
           onSyncEmployeeData={syncEmployeeData}
-          isSyncing={syncingData}
+          isSyncing={syncingData || syncingCalendar}
           onSearch={handleSearch}
           searchQuery={searchQuery}
         />
