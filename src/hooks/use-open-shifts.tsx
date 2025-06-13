@@ -15,18 +15,39 @@ export function useOpenShifts() {
   const { data: openShifts = [], isLoading } = useQuery({
     queryKey: ['open-shifts'],
     queryFn: async () => {
+      const now = new Date().toISOString();
+      
       const { data, error } = await supabase
         .from('open_shifts')
         .select('*')
-        // Only fetch non-expired shifts or shifts without expiration date
-        .or(`expiration_date.gt.${new Date().toISOString()},expiration_date.is.null`)
+        // Filter to only show future shifts that haven't expired
+        .gte('start_time', now)
+        .or(`expiration_date.is.null,expiration_date.gte.${now}`)
         .order('position_order', { ascending: true, nullsFirst: false })
         .order('start_time', { ascending: true });
 
       if (error) throw error;
       
+      // Additional client-side filtering for extra safety
+      const filteredData = (data || []).filter(shift => {
+        const shiftStartTime = new Date(shift.start_time);
+        const now = new Date();
+        
+        // Filter out shifts that have already started
+        if (shiftStartTime <= now) {
+          return false;
+        }
+        
+        // Filter out shifts that have expired
+        if (shift.expiration_date && isAfter(now, parseISO(shift.expiration_date))) {
+          return false;
+        }
+        
+        return true;
+      });
+      
       // Process data to ensure compatibility with both formats
-      return data.map((shift: any) => ({
+      return filteredData.map((shift: any) => ({
         ...shift,
         // Add virtual property aliases for compatibility
         startTime: new Date(shift.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -48,8 +69,15 @@ export function useOpenShifts() {
 
       if (shiftError) throw shiftError;
       
-      // Check if the shift has expired
-      if (openShift.expiration_date && isAfter(new Date(), parseISO(openShift.expiration_date))) {
+      // Check if the shift has expired or already started
+      const now = new Date();
+      const shiftStartTime = new Date(openShift.start_time);
+      
+      if (shiftStartTime <= now) {
+        throw new Error("This shift has already started and cannot be assigned.");
+      }
+      
+      if (openShift.expiration_date && isAfter(now, parseISO(openShift.expiration_date))) {
         throw new Error("This shift has expired and is no longer available.");
       }
 

@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { format } from 'date-fns';
-import { MapPin, Clock, User, Building } from 'lucide-react';
+import { format, isAfter, parseISO } from 'date-fns';
+import { MapPin, Clock, User, Building, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -27,6 +27,12 @@ const ClaimableShiftCard: React.FC<ClaimableShiftCardProps> = ({
   const endTime = new Date(shift.end_time);
   const hours = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60) * 10) / 10;
   
+  // Check if shift is expired or has started
+  const now = new Date();
+  const isExpired = shift.expiration_date ? isAfter(now, parseISO(shift.expiration_date)) : false;
+  const hasStarted = startTime <= now;
+  const isUnavailable = isExpired || hasStarted;
+  
   const getDepartmentColor = (department?: string) => {
     switch (department?.toLowerCase()) {
       case 'sales': return 'bg-blue-500';
@@ -39,6 +45,9 @@ const ClaimableShiftCard: React.FC<ClaimableShiftCardProps> = ({
   };
 
   const getAccessMessage = () => {
+    if (isUnavailable) {
+      return hasStarted ? "This shift has already started" : "This shift has expired";
+    }
     if (isManager || isAdmin || isHR) {
       return "Managers assign shifts to employees";
     }
@@ -48,16 +57,33 @@ const ClaimableShiftCard: React.FC<ClaimableShiftCardProps> = ({
     return null;
   };
 
+  const getStatusBadge = () => {
+    if (isUnavailable) {
+      return (
+        <Badge className="bg-red-500 text-white flex items-center gap-1">
+          <AlertTriangle className="h-3 w-3" />
+          {hasStarted ? "Started" : "Expired"}
+        </Badge>
+      );
+    }
+    return (
+      <Badge className="bg-green-500 text-white">
+        published
+      </Badge>
+    );
+  };
+
   return (
-    <Card className="p-4 border-l-4 border-l-green-500 bg-white shadow-sm hover:shadow-md transition-shadow">
+    <Card className={cn(
+      "p-4 border-l-4 bg-white shadow-sm hover:shadow-md transition-shadow",
+      isUnavailable ? "border-l-red-500 opacity-60" : "border-l-green-500"
+    )}>
       {/* Header with date and status */}
       <div className="flex items-center justify-between mb-3">
         <div className="text-lg font-semibold">
           {format(startTime, 'EEE, MMM d')}
         </div>
-        <Badge className="bg-green-500 text-white">
-          published
-        </Badge>
+        {getStatusBadge()}
       </div>
 
       {/* Time and Hours */}
@@ -112,11 +138,14 @@ const ClaimableShiftCard: React.FC<ClaimableShiftCardProps> = ({
 
       {/* Availability status */}
       <div className="text-sm text-gray-500 italic mb-3">
-        Available for pickup
+        {isUnavailable 
+          ? (hasStarted ? "Shift has already started" : "Shift has expired")
+          : "Available for pickup"
+        }
       </div>
 
-      {/* Claim Button - Only show for employees */}
-      {canClaim && isEmployee && (
+      {/* Claim Button - Only show for employees and if not unavailable */}
+      {canClaim && isEmployee && !isUnavailable && (
         <Button 
           onClick={() => onClaim(shift.id)}
           disabled={isClaimingShift}
@@ -127,7 +156,7 @@ const ClaimableShiftCard: React.FC<ClaimableShiftCardProps> = ({
         </Button>
       )}
 
-      {!canClaim && (
+      {(isUnavailable || !canClaim) && (
         <div className="text-center text-sm text-gray-500 py-2">
           {getAccessMessage()}
         </div>

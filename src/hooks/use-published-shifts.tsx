@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { isAfter, parseISO } from 'date-fns';
 
 export interface PublishedShift {
   id: string;
@@ -18,6 +19,7 @@ export interface PublishedShift {
   claimed_by?: string;
   claimed_at?: string;
   created_at: string;
+  expiration_date?: string;
 }
 
 export function usePublishedShifts() {
@@ -25,18 +27,42 @@ export function usePublishedShifts() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch published open shifts
+  // Fetch published open shifts - filter out expired ones
   const { data: publishedShifts = [], isLoading } = useQuery({
     queryKey: ['published-shifts'],
     queryFn: async () => {
+      const now = new Date().toISOString();
+      
       const { data, error } = await supabase
         .from('open_shifts')
         .select('*')
         .eq('status', 'open')
+        // Filter out shifts that are expired or in the past
+        .gte('start_time', now)
+        .or(`expiration_date.is.null,expiration_date.gte.${now}`)
         .order('start_time', { ascending: true });
 
       if (error) throw error;
-      return data as PublishedShift[];
+      
+      // Additional client-side filtering for extra safety
+      const filteredData = (data || []).filter(shift => {
+        const shiftStartTime = new Date(shift.start_time);
+        const now = new Date();
+        
+        // Filter out shifts that have already started
+        if (shiftStartTime <= now) {
+          return false;
+        }
+        
+        // Filter out shifts that have expired
+        if (shift.expiration_date && isAfter(now, parseISO(shift.expiration_date))) {
+          return false;
+        }
+        
+        return true;
+      });
+      
+      return filteredData as PublishedShift[];
     },
     enabled: !!user
   });
@@ -75,7 +101,7 @@ export function usePublishedShifts() {
 
       console.log('Found employee record:', employee);
 
-      // Check if shift is still available
+      // Check if shift is still available and not expired
       const { data: shift, error: shiftError } = await supabase
         .from('open_shifts')
         .select('*')
@@ -90,6 +116,18 @@ export function usePublishedShifts() {
 
       if (!shift) {
         throw new Error('This shift is no longer available');
+      }
+
+      // Check if shift has expired
+      const now = new Date();
+      const shiftStartTime = new Date(shift.start_time);
+      
+      if (shiftStartTime <= now) {
+        throw new Error('This shift has already started and cannot be claimed');
+      }
+      
+      if (shift.expiration_date && isAfter(now, parseISO(shift.expiration_date))) {
+        throw new Error('This shift has expired and is no longer available');
       }
 
       console.log('Found available shift:', shift);
