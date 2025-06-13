@@ -53,10 +53,10 @@ const ModernCalendar: React.FC<ModernCalendarProps> = ({
       days.push(
         <div
           className={cn(
-            "ios-card relative min-h-[60px] md:min-h-[80px] p-1 md:p-2 cursor-pointer transition-all duration-200 hover:bg-gray-50 border border-gray-100",
-            !isSameMonth(day, monthStart) && "text-gray-400 bg-gray-50/50",
-            isSameDay(day, selectedDate) && "bg-blue-50 border-blue-200",
-            isToday(day) && "bg-blue-500 text-white hover:bg-blue-600"
+            "relative min-h-[80px] md:min-h-[100px] p-2 cursor-pointer transition-all duration-200 border border-gray-100 bg-white hover:bg-gray-50",
+            !isSameMonth(day, monthStart) && "text-gray-300 bg-gray-50/50",
+            isSameDay(day, selectedDate) && "bg-blue-50 border-blue-200 ring-1 ring-blue-200",
+            isToday(day) && "bg-blue-500 text-white hover:bg-blue-600 border-blue-500"
           )}
           key={day.toString()}
           onClick={() => {
@@ -65,22 +65,23 @@ const ModernCalendar: React.FC<ModernCalendarProps> = ({
           }}
         >
           <div className={cn(
-            "text-sm md:text-base font-medium mb-1",
-            isToday(day) ? "text-white" : "text-gray-900"
+            "text-sm md:text-base font-semibold mb-2",
+            isToday(day) ? "text-white" : "text-gray-900",
+            !isSameMonth(day, monthStart) && "text-gray-400"
           )}>
             {formattedDate}
           </div>
           
           {/* Schedule indicators */}
-          <div className="space-y-0.5">
-            {daySchedules.slice(0, isMobile ? 2 : 3).map((schedule, index) => (
+          <div className="space-y-1">
+            {daySchedules.slice(0, isMobile ? 1 : 2).map((schedule, index) => (
               <div
                 key={schedule.id}
                 className={cn(
-                  "text-xs p-1 rounded-md cursor-pointer transition-colors",
+                  "text-xs p-1.5 rounded-md cursor-pointer transition-colors truncate",
                   schedule.status === 'pending' 
-                    ? "bg-orange-100 text-orange-800 border border-orange-200" 
-                    : "bg-blue-100 text-blue-800 border border-blue-200"
+                    ? "bg-orange-100 text-orange-800 border border-orange-200 hover:bg-orange-200" 
+                    : "bg-blue-100 text-blue-800 border border-blue-200 hover:bg-blue-200"
                 )}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -88,20 +89,20 @@ const ModernCalendar: React.FC<ModernCalendarProps> = ({
                 }}
               >
                 <div className="flex items-center gap-1">
-                  <Clock className="h-2 w-2" />
-                  <span className="truncate">
+                  <Clock className="h-2.5 w-2.5 flex-shrink-0" />
+                  <span className="font-medium">
                     {format(new Date(schedule.start_time), 'HH:mm')}
                   </span>
                 </div>
-                <div className="truncate font-medium">
+                <div className="truncate font-medium mt-0.5">
                   {schedule.title}
                 </div>
               </div>
             ))}
             
-            {daySchedules.length > (isMobile ? 2 : 3) && (
-              <div className="text-xs text-gray-500">
-                +{daySchedules.length - (isMobile ? 2 : 3)} more
+            {daySchedules.length > (isMobile ? 1 : 2) && (
+              <div className="text-xs text-gray-500 font-medium px-1">
+                +{daySchedules.length - (isMobile ? 1 : 2)} more
               </div>
             )}
           </div>
@@ -110,7 +111,7 @@ const ModernCalendar: React.FC<ModernCalendarProps> = ({
       day = addDays(day, 1);
     }
     rows.push(
-      <div className="grid grid-cols-7 gap-0.5 md:gap-1" key={day.toString()}>
+      <div className="grid grid-cols-7" key={day.toString()}>
         {days}
       </div>
     );
@@ -132,11 +133,11 @@ const ModernCalendar: React.FC<ModernCalendarProps> = ({
   const pendingCount = schedules.filter(s => s.status === 'pending').length;
 
   return (
-    <div className="ios-card bg-white shadow-sm">
+    <div className="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-100">
-        <h2 className="ios-large-title">Schedule Calendar</h2>
-        <div className="flex items-center gap-2">
+      <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-gray-900">Schedule Calendar</h2>
           {pendingCount > 0 && (
             <Badge className="bg-orange-100 text-orange-800 border border-orange-200">
               {pendingCount} pending
@@ -147,11 +148,11 @@ const ModernCalendar: React.FC<ModernCalendarProps> = ({
 
       {/* Pending shift notification */}
       {pendingCount > 0 && (
-        <div className="mx-4 md:mx-6 mt-4 p-3 md:p-4 bg-orange-50 border border-orange-200 ios-rounded animate-fade-in">
-          <div className="flex items-center gap-2 text-orange-800">
-            <Clock className="h-5 w-5" />
+        <div className="mx-6 mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+          <div className="flex items-start gap-3 text-orange-800">
+            <Clock className="h-5 w-5 mt-0.5 flex-shrink-0" />
             <div>
-              <div className="font-medium">
+              <div className="font-semibold">
                 You have {pendingCount} pending shift{pendingCount > 1 ? 's' : ''} waiting for response
               </div>
               {schedules
@@ -168,18 +169,18 @@ const ModernCalendar: React.FC<ModernCalendarProps> = ({
       )}
 
       {/* Month navigation */}
-      <div className="flex items-center justify-between p-4 md:p-6">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
         <Button
           variant="ghost"
           size="sm"
           onClick={prevMonth}
-          className="ios-button touch-target"
+          className="h-8 w-8 p-0 hover:bg-gray-100"
           disabled={isLoading}
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
         
-        <h3 className="text-lg md:text-xl font-semibold">
+        <h3 className="text-lg font-semibold text-gray-900">
           {format(selectedDate, 'MMMM yyyy')}
         </h3>
         
@@ -187,7 +188,7 @@ const ModernCalendar: React.FC<ModernCalendarProps> = ({
           variant="ghost"
           size="sm"
           onClick={nextMonth}
-          className="ios-button touch-target"
+          className="h-8 w-8 p-0 hover:bg-gray-100"
           disabled={isLoading}
         >
           <ChevronRight className="h-4 w-4" />
@@ -195,29 +196,31 @@ const ModernCalendar: React.FC<ModernCalendarProps> = ({
       </div>
 
       {/* Day headers */}
-      <div className="grid grid-cols-7 gap-0.5 md:gap-1 px-4 md:px-6">
+      <div className="grid grid-cols-7 border-b border-gray-200">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="py-2 text-center text-xs md:text-sm font-medium text-gray-500">
+          <div key={day} className="py-3 text-center text-sm font-semibold text-gray-700 border-r border-gray-100 last:border-r-0 bg-gray-50">
             {day}
           </div>
         ))}
       </div>
 
       {/* Calendar grid */}
-      <div className="px-4 md:px-6 pb-4 md:pb-6 space-y-0.5 md:space-y-1">
+      <div className="bg-white">
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           </div>
         ) : (
-          rows
+          <div className="space-y-0">
+            {rows}
+          </div>
         )}
       </div>
 
-      {/* Current date display */}
-      <div className="border-t border-gray-100 p-4 md:p-6 bg-gray-50/50">
+      {/* Footer with current date/time */}
+      <div className="border-t border-gray-100 px-6 py-4 bg-gray-50">
         <div className="text-center">
-          <div className="text-lg md:text-xl font-semibold">
+          <div className="text-lg font-semibold text-gray-900">
             {format(new Date(), 'EEEE, MMMM d, yyyy')}
           </div>
           <div className="text-sm text-gray-500 mt-1">
