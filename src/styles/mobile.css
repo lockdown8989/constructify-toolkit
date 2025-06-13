@@ -34,19 +34,6 @@
     @apply z-50 max-h-[50vh] overflow-y-auto;
   }
   
-  /* Calendar view adjustments */
-  .shift-calendar-mobile {
-    @apply px-1;
-  }
-  
-  .shift-calendar-mobile .calendar-day {
-    @apply min-h-[60px] text-xs;
-  }
-  
-  .shift-calendar-mobile .calendar-day-header {
-    @apply text-xs py-1;
-  }
-  
   /* Apple-style design elements */
   .card {
     @apply rounded-xl shadow-sm;
@@ -176,19 +163,6 @@
     @apply text-xs py-0.5 px-1 rounded-sm;
   }
   
-  /* Shift schedule cards */
-  .shift-card-mobile {
-    @apply rounded-xl p-2 mb-2;
-  }
-  
-  .shift-time-mobile {
-    @apply text-xs font-medium;
-  }
-  
-  .shift-employee-mobile {
-    @apply text-xs;
-  }
-  
   /* Apple-style design elements */
   .ios-rounded {
     @apply rounded-xl;
@@ -201,7 +175,7 @@
   
   /* iOS-style buttons */
   .ios-button {
-    @apply rounded-xl py-3 font-medium;
+    @apply rounded-xl py-3 font-medium transition-all duration-200 active-touch-state;
   }
   
   /* iOS-style card */
@@ -215,16 +189,46 @@
   }
 }
 
-/* Shift calendar day chip for mobile */
-.shift-day-chip {
-  @apply text-xs py-0.5 px-1.5 rounded-full bg-gray-100 inline-flex items-center justify-center;
+/* Enhanced Apple-style calendar */
+.calendar-day-cell {
+  @apply transition-all duration-200 hover:scale-105 hover:shadow-md;
 }
 
-.shift-day-chip.active {
-  @apply bg-primary text-white;
+.calendar-day-cell.selected {
+  @apply bg-blue-500 text-white shadow-lg transform scale-105;
 }
 
-/* Week date navigation for mobile */
-.week-nav-mobile {
-  @apply flex items-center justify-between py-1.5 px-3 bg-gray-50/80 rounded-xl text-sm mb-2 mx-1;
+.calendar-day-cell.today {
+  @apply bg-blue-500 text-white shadow-md;
+}
+
+.calendar-event-dot {
+  @apply w-2 h-2 rounded-full bg-blue-500 mx-auto mt-1;
+}
+
+/* Smooth animations for calendar navigation */
+.calendar-transition {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Enhanced pending notification */
+.pending-notification {
+  @apply bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-orange-400 shadow-sm;
+}
+
+/* Glassmorphism effect for modern look */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Modern card shadows */
+.modern-shadow {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modern-shadow-lg {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }

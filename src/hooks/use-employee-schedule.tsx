@@ -11,7 +11,7 @@ export const useEmployeeSchedule = () => {
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("my-shifts");
+  const [activeTab, setActiveTab] = useState<string>("calendar");
   const [newSchedules, setNewSchedules] = useState<Record<string, boolean>>({});
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { toast } = useToast();
@@ -41,11 +41,6 @@ export const useEmployeeSchedule = () => {
   useEffect(() => {
     console.log('Processing schedules for tabs, count:', schedules.length);
     
-    // Debug schedules data
-    schedules.forEach(schedule => {
-      console.log(`Schedule ${schedule.id}: status=${schedule.status}, start_time=${schedule.start_time}`);
-    });
-    
     const now = new Date();
     const newScheduleIds: Record<string, boolean> = {};
     
@@ -63,25 +58,22 @@ export const useEmployeeSchedule = () => {
     const pendingShifts = schedules.filter(schedule => schedule.status === 'pending');
     console.log('Found pending shifts:', pendingShifts.length);
     
-    // Show pending tab if there are pending shifts
-    if (pendingShifts.length > 0) {
-      setActiveTab('pending');
-      
-      // Show a toast notification if there are pending shifts
+    // Show calendar tab by default, but show notification for pending shifts
+    if (pendingShifts.length > 0 && activeTab === 'calendar') {
       toast({
         title: `${pendingShifts.length} pending shift${pendingShifts.length > 1 ? 's' : ''} waiting`,
         description: "You have shifts that require your response.",
+        duration: 5000,
       });
     }
-  }, [schedules, toast]);
+  }, [schedules, toast, activeTab]);
 
-  // Subscribe to realtime updates for new schedules
+  // Subscribe to realtime updates for new schedules with improved error handling
   useEffect(() => {
     if (!user) return;
     
     console.log('Setting up realtime subscription for user:', user.id);
     
-    // Get employee ID for the current user
     const getEmployeeId = async () => {
       try {
         const { data: employee } = await supabase
@@ -106,17 +98,21 @@ export const useEmployeeSchedule = () => {
               },
               (payload) => {
                 console.log('Schedule change detected:', payload);
-                refreshSchedules();
+                
+                // Debounce refresh calls
+                setTimeout(() => {
+                  refreshSchedules();
+                }, 500);
                 
                 if (payload.eventType === 'INSERT') {
                   const newSchedule = payload.new as any;
                   
-                  // Check if it's a pending shift and switch to pending tab
                   if (newSchedule.status === 'pending') {
-                    setActiveTab('pending');
+                    // Don't auto-switch tabs, just notify
                     toast({
                       title: "New shift requires response",
                       description: "You have a new shift request waiting for your response.",
+                      duration: 5000,
                     });
                   } else {
                     toast({
@@ -132,7 +128,9 @@ export const useEmployeeSchedule = () => {
                 }
               }
             )
-            .subscribe();
+            .subscribe((status) => {
+              console.log('Realtime subscription status:', status);
+            });
             
           console.log('Subscribed to schedule updates for employee:', employee.id);
           return () => { supabase.removeChannel(channel); };
@@ -146,6 +144,18 @@ export const useEmployeeSchedule = () => {
     
     getEmployeeId();
   }, [user, toast]);
+
+  // Auto-refresh schedules every 30 seconds for better synchronization
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isLoading) {
+        console.log('Auto-refreshing schedules...');
+        refetch();
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [isLoading, refetch]);
 
   return {
     currentDate,
