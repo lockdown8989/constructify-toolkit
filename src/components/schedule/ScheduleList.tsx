@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { format, parseISO, isWithinInterval } from 'date-fns';
 import { Schedule } from '@/hooks/use-schedules';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Clock, Filter, X } from 'lucide-react';
+import { PlusCircle, Clock, Filter, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Select,
@@ -17,20 +17,26 @@ import { DateRange } from 'react-day-picker';
 
 interface ScheduleListProps {
   schedules: Schedule[];
+  isLoading: boolean;
+  onRefresh: () => void;
+  showFilters: boolean;
   onAddSchedule?: () => void;
-  employeeNames: Record<string, string>;
+  employeeNames?: Record<string, string>;
   className?: string;
 }
 
 const ScheduleList = ({ 
   schedules, 
+  isLoading,
+  onRefresh,
+  showFilters,
   onAddSchedule, 
-  employeeNames,
+  employeeNames = {},
   className 
 }: ScheduleListProps) => {
   const [selectedEmployee, setSelectedEmployee] = useState<string>('all');
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFiltersPanel, setShowFiltersPanel] = useState(false);
   
   // Create a list of unique employee IDs from the schedules
   const uniqueEmployees = Array.from(
@@ -74,25 +80,38 @@ const ScheduleList = ({
   return (
     <div className={cn("bg-white rounded-3xl p-6 card-shadow", className)}>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-medium">Daily Schedule</h2>
+        <h2 className="text-xl font-medium">My Shifts</h2>
         <div className="flex gap-2">
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => setShowFilters(!showFilters)}
-            className={cn(
-              "gap-1",
-              showFilters && "bg-blue-50 border-blue-200"
-            )}
+            onClick={onRefresh}
+            disabled={isLoading}
+            className="gap-1"
           >
-            <Filter className="h-4 w-4" />
-            Filters
-            {hasActiveFilters && (
-              <span className="bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
-                !
-              </span>
-            )}
+            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            Refresh
           </Button>
+          
+          {showFilters && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowFiltersPanel(!showFiltersPanel)}
+              className={cn(
+                "gap-1",
+                showFiltersPanel && "bg-blue-50 border-blue-200"
+              )}
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+              {hasActiveFilters && (
+                <span className="bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
+                  !
+                </span>
+              )}
+            </Button>
+          )}
           
           {onAddSchedule && (
             <Button variant="outline" size="sm" onClick={onAddSchedule}>
@@ -103,7 +122,7 @@ const ScheduleList = ({
         </div>
       </div>
       
-      {showFilters && (
+      {showFilters && showFiltersPanel && (
         <div className="mb-4 p-4 border border-gray-100 rounded-lg bg-gray-50">
           <div className="flex flex-col sm:flex-row gap-4 items-end mb-2">
             <div className="w-full sm:w-1/3">
@@ -163,11 +182,15 @@ const ScheduleList = ({
       )}
       
       <div className="space-y-4">
-        {sortedSchedules.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          </div>
+        ) : sortedSchedules.length === 0 ? (
           <p className="text-gray-500 text-center py-8">
             {hasActiveFilters 
               ? "No schedule items match the current filters" 
-              : "No schedule items for today"}
+              : "No schedule items found"}
           </p>
         ) : (
           sortedSchedules.map((schedule) => (
@@ -184,8 +207,13 @@ const ScheduleList = ({
                   {format(parseISO(schedule.start_time), 'h:mm a')} - {format(parseISO(schedule.end_time), 'h:mm a')}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Assigned to: {employeeNames[schedule.employee_id] || 'Unknown'}
+                  {format(parseISO(schedule.start_time), 'EEE, MMM d, yyyy')}
                 </p>
+                {employeeNames[schedule.employee_id] && (
+                  <p className="text-sm text-gray-500">
+                    Assigned to: {employeeNames[schedule.employee_id]}
+                  </p>
+                )}
               </div>
             </div>
           ))
