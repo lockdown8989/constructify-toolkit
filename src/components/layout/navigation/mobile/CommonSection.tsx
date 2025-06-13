@@ -1,5 +1,5 @@
 
-import { Home, Calendar, FileText, User, Settings } from "lucide-react";
+import { Home, Calendar, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import MobileNavLink from "./MobileNavLink";
 import PayrollSection from "./PayrollSection";
@@ -54,20 +54,6 @@ const CommonSection = ({
       {isPayroll && (
         <PayrollSection onClose={onClose} />
       )}
-
-      <MobileNavLink 
-        to="/profile" 
-        icon={User} 
-        label="Profile" 
-        onClick={onClose} 
-      />
-
-      <MobileNavLink 
-        to="/settings" 
-        icon={Settings} 
-        label="Settings" 
-        onClick={onClose} 
-      />
     </>
   );
 };
