@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -61,24 +60,30 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
         department: editedEmployee.department,
         site: editedEmployee.site,
         salary: parseFloat(editedEmployee.salary.replace(/[^0-9.]/g, '')),
-        status: editedEmployee.status,
+        status: editedEmployee.status.toLowerCase(),
         email: editedEmployee.email,
+        phone: editedEmployee.phone || '',
         role: editedEmployee.role,
+        lifecycle: editedEmployee.lifecycle,
+        location: editedEmployee.siteIcon === '🌐' ? 'Remote' : 'Office',
         start_date: new Date(editedEmployee.startDate).toISOString().split('T')[0]
       });
 
+      // Show success confirmation message
       toast({
-        title: "Employee Updated",
-        description: "Employee information has been successfully updated.",
+        title: "Employee Updated Successfully",
+        description: `${editedEmployee.name}'s profile has been updated and saved.`,
+        variant: "default"
       });
 
       setIsEditing(false);
       externalOnSave();
     } catch (error) {
       console.error('Error updating employee:', error);
+      // Show error message
       toast({
         title: "Update Failed",
-        description: "Failed to update employee information.",
+        description: "Failed to update employee information. Please try again.",
         variant: "destructive"
       });
     }
@@ -317,9 +322,10 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="terminated">Terminated</SelectItem>
                 </SelectContent>
               </Select>
             ) : (
@@ -338,6 +344,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
                 value={currentEmployee.salary}
                 onChange={(e) => handleInputChange('salary', e.target.value)}
                 className="mt-1"
+                placeholder="34000"
               />
             ) : (
               <div className="flex items-center gap-2">

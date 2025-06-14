@@ -42,9 +42,17 @@ export const useEmployeeForm = ({ onSuccess, employeeToEdit, defaultLocation }: 
     setError(null);
     try {
       const payload = {
-        ...data,
+        name: data.name!,
+        email: data.email!,
+        phone: data.phone || '',
+        job_title: data.job_title!,
+        department: data.department!,
+        site: data.site!,
+        location: data.location || '',
         salary: data.salary || 0,
         hourly_rate: data.hourly_rate || 0,
+        lifecycle: data.lifecycle!,
+        status: data.status!,
         start_date: data.start_date ? new Date(data.start_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       };
 
