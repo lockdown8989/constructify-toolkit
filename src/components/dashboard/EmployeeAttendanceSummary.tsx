@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,14 +7,18 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useAttendanceSync } from '@/hooks/use-attendance-sync';
 import { useAttendance } from '@/hooks/use-attendance';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 const EmployeeAttendanceSummary = () => {
   useAttendanceSync(); // Enable real-time sync
   const { data: attendanceData } = useAttendance();
   const navigate = useNavigate();
-  
+  const { toast } = useToast();
+  const { isManager, isAdmin, isHR, isPayroll } = useAuth();
+
   const currentTime = format(new Date(), 'dd MMM yyyy, hh:mm a');
-  
+
   const stats = {
     onTime: attendanceData?.present || 0,
     workFromHome: 0, // Can be expanded with actual WFH data
@@ -25,8 +30,16 @@ const EmployeeAttendanceSummary = () => {
   };
 
   const handleViewStats = () => {
-    console.log('Navigating to attendance page...');
-    navigate('/attendance');
+    // Only managers, admin, hr can view stats
+    if (isManager || isAdmin || isHR) {
+      navigate('/attendance');
+    } else {
+      toast({
+        title: "Access Denied",
+        description: "You do not have permission to view detailed attendance stats.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -46,6 +59,7 @@ const EmployeeAttendanceSummary = () => {
             variant="ghost" 
             className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
             onClick={handleViewStats}
+            data-testid="view-stats"
           >
             View Stats
           </Button>
