@@ -8,17 +8,18 @@ import {
   Users, 
   FileText, 
   Calculator,
+  ClipboardList,
+  BarChart3,
+  Clock,
+  CalendarDays,
+  Briefcase,
+  FolderOpen,
+  Bell
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const DesktopNav = () => {
-  // NOTE: Assuming managerial/payroll access for any authenticated user
-  // to fix build errors from a previous state.
-  // The original useAuth hook might have provided more specific roles.
-  const { isAuthenticated } = useAuth();
-  const hasManagerialAccess = isAuthenticated;
-  const hasPayrollAccess = isAuthenticated;
-  
+  const { isAuthenticated, hasManagerialAccess, hasPayrollAccess } = useAuth();
   const location = useLocation();
 
   if (!isAuthenticated) return null;
@@ -50,9 +51,11 @@ const DesktopNav = () => {
         Dashboard
       </NavLink>
 
-      <NavLink to="/schedule" icon={Calendar}>
-        Schedule
-      </NavLink>
+      {!hasManagerialAccess && !hasPayrollAccess && (
+        <NavLink to="/schedule" icon={Calendar}>
+          Schedule
+        </NavLink>
+      )}
 
       <NavLink to="/leave-management" icon={FileText}>
         Leave
@@ -63,6 +66,24 @@ const DesktopNav = () => {
           <NavLink to="/employee-management" icon={Users}>
             Employees
           </NavLink>
+          <NavLink to="/attendance-manager" icon={Clock}>
+            Attendance
+          </NavLink>
+          <NavLink to="/shift-calendar" icon={CalendarDays}>
+            Calendar
+          </NavLink>
+          <NavLink to="/open-shifts" icon={Briefcase}>
+            Open Shifts
+          </NavLink>
+          <NavLink to="/shift-patterns" icon={Clock}>
+            Shift Patterns
+          </NavLink>
+          <NavLink to="/documents-manager" icon={FolderOpen}>
+            Documents
+          </NavLink>
+          <NavLink to="/reports" icon={BarChart3}>
+            Reports
+          </NavLink>
         </>
       )}
 
@@ -71,8 +92,18 @@ const DesktopNav = () => {
           <NavLink to="/payroll-dashboard" icon={Calculator}>
             Payroll
           </NavLink>
+          <NavLink to="/payroll-history" icon={ClipboardList}>
+            History
+          </NavLink>
+          <NavLink to="/payroll-summary" icon={BarChart3}>
+            Summary
+          </NavLink>
         </>
       )}
+
+      <NavLink to="/notifications" icon={Bell}>
+        Notifications
+      </NavLink>
     </nav>
   );
 };

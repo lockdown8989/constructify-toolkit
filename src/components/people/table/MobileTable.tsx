@@ -72,7 +72,7 @@ const MobileTable: React.FC<MobileTableProps> = ({
   const shouldShowScrollIndicator = employees.length > 5;
 
   return (
-    <div className="flex flex-col" ref={containerRef}>
+    <div className="rounded-lg overflow-hidden flex flex-col" ref={containerRef}>
       {employees.length === 0 ? (
         <div className="p-8 text-center text-gray-500 min-h-[200px] flex flex-col items-center justify-center">
           <p className="text-base">No team members found</p>
@@ -81,10 +81,10 @@ const MobileTable: React.FC<MobileTableProps> = ({
       ) : (
         <>
           <ScrollArea 
-            className="max-h-[calc(100vh-250px)] min-h-[300px] overflow-y-auto momentum-scroll"
+            className="max-h-[calc(100vh-250px)] min-h-[300px] overflow-y-auto rounded-lg momentum-scroll"
             ref={scrollAreaRef}
           >
-            <div className="p-2 sm:p-4">
+            <div>
               {employees.map(employee => (
                 <EmployeeMobileCard
                   key={employee.id}
