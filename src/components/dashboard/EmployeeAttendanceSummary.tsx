@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,7 +38,7 @@ const EmployeeAttendanceSummary = () => {
         <div className="flex justify-between items-center">
           <h3 className="text-xl font-semibold">My Attendance</h3>
           <Link to="/attendance">
-            <Button variant="ghost" className="text-blue-500 hover:text-blue-600">
+            <Button variant="ghost" className="text-blue-500 hover:text-blue-600 hover:bg-blue-50">
               View Stats
             </Button>
           </Link>
