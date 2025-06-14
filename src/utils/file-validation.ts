@@ -36,16 +36,24 @@ export const validateFile = (file: File): { isValid: boolean; error?: string } =
 };
 
 export const getFileTypeFromExtension = (filename: string): string => {
-  const extension = filename.toLowerCase().substring(filename.lastIndexOf('.')) as SupportedExtension;
+  const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
   
-  // Check each supported file type
-  for (const [mimeType, extensions] of Object.entries(SUPPORTED_FILE_TYPES)) {
-    if (extensions.includes(extension)) {
-      return mimeType;
-    }
-  }
+  // Create a simple mapping for extensions to MIME types
+  const extensionToMimeType: Record<string, string> = {
+    '.pdf': 'application/pdf',
+    '.doc': 'application/msword',
+    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.txt': 'text/plain',
+    '.csv': 'text/csv',
+    '.xls': 'application/vnd.ms-excel',
+    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  };
   
-  return 'application/octet-stream';
+  return extensionToMimeType[extension] || 'application/octet-stream';
 };
 
 export const isDocumentFile = (filename: string): boolean => {
