@@ -1,9 +1,9 @@
-
 import React, { useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import EmployeeMobileCard from './EmployeeMobileCard';
 import { Employee } from '../types';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Users } from 'lucide-react';
 
 interface MobileTableProps {
   employees: Employee[];

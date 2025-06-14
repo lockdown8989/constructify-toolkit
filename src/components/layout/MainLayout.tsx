@@ -19,7 +19,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {!isMobile && <DesktopSidebar />}
+      {!isMobile && <DesktopSidebar isAuthenticated={isAuthenticated} />}
       
       <div className="flex-1 flex flex-col overflow-hidden">
         {isMobile && <MobileNav isAuthenticated={isAuthenticated} />}
