@@ -1,210 +1,103 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import React from 'react';
+import { useEmployeeDocuments } from '@/hooks/use-documents';
 import { Card } from '@/components/ui/card';
-import { Download } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
-import { useQuery } from '@tanstack/react-query';
+import { FileText, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Skeleton } from '@/components/ui/skeleton';
-import { generatePayslipPDF } from '@/utils/exports';
 
 interface PayslipListProps {
   employeeId: string;
 }
 
-export const PayslipList: React.FC<PayslipListProps> = ({ employeeId }) => {
+const PayslipList: React.FC<PayslipListProps> = ({ employeeId }) => {
+  const { data: documents = [], isLoading } = useEmployeeDocuments(employeeId);
   const { toast } = useToast();
-  const [isDownloading, setIsDownloading] = useState<Record<string, boolean>>({});
   
-  const { data: payslips, isLoading, error, refetch } = useQuery({
-    queryKey: ['employee-payslips', employeeId],
-    queryFn: async () => {
-      console.log("Fetching payslips for employee:", employeeId);
-      
-      const { data, error } = await supabase
-        .from('payroll')
-        .select('*')
-        .eq('employee_id', employeeId)
-        .order('payment_date', { ascending: false });
-        
-      if (error) {
-        console.error('Error fetching payslips:', error);
-        throw error;
-      }
-      
-      console.log("Fetched payslips:", data);
-      return data || [];
-    },
-    refetchInterval: 30000, // Refetch every 30 seconds to get latest data
-    staleTime: 0 // Always consider data stale to ensure fresh fetches
-  });
-  
-  const handleDownloadPayslip = async (payslipId: string, paymentDate: string) => {
-    setIsDownloading(prev => ({ ...prev, [payslipId]: true }));
-    
+  const handleDownload = async (path: string, fileName: string) => {
     try {
-      // Get employee details
-      const { data: employee } = await supabase
-        .from('employees')
-        .select('name, job_title, department, salary')
-        .eq('id', employeeId)
-        .single();
+      const { data, error } = await supabase.storage
+        .from('employee-documents')
+        .download(path);
         
-      if (!employee) {
-        throw new Error('Employee information not found');
-      }
+      if (error) throw error;
       
-      // Get payslip details
-      const { data: payslip } = await supabase
-        .from('payroll')
-        .select('*')
-        .eq('id', payslipId)
-        .single();
-        
-      if (!payslip) {
-        throw new Error('Payslip information not found');
-      }
-      
-      // Generate PDF
-      await generatePayslipPDF(employeeId, {
-        name: employee.name,
-        title: employee.job_title,
-        department: employee.department,
-        salary: payslip.base_pay?.toString() || employee.salary?.toString() || '0',
-        paymentDate: payslip.payment_date || paymentDate,
-        overtimeHours: payslip.overtime_hours || 0,
-        contractualHours: payslip.working_hours || 0
-      });
-      
-      toast({
-        title: 'Payslip downloaded',
-        description: 'Your payslip has been downloaded successfully'
-      });
+      // Create blob URL and trigger download
+      const url = window.URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading payslip:', error);
+      console.error('Download error:', error);
       toast({
-        title: 'Download failed',
-        description: error instanceof Error ? error.message : 'Failed to download payslip',
-        variant: 'destructive'
+        title: "Download failed",
+        description: "Could not download the payslip",
+        variant: "destructive"
       });
-    } finally {
-      setIsDownloading(prev => ({ ...prev, [payslipId]: false }));
     }
   };
-  
-  // Force refetch when component mounts or employeeId changes
-  React.useEffect(() => {
-    refetch();
-  }, [employeeId, refetch]);
-  
+
   if (isLoading) {
     return (
-      <Card className="p-4">
-        <h3 className="text-lg font-medium mb-4">Recent Payslips</h3>
-        <div className="space-y-4">
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-16 w-full" />
-        </div>
+      <Card className="p-6">
+        <h3 className="text-xs font-semibold text-gray-500 mb-5 uppercase tracking-wider">
+          Latest Payslips
+        </h3>
+        <div>Loading payslips...</div>
       </Card>
     );
   }
-  
-  if (error) {
-    return (
-      <Card className="p-4">
-        <h3 className="text-lg font-medium mb-2">Recent Payslips</h3>
-        <p className="text-sm text-red-500">
-          Failed to load payslips. Please try again later.
-        </p>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => refetch()}
-          className="mt-2"
-        >
-          Retry
-        </Button>
-      </Card>
-    );
-  }
-  
-  if (!payslips || payslips.length === 0) {
-    return (
-      <Card className="p-4">
-        <h3 className="text-lg font-medium mb-2">Recent Payslips</h3>
-        <p className="text-sm text-gray-500">
-          No payslips available yet.
-        </p>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => refetch()}
-          className="mt-2"
-        >
-          Check for updates
-        </Button>
-      </Card>
-    );
-  }
-  
+
+  // Filter for payslip documents
+  const payslips = documents.filter(doc => 
+    (doc.category === 'payslip' || doc.document_type === 'payslip')
+  ).sort((a, b) => 
+    new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+  );
+
   return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium">Recent Payslips</h3>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => refetch()}
-        >
-          Refresh
-        </Button>
-      </div>
-      <div className="space-y-2">
-        {payslips.map((payslip) => {
-          // Format the payment date
-          const paymentDate = payslip.payment_date ? 
-            parseISO(payslip.payment_date) : new Date();
-          
-          // Format the month and year for display
-          const monthYear = format(paymentDate, 'MMMM yyyy');
-          
-          return (
-            <div key={payslip.id} 
-              className="flex items-center justify-between p-4 border rounded-md hover:bg-gray-50"
-            >
-              <div>
-                <h4 className="font-medium">{monthYear}</h4>
-                <div className="text-sm text-gray-500 space-y-1">
-                  <p>Payment Date: {format(paymentDate, 'dd.MM.yyyy')}</p>
-                  <p>Net Pay: £{payslip.salary_paid?.toFixed(2) || '0.00'}</p>
-                  <p className="text-xs">Status: {payslip.payment_status || 'Processed'}</p>
+    <Card className="p-6">
+      <h3 className="text-xs font-semibold text-gray-500 mb-5 uppercase tracking-wider">
+        Latest Payslips
+      </h3>
+      
+      {payslips.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+          <p>No payslips available</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {payslips.slice(0, 3).map((payslip) => (
+            <div key={payslip.id} className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center space-x-3">
+                <FileText className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-medium">{payslip.title}</p>
+                  <p className="text-sm text-gray-500">
+                    {payslip.created_at && new Date(payslip.created_at).toLocaleDateString()}
+                    {payslip.size && ` • ${payslip.size}`}
+                  </p>
                 </div>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => handleDownloadPayslip(payslip.id, payslip.payment_date)}
-                disabled={isDownloading[payslip.id]}
-              >
-                {isDownloading[payslip.id] ? (
-                  <span className="flex items-center">
-                    <span className="animate-spin mr-2">⏳</span> 
-                    Downloading...
-                  </span>
-                ) : (
-                  <span className="flex items-center">
-                    <Download className="h-4 w-4 mr-2" /> 
-                    Download
-                  </span>
-                )}
-              </Button>
+              
+              {payslip.path && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDownload(payslip.path!, payslip.title)}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              )}
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </Card>
   );
 };

@@ -3,13 +3,15 @@ import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useEmployees } from '@/hooks/use-employees';
 import { useEmployeeDocuments, useUploadDocument, useDeleteDocument } from '@/hooks/use-documents';
+import { useAttachPayslipToEmployee } from '@/hooks/use-payroll-documents';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Upload, Trash2, Download } from 'lucide-react';
+import { FileText, Upload, Trash2, Download, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import PayslipUploadDialog from '@/components/salary/components/PayslipUploadDialog';
 
 const Payslips = () => {
   const { user, isPayroll } = useAuth();
@@ -17,6 +19,7 @@ const Payslips = () => {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [documentType, setDocumentType] = useState<string>('payslip');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isPayslipDialogOpen, setIsPayslipDialogOpen] = useState(false);
   
   const { data: documents = [], isLoading } = useEmployeeDocuments(selectedEmployeeId);
   const uploadDocument = useUploadDocument();
@@ -34,6 +37,8 @@ const Payslips = () => {
       </div>
     );
   }
+
+  const selectedEmployee = employees.find(emp => emp.id === selectedEmployeeId);
 
   const handleFileUpload = async () => {
     if (!uploadFile || !selectedEmployeeId) {
@@ -102,14 +107,26 @@ const Payslips = () => {
   return (
     <div className="container py-6 max-w-6xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Document Management</h1>
-        <p className="text-gray-600 mt-2">Upload and manage employee documents</p>
+        <h1 className="text-2xl font-bold">Payslip Management</h1>
+        <p className="text-gray-600 mt-2">Upload and manage employee payslips and documents</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Upload Section */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Upload Document</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Upload Document</h2>
+            {selectedEmployeeId && (
+              <Button
+                onClick={() => setIsPayslipDialogOpen(true)}
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Quick Payslip Upload
+              </Button>
+            )}
+          </div>
           
           <div className="space-y-4">
             <div>
@@ -182,11 +199,14 @@ const Payslips = () => {
               {documents.map((doc) => (
                 <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center space-x-3">
-                    <FileText className="h-5 w-5 text-blue-600" />
+                    <FileText className={`h-5 w-5 ${
+                      doc.category === 'payslip' ? 'text-green-600' : 'text-blue-600'
+                    }`} />
                     <div>
                       <p className="font-medium">{doc.title}</p>
                       <p className="text-sm text-gray-500">
                         {doc.category || doc.document_type} • {doc.size}
+                        {doc.created_at && ` • ${new Date(doc.created_at).toLocaleDateString()}`}
                       </p>
                     </div>
                   </div>
@@ -216,6 +236,16 @@ const Payslips = () => {
           )}
         </Card>
       </div>
+
+      {/* Quick Payslip Upload Dialog */}
+      {selectedEmployee && (
+        <PayslipUploadDialog
+          isOpen={isPayslipDialogOpen}
+          onClose={() => setIsPayslipDialogOpen(false)}
+          employeeId={selectedEmployee.id}
+          employeeName={selectedEmployee.name}
+        />
+      )}
     </div>
   );
 };
