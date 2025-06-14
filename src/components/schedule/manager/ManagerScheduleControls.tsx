@@ -7,12 +7,9 @@ import {
   Calendar, 
   Users, 
   Clock, 
-  Plus, 
   Settings, 
   Eye, 
-  Send,
-  Copy,
-  Trash2
+  Send
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -49,17 +46,6 @@ const ManagerScheduleControls: React.FC<ManagerScheduleControlsProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <Button onClick={onCreateShift} className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Shift
-            </Button>
-            <Button onClick={onCreateTemplate} variant="outline" className="w-full">
-              <Copy className="h-4 w-4 mr-2" />
-              Save Template
-            </Button>
-          </div>
-          
           <div className="grid grid-cols-2 gap-3">
             <Button 
               onClick={onManageOpenShifts} 
@@ -136,7 +122,7 @@ const ManagerScheduleControls: React.FC<ManagerScheduleControlsProps> = ({
             </div>
             <div className="flex justify-between border-t pt-2">
               <span className="text-sm font-medium">Labor Cost</span>
-              <span className="font-bold">$4,800</span>
+              <span className="font-bold">£4,800</span>
             </div>
           </div>
         </CardContent>

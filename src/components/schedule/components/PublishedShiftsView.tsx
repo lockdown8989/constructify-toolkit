@@ -19,7 +19,7 @@ const PublishedShiftsView: React.FC = () => {
 
   // Only show actual published shifts, no examples
   const activePublishedShifts = publishedShifts.filter(shift => 
-    shift.status === 'open' || shift.status === 'published'
+    shift.status === 'open'
   );
 
   if (activePublishedShifts.length === 0) {
