@@ -36,8 +36,10 @@ export const validateFile = (file: File): { isValid: boolean; error?: string } =
 export const getFileTypeFromExtension = (filename: string): string => {
   const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
   
-  for (const [mimeType, extensions] of Object.entries(SUPPORTED_FILE_TYPES)) {
-    if (extensions.includes(extension)) {
+  // Use a more explicit approach to avoid TypeScript issues
+  for (const mimeType of Object.keys(SUPPORTED_FILE_TYPES) as Array<keyof typeof SUPPORTED_FILE_TYPES>) {
+    const extensions = SUPPORTED_FILE_TYPES[mimeType];
+    if (extensions.includes(extension as any)) {
       return mimeType;
     }
   }
