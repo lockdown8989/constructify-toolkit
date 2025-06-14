@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, isBefore, startOfDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Send, Clock } from 'lucide-react';
 import { Schedule } from '@/hooks/use-schedules';
@@ -19,6 +18,7 @@ import { useShiftActions } from '@/hooks/use-shift-actions';
 import { useOpenShifts } from '@/hooks/use-open-shifts';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { useAuth } from '@/hooks/use-auth';
 
 interface ScheduleCalendarViewProps {
   date: Date | undefined;
@@ -42,7 +42,7 @@ const PendingShiftNotification: React.FC<{ pendingCount: number }> = ({ pendingC
           You have {pendingCount} pending shift{pendingCount > 1 ? 's' : ''} waiting for response
         </h3>
         <p className="text-sm text-orange-600 mt-1">
-          Office cover on {format(new Date(), 'EEE, MMM d')}
+          Please respond to your pending shifts to help with scheduling
         </p>
       </div>
       <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300">
@@ -64,6 +64,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const { user, isEmployee } = useAuth();
   const { newSchedules, pendingSchedules } = useScheduleCalendar(schedules);
   const shiftAssignment = useShiftAssignmentDialog();
   const { openShifts, isLoading: openShiftsLoading } = useOpenShifts();
@@ -75,7 +76,26 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
   const [animatingDate, setAnimatingDate] = useState<Date | null>(null);
 
   const isManager = isAdmin || isHR;
-  const pendingCount = pendingSchedules.length;
+  
+  // Filter pending schedules for the current user and exclude expired ones
+  const today = startOfDay(new Date());
+  const currentUserPendingSchedules = isEmployee ? 
+    pendingSchedules.filter(schedule => {
+      // Check if the schedule belongs to the current user
+      const belongsToUser = schedules.some(s => 
+        s.id === schedule.id && 
+        s.employee_id && 
+        employeeNames[s.employee_id] // This would need to be matched against current user
+      );
+      
+      // Check if the schedule is not expired (start time is today or in the future)
+      const scheduleDate = startOfDay(new Date(schedule.start_time));
+      const isNotExpired = !isBefore(scheduleDate, today);
+      
+      return belongsToUser && isNotExpired;
+    }) : [];
+
+  const pendingCount = currentUserPendingSchedules.length;
 
   const handleOpenShiftClick = (openShift: OpenShiftType) => {
     if (isManager) {
@@ -235,8 +255,8 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
         )}
       </div>
 
-      {/* Pending Shifts Notification */}
-      {pendingCount > 0 && (
+      {/* Pending Shifts Notification - Only show for employees with pending shifts */}
+      {isEmployee && pendingCount > 0 && (
         <PendingShiftNotification pendingCount={pendingCount} />
       )}
       
