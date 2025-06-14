@@ -2,7 +2,7 @@
 import React from 'react';
 import { useEmployeeDocuments } from '@/hooks/use-documents';
 import { Card } from '@/components/ui/card';
-import { FileText } from 'lucide-react';
+import { FileText, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +33,11 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
       a.download = fileName;
       a.click();
       window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download successful",
+        description: `${fileName} has been downloaded`,
+      });
     } catch (error) {
       console.error('Download error:', error);
       toast({
@@ -64,7 +69,13 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
             <div>
               <h3 className="font-medium">Contract</h3>
               <p className="text-sm text-gray-500">
-                {contractDoc ? contractDoc.size : 'Not available'}
+                {contractDoc ? (
+                  <>
+                    {contractDoc.size} • Available for download
+                  </>
+                ) : (
+                  'Not available'
+                )}
               </p>
             </div>
           </div>
@@ -72,7 +83,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
             <Button 
               variant="outline"
               onClick={() => handleDownload(contractDoc.path!, contractDoc.title)}
+              className="flex items-center gap-2"
             >
+              <Download className="h-4 w-4" />
               Download
             </Button>
           )}
@@ -86,7 +99,13 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
             <div>
               <h3 className="font-medium">Latest Payslip</h3>
               <p className="text-sm text-gray-500">
-                {payslipDoc ? payslipDoc.size : 'Not available'}
+                {payslipDoc ? (
+                  <>
+                    {payslipDoc.size} • Available for download
+                  </>
+                ) : (
+                  'Not available'
+                )}
               </p>
             </div>
           </div>
@@ -94,7 +113,9 @@ const DocumentList: React.FC<DocumentListProps> = ({ employeeId }) => {
             <Button 
               variant="outline"
               onClick={() => handleDownload(payslipDoc.path!, payslipDoc.title)}
+              className="flex items-center gap-2"
             >
+              <Download className="h-4 w-4" />
               Download
             </Button>
           )}

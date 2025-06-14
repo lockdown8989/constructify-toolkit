@@ -179,6 +179,9 @@ export function useUploadDocument() {
         
         console.log("Document metadata saved successfully:", data);
         
+        // Send notification to the employee about the new document
+        await sendDocumentNotification(employeeId, documentType, file.name);
+        
         return data;
       } catch (error) {
         console.error("Error in upload document mutation:", error);
@@ -189,7 +192,7 @@ export function useUploadDocument() {
       queryClient.invalidateQueries({ queryKey: ['employee-documents', variables.employeeId] });
       toast({
         title: "Document uploaded",
-        description: "Document has been uploaded successfully.",
+        description: "Document has been uploaded successfully and employee has been notified.",
       });
     },
     onError: (error) => {
@@ -201,6 +204,46 @@ export function useUploadDocument() {
       });
     }
   });
+}
+
+// Helper function to send notification to employee
+async function sendDocumentNotification(employeeId: string, documentType: string, fileName: string) {
+  try {
+    // Get employee's user_id
+    const { data: employee, error: employeeError } = await supabase
+      .from('employees')
+      .select('user_id, name')
+      .eq('id', employeeId)
+      .single();
+    
+    if (employeeError || !employee?.user_id) {
+      console.error('Error getting employee user_id for notification:', employeeError);
+      return;
+    }
+
+    // Format document type for display
+    const formattedDocType = documentType.charAt(0).toUpperCase() + documentType.slice(1);
+    
+    // Send notification
+    const { error: notificationError } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: employee.user_id,
+        title: `📄 New ${formattedDocType} Available`,
+        message: `A new ${documentType.toLowerCase()} document (${fileName}) has been uploaded to your profile and is now available for download.`,
+        type: 'info',
+        related_entity: 'documents',
+        related_id: employeeId
+      });
+    
+    if (notificationError) {
+      console.error('Error sending document notification:', notificationError);
+    } else {
+      console.log('Document notification sent successfully to employee');
+    }
+  } catch (error) {
+    console.error('Error in sendDocumentNotification:', error);
+  }
 }
 
 export function useDeleteDocument() {

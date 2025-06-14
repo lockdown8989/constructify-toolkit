@@ -18,6 +18,8 @@ export const SUPPORTED_FILE_TYPES = {
 
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
+type SupportedExtension = '.pdf' | '.doc' | '.docx' | '.jpg' | '.jpeg' | '.png' | '.gif' | '.txt' | '.csv' | '.xls' | '.xlsx';
+
 export const validateFile = (file: File): { isValid: boolean; error?: string } => {
   // Check file size
   if (file.size > MAX_FILE_SIZE) {
@@ -34,11 +36,11 @@ export const validateFile = (file: File): { isValid: boolean; error?: string } =
 };
 
 export const getFileTypeFromExtension = (filename: string): string => {
-  const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+  const extension = filename.toLowerCase().substring(filename.lastIndexOf('.')) as SupportedExtension;
   
   // Check each supported file type
   for (const [mimeType, extensions] of Object.entries(SUPPORTED_FILE_TYPES)) {
-    if (extensions.includes(extension as '.pdf' | '.doc' | '.docx' | '.jpg' | '.jpeg' | '.png' | '.gif' | '.txt' | '.csv' | '.xls' | '.xlsx')) {
+    if (extensions.includes(extension)) {
       return mimeType;
     }
   }
