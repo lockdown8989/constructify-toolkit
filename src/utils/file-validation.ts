@@ -25,8 +25,8 @@ export const validateFile = (file: File): { isValid: boolean; error?: string } =
   }
 
   // Check file type
-  const supportedTypes = Object.keys(SUPPORTED_FILE_TYPES);
-  if (!supportedTypes.includes(file.type)) {
+  const supportedTypes = Object.keys(SUPPORTED_FILE_TYPES) as Array<keyof typeof SUPPORTED_FILE_TYPES>;
+  if (!supportedTypes.includes(file.type as keyof typeof SUPPORTED_FILE_TYPES)) {
     return { isValid: false, error: 'File type not supported. Please upload PDF, Word, Excel, image, or text files.' };
   }
 
