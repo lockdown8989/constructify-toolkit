@@ -22,6 +22,8 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
   
   // Set up real-time subscription for attendance changes
   useEffect(() => {
+    if (!employeeId) return;
+    
     const channel = supabase
       .channel('attendance-changes')
       .on(
@@ -30,7 +32,7 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
           event: '*',
           schema: 'public',
           table: 'attendance',
-          filter: employeeId ? `employee_id=eq.${employeeId}` : undefined
+          filter: `employee_id=eq.${employeeId}`
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ['attendance', employeeId, format(selectedDate, 'yyyy-MM-dd')] });
@@ -44,14 +46,28 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
   }, [employeeId, selectedDate, queryClient]);
   
   const fetchAttendanceData = async (): Promise<AttendanceData> => {
+    // If no employeeId provided, return empty data
+    if (!employeeId) {
+      console.log('No employeeId provided to useAttendance hook');
+      return {
+        present: 0,
+        absent: 0,
+        late: 0,
+        total: 0,
+        pending: 0,
+        approved: 0,
+        recentRecords: []
+      };
+    }
+
     try {
       // For time range queries, use the selectedDate as start date and today as end date
       const startDate = selectedDate;
       const endDate = new Date();
       
-      console.log(`Fetching attendance data from ${format(startDate, 'yyyy-MM-dd')} to ${format(endDate, 'yyyy-MM-dd')}`);
+      console.log(`Fetching attendance data for employee ${employeeId} from ${format(startDate, 'yyyy-MM-dd')} to ${format(endDate, 'yyyy-MM-dd')}`);
       
-      const query = supabase
+      const { data: records = [], error } = await supabase
         .from('attendance')
         .select(`
           *,
@@ -59,14 +75,9 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
             name
           )
         `)
+        .eq('employee_id', employeeId)
         .gte('date', format(startDate, 'yyyy-MM-dd'))
         .lte('date', format(endDate, 'yyyy-MM-dd'));
-      
-      if (employeeId) {
-        query.eq('employee_id', employeeId);
-      }
-      
-      const { data: records = [], error } = await query;
       
       if (error) {
         throw error;
@@ -87,6 +98,8 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
       const sortedRecords = processedRecords.sort((a, b) => 
         new Date(b.date || '') < new Date(a.date || '') ? -1 : 1
       );
+      
+      console.log(`Found ${processedRecords.length} attendance records for employee ${employeeId}`);
       
       return {
         present,
@@ -120,6 +133,7 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
   return useQuery({
     queryKey: ['attendance', employeeId, format(selectedDate, 'yyyy-MM-dd')],
     queryFn: fetchAttendanceData,
+    enabled: !!employeeId, // Only run query if employeeId exists
     refetchOnWindowFocus: true,
     staleTime: 1000 * 60, // Data becomes stale after 1 minute
   });

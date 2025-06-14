@@ -7,6 +7,7 @@ import { useEmployees } from "@/hooks/use-employees"
 import { useState, useEffect } from "react"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { format, addMonths, subMonths, startOfMonth } from 'date-fns'
+import { useAuth } from "@/hooks/use-auth"
 
 interface AttendanceControlsProps {
   onSearchChange: (value: string) => void;
@@ -16,8 +17,12 @@ interface AttendanceControlsProps {
 
 const AttendanceControls = ({ onSearchChange, onEmployeeSelect, onDateChange }: AttendanceControlsProps) => {
   const { data: employees = [] } = useEmployees();
+  const { isManager, isAdmin, isHR } = useAuth();
   const [selectedMonth, setSelectedMonth] = useState(startOfMonth(new Date()));
   const isMobile = useIsMobile();
+  
+  // Check if user can select different employees
+  const canSelectEmployees = (isManager || isAdmin || isHR) && onEmployeeSelect;
   
   useEffect(() => {
     // Notify parent component of date changes
@@ -80,25 +85,32 @@ const AttendanceControls = ({ onSearchChange, onEmployeeSelect, onDateChange }: 
       </div>
       
       <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto">
-        <Select onValueChange={onEmployeeSelect}>
-          <SelectTrigger className="w-full md:w-[200px]">
-            <SelectValue placeholder="Select Employee" />
-          </SelectTrigger>
-          <SelectContent>
-            {employees.map((employee) => (
-              <SelectItem key={employee.id} value={employee.id}>
-                {employee.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Only show employee selector for managers/admins */}
+        {canSelectEmployees && (
+          <Select onValueChange={onEmployeeSelect}>
+            <SelectTrigger className="w-full md:w-[200px]">
+              <SelectValue placeholder="Select Employee" />
+            </SelectTrigger>
+            <SelectContent>
+              {employees.map((employee) => (
+                <SelectItem key={employee.id} value={employee.id}>
+                  {employee.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         
-        <Input 
-          type="search" 
-          placeholder="Search employee" 
-          className="md:w-48 h-9"
-          onChange={(e) => onSearchChange(e.target.value)}
-        />
+        {/* Only show search for managers/admins who can view multiple employees */}
+        {canSelectEmployees && (
+          <Input 
+            type="search" 
+            placeholder="Search employee" 
+            className="md:w-48 h-9"
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
+        )}
+        
         <Select defaultValue="all">
           <SelectTrigger className="w-full md:w-36 h-9">
             <SelectValue placeholder="All Status" />
