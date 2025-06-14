@@ -20,8 +20,6 @@ export function useEmployees(filters?: Partial<{
   return useQuery({
     queryKey: ['employees', filters, isManager, isPayroll, isAdmin, isHR, user?.id],
     queryFn: async () => {
-      console.log("Fetching employees with roles:", { isPayroll, isAdmin, isHR, isManager });
-      
       let query = supabase
         .from('employees')
         .select('*');
@@ -29,7 +27,7 @@ export function useEmployees(filters?: Partial<{
       // For payroll users, admins, and HR - show all employees
       if (isPayroll || isAdmin || isHR) {
         console.log("Payroll/Admin/HR user, fetching all employee data");
-        // No filtering - payroll users should see ALL employees
+        // No restrictions for these roles - they should see all employees
       } else if (isManager && user) {
         // For managers - show employees under their management
         console.log("Manager user, fetching team data");
@@ -59,16 +57,12 @@ export function useEmployees(filters?: Partial<{
         }
       }
       
-      // Apply additional filters if provided
       if (filters) {
         if (filters.status) query = query.eq('status', filters.status);
         if (filters.department) query = query.eq('department', filters.department);
         if (filters.site) query = query.eq('site', filters.site);
         if (filters.lifecycle) query = query.eq('lifecycle', filters.lifecycle);
       }
-      
-      // Order by name for consistent display
-      query = query.order('name');
       
       const { data, error } = await query;
       
@@ -77,11 +71,9 @@ export function useEmployees(filters?: Partial<{
         throw error;
       }
       
-      console.log("Successfully fetched employees:", data?.length || 0, "records");
+      console.log("Fetched employees data:", data);
       return data as Employee[];
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime)
+    }
   });
 }
 
@@ -139,15 +131,9 @@ export function useAddEmployee() {
 export function useUpdateEmployee() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { isPayroll, isAdmin, isHR, isManager } = useAuth();
   
   return useMutation({
     mutationFn: async ({ id, ...update }: EmployeeUpdate & { id: string }) => {
-      // Ensure payroll users can update salary fields
-      if (isPayroll || isAdmin || isHR || isManager) {
-        console.log("Authorized user updating employee data:", { id, update });
-      }
-      
       const { data, error } = await supabase
         .from('employees')
         .update(update)
@@ -155,10 +141,7 @@ export function useUpdateEmployee() {
         .select()
         .single();
       
-      if (error) {
-        console.error("Error updating employee:", error);
-        throw error;
-      }
+      if (error) throw error;
       return data as Employee;
     },
     onSuccess: (data) => {
@@ -170,7 +153,6 @@ export function useUpdateEmployee() {
       });
     },
     onError: (error) => {
-      console.error("Update employee error:", error);
       toast({
         title: "Failed to update employee",
         description: error.message,

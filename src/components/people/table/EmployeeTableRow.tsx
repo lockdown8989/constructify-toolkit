@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Employee } from '../types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { formatCurrency } from '@/utils/format';
 
 interface EmployeeTableRowProps {
   employee: Employee;
@@ -56,12 +55,6 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
     Absent: "bg-amber-100 text-amber-700 border border-amber-200"
   };
 
-  // Extract numeric value from salary string and format with British pounds
-  const formatSalaryDisplay = (salaryString: string): string => {
-    const numericValue = parseInt(salaryString.replace(/[^0-9]/g, ''));
-    return formatCurrency(numericValue, 'GBP');
-  };
-
   return (
     <tr
       className={cn(
@@ -69,22 +62,21 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
         isSelected && "bg-blue-50 hover:bg-blue-50"
       )}
       onClick={handleRowClick}
-      style={{ lineHeight: "1.4", minHeight: 64 }}
     >
       <td className="py-3 px-4 whitespace-nowrap">
         <input
           type="checkbox"
           checked={isSelected}
           onChange={() => onSelect(employee.id)}
-          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-5 h-5"
+          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           onClick={e => e.stopPropagation()}
         />
       </td>
-      <td className="py-3 px-4 whitespace-nowrap min-w-[200px]">
-        <div className="flex items-center gap-4">
-          <Avatar className="h-12 w-12 rounded-full border border-gray-200 flex-shrink-0">
-            <AvatarImage
-              src={employee.avatar}
+      <td className="py-3 px-4 whitespace-nowrap">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-10 w-10 rounded-full border border-gray-200 flex-shrink-0">
+            <AvatarImage 
+              src={employee.avatar} 
               alt={employee.name}
               className="object-cover"
             />
@@ -93,13 +85,13 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
             </AvatarFallback>
           </Avatar>
           <div>
-            <div className="font-semibold text-gray-900 text-base">{employee.name}</div>
+            <div className="font-medium text-gray-900">{employee.name}</div>
             <div className="text-sm text-gray-500">{employee.jobTitle}</div>
           </div>
         </div>
       </td>
       <td className="py-3 px-4 whitespace-nowrap">
-        <span className="text-gray-700 font-medium">{employee.department}</span>
+        <span className="text-gray-700">{employee.department}</span>
       </td>
       <td className="py-3 px-4 whitespace-nowrap">
         <div className="flex items-center">
@@ -108,7 +100,7 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
         </div>
       </td>
       <td className="py-3 px-4 whitespace-nowrap">
-        <span className="font-medium text-gray-900">{formatSalaryDisplay(employee.salary)}</span>
+        <span className="font-medium text-gray-900">{employee.salary}</span>
       </td>
       <td className="py-3 px-4 whitespace-nowrap">
         <span className="text-gray-700">{employee.startDate}</span>

@@ -18,10 +18,10 @@ export const useSignIn = () => {
         };
       }
       
-      // Clean email input but don't change the actual value
-      const cleanEmail = email.trim().toLowerCase();
+      // Ensure email has no whitespace and is properly formatted
+      const trimmedEmail = email.trim().toLowerCase();
       
-      if (cleanEmail.length > 254) {
+      if (trimmedEmail.length > 254) {
         return {
           error: {
             message: "Email address is too long"
@@ -30,22 +30,18 @@ export const useSignIn = () => {
         };
       }
       
-      console.log('Attempting sign in with email:', cleanEmail);
-      
       const { data, error } = await supabase.auth.signInWithPassword({ 
-        email: cleanEmail, 
+        email: trimmedEmail, 
         password 
       });
       
       if (error) {
-        console.error('Sign in error:', error);
+        // Don't log sensitive authentication details in production
         return { error, data: undefined };
       } else {
-        console.log('Sign in successful:', data);
         return { error: null, data };
       }
     } catch (error) {
-      console.error('Sign in exception:', error);
       return { 
         error: {
           message: error instanceof Error ? "Sign in failed" : "An unexpected error occurred"

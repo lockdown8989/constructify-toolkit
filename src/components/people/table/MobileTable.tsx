@@ -32,13 +32,10 @@ const MobileTable: React.FC<MobileTableProps> = ({
   // Function to scroll to the top smoothly
   const scrollToTop = () => {
     if (scrollAreaRef.current) {
-      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (viewport) {
-        viewport.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
-      }
+      scrollAreaRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -60,9 +57,9 @@ const MobileTable: React.FC<MobileTableProps> = ({
       activeCards.forEach(card => card.classList.remove('touch-active'));
     };
     
-    container.addEventListener('touchstart', handleTouchStart, { passive: true });
-    container.addEventListener('touchend', handleTouchEnd, { passive: true });
-    container.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+    container.addEventListener('touchstart', handleTouchStart);
+    container.addEventListener('touchend', handleTouchEnd);
+    container.addEventListener('touchcancel', handleTouchEnd);
     
     return () => {
       container.removeEventListener('touchstart', handleTouchStart);
@@ -75,7 +72,7 @@ const MobileTable: React.FC<MobileTableProps> = ({
   const shouldShowScrollIndicator = employees.length > 5;
 
   return (
-    <div className="flex flex-col h-full" ref={containerRef}>
+    <div className="rounded-lg overflow-hidden flex flex-col" ref={containerRef}>
       {employees.length === 0 ? (
         <div className="p-8 text-center text-gray-500 min-h-[200px] flex flex-col items-center justify-center">
           <p className="text-base">No team members found</p>
@@ -84,10 +81,10 @@ const MobileTable: React.FC<MobileTableProps> = ({
       ) : (
         <>
           <ScrollArea 
-            className="flex-1 h-[calc(100vh-280px)] min-h-[400px] px-1"
+            className="max-h-[calc(100vh-250px)] min-h-[300px] overflow-y-auto rounded-lg momentum-scroll"
             ref={scrollAreaRef}
           >
-            <div className="space-y-2 pb-4">
+            <div>
               {employees.map(employee => (
                 <EmployeeMobileCard
                   key={employee.id}
@@ -104,16 +101,14 @@ const MobileTable: React.FC<MobileTableProps> = ({
           </ScrollArea>
           
           {shouldShowScrollIndicator && (
-            <div className="flex justify-center py-2 border-t border-gray-100">
-              <button 
-                onClick={scrollToTop}
-                className="flex items-center justify-center px-4 py-2 text-sm text-gray-600 hover:text-blue-600 transition-colors touch-target rounded-lg hover:bg-gray-50"
-                aria-label="Scroll to top"
-              >
-                <ChevronDown className="h-4 w-4 transform rotate-180 mr-1" />
-                <span>Back to top</span>
-              </button>
-            </div>
+            <button 
+              onClick={scrollToTop}
+              className="mt-2 flex items-center justify-center p-2 text-sm text-gray-600 hover:text-blue-600 transition-colors touch-target"
+              aria-label="Scroll to top"
+            >
+              <ChevronDown className="h-5 w-5 transform rotate-180 mr-1" />
+              <span>Scroll to top</span>
+            </button>
           )}
         </>
       )}

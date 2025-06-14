@@ -36,10 +36,10 @@ export const mapDbEmployeeToUiEmployee = (dbEmployee: any): Employee => {
   const siteIcon = dbEmployee.location === 'Remote' ? '🌐' : '🏢';
   const statusColor = dbEmployee.status === 'Active' ? 'green' : 'gray';
   
-  // Format salary with British pound symbol
-  const formattedSalary = new Intl.NumberFormat('en-GB', {
+  // Format salary with appropriate currency symbol
+  const formattedSalary = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'GBP',
+    currency: 'USD',
     maximumFractionDigits: 0,
     minimumFractionDigits: 0,
   }).format(dbEmployee.salary);

@@ -20,11 +20,9 @@ const PayrollDashboard: React.FC<PayrollDashboardProps> = ({
   employeeCount,
   hiredCount,
 }) => {
-  const { user, isPayroll } = useAuth();
-  const { data: employees = [], isLoading, error } = useEmployees();
+  const { user } = useAuth();
+  const { data: employees = [] } = useEmployees();
   const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
-
-  console.log("PayrollDashboard - employees loaded:", employees.length, "isPayroll:", isPayroll);
 
   // Transform employees data for the SalaryTable
   const salaryEmployees: Employee[] = employees.map(emp => ({
@@ -32,9 +30,9 @@ const PayrollDashboard: React.FC<PayrollDashboardProps> = ({
     name: emp.name,
     avatar: emp.avatar || `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'women' : 'men'}/${Math.floor(Math.random() * 99)}.jpg`,
     title: emp.job_title,
-    salary: `£${emp.salary.toLocaleString()}`,
+    salary: `$${emp.salary.toLocaleString()}`,
     status: emp.status === 'Active' ? 'Paid' as const : emp.status === 'Leave' ? 'Absent' as const : 'Pending' as const,
-    paymentDate: new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' }),
+    paymentDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
     selected: emp.id === selectedEmployee,
     department: emp.department
   }));
@@ -44,31 +42,10 @@ const PayrollDashboard: React.FC<PayrollDashboardProps> = ({
   };
 
   const handleUpdateStatus = (employeeId: string, newStatus: 'Paid' | 'Absent' | 'Pending') => {
+    // This would typically update the employee status in the database
     console.log(`Updating employee ${employeeId} status to ${newStatus}`);
-    // TODO: Implement actual status update
+    // For now, just log the action - in a real app this would make an API call
   };
-
-  if (isLoading) {
-    return (
-      <div className="max-w-[1800px] mx-auto">
-        <DashboardHeader firstName={firstName} />
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-pulse text-gray-600">Loading payroll data...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="max-w-[1800px] mx-auto">
-        <DashboardHeader firstName={firstName} />
-        <div className="flex justify-center items-center h-64">
-          <div className="text-red-600">Error loading employee data. Please try again.</div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-[1800px] mx-auto">

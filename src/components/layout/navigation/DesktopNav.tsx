@@ -19,14 +19,10 @@ import {
 import { cn } from "@/lib/utils";
 
 const DesktopNav = () => {
-  const { isAuthenticated, isAdmin, isHR, isManager, isPayroll } = useAuth();
+  const { isAuthenticated, hasManagerialAccess, hasPayrollAccess } = useAuth();
   const location = useLocation();
 
   if (!isAuthenticated) return null;
-
-  // Calculate derived properties
-  const hasManagerialAccess = isManager || isAdmin || isHR;
-  const hasPayrollAccess = isPayroll;
 
   const isActive = (path: string) => location.pathname === path;
 

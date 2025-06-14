@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import TableControls from './table/TableControls';
@@ -28,24 +28,9 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const isMobile = useIsMobile();
   
-  // Filter employees based on search query
-  const filteredEmployees = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return employees;
-    }
-    
-    const query = searchQuery.toLowerCase().trim();
-    return employees.filter(employee => 
-      employee.name.toLowerCase().includes(query) ||
-      employee.jobTitle.toLowerCase().includes(query) ||
-      employee.department.toLowerCase().includes(query) ||
-      employee.site.toLowerCase().includes(query)
-    );
-  }, [employees, searchQuery]);
-  
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedEmployees(filteredEmployees.map(emp => emp.id));
+      setSelectedEmployees(employees.map(emp => emp.id));
     } else {
       setSelectedEmployees([]);
     }
@@ -116,7 +101,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
   }
 
   return (
-    <div className={cn("bg-white overflow-hidden", className)}>
+    <div className={cn("bg-white", className)}>
       {/* Table controls */}
       <TableControls 
         isMobile={isMobile} 
@@ -125,7 +110,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
         selectedCount={selectedEmployees.length}
       />
       
-      {isManager && filteredEmployees.length === 0 && !searchQuery && (
+      {isManager && employees.length === 0 && (
         <div className="p-8 text-center">
           <p className="text-gray-600 mb-2 font-medium">No team members connected yet</p>
           <p className="text-sm text-gray-500">
@@ -133,20 +118,11 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
           </p>
         </div>
       )}
-
-      {filteredEmployees.length === 0 && searchQuery && (
-        <div className="p-8 text-center">
-          <p className="text-gray-600 mb-2 font-medium">No team members found</p>
-          <p className="text-sm text-gray-500">
-            Try adjusting your search terms or filters
-          </p>
-        </div>
-      )}
       
       {/* Desktop Table */}
       {!isMobile && (
         <DesktopTable 
-          employees={filteredEmployees}
+          employees={employees}
           selectedEmployees={selectedEmployees}
           onSelectEmployee={handleSelectEmployee}
           onSelectAll={handleSelectAll}
@@ -158,7 +134,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
       {/* Mobile Card View */}
       {isMobile && (
         <MobileTable 
-          employees={filteredEmployees}
+          employees={employees}
           selectedEmployees={selectedEmployees}
           expandedEmployee={expandedEmployee}
           onSelectEmployee={handleSelectEmployee}

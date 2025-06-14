@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/hooks/auth';
@@ -88,7 +89,7 @@ const AppRoutes = () => {
             }
           />
           <Route
-            path="/leave-management"
+            path="/leave"
             element={
               <ProtectedRoute>
                 <LeaveManagement />
@@ -114,7 +115,7 @@ const AppRoutes = () => {
           <Route
             path="/salary"
             element={
-              <ProtectedRoute requiredRole="payroll">
+              <ProtectedRoute>
                 <Salary />
               </ProtectedRoute>
             }

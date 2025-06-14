@@ -143,19 +143,16 @@ export const SalaryOverview = () => {
         </Card>
       ) : (
         <div className="space-y-6">
-          {/* MAIN SALARY INFO */}
+          {/* Main Salary Information */}
           <Card className="p-6 bg-white border-t-4 border-black">
             <div className="flex justify-between items-start mb-6">
               <div>
-                {/* CHANGE LABEL */}
-                <h2 className="text-lg font-semibold text-gray-700">
-                  Current Annual Salary
-                </h2>
-                <p className="text-2xl font-bold text-blue-900 mt-2 mb-0 flex items-center gap-2">
-                  <span className="text-blue-500 text-3xl">£</span>
-                  {formatCurrency(currentEmployee?.salary || stats?.base_salary || 0)}
+                <h2 className="text-lg font-semibold text-gray-700">Current Pay Period</h2>
+                <p className="text-sm text-gray-500">
+                  {stats?.payment_date ? 
+                    format(new Date(stats.payment_date), 'MMMM yyyy') : 
+                    format(new Date(), 'MMMM yyyy')}
                 </p>
-                <p className="text-sm text-gray-500 mt-0">Your contracted annual salary</p>
               </div>
               <Button 
                 variant="outline" 
@@ -170,12 +167,12 @@ export const SalaryOverview = () => {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Gross Salary (Pay Period)</p>
+                <p className="text-sm text-gray-600 mb-1">Gross Salary</p>
                 <p className="text-2xl font-bold">{formatCurrency(stats?.base_salary || 0)}</p>
               </div>
 
               <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Net Salary (Pay Period)</p>
+                <p className="text-sm text-gray-600 mb-1">Net Salary</p>
                 <p className="text-2xl font-bold text-green-600">
                   {formatCurrency(stats?.net_salary || 0)}
                 </p>

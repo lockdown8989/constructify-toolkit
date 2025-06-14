@@ -2,26 +2,17 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useAttendanceSync } from '@/hooks/use-attendance-sync';
 import { useAttendance } from '@/hooks/use-attendance';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
-import { useLocation } from "react-router-dom";
 
 const EmployeeAttendanceSummary = () => {
-  const { employeeId } = useEmployeeDataManagement();
   useAttendanceSync(); // Enable real-time sync
-  const { data: attendanceData } = useAttendance(employeeId);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { toast } = useToast();
-  const { isManager, isAdmin, isHR, isPayroll } = useAuth();
-
+  const { data: attendanceData } = useAttendance();
+  
   const currentTime = format(new Date(), 'dd MMM yyyy, hh:mm a');
-
+  
   const stats = {
     onTime: attendanceData?.present || 0,
     workFromHome: 0, // Can be expanded with actual WFH data
@@ -30,14 +21,6 @@ const EmployeeAttendanceSummary = () => {
     totalHours: 1434,
     maxHours: 1500,
     percentageRank: 91.3
-  };
-
-  const handleViewStats = () => {
-    // For employee, lock to their personal stats 
-    const goTo = (isManager || isAdmin || isHR || isPayroll)
-      ? "/attendance"
-      : "/attendance?me=1";
-    navigate(goTo);
   };
 
   return (
@@ -53,14 +36,11 @@ const EmployeeAttendanceSummary = () => {
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-xl font-semibold">My Attendance</h3>
-          <Button 
-            variant="ghost" 
-            className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
-            onClick={handleViewStats}
-            data-testid="view-stats"
-          >
-            View Stats
-          </Button>
+          <Link to="/attendance">
+            <Button variant="ghost" className="text-blue-500 hover:text-blue-600">
+              View Stats
+            </Button>
+          </Link>
         </div>
 
         <div className="grid gap-3">

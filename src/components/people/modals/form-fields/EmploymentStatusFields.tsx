@@ -21,15 +21,13 @@ const EmploymentStatusFields: React.FC<EmploymentStatusFieldsProps> = ({ form })
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select employment status" />
+                  <SelectValue placeholder="Select status" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="full-time">Full-time</SelectItem>
-                <SelectItem value="part-time">Part-time</SelectItem>
-                <SelectItem value="agency worker">Agency Worker</SelectItem>
-                <SelectItem value="contractor">Contractor</SelectItem>
-                <SelectItem value="intern">Intern</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="terminated">Terminated</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />

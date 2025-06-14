@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import SalaryOverview from '@/components/salary/SalaryOverview';
@@ -29,21 +30,28 @@ const SalaryPage = () => {
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
 
-  // Fetch all employees for payroll users
-  const { data: employees = [], isLoading, error } = useEmployees();
-  const { user } = useAuth();
+  const { data: employees = [], isLoading } = useEmployees();
+  const { user, isPayroll } = useAuth();
 
-  console.log("Salary page - employees data:", employees.length);
+  // Only allow payroll users to access this page
+  if (!isPayroll) {
+    return (
+      <div className="container py-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
+          <p className="text-gray-600 mt-2">This page is only accessible to payroll users.</p>
+        </div>
+      </div>
+    );
+  }
 
   React.useEffect(() => {
-    if (employees.length > 0 && !selectedEmployee) {
+    if (employees.length > 0) {
       const firstEmployee = employees[0];
       if (firstEmployee) {
         setSelectedEmployee(firstEmployee.id);
       }
     }
-    // This effect should only run when the employees list loads, not when selection changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [employees]);
 
   const handlePreviousMonth = () => {
@@ -60,40 +68,6 @@ const SalaryPage = () => {
 
   const selectedEmployeeData = employees.find(emp => emp.id === selectedEmployee);
 
-  if (isLoading) {
-    return (
-      <div className="container py-6">
-        <div className="text-center">
-          <div className="animate-pulse">Loading employee data...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    console.error("Error loading employees:", error);
-    return (
-      <div className="container py-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">Error Loading Data</h1>
-          <p className="text-gray-600 mt-2">Please check your permissions and try again.</p>
-          <p className="text-sm text-gray-500 mt-1">Error: {error.message}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (employees.length === 0) {
-    return (
-      <div className="container py-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-600">No Employees Found</h1>
-          <p className="text-gray-600 mt-2">No employee data is available for payroll management.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container py-6 animate-fade-in">
       <header className="mb-6">
@@ -101,9 +75,7 @@ const SalaryPage = () => {
           <DollarSign className="h-6 w-6" />
           <h1 className="text-2xl font-bold">Salary Management</h1>
         </div>
-        <p className="text-muted-foreground">
-          Manage employee salaries and compensation - {employees.length} employees loaded
-        </p>
+        <p className="text-muted-foreground">Manage employee salaries and compensation</p>
       </header>
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -126,11 +98,9 @@ const SalaryPage = () => {
               </div>
               
               <div className="space-y-2 max-h-[calc(100vh-240px)] overflow-y-auto">
-                {filteredEmployees.length === 0 ? (
+                {isLoading ? (
                   <div className="flex justify-center p-4">
-                    <div className="text-gray-500 text-sm">
-                      {employees.length === 0 ? 'No employees found' : 'No matching employees'}
-                    </div>
+                    <div className="animate-pulse">Loading employees...</div>
                   </div>
                 ) : (
                   filteredEmployees.map(employee => (
