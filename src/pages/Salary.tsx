@@ -30,6 +30,7 @@ const SalaryPage = () => {
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
 
+  // Updated to ensure payroll users see all employees
   const { data: employees = [], isLoading } = useEmployees();
   const { user, isPayroll } = useAuth();
 
@@ -46,13 +47,13 @@ const SalaryPage = () => {
   }
 
   React.useEffect(() => {
-    if (employees.length > 0) {
+    if (employees.length > 0 && !selectedEmployee) {
       const firstEmployee = employees[0];
       if (firstEmployee) {
         setSelectedEmployee(firstEmployee.id);
       }
     }
-  }, [employees]);
+  }, [employees, selectedEmployee]);
 
   const handlePreviousMonth = () => {
     setSelectedMonth(prev => subMonths(prev, 1));
@@ -68,6 +69,16 @@ const SalaryPage = () => {
 
   const selectedEmployeeData = employees.find(emp => emp.id === selectedEmployee);
 
+  if (isLoading) {
+    return (
+      <div className="container py-6">
+        <div className="text-center">
+          <div className="animate-pulse">Loading employee data...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-6 animate-fade-in">
       <header className="mb-6">
@@ -75,7 +86,9 @@ const SalaryPage = () => {
           <DollarSign className="h-6 w-6" />
           <h1 className="text-2xl font-bold">Salary Management</h1>
         </div>
-        <p className="text-muted-foreground">Manage employee salaries and compensation</p>
+        <p className="text-muted-foreground">
+          Manage employee salaries and compensation - {employees.length} employees loaded
+        </p>
       </header>
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -98,9 +111,11 @@ const SalaryPage = () => {
               </div>
               
               <div className="space-y-2 max-h-[calc(100vh-240px)] overflow-y-auto">
-                {isLoading ? (
+                {filteredEmployees.length === 0 ? (
                   <div className="flex justify-center p-4">
-                    <div className="animate-pulse">Loading employees...</div>
+                    <div className="text-gray-500 text-sm">
+                      {employees.length === 0 ? 'No employees found' : 'No matching employees'}
+                    </div>
                   </div>
                 ) : (
                   filteredEmployees.map(employee => (
