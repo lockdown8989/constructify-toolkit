@@ -62,27 +62,39 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
     }
   };
 
-  // Convert UI Employee to DB Employee format
+  // Convert UI Employee to DB Employee format for editing
   const mapToDbEmployee = (uiEmployee: Employee): DbEmployee => {
     return {
       id: uiEmployee.id,
       name: uiEmployee.name,
-      job_title: uiEmployee.jobTitle,
+      job_title: uiEmployee.jobTitle || uiEmployee.job_title || '',
       department: uiEmployee.department,
       site: uiEmployee.site,
-      salary: parseFloat(uiEmployee.salary.replace(/[^0-9.]/g, '')),
-      start_date: new Date(uiEmployee.startDate).toISOString().split('T')[0],
-      lifecycle: uiEmployee.lifecycle,
-      status: uiEmployee.status,
+      salary: typeof uiEmployee.salary === 'string' 
+        ? parseFloat(uiEmployee.salary.replace(/[^0-9.]/g, '')) || 0
+        : uiEmployee.salary || 0,
+      start_date: uiEmployee.startDate 
+        ? new Date(uiEmployee.startDate).toISOString().split('T')[0]
+        : uiEmployee.start_date || new Date().toISOString().split('T')[0],
+      lifecycle: uiEmployee.lifecycle || 'Active',
+      status: uiEmployee.status || 'Active',
       avatar: uiEmployee.avatar,
-      location: uiEmployee.siteIcon === '🌐' ? 'Remote' : 'Office',
-      annual_leave_days: uiEmployee.annual_leave_days || 25, 
+      location: uiEmployee.location,
+      annual_leave_days: uiEmployee.annual_leave_days || 25,
       sick_leave_days: uiEmployee.sick_leave_days || 10,
-      manager_id: uiEmployee.managerId || null,
-      user_id: uiEmployee.userId || null,
+      manager_id: uiEmployee.managerId || uiEmployee.manager_id || null,
+      user_id: uiEmployee.userId || uiEmployee.user_id || null,
       email: uiEmployee.email,
-      role: uiEmployee.role,
-      hourly_rate: uiEmployee.hourly_rate
+      role: uiEmployee.role || 'employee',
+      hourly_rate: uiEmployee.hourly_rate || null,
+      shift_pattern_id: uiEmployee.shift_pattern_id || null,
+      monday_shift_id: uiEmployee.monday_shift_id || null,
+      tuesday_shift_id: uiEmployee.tuesday_shift_id || null,
+      wednesday_shift_id: uiEmployee.wednesday_shift_id || null,
+      thursday_shift_id: uiEmployee.thursday_shift_id || null,
+      friday_shift_id: uiEmployee.friday_shift_id || null,
+      saturday_shift_id: uiEmployee.saturday_shift_id || null,
+      sunday_shift_id: uiEmployee.sunday_shift_id || null
     };
   };
 
@@ -116,7 +128,13 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       {isEditModalOpen && (
         <AddEmployeeModal
           open={isEditModalOpen}
-          onOpenChange={setIsEditModalOpen}
+          onOpenChange={(open) => {
+            setIsEditModalOpen(open);
+            if (!open) {
+              // Refresh the parent modal data when edit modal closes
+              onClose();
+            }
+          }}
           departments={[]}
           sites={[]}
           employeeToEdit={mapToDbEmployee(employee)}

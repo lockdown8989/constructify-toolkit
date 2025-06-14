@@ -36,9 +36,10 @@ export const useEmployeeForm = ({
       location: employeeToEdit?.location || defaultLocation || '',
       salary: employeeToEdit?.salary || 0,
       hourly_rate: employeeToEdit?.hourly_rate || 0,
-      lifecycle: 'active',
-      status: 'active',
+      lifecycle: (employeeToEdit?.lifecycle as any) || 'active',
+      status: (employeeToEdit?.status as any) || 'active',
       start_date: employeeToEdit?.start_date || new Date().toISOString().split('T')[0],
+      shift_pattern_id: employeeToEdit?.shift_pattern_id || '',
     },
   });
 
@@ -57,9 +58,10 @@ export const useEmployeeForm = ({
         salary: values.salary || 0,
         hourly_rate: values.hourly_rate || 0,
         start_date: values.start_date || new Date().toISOString().split('T')[0],
-        status: 'Active',
-        lifecycle: 'Active',
+        status: values.status === 'active' ? 'Active' : values.status === 'inactive' ? 'Inactive' : 'Pending',
+        lifecycle: values.lifecycle === 'active' ? 'Active' : values.lifecycle === 'inactive' ? 'Inactive' : 'Terminated',
         role: 'employee',
+        shift_pattern_id: values.shift_pattern_id || null,
       };
 
       if (employeeToEdit) {
