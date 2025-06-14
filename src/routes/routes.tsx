@@ -29,6 +29,9 @@ import Hiring from '@/pages/Hiring';
 import About from '@/pages/About';
 import NotFound from '@/pages/NotFound';
 
+// Import the ShiftCalendar component
+import ShiftCalendar from '@/components/schedule/ShiftCalendar';
+
 const AppRoutes = () => {
   return (
     <AuthProvider>
@@ -81,6 +84,14 @@ const AppRoutes = () => {
             }
           />
           <Route
+            path="/shift-calendar"
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <ShiftCalendar />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/schedule-requests"
             element={
               <ProtectedRoute>
@@ -89,7 +100,7 @@ const AppRoutes = () => {
             }
           />
           <Route
-            path="/leave"
+            path="/leave-management"
             element={
               <ProtectedRoute>
                 <LeaveManagement />
@@ -107,7 +118,7 @@ const AppRoutes = () => {
           <Route
             path="/attendance"
             element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+              <ProtectedRoute>
                 <Attendance />
               </ProtectedRoute>
             }
