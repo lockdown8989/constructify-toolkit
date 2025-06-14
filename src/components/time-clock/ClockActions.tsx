@@ -33,27 +33,10 @@ const ClockActions = ({
   const [isShiftCompletionOpen, setIsShiftCompletionOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'in' | 'out' | 'break' | 'end_break' | null>(null);
   const [localProcessing, setLocalProcessing] = useState(false);
-  const [lastAction, setLastAction] = useState<'in' | 'out' | null>(null);
   const { toast } = useToast();
 
-  // Persist last action in localStorage
-  useEffect(() => {
-    if (selectedEmployee) {
-      const storageKey = `timeClockAction_${selectedEmployee}`;
-      const stored = localStorage.getItem(storageKey);
-      if (stored && (stored === 'in' || stored === 'out')) {
-        setLastAction(stored);
-      }
-    }
-  }, [selectedEmployee]);
-
-  // Save action to localStorage when it changes
-  useEffect(() => {
-    if (selectedEmployee && lastAction) {
-      const storageKey = `timeClockAction_${selectedEmployee}`;
-      localStorage.setItem(storageKey, lastAction);
-    }
-  }, [selectedEmployee, lastAction]);
+  // Remove localStorage use for tracking status (source of truth is now DB)
+  // UI uses employeeStatus directly
 
   const handleActionClick = (clickAction: 'in' | 'out') => {
     if (!selectedEmployee) {
@@ -61,6 +44,24 @@ const ClockActions = ({
         title: "No Employee Selected",
         description: "Please select an employee first",
         variant: "destructive",
+      });
+      return;
+    }
+    
+    // Prevent repeating the same action
+    if (clickAction === 'in' && employeeStatus?.isClockedIn) {
+      toast({
+        title: "Already Clocked In",
+        description: "Employee is already clocked in.",
+        variant: "default",
+      });
+      return;
+    }
+    if (clickAction === 'out' && !employeeStatus?.isClockedIn) {
+      toast({
+        title: "Already Clocked Out",
+        description: "Employee is already clocked out.",
+        variant: "default",
       });
       return;
     }
@@ -73,7 +74,6 @@ const ClockActions = ({
     
     // For clock in or if employee is not clocked in
     setPendingAction(clickAction);
-    setLastAction(clickAction);
     setIsPinDialogOpen(true);
   };
 
@@ -100,7 +100,6 @@ const ClockActions = ({
   const handleShiftCompletion = async (actionType: 'finish' | 'break') => {
     if (actionType === 'finish') {
       setPendingAction('out');
-      setLastAction('out');
     } else {
       if (employeeStatus?.onBreak) {
         // If already on break, end the break
@@ -162,53 +161,19 @@ const ClockActions = ({
     }
   };
 
-  const getButtonLabel = () => {
-    if (!employeeStatus) return { in: 'IN', out: 'OUT' };
-    
-    if (employeeStatus.isClockedIn) {
-      if (employeeStatus.onBreak) {
-        return { in: 'IN', out: 'OUT', break: 'END BREAK' };
-      } else {
-        return { in: 'IN', out: 'OUT', break: 'START BREAK' };
-      }
-    }
-    
-    return { in: 'IN', out: 'OUT (Disabled)' };
+  // Use DB fields to control button state/labels
+  const buttonLabels = {
+    in: 'IN',
+    out: 'OUT',
+    break: employeeStatus?.onBreak 
+      ? 'END BREAK' 
+      : 'START BREAK'
   };
 
-  const buttonLabels = getButtonLabel();
-
-  // Convert pending action for confirmation dialog
-  const getConfirmationAction = (): 'in' | 'out' => {
-    if (pendingAction === 'end_break' || pendingAction === 'break') return 'in';
-    return pendingAction as 'in' | 'out';
-  };
-
-  const getPinAction = (): 'in' | 'out' => {
-    if (pendingAction === 'end_break' || pendingAction === 'break') return 'in';
-    return pendingAction as 'in' | 'out';
-  };
-
-  // Get appropriate dialog title and message based on employee status
-  const getShiftCompletionProps = () => {
-    if (employeeStatus?.onBreak) {
-      return {
-        finishText: "FINISH SHIFT",
-        breakText: "FINISH BREAK",
-        title: "What would you like to do?",
-        subtitle: "You are currently on a break"
-      };
-    } else {
-      return {
-        finishText: "FINISHED MY SHIFT", 
-        breakText: "GOING ON A BREAK",
-        title: "What would you like to do?",
-        subtitle: "Choose your next action"
-      };
-    }
-  };
-
-  const shiftProps = getShiftCompletionProps();
+  // Only enable actions when according to DB status
+  const isInDisabled = isProcessing || localProcessing || employeeStatus?.isClockedIn;
+  const isOutDisabled = isProcessing || localProcessing || !employeeStatus?.isClockedIn;
+  const isBreakDisabled = isProcessing || localProcessing;
 
   return (
     <>
@@ -233,33 +198,31 @@ const ClockActions = ({
                   : 'Clocked Out'}
               </span>
               
-              {/* Show last action indicator */}
-              {lastAction && (
-                <div className="mt-2 text-xs text-gray-500">
-                  Last action: {lastAction.toUpperCase()}
-                </div>
-              )}
+              {/* Show DB last action indicator */}
+              <div className="mt-2 text-xs text-gray-500">
+                Last action: {employeeStatus?.isClockedIn ? "IN" : "OUT"}
+              </div>
             </div>
             
             {/* Mobile-friendly button layout */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
               <Button 
                 className={`py-6 sm:py-8 text-xl sm:text-3xl rounded-md touch-target min-h-[60px] ${
-                  lastAction === 'in' ? 'ring-2 ring-emerald-400 ring-offset-2' : ''
+                  employeeStatus?.isClockedIn ? 'ring-2 ring-emerald-400 ring-offset-2' : ''
                 } ${action === 'in' ? 'animate-pulse' : ''} bg-emerald-500 hover:bg-emerald-600`}
                 onClick={() => handleActionClick('in')}
-                disabled={isProcessing || localProcessing || employeeStatus?.isClockedIn}
+                disabled={isInDisabled}
               >
                 {(isProcessing || localProcessing) && pendingAction === 'in' ? 'Processing...' : buttonLabels.in}
               </Button>
               <Button 
                 className={`py-6 sm:py-8 text-xl sm:text-3xl rounded-md touch-target min-h-[60px] ${
-                  lastAction === 'out' ? 'ring-2 ring-red-400 ring-offset-2' : ''
+                  employeeStatus && !employeeStatus.isClockedIn ? 'ring-2 ring-red-400 ring-offset-2' : ''
                 } ${action === 'out' ? 'animate-pulse' : ''} bg-red-600 hover:bg-red-700`}
                 onClick={() => handleActionClick('out')}
-                disabled={isProcessing || localProcessing || !employeeStatus?.isClockedIn}
+                disabled={isOutDisabled}
               >
-                {(isProcessing || localProcessing) && (pendingAction === 'out') ? 'Processing...' : 'OUT'}
+                {(isProcessing || localProcessing) && (pendingAction === 'out') ? 'Processing...' : buttonLabels.out}
               </Button>
             </div>
 
@@ -272,11 +235,11 @@ const ClockActions = ({
                     : 'bg-orange-500 hover:bg-orange-600'
                 }`}
                 onClick={handleBreakClick}
-                disabled={isProcessing || localProcessing}
+                disabled={isBreakDisabled}
               >
                 {(isProcessing || localProcessing) && (pendingAction === 'break' || pendingAction === 'end_break') 
                   ? 'Processing...' 
-                  : buttonLabels.break || (employeeStatus.onBreak ? 'END BREAK' : 'START BREAK')
+                  : buttonLabels.break
                 }
               </Button>
             )}
@@ -307,9 +270,11 @@ const ClockActions = ({
         onClose={() => setIsShiftCompletionOpen(false)}
         onFinishShift={async () => handleShiftCompletion('finish')}
         onGoOnBreak={async () => handleShiftCompletion('break')}
+        onEndBreak={employeeStatus?.onBreak ? async () => handleShiftCompletion('break') : undefined}
         employeeName={selectedEmployeeName}
         employeeAvatar={selectedEmployeeAvatar}
         isSubmitting={localProcessing}
+        isOnBreak={employeeStatus?.onBreak}
       />
 
       {/* PIN Verification Dialog */}
@@ -318,7 +283,7 @@ const ClockActions = ({
         onClose={() => setIsPinDialogOpen(false)}
         onSuccess={handlePinSuccess}
         employeeName={selectedEmployeeName}
-        action={getPinAction()}
+        action={pendingAction === 'in' ? 'in' : 'out'}
       />
 
       {/* Confirmation Dialog */}
@@ -326,7 +291,7 @@ const ClockActions = ({
         isOpen={isConfirmationOpen}
         onClose={() => setIsConfirmationOpen(false)}
         onConfirm={handleConfirmAction}
-        action={getConfirmationAction()}
+        action={pendingAction === 'in' ? 'in' : 'out'}
         employeeName={selectedEmployeeName}
         employeeAvatar={selectedEmployeeAvatar}
         isSubmitting={isProcessing || localProcessing}

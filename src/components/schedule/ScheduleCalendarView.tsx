@@ -1,17 +1,14 @@
-
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, isBefore, startOfDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Send } from 'lucide-react';
+import { PlusCircle, Send, Clock } from 'lucide-react';
 import { Schedule } from '@/hooks/use-schedules';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useScheduleCalendar } from '@/hooks/use-schedule-calendar';
 import { useShiftAssignmentDialog } from '@/hooks/use-shift-assignment-dialog';
 import { ShiftAssignmentDialog } from './ShiftAssignmentDialog';
 import { OpenShiftType } from '@/types/supabase/schedules';
-import ScheduleNotifications from './components/ScheduleNotifications';
-import ScheduleList from './components/ScheduleList';
 import { useToast } from '@/hooks/use-toast';
 import AddShiftSheet from './components/AddShiftSheet';
 import DateActionDialog from './components/DateActionDialog';
@@ -19,6 +16,9 @@ import ScheduleDateContextMenu from './components/ScheduleDateContextMenu';
 import ScheduleDatePopover from './components/ScheduleDatePopover';
 import { useShiftActions } from '@/hooks/use-shift-actions';
 import { useOpenShifts } from '@/hooks/use-open-shifts';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { useAuth } from '@/hooks/use-auth';
 
 interface ScheduleCalendarViewProps {
   date: Date | undefined;
@@ -30,6 +30,27 @@ interface ScheduleCalendarViewProps {
   isAdmin: boolean;
   isHR: boolean;
 }
+
+const PendingShiftNotification: React.FC<{ pendingCount: number }> = ({ pendingCount }) => (
+  <Card className="mb-6 bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200">
+    <div className="p-4 flex items-center gap-3">
+      <div className="flex-shrink-0">
+        <Clock className="h-5 w-5 text-orange-600" />
+      </div>
+      <div className="flex-1">
+        <h3 className="font-medium text-orange-800">
+          You have {pendingCount} pending shift{pendingCount > 1 ? 's' : ''} waiting for response
+        </h3>
+        <p className="text-sm text-orange-600 mt-1">
+          Please respond to your pending shifts to help with scheduling
+        </p>
+      </div>
+      <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300">
+        Pending
+      </Badge>
+    </div>
+  </Card>
+);
 
 const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
   date,
@@ -43,6 +64,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const { user, isEmployee } = useAuth();
   const { newSchedules, pendingSchedules } = useScheduleCalendar(schedules);
   const shiftAssignment = useShiftAssignmentDialog();
   const { openShifts, isLoading: openShiftsLoading } = useOpenShifts();
@@ -54,6 +76,26 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
   const [animatingDate, setAnimatingDate] = useState<Date | null>(null);
 
   const isManager = isAdmin || isHR;
+  
+  // Filter pending schedules for the current user and exclude expired ones
+  const today = startOfDay(new Date());
+  const currentUserPendingSchedules = isEmployee ? 
+    pendingSchedules.filter(schedule => {
+      // Check if the schedule belongs to the current user
+      const belongsToUser = schedules.some(s => 
+        s.id === schedule.id && 
+        s.employee_id && 
+        employeeNames[s.employee_id] // This would need to be matched against current user
+      );
+      
+      // Check if the schedule is not expired (start time is today or in the future)
+      const scheduleDate = startOfDay(new Date(schedule.start_time));
+      const isNotExpired = !isBefore(scheduleDate, today);
+      
+      return belongsToUser && isNotExpired;
+    }) : [];
+
+  const pendingCount = currentUserPendingSchedules.length;
 
   const handleOpenShiftClick = (openShift: OpenShiftType) => {
     if (isManager) {
@@ -91,7 +133,6 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
       setIsAddShiftOpen(true);
       setIsDateActionOpen(false);
       
-      // Trigger animation on the selected date
       setAnimatingDate(selectedDate);
       setTimeout(() => setAnimatingDate(null), 2000);
     }
@@ -105,16 +146,13 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
         variant: "default"
       });
 
-      // Close the sheet
       setIsAddShiftOpen(false);
       
-      // Show animation on the date where shift was created
       if (selectedDate) {
         setAnimatingDate(selectedDate);
         setTimeout(() => setAnimatingDate(null), 3000);
       }
       
-      // Refresh the parent component to show new shifts
       onAddSchedule();
       
     } catch (error) {
@@ -127,7 +165,6 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
     }
   };
 
-  // Custom day content to add context menu, popover, and animations
   const renderDay = (day: Date) => {
     const daySchedules = schedules.filter(schedule => {
       const scheduleDate = new Date(schedule.start_time);
@@ -138,15 +175,22 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
     const isAnimating = animatingDate && format(animatingDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
 
     const dayContent = (
-      <div className={`relative w-full h-full flex items-center justify-center ${
-        hasSchedules ? 'font-bold' : ''
-      } ${isAnimating ? 'animate-pulse bg-green-100 rounded-full' : ''}`}>
-        {format(day, 'd')}
+      <div className={`relative w-full h-full flex flex-col items-center justify-center p-1 min-h-[40px] ${
+        hasSchedules ? 'font-semibold' : ''
+      } ${isAnimating ? 'animate-pulse bg-green-100 rounded-lg' : ''}`}>
+        <span className="text-sm">{format(day, 'd')}</span>
         {hasSchedules && (
-          <div className="absolute bottom-0 right-0 w-2 h-2 bg-blue-500 rounded-full"></div>
+          <div className="flex gap-0.5 mt-1">
+            {daySchedules.slice(0, 3).map((_, i) => (
+              <div key={i} className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+            ))}
+            {daySchedules.length > 3 && (
+              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+            )}
+          </div>
         )}
         {isAnimating && (
-          <div className="absolute inset-0 bg-green-400/20 rounded-full animate-ping"></div>
+          <div className="absolute inset-0 bg-green-400/20 rounded-lg animate-ping"></div>
         )}
       </div>
     );
@@ -182,77 +226,130 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
       </ScheduleDatePopover>
     );
   };
+
+  const selectedDateSchedules = date ? schedules.filter(schedule => {
+    const scheduleDate = new Date(schedule.start_time);
+    return format(scheduleDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
+  }) : [];
   
   return (
-    <>
-      <div className="bg-white rounded-3xl p-4 sm:p-6 card-shadow">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg sm:text-xl font-medium">Schedule Calendar</h2>
-          
-          {isManager && (
-            <Button 
-              onClick={handlePublishShifts}
-              className="bg-green-600 hover:bg-green-700 text-white"
-              size={isMobile ? "sm" : "default"}
-            >
-              <Send className="h-4 w-4 mr-2" />
-              Publish Shifts
-            </Button>
-          )}
+    <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Schedule</h1>
+          <p className="text-sm text-gray-600 mt-1">
+            {format(new Date(), 'MMMM yyyy')}
+          </p>
         </div>
-        
-        <ScheduleNotifications 
-          newSchedules={Object.keys(newSchedules).map(id => 
-            schedules.find(s => s.id === id)
-          ).filter(Boolean) as Schedule[]}
-          pendingSchedules={pendingSchedules}
-        />
-        
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={setDate}
-          onDayClick={handleDateClick}
-          className="w-full"
-          disabled={false}
-          components={{
-            Day: ({ date: dayDate }) => renderDay(dayDate)
-          }}
-          classNames={{
-            day_today: "bg-black text-white",
-            day_selected: "bg-teampulse-accent text-black",
-            cell: "text-center p-0 relative [&:has([aria-selected])]:bg-teampulse-accent/10 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 cursor-pointer hover:bg-gray-100 transition-colors",
-            head_cell: "text-gray-500 text-xs sm:text-sm w-9 font-normal",
-            nav_button: "h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100",
-            caption: "text-sm sm:text-base",
-            root: "w-full",
-            table: "w-full border-collapse space-y-1",
-            row: "flex w-full mt-2",
-          }}
-        />
-        
-        <ScheduleList
-          date={date}
-          schedules={schedules}
-          schedulesLoading={schedulesLoading}
-          employeeNames={employeeNames}
-          newSchedules={newSchedules}
-        />
         
         {isManager && (
           <Button 
-            variant="outline" 
-            size={isMobile ? "sm" : "default"} 
-            className="mt-4 w-full sm:w-auto hover:scale-105 transition-transform duration-200" 
-            onClick={onAddSchedule}
+            onClick={handlePublishShifts}
+            className="bg-green-600 hover:bg-green-700 text-white rounded-xl"
+            size={isMobile ? "sm" : "default"}
           >
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Add Schedule
+            <Send className="h-4 w-4 mr-2" />
+            Publish Shifts
           </Button>
         )}
       </div>
 
-      {/* Date Action Dialog */}
+      {/* Pending Shifts Notification - Only show for employees with pending shifts */}
+      {isEmployee && pendingCount > 0 && (
+        <PendingShiftNotification pendingCount={pendingCount} />
+      )}
+      
+      {/* Calendar Card */}
+      <Card className="mb-6 overflow-hidden">
+        <div className="p-6">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            onDayClick={handleDateClick}
+            className="w-full"
+            disabled={false}
+            components={{
+              Day: ({ date: dayDate }) => renderDay(dayDate)
+            }}
+            classNames={{
+              day_today: "bg-gray-900 text-white font-semibold rounded-lg",
+              day_selected: "bg-blue-500 text-white rounded-lg",
+              cell: "text-center p-1 relative hover:bg-gray-100 rounded-lg transition-colors cursor-pointer",
+              head_cell: "text-gray-500 text-sm font-medium w-full",
+              nav_button: "h-8 w-8 bg-transparent p-0 hover:bg-gray-100 rounded-lg",
+              caption: "text-lg font-semibold",
+              root: "w-full",
+              table: "w-full border-collapse",
+              row: "flex w-full",
+              month: "space-y-4",
+            }}
+          />
+        </div>
+      </Card>
+
+      {/* Today's Schedule */}
+      {date && (
+        <Card>
+          <div className="p-6">
+            <h3 className="text-lg font-semibold mb-4">
+              {format(date, 'EEEE, MMMM d, yyyy')}
+            </h3>
+            
+            {selectedDateSchedules.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Clock className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                <p>No shifts scheduled for this day</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {selectedDateSchedules.map(schedule => (
+                  <div 
+                    key={schedule.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-8 bg-blue-500 rounded-full"></div>
+                      <div>
+                        <p className="font-medium">
+                          {employeeNames[schedule.employee_id] || 'Unknown Employee'}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {format(new Date(schedule.start_time), 'h:mm a')} - {format(new Date(schedule.end_time), 'h:mm a')}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge 
+                      variant={schedule.status === 'pending' ? 'outline' : 'default'}
+                      className={schedule.status === 'pending' ? 'border-orange-300 text-orange-700 bg-orange-50' : ''}
+                    >
+                      {schedule.status}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* Add Schedule Button */}
+      {isManager && (
+        <div className="mt-6 flex justify-center">
+          <Button 
+            variant="outline" 
+            size="lg"
+            className="rounded-xl hover:scale-105 transition-transform duration-200" 
+            onClick={onAddSchedule}
+          >
+            <PlusCircle className="h-5 w-5 mr-2" />
+            Add New Schedule
+          </Button>
+        </div>
+      )}
+
+      {/* Dialogs and Sheets */}
       <DateActionDialog
         isOpen={isDateActionOpen}
         onClose={() => setIsDateActionOpen(false)}
@@ -260,7 +357,6 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
         onAddShift={handleAddShift}
       />
 
-      {/* Add Shift Sheet */}
       <AddShiftSheet
         isOpen={isAddShiftOpen || shiftActions.isAddShiftOpen}
         onOpenChange={(open) => {
@@ -272,7 +368,6 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
         isMobile={isMobile}
       />
 
-      {/* Shift Assignment Dialog */}
       <ShiftAssignmentDialog
         isOpen={shiftAssignment.isOpen}
         onClose={shiftAssignment.closeDialog}
@@ -280,7 +375,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
         employees={shiftAssignment.employees || []}
         onAssign={shiftAssignment.handleAssign}
       />
-    </>
+    </div>
   );
 };
 
