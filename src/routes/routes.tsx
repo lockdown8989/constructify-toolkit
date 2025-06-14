@@ -114,7 +114,7 @@ const AppRoutes = () => {
           <Route
             path="/salary"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="payroll">
                 <Salary />
               </ProtectedRoute>
             }

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import SalaryOverview from '@/components/salary/SalaryOverview';
@@ -32,21 +31,9 @@ const SalaryPage = () => {
 
   // Fetch all employees for payroll users
   const { data: employees = [], isLoading, error } = useEmployees();
-  const { user, isPayroll } = useAuth();
+  const { user } = useAuth();
 
-  console.log("Salary page - employees data:", employees.length, "isPayroll:", isPayroll);
-
-  // Only allow payroll users to access this page
-  if (!isPayroll) {
-    return (
-      <div className="container py-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
-          <p className="text-gray-600 mt-2">This page is only accessible to payroll users.</p>
-        </div>
-      </div>
-    );
-  }
+  console.log("Salary page - employees data:", employees.length);
 
   React.useEffect(() => {
     if (employees.length > 0 && !selectedEmployee) {
