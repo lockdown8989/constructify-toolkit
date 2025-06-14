@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,10 +9,12 @@ import { useAttendanceSync } from '@/hooks/use-attendance-sync';
 import { useAttendance } from '@/hooks/use-attendance';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
 
 const EmployeeAttendanceSummary = () => {
+  const { employeeId } = useEmployeeDataManagement();
   useAttendanceSync(); // Enable real-time sync
-  const { data: attendanceData } = useAttendance();
+  const { data: attendanceData } = useAttendance(employeeId);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isManager, isAdmin, isHR, isPayroll } = useAuth();
