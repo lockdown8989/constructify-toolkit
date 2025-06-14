@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/types/supabase';
@@ -31,14 +30,22 @@ export function useEmployees(filters?: Partial<{
       } else if (isManager && user) {
         // For managers - show employees under their management
         console.log("Manager user, fetching team data");
-        const { data: managerData } = await supabase
+        
+        // Get the current user's employee record to find their manager_id (which they use as their identifier)
+        const { data: currentManagerEmployee } = await supabase
           .from('employees')
           .select('manager_id')
           .eq('user_id', user.id)
           .single();
         
-        if (managerData && managerData.manager_id) {
-          query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
+        if (currentManagerEmployee?.manager_id) {
+          // Show employees who have this manager's manager_id as their manager_id
+          // This means employees who report to this manager
+          query = query.eq('manager_id', currentManagerEmployee.manager_id);
+          console.log("Filtering employees by manager_id:", currentManagerEmployee.manager_id);
+        } else {
+          console.log("Manager has no manager_id set, showing no employees");
+          return [];
         }
       } else if (!isManager && !isPayroll && !isAdmin && !isHR && user) {
         // For regular employees - show only their own data
