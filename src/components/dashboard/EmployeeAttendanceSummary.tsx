@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useAttendanceSync } from '@/hooks/use-attendance-sync';
 import { useAttendance } from '@/hooks/use-attendance';
@@ -11,6 +10,7 @@ import { useAttendance } from '@/hooks/use-attendance';
 const EmployeeAttendanceSummary = () => {
   useAttendanceSync(); // Enable real-time sync
   const { data: attendanceData } = useAttendance();
+  const navigate = useNavigate();
   
   const currentTime = format(new Date(), 'dd MMM yyyy, hh:mm a');
   
@@ -22,6 +22,11 @@ const EmployeeAttendanceSummary = () => {
     totalHours: 1434,
     maxHours: 1500,
     percentageRank: 91.3
+  };
+
+  const handleViewStats = () => {
+    console.log('Navigating to attendance page...');
+    navigate('/attendance');
   };
 
   return (
@@ -37,11 +42,13 @@ const EmployeeAttendanceSummary = () => {
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-xl font-semibold">My Attendance</h3>
-          <Link to="/attendance">
-            <Button variant="ghost" className="text-blue-500 hover:text-blue-600 hover:bg-blue-50">
-              View Stats
-            </Button>
-          </Link>
+          <Button 
+            variant="ghost" 
+            className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+            onClick={handleViewStats}
+          >
+            View Stats
+          </Button>
         </div>
 
         <div className="grid gap-3">
