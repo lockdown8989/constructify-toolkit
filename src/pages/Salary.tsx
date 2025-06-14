@@ -65,11 +65,6 @@ const SalaryPage = () => {
     setSelectedMonth(prev => addMonths(prev, 1));
   };
 
-  const handleBackNavigation = () => {
-    // Navigate back to payroll dashboard or main dashboard
-    navigate('/payroll-dashboard');
-  };
-
   const filteredEmployees = employees.filter(emp => 
     emp.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -114,14 +109,6 @@ const SalaryPage = () => {
     <div className="container py-6 animate-fade-in">
       <header className="mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <Button 
-            variant="ghost" 
-            onClick={handleBackNavigation}
-            className="p-2 hover:bg-gray-100 rounded-lg"
-          >
-            <ChevronLeft className="h-5 w-5" />
-            <span className="ml-1">Back</span>
-          </Button>
           <DollarSign className="h-6 w-6" />
           <h1 className="text-2xl font-bold">Salary Management</h1>
         </div>
