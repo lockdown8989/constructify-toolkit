@@ -40,31 +40,25 @@ function App() {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/*" element={
-              <MainLayout>
-                <Routes>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/schedule" element={<Schedule />} />
-                  <Route path="/attendance" element={<Attendance />} />
-                  <Route path="/attendance-manager" element={<AttendanceManager />} />
-                  <Route path="/leave-management" element={<LeaveManagement />} />
-                  <Route path="/employee-management" element={<EmployeeManagement />} />
-                  <Route path="/payroll-dashboard" element={<PayrollDashboard />} />
-                  <Route path="/payroll-history" element={<PayrollHistory />} />
-                  <Route path="/payroll-summary" element={<PayrollSummary />} />
-                  <Route path="/documents" element={<Documents />} />
-                  <Route path="/documents-manager" element={<DocumentsManager />} />
-                  <Route path="/reports" element={<Reports />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/shift-calendar" element={<ShiftCalendar />} />
-                  <Route path="/open-shifts" element={<OpenShifts />} />
-                  <Route path="/restaurant-schedule" element={<RestaurantSchedule />} />
-                  <Route path="/notifications" element={<Notifications />} />
-                  <Route path="/shift-patterns" element={<ShiftPatternsPage />} />
-                </Routes>
-              </MainLayout>
-            } />
+            <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
+            <Route path="/schedule" element={<MainLayout><Schedule /></MainLayout>} />
+            <Route path="/attendance" element={<MainLayout><Attendance /></MainLayout>} />
+            <Route path="/attendance-manager" element={<MainLayout><AttendanceManager /></MainLayout>} />
+            <Route path="/leave-management" element={<MainLayout><LeaveManagement /></MainLayout>} />
+            <Route path="/employee-management" element={<MainLayout><EmployeeManagement /></MainLayout>} />
+            <Route path="/payroll-dashboard" element={<MainLayout><PayrollDashboard /></MainLayout>} />
+            <Route path="/payroll-history" element={<MainLayout><PayrollHistory /></MainLayout>} />
+            <Route path="/payroll-summary" element={<MainLayout><PayrollSummary /></MainLayout>} />
+            <Route path="/documents" element={<MainLayout><Documents /></MainLayout>} />
+            <Route path="/documents-manager" element={<MainLayout><DocumentsManager /></MainLayout>} />
+            <Route path="/reports" element={<MainLayout><Reports /></MainLayout>} />
+            <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} />
+            <Route path="/profile" element={<MainLayout><Profile /></MainLayout>} />
+            <Route path="/shift-calendar" element={<MainLayout><ShiftCalendar /></MainLayout>} />
+            <Route path="/open-shifts" element={<MainLayout><OpenShifts /></MainLayout>} />
+            <Route path="/restaurant-schedule" element={<MainLayout><RestaurantSchedule /></MainLayout>} />
+            <Route path="/notifications" element={<MainLayout><Notifications /></MainLayout>} />
+            <Route path="/shift-patterns" element={<MainLayout><ShiftPatternsPage /></MainLayout>} />
           </Routes>
         </AuthProvider>
       </TooltipProvider>
