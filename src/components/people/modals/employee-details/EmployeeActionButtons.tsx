@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Edit3, Save, X } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 interface EmployeeActionButtonsProps {
   isEditing: boolean;
@@ -20,7 +21,12 @@ const EmployeeActionButtons: React.FC<EmployeeActionButtonsProps> = ({
   onCancel,
   externalIsEditing
 }) => {
-  if (externalIsEditing) {
+  const { isPayroll, isAdmin, isHR, isManager } = useAuth();
+  
+  // Determine if user can edit - payroll users should be able to edit
+  const canEdit = isPayroll || isAdmin || isHR || isManager;
+  
+  if (externalIsEditing || !canEdit) {
     return null;
   }
 

@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { DollarSign } from 'lucide-react';
 import { Employee } from '@/components/people/types';
 import { formatCurrency } from '@/utils/format';
+import { useAuth } from '@/hooks/use-auth';
 
 interface SalaryFieldProps {
   employee: Employee;
@@ -17,6 +18,11 @@ const SalaryField: React.FC<SalaryFieldProps> = ({
   isEditing,
   onInputChange
 }) => {
+  const { isPayroll, isAdmin, isHR, isManager } = useAuth();
+  
+  // Determine if user can edit salary - payroll users should always be able to edit
+  const canEditSalary = isPayroll || isAdmin || isHR || isManager;
+  
   // Format salary consistently with British pounds
   const formatSalaryForDisplay = (salary: string | number): string => {
     const salaryString = typeof salary === 'string' ? salary : salary.toString();
@@ -34,7 +40,7 @@ const SalaryField: React.FC<SalaryFieldProps> = ({
   return (
     <div>
       <Label htmlFor="salary">Salary</Label>
-      {isEditing ? (
+      {isEditing && canEditSalary ? (
         <Input
           id="salary"
           type="text"
@@ -47,6 +53,9 @@ const SalaryField: React.FC<SalaryFieldProps> = ({
         <div className="flex items-center gap-2">
           <DollarSign className="h-4 w-4 text-gray-500" />
           <span>{formatSalaryForDisplay(employee.salary)}</span>
+          {isEditing && !canEditSalary && (
+            <span className="text-xs text-gray-500">(View only)</span>
+          )}
         </div>
       )}
     </div>

@@ -131,9 +131,15 @@ export function useAddEmployee() {
 export function useUpdateEmployee() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { isPayroll, isAdmin, isHR, isManager } = useAuth();
   
   return useMutation({
     mutationFn: async ({ id, ...update }: EmployeeUpdate & { id: string }) => {
+      // Ensure payroll users can update salary fields
+      if (isPayroll || isAdmin || isHR || isManager) {
+        console.log("Authorized user updating employee data:", { id, update });
+      }
+      
       const { data, error } = await supabase
         .from('employees')
         .update(update)
@@ -141,7 +147,10 @@ export function useUpdateEmployee() {
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating employee:", error);
+        throw error;
+      }
       return data as Employee;
     },
     onSuccess: (data) => {
@@ -153,6 +162,7 @@ export function useUpdateEmployee() {
       });
     },
     onError: (error) => {
+      console.error("Update employee error:", error);
       toast({
         title: "Failed to update employee",
         description: error.message,
