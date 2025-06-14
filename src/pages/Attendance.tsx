@@ -13,6 +13,10 @@ const Attendance = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
   
+  // Add debugging
+  console.log('Attendance page - Auth info:', { user: user?.id, isManager, isAdmin, isHR });
+  console.log('Employee data:', employeeData);
+  
   // For employees, always use their own employee ID
   // For managers/admins, allow selection of different employees
   const canViewAllEmployees = isManager || isAdmin || isHR;
@@ -22,6 +26,9 @@ const Attendance = () => {
 
   // Determine if this user can view all employees or just their own data
   const effectiveEmployeeId = canViewAllEmployees ? selectedEmployeeId : employeeData?.id;
+  
+  console.log('Effective employee ID for attendance:', effectiveEmployeeId);
+  console.log('Can view all employees:', canViewAllEmployees);
   
   if (isLoading) {
     return (
@@ -35,6 +42,7 @@ const Attendance = () => {
 
   // For employees without proper employee data, show a message
   if (!canViewAllEmployees && !employeeData?.id) {
+    console.log('Employee without proper employee data');
     return (
       <div className="container max-w-[1200px] mx-auto px-4 py-8">
         <AttendanceHeader />
@@ -55,6 +63,8 @@ const Attendance = () => {
   return (
     <div className="container max-w-[1200px] mx-auto px-4 py-8">
       <AttendanceHeader />
+      
+      {/* Always show stats - even if effectiveEmployeeId is undefined, the component will handle it */}
       <AttendanceStats employeeId={effectiveEmployeeId} />
       
       {/* Only show controls for managers/admins who can view all employees */}
@@ -66,6 +76,7 @@ const Attendance = () => {
         />
       )}
       
+      {/* Always show attendance list */}
       <AttendanceList 
         employeeId={effectiveEmployeeId} 
         searchQuery={searchQuery}

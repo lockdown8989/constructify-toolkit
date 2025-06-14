@@ -1,3 +1,4 @@
+
 import { useAttendance } from "@/hooks/use-attendance";
 
 interface AttendanceStatsProps {
@@ -5,7 +6,36 @@ interface AttendanceStatsProps {
 }
 
 const AttendanceStats = ({ employeeId }: AttendanceStatsProps) => {
-  const { data: stats } = useAttendance(employeeId);
+  console.log('AttendanceStats rendered with employeeId:', employeeId);
+  
+  const { data: stats, isLoading, error } = useAttendance(employeeId);
+  
+  console.log('AttendanceStats - hook results:', { stats, isLoading, error });
+  
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="bg-white rounded-lg p-4 shadow-sm animate-pulse">
+            <div className="h-4 bg-gray-200 rounded mb-2"></div>
+            <div className="h-8 bg-gray-200 rounded mb-1"></div>
+            <div className="h-3 bg-gray-200 rounded"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  
+  if (error) {
+    console.error('AttendanceStats error:', error);
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+        <div className="col-span-full bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
+          Error loading attendance data. Please try again.
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
