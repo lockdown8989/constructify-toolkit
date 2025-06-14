@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import EmployeeAttendanceSummary from '@/components/dashboard/EmployeeAttendanceSummary';
@@ -76,7 +75,7 @@ const EmployeeDashboard: React.FC<{ firstName: string }> = ({ firstName }) => {
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       <h1 className="text-2xl font-bold mb-6">Hello {firstName}</h1>
       <div className="grid gap-6">
-        <EmployeeAttendanceSummary />
+        <EmployeeAttendanceSummary employeeId={resolvedEmployeeId} />
         
         {resolvedEmployeeId && (
           <>

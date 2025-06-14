@@ -1,15 +1,20 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock } from 'lucide-react';
+import { Clock, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useAttendanceSync } from '@/hooks/use-attendance-sync';
 import { useAttendance } from '@/hooks/use-attendance';
 
-const EmployeeAttendanceSummary = () => {
+interface EmployeeAttendanceSummaryProps {
+  employeeId: string | null;
+}
+
+const EmployeeAttendanceSummary: React.FC<EmployeeAttendanceSummaryProps> = ({ employeeId }) => {
   useAttendanceSync(); // Enable real-time sync
-  const { data: attendanceData } = useAttendance();
+  const { data: attendanceData, isLoading } = useAttendance(employeeId ?? undefined);
   
   const currentTime = format(new Date(), 'dd MMM yyyy, hh:mm a');
   
@@ -22,6 +27,14 @@ const EmployeeAttendanceSummary = () => {
     maxHours: 1500,
     percentageRank: 91.3
   };
+
+  if (isLoading && employeeId) {
+    return (
+      <Card className="p-6 space-y-6 flex justify-center items-center min-h-[300px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-6 space-y-6">
