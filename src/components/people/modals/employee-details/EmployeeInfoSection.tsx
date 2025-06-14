@@ -52,6 +52,13 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
 
   const handleSave = async () => {
     try {
+      // Parse salary properly - remove currency symbols and commas
+      const salaryValue = typeof editedEmployee.salary === 'string' 
+        ? parseFloat(editedEmployee.salary.replace(/[£$,\s]/g, '')) || 0
+        : editedEmployee.salary;
+
+      console.log('Saving employee with salary:', salaryValue);
+
       // Convert UI employee back to database format
       await updateEmployee.mutateAsync({
         id: employee.id,
@@ -59,7 +66,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
         job_title: editedEmployee.jobTitle,
         department: editedEmployee.department,
         site: editedEmployee.site,
-        salary: parseFloat(editedEmployee.salary.replace(/[^0-9.]/g, '')),
+        salary: salaryValue,
         status: editedEmployee.status.toLowerCase(),
         email: editedEmployee.email,
         role: editedEmployee.role,
@@ -340,10 +347,13 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
               <Input
                 id="salary"
                 type="text"
-                value={currentEmployee.salary}
+                value={typeof currentEmployee.salary === 'string' 
+                  ? currentEmployee.salary.replace(/[£$,\s]/g, '')
+                  : currentEmployee.salary.toString()
+                }
                 onChange={(e) => handleInputChange('salary', e.target.value)}
                 className="mt-1"
-                placeholder="34000"
+                placeholder="45000"
               />
             ) : (
               <div className="flex items-center gap-2">
