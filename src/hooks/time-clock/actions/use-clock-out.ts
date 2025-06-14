@@ -26,14 +26,20 @@ export const useClockOut = (
       console.log('Clocking out with record ID:', currentRecord);
 
       const now = new Date();
-      // Log time information for debugging
       debugTimeInfo('Clock-out time', now);
       console.log('Current device time:', now.toLocaleString());
       
-      // Get check-in time to calculate duration
+      // Get check-in time and employee details to calculate duration
       const { data: checkInData, error: fetchError } = await supabase
         .from('attendance')
-        .select('check_in, break_minutes')
+        .select(`
+          check_in, 
+          break_minutes, 
+          employee_id,
+          shift_pattern_id,
+          scheduled_start_time,
+          scheduled_end_time
+        `)
         .eq('id', currentRecord)
         .single();
         
@@ -42,7 +48,6 @@ export const useClockOut = (
         throw fetchError;
       }
       
-      // Parse check-in time from ISO string
       const checkInTime = new Date(checkInData.check_in);
       console.log('Check-in time from DB:', checkInData.check_in);
       console.log('Parsed check-in time:', checkInTime.toLocaleString());
@@ -52,7 +57,42 @@ export const useClockOut = (
       const totalMinutes = Math.round((now.getTime() - checkInTime.getTime()) / (1000 * 60));
       const breakMinutes = checkInData.break_minutes || 0;
       const workingMinutes = Math.max(0, totalMinutes - breakMinutes);
-      const overtimeMinutes = Math.max(0, workingMinutes - 480); // Over 8 hours
+      
+      // Calculate overtime based on shift pattern if available
+      let overtimeMinutes = 0;
+      let isEarlyDeparture = false;
+      let earlyDepartureMinutes = 0;
+
+      if (checkInData.shift_pattern_id) {
+        const { data: shiftPattern } = await supabase
+          .from('shift_patterns')
+          .select('*')
+          .eq('id', checkInData.shift_pattern_id)
+          .single();
+
+        if (shiftPattern) {
+          const today = now.toISOString().split('T')[0];
+          const scheduledEnd = new Date(`${today}T${shiftPattern.end_time}`);
+          
+          // Handle night shifts that cross midnight
+          if (shiftPattern.end_time < shiftPattern.start_time) {
+            scheduledEnd.setDate(scheduledEnd.getDate() + 1);
+          }
+          
+          const overtimeThreshold = new Date(scheduledEnd.getTime() + shiftPattern.overtime_threshold_minutes * 60000);
+          
+          if (now > overtimeThreshold) {
+            overtimeMinutes = Math.round((now.getTime() - scheduledEnd.getTime()) / (1000 * 60));
+          } else if (now < scheduledEnd) {
+            isEarlyDeparture = true;
+            earlyDepartureMinutes = Math.round((scheduledEnd.getTime() - now.getTime()) / (1000 * 60));
+          }
+        }
+      } else {
+        // Fallback calculation: overtime after 8 hours
+        overtimeMinutes = Math.max(0, workingMinutes - 480);
+      }
+      
       const regularMinutes = workingMinutes - overtimeMinutes;
       
       console.log('Time calculation:', {
@@ -60,7 +100,9 @@ export const useClockOut = (
         breakMinutes,
         workingMinutes,
         regularMinutes,
-        overtimeMinutes
+        overtimeMinutes,
+        isEarlyDeparture,
+        earlyDepartureMinutes
       });
       
       // Update the record with clock-out data and proper current_status
@@ -69,9 +111,11 @@ export const useClockOut = (
         .update({
           check_out: now.toISOString(),
           active_session: false,
-          current_status: 'clocked-out', // Explicitly set the current status
+          current_status: 'clocked-out',
           working_minutes: regularMinutes,
           overtime_minutes: overtimeMinutes,
+          early_departure_minutes: earlyDepartureMinutes,
+          is_early_departure: isEarlyDeparture,
           location,
           device_info: deviceInfo,
           on_break: false,
@@ -93,10 +137,25 @@ export const useClockOut = (
 
       setCurrentRecord(null);
       setStatus('clocked-out');
-      toast({
-        title: "Clocked Out",
-        description: `You clocked out at ${format(now, 'h:mm a')}`,
-      });
+      
+      // Show appropriate message based on early departure or overtime
+      if (isEarlyDeparture) {
+        toast({
+          title: "Early Departure",
+          description: `You clocked out ${earlyDepartureMinutes} minutes early at ${format(now, 'h:mm a')}`,
+          variant: "destructive",
+        });
+      } else if (overtimeMinutes > 0) {
+        toast({
+          title: "Overtime Recorded",
+          description: `You worked ${overtimeMinutes} minutes of overtime. Clocked out at ${format(now, 'h:mm a')}`,
+        });
+      } else {
+        toast({
+          title: "Clocked Out",
+          description: `You clocked out at ${format(now, 'h:mm a')}`,
+        });
+      }
     } catch (error) {
       console.error('Error in handleClockOut:', error);
       toast({

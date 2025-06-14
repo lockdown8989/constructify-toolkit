@@ -1,132 +1,109 @@
 
 import React from "react";
-import { NavLink } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
+import { Link, useLocation } from "react-router-dom";
+import { 
+  LayoutDashboard, 
+  Calendar, 
+  Users, 
+  FileText, 
+  Calculator,
+  ClipboardList,
+  BarChart3,
+  Clock,
+  CalendarDays,
+  Briefcase,
+  FolderOpen,
+  Bell
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
-interface DesktopNavProps {
-  isAuthenticated: boolean;
-}
+const DesktopNav = () => {
+  const { isAuthenticated, hasManagerialAccess, hasPayrollAccess } = useAuth();
+  const location = useLocation();
 
-const DesktopNav: React.FC<DesktopNavProps> = ({ isAuthenticated }) => {
-  const { isAdmin, isManager, isHR, isPayroll } = useAuth();
-  const hasManagerAccess = (isAdmin || isManager || isHR) && !isPayroll;
+  if (!isAuthenticated) return null;
 
-  // Debug log to check payroll role in desktop nav
-  console.log("DesktopNav - isPayroll:", isPayroll);
-  console.log("DesktopNav - isAuthenticated:", isAuthenticated);
-  console.log("DesktopNav - hasManagerAccess:", hasManagerAccess);
+  const isActive = (path: string) => location.pathname === path;
 
-  // Only show navigation links if the user is authenticated
-  if (!isAuthenticated) {
-    return null;
-  }
+  const NavLink = ({ to, icon: Icon, children, className }: {
+    to: string;
+    icon: React.ComponentType<{ className?: string }>;
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <Link
+      to={to}
+      className={cn(
+        "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900",
+        isActive(to) ? "bg-gray-100 text-gray-900" : "text-gray-700",
+        className
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      <span>{children}</span>
+    </Link>
+  );
 
   return (
-    <nav className="mx-6 flex items-center space-x-4 lg:space-x-6">
-      <NavLink
-        to="/dashboard"
-        className={({ isActive }) =>
-          `nav-link ${isActive ? "active" : ""}`
-        }
-      >
+    <nav className="space-y-1 px-2">
+      <NavLink to="/dashboard" icon={LayoutDashboard}>
         Dashboard
       </NavLink>
-      
-      {/* Restaurant Schedule - Only for managers */}
-      {hasManagerAccess && (
-        <NavLink
-          to="/restaurant-schedule"
-          className={({ isActive }) =>
-            `nav-link ${isActive ? "active" : ""}`
-          }
-        >
-          Restaurant Schedule
+
+      {!hasManagerialAccess && !hasPayrollAccess && (
+        <NavLink to="/schedule" icon={Calendar}>
+          Schedule
         </NavLink>
       )}
-      
-      <NavLink
-        to="/schedule"
-        className={({ isActive }) =>
-          `nav-link ${isActive ? "active" : ""}`
-        }
-      >
-        Schedule
-      </NavLink>
-      
-      <NavLink
-        to="/leave-management"
-        className={({ isActive }) =>
-          `nav-link ${isActive ? "active" : ""}`
-        }
-      >
+
+      <NavLink to="/leave-management" icon={FileText}>
         Leave
       </NavLink>
-      
-      {/* Manager Time Clock with IN/OUT - Only for managers */}
-      {hasManagerAccess && (
-        <NavLink
-          to="/manager-time-clock"
-          className={({ isActive }) =>
-            `nav-link time-clock-nav-button ${isActive ? "active" : ""}`
-          }
-        >
-          IN AND OUT
-        </NavLink>
-      )}
-      
-      {/* Attendance - Only for managers */}
-      {hasManagerAccess && (
-        <NavLink
-          to="/attendance"
-          className={({ isActive }) =>
-            `nav-link ${isActive ? "active" : ""}`
-          }
-        >
-          Attendance
-        </NavLink>
-      )}
-      
-      {/* Team Members (People) - Only for managers */}
-      {hasManagerAccess && (
-        <NavLink
-          to="/people"
-          className={({ isActive }) =>
-            `nav-link ${isActive ? "active" : ""}`
-          }
-        >
-          Team Members
-        </NavLink>
-      )}
-      
-      {/* Payroll button only for payroll users */}
-      {isPayroll && (
+
+      {hasManagerialAccess && (
         <>
-          <NavLink
-            to="/payroll"
-            className={({ isActive }) =>
-              `nav-link ${isActive ? "active" : ""}`
-            }
-          >
-            Payroll
+          <NavLink to="/employee-management" icon={Users}>
+            Employees
           </NavLink>
-          <NavLink
-            to="/salary"
-            className={({ isActive }) =>
-              `nav-link salary-nav-button ${isActive ? "active" : ""}`
-            }
-          >
-            Salary
+          <NavLink to="/attendance-manager" icon={Clock}>
+            Attendance
           </NavLink>
-          <NavLink
-            to="/payslips"
-            className={({ isActive }) =>
-              `nav-link ${isActive ? "active" : ""}`
-            }
-          >
-            Payslips
+          <NavLink to="/shift-calendar" icon={CalendarDays}>
+            Calendar
+          </NavLink>
+          <NavLink to="/open-shifts" icon={Briefcase}>
+            Open Shifts
+          </NavLink>
+          <NavLink to="/shift-patterns" icon={Clock}>
+            Shift Patterns
+          </NavLink>
+          <NavLink to="/documents-manager" icon={FolderOpen}>
+            Documents
+          </NavLink>
+          <NavLink to="/reports" icon={BarChart3}>
+            Reports
           </NavLink>
         </>
       )}
+
+      {hasPayrollAccess && (
+        <>
+          <NavLink to="/payroll-dashboard" icon={Calculator}>
+            Payroll
+          </NavLink>
+          <NavLink to="/payroll-history" icon={ClipboardList}>
+            History
+          </NavLink>
+          <NavLink to="/payroll-summary" icon={BarChart3}>
+            Summary
+          </NavLink>
+        </>
+      )}
+
+      <NavLink to="/notifications" icon={Bell}>
+        Notifications
+      </NavLink>
     </nav>
   );
 };

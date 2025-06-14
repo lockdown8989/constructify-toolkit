@@ -24,11 +24,15 @@ export type Database = {
           date: string | null
           device_identifier: string | null
           device_info: string | null
+          early_departure_minutes: number | null
           employee_id: string | null
           id: string
+          is_early_departure: boolean | null
+          is_late: boolean | null
           last_month_status:
             | Database["public"]["Enums"]["attendance_status_type"]
             | null
+          late_minutes: number | null
           location: string | null
           manager_initiated: boolean | null
           month_start_date: string | null
@@ -38,6 +42,9 @@ export type Database = {
           overtime_approved_by: string | null
           overtime_minutes: number | null
           overtime_status: string | null
+          scheduled_end_time: string | null
+          scheduled_start_time: string | null
+          shift_pattern_id: string | null
           status: string | null
           updated_at: string | null
           working_minutes: number | null
@@ -56,11 +63,15 @@ export type Database = {
           date?: string | null
           device_identifier?: string | null
           device_info?: string | null
+          early_departure_minutes?: number | null
           employee_id?: string | null
           id?: string
+          is_early_departure?: boolean | null
+          is_late?: boolean | null
           last_month_status?:
             | Database["public"]["Enums"]["attendance_status_type"]
             | null
+          late_minutes?: number | null
           location?: string | null
           manager_initiated?: boolean | null
           month_start_date?: string | null
@@ -70,6 +81,9 @@ export type Database = {
           overtime_approved_by?: string | null
           overtime_minutes?: number | null
           overtime_status?: string | null
+          scheduled_end_time?: string | null
+          scheduled_start_time?: string | null
+          shift_pattern_id?: string | null
           status?: string | null
           updated_at?: string | null
           working_minutes?: number | null
@@ -88,11 +102,15 @@ export type Database = {
           date?: string | null
           device_identifier?: string | null
           device_info?: string | null
+          early_departure_minutes?: number | null
           employee_id?: string | null
           id?: string
+          is_early_departure?: boolean | null
+          is_late?: boolean | null
           last_month_status?:
             | Database["public"]["Enums"]["attendance_status_type"]
             | null
+          late_minutes?: number | null
           location?: string | null
           manager_initiated?: boolean | null
           month_start_date?: string | null
@@ -102,6 +120,9 @@ export type Database = {
           overtime_approved_by?: string | null
           overtime_minutes?: number | null
           overtime_status?: string | null
+          scheduled_end_time?: string | null
+          scheduled_start_time?: string | null
+          shift_pattern_id?: string | null
           status?: string | null
           updated_at?: string | null
           working_minutes?: number | null
@@ -112,6 +133,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_shift_pattern_id_fkey"
+            columns: ["shift_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
             referencedColumns: ["id"]
           },
         ]
@@ -445,62 +473,143 @@ export type Database = {
           avatar: string | null
           department: string
           email: string | null
+          friday_shift_id: string | null
           hourly_rate: number | null
           id: string
           job_title: string
           lifecycle: string
           location: string | null
           manager_id: string | null
+          monday_shift_id: string | null
           name: string
           role: string | null
           salary: number
+          saturday_shift_id: string | null
+          shift_pattern_id: string | null
           sick_leave_days: number | null
           site: string
           start_date: string
           status: string
+          sunday_shift_id: string | null
+          thursday_shift_id: string | null
+          tuesday_shift_id: string | null
           user_id: string | null
+          wednesday_shift_id: string | null
         }
         Insert: {
           annual_leave_days?: number | null
           avatar?: string | null
           department: string
           email?: string | null
+          friday_shift_id?: string | null
           hourly_rate?: number | null
           id?: string
           job_title: string
           lifecycle?: string
           location?: string | null
           manager_id?: string | null
+          monday_shift_id?: string | null
           name: string
           role?: string | null
           salary: number
+          saturday_shift_id?: string | null
+          shift_pattern_id?: string | null
           sick_leave_days?: number | null
           site: string
           start_date?: string
           status?: string
+          sunday_shift_id?: string | null
+          thursday_shift_id?: string | null
+          tuesday_shift_id?: string | null
           user_id?: string | null
+          wednesday_shift_id?: string | null
         }
         Update: {
           annual_leave_days?: number | null
           avatar?: string | null
           department?: string
           email?: string | null
+          friday_shift_id?: string | null
           hourly_rate?: number | null
           id?: string
           job_title?: string
           lifecycle?: string
           location?: string | null
           manager_id?: string | null
+          monday_shift_id?: string | null
           name?: string
           role?: string | null
           salary?: number
+          saturday_shift_id?: string | null
+          shift_pattern_id?: string | null
           sick_leave_days?: number | null
           site?: string
           start_date?: string
           status?: string
+          sunday_shift_id?: string | null
+          thursday_shift_id?: string | null
+          tuesday_shift_id?: string | null
           user_id?: string | null
+          wednesday_shift_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "employees_friday_shift_id_fkey"
+            columns: ["friday_shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_monday_shift_id_fkey"
+            columns: ["monday_shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_saturday_shift_id_fkey"
+            columns: ["saturday_shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_shift_pattern_id_fkey"
+            columns: ["shift_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_sunday_shift_id_fkey"
+            columns: ["sunday_shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_thursday_shift_id_fkey"
+            columns: ["thursday_shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_tuesday_shift_id_fkey"
+            columns: ["tuesday_shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_wednesday_shift_id_fkey"
+            columns: ["wednesday_shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hiring_statistics: {
         Row: {
@@ -1528,6 +1637,42 @@ export type Database = {
           },
         ]
       }
+      shift_patterns: {
+        Row: {
+          break_duration: number
+          created_at: string
+          end_time: string
+          grace_period_minutes: number
+          id: string
+          name: string
+          overtime_threshold_minutes: number
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          break_duration?: number
+          created_at?: string
+          end_time: string
+          grace_period_minutes?: number
+          id?: string
+          name: string
+          overtime_threshold_minutes?: number
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          break_duration?: number
+          created_at?: string
+          end_time?: string
+          grace_period_minutes?: number
+          id?: string
+          name?: string
+          overtime_threshold_minutes?: number
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shift_requirements: {
         Row: {
           created_at: string | null
@@ -1770,6 +1915,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_attendance_metrics: {
+        Args: {
+          p_attendance_id: string
+          p_employee_id: string
+          p_check_in_time: string
+          p_check_out_time?: string
+        }
+        Returns: undefined
+      }
       calculate_final_salary: {
         Args: {
           base_salary: number

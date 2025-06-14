@@ -27,12 +27,10 @@ export const useClockIn = (
     try {
       console.log('Starting clock in process for employee:', employeeId);
       
-      // Use current time and preserve timezone information with ISO string
       const now = new Date();
       const today = now.toISOString().split('T')[0];
       const deviceIdentifier = getDeviceIdentifier();
       
-      // Log time information for debugging
       debugTimeInfo('Clock-in time', now);
       console.log('Today date:', today);
       console.log('Current device time:', now.toLocaleString());
@@ -50,10 +48,9 @@ export const useClockIn = (
         
       if (deactivateError) {
         console.error('Error deactivating existing sessions:', deactivateError);
-        // Continue anyway, don't throw error
       }
       
-      // Check if there's already a record for today (any record, active or not)
+      // Check if there's already a record for today
       console.log('Checking for existing record for today...');
       const { data: existingRecords, error: checkError } = await supabase
         .from('attendance')
@@ -92,7 +89,7 @@ export const useClockIn = (
         location,
         device_info: deviceInfo,
         active_session: true,
-        current_status: 'clocked-in', // Explicitly set the current status
+        current_status: 'clocked-in' as const,
         device_identifier: deviceIdentifier,
         notes: '',
         attendance_status: 'Present' as const,
@@ -119,10 +116,55 @@ export const useClockIn = (
 
       setCurrentRecord(data.id);
       setStatus('clocked-in');
-      toast({
-        title: "Clocked In",
-        description: `You clocked in at ${format(now, 'h:mm a')}`,
-      });
+      
+      // Show specific message if employee is late
+      const { data: employeeData } = await supabase
+        .from('employees')
+        .select('shift_pattern_id, monday_shift_id, tuesday_shift_id, wednesday_shift_id, thursday_shift_id, friday_shift_id, saturday_shift_id, sunday_shift_id')
+        .eq('id', employeeId)
+        .single();
+
+      if (employeeData) {
+        const dayOfWeek = now.getDay(); // 0=Sunday, 1=Monday, etc.
+        const shiftPatternId = getDayShiftPattern(employeeData, dayOfWeek) || employeeData.shift_pattern_id;
+        
+        if (shiftPatternId) {
+          const { data: shiftPattern } = await supabase
+            .from('shift_patterns')
+            .select('*')
+            .eq('id', shiftPatternId)
+            .single();
+
+          if (shiftPattern) {
+            const scheduledStart = new Date(`${today}T${shiftPattern.start_time}`);
+            const graceEnd = new Date(scheduledStart.getTime() + shiftPattern.grace_period_minutes * 60000);
+            
+            if (now > graceEnd) {
+              const lateMinutes = Math.round((now.getTime() - scheduledStart.getTime()) / 60000);
+              toast({
+                title: "Late Clock-In",
+                description: `You are ${lateMinutes} minutes late for your ${shiftPattern.name}`,
+                variant: "destructive",
+              });
+            } else {
+              toast({
+                title: "Clocked In",
+                description: `You clocked in at ${format(now, 'h:mm a')} for your ${shiftPattern.name}`,
+              });
+            }
+          }
+        } else {
+          toast({
+            title: "Clocked In",
+            description: `You clocked in at ${format(now, 'h:mm a')}`,
+          });
+        }
+      } else {
+        toast({
+          title: "Clocked In",
+          description: `You clocked in at ${format(now, 'h:mm a')}`,
+        });
+      }
     } catch (error) {
       console.error('Error clocking in:', error);
       toast({
@@ -131,6 +173,20 @@ export const useClockIn = (
         variant: "destructive",
       });
     }
+  };
+
+  const getDayShiftPattern = (employeeData: any, dayOfWeek: number) => {
+    const dayMapping = [
+      'sunday_shift_id',    // 0
+      'monday_shift_id',    // 1
+      'tuesday_shift_id',   // 2
+      'wednesday_shift_id', // 3
+      'thursday_shift_id',  // 4
+      'friday_shift_id',    // 5
+      'saturday_shift_id'   // 6
+    ];
+    
+    return employeeData[dayMapping[dayOfWeek]];
   };
 
   return { handleClockIn };
