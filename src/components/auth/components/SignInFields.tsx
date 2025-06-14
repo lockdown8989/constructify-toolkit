@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Mail, Lock } from "lucide-react";
-import { useInputSanitization } from "@/hooks/auth/useInputSanitization";
 
 interface SignInFieldsProps {
   email: string;
@@ -21,13 +20,6 @@ export const SignInFields: React.FC<SignInFieldsProps> = ({
   onPasswordChange,
   onForgotPassword
 }) => {
-  const { sanitizeEmail } = useInputSanitization();
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const sanitized = sanitizeEmail(e.target.value);
-    onEmailChange({ ...e, target: { ...e.target, value: sanitized } });
-  };
-
   return (
     <>
       <div className="space-y-2">
@@ -39,7 +31,7 @@ export const SignInFields: React.FC<SignInFieldsProps> = ({
             type="email"
             placeholder="Enter your email"
             value={email}
-            onChange={handleEmailChange}
+            onChange={onEmailChange}
             className="pl-10"
             required
             autoComplete="email"
