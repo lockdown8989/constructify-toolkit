@@ -1,5 +1,5 @@
 
-import { Home, Calendar, FileText } from "lucide-react";
+import { Home, Calendar, FileText, UserCheck } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import MobileNavLink from "./MobileNavLink";
 import PayrollSection from "./PayrollSection";
@@ -41,6 +41,14 @@ const CommonSection = ({
           onClick={onClose} 
         />
       )}
+
+      {/* Show attendance for all authenticated users */}
+      <MobileNavLink 
+        to="/attendance" 
+        icon={UserCheck} 
+        label="Attendance" 
+        onClick={onClose} 
+      />
 
       {/* Show leave management for all authenticated users */}
       <MobileNavLink 

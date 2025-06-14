@@ -103,6 +103,17 @@ const NavigationLinks = () => {
         />
       )}
 
+      {/* Attendance - For all users */}
+      {!hasManagerialAccess && (
+        <SidebarNavLink
+          to="/attendance"
+          icon={UserCheck}
+          label="Attendance"
+          isActive={location.pathname === "/attendance"}
+          isCollapsed={false}
+        />
+      )}
+
       {/* Leave Management */}
       <SidebarNavLink
         to="/leave-management"

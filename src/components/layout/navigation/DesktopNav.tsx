@@ -14,7 +14,8 @@ import {
   CalendarDays,
   Briefcase,
   FolderOpen,
-  Bell
+  Bell,
+  UserCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +62,11 @@ const DesktopNav = () => {
         </NavLink>
       )}
 
+      {/* Add attendance link for all authenticated users */}
+      <NavLink to="/attendance" icon={UserCheck}>
+        Attendance
+      </NavLink>
+
       <NavLink to="/leave-management" icon={FileText}>
         Leave
       </NavLink>
@@ -71,7 +77,7 @@ const DesktopNav = () => {
             Employees
           </NavLink>
           <NavLink to="/attendance-manager" icon={Clock}>
-            Attendance
+            Attendance Manager
           </NavLink>
           <NavLink to="/shift-calendar" icon={CalendarDays}>
             Calendar
