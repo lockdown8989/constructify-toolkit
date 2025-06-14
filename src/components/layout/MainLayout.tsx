@@ -3,9 +3,11 @@ import React from 'react';
 import DesktopNav from './navigation/DesktopNav';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MobileNav from './navigation/MobileNav';
+import { useAuth } from '@/hooks/use-auth';
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const isMobile = useIsMobile();
+  const { isAuthenticated } = useAuth();
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       <div className="hidden lg:flex lg:flex-shrink-0">
@@ -29,7 +31,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </main>
       </div>
-      {isMobile && <MobileNav />}
+      {isMobile && <MobileNav isAuthenticated={isAuthenticated} />}
     </div>
   );
 };
