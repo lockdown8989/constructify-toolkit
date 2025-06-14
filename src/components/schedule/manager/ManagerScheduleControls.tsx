@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,8 @@ import {
   Send
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/integrations/supabase/client';
+import { startOfWeek, endOfWeek, formatISO } from 'date-fns';
 
 interface ManagerScheduleControlsProps {
   onCreateShift: () => void;
@@ -22,16 +24,96 @@ interface ManagerScheduleControlsProps {
   unpublishedCount: number;
 }
 
+const thisWeekRange = () => {
+  const now = new Date();
+  const start = startOfWeek(now, { weekStartsOn: 1 }); // Monday
+  const end = endOfWeek(now, { weekStartsOn: 1 });
+  return {
+    start: formatISO(start, { representation: 'date' }),
+    end: formatISO(end, { representation: 'date' }),
+  };
+};
+
+const useScheduleStats = () => {
+  const [stats, setStats] = useState<{ total: number; filled: number; open: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { start, end } = thisWeekRange();
+
+        // Fetch total shifts (scheduled for this week)
+        const { count: totalCount, error: totalErr } = await supabase
+          .from('schedules')
+          .select('id', { count: 'exact', head: true })
+          .gte('start_time', start)
+          .lte('start_time', end);
+
+        if (totalErr) throw totalErr;
+
+        // Fetch filled shifts (assigned: employee_id is NOT NULL)
+        const { count: filledCount, error: filledErr } = await supabase
+          .from('schedules')
+          .select('id', { count: 'exact', head: true })
+          .gte('start_time', start)
+          .lte('start_time', end)
+          .not('employee_id', 'is', null);
+
+        if (filledErr) throw filledErr;
+
+        // Fetch open shifts (employee_id IS NULL OR status in 'draft', or open_shifts table)
+        const { count: openCount1, error: openErr1 } = await supabase
+          .from('schedules')
+          .select('id', { count: 'exact', head: true })
+          .gte('start_time', start)
+          .lte('start_time', end)
+          .is('employee_id', null);
+
+        if (openErr1) throw openErr1;
+
+        // Plus published open shifts from open_shifts table this week
+        const { count: openCount2, error: openErr2 } = await supabase
+          .from('open_shifts')
+          .select('id', { count: 'exact', head: true })
+          .gte('start_time', start)
+          .lte('start_time', end)
+          .in('status', ['open', 'published']);
+
+        if (openErr2) throw openErr2;
+
+        setStats({
+          total: totalCount || 0,
+          filled: filledCount || 0,
+          open: (openCount1 || 0) + (openCount2 || 0),
+        });
+      } catch (err: any) {
+        setError('Unable to load schedule stats.');
+      }
+      setLoading(false);
+    };
+
+    fetchStats();
+  }, []);
+
+  return { stats, loading, error };
+};
+
 const ManagerScheduleControls: React.FC<ManagerScheduleControlsProps> = ({
   onCreateShift,
   onPublishSchedule,
   onCreateTemplate,
   onManageOpenShifts,
   openShiftsCount,
-  unpublishedCount
+  unpublishedCount,
 }) => {
   const { isAdmin, isManager, isHR } = useAuth();
   const hasManagerAccess = isAdmin || isManager || isHR;
+
+  const { stats, loading, error } = useScheduleStats();
 
   if (!hasManagerAccess) return null;
 
@@ -85,20 +167,26 @@ const ManagerScheduleControls: React.FC<ManagerScheduleControlsProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-blue-600">24</div>
-              <div className="text-xs text-gray-500">Total Shifts</div>
+          {loading ? (
+            <div className="animate-pulse h-14 flex items-center justify-center text-gray-400">Loading…</div>
+          ) : error ? (
+            <div className="text-red-500 text-center">{error}</div>
+          ) : (
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-blue-600">{stats?.total}</div>
+                <div className="text-xs text-gray-500">Total Shifts</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-green-600">{stats?.filled}</div>
+                <div className="text-xs text-gray-500">Filled</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-orange-600">{stats?.open}</div>
+                <div className="text-xs text-gray-500">Open</div>
+              </div>
             </div>
-            <div>
-              <div className="text-2xl font-bold text-green-600">18</div>
-              <div className="text-xs text-gray-500">Filled</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-orange-600">6</div>
-              <div className="text-xs text-gray-500">Open</div>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
@@ -132,3 +220,4 @@ const ManagerScheduleControls: React.FC<ManagerScheduleControlsProps> = ({
 };
 
 export default ManagerScheduleControls;
+
