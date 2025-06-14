@@ -38,7 +38,7 @@ export const formatCurrency = (amount: number | string, currency: string = 'GBP'
       style: 'currency',
       currency: 'GBP',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 0
     });
     
     return formatter.format(amount);
