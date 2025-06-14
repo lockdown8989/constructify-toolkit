@@ -20,3 +20,12 @@ export const formatCurrency = (
 export const formatNumber = (num: number): string => {
   return new Intl.NumberFormat('en-GB').format(num);
 };
+
+export const formatTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).format(date);
+};
