@@ -36,6 +36,11 @@ const EmployeeAttendanceSummary: React.FC<EmployeeAttendanceSummaryProps> = ({ e
     );
   }
 
+  const handleViewStats = () => {
+    console.log('View Stats clicked for employee:', employeeId);
+    console.log('Attendance data:', attendanceData);
+  };
+
   return (
     <Card className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -49,7 +54,7 @@ const EmployeeAttendanceSummary: React.FC<EmployeeAttendanceSummaryProps> = ({ e
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-xl font-semibold">My Attendance</h3>
-          <Link to="/attendance">
+          <Link to="/attendance" onClick={handleViewStats}>
             <Button variant="ghost" className="text-blue-500 hover:text-blue-600">
               View Stats
             </Button>
