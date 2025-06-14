@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthLimiting } from "@/hooks/auth/useAuthLimiting";
-import { useInputSanitization } from "@/hooks/auth/useInputSanitization";
 
 type SignInFormProps = {
   onSignIn: (email: string, password: string) => Promise<any>;
@@ -24,17 +23,22 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
     recordFailedAttempt, 
     recordSuccessfulAuth 
   } = useAuthLimiting();
-  const { sanitizeEmail, validateEmail } = useInputSanitization();
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const sanitized = sanitizeEmail(e.target.value);
-    setEmail(sanitized);
+    // Simple email handling without sanitization that might interfere
+    const value = e.target.value.trim();
+    setEmail(value);
     if (errorMessage) setErrorMessage(null);
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
     if (errorMessage) setErrorMessage(null);
+  };
+
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,6 +67,7 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
         return;
       }
       
+      // Pass the email directly without any additional processing
       const result = await onSignIn(email, password);
       
       if (result.error) {
