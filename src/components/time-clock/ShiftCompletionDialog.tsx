@@ -89,7 +89,7 @@ const ShiftCompletionDialog: React.FC<ShiftCompletionDialogProps> = ({
               onClick={handleBreakAction}
               className={`h-20 text-white text-xl font-bold flex items-center justify-center gap-4 rounded-xl ${
                 isOnBreak 
-                  ? 'bg-blue-600 hover:bg-blue-700' 
+                  ? 'bg-blue-600 hover:bg-blue-700'
                   : 'bg-orange-500 hover:bg-orange-600'
               }`}
               disabled={isSubmitting}

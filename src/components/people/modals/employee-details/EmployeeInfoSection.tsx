@@ -103,23 +103,6 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
     }
   };
 
-  const getLifecycleColor = (lifecycle: string) => {
-    switch (lifecycle.toLowerCase()) {
-      case 'full-time':
-        return 'bg-blue-100 text-blue-800';
-      case 'part-time':
-        return 'bg-purple-100 text-purple-800';
-      case 'agency worker':
-        return 'bg-orange-100 text-orange-800';
-      case 'contractor':
-        return 'bg-indigo-100 text-indigo-800';
-      case 'intern':
-        return 'bg-pink-100 text-pink-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const currentEmployee = isEditing ? editedEmployee : employee;
 
   return (
@@ -275,32 +258,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
           </div>
           
           <div>
-            <Label htmlFor="employment_status">Employment Status</Label>
-            {isEditing ? (
-              <Select
-                value={currentEmployee.lifecycle}
-                onValueChange={(value) => handleInputChange('lifecycle', value)}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select employment status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="full-time">Full-time</SelectItem>
-                  <SelectItem value="part-time">Part-time</SelectItem>
-                  <SelectItem value="agency worker">Agency Worker</SelectItem>
-                  <SelectItem value="contractor">Contractor</SelectItem>
-                  <SelectItem value="intern">Intern</SelectItem>
-                </SelectContent>
-              </Select>
-            ) : (
-              <Badge className={getLifecycleColor(currentEmployee.lifecycle)}>
-                {currentEmployee.lifecycle}
-              </Badge>
-            )}
-          </div>
-          
-          <div>
-            <Label htmlFor="status">Current Status</Label>
+            <Label htmlFor="status">Status</Label>
             {isEditing ? (
               <Select
                 value={currentEmployee.status}

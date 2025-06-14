@@ -17,7 +17,12 @@ const PublishedShiftsView: React.FC = () => {
     );
   }
 
-  if (publishedShifts.length === 0) {
+  // Only show actual published shifts, no examples
+  const activePublishedShifts = publishedShifts.filter(shift => 
+    shift.status === 'open'
+  );
+
+  if (activePublishedShifts.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500 flex flex-col items-center">
         <AlertCircle className="h-6 w-6 mb-2 text-gray-400" />
@@ -31,7 +36,7 @@ const PublishedShiftsView: React.FC = () => {
 
   return (
     <div className="space-y-3">
-      {publishedShifts.map(shift => (
+      {activePublishedShifts.map(shift => (
         <ClaimableShiftCard
           key={shift.id}
           shift={shift}
