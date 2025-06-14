@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChevronRight, MoreVertical, CheckCircle, XCircle, Mail, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -69,22 +68,23 @@ const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
   return (
     <div 
       className={cn(
-        "p-4 transition-colors cursor-pointer touch-target border-b border-apple-gray-100 employee-card",
-        isSelected ? "bg-blue-50" : ""
+        "px-4 py-3 bg-white shadow-sm my-3 rounded-2xl transition-colors cursor-pointer border border-apple-gray-100 employee-card relative",
+        isSelected ? "bg-blue-50" : "hover:bg-gray-50"
       )}
       onClick={handleCardClick}
+      style={{ minHeight: 72 }}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4" onClick={e => e.stopPropagation()}>
-          <div className="touch-target flex items-center justify-center">
+        <div className="flex items-center space-x-4 min-w-0" onClick={e => e.stopPropagation()}>
+          <div className="flex-shrink-0 flex items-center justify-center">
             <input
               type="checkbox"
               checked={isSelected}
               onChange={() => onSelect(employee.id)}
-              className="rounded border-apple-gray-300 text-blue-600 focus:ring-blue-500 w-5 h-5"
+              className="rounded border-apple-gray-300 text-blue-600 focus:ring-blue-500 w-6 h-6 touch-target"
             />
           </div>
-          <Avatar className="w-12 h-12 rounded-full border border-apple-gray-200">
+          <Avatar className="h-12 w-12 rounded-full border border-apple-gray-200 flex-shrink-0">
             <AvatarImage 
               src={employee.avatar} 
               alt={employee.name} 
@@ -94,9 +94,9 @@ const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
               {getInitials(employee.name)}
             </AvatarFallback>
           </Avatar>
-          <div>
-            <div className="font-medium text-base text-apple-gray-900">{employee.name}</div>
-            <div className="text-sm text-apple-gray-600">{employee.jobTitle}</div>
+          <div className="min-w-0">
+            <div className="font-semibold text-base text-apple-gray-900 truncate">{employee.name}</div>
+            <div className="text-sm text-apple-gray-600 truncate">{employee.jobTitle}</div>
           </div>
         </div>
         
@@ -138,12 +138,16 @@ const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
               e.stopPropagation();
               onToggleExpand(employee.id);
             }}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 touch-target"
+            className={cn(
+              "flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 ml-1",
+              isExpanded ? "bg-blue-100" : ""
+            )}
+            aria-label={isExpanded ? "Collapse" : "Expand"}
           >
             <ChevronRight 
               className={cn(
                 "w-5 h-5 text-apple-gray-600 transition-transform",
-                isExpanded ? "transform rotate-90" : ""
+                isExpanded ? "rotate-90" : ""
               )} 
             />
           </button>
@@ -151,23 +155,18 @@ const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
       </div>
       
       {isExpanded && (
-        <div className="mt-5 pl-12 space-y-3 animate-fade-in">
-          <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm bg-gray-50 p-4 rounded-xl">
+        <div className="mt-5 pl-2 space-y-3 animate-fade-in">
+          <div className="grid grid-cols-2 gap-y-2 gap-x-2 text-sm bg-gray-50 p-3 rounded-xl">
             <div className="text-gray-500 font-medium">Department:</div>
             <div className="text-gray-900">{employee.department}</div>
-            
             <div className="text-gray-500 font-medium">Site:</div>
             <div className="text-gray-900">{employee.site} {employee.siteIcon}</div>
-            
             <div className="text-gray-500 font-medium">Salary:</div>
             <div className="font-medium text-gray-900">{employee.salary}</div>
-            
             <div className="text-gray-500 font-medium">Start date:</div>
             <div className="text-gray-900">{employee.startDate}</div>
-            
             <div className="text-gray-500 font-medium">Lifecycle:</div>
             <div className="text-gray-900">{employee.lifecycle}</div>
-            
             <div className="text-gray-500 font-medium">Status:</div>
             <div>
               <span className={cn(
