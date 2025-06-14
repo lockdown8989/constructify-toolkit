@@ -5,6 +5,7 @@ import { EmployeeFormValues } from '../employee-form-schema';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLocations } from '@/hooks/use-locations';
+import { useShiftPatterns } from '@/hooks/use-shift-patterns';
 
 interface OrganizationFieldsProps {
   form: UseFormReturn<EmployeeFormValues>;
@@ -18,6 +19,7 @@ const OrganizationFields: React.FC<OrganizationFieldsProps> = ({
   sites = []
 }) => {
   const { data: locations = [] } = useLocations();
+  const { data: shiftPatterns = [] } = useShiftPatterns();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -118,6 +120,32 @@ const OrganizationFields: React.FC<OrganizationFieldsProps> = ({
                         - {location.address}
                       </span>
                     )}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="shift_pattern_id"
+        render={({ field }) => (
+          <FormItem className="md:col-span-2">
+            <FormLabel>Default Shift Pattern</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select default shift pattern" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="">No default pattern</SelectItem>
+                {shiftPatterns.map((pattern) => (
+                  <SelectItem key={pattern.id} value={pattern.id}>
+                    {pattern.name} ({pattern.start_time} - {pattern.end_time})
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -7,6 +7,7 @@ import ManagerTab from '@/components/leave/tabs/ManagerTab';
 import AttendanceReport from '@/components/dashboard/attendance-report';
 import HiringStatistics from '@/components/dashboard/HiringStatistics';
 import EmployeeComposition from '@/components/dashboard/EmployeeComposition';
+import ShiftPatternQuickAccess from '@/components/shift-patterns/ShiftPatternQuickAccess';
 
 interface ManagerDashboardProps {
   firstName: string;
@@ -45,17 +46,18 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
       {/* Manager-specific content without salary information */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column - Leave Management */}
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-3">
           <ManagerTab />
         </div>
         
-        {/* Middle Column - Attendance Report */}
+        {/* Middle Column - Attendance Report & Shift Patterns */}
         <div className="lg:col-span-4">
           <AttendanceReport className="mb-6" />
+          <ShiftPatternQuickAccess />
         </div>
         
         {/* Right Column - Statistics */}
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-5">
           <div className="grid grid-cols-1 gap-6">
             <HiringStatistics />
             <EmployeeComposition />
