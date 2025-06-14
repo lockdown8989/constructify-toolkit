@@ -15,7 +15,7 @@ interface EmployeeTableRowProps {
   employee: Employee;
   isSelected: boolean;
   onSelect: (id: string) => void;
-  onRowClick?: (employee: Employee) => void;
+  onClick: (employee: Employee) => void;
   onStatusChange?: (id: string, status: string) => void;
 }
 
@@ -23,7 +23,7 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
   employee,
   isSelected,
   onSelect,
-  onRowClick,
+  onClick,
   onStatusChange,
 }) => {
   const handleRowClick = (e: React.MouseEvent) => {
@@ -34,9 +34,7 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
       return;
     }
     
-    if (onRowClick) {
-      onRowClick(employee);
-    }
+    onClick(employee);
   };
   
   const getInitials = (name: string): string => {

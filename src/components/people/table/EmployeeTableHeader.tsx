@@ -3,15 +3,18 @@ import React from 'react';
 
 interface EmployeeTableHeaderProps {
   onSelectAll: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  allSelected: boolean;
-  hasEmployees: boolean;
+  selectedCount: number;
+  totalCount: number;
 }
 
 const EmployeeTableHeader: React.FC<EmployeeTableHeaderProps> = ({
   onSelectAll,
-  allSelected,
-  hasEmployees,
+  selectedCount,
+  totalCount,
 }) => {
+  const allSelected = selectedCount === totalCount && totalCount > 0;
+  const hasEmployees = totalCount > 0;
+
   return (
     <thead className="bg-gray-50">
       <tr>
