@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,16 +29,8 @@ const EmployeeAttendanceSummary = () => {
   };
 
   const handleViewStats = () => {
-    // Only managers, admin, hr can view stats
-    if (isManager || isAdmin || isHR) {
-      navigate('/attendance');
-    } else {
-      toast({
-        title: "Access Denied",
-        description: "You do not have permission to view detailed attendance stats.",
-        variant: "destructive"
-      });
-    }
+    // Now all users may navigate to attendance page
+    navigate('/attendance');
   };
 
   return (
