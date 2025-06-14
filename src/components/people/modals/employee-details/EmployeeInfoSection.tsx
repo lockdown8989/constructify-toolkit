@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useUpdateEmployee } from '@/hooks/use-employees';
 import { useToast } from '@/hooks/use-toast';
 import DocumentsSection from './DocumentsSection';
+import { formatCurrency } from '@/utils/format';
 
 interface EmployeeInfoSectionProps {
   employee: Employee;
@@ -121,6 +122,12 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
   };
 
   const currentEmployee = isEditing ? editedEmployee : employee;
+
+  // Format salary consistently with British pounds
+  const formatSalaryForDisplay = (salaryString: string): string => {
+    const numericValue = parseFloat(salaryString.replace(/[^0-9.]/g, ''));
+    return isNaN(numericValue) ? '£0' : formatCurrency(numericValue, 'GBP');
+  };
 
   return (
     <div className="space-y-6">
@@ -335,7 +342,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
             ) : (
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-gray-500" />
-                <span>{currentEmployee.salary}</span>
+                <span>{formatSalaryForDisplay(currentEmployee.salary)}</span>
               </div>
             )}
           </div>

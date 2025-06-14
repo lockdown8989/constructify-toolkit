@@ -1,101 +1,81 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { employeeFormSchema, type EmployeeFormValues } from './employee-form-schema';
-import { useAddEmployee, useUpdateEmployee, Employee } from '@/hooks/use-employees';
+import { employeeFormSchema, EmployeeFormValues } from './employee-form-schema';
+import { useCreateEmployee, useUpdateEmployee, Employee as DbEmployee } from '@/hooks/use-employees';
 import { useToast } from '@/hooks/use-toast';
 
-export interface UseEmployeeFormProps {
-  onSuccess: () => void;
-  employeeToEdit?: Employee;
-  defaultLocation?: string;
-}
-
-export const useEmployeeForm = ({ 
-  onSuccess, 
-  employeeToEdit, 
-  defaultLocation 
-}: UseEmployeeFormProps) => {
+export const useEmployeeForm = (
+  departments: string[],
+  sites: string[],
+  onSuccess: () => void,
+  employeeToEdit?: DbEmployee
+) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
-
-  const addEmployee = useAddEmployee();
+  const createEmployee = useCreateEmployee();
   const updateEmployee = useUpdateEmployee();
+  const { toast } = useToast();
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),
     defaultValues: {
       name: employeeToEdit?.name || '',
       email: employeeToEdit?.email || '',
-      phone: '',
+      phone: employeeToEdit?.phone || '',
       job_title: employeeToEdit?.job_title || '',
       department: employeeToEdit?.department || '',
       site: employeeToEdit?.site || '',
-      location: employeeToEdit?.location || defaultLocation || '',
-      salary: employeeToEdit?.salary || 0,
-      hourly_rate: employeeToEdit?.hourly_rate || 0,
-      lifecycle: 'active',
-      status: 'active',
-      start_date: employeeToEdit?.start_date || new Date().toISOString().split('T')[0],
+      location: employeeToEdit?.location || '',
+      salary: employeeToEdit?.salary || undefined,
+      hourly_rate: employeeToEdit?.hourly_rate || undefined,
+      lifecycle: employeeToEdit?.lifecycle || 'full-time',
+      status: employeeToEdit?.status || 'active',
+      start_date: employeeToEdit?.start_date || '',
     },
   });
 
-  const onSubmit = form.handleSubmit(async (values) => {
+  const onSubmit = async (data: EmployeeFormValues) => {
     setIsSubmitting(true);
-    setError(null);
-
     try {
-      const employeeData = {
-        name: values.name,
-        email: values.email,
-        job_title: values.job_title,
-        department: values.department,
-        site: values.site,
-        location: values.location,
-        salary: values.salary || 0,
-        hourly_rate: values.hourly_rate || 0,
-        start_date: values.start_date || new Date().toISOString().split('T')[0],
-        status: 'Active',
-        lifecycle: 'Active',
-        role: 'employee',
+      const payload = {
+        ...data,
+        salary: data.salary || 0,
+        hourly_rate: data.hourly_rate || 0,
+        start_date: data.start_date ? new Date(data.start_date).toISOString() : new Date().toISOString(),
       };
 
       if (employeeToEdit) {
+        // Update employee
         await updateEmployee.mutateAsync({
           id: employeeToEdit.id,
-          ...employeeData,
+          ...payload,
         });
         toast({
           title: "Employee updated",
-          description: "Employee information has been successfully updated.",
+          description: `${data.name} has been updated successfully.`,
         });
       } else {
-        await addEmployee.mutateAsync(employeeData);
+        // Create employee
+        await createEmployee.mutateAsync(payload);
         toast({
-          title: "Employee added",
-          description: "New employee has been successfully added to the team.",
+          title: "Employee created",
+          description: `${data.name} has been created successfully.`,
         });
       }
+      form.reset();
       onSuccess();
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-      setError(errorMessage);
+    } catch (error) {
+      console.error("Error creating/updating employee:", error);
       toast({
         title: "Error",
-        description: errorMessage,
+        description:
+          error instanceof Error ? error.message : "Failed to create/update employee",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
-  });
-
-  return {
-    form,
-    onSubmit,
-    isSubmitting,
-    error,
   };
+
+  return { form, isSubmitting, onSubmit };
 };
