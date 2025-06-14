@@ -19,7 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const DesktopNav = () => {
-  const { isAuthenticated, hasManagerialAccess, hasPayrollAccess } = useAuth();
+  const { isAuthenticated, isManager, isPayroll, isAdmin, isHR } = useAuth();
   const location = useLocation();
 
   if (!isAuthenticated) return null;
@@ -44,6 +44,9 @@ const DesktopNav = () => {
       <span>{children}</span>
     </Link>
   );
+
+  const hasManagerialAccess = isManager || isAdmin || isHR;
+  const hasPayrollAccess = isPayroll || isAdmin;
 
   return (
     <nav className="space-y-1 px-2">

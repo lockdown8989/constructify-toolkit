@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils';
 import EmployeeMobileCard from './EmployeeMobileCard';
 import { Employee } from '../types';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChevronDown } from 'lucide-react';
 
 interface MobileTableProps {
   employees: Employee[];
@@ -68,49 +67,38 @@ const MobileTable: React.FC<MobileTableProps> = ({
     };
   }, []);
 
-  // Function to determine if we should show scroll indicator (when there are many employees)
-  const shouldShowScrollIndicator = employees.length > 5;
-
   return (
-    <div className="rounded-lg overflow-hidden flex flex-col" ref={containerRef}>
+    <div className="flex flex-col" ref={containerRef}>
       {employees.length === 0 ? (
-        <div className="p-8 text-center text-gray-500 min-h-[200px] flex flex-col items-center justify-center">
-          <p className="text-base">No team members found</p>
-          <p className="text-sm mt-1 text-gray-400">Try adjusting your filters or adding new team members</p>
+        <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-xl border border-gray-100">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <Users className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No team members found</h3>
+          <p className="text-sm text-gray-500 max-w-sm">
+            Try adjusting your filters or adding new team members to get started
+          </p>
         </div>
       ) : (
-        <>
-          <ScrollArea 
-            className="max-h-[calc(100vh-250px)] min-h-[300px] overflow-y-auto rounded-lg momentum-scroll"
-            ref={scrollAreaRef}
-          >
-            <div>
-              {employees.map(employee => (
-                <EmployeeMobileCard
-                  key={employee.id}
-                  employee={employee}
-                  isSelected={selectedEmployees.includes(employee.id)}
-                  isExpanded={expandedEmployee === employee.id}
-                  onSelect={onSelectEmployee}
-                  onToggleExpand={onToggleExpand}
-                  onCardClick={onEmployeeClick}
-                  onStatusChange={onStatusChange}
-                />
-              ))}
-            </div>
-          </ScrollArea>
-          
-          {shouldShowScrollIndicator && (
-            <button 
-              onClick={scrollToTop}
-              className="mt-2 flex items-center justify-center p-2 text-sm text-gray-600 hover:text-blue-600 transition-colors touch-target"
-              aria-label="Scroll to top"
-            >
-              <ChevronDown className="h-5 w-5 transform rotate-180 mr-1" />
-              <span>Scroll to top</span>
-            </button>
-          )}
-        </>
+        <ScrollArea 
+          className="max-h-[calc(100vh-300px)] min-h-[400px] overflow-y-auto momentum-scroll"
+          ref={scrollAreaRef}
+        >
+          <div className="px-1">
+            {employees.map(employee => (
+              <EmployeeMobileCard
+                key={employee.id}
+                employee={employee}
+                isSelected={selectedEmployees.includes(employee.id)}
+                isExpanded={expandedEmployee === employee.id}
+                onSelect={onSelectEmployee}
+                onToggleExpand={onToggleExpand}
+                onCardClick={onEmployeeClick}
+                onStatusChange={onStatusChange}
+              />
+            ))}
+          </div>
+        </ScrollArea>
       )}
     </div>
   );
