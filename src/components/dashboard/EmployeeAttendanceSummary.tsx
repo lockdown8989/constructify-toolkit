@@ -5,15 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Clock, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { useAttendanceSync } from '@/hooks/use-attendance-sync';
 import { useAttendance } from '@/hooks/use-attendance';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface EmployeeAttendanceSummaryProps {
   employeeId: string | null;
 }
 
 const EmployeeAttendanceSummary: React.FC<EmployeeAttendanceSummaryProps> = ({ employeeId }) => {
-  useAttendanceSync(); // Enable real-time sync
+  const queryClient = useQueryClient();
   const { data: attendanceData, isLoading } = useAttendance(employeeId ?? undefined);
   
   const currentTime = format(new Date(), 'dd MMM yyyy, hh:mm a');
