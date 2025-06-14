@@ -26,11 +26,11 @@ const MobileTable: React.FC<MobileTableProps> = ({
 }) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  // Add momentum scrolling for iOS
+  // Add momentum scrolling for iOS using CSS class instead
   useEffect(() => {
     const scrollElement = scrollAreaRef.current;
     if (scrollElement) {
-      scrollElement.style.webkitOverflowScrolling = 'touch';
+      scrollElement.style.overflowScrolling = 'touch';
     }
   }, []);
 
