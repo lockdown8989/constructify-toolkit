@@ -5,7 +5,16 @@ import type { Database } from '@/types/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 
-export type Employee = Database['public']['Tables']['employees']['Row'];
+export type Employee = Database['public']['Tables']['employees']['Row'] & {
+  shift_pattern_id?: string;
+  monday_shift_id?: string;
+  tuesday_shift_id?: string;
+  wednesday_shift_id?: string;
+  thursday_shift_id?: string;
+  friday_shift_id?: string;
+  saturday_shift_id?: string;
+  sunday_shift_id?: string;
+};
 export type NewEmployee = Database['public']['Tables']['employees']['Insert'];
 export type EmployeeUpdate = Database['public']['Tables']['employees']['Update'];
 
