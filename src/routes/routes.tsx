@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/hooks/auth';
@@ -89,7 +88,7 @@ const AppRoutes = () => {
             }
           />
           <Route
-            path="/leave"
+            path="/leave-management"
             element={
               <ProtectedRoute>
                 <LeaveManagement />
