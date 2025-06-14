@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FileUpload } from '@/components/ui/file-upload';
 import { useUploadDocument, type DocumentModel } from '@/hooks/use-documents';
 import { useToast } from '@/hooks/use-toast';
 
@@ -24,13 +24,6 @@ const DocumentAssignmentDialog: React.FC<DocumentAssignmentDialogProps> = ({
   const [documentType, setDocumentType] = useState<string>('');
   const uploadDocument = useUploadDocument();
   const { toast } = useToast();
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
-  };
 
   const handleUpload = async () => {
     if (!selectedFile || !documentType) {
@@ -68,8 +61,14 @@ const DocumentAssignmentDialog: React.FC<DocumentAssignmentDialogProps> = ({
     }
   };
 
+  const handleClose = () => {
+    setSelectedFile(null);
+    setDocumentType('');
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Assign Document to {employeeName}</DialogTitle>
@@ -94,21 +93,16 @@ const DocumentAssignmentDialog: React.FC<DocumentAssignmentDialogProps> = ({
 
           <div>
             <label className="text-sm font-medium mb-2 block">Select File</label>
-            <Input
-              type="file"
-              onChange={handleFileChange}
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+            <FileUpload
+              onFileSelect={setSelectedFile}
+              selectedFile={selectedFile}
+              placeholder="Choose a document to upload"
             />
-            {selectedFile && (
-              <p className="text-sm text-gray-600 mt-1">
-                Selected: {selectedFile.name}
-              </p>
-            )}
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
           <Button 

@@ -388,6 +388,7 @@ export type Database = {
           created_at: string | null
           document_type: string
           employee_id: string | null
+          file_extension: string | null
           file_type: string | null
           id: string
           name: string
@@ -405,6 +406,7 @@ export type Database = {
           created_at?: string | null
           document_type: string
           employee_id?: string | null
+          file_extension?: string | null
           file_type?: string | null
           id?: string
           name: string
@@ -422,6 +424,7 @@ export type Database = {
           created_at?: string | null
           document_type?: string
           employee_id?: string | null
+          file_extension?: string | null
           file_type?: string | null
           id?: string
           name?: string

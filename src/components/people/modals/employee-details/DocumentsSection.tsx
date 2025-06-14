@@ -7,6 +7,7 @@ import { FileText, Download, Trash2, Plus, Eye } from 'lucide-react';
 import { useEmployeeDocuments, useDeleteDocument, type DocumentModel } from '@/hooks/use-documents';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { DocumentPreview } from '@/components/documents/DocumentPreview';
 import DocumentAssignmentDialog from './DocumentAssignmentDialog';
 
 interface DocumentsSectionProps {
@@ -136,67 +137,27 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
       ) : (
         <div className="grid gap-4">
           {documents.map((doc) => (
-            <Card key={doc.id} className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start space-x-3 flex-1">
-                  <div className="flex-shrink-0">
-                    <FileText className="h-8 w-8 text-blue-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="text-sm font-medium text-gray-900 truncate">
-                        {doc.title}
-                      </h4>
-                      <Badge className={getDocumentTypeColor(doc.category || doc.document_type || 'general')}>
-                        {doc.category || doc.document_type}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center text-xs text-gray-500 space-x-4">
-                      {doc.size && (
-                        <span>{doc.size}</span>
-                      )}
-                      {doc.created_at && (
-                        <span>
-                          Added {new Date(doc.created_at).toLocaleDateString()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-1 ml-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleView(doc)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  
-                  {doc.path && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDownload(doc)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  )}
-                  
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(doc)}
-                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                    disabled={deleteDocument.isPending}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+            <div key={doc.id} className="relative">
+              <DocumentPreview
+                document={doc}
+                onDownload={handleDownload}
+                onView={handleView}
+              />
+              <div className="absolute top-2 right-2 flex items-center gap-2">
+                <Badge className={getDocumentTypeColor(doc.category || doc.document_type || 'general')}>
+                  {doc.category || doc.document_type}
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDelete(doc)}
+                  className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  disabled={deleteDocument.isPending}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}
