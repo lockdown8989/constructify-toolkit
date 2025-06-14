@@ -21,7 +21,7 @@ export const formatDate = (dateString: string | null | undefined): string => {
 };
 
 /**
- * Format currency with proper symbol and formatting (£ for GBP)
+ * Format currency with proper symbol and formatting
  */
 export const formatCurrency = (amount: number | string, currency: string = 'GBP'): string => {
   if (typeof amount === 'string') {
@@ -33,12 +33,12 @@ export const formatCurrency = (amount: number | string, currency: string = 'GBP'
   if (isNaN(amount)) return '£0';
   
   try {
-    // Always use GBP with £ symbol
+    // Always use GBP for consistency
     const formatter = new Intl.NumberFormat('en-GB', {
       style: 'currency',
       currency: 'GBP',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 0
     });
     
     return formatter.format(amount);

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
-// GBP as the primary currency
+// Updated to only show GBP 
 const currencyOptions = [
   { value: "GBP", label: "British Pound (£)", icon: PoundSterling },
 ];

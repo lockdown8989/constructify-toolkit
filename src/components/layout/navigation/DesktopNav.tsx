@@ -19,10 +19,14 @@ import {
 import { cn } from "@/lib/utils";
 
 const DesktopNav = () => {
-  const { isAuthenticated, isManager, isPayroll, isAdmin, isHR } = useAuth();
+  const { isAuthenticated, isAdmin, isHR, isManager, isPayroll } = useAuth();
   const location = useLocation();
 
   if (!isAuthenticated) return null;
+
+  // Calculate derived properties
+  const hasManagerialAccess = isManager || isAdmin || isHR;
+  const hasPayrollAccess = isPayroll;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -44,9 +48,6 @@ const DesktopNav = () => {
       <span>{children}</span>
     </Link>
   );
-
-  const hasManagerialAccess = isManager || isAdmin || isHR;
-  const hasPayrollAccess = isPayroll || isAdmin;
 
   return (
     <nav className="space-y-1 px-2">

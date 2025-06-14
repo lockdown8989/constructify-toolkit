@@ -29,7 +29,7 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
     }
   }, [hourlyRate, form]);
   
-  // Common departments for UK that typically use hourly rates
+  // Common departments for UK and USA that typically use hourly rates
   const hourlyRateDepartments = ['Hospital', 'Healthcare', 'Waste Services', 'Council', 'Retail', 'Hospitality', 'Cleaning'];
   const showHourlyRateProminent = hourlyRateDepartments.some(dept => 
     department?.toLowerCase().includes(dept.toLowerCase())
@@ -67,11 +67,11 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
             name="salary"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Annual Salary (£)</FormLabel>
+                <FormLabel>Annual Salary</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
-                    placeholder="35000" 
+                    placeholder="65000" 
                     {...field} 
                     onChange={(e) => field.onChange(e.target.valueAsNumber)}
                   />
@@ -88,11 +88,11 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
             name="salary"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Annual Salary (£)</FormLabel>
+                <FormLabel>Annual Salary</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
-                    placeholder="35000" 
+                    placeholder="65000" 
                     {...field} 
                     onChange={(e) => field.onChange(e.target.valueAsNumber)}
                   />
