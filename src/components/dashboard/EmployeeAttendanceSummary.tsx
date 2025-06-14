@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,12 +9,14 @@ import { useAttendance } from '@/hooks/use-attendance';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
+import { useLocation } from "react-router-dom";
 
 const EmployeeAttendanceSummary = () => {
   const { employeeId } = useEmployeeDataManagement();
   useAttendanceSync(); // Enable real-time sync
   const { data: attendanceData } = useAttendance(employeeId);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { isManager, isAdmin, isHR, isPayroll } = useAuth();
 
@@ -32,8 +33,11 @@ const EmployeeAttendanceSummary = () => {
   };
 
   const handleViewStats = () => {
-    // Now all users may navigate to attendance page
-    navigate('/attendance');
+    // For employee, lock to their personal stats 
+    const goTo = (isManager || isAdmin || isHR || isPayroll)
+      ? "/attendance"
+      : "/attendance?me=1";
+    navigate(goTo);
   };
 
   return (

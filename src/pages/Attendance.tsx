@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import AttendanceHeader from "@/components/attendance/AttendanceHeader";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import AttendanceControls from "@/components/attendance/AttendanceControls";
@@ -11,6 +12,12 @@ import { Loader2 } from "lucide-react";
 const Attendance = () => {
   const { employeeData, isLoading: isEmployeeLoading } = useEmployeeDataManagement();
   const { isManager, isAdmin, isHR } = useAuth();
+  const location = useLocation();
+
+  // Check if coming from "View Stats" as self (i.e., "?me=1")
+  const searchParams = new URLSearchParams(location.search);
+  const showSelfAttendance = searchParams.get("me") === "1";
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | undefined>();
@@ -18,12 +25,17 @@ const Attendance = () => {
   const canManageAttendance = isManager || isAdmin || isHR;
 
   useEffect(() => {
-    if (employeeData?.id && !selectedEmployeeId) {
-      // Set initial employee ID for both managers (their own) and employees.
-      // A manager can then change this via controls.
-      setSelectedEmployeeId(employeeData.id);
+    if (employeeData?.id) {
+      if (showSelfAttendance) {
+        setSelectedEmployeeId(employeeData.id);
+      } else if (!selectedEmployeeId) {
+        setSelectedEmployeeId(employeeData.id);
+      }
     }
-  }, [employeeData, selectedEmployeeId]);
+  }, [employeeData, selectedEmployeeId, showSelfAttendance]);
+
+  // Do NOT allow selector to change for regular employees if they came via "View Stats"
+  const lockToSelf = showSelfAttendance && !canManageAttendance;
 
   if (isEmployeeLoading && !selectedEmployeeId) {
     return (
@@ -44,8 +56,11 @@ const Attendance = () => {
           onEmployeeSelect={setSelectedEmployeeId}
           onDateChange={setSelectedDate}
         />
+      ) : lockToSelf ? (
+        // Hide controls completely for employees locked to self
+        <div className="mb-8" />
       ) : (
-        // Add a spacer to maintain layout consistency when controls are hidden
+        // Add a spacer for layout consistency
         <div className="mb-8" />
       )}
       <AttendanceList 
