@@ -1,9 +1,7 @@
-
 import React from 'react';
 import { ChevronRight, MoreVertical, CheckCircle, XCircle, Mail, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Employee } from '../types';
-import { formatCurrency } from '@/utils/format';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,12 +63,6 @@ const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
       .join('')
       .toUpperCase()
       .substring(0, 2);
-  };
-
-  // Extract numeric value from salary string and format with British pounds
-  const formatSalaryDisplay = (salaryString: string): string => {
-    const numericValue = parseInt(salaryString.replace(/[^0-9]/g, ''));
-    return formatCurrency(numericValue, 'GBP');
   };
 
   return (
@@ -170,7 +162,7 @@ const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
             <div className="text-gray-500 font-medium">Site:</div>
             <div className="text-gray-900">{employee.site} {employee.siteIcon}</div>
             <div className="text-gray-500 font-medium">Salary:</div>
-            <div className="font-medium text-gray-900">{formatSalaryDisplay(employee.salary)}</div>
+            <div className="font-medium text-gray-900">{employee.salary}</div>
             <div className="text-gray-500 font-medium">Start date:</div>
             <div className="text-gray-900">{employee.startDate}</div>
             <div className="text-gray-500 font-medium">Lifecycle:</div>

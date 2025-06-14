@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Employee } from '../types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { formatCurrency } from '@/utils/format';
 
 interface EmployeeTableRowProps {
   employee: Employee;
@@ -54,12 +53,6 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
     Inactive: "bg-gray-100 text-gray-700 border border-gray-200",
     Invited: "bg-blue-100 text-blue-700 border border-blue-200",
     Absent: "bg-amber-100 text-amber-700 border border-amber-200"
-  };
-
-  // Extract numeric value from salary string and format with British pounds
-  const formatSalaryDisplay = (salaryString: string): string => {
-    const numericValue = parseInt(salaryString.replace(/[^0-9]/g, ''));
-    return formatCurrency(numericValue, 'GBP');
   };
 
   return (
@@ -108,7 +101,7 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
         </div>
       </td>
       <td className="py-3 px-4 whitespace-nowrap">
-        <span className="font-medium text-gray-900">{formatSalaryDisplay(employee.salary)}</span>
+        <span className="font-medium text-gray-900">{employee.salary}</span>
       </td>
       <td className="py-3 px-4 whitespace-nowrap">
         <span className="text-gray-700">{employee.startDate}</span>
@@ -159,3 +152,4 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
 };
 
 export default EmployeeTableRow;
+

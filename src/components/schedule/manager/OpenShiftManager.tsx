@@ -16,9 +16,20 @@ import {
   Eye
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { useOpenShifts } from '@/hooks/use-open-shifts';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+
+interface OpenShift {
+  id: string;
+  title: string;
+  role: string;
+  start_time: string;
+  end_time: string;
+  location?: string;
+  status: 'draft' | 'published' | 'assigned';
+  applications_count?: number;
+  requirements?: string[];
+  priority?: string;
+  department?: string;
+}
 
 interface OpenShiftManagerProps {
   isOpen: boolean;
@@ -36,11 +47,51 @@ const OpenShiftManager: React.FC<OpenShiftManagerProps> = ({
   onAssignShift
 }) => {
   const [activeTab, setActiveTab] = useState('published');
-  const { openShifts, isLoading } = useOpenShifts();
-  const { toast } = useToast();
 
-  // Filter shifts by status
-  const publishedShifts = openShifts.filter(shift => shift.status === 'open' || shift.status === 'published');
+  // Mock data - replace with actual data from your API
+  const openShifts: OpenShift[] = [
+    {
+      id: '1',
+      title: 'Morning Shift',
+      role: 'Server',
+      start_time: '2025-05-26T09:00:00Z',
+      end_time: '2025-05-26T17:00:00Z',
+      location: 'Main Floor',
+      status: 'published',
+      applications_count: 3,
+      requirements: ['Customer Service', 'Cash Handling'],
+      priority: 'high',
+      department: 'Restaurant'
+    },
+    {
+      id: '2',
+      title: 'Evening Shift',
+      role: 'Kitchen Staff',
+      start_time: '2025-05-26T17:00:00Z',
+      end_time: '2025-05-27T01:00:00Z',
+      location: 'Kitchen',
+      status: 'published',
+      applications_count: 1,
+      requirements: ['Food Safety', 'Team Work'],
+      priority: 'normal',
+      department: 'Kitchen'
+    },
+    {
+      id: '3',
+      title: 'Weekend Cover',
+      role: 'Manager',
+      start_time: '2025-05-31T08:00:00Z',
+      end_time: '2025-05-31T18:00:00Z',
+      location: 'All Areas',
+      status: 'draft',
+      applications_count: 0,
+      requirements: ['Leadership', 'Problem Solving'],
+      priority: 'high',
+      department: 'Management'
+    }
+  ];
+
+  const publishedShifts = openShifts.filter(shift => shift.status === 'published');
   const draftShifts = openShifts.filter(shift => shift.status === 'draft');
   const assignedShifts = openShifts.filter(shift => shift.status === 'assigned');
 
@@ -53,55 +104,7 @@ const OpenShiftManager: React.FC<OpenShiftManagerProps> = ({
     }
   };
 
-  const handlePublishShift = async (shiftId: string) => {
-    try {
-      const { error } = await supabase
-        .from('open_shifts')
-        .update({ status: 'open' })
-        .eq('id', shiftId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Shift Published",
-        description: "The shift has been published and is now available to employees.",
-      });
-
-      onPublishShift(shiftId);
-    } catch (error) {
-      console.error('Error publishing shift:', error);
-      toast({
-        title: "Error",
-        description: "Failed to publish shift. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDeleteShift = async (shiftId: string) => {
-    try {
-      const { error } = await supabase
-        .from('open_shifts')
-        .delete()
-        .eq('id', shiftId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Shift Deleted",
-        description: "The shift has been deleted successfully.",
-      });
-    } catch (error) {
-      console.error('Error deleting shift:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete shift. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const ShiftCard = ({ shift }: { shift: any }) => (
+  const ShiftCard = ({ shift }: { shift: OpenShift }) => (
     <Card className="mb-3">
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-3">
@@ -120,10 +123,10 @@ const OpenShiftManager: React.FC<OpenShiftManagerProps> = ({
             )}
           </div>
           <Badge 
-            variant={shift.status === 'open' || shift.status === 'published' ? 'default' : 
+            variant={shift.status === 'published' ? 'default' : 
                     shift.status === 'assigned' ? 'secondary' : 'outline'}
           >
-            {shift.status === 'open' ? 'published' : shift.status}
+            {shift.status}
           </Badge>
         </div>
         
@@ -147,11 +150,23 @@ const OpenShiftManager: React.FC<OpenShiftManagerProps> = ({
           </div>
         </div>
 
+        {shift.requirements && (
+          <div className="mt-3">
+            <div className="flex flex-wrap gap-1">
+              {shift.requirements.map((req, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {req}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-2 mt-4">
           {shift.status === 'draft' && (
             <Button 
               size="sm" 
-              onClick={() => handlePublishShift(shift.id)}
+              onClick={() => onPublishShift(shift.id)}
               className="bg-green-600 hover:bg-green-700"
             >
               <Send className="h-3 w-3 mr-1" />
@@ -159,7 +174,7 @@ const OpenShiftManager: React.FC<OpenShiftManagerProps> = ({
             </Button>
           )}
           
-          {(shift.status === 'open' || shift.status === 'published') && (shift.applications_count || 0) > 0 && (
+          {shift.status === 'published' && (shift.applications_count || 0) > 0 && (
             <Button 
               size="sm" 
               onClick={() => onAssignShift(shift.id)}
@@ -175,30 +190,13 @@ const OpenShiftManager: React.FC<OpenShiftManagerProps> = ({
             Edit
           </Button>
           
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="text-red-600 hover:text-red-700"
-            onClick={() => handleDeleteShift(shift.id)}
-          >
+          <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
             <Trash2 className="h-3 w-3" />
           </Button>
         </div>
       </CardContent>
     </Card>
   );
-
-  if (isLoading) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-          <div className="flex items-center justify-center py-8">
-            <div className="text-gray-500">Loading open shifts...</div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
