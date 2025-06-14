@@ -25,8 +25,8 @@ export const validateFile = (file: File): { isValid: boolean; error?: string } =
   }
 
   // Check file type
-  const supportedTypes = Object.keys(SUPPORTED_FILE_TYPES) as Array<keyof typeof SUPPORTED_FILE_TYPES>;
-  if (!supportedTypes.includes(file.type as keyof typeof SUPPORTED_FILE_TYPES)) {
+  const supportedTypes = Object.keys(SUPPORTED_FILE_TYPES);
+  if (!supportedTypes.includes(file.type)) {
     return { isValid: false, error: 'File type not supported. Please upload PDF, Word, Excel, image, or text files.' };
   }
 
@@ -36,10 +36,9 @@ export const validateFile = (file: File): { isValid: boolean; error?: string } =
 export const getFileTypeFromExtension = (filename: string): string => {
   const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
   
-  // Use a more explicit approach to avoid TypeScript issues
-  for (const mimeType of Object.keys(SUPPORTED_FILE_TYPES) as Array<keyof typeof SUPPORTED_FILE_TYPES>) {
-    const extensions = SUPPORTED_FILE_TYPES[mimeType];
-    if (extensions.includes(extension as any)) {
+  // Check each supported file type
+  for (const [mimeType, extensions] of Object.entries(SUPPORTED_FILE_TYPES)) {
+    if (extensions.includes(extension as '.pdf' | '.doc' | '.docx' | '.jpg' | '.jpeg' | '.png' | '.gif' | '.txt' | '.csv' | '.xls' | '.xlsx')) {
       return mimeType;
     }
   }

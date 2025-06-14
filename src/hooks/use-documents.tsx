@@ -103,6 +103,12 @@ export function useUploadDocument() {
       try {
         console.log("Starting document upload:", { documentType, employeeId, fileName: file.name });
         
+        // Validate that employeeId is a valid UUID format
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(employeeId)) {
+          throw new Error(`Invalid employee ID format: ${employeeId}. Expected UUID format.`);
+        }
+        
         // Format file path
         const fileExt = file.name.split('.').pop();
         const timestamp = new Date().getTime();
@@ -139,7 +145,12 @@ export function useUploadDocument() {
           
         console.log("File public URL:", urlData.publicUrl);
         
-        // Save document metadata with new schema - fix the name field issue
+        // Save document metadata with new schema - ensure uploaded_by is valid UUID or null
+        let uploadedBy = null;
+        if (user?.id && uuidRegex.test(user.id)) {
+          uploadedBy = user.id;
+        }
+        
         const { data, error: dbError } = await supabase
           .from('documents')
           .insert({
@@ -151,7 +162,7 @@ export function useUploadDocument() {
             path: filePath,
             url: urlData.publicUrl,
             size: sizeString,
-            uploaded_by: user?.id || null,
+            uploaded_by: uploadedBy,
             file_type: file.type || 'application/octet-stream'
           })
           .select()
