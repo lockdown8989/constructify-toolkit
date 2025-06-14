@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import PinCodeVerification from './PinCodeVerification';
@@ -307,9 +306,11 @@ const ClockActions = ({
         onClose={() => setIsShiftCompletionOpen(false)}
         onFinishShift={async () => handleShiftCompletion('finish')}
         onGoOnBreak={async () => handleShiftCompletion('break')}
+        onEndBreak={employeeStatus?.onBreak ? async () => handleShiftCompletion('break') : undefined}
         employeeName={selectedEmployeeName}
         employeeAvatar={selectedEmployeeAvatar}
         isSubmitting={localProcessing}
+        isOnBreak={employeeStatus?.onBreak}
       />
 
       {/* PIN Verification Dialog */}
