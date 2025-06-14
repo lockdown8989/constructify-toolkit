@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useDeleteEmployee, Employee as DbEmployee } from '@/hooks/use-employees';
 import { useToast } from '@/hooks/use-toast';
@@ -27,26 +27,15 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
 }) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
   const deleteEmployee = useDeleteEmployee();
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
-  // Update current employee when prop changes
-  useEffect(() => {
-    console.log("Employee details modal - employee prop changed:", employee?.id, employee?.name);
-    setCurrentEmployee(employee);
-  }, [employee]);
-
-  // Don't render if no employee is selected
-  if (!currentEmployee) {
-    console.log("No current employee, not rendering modal");
-    return null;
-  }
+  if (!employee) return null;
 
   const handleEdit = () => {
     if (onEdit) {
-      onEdit(currentEmployee);
+      onEdit(employee);
       onClose();
     } else {
       setIsEditModalOpen(true);
@@ -55,12 +44,12 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
 
   const handleDelete = async () => {
     try {
-      await deleteEmployee.mutateAsync(currentEmployee.id);
+      await deleteEmployee.mutateAsync(employee.id);
       setIsDeleteDialogOpen(false);
       onClose();
       toast({
         title: "Employee deleted",
-        description: `${currentEmployee.name} has been removed successfully.`,
+        description: `${employee.name} has been removed successfully.`,
         variant: "default"
       });
     } catch (error) {
@@ -71,12 +60,6 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         variant: "destructive"
       });
     }
-  };
-
-  const handleClose = () => {
-    console.log("Closing employee details modal");
-    setCurrentEmployee(null);
-    onClose();
   };
 
   // Convert UI Employee to DB Employee format
@@ -105,17 +88,17 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={handleClose}>
+      <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className={`p-0 overflow-hidden rounded-2xl ${isMobile ? 'w-[95vw] max-w-[95vw]' : 'sm:max-w-[500px]'} max-h-[90vh] flex flex-col`}>
           <EmployeeHeader 
-            employee={currentEmployee}
+            employee={employee}
             onStatusChange={onStatusChange}
             onEdit={handleEdit}
             onDelete={() => setIsDeleteDialogOpen(true)}
           />
           <div className="flex-1 overflow-auto">
             <EmployeeInfoSection 
-              employee={currentEmployee} 
+              employee={employee} 
               isEditing={false}
               onSave={() => {}}
             />
@@ -126,17 +109,17 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       <DeleteConfirmationDialog 
         isOpen={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        employee={currentEmployee}
+        employee={employee}
         onDelete={handleDelete}
       />
 
-      {isEditModalOpen && currentEmployee && (
+      {isEditModalOpen && (
         <AddEmployeeModal
           open={isEditModalOpen}
           onOpenChange={setIsEditModalOpen}
           departments={[]}
           sites={[]}
-          employeeToEdit={mapToDbEmployee(currentEmployee)}
+          employeeToEdit={mapToDbEmployee(employee)}
         />
       )}
     </>

@@ -31,22 +31,14 @@ export function useEmployees(filters?: Partial<{
       } else if (isManager && user) {
         // For managers - show employees under their management
         console.log("Manager user, fetching team data");
-        
-        // Get the current manager's employee record to find their ID
-        const { data: currentManagerEmployee } = await supabase
+        const { data: managerData } = await supabase
           .from('employees')
-          .select('id, manager_id')
+          .select('manager_id')
           .eq('user_id', user.id)
           .single();
         
-        if (currentManagerEmployee?.id) {
-          // Show employees who have this manager's ID as their manager_id
-          // This means employees who report to this manager
-          query = query.eq('manager_id', currentManagerEmployee.id);
-          console.log("Filtering employees by manager's employee ID:", currentManagerEmployee.id);
-        } else {
-          console.log("Manager employee record not found, showing no employees");
-          return [];
+        if (managerData && managerData.manager_id) {
+          query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
         }
       } else if (!isManager && !isPayroll && !isAdmin && !isHR && user) {
         // For regular employees - show only their own data

@@ -53,16 +53,12 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
   };
 
   const handleEmployeeClick = (employee: EmployeeType) => {
-    console.log("Employee clicked:", employee.id, employee.name);
-    // Ensure we're setting the specific employee that was clicked
     setSelectedEmployeeDetails(employee);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
-    console.log("Closing modal, clearing selected employee");
     setIsModalOpen(false);
-    setSelectedEmployeeDetails(null); // Clear the selected employee when closing
   };
 
   const handleStatusChange = (id: string, status: string) => {
@@ -72,7 +68,6 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
   };
 
   const handleEditEmployee = (employee: EmployeeType) => {
-    console.log("Edit employee clicked:", employee.id, employee.name);
     setSelectedEmployeeDetails(employee);
     setIsEditModalOpen(true);
   };
@@ -149,16 +144,14 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
         />
       )}
 
-      {/* Employee Details Modal - Only show if we have a specific employee selected */}
-      {selectedEmployeeDetails && (
-        <EmployeeDetailsModal 
-          employee={selectedEmployeeDetails}
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          onStatusChange={handleStatusChange}
-          onEdit={handleEditEmployee}
-        />
-      )}
+      {/* Employee Details Modal */}
+      <EmployeeDetailsModal 
+        employee={selectedEmployeeDetails}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onStatusChange={handleStatusChange}
+        onEdit={handleEditEmployee}
+      />
 
       {/* Edit Employee Modal */}
       {selectedEmployeeDetails && isEditModalOpen && (

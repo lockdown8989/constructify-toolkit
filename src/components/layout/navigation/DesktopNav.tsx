@@ -19,15 +19,10 @@ import {
 import { cn } from "@/lib/utils";
 
 const DesktopNav = () => {
-  const { isAuthenticated, isManager, isAdmin, isHR, isPayroll } = useAuth();
+  const { isAuthenticated, hasManagerialAccess, hasPayrollAccess } = useAuth();
   const location = useLocation();
 
   if (!isAuthenticated) return null;
-
-  // Check if user has managerial access (admin, manager, or HR)
-  const hasManagerialAccess = isAdmin || isManager || isHR;
-  // Check if user has payroll access
-  const hasPayrollAccess = isPayroll;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -68,17 +63,26 @@ const DesktopNav = () => {
 
       {hasManagerialAccess && (
         <>
-          <NavLink to="/restaurant-schedule" icon={Users}>
+          <NavLink to="/employee-management" icon={Users}>
             Employees
           </NavLink>
-          <NavLink to="/attendance" icon={Clock}>
+          <NavLink to="/attendance-manager" icon={Clock}>
             Attendance
           </NavLink>
-          <NavLink to="/restaurant-schedule" icon={CalendarDays}>
+          <NavLink to="/shift-calendar" icon={CalendarDays}>
             Calendar
+          </NavLink>
+          <NavLink to="/open-shifts" icon={Briefcase}>
+            Open Shifts
           </NavLink>
           <NavLink to="/shift-patterns" icon={Clock}>
             Shift Patterns
+          </NavLink>
+          <NavLink to="/documents-manager" icon={FolderOpen}>
+            Documents
+          </NavLink>
+          <NavLink to="/reports" icon={BarChart3}>
+            Reports
           </NavLink>
         </>
       )}
@@ -88,8 +92,18 @@ const DesktopNav = () => {
           <NavLink to="/payroll-dashboard" icon={Calculator}>
             Payroll
           </NavLink>
+          <NavLink to="/payroll-history" icon={ClipboardList}>
+            History
+          </NavLink>
+          <NavLink to="/payroll-summary" icon={BarChart3}>
+            Summary
+          </NavLink>
         </>
       )}
+
+      <NavLink to="/notifications" icon={Bell}>
+        Notifications
+      </NavLink>
     </nav>
   );
 };
