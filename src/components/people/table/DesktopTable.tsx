@@ -24,7 +24,7 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
 }) => {
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200 table-fixed">
+      <table className="min-w-full divide-y divide-gray-200 table-fixed rounded-2xl overflow-hidden bg-white">
         <EmployeeTableHeader 
           onSelectAll={onSelectAll} 
           allSelected={selectedEmployees.length === employees.length && employees.length > 0}
@@ -57,3 +57,4 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
 };
 
 export default DesktopTable;
+

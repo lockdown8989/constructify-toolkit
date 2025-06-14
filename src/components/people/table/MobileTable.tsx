@@ -1,9 +1,8 @@
 
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 import EmployeeMobileCard from './EmployeeMobileCard';
 import { Employee } from '../types';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface MobileTableProps {
   employees: Employee[];
@@ -37,14 +36,16 @@ const MobileTable: React.FC<MobileTableProps> = ({
           </p>
         </div>
       ) : (
-        <div className="space-y-0 divide-y divide-gray-100">
+        // Responsive: Use grid for mobile, stacked for small screens, and spacing between cards
+        <div className="flex flex-col gap-3 sm:gap-4">
           {employees.map((employee, index) => (
             <div
               key={employee.id}
               className={cn(
+                "bg-white rounded-2xl shadow-sm px-2 sm:px-4 py-2 sm:py-3 flex items-center",
                 "transition-all duration-200",
-                index === 0 && "rounded-t-2xl",
-                index === employees.length - 1 && "rounded-b-2xl"
+                index === 0 && "mt-2",
+                index === employees.length - 1 && "mb-2"
               )}
             >
               <EmployeeMobileCard
@@ -65,3 +66,4 @@ const MobileTable: React.FC<MobileTableProps> = ({
 };
 
 export default MobileTable;
+
