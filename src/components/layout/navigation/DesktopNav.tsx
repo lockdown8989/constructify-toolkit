@@ -1,105 +1,110 @@
 
-import { Button } from "@/components/ui/button";
-import { Bell, LogOut, User, Settings, Users, Calendar, DollarSign, Clock, FileText, Briefcase } from "lucide-react";
+import React from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate, useLocation } from "react-router-dom";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Link, useLocation } from "react-router-dom";
+import { 
+  LayoutDashboard, 
+  Calendar, 
+  Users, 
+  FileText, 
+  Calculator,
+  ClipboardList,
+  BarChart3,
+  Clock,
+  CalendarDays,
+  Briefcase,
+  FolderOpen,
+  Bell
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface DesktopNavProps {
-  isAuthenticated: boolean;
-}
-
-const DesktopNav = ({ isAuthenticated }: DesktopNavProps) => {
-  const { user, signOut, isManager, isAdmin, isHR, isPayroll } = useAuth();
-  const navigate = useNavigate();
+const DesktopNav = () => {
+  const { isAuthenticated, hasManagerialAccess, hasPayrollAccess } = useAuth();
   const location = useLocation();
-  
-  // Calculate managerial and payroll access based on roles
-  const hasManagerialAccess = (isManager || isAdmin || isHR) && !isPayroll;
-  const hasPayrollAccess = isPayroll || isAdmin;
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
+  if (!isAuthenticated) return null;
 
-  const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: Briefcase },
-    { path: '/people', label: 'Team Members', icon: Users, requiredAccess: hasManagerialAccess },
-    { path: '/attendance', label: 'Attendance', icon: Clock },
-    { path: '/schedule', label: 'Schedule', icon: Calendar },
-    { path: '/leave-management', label: 'Leave', icon: FileText },
-    { path: '/payroll', label: 'Payroll', icon: DollarSign, requiredAccess: hasPayrollAccess },
-  ].filter(item => !item.requiredAccess || item.requiredAccess === true);
+  const isActive = (path: string) => location.pathname === path;
 
-  if (!isAuthenticated) {
-    return (
-      <div className="hidden lg:flex items-center space-x-4">
-        <Button variant="ghost" onClick={() => navigate('/auth')}>
-          Sign In
-        </Button>
-      </div>
-    );
-  }
+  const NavLink = ({ to, icon: Icon, children, className }: {
+    to: string;
+    icon: React.ComponentType<{ className?: string }>;
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <Link
+      to={to}
+      className={cn(
+        "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900",
+        isActive(to) ? "bg-gray-100 text-gray-900" : "text-gray-700",
+        className
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      <span>{children}</span>
+    </Link>
+  );
 
   return (
-    <div className="hidden lg:flex items-center space-x-6">
-      {/* Navigation Links */}
-      <nav className="flex items-center space-x-6">
-        {navItems.map((item) => (
-          <Button
-            key={item.path}
-            variant="ghost"
-            className={cn(
-              "flex items-center space-x-2 text-sm font-medium transition-colors hover:text-primary",
-              location.pathname === item.path 
-                ? "text-primary border-b-2 border-primary rounded-none" 
-                : "text-muted-foreground"
-            )}
-            onClick={() => navigate(item.path)}
-          >
-            <item.icon className="h-4 w-4" />
-            <span>{item.label}</span>
-          </Button>
-        ))}
-      </nav>
+    <nav className="space-y-1 px-2">
+      <NavLink to="/dashboard" icon={LayoutDashboard}>
+        Dashboard
+      </NavLink>
 
-      {/* Notifications */}
-      <Button variant="ghost" size="icon">
-        <Bell className="h-5 w-5" />
-      </Button>
+      {!hasManagerialAccess && !hasPayrollAccess && (
+        <NavLink to="/schedule" icon={Calendar}>
+          Schedule
+        </NavLink>
+      )}
 
-      {/* User Menu */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <User className="h-5 w-5" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuItem onClick={() => navigate('/profile')}>
-            <User className="mr-2 h-4 w-4" />
-            Profile
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate('/settings')}>
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleSignOut}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+      <NavLink to="/leave-management" icon={FileText}>
+        Leave
+      </NavLink>
+
+      {hasManagerialAccess && (
+        <>
+          <NavLink to="/employee-management" icon={Users}>
+            Employees
+          </NavLink>
+          <NavLink to="/attendance-manager" icon={Clock}>
+            Attendance
+          </NavLink>
+          <NavLink to="/shift-calendar" icon={CalendarDays}>
+            Calendar
+          </NavLink>
+          <NavLink to="/open-shifts" icon={Briefcase}>
+            Open Shifts
+          </NavLink>
+          <NavLink to="/shift-patterns" icon={Clock}>
+            Shift Patterns
+          </NavLink>
+          <NavLink to="/documents-manager" icon={FolderOpen}>
+            Documents
+          </NavLink>
+          <NavLink to="/reports" icon={BarChart3}>
+            Reports
+          </NavLink>
+        </>
+      )}
+
+      {hasPayrollAccess && (
+        <>
+          <NavLink to="/payroll-dashboard" icon={Calculator}>
+            Payroll
+          </NavLink>
+          <NavLink to="/payroll-history" icon={ClipboardList}>
+            History
+          </NavLink>
+          <NavLink to="/payroll-summary" icon={BarChart3}>
+            Summary
+          </NavLink>
+        </>
+      )}
+
+      <NavLink to="/notifications" icon={Bell}>
+        Notifications
+      </NavLink>
+    </nav>
   );
 };
 

@@ -1,115 +1,77 @@
 
-import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { HelmetProvider } from "react-helmet-async";
-import { AuthProvider } from "@/hooks/auth";
-import AppLayout from "@/components/layout/AppLayout";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/hooks/use-auth";
+import MainLayout from "@/components/layout/MainLayout";
+import Index from "@/pages/Index";
+import Auth from "@/pages/Auth";
+import Dashboard from "@/pages/Dashboard";
+import Schedule from "@/pages/Schedule";
+import Attendance from "@/pages/Attendance";
+import AttendanceManager from "@/pages/AttendanceManager";
+import LeaveManagement from "@/pages/LeaveManagement";
+import EmployeeManagement from "@/pages/EmployeeManagement";
+import PayrollDashboard from "@/pages/PayrollDashboard";
+import PayrollHistory from "@/pages/PayrollHistory";
+import PayrollSummary from "@/pages/PayrollSummary";
+import Documents from "@/pages/Documents";
+import Reports from "@/pages/Reports";
+import Settings from "@/pages/Settings";
+import Profile from "@/pages/Profile";
+import ShiftCalendar from "@/pages/ShiftCalendar";
+import OpenShifts from "@/pages/OpenShifts";
+import RestaurantSchedule from "@/pages/RestaurantSchedule";
+import DocumentsManager from "@/pages/DocumentsManager";
+import Notifications from "@/pages/Notifications";
+import ShiftPatternsPage from "@/components/shift-patterns/ShiftPatternsPage";
 
-// Lazy load components
-const Index = lazy(() => import("./pages/Index"));
-const Auth = lazy(() => import("./pages/Auth"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const People = lazy(() => import("./pages/People"));
-const Attendance = lazy(() => import("./pages/Attendance"));
-const Schedule = lazy(() => import("./pages/Schedule"));
-const TimeClock = lazy(() => import("./pages/TimeClock"));
-const LeaveManagement = lazy(() => import("./pages/LeaveManagement"));
-const Payroll = lazy(() => import("./pages/Payroll"));
-const Salary = lazy(() => import("./pages/Salary"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Settings = lazy(() => import("./pages/Settings"));
+const queryClient = new QueryClient();
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
-    },
-  },
-});
-
-const App = () => {
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <HelmetProvider>
-        <TooltipProvider>
-          <Toaster />
-          <BrowserRouter>
-            <AuthProvider>
-              <Routes>
-                <Route path="/auth" element={
-                  <Suspense fallback={<div>Loading...</div>}>
-                    <Auth />
-                  </Suspense>
-                } />
-                <Route path="/" element={<AppLayout />}>
-                  <Route index element={
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <Index />
-                    </Suspense>
-                  } />
-                  <Route path="dashboard" element={
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <Dashboard />
-                    </Suspense>
-                  } />
-                  <Route path="people" element={
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <People />
-                    </Suspense>
-                  } />
-                  <Route path="attendance" element={
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <Attendance />
-                    </Suspense>
-                  } />
-                  <Route path="schedule" element={
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <Schedule />
-                    </Suspense>
-                  } />
-                  <Route path="time-clock" element={
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <TimeClock />
-                    </Suspense>
-                  } />
-                  <Route path="leave-management" element={
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <LeaveManagement />
-                    </Suspense>
-                  } />
-                  <Route path="payroll" element={
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <Payroll />
-                    </Suspense>
-                  } />
-                  <Route path="salary" element={
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <Salary />
-                    </Suspense>
-                  } />
-                  <Route path="profile" element={
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <Profile />
-                    </Suspense>
-                  } />
-                  <Route path="settings" element={
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <Settings />
-                    </Suspense>
-                  } />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Route>
-              </Routes>
-            </AuthProvider>
-          </BrowserRouter>
-        </TooltipProvider>
-      </HelmetProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/*" element={
+                <MainLayout>
+                  <Routes>
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/schedule" element={<Schedule />} />
+                    <Route path="/attendance" element={<Attendance />} />
+                    <Route path="/attendance-manager" element={<AttendanceManager />} />
+                    <Route path="/leave-management" element={<LeaveManagement />} />
+                    <Route path="/employee-management" element={<EmployeeManagement />} />
+                    <Route path="/payroll-dashboard" element={<PayrollDashboard />} />
+                    <Route path="/payroll-history" element={<PayrollHistory />} />
+                    <Route path="/payroll-summary" element={<PayrollSummary />} />
+                    <Route path="/documents" element={<Documents />} />
+                    <Route path="/documents-manager" element={<DocumentsManager />} />
+                    <Route path="/reports" element={<Reports />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/shift-calendar" element={<ShiftCalendar />} />
+                    <Route path="/open-shifts" element={<OpenShifts />} />
+                    <Route path="/restaurant-schedule" element={<RestaurantSchedule />} />
+                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/shift-patterns" element={<ShiftPatternsPage />} />
+                  </Routes>
+                </MainLayout>
+              } />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;

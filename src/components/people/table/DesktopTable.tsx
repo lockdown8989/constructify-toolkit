@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils';
 import EmployeeTableHeader from './EmployeeTableHeader';
 import EmployeeTableRow from './EmployeeTableRow';
 import { Employee } from '../types';
-import EmployeeDesktopCard from './EmployeeDesktopCard';
 
 interface DesktopTableProps {
   employees: Employee[];
@@ -24,56 +23,35 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
   onStatusChange,
 }) => {
   return (
-    <div className="overflow-x-auto w-full">
-      <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-2">
-        {employees.length === 0 ? (
-          <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500 bg-white rounded-2xl shadow-sm">
-            <p className="text-base">No team members found</p>
-            <p className="text-sm mt-1 text-gray-400">Try adjusting your filters or adding new team members</p>
-          </div>
-        ) : (
-          employees.map((employee) => (
-            <EmployeeDesktopCard
-              key={employee.id}
-              employee={employee}
-              isSelected={selectedEmployees.includes(employee.id)}
-              onSelect={onSelectEmployee}
-              onCardClick={onEmployeeClick}
-            />
-          ))
-        )}
-      </div>
-      {/* fallback: table view for non-lg screens */}
-      <div className="lg:hidden">
-        <table className="min-w-full divide-y divide-gray-200 table-fixed rounded-2xl overflow-hidden bg-white shadow-sm">
-          <EmployeeTableHeader 
-            onSelectAll={onSelectAll} 
-            allSelected={selectedEmployees.length === employees.length && employees.length > 0}
-            hasEmployees={employees.length > 0}
-          />
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {employees.length === 0 ? (
-              <tr>
-                <td colSpan={9} className="py-12 text-center text-gray-500">
-                  <p className="text-base">No team members found</p>
-                  <p className="text-sm mt-1 text-gray-400">Try adjusting your filters or adding new team members</p>
-                </td>
-              </tr>
-            ) : (
-              employees.map(employee => (
-                <EmployeeTableRow
-                  key={employee.id}
-                  employee={employee}
-                  isSelected={selectedEmployees.includes(employee.id)}
-                  onSelect={onSelectEmployee}
-                  onRowClick={onEmployeeClick}
-                  onStatusChange={onStatusChange}
-                />
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200 table-fixed">
+        <EmployeeTableHeader 
+          onSelectAll={onSelectAll} 
+          allSelected={selectedEmployees.length === employees.length && employees.length > 0}
+          hasEmployees={employees.length > 0}
+        />
+        <tbody className="divide-y divide-gray-200 bg-white">
+          {employees.length === 0 ? (
+            <tr>
+              <td colSpan={9} className="py-12 text-center text-gray-500">
+                <p className="text-base">No team members found</p>
+                <p className="text-sm mt-1 text-gray-400">Try adjusting your filters or adding new team members</p>
+              </td>
+            </tr>
+          ) : (
+            employees.map(employee => (
+              <EmployeeTableRow
+                key={employee.id}
+                employee={employee}
+                isSelected={selectedEmployees.includes(employee.id)}
+                onSelect={onSelectEmployee}
+                onRowClick={onEmployeeClick}
+                onStatusChange={onStatusChange}
+              />
+            ))
+          )}
+        </tbody>
+      </table>
     </div>
   );
 };
