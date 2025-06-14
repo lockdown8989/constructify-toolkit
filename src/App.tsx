@@ -31,21 +31,17 @@ function App() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/*" element={
-                <AppLayout>
-                  <Routes>
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/schedule" element={<Schedule />} />
-                    <Route path="/attendance" element={<Attendance />} />
-                    <Route path="/leave-management" element={<LeaveManagement />} />
-                    <Route path="/payroll-dashboard" element={<PayrollDashboard />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/restaurant-schedule" element={<RestaurantSchedule />} />
-                    <Route path="/shift-patterns" element={<ShiftPatternsPage />} />
-                  </Routes>
-                </AppLayout>
-              } />
+              <Route path="/*" element={<AppLayout />}>
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="schedule" element={<Schedule />} />
+                <Route path="attendance" element={<Attendance />} />
+                <Route path="leave-management" element={<LeaveManagement />} />
+                <Route path="payroll-dashboard" element={<PayrollDashboard />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="restaurant-schedule" element={<RestaurantSchedule />} />
+                <Route path="shift-patterns" element={<ShiftPatternsPage />} />
+              </Route>
             </Routes>
           </AuthProvider>
         </BrowserRouter>
