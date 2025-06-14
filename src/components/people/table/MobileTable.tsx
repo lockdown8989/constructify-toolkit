@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { cn } from '@/lib/utils';
 import EmployeeMobileCard from './EmployeeMobileCard';
 import { Employee } from '../types';
 
@@ -36,29 +35,18 @@ const MobileTable: React.FC<MobileTableProps> = ({
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
-          {employees.map((employee, index) => (
-            <div
+        <div className="flex flex-col gap-4 p-2 sm:p-4">
+          {employees.map((employee) => (
+            <EmployeeMobileCard
               key={employee.id}
-              className={cn(
-                "bg-white rounded-2xl shadow-lg px-2.5 py-3 flex items-center",
-                "transition-all duration-200",
-                "border border-gray-100",
-                index === 0 && "mt-2",
-                index === employees.length - 1 && "mb-2"
-              )}
-              style={{ minWidth: 0 }}
-            >
-              <EmployeeMobileCard
-                employee={employee}
-                isSelected={selectedEmployees.includes(employee.id)}
-                isExpanded={expandedEmployee === employee.id}
-                onSelect={onSelectEmployee}
-                onToggleExpand={onToggleExpand}
-                onCardClick={onEmployeeClick}
-                onStatusChange={onStatusChange}
-              />
-            </div>
+              employee={employee}
+              isSelected={selectedEmployees.includes(employee.id)}
+              isExpanded={expandedEmployee === employee.id}
+              onSelect={onSelectEmployee}
+              onToggleExpand={onToggleExpand}
+              onCardClick={onEmployeeClick}
+              onStatusChange={onStatusChange}
+            />
           ))}
         </div>
       )}
@@ -67,4 +55,3 @@ const MobileTable: React.FC<MobileTableProps> = ({
 };
 
 export default MobileTable;
-

@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import EmployeeTableHeader from './EmployeeTableHeader';
 import EmployeeTableRow from './EmployeeTableRow';
 import { Employee } from '../types';
+import EmployeeDesktopCard from './EmployeeDesktopCard';
 
 interface DesktopTableProps {
   employees: Employee[];
@@ -22,10 +23,9 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
   onEmployeeClick,
   onStatusChange,
 }) => {
-  // Responsive: grid of cards for large screens, table for xl with subtle shadow/pill layout
   return (
     <div className="overflow-x-auto w-full">
-      <div className="hidden lg:grid grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-2">
         {employees.length === 0 ? (
           <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500 bg-white rounded-2xl shadow-sm">
             <p className="text-base">No team members found</p>
@@ -33,22 +33,13 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
           </div>
         ) : (
           employees.map((employee) => (
-            <div
+            <EmployeeDesktopCard
               key={employee.id}
-              className="bg-white rounded-2xl shadow-lg p-0 transition hover:shadow-2xl relative"
-            >
-              <table className="min-w-full table-fixed">
-                <tbody>
-                  <EmployeeTableRow
-                    employee={employee}
-                    isSelected={selectedEmployees.includes(employee.id)}
-                    onSelect={onSelectEmployee}
-                    onRowClick={onEmployeeClick}
-                    onStatusChange={onStatusChange}
-                  />
-                </tbody>
-              </table>
-            </div>
+              employee={employee}
+              isSelected={selectedEmployees.includes(employee.id)}
+              onSelect={onSelectEmployee}
+              onCardClick={onEmployeeClick}
+            />
           ))
         )}
       </div>
@@ -88,4 +79,3 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
 };
 
 export default DesktopTable;
-
