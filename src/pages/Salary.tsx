@@ -55,7 +55,9 @@ const SalaryPage = () => {
         setSelectedEmployee(firstEmployee.id);
       }
     }
-  }, [employees, selectedEmployee]);
+    // This effect should only run when the employees list loads, not when selection changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [employees]);
 
   const handlePreviousMonth = () => {
     setSelectedMonth(prev => subMonths(prev, 1));
