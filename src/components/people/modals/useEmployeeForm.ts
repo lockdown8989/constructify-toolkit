@@ -24,7 +24,7 @@ export const useEmployeeForm = ({ onSuccess, employeeToEdit, defaultLocation }: 
     defaultValues: {
       name: employeeToEdit?.name || '',
       email: employeeToEdit?.email || '',
-      phone: employeeToEdit?.phone || '',
+      phone: '', // Always default to empty string since it's optional
       job_title: employeeToEdit?.job_title || '',
       department: employeeToEdit?.department || '',
       site: employeeToEdit?.site || '',
@@ -44,7 +44,6 @@ export const useEmployeeForm = ({ onSuccess, employeeToEdit, defaultLocation }: 
       const payload = {
         name: data.name!,
         email: data.email!,
-        phone: data.phone || '',
         job_title: data.job_title!,
         department: data.department!,
         site: data.site!,

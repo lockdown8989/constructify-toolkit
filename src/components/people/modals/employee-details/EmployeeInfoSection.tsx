@@ -62,7 +62,6 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
         salary: parseFloat(editedEmployee.salary.replace(/[^0-9.]/g, '')),
         status: editedEmployee.status.toLowerCase(),
         email: editedEmployee.email,
-        phone: editedEmployee.phone || '',
         role: editedEmployee.role,
         lifecycle: editedEmployee.lifecycle,
         location: editedEmployee.siteIcon === '🌐' ? 'Remote' : 'Office',
