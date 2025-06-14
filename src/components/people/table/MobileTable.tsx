@@ -24,16 +24,6 @@ const MobileTable: React.FC<MobileTableProps> = ({
   onEmployeeClick,
   onStatusChange,
 }) => {
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-
-  // Add momentum scrolling for iOS using CSS class instead
-  useEffect(() => {
-    const scrollElement = scrollAreaRef.current;
-    if (scrollElement) {
-      scrollElement.style.overflowScrolling = 'touch';
-    }
-  }, []);
-
   return (
     <div className="w-full h-full">
       {employees.length === 0 ? (
