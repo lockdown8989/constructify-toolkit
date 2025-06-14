@@ -30,9 +30,11 @@ const SalaryPage = () => {
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
 
-  // Updated to ensure payroll users see all employees
-  const { data: employees = [], isLoading } = useEmployees();
+  // Fetch all employees for payroll users
+  const { data: employees = [], isLoading, error } = useEmployees();
   const { user, isPayroll } = useAuth();
+
+  console.log("Salary page - employees data:", employees.length, "isPayroll:", isPayroll);
 
   // Only allow payroll users to access this page
   if (!isPayroll) {
@@ -74,6 +76,30 @@ const SalaryPage = () => {
       <div className="container py-6">
         <div className="text-center">
           <div className="animate-pulse">Loading employee data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error("Error loading employees:", error);
+    return (
+      <div className="container py-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600">Error Loading Data</h1>
+          <p className="text-gray-600 mt-2">Please check your permissions and try again.</p>
+          <p className="text-sm text-gray-500 mt-1">Error: {error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (employees.length === 0) {
+    return (
+      <div className="container py-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-600">No Employees Found</h1>
+          <p className="text-gray-600 mt-2">No employee data is available for payroll management.</p>
         </div>
       </div>
     );
