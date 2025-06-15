@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { EmployeeFormValues } from '../employee-form-schema';
@@ -15,7 +14,7 @@ interface ShiftPatternFieldsProps {
 const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
   const { data: shiftPatterns, isLoading, error } = useShiftPatterns();
 
-  const daysOfWeek = [
+  const daysOfWeek: Array<{ key: keyof EmployeeFormValues; label: string }> = [
     { key: 'monday_shift_id', label: 'Monday' },
     { key: 'tuesday_shift_id', label: 'Tuesday' },
     { key: 'wednesday_shift_id', label: 'Wednesday' },
@@ -23,7 +22,7 @@ const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
     { key: 'friday_shift_id', label: 'Friday' },
     { key: 'saturday_shift_id', label: 'Saturday' },
     { key: 'sunday_shift_id', label: 'Sunday' },
-  ] as const;
+  ];
 
   if (isLoading) {
     return (
@@ -102,7 +101,7 @@ const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
               <FormField
                 key={key}
                 control={form.control}
-                name={key as keyof EmployeeFormValues}
+                name={key}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{label}</FormLabel>
