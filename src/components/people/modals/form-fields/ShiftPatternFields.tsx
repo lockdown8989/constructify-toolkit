@@ -43,7 +43,7 @@ const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Default Shift Pattern</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || ''}>
+                <Select onValueChange={field.onChange} value={String(field.value || '')}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a default shift pattern" />
@@ -52,7 +52,7 @@ const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
                   <SelectContent>
                     <SelectItem value="">No default pattern</SelectItem>
                     {shiftPatterns?.map((pattern) => (
-                      <SelectItem key={pattern.id} value={pattern.id}>
+                      <SelectItem key={pattern.id} value={String(pattern.id)}>
                         {pattern.name} ({pattern.start_time} - {pattern.end_time})
                       </SelectItem>
                     ))}
@@ -83,7 +83,7 @@ const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{label}</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                    <Select onValueChange={field.onChange} value={String(field.value || '')}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Use default or select" />
@@ -92,7 +92,7 @@ const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
                       <SelectContent>
                         <SelectItem value="">Use default pattern</SelectItem>
                         {shiftPatterns?.map((pattern) => (
-                          <SelectItem key={pattern.id} value={pattern.id}>
+                          <SelectItem key={pattern.id} value={String(pattern.id)}>
                             {pattern.name}
                           </SelectItem>
                         ))}
