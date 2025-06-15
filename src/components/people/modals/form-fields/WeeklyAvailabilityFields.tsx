@@ -9,12 +9,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
 
 interface WeeklyAvailabilityFieldsProps {
   form: UseFormReturn<EmployeeFormValues>;
 }
 
 const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ form }) => {
+  const { toast } = useToast();
+  
   const daysOfWeek = [
     { key: 'monday', label: 'Monday' },
     { key: 'tuesday', label: 'Tuesday' },
@@ -23,19 +26,57 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
     { key: 'friday', label: 'Friday' },
     { key: 'saturday', label: 'Saturday' },
     { key: 'sunday', label: 'Sunday' },
-  ];
+  ] as const;
 
   const handleCancel = () => {
     // Reset form to default values
     form.reset();
+    toast({
+      title: "Changes cancelled",
+      description: "All changes have been reset to default values.",
+    });
   };
 
   const handleSaveAvailability = () => {
-    // Trigger form validation and submission
-    form.handleSubmit((data) => {
-      console.log('Availability data saved:', data);
-      // The actual form submission will be handled by the parent form
-    })();
+    // Validate only availability fields
+    const availabilityFields = daysOfWeek.flatMap(day => [
+      `${day.key}_available`,
+      `${day.key}_start_time`,
+      `${day.key}_end_time`
+    ]);
+    
+    // Check if any availability fields have errors
+    const hasErrors = availabilityFields.some(field => 
+      form.formState.errors[field as keyof EmployeeFormValues]
+    );
+    
+    if (hasErrors) {
+      toast({
+        title: "Validation Error",
+        description: "Please check your availability settings and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Get current form values
+    const formValues = form.getValues();
+    console.log('Availability data saved:', {
+      availability: daysOfWeek.reduce((acc, day) => ({
+        ...acc,
+        [day.key]: {
+          available: formValues[`${day.key}_available` as keyof EmployeeFormValues],
+          start_time: formValues[`${day.key}_start_time` as keyof EmployeeFormValues],
+          end_time: formValues[`${day.key}_end_time` as keyof EmployeeFormValues],
+        }
+      }), {})
+    });
+
+    toast({
+      title: "Availability Saved",
+      description: "Your weekly availability has been updated successfully.",
+      variant: "success",
+    });
   };
 
   return (
@@ -58,50 +99,90 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
                   <div className="flex items-center space-x-3">
                     <span className="text-sm text-gray-600">Available</span>
                     <div className="flex items-center space-x-2">
-                      <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                      <Switch 
-                        checked={true}
-                        className="data-[state=checked]:bg-green-500"
+                      <FormField
+                        control={form.control}
+                        name={`${key}_available` as keyof EmployeeFormValues}
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2">
+                            <FormControl>
+                              <div className="flex items-center space-x-2">
+                                <span className={`w-3 h-3 rounded-full ${field.value ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                                <Switch 
+                                  checked={field.value as boolean}
+                                  onCheckedChange={field.onChange}
+                                  className={field.value ? "data-[state=checked]:bg-green-500" : ""}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
                     </div>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <Label className="text-sm text-gray-500 mb-2 block">From</Label>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 text-gray-400">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="12" cy="12" r="10"/>
-                          <polyline points="12,6 12,12 16,14"/>
-                        </svg>
-                      </div>
-                      <Input 
-                        type="time" 
-                        defaultValue="09:00"
-                        className="flex-1"
+                <FormField
+                  control={form.control}
+                  name={`${key}_available` as keyof EmployeeFormValues}
+                  render={({ field }) => (
+                    <div className={`grid grid-cols-2 gap-6 transition-opacity ${field.value ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+                      <FormField
+                        control={form.control}
+                        name={`${key}_start_time` as keyof EmployeeFormValues}
+                        render={({ field: timeField }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm text-gray-500 mb-2 block">From</FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-2">
+                                <div className="w-5 h-5 text-gray-400">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12,6 12,12 16,14"/>
+                                  </svg>
+                                </div>
+                                <Input 
+                                  type="time" 
+                                  value={timeField.value as string}
+                                  onChange={timeField.onChange}
+                                  className="flex-1"
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name={`${key}_end_time` as keyof EmployeeFormValues}
+                        render={({ field: timeField }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm text-gray-500 mb-2 block">To</FormLabel>
+                            <FormControl>
+                              <div className="flex items-center space-x-2">
+                                <div className="w-5 h-5 text-gray-400">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12,6 12,12 16,14"/>
+                                  </svg>
+                                </div>
+                                <Input 
+                                  type="time" 
+                                  value={timeField.value as string}
+                                  onChange={timeField.onChange}
+                                  className="flex-1"
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
                     </div>
-                  </div>
-                  
-                  <div>
-                    <Label className="text-sm text-gray-500 mb-2 block">To</Label>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 text-gray-400">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="12" cy="12" r="10"/>
-                          <polyline points="12,6 12,12 16,14"/>
-                        </svg>
-                      </div>
-                      <Input 
-                        type="time" 
-                        defaultValue="17:00"
-                        className="flex-1"
-                      />
-                    </div>
-                  </div>
-                </div>
+                  )}
+                />
               </div>
             ))}
           </div>
@@ -120,7 +201,7 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
               onClick={handleSaveAvailability}
               className="flex-1 py-3 px-4 bg-blue-600 text-white hover:bg-blue-700"
             >
-              Save Availability
+              Save Changes
             </Button>
           </div>
         </CardContent>
