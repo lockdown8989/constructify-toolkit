@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 
 interface WeeklyAvailabilityFieldsProps {
@@ -23,6 +24,19 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
     { key: 'saturday', label: 'Saturday' },
     { key: 'sunday', label: 'Sunday' },
   ];
+
+  const handleCancel = () => {
+    // Reset form to default values
+    form.reset();
+  };
+
+  const handleSaveAvailability = () => {
+    // Trigger form validation and submission
+    form.handleSubmit((data) => {
+      console.log('Availability data saved:', data);
+      // The actual form submission will be handled by the parent form
+    })();
+  };
 
   return (
     <div className="space-y-6">
@@ -93,18 +107,21 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
           </div>
           
           <div className="mt-8 flex space-x-4">
-            <button 
+            <Button 
               type="button"
-              className="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+              variant="outline"
+              onClick={handleCancel}
+              className="flex-1 py-3 px-4"
             >
               Cancel
-            </button>
-            <button 
+            </Button>
+            <Button 
               type="button"
-              className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              onClick={handleSaveAvailability}
+              className="flex-1 py-3 px-4 bg-blue-600 text-white hover:bg-blue-700"
             >
               Save Availability
-            </button>
+            </Button>
           </div>
         </CardContent>
       </Card>
