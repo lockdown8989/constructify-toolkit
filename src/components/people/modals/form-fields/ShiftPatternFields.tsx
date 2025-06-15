@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { EmployeeFormValues } from '../employee-form-schema';
@@ -63,7 +64,7 @@ const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
               <FormItem>
                 <FormLabel>Default Shift Pattern</FormLabel>
                 <Select 
-                  onValueChange={(value) => field.onChange(value || '')} 
+                  onValueChange={(value: string) => field.onChange(value || '')} 
                   value={field.value || ''}
                 >
                   <FormControl>
@@ -106,7 +107,7 @@ const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
                   <FormItem>
                     <FormLabel>{label}</FormLabel>
                     <Select 
-                      onValueChange={(value) => field.onChange(value || '')} 
+                      onValueChange={(value: string) => field.onChange(value || '')} 
                       value={field.value || ''}
                     >
                       <FormControl>
