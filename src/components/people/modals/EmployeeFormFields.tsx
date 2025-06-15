@@ -29,6 +29,8 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
   const cardClasses = isMobile ? "border shadow-sm mb-6" : "border shadow-sm";
   const cardContentClasses = "p-4";
 
+  console.log('EmployeeFormFields activeTab:', activeTab);
+
   return (
     <div className="py-4">
       <TabsContent value="personal" className="mt-0 space-y-6">

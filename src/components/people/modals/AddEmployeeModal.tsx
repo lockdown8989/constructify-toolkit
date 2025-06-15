@@ -47,6 +47,8 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     onOpenChange(false);
   };
 
+  console.log('AddEmployeeModal activeTab:', activeTab);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={isMobile ? "w-full p-0 max-w-full h-[100dvh] max-h-[100dvh] rounded-none flex flex-col overflow-hidden" : "sm:max-w-[600px] p-6"}>
