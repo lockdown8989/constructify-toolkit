@@ -7,7 +7,7 @@ import PersonalInfoFields from './form-fields/PersonalInfoFields';
 import OrganizationFields from './form-fields/OrganizationFields';
 import EmploymentStatusFields from './form-fields/EmploymentStatusFields';
 import CompensationFields from './form-fields/CompensationFields';
-import ShiftPatternFields from './form-fields/ShiftPatternFields';
+import WeeklyAvailabilityFields from './form-fields/WeeklyAvailabilityFields';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
@@ -71,8 +71,8 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
         </Card>
       </TabsContent>
 
-      <TabsContent value="shifts" className="mt-0 space-y-6">
-        <ShiftPatternFields form={form} />
+      <TabsContent value="availability" className="mt-0 space-y-6">
+        <WeeklyAvailabilityFields form={form} />
       </TabsContent>
     </div>
   );

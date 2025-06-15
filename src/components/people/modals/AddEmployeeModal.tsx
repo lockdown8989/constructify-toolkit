@@ -99,9 +99,9 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   </svg>
                   <span className={isMobile ? "hidden" : "inline"}>Status</span>
                 </TabsTrigger>
-                <TabsTrigger value="shifts" className="text-sm min-h-[44px]">
+                <TabsTrigger value="availability" className="text-sm min-h-[44px]">
                   <Clock className="mr-1 h-3.5 w-3.5" />
-                  <span className={isMobile ? "hidden" : "inline"}>Shifts</span>
+                  <span className={isMobile ? "hidden" : "inline"}>Availability</span>
                 </TabsTrigger>
               </TabsList>
               
