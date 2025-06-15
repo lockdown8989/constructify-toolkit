@@ -7,6 +7,7 @@ import PersonalInfoFields from './form-fields/PersonalInfoFields';
 import OrganizationFields from './form-fields/OrganizationFields';
 import EmploymentStatusFields from './form-fields/EmploymentStatusFields';
 import CompensationFields from './form-fields/CompensationFields';
+import ShiftPatternFields from './form-fields/ShiftPatternFields';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
@@ -64,6 +65,16 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
             <h3 className="text-sm font-medium text-gray-700 mb-3">Employment Status</h3>
             <Separator className="mb-4" />
             <EmploymentStatusFields form={form} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="shifts" className="mt-0 space-y-6">
+        <Card className={cardClasses}>
+          <CardContent className={cardContentClasses}>
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Shift Patterns</h3>
+            <Separator className="mb-4" />
+            <ShiftPatternFields form={form} />
           </CardContent>
         </Card>
       </TabsContent>

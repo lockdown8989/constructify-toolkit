@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Briefcase } from 'lucide-react';
+import { ArrowLeft, User, Briefcase, Clock } from 'lucide-react';
 import { useEmployeeForm } from './useEmployeeForm';
 import EmployeeFormFields from './EmployeeFormFields';
 import { Employee } from '@/hooks/use-employees';
@@ -80,11 +80,11 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               <div className="text-sm font-medium text-destructive bg-destructive/10 p-3 rounded-md mx-4 mt-4">{error}</div>
             )}
             
-            <Tabs defaultValue="personal" value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-grow overflow-hidden">
-              <TabsList className={`grid grid-cols-3 ${isMobile ? "p-2 mx-4 mt-4 sticky top-0 z-10" : "mb-4"}`}>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-grow overflow-hidden">
+              <TabsList className={`grid grid-cols-4 ${isMobile ? "p-2 mx-4 mt-4 sticky top-0 z-10" : "mb-4"}`}>
                 <TabsTrigger value="personal" className="text-sm min-h-[44px]">
                   <User className="mr-1 h-3.5 w-3.5" />
-                  <span className={isMobile ? "hidden" : "inline"}>Personal Info</span>
+                  <span className={isMobile ? "hidden" : "inline"}>Personal</span>
                 </TabsTrigger>
                 <TabsTrigger value="organization" className="text-sm min-h-[44px]">
                   <Briefcase className="mr-1 h-3.5 w-3.5" />
@@ -96,6 +96,10 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                     <path d="M9 9h.01M15 9h.01M9 15h.01M15 15h.01" />
                   </svg>
                   <span className={isMobile ? "hidden" : "inline"}>Status</span>
+                </TabsTrigger>
+                <TabsTrigger value="shifts" className="text-sm min-h-[44px]">
+                  <Clock className="mr-1 h-3.5 w-3.5" />
+                  <span className={isMobile ? "hidden" : "inline"}>Shifts</span>
                 </TabsTrigger>
               </TabsList>
               
