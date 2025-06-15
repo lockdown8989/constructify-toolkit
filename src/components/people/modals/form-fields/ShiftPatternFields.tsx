@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { EmployeeFormValues } from '../employee-form-schema';
@@ -12,10 +13,12 @@ interface ShiftPatternFieldsProps {
   form: UseFormReturn<EmployeeFormValues>;
 }
 
+type DayShiftKey = 'monday_shift_id' | 'tuesday_shift_id' | 'wednesday_shift_id' | 'thursday_shift_id' | 'friday_shift_id' | 'saturday_shift_id' | 'sunday_shift_id';
+
 const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
   const { data: shiftPatterns, isLoading, error } = useShiftPatterns();
 
-  const daysOfWeek: Array<{ key: keyof EmployeeFormValues; label: string }> = [
+  const daysOfWeek: Array<{ key: DayShiftKey; label: string }> = [
     { key: 'monday_shift_id', label: 'Monday' },
     { key: 'tuesday_shift_id', label: 'Tuesday' },
     { key: 'wednesday_shift_id', label: 'Wednesday' },
@@ -137,3 +140,4 @@ const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
 };
 
 export default ShiftPatternFields;
+
