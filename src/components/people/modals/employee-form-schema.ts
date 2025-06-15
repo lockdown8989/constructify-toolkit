@@ -1,14 +1,19 @@
 
-import { z } from 'zod';
+import { z } from "zod";
 
 export const employeeFormSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
   phone: z.string().optional(),
-  job_title: z.string().min(1, 'Job title is required'),
-  department: z.string().min(1, 'Department is required'),
-  site: z.string().min(1, 'Site is required'),
+  job_title: z.string().min(1, "Job title is required"),
+  department: z.string().min(1, "Department is required"),
+  site: z.string().min(1, "Site is required"),
   location: z.string().optional(),
+  salary: z.number().min(0, "Salary must be a positive number"),
+  hourly_rate: z.number().min(0, "Hourly rate must be a positive number").optional(),
+  lifecycle: z.enum(["active", "inactive", "terminated"]),
+  status: z.enum(["active", "inactive", "pending"]),
+  start_date: z.string(),
   shift_pattern_id: z.string().optional(),
   monday_shift_id: z.string().optional(),
   tuesday_shift_id: z.string().optional(),
@@ -17,11 +22,6 @@ export const employeeFormSchema = z.object({
   friday_shift_id: z.string().optional(),
   saturday_shift_id: z.string().optional(),
   sunday_shift_id: z.string().optional(),
-  salary: z.number().min(0, 'Salary must be positive').optional(),
-  hourly_rate: z.number().min(0, 'Hourly rate must be positive').optional(),
-  lifecycle: z.enum(['active', 'inactive', 'terminated']).default('active'),
-  status: z.enum(['active', 'inactive', 'pending', 'terminated']).default('active'),
-  start_date: z.string().optional(),
 });
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
