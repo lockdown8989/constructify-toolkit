@@ -11,8 +11,9 @@ export const employeeFormSchema = z.object({
   location: z.string().optional(),
   salary: z.number().min(0, "Salary must be a positive number"),
   hourly_rate: z.number().min(0, "Hourly rate must be a positive number").optional(),
-  lifecycle: z.enum(["active", "inactive", "terminated"]),
-  status: z.enum(["active", "inactive", "pending"]),
+  // Use the actual database values instead of transformed ones
+  lifecycle: z.enum(["Active", "Inactive", "Terminated"]),
+  status: z.enum(["Active", "Inactive", "Pending"]),
   start_date: z.string(),
   shift_pattern_id: z.string().optional(),
   monday_shift_id: z.string().optional(),

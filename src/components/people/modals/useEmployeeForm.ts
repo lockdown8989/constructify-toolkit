@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -55,6 +54,8 @@ export const useEmployeeForm = ({
     setError(null);
 
     try {
+      console.log('Form values before submission:', values);
+      
       const employeeData = {
         name: values.name,
         email: values.email,
@@ -65,8 +66,9 @@ export const useEmployeeForm = ({
         salary: values.salary || 0,
         hourly_rate: values.hourly_rate || 0,
         start_date: values.start_date || new Date().toISOString().split('T')[0],
-        status: values.status === 'active' ? 'Active' : values.status === 'inactive' ? 'Inactive' : 'Pending',
-        lifecycle: values.lifecycle === 'active' ? 'Active' : values.lifecycle === 'inactive' ? 'Inactive' : 'Terminated',
+        // Keep the original values from the database instead of transforming them
+        status: values.status,
+        lifecycle: values.lifecycle,
         role: 'employee',
         shift_pattern_id: values.shift_pattern_id || null,
         monday_shift_id: values.monday_shift_id || null,
@@ -77,6 +79,8 @@ export const useEmployeeForm = ({
         saturday_shift_id: values.saturday_shift_id || null,
         sunday_shift_id: values.sunday_shift_id || null,
       };
+
+      console.log('Employee data being submitted:', employeeData);
 
       if (employeeToEdit) {
         await updateEmployee.mutateAsync({
@@ -96,6 +100,7 @@ export const useEmployeeForm = ({
       }
       onSuccess();
     } catch (err) {
+      console.error('Error submitting employee form:', err);
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
       setError(errorMessage);
       toast({
