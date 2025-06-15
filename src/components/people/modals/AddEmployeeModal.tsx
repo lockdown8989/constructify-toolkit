@@ -80,7 +80,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               <div className="text-sm font-medium text-destructive bg-destructive/10 p-3 rounded-md mx-4 mt-4">{error}</div>
             )}
             
-            <Tabs defaultValue="personal" value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-grow overflow-hidden">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-grow overflow-hidden">
               <TabsList className={`grid grid-cols-3 ${isMobile ? "p-2 mx-4 mt-4 sticky top-0 z-10" : "mb-4"}`}>
                 <TabsTrigger value="personal" className="text-sm min-h-[44px]">
                   <User className="mr-1 h-3.5 w-3.5" />
