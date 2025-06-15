@@ -70,13 +70,7 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
       </TabsContent>
 
       <TabsContent value="shifts" className="mt-0 space-y-6">
-        <Card className={cardClasses}>
-          <CardContent className={cardContentClasses}>
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Shift Patterns</h3>
-            <Separator className="mb-4" />
-            <ShiftPatternFields form={form} />
-          </CardContent>
-        </Card>
+        <ShiftPatternFields form={form} />
       </TabsContent>
     </div>
   );
