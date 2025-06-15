@@ -13,7 +13,7 @@ interface ShiftPatternFieldsProps {
 }
 
 const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
-  const { data: shiftPatterns, isLoading } = useShiftPatterns();
+  const { data: shiftPatterns, isLoading, error } = useShiftPatterns();
 
   const daysOfWeek = [
     { key: 'monday_shift_id', label: 'Monday' },
@@ -26,7 +26,27 @@ const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
   ] as const;
 
   if (isLoading) {
-    return <div className="text-sm text-gray-500">Loading shift patterns...</div>;
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-sm text-gray-500">Loading shift patterns...</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-sm text-red-500">Error loading shift patterns. Please try again.</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -43,7 +63,10 @@ const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Default Shift Pattern</FormLabel>
-                <Select onValueChange={field.onChange} value={String(field.value || '')}>
+                <Select 
+                  onValueChange={(value) => field.onChange(value || '')} 
+                  value={field.value || ''}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a default shift pattern" />
@@ -52,7 +75,7 @@ const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
                   <SelectContent>
                     <SelectItem value="">No default pattern</SelectItem>
                     {shiftPatterns?.map((pattern) => (
-                      <SelectItem key={pattern.id} value={String(pattern.id)}>
+                      <SelectItem key={pattern.id} value={pattern.id}>
                         {pattern.name} ({pattern.start_time} - {pattern.end_time})
                       </SelectItem>
                     ))}
@@ -83,7 +106,10 @@ const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{label}</FormLabel>
-                    <Select onValueChange={field.onChange} value={String(field.value || '')}>
+                    <Select 
+                      onValueChange={(value) => field.onChange(value || '')} 
+                      value={field.value || ''}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Use default or select" />
@@ -92,7 +118,7 @@ const ShiftPatternFields: React.FC<ShiftPatternFieldsProps> = ({ form }) => {
                       <SelectContent>
                         <SelectItem value="">Use default pattern</SelectItem>
                         {shiftPatterns?.map((pattern) => (
-                          <SelectItem key={pattern.id} value={String(pattern.id)}>
+                          <SelectItem key={pattern.id} value={pattern.id}>
                             {pattern.name}
                           </SelectItem>
                         ))}
