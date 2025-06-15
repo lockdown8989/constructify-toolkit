@@ -24,6 +24,8 @@ export const useEmployeeForm = ({
   const addEmployee = useAddEmployee();
   const updateEmployee = useUpdateEmployee();
 
+  console.log('useEmployeeForm - employeeToEdit:', employeeToEdit);
+
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),
     defaultValues: {
@@ -51,6 +53,7 @@ export const useEmployeeForm = ({
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
+    console.log('Form submission values:', values);
     setIsSubmitting(true);
     setError(null);
 
@@ -96,6 +99,7 @@ export const useEmployeeForm = ({
       }
       onSuccess();
     } catch (err) {
+      console.error('Form submission error:', err);
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
       setError(errorMessage);
       toast({
