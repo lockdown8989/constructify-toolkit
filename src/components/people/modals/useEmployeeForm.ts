@@ -40,6 +40,13 @@ export const useEmployeeForm = ({
       status: (employeeToEdit?.status as any) || 'active',
       start_date: employeeToEdit?.start_date || new Date().toISOString().split('T')[0],
       shift_pattern_id: employeeToEdit?.shift_pattern_id || '',
+      monday_shift_id: employeeToEdit?.monday_shift_id || '',
+      tuesday_shift_id: employeeToEdit?.tuesday_shift_id || '',
+      wednesday_shift_id: employeeToEdit?.wednesday_shift_id || '',
+      thursday_shift_id: employeeToEdit?.thursday_shift_id || '',
+      friday_shift_id: employeeToEdit?.friday_shift_id || '',
+      saturday_shift_id: employeeToEdit?.saturday_shift_id || '',
+      sunday_shift_id: employeeToEdit?.sunday_shift_id || '',
     },
   });
 
@@ -62,6 +69,13 @@ export const useEmployeeForm = ({
         lifecycle: values.lifecycle === 'active' ? 'Active' : values.lifecycle === 'inactive' ? 'Inactive' : 'Terminated',
         role: 'employee',
         shift_pattern_id: values.shift_pattern_id || null,
+        monday_shift_id: values.monday_shift_id || null,
+        tuesday_shift_id: values.tuesday_shift_id || null,
+        wednesday_shift_id: values.wednesday_shift_id || null,
+        thursday_shift_id: values.thursday_shift_id || null,
+        friday_shift_id: values.friday_shift_id || null,
+        saturday_shift_id: values.saturday_shift_id || null,
+        sunday_shift_id: values.sunday_shift_id || null,
       };
 
       if (employeeToEdit) {

@@ -142,6 +142,13 @@ export type Database = {
             referencedRelation: "shift_patterns"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_attendance_shift_pattern"
+            columns: ["shift_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
         ]
       }
       auth_events: {
@@ -607,6 +614,62 @@ export type Database = {
           },
           {
             foreignKeyName: "employees_wednesday_shift_id_fkey"
+            columns: ["wednesday_shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_employees_friday_shift"
+            columns: ["friday_shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_employees_monday_shift"
+            columns: ["monday_shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_employees_saturday_shift"
+            columns: ["saturday_shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_employees_shift_pattern"
+            columns: ["shift_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_employees_sunday_shift"
+            columns: ["sunday_shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_employees_thursday_shift"
+            columns: ["thursday_shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_employees_tuesday_shift"
+            columns: ["tuesday_shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_employees_wednesday_shift"
             columns: ["wednesday_shift_id"]
             isOneToOne: false
             referencedRelation: "shift_patterns"
