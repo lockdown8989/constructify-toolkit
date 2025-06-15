@@ -22,6 +22,14 @@ export interface Employee {
   phone?: string;
   hourly_rate?: number;
   role?: string;
+  shift_pattern_id?: string;
+  monday_shift_id?: string;
+  tuesday_shift_id?: string;
+  wednesday_shift_id?: string;
+  thursday_shift_id?: string;
+  friday_shift_id?: string;
+  saturday_shift_id?: string;
+  sunday_shift_id?: string;
 }
 
 export interface PeopleTableProps {
@@ -71,6 +79,14 @@ export const mapDbEmployeeToUiEmployee = (dbEmployee: any): Employee => {
     email: dbEmployee.email,
     phone: dbEmployee.phone,
     hourly_rate: dbEmployee.hourly_rate,
-    role: dbEmployee.role
+    role: dbEmployee.role,
+    shift_pattern_id: dbEmployee.shift_pattern_id,
+    monday_shift_id: dbEmployee.monday_shift_id,
+    tuesday_shift_id: dbEmployee.tuesday_shift_id,
+    wednesday_shift_id: dbEmployee.wednesday_shift_id,
+    thursday_shift_id: dbEmployee.thursday_shift_id,
+    friday_shift_id: dbEmployee.friday_shift_id,
+    saturday_shift_id: dbEmployee.saturday_shift_id,
+    sunday_shift_id: dbEmployee.sunday_shift_id,
   };
 };
