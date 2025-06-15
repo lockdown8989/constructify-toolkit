@@ -67,7 +67,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
     return {
       id: uiEmployee.id,
       name: uiEmployee.name,
-      job_title: uiEmployee.jobTitle || uiEmployee.job_title || '',
+      job_title: uiEmployee.jobTitle || '',
       department: uiEmployee.department,
       site: uiEmployee.site,
       salary: typeof uiEmployee.salary === 'string' 
@@ -75,26 +75,26 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         : uiEmployee.salary || 0,
       start_date: uiEmployee.startDate 
         ? new Date(uiEmployee.startDate).toISOString().split('T')[0]
-        : uiEmployee.start_date || new Date().toISOString().split('T')[0],
+        : new Date().toISOString().split('T')[0],
       lifecycle: uiEmployee.lifecycle || 'Active',
       status: uiEmployee.status || 'Active',
       avatar: uiEmployee.avatar,
-      location: uiEmployee.location,
+      location: uiEmployee.siteIcon === '🌐' ? 'Remote' : 'Office',
       annual_leave_days: uiEmployee.annual_leave_days || 25,
       sick_leave_days: uiEmployee.sick_leave_days || 10,
-      manager_id: uiEmployee.managerId || uiEmployee.manager_id || null,
-      user_id: uiEmployee.userId || uiEmployee.user_id || null,
+      manager_id: uiEmployee.managerId || null,
+      user_id: uiEmployee.userId || null,
       email: uiEmployee.email,
       role: uiEmployee.role || 'employee',
       hourly_rate: uiEmployee.hourly_rate || null,
-      shift_pattern_id: uiEmployee.shift_pattern_id || null,
-      monday_shift_id: uiEmployee.monday_shift_id || null,
-      tuesday_shift_id: uiEmployee.tuesday_shift_id || null,
-      wednesday_shift_id: uiEmployee.wednesday_shift_id || null,
-      thursday_shift_id: uiEmployee.thursday_shift_id || null,
-      friday_shift_id: uiEmployee.friday_shift_id || null,
-      saturday_shift_id: uiEmployee.saturday_shift_id || null,
-      sunday_shift_id: uiEmployee.sunday_shift_id || null
+      shift_pattern_id: null,
+      monday_shift_id: null,
+      tuesday_shift_id: null,
+      wednesday_shift_id: null,
+      thursday_shift_id: null,
+      friday_shift_id: null,
+      saturday_shift_id: null,
+      sunday_shift_id: null
     };
   };
 
