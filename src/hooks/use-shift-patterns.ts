@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ShiftPattern } from '@/types/shift-patterns';
@@ -88,18 +87,12 @@ export function useUpdateShiftPattern() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (shiftPattern: ShiftPattern) => {
+    mutationFn: async (params: { id: string } & Omit<ShiftPattern, 'id' | 'created_at' | 'updated_at'>) => {
+      const { id, ...updateData } = params;
       const { data, error } = await supabase
         .from('shift_patterns')
-        .update({
-          name: shiftPattern.name,
-          start_time: shiftPattern.start_time,
-          end_time: shiftPattern.end_time,
-          break_duration: shiftPattern.break_duration,
-          grace_period_minutes: shiftPattern.grace_period_minutes,
-          overtime_threshold_minutes: shiftPattern.overtime_threshold_minutes,
-        })
-        .eq('id', shiftPattern.id)
+        .update(updateData)
+        .eq('id', id)
         .select()
         .single();
 
