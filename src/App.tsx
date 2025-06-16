@@ -6,13 +6,13 @@ import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import SignInForm from './components/auth/SignInForm';
-import SignUpForm from './components/auth/SignUpForm';
+import { SignInForm } from './components/auth/SignInForm';
+import { SignUpForm } from './components/auth/SignUpForm';
 import Dashboard from './pages/Dashboard';
-import PeoplePage from './pages/PeoplePage';
-import AttendancePage from './pages/AttendancePage';
-import PayrollPage from './pages/PayrollPage';
-import SchedulePage from './pages/SchedulePage';
+import People from './pages/People';
+import Attendance from './pages/Attendance';
+import Payroll from './pages/Payroll';
+import Schedule from './pages/Schedule';
 import { useAuth } from './hooks/use-auth';
 import BackgroundNotificationService from './services/shift-notifications/background-notification-service';
 import './App.css';
@@ -48,8 +48,8 @@ function App() {
           <Router>
             <div className="min-h-screen bg-gray-50">
               <Routes>
-                <Route path="/auth" element={<SignInForm />} />
-                <Route path="/auth/signup" element={<SignUpForm />} />
+                <Route path="/auth" element={<SignInForm onSignIn={async () => {}} onForgotPassword={() => {}} />} />
+                <Route path="/auth/signup" element={<SignUpForm onSignUp={async () => {}} />} />
                 <Route path="/" element={
                   <ProtectedRoute>
                     <Dashboard />
@@ -57,22 +57,22 @@ function App() {
                 } />
                 <Route path="/people" element={
                   <ProtectedRoute>
-                    <PeoplePage />
+                    <People />
                   </ProtectedRoute>
                 } />
                 <Route path="/attendance" element={
                   <ProtectedRoute>
-                    <AttendancePage />
+                    <Attendance />
                   </ProtectedRoute>
                 } />
                 <Route path="/payroll" element={
                   <ProtectedRoute>
-                    <PayrollPage />
+                    <Payroll />
                   </ProtectedRoute>
                 } />
                 <Route path="/schedule" element={
                   <ProtectedRoute>
-                    <SchedulePage />
+                    <Schedule />
                   </ProtectedRoute>
                 } />
                 <Route path="*" element={<Navigate to="/" replace />} />
