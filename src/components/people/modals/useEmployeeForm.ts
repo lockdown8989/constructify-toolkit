@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -88,7 +89,6 @@ export const useEmployeeForm = ({
         salary: values.salary || 0,
         hourly_rate: values.hourly_rate || 0,
         start_date: values.start_date || new Date().toISOString().split('T')[0],
-        // Keep the original values from the database instead of transforming them
         status: values.status,
         lifecycle: values.lifecycle,
         role: 'employee',
@@ -100,6 +100,28 @@ export const useEmployeeForm = ({
         friday_shift_id: values.friday_shift_id || null,
         saturday_shift_id: values.saturday_shift_id || null,
         sunday_shift_id: values.sunday_shift_id || null,
+        // Include weekly availability data
+        monday_available: values.monday_available,
+        monday_start_time: values.monday_start_time,
+        monday_end_time: values.monday_end_time,
+        tuesday_available: values.tuesday_available,
+        tuesday_start_time: values.tuesday_start_time,
+        tuesday_end_time: values.tuesday_end_time,
+        wednesday_available: values.wednesday_available,
+        wednesday_start_time: values.wednesday_start_time,
+        wednesday_end_time: values.wednesday_end_time,
+        thursday_available: values.thursday_available,
+        thursday_start_time: values.thursday_start_time,
+        thursday_end_time: values.thursday_end_time,
+        friday_available: values.friday_available,
+        friday_start_time: values.friday_start_time,
+        friday_end_time: values.friday_end_time,
+        saturday_available: values.saturday_available,
+        saturday_start_time: values.saturday_start_time,
+        saturday_end_time: values.saturday_end_time,
+        sunday_available: values.sunday_available,
+        sunday_start_time: values.sunday_start_time,
+        sunday_end_time: values.sunday_end_time,
       };
 
       console.log('Employee data being submitted:', employeeData);
@@ -111,13 +133,13 @@ export const useEmployeeForm = ({
         });
         toast({
           title: "Employee updated",
-          description: "Employee information has been successfully updated.",
+          description: "Employee information and availability have been successfully updated.",
         });
       } else {
         await addEmployee.mutateAsync(employeeData);
         toast({
           title: "Employee added",
-          description: "New employee has been successfully added to the team.",
+          description: "New employee has been successfully added with their availability schedule.",
         });
       }
       onSuccess();

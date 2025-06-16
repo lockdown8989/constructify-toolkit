@@ -5,6 +5,7 @@ import { useAutoClockout } from './use-auto-clockout';
 import { useTimeClockActions } from './use-time-clock-actions';
 import { useStatusCheck } from './use-status-check';
 import { useAttendanceSync } from './use-attendance-sync';
+import { useOvertimeMonitoring } from './use-overtime-monitoring';
 import { TimeClockStatus, TimelogEntry } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -50,6 +51,9 @@ export const useTimeClock = () => {
 
   // Check initial status and handle page refresh
   useStatusCheck(employeeData?.id, setCurrentRecord, setStatus);
+
+  // Monitor for overtime when clocked in
+  useOvertimeMonitoring(employeeData?.id, currentRecord, status);
 
   // Get time clock actions with state persistence
   const {
@@ -175,7 +179,7 @@ export const useTimeClock = () => {
 
       const { data, error } = await supabase
         .from('attendance')
-        .select('check_in, break_minutes, break_start')
+        .select('check_in, break_minutes, break_start, scheduled_end_time, overtime_minutes')
         .eq('id', currentRecord)
         .single();
 

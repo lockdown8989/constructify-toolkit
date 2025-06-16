@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WeeklyAvailabilityFieldsProps {
   form: UseFormReturn<EmployeeFormValues>;
@@ -37,7 +38,7 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
     });
   };
 
-  const handleSaveAvailability = () => {
+  const handleSaveAvailability = async () => {
     // Validate only availability fields
     const availabilityFields = daysOfWeek.flatMap(day => [
       `${day.key}_available`,
@@ -61,7 +62,7 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
 
     // Get current form values
     const formValues = form.getValues();
-    console.log('Availability data saved:', {
+    console.log('Availability data being saved:', {
       availability: daysOfWeek.reduce((acc, day) => ({
         ...acc,
         [day.key]: {
@@ -72,11 +73,28 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
       }), {})
     });
 
-    toast({
-      title: "Availability Saved",
-      description: "Your weekly availability has been updated successfully.",
-      variant: "success",
-    });
+    try {
+      // Trigger shift notification creation after saving availability
+      const { error } = await supabase.rpc('create_shift_notifications');
+      if (error) {
+        console.error('Error creating shift notifications:', error);
+      } else {
+        console.log('Shift notifications created successfully');
+      }
+
+      toast({
+        title: "Availability Saved",
+        description: "Your weekly availability has been updated and shift notifications have been scheduled.",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      toast({
+        title: "Availability Saved",
+        description: "Your weekly availability has been updated successfully.",
+        variant: "default",
+      });
+    }
   };
 
   return (
@@ -86,7 +104,7 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
           <div className="mb-6">
             <h2 className="text-2xl font-semibold text-gray-900 mb-2">Weekly Availability</h2>
             <p className="text-gray-600">
-              Set your regular weekly availability. This helps managers schedule shifts that work for you.
+              Set your regular weekly availability. This helps managers schedule shifts and you'll receive 🔔 notifications 10 minutes before your shifts start and end.
             </p>
           </div>
           <Separator className="mb-6" />

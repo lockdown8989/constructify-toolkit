@@ -483,84 +483,147 @@ export type Database = {
           avatar: string | null
           department: string
           email: string | null
+          friday_available: boolean | null
+          friday_end_time: string | null
           friday_shift_id: string | null
+          friday_start_time: string | null
           hourly_rate: number | null
           id: string
           job_title: string
           lifecycle: string
           location: string | null
           manager_id: string | null
+          monday_available: boolean | null
+          monday_end_time: string | null
           monday_shift_id: string | null
+          monday_start_time: string | null
           name: string
           role: string | null
           salary: number
+          saturday_available: boolean | null
+          saturday_end_time: string | null
           saturday_shift_id: string | null
+          saturday_start_time: string | null
           shift_pattern_id: string | null
           sick_leave_days: number | null
           site: string
           start_date: string
           status: string
+          sunday_available: boolean | null
+          sunday_end_time: string | null
           sunday_shift_id: string | null
+          sunday_start_time: string | null
+          thursday_available: boolean | null
+          thursday_end_time: string | null
           thursday_shift_id: string | null
+          thursday_start_time: string | null
+          tuesday_available: boolean | null
+          tuesday_end_time: string | null
           tuesday_shift_id: string | null
+          tuesday_start_time: string | null
           user_id: string | null
+          wednesday_available: boolean | null
+          wednesday_end_time: string | null
           wednesday_shift_id: string | null
+          wednesday_start_time: string | null
         }
         Insert: {
           annual_leave_days?: number | null
           avatar?: string | null
           department: string
           email?: string | null
+          friday_available?: boolean | null
+          friday_end_time?: string | null
           friday_shift_id?: string | null
+          friday_start_time?: string | null
           hourly_rate?: number | null
           id?: string
           job_title: string
           lifecycle?: string
           location?: string | null
           manager_id?: string | null
+          monday_available?: boolean | null
+          monday_end_time?: string | null
           monday_shift_id?: string | null
+          monday_start_time?: string | null
           name: string
           role?: string | null
           salary: number
+          saturday_available?: boolean | null
+          saturday_end_time?: string | null
           saturday_shift_id?: string | null
+          saturday_start_time?: string | null
           shift_pattern_id?: string | null
           sick_leave_days?: number | null
           site: string
           start_date?: string
           status?: string
+          sunday_available?: boolean | null
+          sunday_end_time?: string | null
           sunday_shift_id?: string | null
+          sunday_start_time?: string | null
+          thursday_available?: boolean | null
+          thursday_end_time?: string | null
           thursday_shift_id?: string | null
+          thursday_start_time?: string | null
+          tuesday_available?: boolean | null
+          tuesday_end_time?: string | null
           tuesday_shift_id?: string | null
+          tuesday_start_time?: string | null
           user_id?: string | null
+          wednesday_available?: boolean | null
+          wednesday_end_time?: string | null
           wednesday_shift_id?: string | null
+          wednesday_start_time?: string | null
         }
         Update: {
           annual_leave_days?: number | null
           avatar?: string | null
           department?: string
           email?: string | null
+          friday_available?: boolean | null
+          friday_end_time?: string | null
           friday_shift_id?: string | null
+          friday_start_time?: string | null
           hourly_rate?: number | null
           id?: string
           job_title?: string
           lifecycle?: string
           location?: string | null
           manager_id?: string | null
+          monday_available?: boolean | null
+          monday_end_time?: string | null
           monday_shift_id?: string | null
+          monday_start_time?: string | null
           name?: string
           role?: string | null
           salary?: number
+          saturday_available?: boolean | null
+          saturday_end_time?: string | null
           saturday_shift_id?: string | null
+          saturday_start_time?: string | null
           shift_pattern_id?: string | null
           sick_leave_days?: number | null
           site?: string
           start_date?: string
           status?: string
+          sunday_available?: boolean | null
+          sunday_end_time?: string | null
           sunday_shift_id?: string | null
+          sunday_start_time?: string | null
+          thursday_available?: boolean | null
+          thursday_end_time?: string | null
           thursday_shift_id?: string | null
+          thursday_start_time?: string | null
+          tuesday_available?: boolean | null
+          tuesday_end_time?: string | null
           tuesday_shift_id?: string | null
+          tuesday_start_time?: string | null
           user_id?: string | null
+          wednesday_available?: boolean | null
+          wednesday_end_time?: string | null
           wednesday_shift_id?: string | null
+          wednesday_start_time?: string | null
         }
         Relationships: [
           {
@@ -1703,6 +1766,53 @@ export type Database = {
           },
         ]
       }
+      shift_notifications: {
+        Row: {
+          created_at: string | null
+          employee_id: string
+          id: string
+          notification_time: string
+          notification_type: string
+          sent: boolean | null
+          sent_at: string | null
+          shift_date: string
+          shift_end_time: string
+          shift_start_time: string
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          notification_time: string
+          notification_type: string
+          sent?: boolean | null
+          sent_at?: string | null
+          shift_date: string
+          shift_end_time: string
+          shift_start_time: string
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          notification_time?: string
+          notification_type?: string
+          sent?: boolean | null
+          sent_at?: string | null
+          shift_date?: string
+          shift_end_time?: string
+          shift_start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_notifications_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shift_patterns: {
         Row: {
           break_duration: number
@@ -2016,6 +2126,10 @@ export type Database = {
         Args: { shift_id: string }
         Returns: boolean
       }
+      create_shift_notifications: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       delete_user: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -2058,6 +2172,10 @@ export type Database = {
       safe_user_signout: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      send_due_shift_notifications: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       start_employee_break: {
         Args: { p_attendance_id: string }
