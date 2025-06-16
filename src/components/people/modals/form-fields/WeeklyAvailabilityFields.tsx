@@ -6,19 +6,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface WeeklyAvailabilityFieldsProps {
   form: UseFormReturn<EmployeeFormValues>;
 }
 
 const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ form }) => {
-  const { toast } = useToast();
-  
   const daysOfWeek = [
     { key: 'monday', label: 'Monday' },
     { key: 'tuesday', label: 'Tuesday' },
@@ -28,74 +22,6 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
     { key: 'saturday', label: 'Saturday' },
     { key: 'sunday', label: 'Sunday' },
   ] as const;
-
-  const handleCancel = () => {
-    // Reset form to default values
-    form.reset();
-    toast({
-      title: "Changes cancelled",
-      description: "All changes have been reset to default values.",
-    });
-  };
-
-  const handleSaveAvailability = async () => {
-    // Validate only availability fields
-    const availabilityFields = daysOfWeek.flatMap(day => [
-      `${day.key}_available`,
-      `${day.key}_start_time`,
-      `${day.key}_end_time`
-    ]);
-    
-    // Check if any availability fields have errors
-    const hasErrors = availabilityFields.some(field => 
-      form.formState.errors[field as keyof EmployeeFormValues]
-    );
-    
-    if (hasErrors) {
-      toast({
-        title: "Validation Error",
-        description: "Please check your availability settings and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Get current form values
-    const formValues = form.getValues();
-    console.log('Availability data being saved:', {
-      availability: daysOfWeek.reduce((acc, day) => ({
-        ...acc,
-        [day.key]: {
-          available: formValues[`${day.key}_available` as keyof EmployeeFormValues],
-          start_time: formValues[`${day.key}_start_time` as keyof EmployeeFormValues],
-          end_time: formValues[`${day.key}_end_time` as keyof EmployeeFormValues],
-        }
-      }), {})
-    });
-
-    try {
-      // Trigger shift notification creation after saving availability
-      const { error } = await supabase.rpc('create_shift_notifications');
-      if (error) {
-        console.error('Error creating shift notifications:', error);
-      } else {
-        console.log('Shift notifications created successfully');
-      }
-
-      toast({
-        title: "Availability Saved",
-        description: "Your weekly availability has been updated and shift notifications have been scheduled.",
-        variant: "default",
-      });
-    } catch (error) {
-      console.error('Error updating availability:', error);
-      toast({
-        title: "Availability Saved",
-        description: "Your weekly availability has been updated successfully.",
-        variant: "default",
-      });
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -203,24 +129,6 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
                 />
               </div>
             ))}
-          </div>
-          
-          <div className="mt-8 flex space-x-4">
-            <Button 
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              className="flex-1 py-3 px-4"
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="button"
-              onClick={handleSaveAvailability}
-              className="flex-1 py-3 px-4 bg-blue-600 text-white hover:bg-blue-700"
-            >
-              Save Changes
-            </Button>
           </div>
         </CardContent>
       </Card>
