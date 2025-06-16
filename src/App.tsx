@@ -8,8 +8,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from './hooks/auth';
 import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import { SignInForm } from './components/auth/SignInForm';
-import { SignUpForm } from './components/auth/SignUpForm';
+import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import People from './pages/People';
 import Attendance from './pages/Attendance';
@@ -51,8 +50,7 @@ function App() {
             <div className="min-h-screen bg-gray-50">
               <Routes>
                 {/* Public routes without layout */}
-                <Route path="/auth" element={<SignInForm onSignIn={async () => {}} onForgotPassword={() => {}} />} />
-                <Route path="/auth/signup" element={<SignUpForm onSignUp={async () => {}} />} />
+                <Route path="/auth" element={<Auth />} />
                 
                 {/* Protected routes with layout */}
                 <Route path="/*" element={
