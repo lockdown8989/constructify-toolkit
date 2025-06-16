@@ -26,6 +26,10 @@ export const useAttendanceSync = () => {
         async (payload) => {
           console.log('Attendance change detected:', payload);
           
+          // Type guard to check if payload has employee_id
+          const hasEmployeeIdNew = payload.new && typeof payload.new === 'object' && 'employee_id' in payload.new;
+          const hasEmployeeIdOld = payload.old && typeof payload.old === 'object' && 'employee_id' in payload.old;
+          
           // For managers, invalidate all attendance-related queries
           if (isManager) {
             await queryClient.invalidateQueries({ queryKey: ['attendance'] });
@@ -33,7 +37,10 @@ export const useAttendanceSync = () => {
             await queryClient.invalidateQueries({ queryKey: ['employee-status'] });
           } else {
             // For employees, only invalidate their own data
-            if (payload.new?.employee_id === user.id || payload.old?.employee_id === user.id) {
+            const newEmployeeId = hasEmployeeIdNew ? (payload.new as any).employee_id : null;
+            const oldEmployeeId = hasEmployeeIdOld ? (payload.old as any).employee_id : null;
+            
+            if (newEmployeeId === user.id || oldEmployeeId === user.id) {
               await queryClient.invalidateQueries({ queryKey: ['attendance', user.id] });
               await queryClient.invalidateQueries({ queryKey: ['employee-statistics', user.id] });
             }
