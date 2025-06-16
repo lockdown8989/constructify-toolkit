@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { AuthProvider } from './hooks/auth';
+import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { SignInForm } from './components/auth/SignInForm';
 import { SignUpForm } from './components/auth/SignUpForm';
@@ -44,41 +46,34 @@ function App() {
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <div className="min-h-screen bg-gray-50">
-            <Routes>
-              <Route path="/auth" element={<SignInForm onSignIn={async () => {}} onForgotPassword={() => {}} />} />
-              <Route path="/auth/signup" element={<SignUpForm onSignUp={async () => {}} />} />
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/people" element={
-                <ProtectedRoute>
-                  <People />
-                </ProtectedRoute>
-              } />
-              <Route path="/attendance" element={
-                <ProtectedRoute>
-                  <Attendance />
-                </ProtectedRoute>
-              } />
-              <Route path="/payroll" element={
-                <ProtectedRoute>
-                  <Payroll />
-                </ProtectedRoute>
-              } />
-              <Route path="/schedule" element={
-                <ProtectedRoute>
-                  <Schedule />
-                </ProtectedRoute>
-              } />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </div>
-          <Toaster />
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <div className="min-h-screen bg-gray-50">
+              <Routes>
+                {/* Public routes without layout */}
+                <Route path="/auth" element={<SignInForm onSignIn={async () => {}} onForgotPassword={() => {}} />} />
+                <Route path="/auth/signup" element={<SignUpForm onSignUp={async () => {}} />} />
+                
+                {/* Protected routes with layout */}
+                <Route path="/*" element={
+                  <ProtectedRoute>
+                    <AppLayout />
+                  </ProtectedRoute>
+                }>
+                  <Route index element={<Dashboard />} />
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="people" element={<People />} />
+                  <Route path="attendance" element={<Attendance />} />
+                  <Route path="payroll" element={<Payroll />} />
+                  <Route path="schedule" element={<Schedule />} />
+                </Route>
+                
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </div>
+            <Toaster />
+          </TooltipProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </HelmetProvider>
   );
