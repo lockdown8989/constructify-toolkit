@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
@@ -45,41 +45,39 @@ function App() {
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Router>
-            <div className="min-h-screen bg-gray-50">
-              <Routes>
-                <Route path="/auth" element={<SignInForm onSignIn={async () => {}} onForgotPassword={() => {}} />} />
-                <Route path="/auth/signup" element={<SignUpForm onSignUp={async () => {}} />} />
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } />
-                <Route path="/people" element={
-                  <ProtectedRoute>
-                    <People />
-                  </ProtectedRoute>
-                } />
-                <Route path="/attendance" element={
-                  <ProtectedRoute>
-                    <Attendance />
-                  </ProtectedRoute>
-                } />
-                <Route path="/payroll" element={
-                  <ProtectedRoute>
-                    <Payroll />
-                  </ProtectedRoute>
-                } />
-                <Route path="/schedule" element={
-                  <ProtectedRoute>
-                    <Schedule />
-                  </ProtectedRoute>
-                } />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </div>
-            <Toaster />
-          </Router>
+          <div className="min-h-screen bg-gray-50">
+            <Routes>
+              <Route path="/auth" element={<SignInForm onSignIn={async () => {}} onForgotPassword={() => {}} />} />
+              <Route path="/auth/signup" element={<SignUpForm onSignUp={async () => {}} />} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/people" element={
+                <ProtectedRoute>
+                  <People />
+                </ProtectedRoute>
+              } />
+              <Route path="/attendance" element={
+                <ProtectedRoute>
+                  <Attendance />
+                </ProtectedRoute>
+              } />
+              <Route path="/payroll" element={
+                <ProtectedRoute>
+                  <Payroll />
+                </ProtectedRoute>
+              } />
+              <Route path="/schedule" element={
+                <ProtectedRoute>
+                  <Schedule />
+                </ProtectedRoute>
+              } />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+          <Toaster />
         </TooltipProvider>
       </QueryClientProvider>
     </HelmetProvider>
