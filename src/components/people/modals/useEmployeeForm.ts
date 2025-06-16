@@ -79,6 +79,7 @@ export const useEmployeeForm = ({
     try {
       console.log('Form values before submission:', values);
       
+      // Create the employee data object with all fields including weekly availability
       const employeeData = {
         name: values.name,
         email: values.email,
@@ -100,7 +101,7 @@ export const useEmployeeForm = ({
         friday_shift_id: values.friday_shift_id || null,
         saturday_shift_id: values.saturday_shift_id || null,
         sunday_shift_id: values.sunday_shift_id || null,
-        // Include weekly availability data
+        // Weekly availability data - ensure all fields are included
         monday_available: values.monday_available,
         monday_start_time: values.monday_start_time,
         monday_end_time: values.monday_end_time,
