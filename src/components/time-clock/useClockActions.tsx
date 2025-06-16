@@ -22,22 +22,30 @@ export const useClockActions = () => {
     setSelectedEmployee(employeeId);
     setAction(null);
     
-    // Get employee's current status
+    // Get employee's current status from database
     try {
-      const { data, error } = await supabase.rpc('get_employee_attendance_status', {
-        p_employee_id: employeeId
-      });
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data: attendanceRecords, error } = await supabase
+        .from('attendance')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .eq('date', today)
+        .eq('active_session', true)
+        .order('check_in', { ascending: false })
+        .limit(1);
 
       if (error) throw error;
 
-      if (data && data.length > 0) {
-        const status = data[0];
+      const activeRecord = attendanceRecords && attendanceRecords.length > 0 ? attendanceRecords[0] : null;
+      
+      if (activeRecord) {
         setEmployeeStatus({
-          attendanceId: status.attendance_id,
-          isClockedIn: status.is_clocked_in,
-          onBreak: status.on_break,
-          checkInTime: status.check_in_time,
-          breakStartTime: status.break_start_time
+          attendanceId: activeRecord.id,
+          isClockedIn: true,
+          onBreak: activeRecord.on_break || false,
+          checkInTime: activeRecord.check_in,
+          breakStartTime: activeRecord.break_start
         });
       } else {
         setEmployeeStatus({
@@ -63,15 +71,19 @@ export const useClockActions = () => {
     try {
       if (actionType === 'in') {
         // Clock in the employee
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+
         const { data, error } = await supabase
           .from('attendance')
           .insert({
             employee_id: selectedEmployee,
-            check_in: new Date().toISOString(),
-            date: new Date().toISOString().split('T')[0],
+            check_in: now.toISOString(),
+            date: today,
             active_session: true,
             manager_initiated: true,
-            attendance_status: 'Present'
+            attendance_status: 'Present',
+            current_status: 'clocked-in'
           })
           .select()
           .single();
@@ -84,6 +96,11 @@ export const useClockActions = () => {
           onBreak: false,
           checkInTime: data.check_in,
           breakStartTime: null
+        });
+
+        toast({
+          title: "Employee Clocked In",
+          description: "Employee has been successfully clocked in.",
         });
 
       } else if (actionType === 'out') {
@@ -123,7 +140,8 @@ export const useClockActions = () => {
             working_minutes: regularMinutes,
             overtime_minutes: overtimeMinutes,
             break_minutes: totalBreakMinutes,
-            break_start: null
+            break_start: null,
+            current_status: 'clocked-out'
           })
           .eq('id', employeeStatus.attendanceId);
 
@@ -135,6 +153,11 @@ export const useClockActions = () => {
           onBreak: false,
           checkInTime: null,
           breakStartTime: null
+        });
+
+        toast({
+          title: "Employee Clocked Out",
+          description: "Employee has been successfully clocked out.",
         });
       }
 
@@ -158,9 +181,14 @@ export const useClockActions = () => {
 
     try {
       if (actionType === 'start') {
-        const { data, error } = await supabase.rpc('start_employee_break', {
-          p_attendance_id: employeeStatus.attendanceId
-        });
+        const { error } = await supabase
+          .from('attendance')
+          .update({
+            break_start: new Date().toISOString(),
+            on_break: true,
+            current_status: 'on-break'
+          })
+          .eq('id', employeeStatus.attendanceId);
 
         if (error) throw error;
 
@@ -170,10 +198,33 @@ export const useClockActions = () => {
           breakStartTime: new Date().toISOString()
         });
 
-      } else if (actionType === 'end') {
-        const { data, error } = await supabase.rpc('end_employee_break', {
-          p_attendance_id: employeeStatus.attendanceId
+        toast({
+          title: "Break Started",
+          description: "Employee break has been started.",
         });
+
+      } else if (actionType === 'end') {
+        // Calculate break duration and add to total break minutes
+        const { data: currentData, error: fetchError } = await supabase
+          .from('attendance')
+          .select('break_start, break_minutes')
+          .eq('id', employeeStatus.attendanceId)
+          .single();
+
+        if (fetchError) throw fetchError;
+
+        const breakDuration = Math.round((new Date().getTime() - new Date(currentData.break_start).getTime()) / (1000 * 60));
+        const totalBreakMinutes = (currentData.break_minutes || 0) + breakDuration;
+
+        const { error } = await supabase
+          .from('attendance')
+          .update({
+            break_start: null,
+            on_break: false,
+            break_minutes: totalBreakMinutes,
+            current_status: 'clocked-in'
+          })
+          .eq('id', employeeStatus.attendanceId);
 
         if (error) throw error;
 
@@ -181,6 +232,11 @@ export const useClockActions = () => {
           ...employeeStatus,
           onBreak: false,
           breakStartTime: null
+        });
+
+        toast({
+          title: "Break Ended",
+          description: "Employee break has been ended.",
         });
       }
 

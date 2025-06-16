@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 
 export const useAttendanceSync = () => {
-  const { user } = useAuth();
+  const { user, isManager } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -21,20 +21,28 @@ export const useAttendanceSync = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'attendance',
-          filter: `employee_id=eq.${user.id}`
+          table: 'attendance'
         },
         async (payload) => {
           console.log('Attendance change detected:', payload);
           
-          // Invalidate both attendance and statistics queries to trigger refresh
-          await queryClient.invalidateQueries({ queryKey: ['attendance'] });
-          await queryClient.invalidateQueries({ queryKey: ['employee-statistics'] });
+          // For managers, invalidate all attendance-related queries
+          if (isManager) {
+            await queryClient.invalidateQueries({ queryKey: ['attendance'] });
+            await queryClient.invalidateQueries({ queryKey: ['employee-statistics'] });
+            await queryClient.invalidateQueries({ queryKey: ['employee-status'] });
+          } else {
+            // For employees, only invalidate their own data
+            if (payload.new?.employee_id === user.id || payload.old?.employee_id === user.id) {
+              await queryClient.invalidateQueries({ queryKey: ['attendance', user.id] });
+              await queryClient.invalidateQueries({ queryKey: ['employee-statistics', user.id] });
+            }
+          }
           
           if (payload.eventType === 'UPDATE') {
             toast({
               title: "Attendance Updated",
-              description: "Your attendance record has been synchronized.",
+              description: "Attendance record has been synchronized.",
             });
           }
         }
@@ -44,6 +52,5 @@ export const useAttendanceSync = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, queryClient, toast]);
+  }, [user, isManager, queryClient, toast]);
 };
-
