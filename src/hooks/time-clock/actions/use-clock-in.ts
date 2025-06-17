@@ -17,7 +17,7 @@ export const useClockIn = (
     if (!employeeId) {
       console.error('Clock in failed: No employee ID provided');
       toast({
-        title: "❌ Error",
+        title: "Error",
         description: "No employee ID provided",
         variant: "destructive",
       });
@@ -71,7 +71,7 @@ export const useClockIn = (
       if (activeRecord) {
         console.log('User already has an active session:', activeRecord);
         toast({
-          title: "⚠️ Already Clocked In",
+          title: "Already clocked in",
           description: "You are already clocked in for today",
           variant: "destructive",
         });
@@ -117,14 +117,7 @@ export const useClockIn = (
       setCurrentRecord(data.id);
       setStatus('clocked-in');
       
-      // Show immediate success message with current time
-      toast({
-        title: "✅ Successfully Clocked In",
-        description: `You clocked in at ${format(now, 'h:mm a')}. Have a great shift!`,
-        variant: "default",
-      });
-
-      // Check for late arrival and show additional notification if needed
+      // Show specific message if employee is late
       const { data: employeeData } = await supabase
         .from('employees')
         .select('shift_pattern_id, monday_shift_id, tuesday_shift_id, wednesday_shift_id, thursday_shift_id, friday_shift_id, saturday_shift_id, sunday_shift_id')
@@ -149,35 +142,33 @@ export const useClockIn = (
             if (now > graceEnd) {
               const lateMinutes = Math.round((now.getTime() - scheduledStart.getTime()) / 60000);
               toast({
-                title: "⚠️ Late Clock-In",
+                title: "Late Clock-In",
                 description: `You are ${lateMinutes} minutes late for your ${shiftPattern.name}`,
                 variant: "destructive",
               });
             } else {
-              // Show on-time message
               toast({
-                title: "🎯 Right On Time!",
-                description: `Perfect timing for your ${shiftPattern.name} shift`,
-                variant: "default",
+                title: "Clocked In",
+                description: `You clocked in at ${format(now, 'h:mm a')} for your ${shiftPattern.name}`,
               });
             }
           }
+        } else {
+          toast({
+            title: "Clocked In",
+            description: `You clocked in at ${format(now, 'h:mm a')}`,
+          });
         }
-      }
-
-      // Show reminder about breaks
-      setTimeout(() => {
+      } else {
         toast({
-          title: "💡 Reminder",
-          description: "Remember to take breaks during your shift and clock out when finished",
-          variant: "default",
+          title: "Clocked In",
+          description: `You clocked in at ${format(now, 'h:mm a')}`,
         });
-      }, 5000);
-
+      }
     } catch (error) {
       console.error('Error clocking in:', error);
       toast({
-        title: "❌ Clock-In Failed",
+        title: "Error",
         description: error instanceof Error ? error.message : "There was an unexpected error while clocking in",
         variant: "destructive",
       });

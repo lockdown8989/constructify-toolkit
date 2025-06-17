@@ -5,11 +5,14 @@ import { useLocation } from "react-router-dom";
 import LeaveRequestForm from "../LeaveRequestForm";
 import MobileNavigation from "../../schedule/components/MobileNavigation";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import LeaveBalanceCard from "../../schedule/LeaveBalanceCard";
+import { useEmployeeLeave } from "@/hooks/use-employee-leave";
 
 const EmployeeTab = () => {
   const [activeSection, setActiveSection] = useState<'requests' | 'form'>('requests');
   const isMobile = useMediaQuery("(max-width: 640px)");
   const location = useLocation();
+  const { data: leaveData, isLoading } = useEmployeeLeave();
 
   // Check if we should show the form based on the state passed from navigation
   useEffect(() => {
@@ -17,6 +20,13 @@ const EmployeeTab = () => {
       setActiveSection('form');
     }
   }, [location.state]);
+
+  const leaveBalance = {
+    annual: leaveData?.annual_leave_days || 0,
+    sick: leaveData?.sick_leave_days || 0,
+    used: 0,
+    remaining: leaveData?.annual_leave_days || 0,
+  };
 
   return (
     <div>
@@ -28,6 +38,8 @@ const EmployeeTab = () => {
       
       {activeSection === 'requests' && (
         <div className="space-y-4">
+          <LeaveBalanceCard leaveBalance={leaveBalance} />
+          
           <Tabs defaultValue="pending" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="pending">Pending</TabsTrigger>

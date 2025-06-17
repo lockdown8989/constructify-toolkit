@@ -15,9 +15,9 @@ const AppLayout = () => {
       {/* Only render Desktop Sidebar when not on mobile */}
       {!isMobile && <DesktopSidebar isAuthenticated={isAuthenticated} />}
       
-      <div className="flex flex-col flex-grow w-full min-w-0">
+      <div className="flex flex-col flex-grow w-full">
         <Navbar />
-        <div className="container py-2 px-2 sm:py-4 sm:px-4 md:px-6 flex-1 max-w-full overflow-x-hidden">
+        <div className="container py-4 px-4 md:px-6 flex-1">
           <Outlet />
         </div>
       </div>

@@ -15,7 +15,7 @@ export const useClockOut = (
   const handleClockOut = async (currentRecord: string | null) => {
     if (!currentRecord) {
       toast({
-        title: "❌ Error",
+        title: "Error",
         description: "No active session to clock out from",
         variant: "destructive",
       });
@@ -126,7 +126,7 @@ export const useClockOut = (
       if (error) {
         console.error('Error clocking out:', error);
         toast({
-          title: "❌ Error Clocking Out",
+          title: "Error Clocking Out",
           description: error.message,
           variant: "destructive",
         });
@@ -138,51 +138,28 @@ export const useClockOut = (
       setCurrentRecord(null);
       setStatus('clocked-out');
       
-      // Show immediate success notification
-      toast({
-        title: "✅ Successfully Clocked Out",
-        description: `You clocked out at ${format(now, 'h:mm a')}. Great work today!`,
-        variant: "default",
-      });
-
-      // Show specific additional message based on early departure or overtime
-      setTimeout(() => {
-        if (isEarlyDeparture) {
-          toast({
-            title: "⚠️ Early Departure Noted",
-            description: `You left ${earlyDepartureMinutes} minutes early. This has been recorded.`,
-            variant: "destructive",
-          });
-        } else if (overtimeMinutes > 0) {
-          toast({
-            title: "⏰ Overtime Recorded",
-            description: `You worked ${overtimeMinutes} minutes of overtime. Thanks for your dedication!`,
-            variant: "default",
-          });
-        } else {
-          toast({
-            title: "🎯 Perfect Timing!",
-            description: `You completed your shift right on schedule. Well done!`,
-            variant: "default",
-          });
-        }
-      }, 2000);
-
-      // Show work summary
-      setTimeout(() => {
-        const hoursWorked = Math.floor(workingMinutes / 60);
-        const minutesWorked = workingMinutes % 60;
+      // Show appropriate message based on early departure or overtime
+      if (isEarlyDeparture) {
         toast({
-          title: "📊 Shift Summary",
-          description: `Total work time: ${hoursWorked}h ${minutesWorked}m${breakMinutes > 0 ? ` (${breakMinutes}m break)` : ''}`,
-          variant: "default",
+          title: "Early Departure",
+          description: `You clocked out ${earlyDepartureMinutes} minutes early at ${format(now, 'h:mm a')}`,
+          variant: "destructive",
         });
-      }, 4000);
-
+      } else if (overtimeMinutes > 0) {
+        toast({
+          title: "Overtime Recorded",
+          description: `You worked ${overtimeMinutes} minutes of overtime. Clocked out at ${format(now, 'h:mm a')}`,
+        });
+      } else {
+        toast({
+          title: "Clocked Out",
+          description: `You clocked out at ${format(now, 'h:mm a')}`,
+        });
+      }
     } catch (error) {
       console.error('Error in handleClockOut:', error);
       toast({
-        title: "❌ Error",
+        title: "Error",
         description: "There was an unexpected error while clocking out",
         variant: "destructive",
       });

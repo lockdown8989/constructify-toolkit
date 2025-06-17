@@ -4,13 +4,16 @@ import { Employee } from '@/types/employee';
 
 export const assignLeavePolicy = async (employee: Employee) => {
   try {
+    // If the employee already has leave days set, don't override them
     if (employee.annual_leave_days !== undefined && employee.sick_leave_days !== undefined) {
       return { success: true, message: 'Employee already has leave policy assigned' };
     }
     
-    const annualLeaveDays = 20;
-    const sickLeaveDays = 10;
+    // Default annual and sick leave values
+    const annualLeaveDays = 20;  // Default 20 days annual leave
+    const sickLeaveDays = 10;    // Default 10 days sick leave
     
+    // Update the employee record with default leave values
     const { data, error } = await supabase
       .from('employees')
       .update({
@@ -21,9 +24,6 @@ export const assignLeavePolicy = async (employee: Employee) => {
       
     if (error) throw error;
     
-    // Sync with payroll records
-    await syncLeaveWithPayroll(employee.id, annualLeaveDays, sickLeaveDays);
-    
     return { success: true };
   } catch (error) {
     console.error('Error assigning leave policy:', error);
@@ -31,35 +31,10 @@ export const assignLeavePolicy = async (employee: Employee) => {
   }
 };
 
-// Sync leave data with payroll system
-export const syncLeaveWithPayroll = async (
-  employeeId: string, 
-  annualLeaveDays: number, 
-  sickLeaveDays: number
-) => {
-  try {
-    // Update or create payroll record with leave information
-    const { error } = await supabase
-      .from('payroll')
-      .upsert({
-        employee_id: employeeId,
-        // Add any leave-related fields that exist in payroll table
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'employee_id'
-      });
-      
-    if (error) throw error;
-    
-    return { success: true };
-  } catch (error) {
-    console.error('Error syncing leave with payroll:', error);
-    throw error;
-  }
-};
-
+// Function to check remaining leave balance
 export const checkLeaveBalance = async (employeeId: string) => {
   try {
+    // Get employee's leave allocation
     const { data: employee, error: employeeError } = await supabase
       .from('employees')
       .select('annual_leave_days, sick_leave_days')
@@ -72,6 +47,7 @@ export const checkLeaveBalance = async (employeeId: string) => {
     const yearStart = `${currentYear}-01-01`;
     const yearEnd = `${currentYear}-12-31`;
     
+    // Get all approved leave for this year
     const { data: approvedLeave, error: leaveError } = await supabase
       .from('leave_calendar')
       .select('type, start_date, end_date')
@@ -82,6 +58,7 @@ export const checkLeaveBalance = async (employeeId: string) => {
       
     if (leaveError) throw leaveError;
     
+    // Calculate used leave days
     let annualLeaveUsed = 0;
     let sickLeaveUsed = 0;
     
@@ -97,11 +74,9 @@ export const checkLeaveBalance = async (employeeId: string) => {
       }
     });
     
+    // Calculate remaining leave
     const annualLeaveRemaining = (employee?.annual_leave_days || 0) - annualLeaveUsed;
     const sickLeaveRemaining = (employee?.sick_leave_days || 0) - sickLeaveUsed;
-    
-    // Sync updated balances with payroll
-    await syncLeaveWithPayroll(employeeId, annualLeaveRemaining, sickLeaveRemaining);
     
     return {
       success: true,
@@ -122,6 +97,7 @@ export const checkLeaveBalance = async (employeeId: string) => {
   }
 };
 
+// Function to process a leave request
 export const processLeaveRequest = async (
   employeeId: string, 
   startDate: string, 
@@ -130,6 +106,7 @@ export const processLeaveRequest = async (
   notes?: string
 ) => {
   try {
+    // Check leave balance first
     const leaveBalance = await checkLeaveBalance(employeeId);
     
     const startDateObj = new Date(startDate);
@@ -153,6 +130,7 @@ export const processLeaveRequest = async (
       };
     }
     
+    // Check for scheduling conflicts
     const { data: scheduleConflicts } = await supabase
       .from('schedules')
       .select('id, start_time, end_time')
@@ -160,6 +138,7 @@ export const processLeaveRequest = async (
       .gte('start_time', startDate)
       .lte('end_time', endDate);
     
+    // Create the leave request
     const { data: leaveRequest, error } = await supabase
       .from('leave_calendar')
       .insert({
@@ -179,9 +158,6 @@ export const processLeaveRequest = async (
       .single();
       
     if (error) throw error;
-    
-    // Sync with payroll after successful leave request
-    await syncLeaveWithPayroll(employeeId, 0, 0); // Trigger sync
     
     return {
       success: true,

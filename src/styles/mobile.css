@@ -71,19 +71,6 @@
   }
 }
 
-/* Responsive container improvements */
-@media (min-width: 640px) and (max-width: 1024px) {
-  .container {
-    @apply px-4;
-  }
-}
-
-@media (min-width: 1024px) {
-  .container {
-    @apply px-6;
-  }
-}
-
 /* Touch-friendly interactive elements */
 .touch-target {
   @apply min-h-[44px] min-w-[44px];
@@ -111,145 +98,171 @@
   padding-bottom: calc(1rem + env(safe-area-inset-bottom));
 }
 
-/* Responsive grid improvements */
-.responsive-grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: 1fr;
+/* Pull to refresh animation for mobile */
+.pull-to-refresh {
+  position: relative;
+  overflow: hidden;
 }
 
-@media (min-width: 640px) {
-  .responsive-grid {
-    gap: 1.5rem;
+.pull-to-refresh::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #FFCB45;
+  animation: spin 1s linear infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.pull-to-refresh.active::before {
+  opacity: 1;
+}
+
+@keyframes spin {
+  0% { transform: translateX(-50%) rotate(0deg); }
+  100% { transform: translateX(-50%) rotate(360deg); }
+}
+
+/* Momentum scrolling for iOS */
+.momentum-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+/* Prevent selection on mobile */
+.prevent-select {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version */
+}
+
+/* Back button swipe gesture area */
+.swipe-back-area {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  z-index: 10;
+}
+
+/* Active touch state for elements */
+.active-touch-state {
+  transition: transform 0.1s, opacity 0.1s;
+}
+
+.active-touch-state:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* Better input focus outlines for touch */
+@media (max-width: 768px) {
+  input:focus, button:focus, a:focus, [role="button"]:focus {
+    @apply ring-2 ring-primary/70 outline-none;
   }
 }
 
-@media (min-width: 1024px) {
-  .responsive-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-  }
+/* Enhanced calendar animations and effects */
+.calendar-day-cell {
+  @apply transition-all duration-300 ease-in-out;
 }
 
-/* Enhanced viewport handling */
-.viewport-container {
-  width: 100vw;
-  max-width: 100%;
-  overflow-x: hidden;
+.calendar-day-cell:hover {
+  @apply transform scale-[1.02] shadow-lg z-10;
 }
 
-/* Improved responsive text sizing */
-.responsive-text-sm {
-  @apply text-sm;
+.calendar-day-cell.selected {
+  @apply transform scale-105 shadow-xl z-20;
 }
 
-@media (min-width: 640px) {
-  .responsive-text-sm {
-    @apply text-base;
-  }
+.calendar-event-item {
+  @apply transition-all duration-200 ease-in-out;
 }
 
-.responsive-text-base {
-  @apply text-base;
+.calendar-event-item:hover {
+  @apply transform scale-[1.03] shadow-md z-10;
 }
 
-@media (min-width: 640px) {
-  .responsive-text-base {
-    @apply text-lg;
-  }
+/* Enhanced pending notification styling */
+.pending-notification {
+  @apply bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 shadow-lg rounded-xl;
 }
 
-.responsive-text-lg {
-  @apply text-lg;
+.pending-notification:hover {
+  @apply shadow-xl transform scale-[1.01];
 }
 
-@media (min-width: 640px) {
-  .responsive-text-lg {
-    @apply text-xl;
-  }
+/* Modern card shadows and effects */
+.calendar-card-shadow {
+  box-shadow: 
+    0 1px 3px 0 rgba(0, 0, 0, 0.1), 
+    0 1px 2px 0 rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 
-/* Better button sizing for different devices */
-.responsive-button {
-  @apply py-2 px-4 text-sm;
+.calendar-card-shadow-lg {
+  box-shadow: 
+    0 10px 15px -3px rgba(0, 0, 0, 0.1), 
+    0 4px 6px -2px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 
-@media (min-width: 640px) {
-  .responsive-button {
-    @apply py-2.5 px-5 text-base;
-  }
+/* Gradient backgrounds for visual hierarchy */
+.calendar-gradient-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
-@media (min-width: 1024px) {
-  .responsive-button {
-    @apply py-3 px-6 text-base;
-  }
+.calendar-gradient-pending {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
 }
 
-/* Enhanced table responsiveness */
-.responsive-table {
-  @apply w-full overflow-x-auto;
+/* iOS-style blur effects */
+.calendar-blur-bg {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.8);
 }
 
-.responsive-table table {
-  @apply min-w-full;
+/* Enhanced spacing and typography */
+.calendar-section-spacing {
+  @apply py-5 px-6;
 }
 
-@media (max-width: 640px) {
-  .responsive-table th,
-  .responsive-table td {
-    @apply px-2 py-2 text-sm;
-  }
+.calendar-title {
+  @apply text-xl font-semibold text-gray-900 tracking-tight;
 }
 
-@media (min-width: 641px) {
-  .responsive-table th,
-  .responsive-table td {
-    @apply px-4 py-3 text-base;
-  }
+.calendar-subtitle {
+  @apply text-sm text-gray-600 font-medium;
 }
 
-/* Improved card responsiveness */
-.responsive-card {
-  @apply p-3 rounded-lg;
+/* Improved button styling */
+.calendar-nav-button {
+  @apply h-9 w-9 p-0 rounded-lg transition-all duration-200 hover:shadow-md;
 }
 
-@media (min-width: 640px) {
-  .responsive-card {
-    @apply p-4 rounded-xl;
-  }
+.calendar-nav-button:hover {
+  @apply bg-gray-200 transform scale-105;
 }
 
-@media (min-width: 1024px) {
-  .responsive-card {
-    @apply p-6 rounded-2xl;
-  }
+/* Enhanced badge styling */
+.calendar-badge {
+  @apply px-3 py-1 rounded-full text-sm font-medium shadow-sm;
 }
 
-/* Enhanced form field responsiveness */
-.responsive-form-field {
-  @apply text-sm py-2 px-3 rounded-lg;
+.calendar-badge-pending {
+  @apply bg-orange-500 text-white border-0;
 }
 
-@media (min-width: 640px) {
-  .responsive-form-field {
-    @apply text-base py-2.5 px-4 rounded-xl;
-  }
-}
-
-/* Better modal/dialog responsiveness */
-.responsive-modal {
-  @apply w-[95vw] max-w-md;
-}
-
-@media (min-width: 640px) {
-  .responsive-modal {
-    @apply w-full max-w-lg;
-  }
-}
-
-@media (min-width: 1024px) {
-  .responsive-modal {
-    @apply max-w-2xl;
-  }
+.calendar-badge-confirmed {
+  @apply bg-blue-500 text-white border-0;
 }
