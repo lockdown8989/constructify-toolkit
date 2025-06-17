@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { format, isBefore, startOfDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Send, Clock } from 'lucide-react';
+import { PlusCircle, Send, Clock, RefreshCw } from 'lucide-react';
 import { Schedule } from '@/hooks/use-schedules';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useScheduleCalendar } from '@/hooks/use-schedule-calendar';
@@ -19,6 +20,7 @@ import { useOpenShifts } from '@/hooks/use-open-shifts';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
+import PendingShiftsSection from './components/PendingShiftsSection';
 
 interface ScheduleCalendarViewProps {
   date: Date | undefined;
@@ -29,28 +31,8 @@ interface ScheduleCalendarViewProps {
   onAddSchedule: () => void;
   isAdmin: boolean;
   isHR: boolean;
+  refreshSchedules?: () => void;
 }
-
-const PendingShiftNotification: React.FC<{ pendingCount: number }> = ({ pendingCount }) => (
-  <Card className="mb-6 bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200">
-    <div className="p-4 flex items-center gap-3">
-      <div className="flex-shrink-0">
-        <Clock className="h-5 w-5 text-orange-600" />
-      </div>
-      <div className="flex-1">
-        <h3 className="font-medium text-orange-800">
-          You have {pendingCount} pending shift{pendingCount > 1 ? 's' : ''} waiting for response
-        </h3>
-        <p className="text-sm text-orange-600 mt-1">
-          Please respond to your pending shifts to help with scheduling
-        </p>
-      </div>
-      <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300">
-        Pending
-      </Badge>
-    </div>
-  </Card>
-);
 
 const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
   date,
@@ -60,7 +42,8 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
   employeeNames,
   onAddSchedule,
   isAdmin,
-  isHR
+  isHR,
+  refreshSchedules
 }) => {
   const isMobile = useIsMobile();
   const { toast } = useToast();
@@ -77,22 +60,26 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
 
   const isManager = isAdmin || isHR;
   
+  // Set initial date to today if not set
+  useEffect(() => {
+    if (!date) {
+      setDate(new Date());
+    }
+  }, [date, setDate]);
+
   // Filter pending schedules for the current user and exclude expired ones
   const today = startOfDay(new Date());
   const currentUserPendingSchedules = isEmployee ? 
-    pendingSchedules.filter(schedule => {
-      // Check if the schedule belongs to the current user
-      const belongsToUser = schedules.some(s => 
-        s.id === schedule.id && 
-        s.employee_id && 
-        employeeNames[s.employee_id] // This would need to be matched against current user
-      );
+    schedules.filter(schedule => {
+      // Check if the schedule is pending and belongs to the current user
+      const isPending = schedule.status === 'pending';
+      const belongsToUser = schedule.employee_id; // We'll need to match this against current user's employee record
       
       // Check if the schedule is not expired (start time is today or in the future)
       const scheduleDate = startOfDay(new Date(schedule.start_time));
       const isNotExpired = !isBefore(scheduleDate, today);
       
-      return belongsToUser && isNotExpired;
+      return isPending && belongsToUser && isNotExpired;
     }) : [];
 
   const pendingCount = currentUserPendingSchedules.length;
@@ -165,6 +152,23 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
     }
   };
 
+  const handleRefreshSchedules = () => {
+    if (refreshSchedules) {
+      refreshSchedules();
+      toast({
+        title: "Refreshed",
+        description: "Schedule data has been refreshed.",
+      });
+    }
+  };
+
+  const handlePendingShiftResponse = () => {
+    // Refresh schedules after a pending shift response
+    if (refreshSchedules) {
+      refreshSchedules();
+    }
+  };
+
   const renderDay = (day: Date) => {
     const daySchedules = schedules.filter(schedule => {
       const scheduleDate = new Date(schedule.start_time);
@@ -172,6 +176,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
     });
 
     const hasSchedules = daySchedules.length > 0;
+    const hasPendingSchedules = daySchedules.some(s => s.status === 'pending');
     const isAnimating = animatingDate && format(animatingDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
 
     const dayContent = (
@@ -181,13 +186,21 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
         <span className="text-sm">{format(day, 'd')}</span>
         {hasSchedules && (
           <div className="flex gap-0.5 mt-1">
-            {daySchedules.slice(0, 3).map((_, i) => (
-              <div key={i} className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+            {daySchedules.slice(0, 3).map((schedule, i) => (
+              <div 
+                key={i} 
+                className={`w-1.5 h-1.5 rounded-full ${
+                  schedule.status === 'pending' ? 'bg-orange-500' : 'bg-blue-500'
+                }`}
+              ></div>
             ))}
             {daySchedules.length > 3 && (
               <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
             )}
           </div>
+        )}
+        {hasPendingSchedules && (
+          <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
         )}
         {isAnimating && (
           <div className="absolute inset-0 bg-green-400/20 rounded-lg animate-ping"></div>
@@ -243,21 +256,36 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
           </p>
         </div>
         
-        {isManager && (
+        <div className="flex gap-2">
           <Button 
-            onClick={handlePublishShifts}
-            className="bg-green-600 hover:bg-green-700 text-white rounded-xl"
+            onClick={handleRefreshSchedules}
+            variant="outline"
             size={isMobile ? "sm" : "default"}
+            className="rounded-xl"
           >
-            <Send className="h-4 w-4 mr-2" />
-            Publish Shifts
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
           </Button>
-        )}
+          
+          {isManager && (
+            <Button 
+              onClick={handlePublishShifts}
+              className="bg-green-600 hover:bg-green-700 text-white rounded-xl"
+              size={isMobile ? "sm" : "default"}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Publish Shifts
+            </Button>
+          )}
+        </div>
       </div>
 
-      {/* Pending Shifts Notification - Only show for employees with pending shifts */}
+      {/* Pending Shifts Section - Only show for employees with pending shifts */}
       {isEmployee && pendingCount > 0 && (
-        <PendingShiftNotification pendingCount={pendingCount} />
+        <PendingShiftsSection 
+          pendingShifts={currentUserPendingSchedules}
+          onResponseComplete={handlePendingShiftResponse}
+        />
       )}
       
       {/* Calendar Card */}
@@ -310,7 +338,9 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
                     className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-2 h-8 bg-blue-500 rounded-full"></div>
+                      <div className={`w-2 h-8 rounded-full ${
+                        schedule.status === 'pending' ? 'bg-orange-500' : 'bg-blue-500'
+                      }`}></div>
                       <div>
                         <p className="font-medium">
                           {employeeNames[schedule.employee_id] || 'Unknown Employee'}
@@ -318,13 +348,26 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
                         <p className="text-sm text-gray-600">
                           {format(new Date(schedule.start_time), 'h:mm a')} - {format(new Date(schedule.end_time), 'h:mm a')}
                         </p>
+                        {schedule.title && (
+                          <p className="text-sm text-gray-500">{schedule.title}</p>
+                        )}
                       </div>
                     </div>
                     <Badge 
                       variant={schedule.status === 'pending' ? 'outline' : 'default'}
-                      className={schedule.status === 'pending' ? 'border-orange-300 text-orange-700 bg-orange-50' : ''}
+                      className={
+                        schedule.status === 'pending' 
+                          ? 'border-orange-300 text-orange-700 bg-orange-50' 
+                          : schedule.status === 'employee_accepted' 
+                            ? 'border-green-300 text-green-700 bg-green-50'
+                            : schedule.status === 'employee_rejected'
+                              ? 'border-red-300 text-red-700 bg-red-50'
+                              : ''
+                      }
                     >
-                      {schedule.status}
+                      {schedule.status === 'employee_accepted' ? 'Accepted' : 
+                       schedule.status === 'employee_rejected' ? 'Rejected' : 
+                       schedule.status}
                     </Badge>
                   </div>
                 ))}
