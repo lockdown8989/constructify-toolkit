@@ -15,14 +15,14 @@ const TimeClocksSection = ({ onClose, isAuthenticated = true, hasManagerialAcces
 
   return (
     <>
-      {/* Time Clock with IN/OUT buttons - Available for all authenticated users */}
-      {isAuthenticated && (
+      {/* Time Clock with IN/OUT buttons - Only for managers, not payroll users */}
+      {isAuthenticated && hasManagerialAccess && (
         <MobileNavLink
-          to="/time-clock"
+          to="/manager-time-clock"
           icon={Clock}
           label="⏰️IN AND OUT⏱️"
           onClick={() => {
-            navigate('/time-clock');
+            navigate('/manager-time-clock');
             onClose();
           }}
           className="time-clock-nav-button"
