@@ -15,7 +15,7 @@ export const useClockOut = (
   const handleClockOut = async (currentRecord: string | null) => {
     if (!currentRecord) {
       toast({
-        title: "Error",
+        title: "❌ Error",
         description: "No active session to clock out from",
         variant: "destructive",
       });
@@ -126,7 +126,7 @@ export const useClockOut = (
       if (error) {
         console.error('Error clocking out:', error);
         toast({
-          title: "Error Clocking Out",
+          title: "❌ Error Clocking Out",
           description: error.message,
           variant: "destructive",
         });
@@ -141,25 +141,27 @@ export const useClockOut = (
       // Show appropriate message based on early departure or overtime
       if (isEarlyDeparture) {
         toast({
-          title: "Early Departure",
+          title: "⚠️ Early Departure",
           description: `You clocked out ${earlyDepartureMinutes} minutes early at ${format(now, 'h:mm a')}`,
           variant: "destructive",
         });
       } else if (overtimeMinutes > 0) {
         toast({
-          title: "Overtime Recorded",
+          title: "⏰ Overtime Recorded",
           description: `You worked ${overtimeMinutes} minutes of overtime. Clocked out at ${format(now, 'h:mm a')}`,
+          variant: "default",
         });
       } else {
         toast({
-          title: "Clocked Out",
-          description: `You clocked out at ${format(now, 'h:mm a')}`,
+          title: "✅ Successfully Clocked Out",
+          description: `You clocked out at ${format(now, 'h:mm a')}. Great work today!`,
+          variant: "default",
         });
       }
     } catch (error) {
       console.error('Error in handleClockOut:', error);
       toast({
-        title: "Error",
+        title: "❌ Error",
         description: "There was an unexpected error while clocking out",
         variant: "destructive",
       });

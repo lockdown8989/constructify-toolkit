@@ -71,7 +71,7 @@ export const useClockIn = (
       if (activeRecord) {
         console.log('User already has an active session:', activeRecord);
         toast({
-          title: "Already clocked in",
+          title: "Already Clocked In",
           description: "You are already clocked in for today",
           variant: "destructive",
         });
@@ -117,6 +117,13 @@ export const useClockIn = (
       setCurrentRecord(data.id);
       setStatus('clocked-in');
       
+      // Show success message with current time
+      toast({
+        title: "✅ Successfully Clocked In",
+        description: `You clocked in at ${format(now, 'h:mm a')}. Have a great shift!`,
+        variant: "default",
+      });
+
       // Show specific message if employee is late
       const { data: employeeData } = await supabase
         .from('employees')
@@ -142,33 +149,18 @@ export const useClockIn = (
             if (now > graceEnd) {
               const lateMinutes = Math.round((now.getTime() - scheduledStart.getTime()) / 60000);
               toast({
-                title: "Late Clock-In",
+                title: "⚠️ Late Clock-In",
                 description: `You are ${lateMinutes} minutes late for your ${shiftPattern.name}`,
                 variant: "destructive",
               });
-            } else {
-              toast({
-                title: "Clocked In",
-                description: `You clocked in at ${format(now, 'h:mm a')} for your ${shiftPattern.name}`,
-              });
             }
           }
-        } else {
-          toast({
-            title: "Clocked In",
-            description: `You clocked in at ${format(now, 'h:mm a')}`,
-          });
         }
-      } else {
-        toast({
-          title: "Clocked In",
-          description: `You clocked in at ${format(now, 'h:mm a')}`,
-        });
       }
     } catch (error) {
       console.error('Error clocking in:', error);
       toast({
-        title: "Error",
+        title: "❌ Clock-In Failed",
         description: error instanceof Error ? error.message : "There was an unexpected error while clocking in",
         variant: "destructive",
       });
