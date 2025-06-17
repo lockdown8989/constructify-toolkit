@@ -21,7 +21,6 @@ const LeaveBalanceCard = ({ leaveBalance }: LeaveBalanceCardProps) => {
   };
 
   // Calculate progress percentages for visual representation
-  const annualLeaveUsed = (leaveBalance.used || 0);
   const totalAnnualLeave = 30; // Default total
   const annualLeaveRemaining = leaveBalance.annual || 20;
   const annualLeaveProgress = ((totalAnnualLeave - annualLeaveRemaining) / totalAnnualLeave) * 100;
