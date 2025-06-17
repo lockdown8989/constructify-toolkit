@@ -1,14 +1,15 @@
 
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import App from "./App.tsx";
-import "./index.css";
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom'; 
+import { AuthProvider } from './hooks/auth';
+import App from './App.tsx';
+import './index.css';
 
+// Create the root and render the app with proper provider nesting
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <BrowserRouter>
+  <BrowserRouter>
+    <AuthProvider>
       <App />
-    </BrowserRouter>
-  </StrictMode>
+    </AuthProvider>
+  </BrowserRouter>
 );
