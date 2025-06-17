@@ -44,45 +44,73 @@ const EmployeeShiftAssignmentComponent = () => {
     try {
       console.log('Loading shifts for employee:', employeeId);
       
-      const { data, error } = await supabase
-        .from('employees')
-        .select(`
-          id,
-          shift_pattern_id,
-          monday_shift_id,
-          tuesday_shift_id,
-          wednesday_shift_id,
-          thursday_shift_id,
-          friday_shift_id,
-          saturday_shift_id,
-          sunday_shift_id
-        `)
-        .eq('id', employeeId)
-        .single();
+      // Use the new database function for safe data retrieval
+      const { data: functionResult, error: functionError } = await supabase
+        .rpc('get_employee_shift_assignments', { p_employee_id: employeeId });
 
-      if (error) {
-        console.error('Error loading employee shifts:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load employee shift data. Please try again.",
-          variant: "destructive",
-        });
-        return;
+      if (functionError) {
+        console.error('Error calling get_employee_shift_assignments:', functionError);
+        throw functionError;
       }
 
-      if (data) {
-        console.log('Loaded employee data:', data);
+      if (functionResult?.success) {
+        const employeeData = functionResult.data;
+        console.log('Loaded employee data:', employeeData);
+        
         setAssignments({
-          employee_id: data.id,
-          shift_pattern_id: data.shift_pattern_id || '',
-          monday_shift_id: data.monday_shift_id || '',
-          tuesday_shift_id: data.tuesday_shift_id || '',
-          wednesday_shift_id: data.wednesday_shift_id || '',
-          thursday_shift_id: data.thursday_shift_id || '',
-          friday_shift_id: data.friday_shift_id || '',
-          saturday_shift_id: data.saturday_shift_id || '',
-          sunday_shift_id: data.sunday_shift_id || '',
+          employee_id: employeeData.employee_id || '',
+          shift_pattern_id: employeeData.shift_pattern_id || '',
+          monday_shift_id: employeeData.monday_shift_id || '',
+          tuesday_shift_id: employeeData.tuesday_shift_id || '',
+          wednesday_shift_id: employeeData.wednesday_shift_id || '',
+          thursday_shift_id: employeeData.thursday_shift_id || '',
+          friday_shift_id: employeeData.friday_shift_id || '',
+          saturday_shift_id: employeeData.saturday_shift_id || '',
+          sunday_shift_id: employeeData.sunday_shift_id || '',
         });
+      } else {
+        // Fallback to direct table query if function fails
+        console.log('Function failed, trying direct query');
+        const { data, error } = await supabase
+          .from('employees')
+          .select(`
+            id,
+            shift_pattern_id,
+            monday_shift_id,
+            tuesday_shift_id,
+            wednesday_shift_id,
+            thursday_shift_id,
+            friday_shift_id,
+            saturday_shift_id,
+            sunday_shift_id
+          `)
+          .eq('id', employeeId)
+          .single();
+
+        if (error) {
+          console.error('Error loading employee shifts:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load employee shift data. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (data) {
+          console.log('Loaded employee data (fallback):', data);
+          setAssignments({
+            employee_id: data.id,
+            shift_pattern_id: data.shift_pattern_id || '',
+            monday_shift_id: data.monday_shift_id || '',
+            tuesday_shift_id: data.tuesday_shift_id || '',
+            wednesday_shift_id: data.wednesday_shift_id || '',
+            thursday_shift_id: data.thursday_shift_id || '',
+            friday_shift_id: data.friday_shift_id || '',
+            saturday_shift_id: data.saturday_shift_id || '',
+            sunday_shift_id: data.sunday_shift_id || '',
+          });
+        }
       }
     } catch (error) {
       console.error('Error in loadEmployeeShifts:', error);
@@ -98,6 +126,25 @@ const EmployeeShiftAssignmentComponent = () => {
 
   const handleEmployeeSelect = (employeeId: string) => {
     console.log('Employee selected:', employeeId);
+    
+    // Validate employeeId before proceeding
+    if (!employeeId || employeeId === 'undefined' || employeeId === 'null') {
+      console.warn('Invalid employee ID selected:', employeeId);
+      setSelectedEmployee('');
+      setAssignments({
+        employee_id: '',
+        shift_pattern_id: '',
+        monday_shift_id: '',
+        tuesday_shift_id: '',
+        wednesday_shift_id: '',
+        thursday_shift_id: '',
+        friday_shift_id: '',
+        saturday_shift_id: '',
+        sunday_shift_id: '',
+      });
+      return;
+    }
+
     setSelectedEmployee(employeeId);
     
     if (employeeId) {
@@ -287,11 +334,19 @@ const EmployeeShiftAssignmentComponent = () => {
               <SelectValue placeholder="Choose an employee..." />
             </SelectTrigger>
             <SelectContent>
-              {employees.map((employee) => (
-                <SelectItem key={employee.id} value={employee.id}>
-                  {employee.name} - {employee.job_title}
-                </SelectItem>
-              ))}
+              {employees.map((employee) => {
+                // Add validation to prevent invalid data from causing crashes
+                if (!employee || !employee.id || !employee.name) {
+                  console.warn('Invalid employee data:', employee);
+                  return null;
+                }
+                
+                return (
+                  <SelectItem key={employee.id} value={employee.id}>
+                    {employee.name} - {employee.job_title || 'No Title'}
+                  </SelectItem>
+                );
+              }).filter(Boolean)}
             </SelectContent>
           </Select>
         </div>
@@ -316,11 +371,18 @@ const EmployeeShiftAssignmentComponent = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">No default pattern</SelectItem>
-                      {shiftPatterns.map((pattern) => (
-                        <SelectItem key={pattern.id} value={pattern.id}>
-                          {pattern.name} ({pattern.start_time} - {pattern.end_time})
-                        </SelectItem>
-                      ))}
+                      {shiftPatterns.map((pattern) => {
+                        if (!pattern || !pattern.id || !pattern.name) {
+                          console.warn('Invalid shift pattern data:', pattern);
+                          return null;
+                        }
+                        
+                        return (
+                          <SelectItem key={pattern.id} value={pattern.id}>
+                            {pattern.name} ({pattern.start_time} - {pattern.end_time})
+                          </SelectItem>
+                        );
+                      }).filter(Boolean)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -341,11 +403,17 @@ const EmployeeShiftAssignmentComponent = () => {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="">Use default pattern</SelectItem>
-                              {shiftPatterns.map((pattern) => (
-                                <SelectItem key={pattern.id} value={pattern.id}>
-                                  {pattern.name} ({pattern.start_time} - {pattern.end_time})
-                                </SelectItem>
-                              ))}
+                              {shiftPatterns.map((pattern) => {
+                                if (!pattern || !pattern.id || !pattern.name) {
+                                  return null;
+                                }
+                                
+                                return (
+                                  <SelectItem key={pattern.id} value={pattern.id}>
+                                    {pattern.name} ({pattern.start_time} - {pattern.end_time})
+                                  </SelectItem>
+                                );
+                              }).filter(Boolean)}
                             </SelectContent>
                           </Select>
                         </div>

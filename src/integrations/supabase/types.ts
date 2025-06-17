@@ -2190,6 +2190,10 @@ export type Database = {
           break_start_time: string
         }[]
       }
+      get_employee_shift_assignments: {
+        Args: { p_employee_id: string }
+        Returns: Json
+      }
       has_role: {
         Args:
           | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
