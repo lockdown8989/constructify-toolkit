@@ -1,30 +1,26 @@
 
-import React, { useState } from 'react';
-import { WeekStats, Employee } from '@/types/restaurant-schedule';
-import { days } from './utils/schedule-utils';
-import DayColumn from './DayColumn';
-import WeekSummaryColumn from './WeekSummaryColumn';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React from 'react';
+import { Employee, OpenShift } from '@/types/restaurant-schedule';
 import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import EmployeeScheduleRow from './EmployeeScheduleRow';
 import { OpenShiftType } from '@/types/supabase/schedules';
-import { useToast } from '@/hooks/use-toast';
 
 interface WeeklyGridProps {
-  weekStats: WeekStats;
+  weekStats: any;
   openShifts: OpenShiftType[];
   employees: Employee[];
   daysDisplayNames: string[];
-  formatCurrency: (amount: number, currency?: string, locale?: string) => string;
+  formatCurrency: (amount: number) => string;
   handleAssignOpenShift: (openShiftId: string, employeeId?: string) => void;
   previousWeek: () => void;
   nextWeek: () => void;
   isMobile: boolean;
 }
 
-const WeeklyGrid = ({ 
-  weekStats, 
-  openShifts, 
+const WeeklyGrid: React.FC<WeeklyGridProps> = ({
+  weekStats,
+  openShifts,
   employees,
   daysDisplayNames,
   formatCurrency,
@@ -32,152 +28,88 @@ const WeeklyGrid = ({
   previousWeek,
   nextWeek,
   isMobile
-}: WeeklyGridProps) => {
-  const [currentDayGroup, setCurrentDayGroup] = useState(0);
-  const [draggedShift, setDraggedShift] = useState<OpenShiftType | null>(null);
-  const { toast } = useToast();
-  
-  // Get visible days based on current group (for mobile pagination)
-  const getVisibleDays = () => {
-    if (!isMobile) return days;
-    const start = currentDayGroup * 2;
-    return days.slice(start, start + 2);
-  };
-
-  // Filter open shifts by day
-  const getOpenShiftsByDay = (day: string) => {
-    return openShifts.filter(shift => {
-      // For compatibility with both formats, check both day property and derive from start_time
-      const shiftDay = shift.day || 
-        new Date(shift.start_time).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-      return shiftDay === day;
-    });
-  };
-
-  // Navigate to previous day group on mobile
-  const previousDayGroup = () => {
-    setCurrentDayGroup(prev => (prev === 0 ? 3 : prev - 1));
-  };
-
-  // Navigate to next day group on mobile
-  const nextDayGroup = () => {
-    setCurrentDayGroup(prev => (prev === 3 ? 0 : prev + 1));
-  };
-  
-  // Handle shift drag start
-  const handleShiftDragStart = (e: React.DragEvent, shift: OpenShiftType) => {
-    setDraggedShift(shift);
-    e.dataTransfer.setData('text/plain', JSON.stringify(shift));
-    e.dataTransfer.effectAllowed = 'move';
-    
-    // Create a custom drag image
-    const dragImage = document.createElement('div');
-    dragImage.className = 'bg-white shadow-lg p-2 rounded border border-blue-300 text-sm';
-    dragImage.textContent = shift.title || 'Shift';
-    dragImage.style.position = 'absolute';
-    dragImage.style.top = '-1000px';
-    document.body.appendChild(dragImage);
-    
-    e.dataTransfer.setDragImage(dragImage, 20, 20);
-    
-    // Clean up the element after drag starts
-    setTimeout(() => {
-      document.body.removeChild(dragImage);
-    }, 0);
-  };
-  
-  // Handle shift drag end
-  const handleShiftDragEnd = () => {
-    setDraggedShift(null);
-  };
-  
-  // Handle shift drop on employee
-  const handleShiftDrop = (e: React.DragEvent, employeeId: string, day: string) => {
-    e.preventDefault();
-    
-    if (draggedShift) {
-      console.log(`Dropped shift ${draggedShift.id} on employee ${employeeId} for day ${day}`);
-      handleAssignOpenShift(draggedShift.id, employeeId);
-      
-      toast({
-        title: "Shift assigned",
-        description: "The shift has been assigned to the employee.",
-      });
-    }
-  };
-
-  const visibleDays = getVisibleDays();
+}) => {
+  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
   return (
-    <div className="overflow-x-auto -mx-4 sm:mx-0">
-      <div className={`grid ${isMobile ? 'grid-cols-3' : 'grid-cols-8'} min-w-[600px]`}>
-        {/* Summary column */}
-        <WeekSummaryColumn 
-          weekStats={weekStats} 
-          openShifts={openShifts} 
-          formatCurrency={formatCurrency}
-          handleAssignOpenShift={handleAssignOpenShift}
-          previousWeek={previousWeek}
-          nextWeek={nextWeek}
-          onShiftDragStart={handleShiftDragStart}
-          onShiftDragEnd={handleShiftDragEnd}
-        />
+    <div className="bg-white rounded-lg">
+      {/* Week Navigation Header */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <Button
+          onClick={previousWeek}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Previous Week
+        </Button>
         
-        {/* Only show 2 days at a time on mobile */}
-        {visibleDays.map((day, index) => {
-          // Calculate the actual day index for getting the correct day label
-          const dayIndex = isMobile ? currentDayGroup * 2 + index : index;
-          
-          return (
-            <DayColumn 
-              key={day}
-              day={day}
-              dayLabel={daysDisplayNames[dayIndex]}
-              dayStats={weekStats.days.find(d => d.day === day)!}
-              employees={employees}
-              openShifts={getOpenShiftsByDay(day)}
-              handleAssignOpenShift={handleAssignOpenShift}
-              onShiftDragStart={handleShiftDragStart}
-              onShiftDragEnd={handleShiftDragEnd}
-              onShiftDrop={handleShiftDrop}
-            />
-          );
-        })}
-      </div>
-      
-      {/* Mobile day pagination - with improved navigation UI */}
-      {isMobile && (
-        <div className="mt-4 pb-4 flex items-center justify-center">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={previousDayGroup}
-            className="mr-2 h-8 w-8 p-0 active-touch-state"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          
-          <div className="flex justify-center gap-3">
-            {[0, 1, 2, 3].map((index) => (
-              <button 
-                key={index}
-                className={`w-2.5 h-2.5 rounded-full transition-colors ${index === currentDayGroup ? 'bg-primary' : 'bg-gray-300'}`}
-                onClick={() => setCurrentDayGroup(index)}
-                aria-label={`Show days ${index * 2 + 1} to ${index * 2 + 2}`}
-              />
-            ))}
-          </div>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={nextDayGroup}
-            className="ml-2 h-8 w-8 p-0 active-touch-state"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Week of {weekStats.weekRange}
+          </h3>
+          <p className="text-sm text-gray-600">
+            {weekStats.totalHours}h • {formatCurrency(weekStats.totalCost)}
+          </p>
         </div>
-      )}
+        
+        <Button
+          onClick={nextWeek}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          Next Week
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Schedule Grid */}
+      <div className="overflow-x-auto">
+        {/* Header Row */}
+        <div className="grid grid-cols-8 border-b border-gray-200 bg-gray-50">
+          <div className="p-3 font-medium text-sm text-gray-700 border-r border-gray-200">
+            Employee
+          </div>
+          {days.map((day, index) => (
+            <div key={day} className="p-3 text-center font-medium text-sm text-gray-700 border-r border-gray-200 last:border-r-0">
+              {daysDisplayNames[index]}
+            </div>
+          ))}
+        </div>
+
+        {/* Employee Rows */}
+        <div className="divide-y divide-gray-200">
+          {employees.map(employee => (
+            <EmployeeScheduleRow
+              key={employee.id}
+              employee={employee}
+              days={days}
+              openShifts={openShifts}
+              onAssignOpenShift={handleAssignOpenShift}
+              isMobile={isMobile}
+            />
+          ))}
+        </div>
+
+        {/* Weekly Summary Row */}
+        <div className="grid grid-cols-8 border-t-2 border-gray-300 bg-gray-50">
+          <div className="p-3 font-semibold text-sm text-gray-800 border-r border-gray-200">
+            Weekly Totals
+          </div>
+          {days.map(day => (
+            <div key={`total-${day}`} className="p-3 text-center text-sm border-r border-gray-200 last:border-r-0">
+              <div className="font-medium text-gray-800">
+                {weekStats.dailyHours[day] || 0}h
+              </div>
+              <div className="text-xs text-gray-600">
+                {formatCurrency(weekStats.dailyCosts[day] || 0)}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

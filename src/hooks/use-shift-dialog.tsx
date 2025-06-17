@@ -2,43 +2,49 @@
 import { useState } from 'react';
 import { Shift } from '@/types/restaurant-schedule';
 
+export type ShiftDialogMode = 'add' | 'edit';
+
 export const useShiftDialog = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [mode, setMode] = useState<'add' | 'edit'>('add');
-  const [currentShift, setCurrentShift] = useState<Shift | null>(null);
-  const [employeeId, setEmployeeId] = useState<string | null>(null);
-  const [day, setDay] = useState<string | null>(null);
+  const [mode, setMode] = useState<ShiftDialogMode>('add');
+  const [editingShift, setEditingShift] = useState<Shift | null>(null);
+  const [employeeId, setEmployeeId] = useState<string>('');
+  const [day, setDay] = useState<string>('');
 
-  const openAddShiftDialog = (employeeId: string, day: string) => {
+  const openAddDialog = (empId: string, dayName: string) => {
+    console.log('Opening add dialog for employee:', empId, 'day:', dayName);
+    setEmployeeId(empId);
+    setDay(dayName);
     setMode('add');
-    setEmployeeId(employeeId);
-    setDay(day);
+    setEditingShift(null);
     setIsOpen(true);
   };
 
-  const openEditShiftDialog = (shift: Shift) => {
+  const openEditDialog = (shift: Shift) => {
+    console.log('Opening edit dialog for shift:', shift);
+    setEditingShift(shift);
+    setEmployeeId(shift.employeeId);
+    setDay(shift.day);
     setMode('edit');
-    setCurrentShift(shift);
     setIsOpen(true);
   };
 
   const closeDialog = () => {
+    console.log('Closing shift dialog');
     setIsOpen(false);
-    setCurrentShift(null);
-    setEmployeeId(null);
-    setDay(null);
+    setEditingShift(null);
+    setEmployeeId('');
+    setDay('');
   };
 
   return {
     isOpen,
     mode,
-    currentShift,
+    editingShift,
     employeeId,
     day,
-    openAddShiftDialog,
-    openEditShiftDialog,
-    closeDialog,
-    setCurrentShift,
-    setMode
+    openAddDialog,
+    openEditDialog,
+    closeDialog
   };
 };
