@@ -1,7 +1,9 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ScheduleStatus } from '@/types/supabase/schedules';
 
 export interface Schedule {
   id: string;
@@ -12,7 +14,7 @@ export interface Schedule {
   created_at?: string;
   updated_at?: string;
   notes?: string;
-  status?: 'confirmed' | 'pending' | 'completed' | 'rejected';
+  status?: ScheduleStatus;
   location?: string;
   shift_type?: string;
   published?: boolean;
