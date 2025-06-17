@@ -21,37 +21,39 @@ export const useEmployeeShiftAssignments = () => {
   const [loadingEmployee, setLoadingEmployee] = useState(false);
 
   const loadEmployeeShifts = async (employeeId: string) => {
-    if (!employeeId) return;
+    if (!employeeId || employeeId === 'undefined' || employeeId === 'null') {
+      console.warn('Invalid employee ID provided to loadEmployeeShifts:', employeeId);
+      return;
+    }
     
     setLoadingEmployee(true);
     try {
       console.log('Loading shifts for employee:', employeeId);
       
-      // Use the new database function for safe data retrieval
+      // First, validate that the employee exists
+      const { data: employeeExists, error: employeeCheckError } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('id', employeeId)
+        .single();
+
+      if (employeeCheckError || !employeeExists) {
+        console.error('Employee validation failed:', employeeCheckError);
+        toast({
+          title: "Error",
+          description: "Selected employee not found. Please refresh and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Use the database function for safe data retrieval
       const { data: functionResult, error: functionError } = await supabase
         .rpc('get_employee_shift_assignments', { p_employee_id: employeeId });
 
       if (functionError) {
         console.error('Error calling get_employee_shift_assignments:', functionError);
-        throw functionError;
-      }
-
-      if (functionResult?.success) {
-        const employeeData = functionResult.data;
-        console.log('Loaded employee data:', employeeData);
         
-        setAssignments({
-          employee_id: employeeData.employee_id || '',
-          shift_pattern_id: employeeData.shift_pattern_id || '',
-          monday_shift_id: employeeData.monday_shift_id || '',
-          tuesday_shift_id: employeeData.tuesday_shift_id || '',
-          wednesday_shift_id: employeeData.wednesday_shift_id || '',
-          thursday_shift_id: employeeData.thursday_shift_id || '',
-          friday_shift_id: employeeData.friday_shift_id || '',
-          saturday_shift_id: employeeData.saturday_shift_id || '',
-          sunday_shift_id: employeeData.sunday_shift_id || '',
-        });
-      } else {
         // Fallback to direct table query if function fails
         console.log('Function failed, trying direct query');
         const { data, error } = await supabase
@@ -94,8 +96,33 @@ export const useEmployeeShiftAssignments = () => {
             sunday_shift_id: data.sunday_shift_id || '',
           });
         }
+        return;
       }
-    } catch (error) {
+
+      if (functionResult?.success) {
+        const employeeData = functionResult.data;
+        console.log('Loaded employee data:', employeeData);
+        
+        setAssignments({
+          employee_id: employeeData.employee_id || '',
+          shift_pattern_id: employeeData.shift_pattern_id || '',
+          monday_shift_id: employeeData.monday_shift_id || '',
+          tuesday_shift_id: employeeData.tuesday_shift_id || '',
+          wednesday_shift_id: employeeData.wednesday_shift_id || '',
+          thursday_shift_id: employeeData.thursday_shift_id || '',
+          friday_shift_id: employeeData.friday_shift_id || '',
+          saturday_shift_id: employeeData.saturday_shift_id || '',
+          sunday_shift_id: employeeData.sunday_shift_id || '',
+        });
+      } else {
+        console.error('Function returned unsuccessful result:', functionResult);
+        toast({
+          title: "Error",
+          description: "Failed to load employee shift assignments.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
       console.error('Error in loadEmployeeShifts:', error);
       toast({
         title: "Error",
@@ -108,7 +135,7 @@ export const useEmployeeShiftAssignments = () => {
   };
 
   const saveAssignments = async (selectedEmployee: string) => {
-    if (!selectedEmployee) {
+    if (!selectedEmployee || selectedEmployee === 'undefined' || selectedEmployee === 'null') {
       toast({
         title: "Error",
         description: "Please select an employee first",
@@ -121,7 +148,18 @@ export const useEmployeeShiftAssignments = () => {
     try {
       console.log('Saving assignments using database function:', assignments);
       
-      // Use the new database function for safe updates
+      // Validate employee exists before updating
+      const { data: employeeExists, error: employeeCheckError } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('id', selectedEmployee)
+        .single();
+
+      if (employeeCheckError || !employeeExists) {
+        throw new Error('Selected employee not found');
+      }
+
+      // Use the database function for safe updates
       const { data: result, error } = await supabase
         .rpc('update_employee_shift_assignments', {
           p_employee_id: selectedEmployee,
@@ -162,13 +200,21 @@ export const useEmployeeShiftAssignments = () => {
 
   const handleAssignmentChange = (key: string, value: string) => {
     console.log('Assignment changed:', key, value);
+    
+    // Validate the assignment change
+    if (typeof key !== 'string' || !key) {
+      console.warn('Invalid assignment key:', key);
+      return;
+    }
+
     setAssignments(prev => ({
       ...prev,
-      [key]: value
+      [key]: value || ''
     }));
   };
 
   const resetAssignments = () => {
+    console.log('Resetting assignments');
     setAssignments({
       employee_id: '',
       shift_pattern_id: '',

@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/types/supabase';
@@ -51,60 +50,77 @@ export function useEmployees(filters?: Partial<{
   return useQuery({
     queryKey: ['employees', filters, isManager, isPayroll, isAdmin, isHR, user?.id],
     queryFn: async () => {
-      let query = supabase
-        .from('employees')
-        .select('*');
-      
-      // For payroll users, admins, and HR - show all employees
-      if (isPayroll || isAdmin || isHR) {
-        console.log("Payroll/Admin/HR user, fetching all employee data");
-        // No restrictions for these roles - they should see all employees
-      } else if (isManager && user) {
-        // For managers - show employees under their management
-        console.log("Manager user, fetching team data");
-        const { data: managerData } = await supabase
+      try {
+        let query = supabase
           .from('employees')
-          .select('manager_id')
-          .eq('user_id', user.id)
-          .single();
+          .select('*');
         
-        if (managerData && managerData.manager_id) {
-          query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
-        }
-      } else if (!isManager && !isPayroll && !isAdmin && !isHR && user) {
-        // For regular employees - show only their own data
-        console.log("Regular employee user, fetching own data only");
-        const { data: currentEmployeeData } = await supabase
-          .from('employees')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
+        // For payroll users, admins, and HR - show all employees
+        if (isPayroll || isAdmin || isHR) {
+          console.log("Payroll/Admin/HR user, fetching all employee data");
+          // No restrictions for these roles - they should see all employees
+        } else if (isManager && user) {
+          // For managers - show employees under their management
+          console.log("Manager user, fetching team data");
+          const { data: managerData } = await supabase
+            .from('employees')
+            .select('manager_id')
+            .eq('user_id', user.id)
+            .single();
           
-        if (currentEmployeeData) {
-          query = query.eq('id', currentEmployeeData.id);
-        } else {
-          console.log("No employee record found for user");
-          return [];
+          if (managerData && managerData.manager_id) {
+            query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
+          }
+        } else if (!isManager && !isPayroll && !isAdmin && !isHR && user) {
+          // For regular employees - show only their own data
+          console.log("Regular employee user, fetching own data only");
+          const { data: currentEmployeeData } = await supabase
+            .from('employees')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+            
+          if (currentEmployeeData) {
+            query = query.eq('id', currentEmployeeData.id);
+          } else {
+            console.log("No employee record found for user");
+            return [];
+          }
         }
-      }
-      
-      if (filters) {
-        if (filters.status) query = query.eq('status', filters.status);
-        if (filters.department) query = query.eq('department', filters.department);
-        if (filters.site) query = query.eq('site', filters.site);
-        if (filters.lifecycle) query = query.eq('lifecycle', filters.lifecycle);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error("Error fetching employees:", error);
+        
+        if (filters) {
+          if (filters.status) query = query.eq('status', filters.status);
+          if (filters.department) query = query.eq('department', filters.department);
+          if (filters.site) query = query.eq('site', filters.site);
+          if (filters.lifecycle) query = query.eq('lifecycle', filters.lifecycle);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error("Error fetching employees:", error);
+          throw error;
+        }
+        
+        // Validate and clean the employee data
+        const validEmployees = (data || []).filter(employee => {
+          if (!employee || !employee.id || !employee.name) {
+            console.warn('Invalid employee record found:', employee);
+            return false;
+          }
+          return true;
+        });
+        
+        console.log("Fetched and validated employees data:", validEmployees);
+        return validEmployees as Employee[];
+        
+      } catch (error) {
+        console.error("Error in employees query function:", error);
         throw error;
       }
-      
-      console.log("Fetched employees data:", data);
-      return data as Employee[];
-    }
+    },
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }
 

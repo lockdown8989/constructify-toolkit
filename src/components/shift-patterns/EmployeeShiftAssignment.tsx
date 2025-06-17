@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Save, Loader2 } from 'lucide-react';
+import { Users, Save, Loader2, AlertTriangle } from 'lucide-react';
 import { useShiftPatterns } from '@/hooks/use-shift-patterns';
 import { useEmployees } from '@/hooks/use-employees';
 import { useEmployeeShiftAssignments } from '@/hooks/use-employee-shift-assignments';
@@ -22,6 +22,7 @@ const EmployeeShiftAssignmentComponent = () => {
   const { data: employees = [], isLoading: employeesLoading, error: employeesError } = useEmployees();
   
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
+  const [selectionError, setSelectionError] = useState<string>('');
   
   const {
     assignments,
@@ -34,27 +35,52 @@ const EmployeeShiftAssignmentComponent = () => {
   } = useEmployeeShiftAssignments();
 
   const handleEmployeeSelect = (employeeId: string) => {
-    console.log('Employee selected:', employeeId);
+    console.log('Employee selected in main component:', employeeId);
+    setSelectionError('');
     
-    // Validate employeeId before proceeding
-    if (!employeeId || employeeId === 'undefined' || employeeId === 'null') {
-      console.warn('Invalid employee ID selected:', employeeId);
-      setSelectedEmployee('');
-      resetAssignments();
-      return;
-    }
+    try {
+      // Validate employeeId before proceeding
+      if (!employeeId || employeeId === 'undefined' || employeeId === 'null' || employeeId === '') {
+        console.log('Clearing employee selection');
+        setSelectedEmployee('');
+        resetAssignments();
+        return;
+      }
 
-    setSelectedEmployee(employeeId);
-    
-    if (employeeId) {
+      // Check if the employee exists in our employees list
+      const employee = employees.find(emp => emp.id === employeeId);
+      if (!employee) {
+        console.error('Employee not found in list:', employeeId);
+        setSelectionError('Selected employee not found. Please refresh the page and try again.');
+        setSelectedEmployee('');
+        resetAssignments();
+        return;
+      }
+
+      console.log('Valid employee selected:', employee.name);
+      setSelectedEmployee(employeeId);
       loadEmployeeShifts(employeeId);
-    } else {
+      
+    } catch (error) {
+      console.error('Error in handleEmployeeSelect:', error);
+      setSelectionError('An error occurred while selecting the employee. Please try again.');
+      setSelectedEmployee('');
       resetAssignments();
     }
   };
 
   const handleSave = () => {
-    saveAssignments(selectedEmployee);
+    if (!selectedEmployee) {
+      setSelectionError('Please select an employee first');
+      return;
+    }
+    
+    try {
+      saveAssignments(selectedEmployee);
+    } catch (error) {
+      console.error('Error saving assignments:', error);
+      setSelectionError('Failed to save assignments. Please try again.');
+    }
   };
 
   // Show loading state
@@ -86,11 +112,19 @@ const EmployeeShiftAssignmentComponent = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <EmployeeSelector
-          employees={employees}
-          selectedEmployee={selectedEmployee}
-          onEmployeeSelect={handleEmployeeSelect}
-        />
+        <div>
+          <EmployeeSelector
+            employees={employees}
+            selectedEmployee={selectedEmployee}
+            onEmployeeSelect={handleEmployeeSelect}
+          />
+          {selectionError && (
+            <div className="flex items-center gap-2 mt-2 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+              <AlertTriangle className="h-4 w-4" />
+              {selectionError}
+            </div>
+          )}
+        </div>
 
         {selectedEmployee && (
           <div className="space-y-4">
