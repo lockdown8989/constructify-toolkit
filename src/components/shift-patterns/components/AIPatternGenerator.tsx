@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, Users } from 'lucide-react';
 import { useGeminiShiftAssistant } from '@/hooks/use-gemini-shift-assistant';
 import { useCreateShiftPattern } from '@/hooks/use-shift-patterns';
+import { useEmployees } from '@/hooks/use-employees';
 import { useToast } from '@/hooks/use-toast';
 
 const AIPatternGenerator = () => {
@@ -19,6 +20,7 @@ const AIPatternGenerator = () => {
   
   const { generatePattern, isLoading } = useGeminiShiftAssistant();
   const createPattern = useCreateShiftPattern();
+  const { data: employees = [], isLoading: employeesLoading } = useEmployees();
   const { toast } = useToast();
 
   const handleGeneratePattern = async () => {
@@ -32,11 +34,35 @@ const AIPatternGenerator = () => {
     }
 
     try {
+      // Prepare employee data for Gemini
+      const employeeData = employees.map(emp => ({
+        id: emp.id,
+        name: emp.name,
+        job_title: emp.job_title,
+        department: emp.department,
+        status: emp.status,
+        availability: {
+          monday: emp.monday_available ? `${emp.monday_start_time}-${emp.monday_end_time}` : 'Not available',
+          tuesday: emp.tuesday_available ? `${emp.tuesday_start_time}-${emp.tuesday_end_time}` : 'Not available',
+          wednesday: emp.wednesday_available ? `${emp.wednesday_start_time}-${emp.wednesday_end_time}` : 'Not available',
+          thursday: emp.thursday_available ? `${emp.thursday_start_time}-${emp.thursday_end_time}` : 'Not available',
+          friday: emp.friday_available ? `${emp.friday_start_time}-${emp.friday_end_time}` : 'Not available',
+          saturday: emp.saturday_available ? `${emp.saturday_start_time}-${emp.saturday_end_time}` : 'Not available',
+          sunday: emp.sunday_available ? `${emp.sunday_start_time}-${emp.sunday_end_time}` : 'Not available'
+        }
+      }));
+
+      console.log('Sending employee data to Gemini:', employeeData);
+
       const response = await generatePattern({
         businessType,
         operatingHours,
         teamSize,
-        requirements
+        requirements,
+        employees: employeeData,
+        totalEmployees: employees.length,
+        activeDepartments: [...new Set(employees.map(emp => emp.department))],
+        activeEmployees: employees.filter(emp => emp.status === 'Active').length
       });
 
       if (response.success && response.result) {
@@ -56,7 +82,7 @@ const AIPatternGenerator = () => {
 
           toast({
             title: "AI Pattern Generated",
-            description: "A new shift pattern has been created based on AI recommendations.",
+            description: "A new shift pattern has been created based on AI recommendations using current employee data.",
           });
 
           // Clear form
@@ -84,6 +110,10 @@ const AIPatternGenerator = () => {
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-purple-500" />
           AI Pattern Generator
+          <div className="flex items-center gap-1 text-sm text-gray-500 ml-auto">
+            <Users className="h-4 w-4" />
+            {employeesLoading ? 'Loading...' : `${employees.length} employees`}
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -120,7 +150,7 @@ const AIPatternGenerator = () => {
           <Label htmlFor="team-size">Team Size (optional)</Label>
           <Input
             id="team-size"
-            placeholder="e.g., 15 employees"
+            placeholder={`e.g., ${employees.length} employees (current team size)`}
             value={teamSize}
             onChange={(e) => setTeamSize(e.target.value)}
           />
@@ -137,20 +167,32 @@ const AIPatternGenerator = () => {
           />
         </div>
 
+        <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+          <p className="font-medium flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            AI will consider your current team:
+          </p>
+          <ul className="mt-2 space-y-1">
+            <li>• {employees.filter(emp => emp.status === 'Active').length} active employees</li>
+            <li>• {[...new Set(employees.map(emp => emp.department))].length} departments</li>
+            <li>• Individual availability patterns</li>
+          </ul>
+        </div>
+
         <Button 
           onClick={handleGeneratePattern} 
-          disabled={isLoading || createPattern.isPending}
+          disabled={isLoading || createPattern.isPending || employeesLoading}
           className="w-full"
         >
           {isLoading || createPattern.isPending ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Generating AI Pattern...
+              Generating AI Pattern with Employee Data...
             </>
           ) : (
             <>
               <Sparkles className="h-4 w-4 mr-2" />
-              Generate AI Pattern
+              Generate AI Pattern with Current Team
             </>
           )}
         </Button>

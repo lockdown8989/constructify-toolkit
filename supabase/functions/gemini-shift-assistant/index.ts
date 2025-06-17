@@ -21,37 +21,70 @@ serve(async (req) => {
     
     switch (action) {
       case 'generate_pattern':
-        prompt = `Create an optimal shift pattern based on these requirements: ${JSON.stringify(data)}. 
-        Please suggest: 
-        1. Pattern name
-        2. Start and end times
-        3. Break duration in minutes
-        4. Grace period in minutes
-        5. Overtime threshold in minutes
+        const { employees = [], totalEmployees = 0, activeDepartments = [], activeEmployees = 0 } = data;
         
-        Respond in JSON format with these exact fields: name, start_time, end_time, break_duration, grace_period_minutes, overtime_threshold_minutes`;
+        prompt = `Create an optimal shift pattern based on these requirements and current employee data:
+
+BUSINESS REQUIREMENTS: ${JSON.stringify(data)}
+
+CURRENT TEAM DATA:
+- Total Employees: ${totalEmployees}
+- Active Employees: ${activeEmployees}
+- Departments: ${activeDepartments.join(', ')}
+
+EMPLOYEE AVAILABILITY:
+${employees.map(emp => `
+- ${emp.name} (${emp.job_title}, ${emp.department}):
+  * Monday: ${emp.availability.monday}
+  * Tuesday: ${emp.availability.tuesday}
+  * Wednesday: ${emp.availability.wednesday}
+  * Thursday: ${emp.availability.thursday}
+  * Friday: ${emp.availability.friday}
+  * Saturday: ${emp.availability.saturday}
+  * Sunday: ${emp.availability.sunday}
+`).join('')}
+
+Please analyze the employee availability patterns and business requirements to suggest an optimal shift pattern. Consider:
+1. Employee availability windows
+2. Department coverage needs
+3. Business operating hours
+4. Peak time requirements
+
+Respond in JSON format with these exact fields: 
+{
+  "name": "Pattern name based on analysis",
+  "start_time": "HH:MM:SS format",
+  "end_time": "HH:MM:SS format", 
+  "break_duration": "minutes as integer",
+  "grace_period_minutes": "minutes as integer",
+  "overtime_threshold_minutes": "minutes as integer",
+  "reasoning": "Brief explanation of why this pattern works for the team"
+}`;
         break;
         
       case 'optimize_pattern':
-        prompt = `Analyze this shift pattern and suggest improvements: ${JSON.stringify(data)}.
-        Consider efficiency, employee wellbeing, and business needs. 
+        prompt = `Analyze this shift pattern and suggest improvements considering current employee data: ${JSON.stringify(data)}.
+        Consider efficiency, employee wellbeing, business needs, and current team availability patterns. 
         Provide specific recommendations for optimization.`;
         break;
         
       case 'assign_shifts':
-        prompt = `Given these employees and shift patterns, suggest optimal assignments: ${JSON.stringify(data)}.
-        Consider employee availability, workload balance, and coverage needs.
-        Provide recommendations with reasoning.`;
+        prompt = `Given these employees and shift patterns, suggest optimal assignments considering individual availability: ${JSON.stringify(data)}.
+        Consider employee availability windows, workload balance, department needs, and coverage requirements.
+        Provide recommendations with reasoning based on actual employee availability data.`;
         break;
         
       case 'resolve_conflicts':
-        prompt = `Analyze these scheduling conflicts and suggest solutions: ${JSON.stringify(data)}.
+        prompt = `Analyze these scheduling conflicts and suggest solutions using current employee data: ${JSON.stringify(data)}.
+        Consider employee availability patterns, department coverage, and business requirements.
         Provide practical recommendations to resolve conflicts while maintaining coverage.`;
         break;
         
       default:
         throw new Error('Invalid action specified');
     }
+
+    console.log('Sending prompt to Gemini:', prompt.substring(0, 200) + '...');
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
@@ -68,17 +101,21 @@ serve(async (req) => {
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 2048,
         }
       }),
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Gemini API error:', response.status, errorText);
       throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const result = await response.json();
     const generatedText = result.candidates[0].content.parts[0].text;
+
+    console.log('Gemini response:', generatedText.substring(0, 200) + '...');
 
     return new Response(JSON.stringify({ 
       success: true, 
