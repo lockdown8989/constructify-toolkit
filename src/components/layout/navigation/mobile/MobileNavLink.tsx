@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -21,9 +21,12 @@ const MobileNavLink: React.FC<MobileNavLinkProps> = ({
   onClick,
   className
 }) => {
+  const navigate = useNavigate();
+
   const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate(to);
     if (onClick) {
-      e.preventDefault();
       onClick();
     }
   };
@@ -41,25 +44,14 @@ const MobileNavLink: React.FC<MobileNavLinkProps> = ({
     className
   );
 
-  if (onClick) {
-    return (
-      <button
-        onClick={handleClick}
-        className={linkClasses}
-        type="button"
-      >
-        {linkContent}
-      </button>
-    );
-  }
-
   return (
-    <Link
-      to={to}
+    <button
+      onClick={handleClick}
       className={linkClasses}
+      type="button"
     >
       {linkContent}
-    </Link>
+    </button>
   );
 };
 
