@@ -2233,6 +2233,20 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      update_employee_shift_assignments: {
+        Args: {
+          p_employee_id: string
+          p_shift_pattern_id?: string
+          p_monday_shift_id?: string
+          p_tuesday_shift_id?: string
+          p_wednesday_shift_id?: string
+          p_thursday_shift_id?: string
+          p_friday_shift_id?: string
+          p_saturday_shift_id?: string
+          p_sunday_shift_id?: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "hr" | "employee" | "employer" | "manager" | "payroll"

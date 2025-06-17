@@ -119,33 +119,35 @@ export const useEmployeeShiftAssignments = () => {
 
     setIsLoading(true);
     try {
-      console.log('Saving assignments:', assignments);
+      console.log('Saving assignments using database function:', assignments);
       
-      const updateData = {
-        shift_pattern_id: assignments.shift_pattern_id || null,
-        monday_shift_id: assignments.monday_shift_id || null,
-        tuesday_shift_id: assignments.tuesday_shift_id || null,
-        wednesday_shift_id: assignments.wednesday_shift_id || null,
-        thursday_shift_id: assignments.thursday_shift_id || null,
-        friday_shift_id: assignments.friday_shift_id || null,
-        saturday_shift_id: assignments.saturday_shift_id || null,
-        sunday_shift_id: assignments.sunday_shift_id || null,
-      };
-
-      const { error } = await supabase
-        .from('employees')
-        .update(updateData)
-        .eq('id', selectedEmployee);
+      // Use the new database function for safe updates
+      const { data: result, error } = await supabase
+        .rpc('update_employee_shift_assignments', {
+          p_employee_id: selectedEmployee,
+          p_shift_pattern_id: assignments.shift_pattern_id || null,
+          p_monday_shift_id: assignments.monday_shift_id || null,
+          p_tuesday_shift_id: assignments.tuesday_shift_id || null,
+          p_wednesday_shift_id: assignments.wednesday_shift_id || null,
+          p_thursday_shift_id: assignments.thursday_shift_id || null,
+          p_friday_shift_id: assignments.friday_shift_id || null,
+          p_saturday_shift_id: assignments.saturday_shift_id || null,
+          p_sunday_shift_id: assignments.sunday_shift_id || null,
+        });
 
       if (error) {
-        console.error('Error updating shift assignments:', error);
+        console.error('Error calling update_employee_shift_assignments:', error);
         throw error;
       }
 
-      toast({
-        title: "Success",
-        description: "Employee shift assignments updated successfully",
-      });
+      if (result?.success) {
+        toast({
+          title: "Success",
+          description: result.message || "Employee shift assignments updated successfully",
+        });
+      } else {
+        throw new Error(result?.error || "Failed to update shift assignments");
+      }
     } catch (error: any) {
       console.error('Error updating shift assignments:', error);
       toast({
