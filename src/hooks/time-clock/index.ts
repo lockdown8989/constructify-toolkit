@@ -6,6 +6,7 @@ import { useTimeClockActions } from './use-time-clock-actions';
 import { useStatusCheck } from './use-status-check';
 import { useAttendanceSync } from './use-attendance-sync';
 import { useOvertimeMonitoring } from './use-overtime-monitoring';
+import { useClockNotifications } from '@/hooks/use-clock-notifications';
 import { TimeClockStatus, TimelogEntry } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +21,9 @@ export const useTimeClock = () => {
   const [lastAction, setLastAction] = useState<'in' | 'out' | null>(null);
   const { employeeData } = useEmployeeDataManagement();
   const { toast } = useToast();
+
+  // Setup clock notifications
+  useClockNotifications();
 
   // Persist last action in localStorage
   useEffect(() => {
@@ -111,26 +115,17 @@ export const useTimeClock = () => {
   // Handle real-time sync of attendance data
   useAttendanceSync(refreshAttendanceData);
 
-  // Wrap actions to persist state
+  // Wrap actions to persist state and show enhanced notifications
   const handleClockIn = async () => {
     await originalHandleClockIn(employeeData?.id);
     setLastAction('in');
-    
-    // Show break reminder after successful clock in
-    setTimeout(() => {
-      toast({
-        title: "Reminder",
-        description: "Remember to take breaks during your shift and end them when finished",
-        variant: "default",
-      });
-    }, 3000);
   };
 
   const handleClockOut = async () => {
     // Check if currently on break
     if (status === 'on-break') {
       toast({
-        title: "End Break First",
+        title: "⚠️ End Break First",
         description: "Please end your current break before clocking out",
         variant: "destructive",
       });
@@ -149,23 +144,10 @@ export const useTimeClock = () => {
 
   const handleBreakStart = async () => {
     await originalHandleBreakStart(currentRecord);
-    
-    // Set reminder to end break
-    toast({
-      title: "Break Started",
-      description: "Remember to end your break when you're ready to continue working",
-      variant: "default",
-    });
   };
 
   const handleBreakEnd = async () => {
     await originalHandleBreakEnd(currentRecord);
-    
-    toast({
-      title: "Break Ended",
-      description: "Welcome back! Continue with your shift",
-      variant: "default",
-    });
   };
 
   // Update elapsed time based on current status
@@ -222,21 +204,6 @@ export const useTimeClock = () => {
 
     fetchAttendanceData();
   }, [currentRecord, status, breakTime]);
-
-  // Show break reminder if on break for too long
-  useEffect(() => {
-    if (status === 'on-break') {
-      const reminderTimeout = setTimeout(() => {
-        toast({
-          title: "Break Reminder",
-          description: "You've been on break for a while. Don't forget to end your break when ready!",
-          variant: "default",
-        });
-      }, 30 * 60 * 1000); // 30 minutes
-
-      return () => clearTimeout(reminderTimeout);
-    }
-  }, [status, toast]);
 
   return {
     // Status and actions

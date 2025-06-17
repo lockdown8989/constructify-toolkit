@@ -17,7 +17,7 @@ export const useClockIn = (
     if (!employeeId) {
       console.error('Clock in failed: No employee ID provided');
       toast({
-        title: "Error",
+        title: "❌ Error",
         description: "No employee ID provided",
         variant: "destructive",
       });
@@ -71,7 +71,7 @@ export const useClockIn = (
       if (activeRecord) {
         console.log('User already has an active session:', activeRecord);
         toast({
-          title: "Already Clocked In",
+          title: "⚠️ Already Clocked In",
           description: "You are already clocked in for today",
           variant: "destructive",
         });
@@ -117,14 +117,14 @@ export const useClockIn = (
       setCurrentRecord(data.id);
       setStatus('clocked-in');
       
-      // Show success message with current time
+      // Show immediate success message with current time
       toast({
         title: "✅ Successfully Clocked In",
         description: `You clocked in at ${format(now, 'h:mm a')}. Have a great shift!`,
         variant: "default",
       });
 
-      // Show specific message if employee is late
+      // Check for late arrival and show additional notification if needed
       const { data: employeeData } = await supabase
         .from('employees')
         .select('shift_pattern_id, monday_shift_id, tuesday_shift_id, wednesday_shift_id, thursday_shift_id, friday_shift_id, saturday_shift_id, sunday_shift_id')
@@ -153,10 +153,27 @@ export const useClockIn = (
                 description: `You are ${lateMinutes} minutes late for your ${shiftPattern.name}`,
                 variant: "destructive",
               });
+            } else {
+              // Show on-time message
+              toast({
+                title: "🎯 Right On Time!",
+                description: `Perfect timing for your ${shiftPattern.name} shift`,
+                variant: "default",
+              });
             }
           }
         }
       }
+
+      // Show reminder about breaks
+      setTimeout(() => {
+        toast({
+          title: "💡 Reminder",
+          description: "Remember to take breaks during your shift and clock out when finished",
+          variant: "default",
+        });
+      }, 5000);
+
     } catch (error) {
       console.error('Error clocking in:', error);
       toast({

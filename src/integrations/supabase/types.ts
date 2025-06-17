@@ -334,6 +334,41 @@ export type Database = {
           },
         ]
       }
+      clock_notifications: {
+        Row: {
+          action_type: string
+          attendance_id: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          message: string
+        }
+        Insert: {
+          action_type: string
+          attendance_id?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          message: string
+        }
+        Update: {
+          action_type?: string
+          attendance_id?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          message?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clock_notifications_attendance_id_fkey"
+            columns: ["attendance_id"]
+            isOneToOne: false
+            referencedRelation: "attendance"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_assignments: {
         Row: {
           assigned_at: string | null
@@ -2160,6 +2195,15 @@ export type Database = {
           | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
           | { _user_id: string; _role: string }
         Returns: boolean
+      }
+      log_clock_action: {
+        Args: {
+          p_employee_id: string
+          p_action_type: string
+          p_message: string
+          p_attendance_id?: string
+        }
+        Returns: string
       }
       publish_weekly_schedule: {
         Args: {

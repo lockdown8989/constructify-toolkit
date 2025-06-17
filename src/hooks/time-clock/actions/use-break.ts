@@ -43,11 +43,22 @@ export const useBreak = (
 
       setStatus('on-break');
       
+      // Show immediate success notification
       toast({
         title: "☕ Break Started",
         description: `You started your break at ${format(now, 'h:mm a')}. Take your time!`,
         variant: "default",
       });
+
+      // Show reminder about ending break
+      setTimeout(() => {
+        toast({
+          title: "💡 Break Reminder",
+          description: "Remember to end your break when you're ready to continue working",
+          variant: "default",
+        });
+      }, 3000);
+
     } catch (error) {
       console.error('Error in handleBreakStart:', error);
       toast({
@@ -118,11 +129,22 @@ export const useBreak = (
 
       setStatus('clocked-in');
       
+      // Show immediate success notification
       toast({
         title: "🎯 Break Ended",
         description: `Welcome back! Your break lasted ${currentBreakMinutes} minutes. Back to work at ${format(now, 'h:mm a')}`,
         variant: "default",
       });
+
+      // Show motivational message
+      setTimeout(() => {
+        toast({
+          title: "💪 Ready to Go!",
+          description: "Hope you're refreshed and ready to tackle the rest of your shift!",
+          variant: "default",
+        });
+      }, 2000);
+
     } catch (error) {
       console.error('Error in handleBreakEnd:', error);
       toast({
