@@ -367,6 +367,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
                     >
                       {schedule.status === 'employee_accepted' ? 'Accepted' : 
                        schedule.status === 'employee_rejected' ? 'Rejected' : 
+                       schedule.status === 'pending' ? 'Pending' :
                        schedule.status}
                     </Badge>
                   </div>
