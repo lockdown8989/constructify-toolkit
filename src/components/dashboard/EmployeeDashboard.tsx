@@ -1,10 +1,12 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import EmployeeAttendanceSummary from '@/components/dashboard/EmployeeAttendanceSummary';
-import EmployeeStatistics from '@/components/people/EmployeeStatistics';
 import DocumentList from '@/components/salary/components/DocumentList';
 import PayslipList from '@/components/salary/components/PayslipList';
+import LeaveBalanceCard from '@/components/schedule/LeaveBalanceCard';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
+import { useEmployeeLeave } from '@/hooks/use-employee-leave';
 import { useAuth } from '@/hooks/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
@@ -14,6 +16,9 @@ const EmployeeDashboard: React.FC<{ firstName: string }> = ({ firstName }) => {
   const { employeeId, isLoading, error } = useEmployeeDataManagement();
   const [currentEmployeeId, setCurrentEmployeeId] = useState<string | null>(null);
   const [loadingEmployee, setLoadingEmployee] = useState(true);
+
+  // Fetch employee leave data
+  const { data: leaveData } = useEmployeeLeave(employeeId || currentEmployeeId || undefined);
 
   // Fetch employee record if not available through hook
   useEffect(() => {
@@ -71,23 +76,25 @@ const EmployeeDashboard: React.FC<{ firstName: string }> = ({ firstName }) => {
     );
   }
 
+  // Transform leave data for LeaveBalanceCard
+  const leaveBalance = {
+    annual: leaveData?.annual_leave_days || 0,
+    sick: leaveData?.sick_leave_days || 0
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       <h1 className="text-2xl font-bold mb-6">Hello {firstName}</h1>
       <div className="grid gap-6">
         <EmployeeAttendanceSummary employeeId={resolvedEmployeeId} />
         
+        {/* Leave Balance Card with live data */}
+        <LeaveBalanceCard leaveBalance={leaveBalance} />
+        
         {resolvedEmployeeId && (
           <>
             {/* Add Payslip List component */}
             <PayslipList employeeId={resolvedEmployeeId} />
-            
-            <Card className="p-6">
-              <h3 className="text-xs font-semibold text-gray-500 mb-5 uppercase tracking-wider">
-                Statistics
-              </h3>
-              <EmployeeStatistics employeeId={resolvedEmployeeId} />
-            </Card>
             
             <Card className="p-6">
               <h3 className="text-xs font-semibold text-gray-500 mb-5 uppercase tracking-wider">
