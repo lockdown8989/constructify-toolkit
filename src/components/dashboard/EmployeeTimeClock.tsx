@@ -7,6 +7,7 @@ import { TimeClockStatus } from '@/hooks/time-clock/types';
 import { useTimeClock } from '@/hooks/time-clock';
 import { formatDuration } from '@/utils/time-utils';
 import ShiftCompletionDialog from '@/components/time-clock/ShiftCompletionDialog';
+import ConfirmationDialog from '@/components/time-clock/ConfirmationDialog';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
 
 export const EmployeeTimeClock = () => {
@@ -21,6 +22,9 @@ export const EmployeeTimeClock = () => {
   
   const { employeeData } = useEmployeeDataManagement();
   const [showDialog, setShowDialog] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState<'in' | 'out' | 'break'>('in');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const getStatusDisplay = (status: TimeClockStatus) => {
     switch (status) {
@@ -39,13 +43,44 @@ export const EmployeeTimeClock = () => {
     setShowDialog(true);
   };
 
+  const handleClockInClick = () => {
+    setConfirmationAction('in');
+    setShowConfirmation(true);
+  };
+
+  const handleBreakClick = () => {
+    setConfirmationAction('break');
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmAction = async () => {
+    setIsSubmitting(true);
+    try {
+      switch (confirmationAction) {
+        case 'in':
+          await handleClockIn();
+          break;
+        case 'break':
+          await handleBreakStart();
+          break;
+        default:
+          break;
+      }
+      setShowConfirmation(false);
+    } catch (error) {
+      console.error('Error in confirmation action:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const getActionButton = () => {
     switch (status) {
       case 'clocked-out':
         return (
           <Button 
             className="w-full bg-green-500 hover:bg-green-600" 
-            onClick={handleClockIn}
+            onClick={handleClockInClick}
             size="lg"
           >
             <Play className="mr-2 h-4 w-4" />
@@ -57,7 +92,7 @@ export const EmployeeTimeClock = () => {
           <div className="grid grid-cols-2 gap-2">
             <Button 
               className="w-full bg-amber-500 hover:bg-amber-600" 
-              onClick={handleBreakStart}
+              onClick={handleBreakClick}
             >
               <Pause className="mr-2 h-4 w-4" />
               Take Break
@@ -131,6 +166,17 @@ export const EmployeeTimeClock = () => {
         employeeName={employeeData?.name || 'Employee'}
         employeeAvatar={employeeData?.avatar}
         isOnBreak={status === 'on-break'}
+      />
+
+      <ConfirmationDialog
+        isOpen={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        onConfirm={handleConfirmAction}
+        action={confirmationAction}
+        employeeName={employeeData?.name || 'Employee'}
+        employeeAvatar={employeeData?.avatar}
+        isSubmitting={isSubmitting}
+        isManagerAction={false}
       />
     </>
   );

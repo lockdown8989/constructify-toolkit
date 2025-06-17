@@ -6,6 +6,7 @@ import { Clock, Coffee, StopCircle, PauseCircle, Timer, Activity } from 'lucide-
 import { useTimeClock } from '@/hooks/time-clock';
 import { formatDuration } from '@/utils/time-utils';
 import ShiftCompletionDialog from '@/components/time-clock/ShiftCompletionDialog';
+import ConfirmationDialog from '@/components/time-clock/ConfirmationDialog';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
 
 const TimeClockWidget = () => {
@@ -21,6 +22,9 @@ const TimeClockWidget = () => {
 
   const { employeeData } = useEmployeeDataManagement();
   const [showDialog, setShowDialog] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState<'in' | 'out' | 'break'>('in');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     console.log('TimeClockWidget rendered with status:', status);
@@ -58,6 +62,37 @@ const TimeClockWidget = () => {
     setShowDialog(true);
   };
 
+  const handleClockInClick = () => {
+    setConfirmationAction('in');
+    setShowConfirmation(true);
+  };
+
+  const handleBreakClick = () => {
+    setConfirmationAction('break');
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmAction = async () => {
+    setIsSubmitting(true);
+    try {
+      switch (confirmationAction) {
+        case 'in':
+          await handleClockIn();
+          break;
+        case 'break':
+          await handleBreakStart();
+          break;
+        default:
+          break;
+      }
+      setShowConfirmation(false);
+    } catch (error) {
+      console.error('Error in confirmation action:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <>
       <Card>
@@ -88,7 +123,7 @@ const TimeClockWidget = () => {
           <div className="flex flex-col sm:flex-row justify-center gap-2 mb-4">
             {status === 'clocked-out' && (
               <Button 
-                onClick={handleClockIn} 
+                onClick={handleClockInClick} 
                 className="bg-green-600 hover:bg-green-700"
               >
                 <Clock className="h-4 w-4 mr-2" />
@@ -99,7 +134,7 @@ const TimeClockWidget = () => {
             {status === 'clocked-in' && (
               <>
                 <Button 
-                  onClick={handleBreakStart} 
+                  onClick={handleBreakClick} 
                   variant="outline"
                   className="border-blue-400 text-blue-500 hover:bg-blue-50"
                 >
@@ -151,6 +186,17 @@ const TimeClockWidget = () => {
         employeeName={employeeData?.name || 'Employee'}
         employeeAvatar={employeeData?.avatar}
         isOnBreak={status === 'on-break'}
+      />
+
+      <ConfirmationDialog
+        isOpen={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        onConfirm={handleConfirmAction}
+        action={confirmationAction}
+        employeeName={employeeData?.name || 'Employee'}
+        employeeAvatar={employeeData?.avatar}
+        isSubmitting={isSubmitting}
+        isManagerAction={false}
       />
     </>
   );
