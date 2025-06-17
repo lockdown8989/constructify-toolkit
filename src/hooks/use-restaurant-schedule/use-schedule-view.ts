@@ -6,9 +6,9 @@ export const useScheduleView = (initialWeekNumber: number = 17, initialViewMode:
   const [weekNumber, setWeekNumber] = useState<number>(initialWeekNumber);
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
 
-  // Function to toggle between week and month views
+  // Function to toggle between week and day views
   const toggleViewMode = () => {
-    setViewMode(prevMode => prevMode === 'week' ? 'month' : 'week');
+    setViewMode(prevMode => prevMode === 'week' ? 'day' : 'week');
   };
 
   // Function to navigate to the previous week
