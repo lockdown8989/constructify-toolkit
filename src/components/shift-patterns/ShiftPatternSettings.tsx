@@ -1,41 +1,27 @@
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Clock, Users } from 'lucide-react';
 import ShiftPatternManager from './ShiftPatternManager';
 import EmployeeShiftAssignmentComponent from './EmployeeShiftAssignment';
+import AIPatternGenerator from './components/AIPatternGenerator';
 
 const ShiftPatternSettings = () => {
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto py-6 space-y-8">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Shift Pattern Management</h2>
-        <p className="text-muted-foreground">
-          Manage shift patterns and assign them to employees for better scheduling and attendance tracking.
-        </p>
+        <h1 className="text-3xl font-bold mb-2">Shift Pattern Management</h1>
+        <p className="text-gray-600">Manage shift patterns and employee assignments with AI assistance</p>
       </div>
-
-      <Tabs defaultValue="patterns" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="patterns" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Shift Patterns
-          </TabsTrigger>
-          <TabsTrigger value="assignments" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Employee Assignments
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="patterns">
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <AIPatternGenerator />
           <ShiftPatternManager />
-        </TabsContent>
+        </div>
         
-        <TabsContent value="assignments">
+        <div>
           <EmployeeShiftAssignmentComponent />
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 };
