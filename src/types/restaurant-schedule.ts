@@ -47,6 +47,10 @@ export interface OpenShift {
   end_time?: string;
   location?: string;
   expiration_date?: string;
+  status?: string;
+  created_platform?: string;
+  last_modified_platform?: string;
+  mobile_notification_sent?: boolean;
 }
 
 export interface StaffRole {
@@ -64,6 +68,9 @@ export interface DayStats {
 
 export interface WeekStats {
   weekRange: string;
+  weekNumber?: number;
+  startDate: Date;
+  endDate: Date;
   totalHours: number;
   totalCost: number;
   dailyHours: {
@@ -85,6 +92,9 @@ export interface WeekStats {
     sunday: number;
   };
   roles: StaffRole[];
+  days?: { day: string; totalHours: number; totalCost: number; shifts: Shift[]; openShifts: OpenShift[]; }[];
+  openShiftsTotalHours: number;
+  openShiftsTotalCount: number;
 }
 
 export type ViewMode = 'week' | 'day';

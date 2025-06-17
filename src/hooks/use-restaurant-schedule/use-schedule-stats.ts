@@ -7,6 +7,7 @@ import {
   WeekStats,
   StaffRole 
 } from '@/types/restaurant-schedule';
+import { format } from 'date-fns';
 
 // Helper function to calculate hours between two time strings
 export const calculateHours = (startTime: string, endTime: string): number => {
@@ -68,6 +69,27 @@ export const useScheduleStats = (
   const weekStats = useMemo(() => {
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     
+    // Initialize daily hours and costs
+    const dailyHours = {
+      monday: 0,
+      tuesday: 0,
+      wednesday: 0,
+      thursday: 0,
+      friday: 0,
+      saturday: 0,
+      sunday: 0
+    };
+    
+    const dailyCosts = {
+      monday: 0,
+      tuesday: 0,
+      wednesday: 0,
+      thursday: 0,
+      friday: 0,
+      saturday: 0,
+      sunday: 0
+    };
+    
     // Calculate day stats
     const dayStats = days.map(day => {
       const dayShifts = shifts.filter(s => s.day === day && !s.isUnavailable);
@@ -84,6 +106,10 @@ export const useScheduleStats = (
           totalCost += hours * employee.hourlyRate;
         }
       });
+      
+      // Update daily totals
+      dailyHours[day as keyof typeof dailyHours] = totalHours;
+      dailyCosts[day as keyof typeof dailyCosts] = totalCost;
       
       return {
         day,
@@ -110,12 +136,17 @@ export const useScheduleStats = (
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 6); // End on Sunday
     
+    const weekRange = `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')}`;
+    
     return {
       weekNumber,
+      weekRange,
       startDate,
       endDate,
       totalHours,
       totalCost,
+      dailyHours,
+      dailyCosts,
       days: dayStats,
       roles: staffRoles,
       openShiftsTotalHours,

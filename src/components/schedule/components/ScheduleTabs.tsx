@@ -116,7 +116,10 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
                     start_time: schedule.start_time,
                     end_time: schedule.end_time,
                     location: schedule.location || '',
-                    notes: schedule.notes
+                    notes: schedule.notes,
+                    day: 'monday', // Default day
+                    startTime: '09:00', // Default start time
+                    endTime: '17:00' // Default end time
                   }}
                   employeeId={schedule.employee_id}
                   status="completed"
@@ -133,7 +136,10 @@ export const ScheduleTabs: React.FC<ScheduleTabsProps> = ({
                     start_time: schedule.start_time,
                     end_time: schedule.end_time,
                     location: schedule.location || '',
-                    notes: schedule.notes
+                    notes: schedule.notes,
+                    day: 'monday', // Default day
+                    startTime: '09:00', // Default start time
+                    endTime: '17:00' // Default end time
                   }}
                   employeeId={schedule.employee_id}
                   status="pending"

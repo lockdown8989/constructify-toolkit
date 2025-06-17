@@ -45,7 +45,6 @@ const OpenShiftActions = ({ addOpenShift }: OpenShiftActionsProps) => {
       end_time: endTimeISO,
       expiration_date: expirationDate,
       notes: 'New open shift',
-      status: 'open',
       created_platform: 'web',
       last_modified_platform: 'web',
       mobile_notification_sent: false
