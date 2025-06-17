@@ -21,7 +21,7 @@ const PendingShiftCard: React.FC<PendingShiftCardProps> = ({
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <AlertCircle className="h-4 w-4 text-orange-600" />
-          <span className="font-medium text-orange-800">Pending Shift Response</span>
+          <span className="font-medium text-orange-800">Needs Response</span>
         </div>
         <Badge variant="outline" className="border-orange-300 text-orange-700 bg-orange-100">
           Pending

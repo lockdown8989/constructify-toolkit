@@ -35,10 +35,11 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
       });
       
       toast({
-        title: response === 'accepted' ? 'Shift accepted' : 'Shift rejected',
+        title: response === 'accepted' ? 'Shift Accepted' : 'Shift Declined',
         description: response === 'accepted' 
-          ? 'You have successfully accepted this shift. Managers have been notified.' 
-          : 'You have successfully rejected this shift. Managers have been notified.',
+          ? 'You have successfully accepted this shift.' 
+          : 'You have successfully declined this shift.',
+        variant: response === 'accepted' ? 'default' : 'destructive',
       });
       
       // Call the callback after successful response
@@ -46,9 +47,9 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
         onResponseComplete();
       }
     } catch (error) {
-      console.error(`Error ${response === 'accepted' ? 'accepting' : 'rejecting'} shift:`, error);
+      console.error(`Error ${response === 'accepted' ? 'accepting' : 'declining'} shift:`, error);
       toast({
-        title: `Failed to ${response === 'accepted' ? 'accept' : 'reject'} shift`,
+        title: `Failed to ${response === 'accepted' ? 'accept' : 'decline'} shift`,
         description: "Please try again later.",
         variant: "destructive",
       });
@@ -57,12 +58,17 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
     }
   };
 
+  // Don't show buttons if the shift is not pending
+  if (schedule.status !== 'pending') {
+    return null;
+  }
+
   return (
     <div className={`flex space-x-2 ${className}`}>
       <Button 
         variant={variant}
         size={size}
-        className="flex items-center text-green-600 border-green-200 hover:bg-green-50"
+        className="flex items-center text-green-600 border-green-200 hover:bg-green-50 bg-white"
         onClick={() => handleResponse('accepted')}
         disabled={respondToShift.isPending || loading !== null}
       >
@@ -76,7 +82,7 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
       <Button 
         variant={variant}
         size={size}
-        className="flex items-center text-red-600 border-red-200 hover:bg-red-50"
+        className="flex items-center text-red-600 border-red-200 hover:bg-red-50 bg-white"
         onClick={() => handleResponse('rejected')}
         disabled={respondToShift.isPending || loading !== null}
       >
@@ -85,7 +91,7 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
         ) : (
           <XCircle className="h-4 w-4 mr-1" />
         )}
-        Reject
+        Decline
       </Button>
     </div>
   );

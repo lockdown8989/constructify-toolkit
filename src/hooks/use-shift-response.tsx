@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from '@/hooks/use-toast';
-import { ScheduleStatus } from '@/types/supabase/schedules';
 
 export const useShiftResponse = () => {
   const { user } = useAuth();
@@ -25,7 +24,7 @@ export const useShiftResponse = () => {
         console.log(`Processing shift response: ${response} for schedule ID: ${scheduleId}`);
 
         // Map the response to the correct status enum value
-        const statusValue: ScheduleStatus = response === 'accepted' ? 'employee_accepted' : 'employee_rejected';
+        const statusValue = response === 'accepted' ? 'employee_accepted' : 'employee_rejected';
 
         // Update the shift status in Supabase
         const { data: scheduleData, error: updateError } = await supabase
@@ -43,24 +42,22 @@ export const useShiftResponse = () => {
           throw new Error(`Failed to update shift status: ${updateError.message}`);
         }
 
-        console.log('Schedule data after update:', scheduleData);
+        console.log('Schedule updated successfully:', scheduleData);
         return scheduleData;
       } catch (error) {
         console.error('Error responding to shift:', error);
         throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       // Refresh the schedules data after successful response
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
+      
+      console.log('Shift response successful, data refreshed');
     },
     onError: (error) => {
-      // Add a user-friendly error toast
-      toast({
-        title: 'Shift Response Failed',
-        description: error instanceof Error ? error.message : 'Unable to process your shift response.',
-        variant: 'destructive',
-      });
+      console.error('Shift response error:', error);
+      // The error toast is handled in the component
     }
   });
 
