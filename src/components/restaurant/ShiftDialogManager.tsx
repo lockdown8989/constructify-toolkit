@@ -87,7 +87,6 @@ const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: Shift
       onSave={handleSave}
       shift={shiftDialog.editingShift}
       mode={shiftDialog.mode}
-      isLoading={isCreating}
       employeeId={shiftDialog.employeeId}
       day={shiftDialog.day}
     />
