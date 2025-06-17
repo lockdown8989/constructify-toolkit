@@ -76,6 +76,8 @@ function App() {
                   <Route path="employee-workflow" element={<EmployeeWorkflow />} />
                   <Route path="leave-management" element={<LeaveManagement />} />
                   <Route path="time-clock" element={<TimeClock />} />
+                  {/* Add alias for manager-time-clock to redirect to time-clock */}
+                  <Route path="manager-time-clock" element={<Navigate to="/time-clock" replace />} />
                 </Route>
                 
                 <Route path="*" element={<Navigate to="/" replace />} />
