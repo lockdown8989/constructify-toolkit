@@ -40,6 +40,7 @@ const RestaurantSchedule = () => {
       assignOpenShift,
       previousWeek,
       nextWeek,
+      viewMode,
       setViewMode
     } = useRestaurantSchedule();
     
@@ -141,6 +142,7 @@ const RestaurantSchedule = () => {
     // Organize shifts by employee and day for the role sections (use filtered employees)
     const organizedShifts = useMemo(() => {
       const result: Record<string, Record<string, Shift[]>> = {};
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
       
       // Initialize the structure with filtered employees
       filteredEmployees.forEach(employee => {
@@ -205,7 +207,7 @@ const RestaurantSchedule = () => {
           <ScheduleHeader 
             locationName={locationName}  
             setLocationName={setLocationName}  
-            setViewMode={setViewMode} 
+            setViewMode={(mode) => setViewMode(mode as 'week' | 'day')} 
             onSyncCalendar={syncWithCalendar}
             onSyncEmployeeData={syncEmployeeData}
             isSyncing={syncingData || syncingCalendar}
