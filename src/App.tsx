@@ -19,6 +19,7 @@ import RestaurantSchedule from './pages/RestaurantSchedule';
 import ShiftCalendar from './pages/ShiftCalendar';
 import EmployeeWorkflow from './pages/EmployeeWorkflow';
 import LeaveManagement from './pages/LeaveManagement';
+import ManagerTimeClock from './pages/ManagerTimeClock';
 import { useAuth } from './hooks/use-auth';
 import BackgroundNotificationService from './services/shift-notifications/background-notification-service';
 import './App.css';
@@ -74,6 +75,7 @@ function App() {
                   <Route path="shift-calendar" element={<ShiftCalendar />} />
                   <Route path="employee-workflow" element={<EmployeeWorkflow />} />
                   <Route path="leave-management" element={<LeaveManagement />} />
+                  <Route path="manager-time-clock" element={<ManagerTimeClock />} />
                 </Route>
                 
                 <Route path="*" element={<Navigate to="/" replace />} />
