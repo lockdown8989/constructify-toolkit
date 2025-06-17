@@ -18,6 +18,8 @@ import ShiftPatterns from './pages/ShiftPatterns';
 import RestaurantSchedule from './pages/RestaurantSchedule';
 import ShiftCalendar from './pages/ShiftCalendar';
 import EmployeeWorkflow from './pages/EmployeeWorkflow';
+import TimeClock from './pages/TimeClock';
+import ManagerTimeClock from './pages/ManagerTimeClock';
 import { useAuth } from './hooks/use-auth';
 import BackgroundNotificationService from './services/shift-notifications/background-notification-service';
 import './App.css';
@@ -72,6 +74,12 @@ function App() {
                   <Route path="restaurant-schedule" element={<RestaurantSchedule />} />
                   <Route path="shift-calendar" element={<ShiftCalendar />} />
                   <Route path="employee-workflow" element={<EmployeeWorkflow />} />
+                  <Route path="time-clock" element={<TimeClock />} />
+                  <Route path="manager-time-clock" element={
+                    <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                      <ManagerTimeClock />
+                    </ProtectedRoute>
+                  } />
                 </Route>
                 
                 <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,35 +1,64 @@
 
-import { Link } from "react-router-dom";
-import { LucideIcon } from "lucide-react";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface MobileNavLinkProps {
   to: string;
   icon: LucideIcon;
   label: string;
-  onClick: () => void;
-  disabled?: boolean;
+  isActive?: boolean;
+  onClick?: () => void;
   className?: string;
 }
 
-const MobileNavLink = ({ 
-  to, 
-  icon: Icon, 
-  label, 
+const MobileNavLink: React.FC<MobileNavLinkProps> = ({
+  to,
+  icon: Icon,
+  label,
+  isActive = false,
   onClick,
-  disabled = false,
-  className = ""
-}: MobileNavLinkProps) => {
+  className
+}) => {
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
+  const linkContent = (
+    <>
+      <Icon className="h-5 w-5" />
+      <span className="text-sm font-medium">{label}</span>
+    </>
+  );
+
+  const linkClasses = cn(
+    "flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors",
+    isActive && "bg-blue-50 text-blue-600 font-medium",
+    className
+  );
+
+  if (onClick) {
+    return (
+      <button
+        onClick={handleClick}
+        className={linkClasses}
+        type="button"
+      >
+        {linkContent}
+      </button>
+    );
+  }
+
   return (
     <Link
       to={to}
-      onClick={onClick}
-      className={`flex items-center py-3 px-4 mx-2 rounded-xl text-[15px] font-medium text-neutral-800 ${
-        disabled ? 'opacity-50 pointer-events-none' : 'hover:bg-white/70 active:bg-white/90'
-      } transition-all touch-target ${className}`}
-      aria-disabled={disabled}
+      className={linkClasses}
     >
-      <Icon className={`mr-3 h-5 w-5 ${className || 'text-neutral-600'}`} />
-      <span>{label}</span>
+      {linkContent}
     </Link>
   );
 };
