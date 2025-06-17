@@ -42,11 +42,11 @@ const CommonSection = ({
         />
       )}
 
-      {/* Show attendance for all authenticated users */}
+      {/* Show attendance for all authenticated users - but only once */}
       <MobileNavLink 
         to="/attendance" 
         icon={UserCheck} 
-        label="Attendance" 
+        label="📊 Attendance" 
         onClick={onClose} 
       />
 

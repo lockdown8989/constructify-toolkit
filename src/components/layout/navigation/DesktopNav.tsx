@@ -26,8 +26,7 @@ const DesktopNav = () => {
   if (!isAuthenticated) return null;
 
   // Calculate derived properties
-  const hasManagerialAccess = isManager || isAdmin || isHR;
-  const hasPayrollAccess = isPayroll;
+  const hasManagerialAccess = (isManager || isAdmin || isHR) && !isPayroll;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -56,57 +55,52 @@ const DesktopNav = () => {
         Dashboard
       </NavLink>
 
-      {!hasManagerialAccess && !hasPayrollAccess && (
+      {/* Schedule for non-managers and non-payroll users */}
+      {!hasManagerialAccess && !isPayroll && (
         <NavLink to="/schedule" icon={Calendar}>
           Schedule
         </NavLink>
       )}
 
-      {/* Add attendance link for all authenticated users */}
+      {/* Attendance for all authenticated users */}
       <NavLink to="/attendance" icon={UserCheck}>
         Attendance
       </NavLink>
 
+      {/* Leave for all authenticated users */}
       <NavLink to="/leave-management" icon={FileText}>
         Leave
       </NavLink>
 
+      {/* Manager-only sections */}
       {hasManagerialAccess && (
         <>
-          <NavLink to="/employee-management" icon={Users}>
-            Employees
+          <NavLink to="/people" icon={Users}>
+            Team Members
           </NavLink>
-          <NavLink to="/attendance-manager" icon={Clock}>
-            Attendance Manager
+          <NavLink to="/restaurant-schedule" icon={Clock}>
+            Restaurant Schedule
           </NavLink>
           <NavLink to="/shift-calendar" icon={CalendarDays}>
-            Calendar
-          </NavLink>
-          <NavLink to="/open-shifts" icon={Briefcase}>
-            Open Shifts
+            Shift Calendar
           </NavLink>
           <NavLink to="/shift-patterns" icon={Clock}>
             Shift Patterns
           </NavLink>
-          <NavLink to="/documents-manager" icon={FolderOpen}>
-            Documents
-          </NavLink>
-          <NavLink to="/reports" icon={BarChart3}>
-            Reports
+          <NavLink to="/manager-time-clock" icon={Clock}>
+            Manager Time Clock
           </NavLink>
         </>
       )}
 
-      {hasPayrollAccess && (
+      {/* Payroll-only sections */}
+      {isPayroll && (
         <>
           <NavLink to="/payroll-dashboard" icon={Calculator}>
-            Payroll
+            Payroll Dashboard
           </NavLink>
-          <NavLink to="/payroll-history" icon={ClipboardList}>
-            History
-          </NavLink>
-          <NavLink to="/payroll-summary" icon={BarChart3}>
-            Summary
+          <NavLink to="/payslips" icon={ClipboardList}>
+            Payslips
           </NavLink>
         </>
       )}
