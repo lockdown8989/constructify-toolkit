@@ -73,22 +73,37 @@ export const useEmployeeForm = ({
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
+    console.log('Form submission started with values:', values);
     setIsSubmitting(true);
     setError(null);
 
     try {
-      console.log('Form values before submission:', values);
+      // Validate required fields
+      if (!values.name?.trim()) {
+        throw new Error('Name is required');
+      }
+      if (!values.job_title?.trim()) {
+        throw new Error('Job title is required');
+      }
+      if (!values.department?.trim()) {
+        throw new Error('Department is required');
+      }
+      if (!values.site?.trim()) {
+        throw new Error('Site is required');
+      }
+
+      console.log('Validation passed, preparing employee data...');
       
       // Create the employee data object with all fields including weekly availability
       const employeeData = {
-        name: values.name,
-        email: values.email,
-        job_title: values.job_title,
-        department: values.department,
-        site: values.site,
-        location: values.location,
-        salary: values.salary || 0,
-        hourly_rate: values.hourly_rate || 0,
+        name: values.name.trim(),
+        email: values.email?.trim() || null,
+        job_title: values.job_title.trim(),
+        department: values.department.trim(),
+        site: values.site.trim(),
+        location: values.location?.trim() || null,
+        salary: Number(values.salary) || 0,
+        hourly_rate: Number(values.hourly_rate) || 0,
         start_date: values.start_date || new Date().toISOString().split('T')[0],
         status: values.status,
         lifecycle: values.lifecycle,
@@ -125,9 +140,10 @@ export const useEmployeeForm = ({
         sunday_end_time: values.sunday_end_time || '17:00',
       };
 
-      console.log('Employee data being submitted:', employeeData);
+      console.log('Employee data prepared for submission:', employeeData);
 
       if (employeeToEdit) {
+        console.log('Updating existing employee with ID:', employeeToEdit.id);
         await updateEmployee.mutateAsync({
           id: employeeToEdit.id,
           ...employeeData,
@@ -137,16 +153,19 @@ export const useEmployeeForm = ({
           description: "Employee information and weekly availability have been saved.",
         });
       } else {
+        console.log('Creating new employee...');
         await addEmployee.mutateAsync(employeeData);
         toast({
           title: "Employee added successfully",
           description: "New employee has been created with their weekly availability schedule.",
         });
       }
+      
+      console.log('Employee save operation completed successfully');
       onSuccess();
     } catch (err) {
       console.error('Error submitting employee form:', err);
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred while saving employee data';
       setError(errorMessage);
       toast({
         title: "Error",
