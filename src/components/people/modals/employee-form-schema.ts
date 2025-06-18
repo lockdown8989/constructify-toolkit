@@ -23,7 +23,7 @@ export const employeeFormSchema = z.object({
   saturday_shift_id: z.string().optional(),
   sunday_shift_id: z.string().optional(),
   
-  // Weekly availability fields with enhanced validation
+  // Weekly availability fields
   monday_available: z.boolean().default(true),
   monday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
   monday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
@@ -51,38 +51,6 @@ export const employeeFormSchema = z.object({
   sunday_available: z.boolean().default(true),
   sunday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
   sunday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
-}).refine((data) => {
-  // Enhanced validation to ensure end time is after start time for available days
-  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-  
-  for (const day of days) {
-    const available = data[`${day}_available` as keyof typeof data] as boolean;
-    if (available) {
-      const startTime = data[`${day}_start_time` as keyof typeof data] as string;
-      const endTime = data[`${day}_end_time` as keyof typeof data] as string;
-      
-      if (startTime && endTime) {
-        // Convert time strings to minutes for comparison
-        const startMinutes = timeToMinutes(startTime);
-        const endMinutes = timeToMinutes(endTime);
-        
-        if (startMinutes >= endMinutes) {
-          return false;
-        }
-      }
-    }
-  }
-  
-  return true;
-}, {
-  message: "End time must be after start time for all available days",
-  path: [], // This will be a general form error
 });
-
-// Helper function to convert time string to minutes
-function timeToMinutes(timeString: string): number {
-  const [hours, minutes] = timeString.split(':').map(Number);
-  return hours * 60 + minutes;
-}
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;

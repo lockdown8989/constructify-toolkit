@@ -47,7 +47,7 @@ export const useEmployeeForm = ({
       friday_shift_id: employeeToEdit?.friday_shift_id || '',
       saturday_shift_id: employeeToEdit?.saturday_shift_id || '',
       sunday_shift_id: employeeToEdit?.sunday_shift_id || '',
-      // Weekly availability default values - ensure proper boolean handling
+      // Weekly availability default values
       monday_available: employeeToEdit?.monday_available !== undefined ? employeeToEdit.monday_available : true,
       monday_start_time: employeeToEdit?.monday_start_time || '09:00',
       monday_end_time: employeeToEdit?.monday_end_time || '17:00',
@@ -78,51 +78,7 @@ export const useEmployeeForm = ({
     setError(null);
 
     try {
-      // Enhanced validation with detailed error messages
-      const validationErrors: string[] = [];
-      
-      if (!values.name?.trim()) {
-        validationErrors.push('Name is required');
-      }
-      if (!values.job_title?.trim()) {
-        validationErrors.push('Job title is required');
-      }
-      if (!values.department?.trim()) {
-        validationErrors.push('Department is required');
-      }
-      if (!values.site?.trim()) {
-        validationErrors.push('Site is required');
-      }
-
-      // Validate email format if provided
-      if (values.email && values.email.trim()) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(values.email.trim())) {
-          validationErrors.push('Please enter a valid email address');
-        }
-      }
-
-      // Validate time ranges for available days
-      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-      for (const day of days) {
-        const available = values[`${day}_available` as keyof EmployeeFormValues] as boolean;
-        if (available) {
-          const startTime = values[`${day}_start_time` as keyof EmployeeFormValues] as string;
-          const endTime = values[`${day}_end_time` as keyof EmployeeFormValues] as string;
-          
-          if (startTime && endTime && startTime >= endTime) {
-            validationErrors.push(`${day.charAt(0).toUpperCase() + day.slice(1)}: End time must be after start time`);
-          }
-        }
-      }
-
-      if (validationErrors.length > 0) {
-        throw new Error(validationErrors.join(', '));
-      }
-
-      console.log('✅ Form validation passed');
-      
-      // Sanitize and prepare data with safe conversions
+      // Sanitize and prepare data
       const sanitizeString = (str: any): string | null => {
         if (typeof str !== 'string') return null;
         const trimmed = str.trim();
@@ -151,13 +107,27 @@ export const useEmployeeForm = ({
         return '09:00';
       };
 
-      // Create the employee data object with comprehensive sanitization
+      // Validate required fields
+      if (!values.name?.trim()) {
+        throw new Error('Name is required');
+      }
+      if (!values.job_title?.trim()) {
+        throw new Error('Job title is required');
+      }
+      if (!values.department?.trim()) {
+        throw new Error('Department is required');
+      }
+      if (!values.site?.trim()) {
+        throw new Error('Site is required');
+      }
+
+      // Create the employee data object
       const employeeData = {
-        name: sanitizeString(values.name) || '',
+        name: values.name.trim(),
         email: sanitizeString(values.email),
-        job_title: sanitizeString(values.job_title) || '',
-        department: sanitizeString(values.department) || '',
-        site: sanitizeString(values.site) || '',
+        job_title: values.job_title.trim(),
+        department: values.department.trim(),
+        site: values.site.trim(),
         location: sanitizeString(values.location),
         salary: sanitizeNumber(values.salary),
         hourly_rate: sanitizeNumber(values.hourly_rate),
@@ -173,7 +143,7 @@ export const useEmployeeForm = ({
         friday_shift_id: sanitizeString(values.friday_shift_id),
         saturday_shift_id: sanitizeString(values.saturday_shift_id),
         sunday_shift_id: sanitizeString(values.sunday_shift_id),
-        // Weekly availability with proper type safety
+        // Weekly availability
         monday_available: ensureBoolean(values.monday_available),
         monday_start_time: ensureTimeString(values.monday_start_time),
         monday_end_time: ensureTimeString(values.monday_end_time),
@@ -207,14 +177,14 @@ export const useEmployeeForm = ({
         });
         toast({
           title: "Employee updated successfully",
-          description: "Employee information and weekly availability have been saved.",
+          description: "Employee information has been saved.",
         });
       } else {
         console.log('➕ Creating new employee');
         await addEmployee.mutateAsync(employeeData);
         toast({
           title: "Employee added successfully", 
-          description: "New employee has been created with their weekly availability schedule.",
+          description: "New employee has been created.",
         });
       }
       
@@ -223,26 +193,18 @@ export const useEmployeeForm = ({
     } catch (err) {
       console.error('❌ Error submitting employee form:', err);
       
-      let errorMessage = 'An unexpected error occurred while saving employee data';
+      let errorMessage = 'Failed to save employee data';
       
       if (err instanceof Error) {
         errorMessage = err.message;
-        console.error('Error details:', {
-          message: err.message,
-          stack: err.stack,
-          name: err.name
-        });
-      } else {
-        console.error('Non-Error object thrown:', err);
+        console.error('Error details:', err);
       }
 
-      // Handle specific error types
+      // Handle specific database errors
       if (errorMessage.includes('violates check constraint')) {
         errorMessage = 'Invalid data format. Please check your input values.';
       } else if (errorMessage.includes('duplicate key')) {
         errorMessage = 'An employee with this information already exists.';
-      } else if (errorMessage.includes('network')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
       }
       
       setError(errorMessage);
