@@ -42,27 +42,32 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
                   <h3 className="text-lg font-medium text-gray-900">{label}</h3>
                   <div className="flex items-center space-x-3">
                     <span className="text-sm text-gray-600">Available</span>
-                    <div className="flex items-center space-x-2">
-                      <FormField
-                        control={form.control}
-                        name={`${key}_available` as keyof EmployeeFormValues}
-                        render={({ field }) => (
-                          <FormItem className="flex items-center space-x-2">
-                            <FormControl>
-                              <div className="flex items-center space-x-2">
-                                <span className={`w-3 h-3 rounded-full ${field.value ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                                <Switch 
-                                  checked={field.value as boolean}
-                                  onCheckedChange={field.onChange}
-                                  className={field.value ? "data-[state=checked]:bg-green-500" : ""}
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name={`${key}_available` as keyof EmployeeFormValues}
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2">
+                          <FormControl>
+                            <div className="flex items-center space-x-2">
+                              <span className={`w-3 h-3 rounded-full transition-colors ${field.value ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                              <Switch 
+                                checked={!!field.value}
+                                onCheckedChange={(checked) => {
+                                  field.onChange(checked);
+                                  // If turning off availability, clear the time fields
+                                  if (!checked) {
+                                    form.setValue(`${key}_start_time` as keyof EmployeeFormValues, '09:00');
+                                    form.setValue(`${key}_end_time` as keyof EmployeeFormValues, '17:00');
+                                  }
+                                }}
+                                className={field.value ? "data-[state=checked]:bg-green-500" : "data-[state=unchecked]:bg-red-500"}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
                 
@@ -70,7 +75,7 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
                   control={form.control}
                   name={`${key}_available` as keyof EmployeeFormValues}
                   render={({ field }) => (
-                    <div className={`grid grid-cols-2 gap-6 transition-opacity ${field.value ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+                    <div className={`grid grid-cols-2 gap-6 transition-all duration-300 ${field.value ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
                       <FormField
                         control={form.control}
                         name={`${key}_start_time` as keyof EmployeeFormValues}
@@ -87,9 +92,10 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
                                 </div>
                                 <Input 
                                   type="time" 
-                                  value={timeField.value as string}
+                                  value={timeField.value as string || '09:00'}
                                   onChange={timeField.onChange}
                                   className="flex-1"
+                                  disabled={!field.value}
                                 />
                               </div>
                             </FormControl>
@@ -114,9 +120,10 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
                                 </div>
                                 <Input 
                                   type="time" 
-                                  value={timeField.value as string}
+                                  value={timeField.value as string || '17:00'}
                                   onChange={timeField.onChange}
                                   className="flex-1"
+                                  disabled={!field.value}
                                 />
                               </div>
                             </FormControl>

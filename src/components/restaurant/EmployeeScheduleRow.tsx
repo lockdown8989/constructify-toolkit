@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Employee } from '@/types/restaurant-schedule';
 import { Badge } from '@/components/ui/badge';
@@ -48,26 +47,36 @@ const EmployeeScheduleRow: React.FC<EmployeeScheduleRowProps> = ({
     return employeeShifts.filter(shift => shift.day === day);
   };
 
+  const getAvailabilityForDay = (day: string) => {
+    return employee.availability[day as keyof typeof employee.availability];
+  };
+
   const renderDayCell = (day: string, dayIndex: number) => {
     const dayShifts = getShiftsForDay(day);
-    const isAvailable = employee.availability[day as keyof typeof employee.availability]?.available || false;
+    const availability = getAvailabilityForDay(day);
+    const isAvailable = availability?.available || false;
 
     return (
-      <div className={`p-2 min-h-[80px] ${!isMobile ? 'border-r border-gray-200 last:border-r-0' : 'border-b border-gray-100'} relative bg-white hover:bg-gray-50/50 transition-colors`}>
+      <div className={`p-2 min-h-[80px] ${!isMobile ? 'border-r border-gray-200 last:border-r-0' : 'border-b border-gray-100'} relative transition-colors ${isAvailable ? 'bg-white hover:bg-gray-50/50' : 'bg-gray-50/80'}`}>
         {/* Mobile day header */}
         {isMobile && (
           <div className="flex justify-between items-center mb-2">
             <span className="text-xs font-medium text-gray-600">{days[dayIndex]?.substring(0, 3)}</span>
-            {isAvailable && (
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-            )}
+            <div className={`w-3 h-3 rounded-full ${isAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
           </div>
         )}
 
         {/* Desktop availability indicator */}
-        {!isMobile && isAvailable && (
-          <div className="absolute top-1 right-1">
-            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+        {!isMobile && (
+          <div className="absolute top-2 right-2">
+            <div className={`w-3 h-3 rounded-full ${isAvailable ? 'bg-green-500' : 'bg-red-500'}`} title={isAvailable ? 'Available' : 'Not Available'}></div>
+          </div>
+        )}
+
+        {/* Availability time display */}
+        {isAvailable && (
+          <div className="text-xs text-gray-500 mb-2">
+            {availability?.start} - {availability?.end}
           </div>
         )}
 
@@ -97,7 +106,7 @@ const EmployeeScheduleRow: React.FC<EmployeeScheduleRowProps> = ({
           ))}
         </div>
 
-        {/* Add shift button */}
+        {/* Add shift button - only show if available */}
         {isAvailable && (
           <Button
             onClick={() => handleAddShift(day)}
@@ -110,8 +119,9 @@ const EmployeeScheduleRow: React.FC<EmployeeScheduleRowProps> = ({
           </Button>
         )}
 
+        {/* Not available message */}
         {!isAvailable && dayShifts.length === 0 && (
-          <div className="text-center text-gray-400 text-xs py-2 rounded-lg bg-gray-50">
+          <div className="text-center text-gray-400 text-xs py-2 rounded-lg bg-gray-100">
             Not Available
           </div>
         )}
