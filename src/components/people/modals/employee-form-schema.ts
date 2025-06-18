@@ -23,36 +23,36 @@ export const employeeFormSchema = z.object({
   saturday_shift_id: z.string().optional(),
   sunday_shift_id: z.string().optional(),
   
-  // Weekly availability fields with proper validation
+  // Weekly availability fields with enhanced validation
   monday_available: z.boolean().default(true),
-  monday_start_time: z.string().default('09:00'),
-  monday_end_time: z.string().default('17:00'),
+  monday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
+  monday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
   
   tuesday_available: z.boolean().default(true),
-  tuesday_start_time: z.string().default('09:00'),
-  tuesday_end_time: z.string().default('17:00'),
+  tuesday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
+  tuesday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
   
   wednesday_available: z.boolean().default(true),
-  wednesday_start_time: z.string().default('09:00'),
-  wednesday_end_time: z.string().default('17:00'),
+  wednesday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
+  wednesday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
   
   thursday_available: z.boolean().default(true),
-  thursday_start_time: z.string().default('09:00'),
-  thursday_end_time: z.string().default('17:00'),
+  thursday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
+  thursday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
   
   friday_available: z.boolean().default(true),
-  friday_start_time: z.string().default('09:00'),
-  friday_end_time: z.string().default('17:00'),
+  friday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
+  friday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
   
   saturday_available: z.boolean().default(true),
-  saturday_start_time: z.string().default('09:00'),
-  saturday_end_time: z.string().default('17:00'),
+  saturday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
+  saturday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
   
   sunday_available: z.boolean().default(true),
-  sunday_start_time: z.string().default('09:00'),
-  sunday_end_time: z.string().default('17:00'),
+  sunday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
+  sunday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
 }).refine((data) => {
-  // Custom validation to ensure end time is after start time for each day
+  // Enhanced validation to ensure end time is after start time for available days
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
   
   for (const day of days) {
@@ -61,8 +61,14 @@ export const employeeFormSchema = z.object({
       const startTime = data[`${day}_start_time` as keyof typeof data] as string;
       const endTime = data[`${day}_end_time` as keyof typeof data] as string;
       
-      if (startTime && endTime && startTime >= endTime) {
-        return false;
+      if (startTime && endTime) {
+        // Convert time strings to minutes for comparison
+        const startMinutes = timeToMinutes(startTime);
+        const endMinutes = timeToMinutes(endTime);
+        
+        if (startMinutes >= endMinutes) {
+          return false;
+        }
       }
     }
   }
@@ -70,6 +76,13 @@ export const employeeFormSchema = z.object({
   return true;
 }, {
   message: "End time must be after start time for all available days",
+  path: [], // This will be a general form error
 });
+
+// Helper function to convert time string to minutes
+function timeToMinutes(timeString: string): number {
+  const [hours, minutes] = timeString.split(':').map(Number);
+  return hours * 60 + minutes;
+}
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;

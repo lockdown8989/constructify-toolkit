@@ -47,103 +47,160 @@ export const useEmployeeForm = ({
       friday_shift_id: employeeToEdit?.friday_shift_id || '',
       saturday_shift_id: employeeToEdit?.saturday_shift_id || '',
       sunday_shift_id: employeeToEdit?.sunday_shift_id || '',
-      // Weekly availability default values
-      monday_available: employeeToEdit?.monday_available ?? true,
+      // Weekly availability default values - ensure proper boolean handling
+      monday_available: employeeToEdit?.monday_available !== undefined ? employeeToEdit.monday_available : true,
       monday_start_time: employeeToEdit?.monday_start_time || '09:00',
       monday_end_time: employeeToEdit?.monday_end_time || '17:00',
-      tuesday_available: employeeToEdit?.tuesday_available ?? true,
+      tuesday_available: employeeToEdit?.tuesday_available !== undefined ? employeeToEdit.tuesday_available : true,
       tuesday_start_time: employeeToEdit?.tuesday_start_time || '09:00',
       tuesday_end_time: employeeToEdit?.tuesday_end_time || '17:00',
-      wednesday_available: employeeToEdit?.wednesday_available ?? true,
+      wednesday_available: employeeToEdit?.wednesday_available !== undefined ? employeeToEdit.wednesday_available : true,
       wednesday_start_time: employeeToEdit?.wednesday_start_time || '09:00',
       wednesday_end_time: employeeToEdit?.wednesday_end_time || '17:00',
-      thursday_available: employeeToEdit?.thursday_available ?? true,
+      thursday_available: employeeToEdit?.thursday_available !== undefined ? employeeToEdit.thursday_available : true,
       thursday_start_time: employeeToEdit?.thursday_start_time || '09:00',
       thursday_end_time: employeeToEdit?.thursday_end_time || '17:00',
-      friday_available: employeeToEdit?.friday_available ?? true,
+      friday_available: employeeToEdit?.friday_available !== undefined ? employeeToEdit.friday_available : true,
       friday_start_time: employeeToEdit?.friday_start_time || '09:00',
       friday_end_time: employeeToEdit?.friday_end_time || '17:00',
-      saturday_available: employeeToEdit?.saturday_available ?? true,
+      saturday_available: employeeToEdit?.saturday_available !== undefined ? employeeToEdit.saturday_available : true,
       saturday_start_time: employeeToEdit?.saturday_start_time || '09:00',
       saturday_end_time: employeeToEdit?.saturday_end_time || '17:00',
-      sunday_available: employeeToEdit?.sunday_available ?? true,
+      sunday_available: employeeToEdit?.sunday_available !== undefined ? employeeToEdit.sunday_available : true,
       sunday_start_time: employeeToEdit?.sunday_start_time || '09:00',
       sunday_end_time: employeeToEdit?.sunday_end_time || '17:00',
     },
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
-    console.log('Form submission started with values:', values);
+    console.log('🚀 Form submission started with values:', values);
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // Validate required fields
+      // Enhanced validation with detailed error messages
+      const validationErrors: string[] = [];
+      
       if (!values.name?.trim()) {
-        throw new Error('Name is required');
+        validationErrors.push('Name is required');
       }
       if (!values.job_title?.trim()) {
-        throw new Error('Job title is required');
+        validationErrors.push('Job title is required');
       }
       if (!values.department?.trim()) {
-        throw new Error('Department is required');
+        validationErrors.push('Department is required');
       }
       if (!values.site?.trim()) {
-        throw new Error('Site is required');
+        validationErrors.push('Site is required');
       }
 
-      console.log('Validation passed, preparing employee data...');
+      // Validate email format if provided
+      if (values.email && values.email.trim()) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(values.email.trim())) {
+          validationErrors.push('Please enter a valid email address');
+        }
+      }
+
+      // Validate time ranges for available days
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      for (const day of days) {
+        const available = values[`${day}_available` as keyof EmployeeFormValues] as boolean;
+        if (available) {
+          const startTime = values[`${day}_start_time` as keyof EmployeeFormValues] as string;
+          const endTime = values[`${day}_end_time` as keyof EmployeeFormValues] as string;
+          
+          if (startTime && endTime && startTime >= endTime) {
+            validationErrors.push(`${day.charAt(0).toUpperCase() + day.slice(1)}: End time must be after start time`);
+          }
+        }
+      }
+
+      if (validationErrors.length > 0) {
+        throw new Error(validationErrors.join(', '));
+      }
+
+      console.log('✅ Form validation passed');
       
-      // Create the employee data object with all fields including weekly availability
-      const employeeData = {
-        name: values.name.trim(),
-        email: values.email?.trim() || null,
-        job_title: values.job_title.trim(),
-        department: values.department.trim(),
-        site: values.site.trim(),
-        location: values.location?.trim() || null,
-        salary: Number(values.salary) || 0,
-        hourly_rate: Number(values.hourly_rate) || 0,
-        start_date: values.start_date || new Date().toISOString().split('T')[0],
-        status: values.status,
-        lifecycle: values.lifecycle,
-        role: 'employee',
-        shift_pattern_id: values.shift_pattern_id || null,
-        monday_shift_id: values.monday_shift_id || null,
-        tuesday_shift_id: values.tuesday_shift_id || null,
-        wednesday_shift_id: values.wednesday_shift_id || null,
-        thursday_shift_id: values.thursday_shift_id || null,
-        friday_shift_id: values.friday_shift_id || null,
-        saturday_shift_id: values.saturday_shift_id || null,
-        sunday_shift_id: values.sunday_shift_id || null,
-        // Weekly availability data - ensure all fields are included with proper boolean handling
-        monday_available: Boolean(values.monday_available),
-        monday_start_time: values.monday_start_time || '09:00',
-        monday_end_time: values.monday_end_time || '17:00',
-        tuesday_available: Boolean(values.tuesday_available),
-        tuesday_start_time: values.tuesday_start_time || '09:00',
-        tuesday_end_time: values.tuesday_end_time || '17:00',
-        wednesday_available: Boolean(values.wednesday_available),
-        wednesday_start_time: values.wednesday_start_time || '09:00',
-        wednesday_end_time: values.wednesday_end_time || '17:00',
-        thursday_available: Boolean(values.thursday_available),
-        thursday_start_time: values.thursday_start_time || '09:00',
-        thursday_end_time: values.thursday_end_time || '17:00',
-        friday_available: Boolean(values.friday_available),
-        friday_start_time: values.friday_start_time || '09:00',
-        friday_end_time: values.friday_end_time || '17:00',
-        saturday_available: Boolean(values.saturday_available),
-        saturday_start_time: values.saturday_start_time || '09:00',
-        saturday_end_time: values.saturday_end_time || '17:00',
-        sunday_available: Boolean(values.sunday_available),
-        sunday_start_time: values.sunday_start_time || '09:00',
-        sunday_end_time: values.sunday_end_time || '17:00',
+      // Sanitize and prepare data with safe conversions
+      const sanitizeString = (str: any): string | null => {
+        if (typeof str !== 'string') return null;
+        const trimmed = str.trim();
+        return trimmed === '' ? null : trimmed;
       };
 
-      console.log('Employee data prepared for submission:', employeeData);
+      const sanitizeNumber = (num: any): number => {
+        if (typeof num === 'number' && !isNaN(num)) return num;
+        if (typeof num === 'string') {
+          const parsed = parseFloat(num);
+          return isNaN(parsed) ? 0 : parsed;
+        }
+        return 0;
+      };
+
+      const ensureBoolean = (val: any): boolean => {
+        if (typeof val === 'boolean') return val;
+        if (typeof val === 'string') return val.toLowerCase() === 'true';
+        return Boolean(val);
+      };
+
+      const ensureTimeString = (time: any): string => {
+        if (typeof time === 'string' && time.match(/^\d{2}:\d{2}$/)) {
+          return time;
+        }
+        return '09:00';
+      };
+
+      // Create the employee data object with comprehensive sanitization
+      const employeeData = {
+        name: sanitizeString(values.name) || '',
+        email: sanitizeString(values.email),
+        job_title: sanitizeString(values.job_title) || '',
+        department: sanitizeString(values.department) || '',
+        site: sanitizeString(values.site) || '',
+        location: sanitizeString(values.location),
+        salary: sanitizeNumber(values.salary),
+        hourly_rate: sanitizeNumber(values.hourly_rate),
+        start_date: values.start_date || new Date().toISOString().split('T')[0],
+        status: values.status || 'Active',
+        lifecycle: values.lifecycle || 'Active',
+        role: 'employee',
+        shift_pattern_id: sanitizeString(values.shift_pattern_id),
+        monday_shift_id: sanitizeString(values.monday_shift_id),
+        tuesday_shift_id: sanitizeString(values.tuesday_shift_id),
+        wednesday_shift_id: sanitizeString(values.wednesday_shift_id),
+        thursday_shift_id: sanitizeString(values.thursday_shift_id),
+        friday_shift_id: sanitizeString(values.friday_shift_id),
+        saturday_shift_id: sanitizeString(values.saturday_shift_id),
+        sunday_shift_id: sanitizeString(values.sunday_shift_id),
+        // Weekly availability with proper type safety
+        monday_available: ensureBoolean(values.monday_available),
+        monday_start_time: ensureTimeString(values.monday_start_time),
+        monday_end_time: ensureTimeString(values.monday_end_time),
+        tuesday_available: ensureBoolean(values.tuesday_available),
+        tuesday_start_time: ensureTimeString(values.tuesday_start_time),
+        tuesday_end_time: ensureTimeString(values.tuesday_end_time),
+        wednesday_available: ensureBoolean(values.wednesday_available),
+        wednesday_start_time: ensureTimeString(values.wednesday_start_time),
+        wednesday_end_time: ensureTimeString(values.wednesday_end_time),
+        thursday_available: ensureBoolean(values.thursday_available),
+        thursday_start_time: ensureTimeString(values.thursday_start_time),
+        thursday_end_time: ensureTimeString(values.thursday_end_time),
+        friday_available: ensureBoolean(values.friday_available),
+        friday_start_time: ensureTimeString(values.friday_start_time),
+        friday_end_time: ensureTimeString(values.friday_end_time),
+        saturday_available: ensureBoolean(values.saturday_available),
+        saturday_start_time: ensureTimeString(values.saturday_start_time),
+        saturday_end_time: ensureTimeString(values.saturday_end_time),
+        sunday_available: ensureBoolean(values.sunday_available),
+        sunday_start_time: ensureTimeString(values.sunday_start_time),
+        sunday_end_time: ensureTimeString(values.sunday_end_time),
+      };
+
+      console.log('📋 Sanitized employee data prepared:', employeeData);
 
       if (employeeToEdit) {
-        console.log('Updating existing employee with ID:', employeeToEdit.id);
+        console.log('🔄 Updating existing employee with ID:', employeeToEdit.id);
         await updateEmployee.mutateAsync({
           id: employeeToEdit.id,
           ...employeeData,
@@ -153,19 +210,41 @@ export const useEmployeeForm = ({
           description: "Employee information and weekly availability have been saved.",
         });
       } else {
-        console.log('Creating new employee...');
+        console.log('➕ Creating new employee');
         await addEmployee.mutateAsync(employeeData);
         toast({
-          title: "Employee added successfully",
+          title: "Employee added successfully", 
           description: "New employee has been created with their weekly availability schedule.",
         });
       }
       
-      console.log('Employee save operation completed successfully');
+      console.log('✅ Employee save operation completed successfully');
       onSuccess();
     } catch (err) {
-      console.error('Error submitting employee form:', err);
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred while saving employee data';
+      console.error('❌ Error submitting employee form:', err);
+      
+      let errorMessage = 'An unexpected error occurred while saving employee data';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+        console.error('Error details:', {
+          message: err.message,
+          stack: err.stack,
+          name: err.name
+        });
+      } else {
+        console.error('Non-Error object thrown:', err);
+      }
+
+      // Handle specific error types
+      if (errorMessage.includes('violates check constraint')) {
+        errorMessage = 'Invalid data format. Please check your input values.';
+      } else if (errorMessage.includes('duplicate key')) {
+        errorMessage = 'An employee with this information already exists.';
+      } else if (errorMessage.includes('network')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      }
+      
       setError(errorMessage);
       toast({
         title: "Error",
@@ -174,6 +253,7 @@ export const useEmployeeForm = ({
       });
     } finally {
       setIsSubmitting(false);
+      console.log('🏁 Form submission process completed');
     }
   });
 
