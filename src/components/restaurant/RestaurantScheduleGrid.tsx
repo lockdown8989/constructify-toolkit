@@ -5,13 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LayoutGrid, AlertCircle } from 'lucide-react';
 import { OpenShiftType } from '@/types/supabase/schedules';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import WeeklyGrid from '@/components/restaurant/WeeklyGrid';
 import OpenShiftActions from '@/components/restaurant/OpenShiftActions';
 import EmployeeList from '@/components/restaurant/EmployeeList';
 import ShiftDialogManager from '@/components/restaurant/ShiftDialogManager';
-import { toast as sonnerToast } from 'sonner';
 
 interface RestaurantScheduleGridProps {
   employees: Employee[];
@@ -42,7 +40,7 @@ const RestaurantScheduleGrid = ({
   updateShift,
   removeShift
 }: RestaurantScheduleGridProps) => {
-  const [showEmployeePanel, setShowEmployeePanel] = useState(true);
+  const [showEmployeePanel, setShowEmployeePanel] = useState(!isMobile); // Hide by default on mobile
   const [searchQuery, setSearchQuery] = useState("");
   const [locationName, setLocationName] = useState("Main Location");
   const { toast } = useToast();
@@ -92,44 +90,49 @@ const RestaurantScheduleGrid = ({
 
   if (filteredEmployees.length === 0) {
     return (
-      <Card className="p-8 text-center mb-6">
-        <div className="flex flex-col items-center gap-2">
-          <AlertCircle className="h-10 w-10 text-amber-500" />
-          <h3 className="text-lg font-semibold mt-2">
+      <Card className="p-6 text-center mb-6">
+        <div className="flex flex-col items-center gap-3">
+          <AlertCircle className="h-12 w-12 text-amber-500" />
+          <h3 className="text-lg font-semibold">
             {searchQuery ? "No employees found" : "No Employees Found"}
           </h3>
-          <p className="text-gray-600 max-w-md mx-auto mb-4">
+          <p className="text-gray-600 max-w-md mx-auto text-sm">
             {searchQuery 
               ? `No employees match "${searchQuery}" at ${locationName}. Try adjusting your search.`
               : "There are no employees available to schedule. Add employees to get started with scheduling."
             }
           </p>
-          {searchQuery && (
-            <Button variant="outline" onClick={() => setSearchQuery("")}>
-              Clear Search
-            </Button>
-          )}
-          {!searchQuery && (
-            <Button variant="default">Add Employees</Button>
-          )}
+          <div className="flex gap-2 mt-2">
+            {searchQuery && (
+              <Button variant="outline" size="sm" onClick={() => setSearchQuery("")}>
+                Clear Search
+              </Button>
+            )}
+            {!searchQuery && (
+              <Button variant="default" size="sm">Add Employees</Button>
+            )}
+          </div>
         </div>
       </Card>
     );
   }
 
   return (
-    <>
-      <div className="flex justify-between mb-3 sm:mb-4">
+    <div className="space-y-4">
+      {/* Controls Header */}
+      <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between items-center'}`}>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={toggleEmployeePanel}
-            className="flex items-center gap-2"
-          >
-            {showEmployeePanel ? "Hide" : "Show"} Employees
-            <LayoutGrid className="h-4 w-4" />
-          </Button>
+          {!isMobile && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={toggleEmployeePanel}
+              className="flex items-center gap-2"
+            >
+              {showEmployeePanel ? "Hide" : "Show"} Employees
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+          )}
           {searchQuery && (
             <div className="text-sm text-gray-600">
               Showing {filteredEmployees.length} of {employees.length} employees
@@ -139,10 +142,11 @@ const RestaurantScheduleGrid = ({
         <OpenShiftActions addOpenShift={addOpenShift} />
       </div>
       
-      <div className={`grid ${showEmployeePanel ? 'grid-cols-1 lg:grid-cols-[320px_1fr]' : 'grid-cols-1'} gap-4 mb-6`}>
-        {/* Employee list panel */}
+      {/* Main Content Grid */}
+      <div className={isMobile ? 'space-y-4' : `grid ${showEmployeePanel ? 'grid-cols-[280px_1fr]' : 'grid-cols-1'} gap-4`}>
+        {/* Employee list panel - Desktop only */}
         {showEmployeePanel && !isMobile && (
-          <Card className="overflow-hidden h-fit bg-white rounded-xl shadow-sm">
+          <Card className="overflow-hidden h-fit bg-white rounded-xl shadow-sm max-h-[600px]">
             <EmployeeList employees={filteredEmployees} />
           </Card>
         )}
@@ -167,7 +171,7 @@ const RestaurantScheduleGrid = ({
 
       {/* Shift edit dialog */}
       {shiftDialog.ShiftDialogComponent}
-    </>
+    </div>
   );
 };
 
