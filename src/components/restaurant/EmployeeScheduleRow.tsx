@@ -1,10 +1,11 @@
-
-import React, { useState } from 'react';
-import { Employee, OpenShift } from '@/types/restaurant-schedule';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import React from 'react';
+import { Employee } from '@/types/restaurant-schedule';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import { Plus, Clock } from 'lucide-react';
 import { OpenShiftType } from '@/types/supabase/schedules';
+import { useRestaurantSchedule } from '@/hooks/use-restaurant-schedule';
+import ShiftDialogManager from './ShiftDialogManager';
 
 interface EmployeeScheduleRowProps {
   employee: Employee;
@@ -21,121 +22,121 @@ const EmployeeScheduleRow: React.FC<EmployeeScheduleRowProps> = ({
   onAssignOpenShift,
   isMobile
 }) => {
-  const [expanded, setExpanded] = useState(false);
-  const initials = employee.name.split(' ').map(n => n[0]).join('');
+  const { shifts, addShift, updateShift } = useRestaurantSchedule();
+  
+  // Get shifts for this employee
+  const employeeShifts = shifts.filter(shift => shift.employeeId === employee.id);
+  
+  // Create shift dialog manager for this employee
+  const shiftDialog = ShiftDialogManager({ 
+    addShift, 
+    updateShift,
+    onResponseComplete: () => {
+      // Force a refresh of the schedule data
+      window.location.reload();
+    }
+  });
 
-  // Calculate employee shifts for the week
-  const calculateEmployeeHours = () => {
-    // This would normally come from actual shift data
-    // For now, return a mock value
-    return Math.floor(Math.random() * 40);
+  const handleAddShift = (day: string) => {
+    console.log('Adding shift for employee:', employee.id, 'on day:', day);
+    shiftDialog.handleAddShift(employee.id, day);
   };
 
-  const employeeHours = calculateEmployeeHours();
+  const getShiftsForDay = (day: string) => {
+    return employeeShifts.filter(shift => shift.day === day);
+  };
 
-  if (isMobile) {
+  const renderDayCell = (day: string) => {
+    const dayShifts = getShiftsForDay(day);
+    const isAvailable = employee.availability[day as keyof typeof employee.availability]?.available || false;
+
     return (
-      <div className="bg-white">
-        {/* Mobile Employee Header */}
-        <div className="flex items-center p-3 bg-gray-50/50">
-          <Avatar className="h-8 w-8 mr-3 border border-gray-200">
-            <AvatarImage src={employee.avatarUrl} alt={employee.name} />
-            <AvatarFallback className="bg-blue-100 text-blue-800 text-xs font-medium">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-gray-900 truncate">
-              {employee.name}
-            </div>
-            <div className="flex items-center text-xs text-gray-500">
-              <span className="font-medium mr-2">{employeeHours}h</span>
-              <span className="text-gray-400">•</span>
-              <span className="ml-2">{employee.role}</span>
-            </div>
+      <div className="p-2 min-h-[80px] border-r border-gray-200 last:border-r-0 relative">
+        {/* Availability indicator */}
+        {isAvailable && (
+          <div className="absolute top-1 right-1">
+            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
           </div>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setExpanded(!expanded)}
-            className="p-1"
-          >
-            {expanded ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </Button>
+        )}
+
+        {/* Existing shifts */}
+        <div className="space-y-1 mb-2">
+          {dayShifts.map(shift => (
+            <div
+              key={shift.id}
+              className="bg-blue-100 border border-blue-200 rounded p-1 text-xs cursor-pointer hover:bg-blue-200 transition-colors"
+              onClick={() => shiftDialog.handleEditShift(shift)}
+            >
+              <div className="flex items-center gap-1 mb-1">
+                <Clock className="h-3 w-3 text-blue-600" />
+                <span className="font-medium text-blue-800">
+                  {shift.startTime} - {shift.endTime}
+                </span>
+              </div>
+              <div className="text-blue-700 truncate">
+                {shift.role}
+              </div>
+              {shift.notes && (
+                <div className="text-blue-600 text-xs truncate">
+                  {shift.notes}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
-        {/* Mobile Days Grid (Expandable) */}
-        {expanded && (
-          <div className="p-3 pt-0">
-            <div className="grid grid-cols-3 gap-2">
-              {days.map((day) => (
-                <div key={day} className="bg-gray-50 rounded-lg p-2 min-h-[60px]">
-                  <div className="text-xs font-medium text-gray-600 mb-1 text-center">
-                    {day.substring(0, 3)}
-                  </div>
-                  {/* Shift content would go here */}
-                  <div className="flex justify-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 rounded-full text-gray-400 hover:text-gray-600"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+        {/* Add shift button */}
+        {isAvailable && (
+          <Button
+            onClick={() => handleAddShift(day)}
+            variant="ghost"
+            size="sm"
+            className="w-full h-8 border-dashed border border-gray-300 hover:border-blue-400 hover:bg-blue-50 text-gray-600 hover:text-blue-600"
+          >
+            <Plus className="h-3 w-3 mr-1" />
+            Add Shift
+          </Button>
+        )}
+
+        {!isAvailable && dayShifts.length === 0 && (
+          <div className="text-center text-gray-400 text-xs py-2">
+            Not Available
           </div>
         )}
       </div>
     );
-  }
+  };
 
-  // Desktop layout
   return (
-    <div className="grid grid-cols-8 hover:bg-gray-50/50 transition-colors">
-      {/* Employee Info Column */}
-      <div className="p-3 border-r border-gray-200 flex items-center min-w-[150px]">
-        <Avatar className="h-8 w-8 mr-3 border border-gray-200">
-          <AvatarImage src={employee.avatarUrl} alt={employee.name} />
-          <AvatarFallback className="bg-blue-100 text-blue-800 text-xs font-medium">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-        
-        <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium text-gray-900 truncate">
-            {employee.name}
-          </div>
-          <div className="text-xs text-gray-500">
-            {employee.role} • {employeeHours}h
+    <>
+      <div className="grid grid-cols-8 hover:bg-gray-50 transition-colors">
+        {/* Employee Info */}
+        <div className="p-3 border-r border-gray-200 flex items-center">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium"
+              style={{ backgroundColor: employee.color }}
+            >
+              {employee.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+            </div>
+            <div>
+              <div className="font-medium text-sm text-gray-900">{employee.name}</div>
+              <div className="text-xs text-gray-500">{employee.role}</div>
+            </div>
           </div>
         </div>
+
+        {/* Day cells */}
+        {days.map(day => (
+          <div key={`${employee.id}-${day}`}>
+            {renderDayCell(day)}
+          </div>
+        ))}
       </div>
 
-      {/* Day Columns */}
-      {days.map((day) => (
-        <div key={day} className="p-2 border-r border-gray-200 last:border-r-0 min-h-[80px] min-w-[100px]">
-          {/* Shift content would go here */}
-          <div className="flex justify-center items-center h-full">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 rounded-full text-gray-400 hover:text-gray-600"
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
-          </div>
-        </div>
-      ))}
-    </div>
+      {/* Shift Dialog */}
+      {shiftDialog.ShiftDialogComponent}
+    </>
   );
 };
 
