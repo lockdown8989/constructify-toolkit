@@ -3,8 +3,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateEmployee } from '@/hooks/use-employees';
+import type { LeaveCalendar } from '@/hooks/leave/leave-types';
 
-export const useLeaveApprovalActions = () => {
+export const useLeaveApprovalActions = (currentUser: { id: string; name: string; department: string; isManager: boolean }) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const updateEmployee = useUpdateEmployee();
@@ -73,9 +74,81 @@ export const useLeaveApprovalActions = () => {
     }
   };
 
+  const handleApprove = async (leave: LeaveCalendar) => {
+    try {
+      const { error } = await supabase
+        .from('leave_calendar')
+        .update({ 
+          status: 'approved',
+          audit_log: [
+            ...(leave.audit_log || []),
+            {
+              action: 'approved',
+              timestamp: new Date().toISOString(),
+              user_id: currentUser.id,
+              user_name: currentUser.name
+            }
+          ]
+        })
+        .eq('id', leave.id);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
+      toast({
+        title: "Leave Approved",
+        description: "Leave request has been approved successfully",
+      });
+    } catch (error) {
+      console.error('Error approving leave:', error);
+      toast({
+        title: "Error",
+        description: "Failed to approve leave request",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReject = async (leave: LeaveCalendar) => {
+    try {
+      const { error } = await supabase
+        .from('leave_calendar')
+        .update({ 
+          status: 'rejected',
+          audit_log: [
+            ...(leave.audit_log || []),
+            {
+              action: 'rejected',
+              timestamp: new Date().toISOString(),
+              user_id: currentUser.id,
+              user_name: currentUser.name
+            }
+          ]
+        })
+        .eq('id', leave.id);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['leave-calendar'] });
+      toast({
+        title: "Leave Rejected",
+        description: "Leave request has been rejected",
+      });
+    } catch (error) {
+      console.error('Error rejecting leave:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reject leave request",
+        variant: "destructive",
+      });
+    }
+  };
+
   return {
     updateLeaveStatus,
     updateEmployeeStatus,
+    handleApprove,
+    handleReject,
     isUpdating: updateLeaveStatus.isPending
   };
 };
