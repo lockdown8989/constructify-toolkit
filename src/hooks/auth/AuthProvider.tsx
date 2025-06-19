@@ -5,8 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { AuthContextType } from './types';
 import { useAuthActions } from './useAuthActions';
 import { useRoles } from './useRoles';
-import { useAuthDebugger } from './useAuthDebugger';
-import { SessionTimeoutWarning } from '@/components/auth/SessionTimeoutWarning';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -21,9 +19,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Use auth actions hook
   const authActions = useAuthActions();
-
-  // Add debugging hook
-  useAuthDebugger({ user, session, isLoading });
 
   useEffect(() => {
     console.log('🔄 AuthProvider: Setting up auth state listener');
@@ -100,7 +95,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider value={value}>
       {children}
-      {session?.user && <SessionTimeoutWarning />}
     </AuthContext.Provider>
   );
 };
