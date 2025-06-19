@@ -62,7 +62,7 @@ export const useRoles = (user: User | null) => {
         // Check each role with explicit logging - FIXED PRIORITY ORDER
         const hasAdminRole = userRoles.includes('admin');
         const hasHRRole = userRoles.includes('hr');
-        // Check for 'employer' role specifically for managers
+        // FIXED: Check for 'employer' role specifically for managers
         const hasManagerRole = userRoles.includes('employer');
         const hasPayrollRole = userRoles.includes('payroll');
         // Only set as employee if no other management roles

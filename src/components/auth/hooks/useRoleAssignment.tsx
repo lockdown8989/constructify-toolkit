@@ -26,7 +26,7 @@ export const useRoleAssignment = () => {
         return false;
       }
       
-      // Map the UI role to the database role
+      // Map the UI role to the database role - FIXED MAPPING
       let dbRole: string;
       
       switch (userRole) {
@@ -48,33 +48,35 @@ export const useRoleAssignment = () => {
       
       console.log(`🔄 Mapped UI role ${userRole} to DB role ${dbRole}`);
       
-      // Check specifically for the role we're trying to add
-      const hasRequestedRole = existingRoles?.some(r => r.role === dbRole);
-      
-      if (!hasRequestedRole) {
-        // Insert the new role (without removing existing roles)
-        const { error: insertError } = await supabase
-          .from('user_roles')
-          .insert({ 
-            user_id: userId, 
-            role: dbRole 
-          });
-            
-        if (insertError) {
-          console.error("Role insertion error:", insertError);
-          toast({
-            title: "Error",
-            description: "Could not assign user role: " + insertError.message,
-            variant: "destructive",
-          });
-          return false;
-        } 
+      // Remove any existing roles first to avoid conflicts
+      const { error: deleteError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
         
-        console.log(`✅ Role ${dbRole} inserted successfully for user ${userId}`);
-      } else {
-        console.log(`⚠️ User already has role: ${dbRole}, not adding again`);
+      if (deleteError) {
+        console.error("Error removing existing roles:", deleteError);
       }
       
+      // Insert the new role
+      const { error: insertError } = await supabase
+        .from('user_roles')
+        .insert({ 
+          user_id: userId, 
+          role: dbRole 
+        });
+          
+      if (insertError) {
+        console.error("Role insertion error:", insertError);
+        toast({
+          title: "Error",
+          description: "Could not assign user role: " + insertError.message,
+          variant: "destructive",
+        });
+        return false;
+      } 
+      
+      console.log(`✅ Role ${dbRole} inserted successfully for user ${userId}`);
       return true;
     } catch (error) {
       console.error("💥 Role assignment error:", error);
