@@ -1,76 +1,55 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 /**
  * Hook for handling sign out functionality
  */
 export const useSignOut = () => {
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const signOut = async () => {
     try {
-      console.log("Signing out user...");
+      console.log('🚪 Starting sign out process...');
       
-      // First, try to call our safe sign-out function
-      // This will always succeed regardless of session state
-      const { data, error: functionError } = await supabase
-        .rpc('safe_user_signout')
-        .single();
-      
-      if (functionError) {
-        console.log("Safe sign out function error:", functionError);
-        // If our function fails, fall back to regular sign out
-      } else {
-        console.log("Safe sign out function success:", data);
-      }
-      
-      // Always attempt the regular sign out as well to clean up client state
-      // Force a logout by using the signOut method with scope: 'global'
-      // This will clear all auth state, local storage tokens, and cookies
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.log("Sign out error:", error);
-        
-        // If it's a missing session error, treat it as successful anyway
-        // Our safe_user_signout function should have handled the server side
-        if (error.message?.includes('missing') || error.message?.includes('session')) {
-          console.log("Session already missing, considering user signed out");
-          toast({
-            title: "Signed out",
-            description: "You have been successfully signed out."
-          });
-        } else {
-          // Only show error for non-session related issues
-          toast({
-            title: "Sign out issue",
-            description: "There was an issue during sign out. Please try again.",
-            variant: "destructive",
-          });
-        }
-      } else {
-        console.log("Sign out successful");
+        console.error('Sign out error:', error);
         toast({
-          title: "Signed out",
-          description: "You have been successfully signed out."
+          title: "Sign Out Error",
+          description: error.message,
+          variant: "destructive",
         });
+        return;
       }
+
+      console.log('✅ Sign out successful');
       
-      // Always navigate to auth page with signout parameter to force re-rendering
-      // This helps ensure the UI updates correctly
-      navigate('/auth?signout=true');
-    } catch (error) {
-      console.error('Sign out error:', error);
-      
-      // Always reset UI state and redirect on any error
+      // Clear any local storage items if needed
+      try {
+        localStorage.removeItem('supabase.auth.token');
+      } catch (e) {
+        // Ignore localStorage errors
+      }
+
       toast({
-        title: "Session ended",
-        description: "Your session has been ended."
+        title: "Signed Out",
+        description: "You have been signed out successfully",
       });
+
+      // Navigate to auth page with sign out flag
       navigate('/auth?signout=true');
+      
+    } catch (error) {
+      console.error('Unexpected sign out error:', error);
+      toast({
+        title: "Sign Out Error",
+        description: "An unexpected error occurred during sign out",
+        variant: "destructive",
+      });
     }
   };
 

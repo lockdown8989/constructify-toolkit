@@ -1,84 +1,68 @@
 
 import { useState, useEffect } from 'react';
 
-interface AttemptTracker {
-  count: number;
-  lastAttempt: number;
-  blocked: boolean;
+const MAX_ATTEMPTS = 5;
+const BLOCK_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+interface AuthAttempt {
+  timestamp: number;
+  success: boolean;
 }
 
+/**
+ * Hook to handle authentication rate limiting
+ */
 export const useAuthLimiting = () => {
-  const [attempts, setAttempts] = useState<AttemptTracker>({
-    count: 0,
-    lastAttempt: 0,
-    blocked: false
-  });
-
-  const MAX_ATTEMPTS = 5;
-  const BLOCK_DURATION = 15 * 60 * 1000; // 15 minutes
-  const RESET_DURATION = 60 * 60 * 1000; // 1 hour
+  const [attempts, setAttempts] = useState<AuthAttempt[]>([]);
+  const [canAttempt, setCanAttempt] = useState(true);
+  const [attemptsRemaining, setAttemptsRemaining] = useState(MAX_ATTEMPTS);
+  const [remainingBlockTime, setRemainingBlockTime] = useState(0);
 
   useEffect(() => {
-    const stored = localStorage.getItem('auth_attempts');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as AttemptTracker;
-        const now = Date.now();
+    const now = Date.now();
+    const recentAttempts = attempts.filter(attempt => 
+      now - attempt.timestamp < BLOCK_DURATION
+    );
+
+    const failedAttempts = recentAttempts.filter(attempt => !attempt.success);
+    
+    if (failedAttempts.length >= MAX_ATTEMPTS) {
+      const oldestFailedAttempt = failedAttempts[0];
+      const timeUntilUnblock = BLOCK_DURATION - (now - oldestFailedAttempt.timestamp);
+      
+      if (timeUntilUnblock > 0) {
+        setCanAttempt(false);
+        setRemainingBlockTime(Math.ceil(timeUntilUnblock / 1000));
+        setAttemptsRemaining(0);
         
-        // Reset if enough time has passed
-        if (now - parsed.lastAttempt > RESET_DURATION) {
-          setAttempts({ count: 0, lastAttempt: 0, blocked: false });
-          localStorage.removeItem('auth_attempts');
-        } else if (parsed.blocked && now - parsed.lastAttempt > BLOCK_DURATION) {
-          // Unblock after block duration
-          setAttempts({ ...parsed, blocked: false });
-        } else {
-          setAttempts(parsed);
-        }
-      } catch {
-        localStorage.removeItem('auth_attempts');
+        const timer = setTimeout(() => {
+          setCanAttempt(true);
+          setRemainingBlockTime(0);
+          setAttemptsRemaining(MAX_ATTEMPTS);
+        }, timeUntilUnblock);
+        
+        return () => clearTimeout(timer);
       }
     }
-  }, []);
+
+    setCanAttempt(true);
+    setAttemptsRemaining(MAX_ATTEMPTS - failedAttempts.length);
+    setRemainingBlockTime(0);
+  }, [attempts]);
 
   const recordFailedAttempt = () => {
-    const now = Date.now();
-    const newCount = attempts.count + 1;
-    const blocked = newCount >= MAX_ATTEMPTS;
-    
-    const newAttempts = {
-      count: newCount,
-      lastAttempt: now,
-      blocked
-    };
-    
-    setAttempts(newAttempts);
-    localStorage.setItem('auth_attempts', JSON.stringify(newAttempts));
+    setAttempts(prev => [...prev, { timestamp: Date.now(), success: false }]);
   };
 
   const recordSuccessfulAuth = () => {
-    setAttempts({ count: 0, lastAttempt: 0, blocked: false });
-    localStorage.removeItem('auth_attempts');
-  };
-
-  const getRemainingBlockTime = (): number => {
-    if (!attempts.blocked) return 0;
-    const elapsed = Date.now() - attempts.lastAttempt;
-    const remaining = BLOCK_DURATION - elapsed;
-    return Math.max(0, Math.ceil(remaining / 1000));
-  };
-
-  const canAttempt = (): boolean => {
-    if (!attempts.blocked) return true;
-    return getRemainingBlockTime() === 0;
+    setAttempts(prev => [...prev, { timestamp: Date.now(), success: true }]);
   };
 
   return {
-    canAttempt: canAttempt(),
-    attemptsRemaining: Math.max(0, MAX_ATTEMPTS - attempts.count),
-    remainingBlockTime: getRemainingBlockTime(),
+    canAttempt,
+    attemptsRemaining,
+    remainingBlockTime,
     recordFailedAttempt,
-    recordSuccessfulAuth,
-    isBlocked: attempts.blocked
+    recordSuccessfulAuth
   };
 };

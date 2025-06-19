@@ -2224,6 +2224,10 @@ export type Database = {
         Args: { p_employee_id: string }
         Returns: Json
       }
+      get_user_role_safe: {
+        Args: { p_user_id: string }
+        Returns: string
+      }
       has_role: {
         Args:
           | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
@@ -2276,6 +2280,10 @@ export type Database = {
           p_sunday_shift_id?: string
         }
         Returns: Json
+      }
+      user_has_role: {
+        Args: { p_user_id: string; p_role: string }
+        Returns: boolean
       }
     }
     Enums: {
