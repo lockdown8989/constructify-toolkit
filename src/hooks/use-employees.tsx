@@ -51,6 +51,12 @@ export function useEmployees(filters?: Partial<{
     queryKey: ['employees', filters, isManager, isPayroll, isAdmin, isHR, user?.id],
     queryFn: async () => {
       try {
+        // If no user, return empty array instead of throwing error
+        if (!user) {
+          console.log('No authenticated user, returning empty employees list');
+          return [];
+        }
+
         let query = supabase
           .from('employees')
           .select('*');
@@ -64,13 +70,16 @@ export function useEmployees(filters?: Partial<{
         } else if (isManager && user) {
           // For managers - show employees under their management
           console.log("Manager user, fetching team data");
-          const { data: managerData } = await supabase
+          const { data: managerData, error: managerError } = await supabase
             .from('employees')
             .select('manager_id')
             .eq('user_id', user.id)
-            .single();
+            .maybeSingle();
           
-          if (managerData && managerData.manager_id) {
+          if (managerError) {
+            console.error('Error fetching manager data:', managerError);
+            // Continue with showing all employees if manager data fetch fails
+          } else if (managerData && managerData.manager_id) {
             query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
           } else {
             // If manager doesn't have manager_id set, show all employees (they might be the top-level manager)
@@ -79,11 +88,16 @@ export function useEmployees(filters?: Partial<{
         } else if (!isManager && !isPayroll && !isAdmin && !isHR && user) {
           // For regular employees - show only their own data
           console.log("Regular employee user, fetching own data only");
-          const { data: currentEmployeeData } = await supabase
+          const { data: currentEmployeeData, error: employeeError } = await supabase
             .from('employees')
             .select('*')
             .eq('user_id', user.id)
-            .single();
+            .maybeSingle();
+            
+          if (employeeError) {
+            console.error('Error fetching employee data:', employeeError);
+            return [];
+          }
             
           if (currentEmployeeData) {
             query = query.eq('id', currentEmployeeData.id);
@@ -104,7 +118,8 @@ export function useEmployees(filters?: Partial<{
         
         if (error) {
           console.error("Error fetching employees:", error);
-          throw error;
+          // Return empty array instead of throwing to prevent app crashes
+          return [];
         }
         
         // Validate and clean the employee data
@@ -121,11 +136,14 @@ export function useEmployees(filters?: Partial<{
         
       } catch (error) {
         console.error("Error in employees query function:", error);
-        throw error;
+        // Return empty array instead of throwing to prevent app crashes
+        return [];
       }
     },
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    // Don't throw errors to prevent app crashes
+    throwOnError: false,
   });
 }
 
@@ -278,30 +296,39 @@ export function useOwnEmployeeData() {
     queryKey: ['own-employee-data', user?.id],
     queryFn: async () => {
       if (!user) {
-        throw new Error('No authenticated user');
+        console.log('No authenticated user for employee data');
+        return null;
       }
 
       console.log("Fetching employee data for user:", user.id);
-      const { data, error } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      
+      try {
+        const { data, error } = await supabase
+          .from('employees')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching own employee data:", error);
-        return null; // Return null instead of throwing error
+        if (error) {
+          console.error("Error fetching own employee data:", error);
+          return null;
+        }
+
+        if (!data) {
+          console.log("No employee record found for user:", user.id);
+          return null;
+        }
+
+        return data as Employee;
+      } catch (error) {
+        console.error("Exception in useOwnEmployeeData:", error);
+        return null;
       }
-
-      if (!data) {
-        console.log("No employee record found for user:", user.id);
-        return null; // Return null if no data found
-      }
-
-      return data as Employee;
     },
     enabled: !!user,
-    retry: 3, // Retry up to 3 times
-    retryDelay: attempt => Math.min(attempt > 1 ? 2000 : 1000, 30 * 1000),
+    retry: 2,
+    retryDelay: attempt => Math.min(attempt > 1 ? 2000 : 1000, 10 * 1000),
+    // Don't throw errors to prevent app crashes
+    throwOnError: false,
   });
 }

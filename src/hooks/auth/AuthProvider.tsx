@@ -51,6 +51,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           timestamp: new Date().toISOString()
         });
         
+        // Handle user deletion or account removal
+        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+          console.log('🔄 User signed out or deleted, clearing state');
+          setSession(null);
+          setUser(null);
+          setIsLoading(false);
+          
+          // Clear any cached data
+          localStorage.clear();
+          sessionStorage.clear();
+          
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -64,7 +78,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // THEN check for existing session
     console.log('🔄 AuthProvider: Checking for existing session');
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Error getting session:', error);
+        setSession(null);
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
       console.log('📋 Initial session check:', {
         hasSession: !!session,
         hasUser: !!session?.user,
@@ -80,6 +102,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('📝 No initial session, setting loading to false');
         setIsLoading(false);
       }
+    }).catch((error) => {
+      console.error('Exception in getSession:', error);
+      setSession(null);
+      setUser(null);
+      setIsLoading(false);
     });
 
     return () => {

@@ -1,70 +1,38 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useAuthActions } from '../useAuthActions';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
-/**
- * Hook for handling account deletion functionality
- */
 export const useDeleteAccount = () => {
+  const { deleteAccount: deleteAccountAction } = useAuthActions();
+  const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Safely get navigator - will return null if outside Router context
-  let navigate;
-  try {
-    navigate = useNavigate();
-  } catch (error) {
-    // Handle case when hook is used outside Router context
-    navigate = null;
-    console.log("useDeleteAccount: useNavigate failed - outside Router context");
-  }
 
-  const deleteAccount = async (): Promise<{success: boolean; error?: string}> => {
+  const deleteAccount = async () => {
     try {
-      // First call the edge function to delete user data from all tables
-      const { error: functionError } = await supabase.functions.invoke("delete-user-account");
+      const result = await deleteAccountAction();
       
-      if (functionError) {
-        console.error('Error deleting user data:', functionError);
-        
+      if (result.success) {
         toast({
-          title: "Account deletion failed",
-          description: functionError.message || "Could not delete your account data. Please try again later.",
-          variant: "destructive",
+          title: "Account deleted",
+          description: "Your account has been successfully deleted.",
         });
         
-        return { success: false, error: functionError.message };
-      }
-      
-      toast({
-        title: "Account deleted",
-        description: "Your account has been successfully deleted. You will be redirected shortly.",
-      });
-      
-      // Sign out after successful deletion
-      await supabase.auth.signOut();
-      
-      // Redirect to homepage if navigation is available
-      if (navigate) {
+        // Immediate redirect to auth page
+        navigate('/auth', { replace: true });
+        
+        // Additional cleanup - clear any remaining data
         setTimeout(() => {
-          navigate("/");
-        }, 1500);
+          window.location.href = '/auth';
+        }, 100);
+        
+        return { success: true };
+      } else {
+        return { success: false, error: result.error };
       }
-      
-      return { success: true };
     } catch (error: any) {
-      console.error('Exception in deleteAccount:', error);
-      
-      toast({
-        title: "Account deletion failed",
-        description: "An unexpected error occurred. Please try again or contact support.",
-        variant: "destructive",
-      });
-      
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : "An unexpected error occurred" 
-      };
+      console.error('Delete account error:', error);
+      return { success: false, error: error.message || 'Failed to delete account' };
     }
   };
 

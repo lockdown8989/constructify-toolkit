@@ -28,7 +28,10 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
   
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!user) return;
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
       
       try {
         const { data, error } = await supabase
@@ -39,6 +42,8 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
         
         if (error) {
           console.error("Error fetching profile:", error);
+          // Don't show error toast for missing profiles
+          setIsLoading(false);
           return;
         }
         
@@ -64,6 +69,7 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
             
           if (employeeError) {
             console.error("Error fetching manager ID:", employeeError);
+            // Don't show error for missing employee records
           } else if (employeeData && employeeData.manager_id) {
             console.log("Found manager ID:", employeeData.manager_id);
             setManagerId(employeeData.manager_id);
@@ -89,14 +95,15 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
           }
         }
       } catch (error) {
-        console.error("Error:", error);
+        console.error("Error in fetchProfile:", error);
+        // Don't show error toast for profile fetch errors
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchProfile();
-  }, [user, isManager, toast]);
+  }, [user?.id, isManager]); // Removed toast from dependencies to prevent unnecessary re-renders
   
   const reconnectEmployeesToManager = async (currentManagerId: string) => {
     try {
@@ -113,8 +120,6 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
       
       if (allEmployees && allEmployees.length > 0) {
         // Look for employees that might need to be reconnected
-        // This could be based on department, previous connections, etc.
-        // For now, we'll check if there are any employees without a manager or with an invalid manager ID
         const employeesNeedingReconnection = allEmployees.filter(emp => 
           !emp.manager_id || emp.manager_id === '' || emp.manager_id === 'undefined'
         );
@@ -122,13 +127,14 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
         if (employeesNeedingReconnection.length > 0) {
           console.log(`Found ${employeesNeedingReconnection.length} employees that might need reconnection`);
           
-          // Note: We don't automatically reconnect employees without their consent
-          // This is just for logging and potential future notification features
-          toast({
-            title: "Manager Profile Updated",
-            description: `Your Manager ID (${currentManagerId}) is active. Employees can use this ID to connect to your account.`,
-            variant: "default",
-          });
+          // Only show toast if user is still authenticated
+          if (user) {
+            toast({
+              title: "Manager Profile Updated",
+              description: `Your Manager ID (${currentManagerId}) is active. Employees can use this ID to connect to your account.`,
+              variant: "default",
+            });
+          }
         }
       }
     } catch (error) {
