@@ -75,7 +75,8 @@ export const useRoles = (user: User | null) => {
           payroll: hasPayrollRole,
           employee: hasEmployeeRole,
           jobTitle: employeeData?.job_title,
-          allRoles: userRoles
+          allRoles: userRoles,
+          userEmail: user?.email
         });
         
         setIsAdmin(hasAdminRole);

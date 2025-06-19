@@ -25,7 +25,15 @@ const Dashboard = () => {
 
   // Determine dashboard type based on role priority - FIXED LOGIC
   const getDashboardType = () => {
-    console.log("🎯 Dashboard role determination:", { isManager, isAdmin, isHR, isPayroll, isEmployee });
+    console.log("🎯 Dashboard role determination:", { 
+      isManager, 
+      isAdmin, 
+      isHR, 
+      isPayroll, 
+      isEmployee,
+      userEmail: user?.email,
+      rolesLoaded 
+    });
     
     // Priority order: admin/hr/manager > payroll > employee
     if (isAdmin || isHR || isManager) return 'manager';
