@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/types/supabase/database';
@@ -50,7 +51,7 @@ const useEmployees = (filters: {
 const fetchEmployeeFilters = async () => {
   const { data: employees, error } = await supabase
     .from('employees')
-    .select('department, site');
+    .select('department, site, lifecycle, status');
 
   if (error) {
     console.error('Error fetching employee filters:', error);
@@ -59,14 +60,40 @@ const fetchEmployeeFilters = async () => {
 
   const departments = [...new Set(employees.map((employee) => employee.department))];
   const sites = [...new Set(employees.map((employee) => employee.site))];
+  const lifecycles = [...new Set(employees.map((employee) => employee.lifecycle))];
+  const statuses = [...new Set(employees.map((employee) => employee.status))];
 
-  return { departments, sites };
+  return { departments, sites, lifecycles, statuses };
 };
 
 const useEmployeeFilters = () => {
   return useQuery({
     queryKey: ['employeeFilters'],
     queryFn: fetchEmployeeFilters,
+  });
+};
+
+// Add useOwnEmployeeData hook
+const useOwnEmployeeData = () => {
+  return useQuery({
+    queryKey: ['ownEmployeeData'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching own employee data:', error);
+        throw new Error(error.message);
+      }
+
+      return data;
+    },
   });
 };
 
@@ -139,9 +166,10 @@ const addEmployee = async (employeeData: Omit<Employee, 'id'>) => {
 
 const useAddEmployee = () => {
   const queryClient = useQueryClient();
-  return useMutation(addEmployee, {
+  return useMutation({
+    mutationFn: addEmployee,
     onSuccess: () => {
-      queryClient.invalidateQueries(['employees']);
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
     },
   });
 };
@@ -165,9 +193,10 @@ const updateEmployee = async (employeeData: Employee) => {
 
 const useUpdateEmployee = () => {
   const queryClient = useQueryClient();
-  return useMutation(updateEmployee, {
+  return useMutation({
+    mutationFn: updateEmployee,
     onSuccess: () => {
-      queryClient.invalidateQueries(['employees']);
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
     },
   });
 };
@@ -188,11 +217,12 @@ const deleteEmployee = async (id: string) => {
 
 const useDeleteEmployee = () => {
   const queryClient = useQueryClient();
-  return useMutation(deleteEmployee, {
+  return useMutation({
+    mutationFn: deleteEmployee,
     onSuccess: () => {
-      queryClient.invalidateQueries(['employees']);
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
     },
   });
 };
 
-export { useEmployees, useEmployeeFilters, useAddEmployee, useUpdateEmployee, useDeleteEmployee };
+export { useEmployees, useEmployeeFilters, useOwnEmployeeData, useAddEmployee, useUpdateEmployee, useDeleteEmployee };

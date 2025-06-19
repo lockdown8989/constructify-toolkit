@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,8 +20,8 @@ export const useEmployeeForm = ({
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const addEmployee = useAddEmployee();
-  const updateEmployee = useUpdateEmployee();
+  const addEmployeeMutation = useAddEmployee();
+  const updateEmployeeMutation = useUpdateEmployee();
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),
@@ -171,7 +170,7 @@ export const useEmployeeForm = ({
 
       if (employeeToEdit) {
         console.log('🔄 Updating existing employee with ID:', employeeToEdit.id);
-        await updateEmployee.mutateAsync({
+        await updateEmployeeMutation.mutateAsync({
           id: employeeToEdit.id,
           ...employeeData,
         });
@@ -181,7 +180,7 @@ export const useEmployeeForm = ({
         });
       } else {
         console.log('➕ Creating new employee');
-        await addEmployee.mutateAsync(employeeData);
+        await addEmployeeMutation.mutateAsync(employeeData);
         toast({
           title: "Employee added successfully", 
           description: "New employee has been created.",
