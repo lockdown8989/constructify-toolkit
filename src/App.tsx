@@ -24,14 +24,12 @@ function App() {
     <ErrorBoundary>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-              <TooltipProvider>
-                <AppRoutes />
-                <Toaster />
-              </TooltipProvider>
-            </ThemeProvider>
-          </AuthProvider>
+          <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+            <TooltipProvider>
+              <AppRoutes />
+              <Toaster />
+            </TooltipProvider>
+          </ThemeProvider>
         </QueryClientProvider>
       </HelmetProvider>
     </ErrorBoundary>
