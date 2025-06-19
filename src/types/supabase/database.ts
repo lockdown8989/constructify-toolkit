@@ -1,4 +1,3 @@
-
 import { Json } from '@/integrations/supabase/types';
 import type { 
   Employee, 
@@ -158,7 +157,6 @@ export interface Database {
         Update: Partial<UserRole>;
         Relationships: [];
       };
-      // Add the missing tables
       attendance: {
         Row: {
           id: string;

@@ -38,7 +38,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(externalIsEditing);
   const [editedEmployee, setEditedEmployee] = useState<Employee>(employee);
-  const updateEmployee = useUpdateEmployee();
+  const updateEmployeeMutation = useUpdateEmployee();
   const { toast } = useToast();
 
   const handleEdit = () => {
@@ -53,7 +53,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
   const handleSave = async () => {
     try {
       // Convert UI employee back to database format
-      await updateEmployee.mutateAsync({
+      await updateEmployeeMutation.mutateAsync({
         id: employee.id,
         name: editedEmployee.name,
         job_title: editedEmployee.jobTitle,
