@@ -55,7 +55,7 @@ SET sunday_shift_id = safe_clean_uuid_field(sunday_shift_id::text);
 UPDATE employees 
 SET manager_id = NULLIF(manager_id, '');
 
--- Create the trigger function to prevent future issues
+-- Create the trigger function to prevent future issues with proper security settings
 CREATE OR REPLACE FUNCTION clean_uuid_fields()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -146,4 +146,3 @@ CREATE TRIGGER trigger_clean_uuid_fields
 
 -- Clean up the helper function (we don't need it after the migration)
 DROP FUNCTION IF EXISTS safe_clean_uuid_field(text);
-
