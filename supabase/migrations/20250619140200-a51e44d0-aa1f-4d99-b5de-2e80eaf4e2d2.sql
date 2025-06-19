@@ -1,3 +1,4 @@
+
 -- Safe migration to handle UUID fields without type casting issues
 -- We'll use string functions to identify and clean problematic values
 
@@ -132,7 +133,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path TO 'public';
+SET search_path = 'public';
 
 -- Create trigger to automatically clean UUID fields
 DROP TRIGGER IF EXISTS trigger_clean_uuid_fields ON employees;
