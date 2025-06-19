@@ -8,6 +8,7 @@ export const useRoles = (user: User | null) => {
   const [isHR, setIsHR] = useState(false);
   const [isManager, setIsManager] = useState(false);
   const [isPayroll, setIsPayroll] = useState(false);
+  const [isEmployee, setIsEmployee] = useState(false);
   const [rolesLoaded, setRolesLoaded] = useState(false);
 
   // Automatically fetch roles when user changes
@@ -34,6 +35,7 @@ export const useRoles = (user: User | null) => {
         setIsHR(false);
         setIsManager(false);
         setIsPayroll(false);
+        setIsEmployee(true);
         setRolesLoaded(true);
         return;
       }
@@ -47,24 +49,29 @@ export const useRoles = (user: User | null) => {
         const hasHRRole = userRoles.includes('hr');
         const hasEmployerRole = userRoles.includes('employer');
         const hasPayrollRole = userRoles.includes('payroll');
+        const hasEmployeeRole = userRoles.includes('employee');
         
         console.log("Role checks:", {
           admin: hasAdminRole,
           hr: hasHRRole,
           manager: hasEmployerRole,
-          payroll: hasPayrollRole
+          payroll: hasPayrollRole,
+          employee: hasEmployeeRole
         });
         
         setIsAdmin(hasAdminRole);
         setIsHR(hasHRRole);
         setIsManager(hasEmployerRole);
         setIsPayroll(hasPayrollRole);
+        // Set isEmployee to true if they have employee role OR if they have no management roles
+        setIsEmployee(hasEmployeeRole || (!hasAdminRole && !hasHRRole && !hasEmployerRole && !hasPayrollRole));
       } else {
         console.log("No roles found for user, defaulting to employee");
         setIsAdmin(false);
         setIsHR(false);
         setIsManager(false);
         setIsPayroll(false);
+        setIsEmployee(true);
       }
       
       setRolesLoaded(true);
@@ -75,6 +82,7 @@ export const useRoles = (user: User | null) => {
       setIsHR(false);
       setIsManager(false);
       setIsPayroll(false);
+      setIsEmployee(true);
       setRolesLoaded(true);
     }
   };
@@ -84,6 +92,7 @@ export const useRoles = (user: User | null) => {
     setIsHR(false);
     setIsManager(false);
     setIsPayroll(false);
+    setIsEmployee(false);
     setRolesLoaded(false);
   };
 
@@ -92,6 +101,7 @@ export const useRoles = (user: User | null) => {
     isHR,
     isManager,
     isPayroll,
+    isEmployee,
     fetchUserRoles,
     resetRoles,
     rolesLoaded

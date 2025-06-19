@@ -2224,6 +2224,10 @@ export type Database = {
         Args: { p_employee_id: string }
         Returns: Json
       }
+      get_user_dashboard_type: {
+        Args: { p_user_id: string }
+        Returns: string
+      }
       get_user_role_safe: {
         Args: { p_user_id: string }
         Returns: string

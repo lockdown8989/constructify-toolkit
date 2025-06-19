@@ -2,8 +2,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { useRoles } from './useRoles';
 
-export type UserRole = 'employee' | 'employer' | 'admin' | 'hr' | 'manager';
+export type UserRole = 'employee' | 'employer' | 'admin' | 'hr' | 'manager' | 'payroll';
 
 interface AuthContextType {
   user: User | null;
@@ -13,7 +14,9 @@ interface AuthContextType {
   isManager: boolean;
   isHR: boolean;
   isEmployee: boolean;
+  isPayroll: boolean;
   userRole: UserRole | null;
+  rolesLoaded: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -25,7 +28,9 @@ const AuthContext = createContext<AuthContextType>({
   isManager: false,
   isHR: false,
   isEmployee: false,
+  isPayroll: false,
   userRole: null,
+  rolesLoaded: false,
   signOut: async () => {},
 });
 
@@ -33,7 +38,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  
+  // Use the roles hook
+  const { isAdmin, isManager, isHR, isEmployee, isPayroll, rolesLoaded } = useRoles(user);
+
+  // Determine primary user role
+  const getUserRole = (): UserRole | null => {
+    if (!user) return null;
+    if (isAdmin) return 'admin';
+    if (isHR) return 'hr';
+    if (isManager) return 'manager';
+    if (isPayroll) return 'payroll';
+    if (isEmployee) return 'employee';
+    return 'employee'; // default fallback
+  };
+
+  const userRole = getUserRole();
 
   useEffect(() => {
     let isMounted = true;
@@ -47,32 +67,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
-          // Fetch user role separately to avoid infinite recursion
-          setTimeout(async () => {
-            try {
-              const { data: roleData } = await supabase
-                .from('user_roles')
-                .select('role')
-                .eq('user_id', session.user.id)
-                .single();
-              
-              if (isMounted) {
-                setUserRole(roleData?.role || 'employee');
-              }
-            } catch (error) {
-              console.error('Error fetching user role:', error);
-              if (isMounted) {
-                setUserRole('employee');
-              }
-            }
-          }, 0);
-        } else {
-          if (isMounted) {
-            setUserRole(null);
-          }
-        }
-        
         if (isMounted) {
           setIsLoading(false);
         }
@@ -85,28 +79,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       setSession(session);
       setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Fetch user role
-        setTimeout(async () => {
-          try {
-            const { data: roleData } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', session.user.id)
-              .single();
-            
-            if (isMounted) {
-              setUserRole(roleData?.role || 'employee');
-            }
-          } catch (error) {
-            console.error('Error fetching user role:', error);
-            if (isMounted) {
-              setUserRole('employee');
-            }
-          }
-        }, 0);
-      }
       
       if (isMounted) {
         setIsLoading(false);
@@ -127,11 +99,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const isAdmin = userRole === 'admin';
-  const isManager = userRole === 'manager' || userRole === 'employer';
-  const isHR = userRole === 'hr';
-  const isEmployee = userRole === 'employee' || (!isAdmin && !isManager && !isHR && !!user);
-
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -141,7 +108,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isManager, 
       isHR, 
       isEmployee,
+      isPayroll,
       userRole, 
+      rolesLoaded,
       signOut 
     }}>
       {children}
