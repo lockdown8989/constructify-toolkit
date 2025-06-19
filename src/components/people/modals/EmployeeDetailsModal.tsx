@@ -64,16 +64,38 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
 
   // Convert UI Employee to DB Employee format for editing
   const mapToDbEmployee = (uiEmployee: Employee): DbEmployee => {
+    // Parse the formatted salary string back to a number
+    let salaryValue = 0;
+    if (typeof uiEmployee.salary === 'string') {
+      // Remove currency symbols and formatting, then parse
+      const cleanSalary = uiEmployee.salary.replace(/[£$,\s]/g, '');
+      salaryValue = parseFloat(cleanSalary) || 0;
+    } else {
+      salaryValue = uiEmployee.salary || 0;
+    }
+
+    // Convert formatted date back to ISO date string
+    let startDateValue = new Date().toISOString().split('T')[0];
+    if (uiEmployee.startDate) {
+      try {
+        // Parse the formatted date string and convert to ISO format
+        const parsedDate = new Date(uiEmployee.startDate);
+        if (!isNaN(parsedDate.getTime())) {
+          startDateValue = parsedDate.toISOString().split('T')[0];
+        }
+      } catch (error) {
+        console.error('Error parsing start date:', error);
+      }
+    }
+
     return {
       id: uiEmployee.id,
       name: uiEmployee.name,
       job_title: uiEmployee.jobTitle || 'Employee',
       department: uiEmployee.department || 'General',
       site: uiEmployee.site || 'Main Office',
-      salary: typeof uiEmployee.salary === 'string' 
-        ? parseFloat(uiEmployee.salary.replace(/[^0-9.]/g, '')) || 0
-        : uiEmployee.salary || 0,
-      start_date: uiEmployee.startDate || new Date().toISOString().split('T')[0],
+      salary: salaryValue,
+      start_date: startDateValue,
       lifecycle: uiEmployee.lifecycle || 'Active',
       status: uiEmployee.status || 'Active',
       avatar: uiEmployee.avatar,
