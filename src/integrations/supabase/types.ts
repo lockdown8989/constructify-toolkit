@@ -26,6 +26,9 @@ export type Database = {
           device_info: string | null
           early_departure_minutes: number | null
           employee_id: string | null
+          gps_accuracy: number | null
+          gps_latitude: number | null
+          gps_longitude: number | null
           id: string
           is_early_departure: boolean | null
           is_late: boolean | null
@@ -34,6 +37,7 @@ export type Database = {
             | null
           late_minutes: number | null
           location: string | null
+          location_verified: boolean | null
           manager_initiated: boolean | null
           month_start_date: string | null
           notes: string | null
@@ -42,6 +46,7 @@ export type Database = {
           overtime_approved_by: string | null
           overtime_minutes: number | null
           overtime_status: string | null
+          restriction_id: string | null
           scheduled_end_time: string | null
           scheduled_start_time: string | null
           shift_pattern_id: string | null
@@ -65,6 +70,9 @@ export type Database = {
           device_info?: string | null
           early_departure_minutes?: number | null
           employee_id?: string | null
+          gps_accuracy?: number | null
+          gps_latitude?: number | null
+          gps_longitude?: number | null
           id?: string
           is_early_departure?: boolean | null
           is_late?: boolean | null
@@ -73,6 +81,7 @@ export type Database = {
             | null
           late_minutes?: number | null
           location?: string | null
+          location_verified?: boolean | null
           manager_initiated?: boolean | null
           month_start_date?: string | null
           notes?: string | null
@@ -81,6 +90,7 @@ export type Database = {
           overtime_approved_by?: string | null
           overtime_minutes?: number | null
           overtime_status?: string | null
+          restriction_id?: string | null
           scheduled_end_time?: string | null
           scheduled_start_time?: string | null
           shift_pattern_id?: string | null
@@ -104,6 +114,9 @@ export type Database = {
           device_info?: string | null
           early_departure_minutes?: number | null
           employee_id?: string | null
+          gps_accuracy?: number | null
+          gps_latitude?: number | null
+          gps_longitude?: number | null
           id?: string
           is_early_departure?: boolean | null
           is_late?: boolean | null
@@ -112,6 +125,7 @@ export type Database = {
             | null
           late_minutes?: number | null
           location?: string | null
+          location_verified?: boolean | null
           manager_initiated?: boolean | null
           month_start_date?: string | null
           notes?: string | null
@@ -120,6 +134,7 @@ export type Database = {
           overtime_approved_by?: string | null
           overtime_minutes?: number | null
           overtime_status?: string | null
+          restriction_id?: string | null
           scheduled_end_time?: string | null
           scheduled_start_time?: string | null
           shift_pattern_id?: string | null
@@ -133,6 +148,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_restriction_id_fkey"
+            columns: ["restriction_id"]
+            isOneToOne: false
+            referencedRelation: "gps_clocking_restrictions"
             referencedColumns: ["id"]
           },
           {
@@ -512,6 +534,50 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_location_logs: {
+        Row: {
+          accuracy: number | null
+          attendance_id: string | null
+          employee_id: string
+          id: string
+          is_within_restriction: boolean | null
+          latitude: number
+          longitude: number
+          recorded_at: string
+          restriction_id: string | null
+        }
+        Insert: {
+          accuracy?: number | null
+          attendance_id?: string | null
+          employee_id: string
+          id?: string
+          is_within_restriction?: boolean | null
+          latitude: number
+          longitude: number
+          recorded_at?: string
+          restriction_id?: string | null
+        }
+        Update: {
+          accuracy?: number | null
+          attendance_id?: string | null
+          employee_id?: string
+          id?: string
+          is_within_restriction?: boolean | null
+          latitude?: number
+          longitude?: number
+          recorded_at?: string
+          restriction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_location_logs_restriction_id_fkey"
+            columns: ["restriction_id"]
+            isOneToOne: false
+            referencedRelation: "gps_clocking_restrictions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           annual_leave_days: number | null
@@ -774,6 +840,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gps_clocking_restrictions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          latitude: number
+          longitude: number
+          name: string
+          radius_meters: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          latitude: number
+          longitude: number
+          name: string
+          radius_meters?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          latitude?: number
+          longitude?: number
+          name?: string
+          radius_meters?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       hiring_statistics: {
         Row: {
@@ -2159,6 +2261,14 @@ export type Database = {
       }
       can_edit_shift: {
         Args: { shift_id: string }
+        Returns: boolean
+      }
+      check_location_within_restriction: {
+        Args: {
+          p_latitude: number
+          p_longitude: number
+          p_restriction_id: string
+        }
         Returns: boolean
       }
       create_shift_notifications: {

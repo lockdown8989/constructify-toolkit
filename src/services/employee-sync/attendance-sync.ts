@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Employee } from '@/types/employee';
 
@@ -217,6 +216,75 @@ export const markAbsenceForMissedShifts = async () => {
     }
   } catch (error) {
     console.error('Error marking absences:', error);
+    throw error;
+  }
+};
+
+// Function to record employee clock in with GPS
+export const recordClockInWithGPS = async (
+  employeeId: string, 
+  deviceInfo?: string, 
+  location?: string,
+  gpsLatitude?: number,
+  gpsLongitude?: number,
+  gpsAccuracy?: number
+) => {
+  try {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    
+    console.log('Recording clock in with GPS at (local):', now.toLocaleString());
+    console.log('GPS coordinates:', { gpsLatitude, gpsLongitude, gpsAccuracy });
+    
+    // Check if there's already a record for today
+    const { data: existingRecord } = await supabase
+      .from('attendance')
+      .select('id, check_in')
+      .eq('employee_id', employeeId)
+      .eq('date', today)
+      .single();
+    
+    const attendanceData = {
+      check_in: now.toISOString(),
+      device_info: deviceInfo,
+      location: location,
+      active_session: true,
+      attendance_status: 'Present' as const,
+      gps_latitude: gpsLatitude,
+      gps_longitude: gpsLongitude,
+      gps_accuracy: gpsAccuracy
+    };
+    
+    if (existingRecord) {
+      // Update existing record
+      const { data, error } = await supabase
+        .from('attendance')
+        .update(attendanceData)
+        .eq('id', existingRecord.id)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      return { success: true, record: data };
+    } else {
+      // Create new record
+      const { data, error } = await supabase
+        .from('attendance')
+        .insert({
+          employee_id: employeeId,
+          date: today,
+          ...attendanceData
+        })
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      return { success: true, record: data };
+    }
+  } catch (error) {
+    console.error('Error recording clock in with GPS:', error);
     throw error;
   }
 };
