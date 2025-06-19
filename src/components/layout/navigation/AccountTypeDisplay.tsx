@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/auth';
 import { Badge } from '@/components/ui/badge';
 import { User, Shield, Calculator, Users } from 'lucide-react';
 
