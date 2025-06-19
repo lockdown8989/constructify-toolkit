@@ -1,4 +1,5 @@
 
+
 -- Safe migration to handle UUID fields without type casting issues
 -- We'll use string functions to identify and clean problematic values
 
@@ -144,3 +145,4 @@ CREATE TRIGGER trigger_clean_uuid_fields
 
 -- Clean up the helper function (we don't need it after the migration)
 DROP FUNCTION IF EXISTS safe_clean_uuid_field(text);
+
