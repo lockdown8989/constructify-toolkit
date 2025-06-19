@@ -114,8 +114,30 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       thursday_shift_id: uiEmployee.thursday_shift_id || null,
       friday_shift_id: uiEmployee.friday_shift_id || null,
       saturday_shift_id: uiEmployee.saturday_shift_id || null,
-      sunday_shift_id: uiEmployee.sunday_shift_id || null
-    };
+      sunday_shift_id: uiEmployee.sunday_shift_id || null,
+      // Weekly availability fields
+      monday_available: uiEmployee.monday_available,
+      monday_start_time: uiEmployee.monday_start_time,
+      monday_end_time: uiEmployee.monday_end_time,
+      tuesday_available: uiEmployee.tuesday_available,
+      tuesday_start_time: uiEmployee.tuesday_start_time,
+      tuesday_end_time: uiEmployee.tuesday_end_time,
+      wednesday_available: uiEmployee.wednesday_available,
+      wednesday_start_time: uiEmployee.wednesday_start_time,
+      wednesday_end_time: uiEmployee.wednesday_end_time,
+      thursday_available: uiEmployee.thursday_available,
+      thursday_start_time: uiEmployee.thursday_start_time,
+      thursday_end_time: uiEmployee.thursday_end_time,
+      friday_available: uiEmployee.friday_available,
+      friday_start_time: uiEmployee.friday_start_time,
+      friday_end_time: uiEmployee.friday_end_time,
+      saturday_available: uiEmployee.saturday_available,
+      saturday_start_time: uiEmployee.saturday_start_time,
+      saturday_end_time: uiEmployee.saturday_end_time,
+      sunday_available: uiEmployee.sunday_available,
+      sunday_start_time: uiEmployee.sunday_start_time,
+      sunday_end_time: uiEmployee.sunday_end_time
+    } as DbEmployee;
   };
 
   return (
