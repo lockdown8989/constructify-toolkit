@@ -1,5 +1,9 @@
 
-// Export the enhanced authentication system
+// Create a new index file to re-export auth hooks with proper typing
+
 export { AuthProvider, useAuth } from './AuthProvider';
-export type { AuthContextType, UserRole } from './types';
-export { isAuthenticated, mapUIRoleToDBRole } from './types';
+export { useAuthActions } from './useAuthActions';
+export { useAuthPage } from './useAuthPage';
+export { useRoles } from './useRoles';
+export { isAuthenticated } from './types';
+export type { UserRole } from './types';

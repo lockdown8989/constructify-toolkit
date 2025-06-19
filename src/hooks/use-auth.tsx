@@ -1,11 +1,9 @@
 
-// This file now just re-exports from the enhanced auth system
+// This file now just re-exports from the auth folder
 // to maintain backward compatibility with existing imports
 export { 
   AuthProvider, 
   useAuth, 
   isAuthenticated,
-  type UserRole,
-  type AuthContextType
-} from './auth/AuthProvider';
-export { mapUIRoleToDBRole } from './auth/types';
+  type UserRole 
+} from './auth';

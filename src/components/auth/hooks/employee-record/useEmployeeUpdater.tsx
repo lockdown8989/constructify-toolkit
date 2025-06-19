@@ -36,8 +36,8 @@ export const useEmployeeUpdater = () => {
       .update({ 
         manager_id: managerId,
         job_title: 'Manager',
-        status: 'Active',  // Use the correct status value
-        lifecycle: 'Active'  // Use the correct lifecycle value
+        status: 'Present',  // Ensure we use the correct status value
+        lifecycle: 'Employed'  // Ensure we use the correct lifecycle value
       })
       .eq('user_id', userId);
       
@@ -65,8 +65,8 @@ export const useEmployeeUpdater = () => {
         .from('employees')
         .update({ 
           manager_id: managerId,
-          status: 'Active',  // Use the correct status value
-          lifecycle: 'Active'  // Use the correct lifecycle value
+          status: 'Present',  // Ensure we use the correct status value
+          lifecycle: 'Employed'  // Ensure we use the correct lifecycle value
         })
         .eq('user_id', userId);
         
@@ -97,8 +97,8 @@ export const useEmployeeUpdater = () => {
         .from('employees')
         .update({ 
           manager_id: managerId,
-          status: 'Active',  // Use the correct status value
-          lifecycle: 'Active'  // Use the correct lifecycle value
+          status: 'Present',  // Ensure we use the correct status value
+          lifecycle: 'Employed'  // Ensure we use the correct lifecycle value
         })
         .eq('user_id', userId);
       
