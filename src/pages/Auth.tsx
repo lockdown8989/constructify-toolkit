@@ -8,7 +8,7 @@ import { AuthTabs } from "@/components/auth/AuthTabs";
 import { ResetPasswordMode } from "@/components/auth/ResetPasswordMode";
 
 const Auth = () => {
-  const { signIn, signUp, user } = useAuth();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const {
     from,
@@ -17,7 +17,9 @@ const Auth = () => {
     isResetMode,
     isRecoveryMode,
     handleShowResetPassword,
-    handleBackToSignIn
+    handleBackToSignIn,
+    signIn,
+    signUp
   } = useAuthPage();
 
   // Check for recovery token in URL
@@ -25,6 +27,9 @@ const Auth = () => {
   
   // Check if this is a sign-out redirect
   const isSignOut = searchParams.has("signout") || searchParams.get("action") === "signout";
+  
+  // Check for specific mode parameter
+  const mode = searchParams.get("mode");
   
   useEffect(() => {
     // Enhanced logging for auth page state
@@ -35,6 +40,7 @@ const Auth = () => {
       isRecoveryMode, 
       hasRecoveryToken,
       isSignOut,
+      mode,
       from,
       url: window.location.href,
       searchParams: Object.fromEntries(searchParams.entries())
@@ -56,10 +62,10 @@ const Auth = () => {
     }
     
     console.groupEnd();
-  }, [user, isResetMode, isRecoveryMode, hasRecoveryToken, isSignOut, from, searchParams]);
+  }, [user, isResetMode, isRecoveryMode, hasRecoveryToken, isSignOut, mode, from, searchParams]);
 
-  // If we have a token in the URL but not in reset mode, force reset mode
-  const shouldShowReset = isResetMode || isRecoveryMode || hasRecoveryToken;
+  // If we have a token in the URL or mode is recovery, force reset mode
+  const shouldShowReset = isResetMode || isRecoveryMode || hasRecoveryToken || mode === 'recovery';
 
   // Redirect authenticated users to dashboard unless they're in reset mode
   // or just signed out (in which case we'll show the sign in form)
