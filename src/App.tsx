@@ -5,8 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { AuthProvider } from './hooks/auth';
-import { ThemeProvider } from '@/components/theme-provider';
+import { AuthProvider, useAuth } from './hooks/auth';
 import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Auth from './pages/Auth';
@@ -26,7 +25,6 @@ import ManagerTimeClock from './pages/ManagerTimeClock';
 import LeaveManagement from './pages/LeaveManagement';
 import ScheduleRequests from './pages/ScheduleRequests';
 import BackgroundNotificationService from './services/shift-notifications/background-notification-service';
-import { useAuth } from './hooks/auth';
 import './App.css';
 
 const queryClient = new QueryClient({
@@ -127,12 +125,10 @@ function App() {
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <ThemeProvider>
-            <TooltipProvider>
-              <AppContent />
-              <Toaster />
-            </TooltipProvider>
-          </ThemeProvider>
+          <TooltipProvider>
+            <AppContent />
+            <Toaster />
+          </TooltipProvider>
         </AuthProvider>
       </QueryClientProvider>
     </HelmetProvider>

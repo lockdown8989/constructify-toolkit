@@ -65,18 +65,7 @@ const People = () => {
   // Handle updating employee status
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
-      // Find the employee to get all required fields
-      const employee = employees.find(emp => emp.id === id);
-      if (!employee) {
-        console.error("Employee not found");
-        return;
-      }
-      
-      // Update with complete employee object
-      await updateEmployee.mutateAsync({
-        ...employee,
-        status
-      });
+      await updateEmployee.mutateAsync({ id, status });
     } catch (error) {
       console.error("Error updating status:", error);
     }

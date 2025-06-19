@@ -64,38 +64,18 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
 
   // Convert UI Employee to DB Employee format for editing
   const mapToDbEmployee = (uiEmployee: Employee): DbEmployee => {
-    // Parse the formatted salary string back to a number
-    let salaryValue = 0;
-    if (typeof uiEmployee.salary === 'string') {
-      // Remove currency symbols and formatting, then parse
-      const cleanSalary = uiEmployee.salary.replace(/[£$,\s]/g, '');
-      salaryValue = parseFloat(cleanSalary) || 0;
-    } else {
-      salaryValue = uiEmployee.salary || 0;
-    }
-
-    // Convert formatted date back to ISO date string
-    let startDateValue = new Date().toISOString().split('T')[0];
-    if (uiEmployee.startDate) {
-      try {
-        // Parse the formatted date string and convert to ISO format
-        const parsedDate = new Date(uiEmployee.startDate);
-        if (!isNaN(parsedDate.getTime())) {
-          startDateValue = parsedDate.toISOString().split('T')[0];
-        }
-      } catch (error) {
-        console.error('Error parsing start date:', error);
-      }
-    }
-
     return {
       id: uiEmployee.id,
       name: uiEmployee.name,
-      job_title: uiEmployee.jobTitle || 'Employee',
-      department: uiEmployee.department || 'General',
-      site: uiEmployee.site || 'Main Office',
-      salary: salaryValue,
-      start_date: startDateValue,
+      job_title: uiEmployee.jobTitle || '',
+      department: uiEmployee.department,
+      site: uiEmployee.site,
+      salary: typeof uiEmployee.salary === 'string' 
+        ? parseFloat(uiEmployee.salary.replace(/[^0-9.]/g, '')) || 0
+        : uiEmployee.salary || 0,
+      start_date: uiEmployee.startDate 
+        ? new Date(uiEmployee.startDate).toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0],
       lifecycle: uiEmployee.lifecycle || 'Active',
       status: uiEmployee.status || 'Active',
       avatar: uiEmployee.avatar,
@@ -114,30 +94,8 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       thursday_shift_id: uiEmployee.thursday_shift_id || null,
       friday_shift_id: uiEmployee.friday_shift_id || null,
       saturday_shift_id: uiEmployee.saturday_shift_id || null,
-      sunday_shift_id: uiEmployee.sunday_shift_id || null,
-      // Weekly availability fields with default values
-      monday_available: true,
-      monday_start_time: '09:00:00',
-      monday_end_time: '17:00:00',
-      tuesday_available: true,
-      tuesday_start_time: '09:00:00',
-      tuesday_end_time: '17:00:00',
-      wednesday_available: true,
-      wednesday_start_time: '09:00:00',
-      wednesday_end_time: '17:00:00',
-      thursday_available: true,
-      thursday_start_time: '09:00:00',
-      thursday_end_time: '17:00:00',
-      friday_available: true,
-      friday_start_time: '09:00:00',
-      friday_end_time: '17:00:00',
-      saturday_available: true,
-      saturday_start_time: '09:00:00',
-      saturday_end_time: '17:00:00',
-      sunday_available: true,
-      sunday_start_time: '09:00:00',
-      sunday_end_time: '17:00:00'
-    } as DbEmployee;
+      sunday_shift_id: uiEmployee.sunday_shift_id || null
+    };
   };
 
   return (
@@ -151,7 +109,11 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
             onDelete={() => setIsDeleteDialogOpen(true)}
           />
           <div className="flex-1 overflow-auto">
-            <EmployeeInfoSection employee={employee} />
+            <EmployeeInfoSection 
+              employee={employee} 
+              isEditing={false}
+              onSave={() => {}}
+            />
           </div>
         </DialogContent>
       </Dialog>

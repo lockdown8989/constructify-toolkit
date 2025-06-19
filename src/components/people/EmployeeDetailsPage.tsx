@@ -8,13 +8,15 @@ import { useEmployees } from '@/hooks/use-employees';
 import EmployeeHeader from './modals/employee-details/EmployeeHeader';
 import EmployeeInfoSection from './modals/employee-details/EmployeeInfoSection';
 import DocumentsSection from './modals/employee-details/DocumentsSection';
+import { mapDbEmployeeToUiEmployee } from './types';
 
 const EmployeeDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: employees, isLoading } = useEmployees();
   
-  const employee = employees?.find(emp => emp.id === id);
+  const dbEmployee = employees?.find(emp => emp.id === id);
+  const employee = dbEmployee ? mapDbEmployeeToUiEmployee(dbEmployee) : null;
 
   if (isLoading) {
     return (
@@ -53,8 +55,29 @@ const EmployeeDetailsPage = () => {
         <h1 className="text-3xl font-bold">Employee Details</h1>
       </div>
 
+      {/* Employee Header Card */}
+      <Card>
+        <CardContent className="p-6">
+          <EmployeeHeader
+            employee={employee}
+            onDelete={() => {}}
+          />
+        </CardContent>
+      </Card>
+
       {/* Employee Information */}
-      <EmployeeInfoSection employee={employee} />
+      <Card>
+        <CardHeader>
+          <CardTitle>Employee Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EmployeeInfoSection 
+            employee={employee}
+            isEditing={false}
+            onSave={() => {}}
+          />
+        </CardContent>
+      </Card>
 
       {/* Documents Section */}
       <Card>

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,8 +21,8 @@ export const useEmployeeForm = ({
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const addEmployeeMutation = useAddEmployee();
-  const updateEmployeeMutation = useUpdateEmployee();
+  const addEmployee = useAddEmployee();
+  const updateEmployee = useUpdateEmployee();
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),
@@ -120,7 +121,7 @@ export const useEmployeeForm = ({
         throw new Error('Site is required');
       }
 
-      // Create the employee data object with proper type conversion
+      // Create the employee data object
       const employeeData = {
         name: values.name.trim(),
         email: sanitizeString(values.email),
@@ -142,7 +143,7 @@ export const useEmployeeForm = ({
         friday_shift_id: sanitizeString(values.friday_shift_id),
         saturday_shift_id: sanitizeString(values.saturday_shift_id),
         sunday_shift_id: sanitizeString(values.sunday_shift_id),
-        // Weekly availability with proper type conversion
+        // Weekly availability
         monday_available: ensureBoolean(values.monday_available),
         monday_start_time: ensureTimeString(values.monday_start_time),
         monday_end_time: ensureTimeString(values.monday_end_time),
@@ -170,7 +171,7 @@ export const useEmployeeForm = ({
 
       if (employeeToEdit) {
         console.log('🔄 Updating existing employee with ID:', employeeToEdit.id);
-        await updateEmployeeMutation.mutateAsync({
+        await updateEmployee.mutateAsync({
           id: employeeToEdit.id,
           ...employeeData,
         });
@@ -180,7 +181,7 @@ export const useEmployeeForm = ({
         });
       } else {
         console.log('➕ Creating new employee');
-        await addEmployeeMutation.mutateAsync(employeeData);
+        await addEmployee.mutateAsync(employeeData);
         toast({
           title: "Employee added successfully", 
           description: "New employee has been created.",

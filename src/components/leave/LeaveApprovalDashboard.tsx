@@ -18,7 +18,7 @@ import {
 } from "./approval";
 import { ClipboardCheck } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/hooks/use-auth";
 
 const LeaveApprovalDashboard: React.FC = () => {
   const { data: leaves = [], isLoading: isLoadingLeaves } = useLeaveCalendar();
