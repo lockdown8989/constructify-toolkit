@@ -31,7 +31,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   // Update the title and button text based on whether we're editing or adding
   const isEditMode = !!employeeToEdit;
   const title = isEditMode ? "Edit Employee" : "Add Team Member";
-  const buttonText = isEditMode ? "Save Changes" : "Add Team Member";
+  const buttonText = isEditMode ? "Save" : "Add Team Member";
   const loadingText = isEditMode ? "Saving..." : "Adding...";
   const isMobile = useIsMobile();
   

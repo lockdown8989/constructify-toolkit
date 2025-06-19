@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/hooks/use-auth';
 import { useEmployees } from '@/hooks/use-employees';
 import { useInterviews } from '@/hooks/use-interviews';
 import { useAttendanceSync } from '@/hooks/use-attendance-sync';
@@ -9,6 +9,7 @@ import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard';
 import ManagerDashboard from '@/components/dashboard/ManagerDashboard';
 import PayrollDashboard from '@/components/dashboard/PayrollDashboard';
 import { Loader2 } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
 const Dashboard = () => {
   const { isManager, isAdmin, isHR, isPayroll, isLoading: authLoading, user } = useAuth();

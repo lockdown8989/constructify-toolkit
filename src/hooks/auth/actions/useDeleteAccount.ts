@@ -1,30 +1,69 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Hook for handling account deletion functionality
  */
 export const useDeleteAccount = () => {
-  const deleteAccount = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        return { success: false, error: "No user found" };
-      }
+  const { toast } = useToast();
+  
+  // Safely get navigator - will return null if outside Router context
+  let navigate;
+  try {
+    navigate = useNavigate();
+  } catch (error) {
+    // Handle case when hook is used outside Router context
+    navigate = null;
+    console.log("useDeleteAccount: useNavigate failed - outside Router context");
+  }
 
-      // Note: Supabase doesn't have a direct delete user method from client
-      // This would typically require an admin function or manual deletion
-      console.log('Account deletion requested for user:', user.id);
+  const deleteAccount = async (): Promise<{success: boolean; error?: string}> => {
+    try {
+      // First call the edge function to delete user data from all tables
+      const { error: functionError } = await supabase.functions.invoke("delete-user-account");
+      
+      if (functionError) {
+        console.error('Error deleting user data:', functionError);
+        
+        toast({
+          title: "Account deletion failed",
+          description: functionError.message || "Could not delete your account data. Please try again later.",
+          variant: "destructive",
+        });
+        
+        return { success: false, error: functionError.message };
+      }
+      
+      toast({
+        title: "Account deleted",
+        description: "Your account has been successfully deleted. You will be redirected shortly.",
+      });
+      
+      // Sign out after successful deletion
+      await supabase.auth.signOut();
+      
+      // Redirect to homepage if navigation is available
+      if (navigate) {
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
+      }
+      
+      return { success: true };
+    } catch (error: any) {
+      console.error('Exception in deleteAccount:', error);
+      
+      toast({
+        title: "Account deletion failed",
+        description: "An unexpected error occurred. Please try again or contact support.",
+        variant: "destructive",
+      });
       
       return { 
         success: false, 
-        error: "Account deletion requires admin approval. Please contact support." 
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Account deletion failed"
+        error: error instanceof Error ? error.message : "An unexpected error occurred" 
       };
     }
   };

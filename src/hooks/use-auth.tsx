@@ -4,5 +4,6 @@
 export { 
   AuthProvider, 
   useAuth, 
+  isAuthenticated,
   type UserRole 
 } from './auth';

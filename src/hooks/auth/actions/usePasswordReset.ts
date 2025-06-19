@@ -3,68 +3,86 @@ import { supabase } from "@/integrations/supabase/client";
 import { AuthError } from "@supabase/supabase-js";
 
 /**
- * Hook for handling password reset functionality
+ * Hook for handling password reset functionality with enhanced security
  */
 export const usePasswordReset = () => {
+  /**
+   * Sends a password reset email to the specified email address
+   */
   const resetPassword = async (email: string) => {
     try {
-      if (!email) {
+      const trimmedEmail = email.trim().toLowerCase();
+      
+      if (!trimmedEmail || trimmedEmail.length > 254) {
         return {
           error: {
-            message: "Email is required"
+            message: "Please enter a valid email address"
           } as AuthError,
           data: undefined
         };
       }
-
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?type=recovery`,
-      });
-
-      if (error) {
-        return { error, data: undefined };
-      }
-
-      return { error: null, data };
+      
+      const { data, error } = await supabase.auth.resetPasswordForEmail(
+        trimmedEmail,
+        {
+          redirectTo: `${window.location.origin}/auth?recovery=true`,
+        }
+      );
+      
+      // Always return success for security (don't reveal if email exists)
+      return { data: { message: "If an account with this email exists, you will receive a password reset link." }, error: null };
     } catch (error) {
-      return {
+      return { 
         error: {
-          message: error instanceof Error ? error.message : "Password reset failed"
+          message: "Unable to send reset email at this time"
         } as AuthError,
         data: undefined
       };
     }
   };
-
+  
+  /**
+   * Updates the user's password with enhanced validation
+   */
   const updatePassword = async (password: string) => {
     try {
-      if (!password) {
+      // Enhanced password validation
+      if (password.length < 8) {
         return {
           error: {
-            message: "Password is required"
+            message: "Password must be at least 8 characters long"
           } as AuthError,
           data: undefined
         };
       }
-
+      
+      if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password) || !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        return {
+          error: {
+            message: "Password must contain uppercase, lowercase, number, and special character"
+          } as AuthError,
+          data: undefined
+        };
+      }
+      
       const { data, error } = await supabase.auth.updateUser({
-        password: password
+        password,
       });
-
+      
       if (error) {
         return { error, data: undefined };
       }
-
-      return { error: null, data };
+      
+      return { data, error: null };
     } catch (error) {
-      return {
+      return { 
         error: {
-          message: error instanceof Error ? error.message : "Password update failed"
+          message: "Unable to update password at this time"
         } as AuthError,
-        data: undefined
+        data: undefined 
       };
     }
   };
-
+  
   return { resetPassword, updatePassword };
 };

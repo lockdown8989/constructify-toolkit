@@ -1,24 +1,42 @@
-/**
- * Hook for input sanitization and validation
- */
+
+import { useMemo } from 'react';
+
 export const useInputSanitization = () => {
-  const sanitizeEmail = (email: string): string => {
-    return email.trim().toLowerCase();
-  };
+  return useMemo(() => ({
+    sanitizeEmail: (email: string): string => {
+      return email.trim().toLowerCase().replace(/[^\w@.-]/g, '');
+    },
 
-  const sanitizeName = (name: string): string => {
-    // Remove any potentially harmful characters but keep spaces and common name characters
-    return name.replace(/[<>"/\\&]/g, '').trim();
-  };
+    sanitizeText: (text: string): string => {
+      // Remove potentially dangerous characters while preserving normal text
+      return text.trim().replace(/[<>\"'&]/g, '');
+    },
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+    sanitizeName: (name: string): string => {
+      // Allow letters, spaces, hyphens, apostrophes
+      return name.trim().replace(/[^a-zA-Z\s\-']/g, '');
+    },
 
-  return {
-    sanitizeEmail,
-    sanitizeName,
-    validateEmail
-  };
+    validateEmail: (email: string): boolean => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email) && email.length <= 254;
+    },
+
+    validatePassword: (password: string): boolean => {
+      return password.length >= 8 && 
+             /[A-Z]/.test(password) && 
+             /[a-z]/.test(password) && 
+             /\d/.test(password) && 
+             /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    },
+
+    escapeHtml: (unsafe: string): string => {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  }), []);
 };

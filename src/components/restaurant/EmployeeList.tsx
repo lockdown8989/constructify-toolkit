@@ -1,88 +1,125 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Employee } from '@/types/restaurant-schedule';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Users, Clock, MapPin } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface EmployeeListProps {
   employees: Employee[];
 }
 
-const EmployeeList: React.FC<EmployeeListProps> = ({ employees }) => {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const filteredEmployees = employees.filter(employee =>
-    employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    employee.role.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
+const EmployeeList = ({ employees }: EmployeeListProps) => {
+  const handleDragStart = (e: React.DragEvent, employeeId: string) => {
+    e.dataTransfer.setData('employeeId', employeeId);
+    e.dataTransfer.effectAllowed = 'move';
+    
+    // Create and append ghost image element
+    const ghostEl = document.createElement('div');
+    ghostEl.className = 'fixed top-0 left-0 -translate-x-full bg-white rounded-lg shadow-lg p-3 pointer-events-none';
+    ghostEl.innerHTML = `
+      <div class="flex items-center">
+        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 mr-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <div>Assigning...</div>
+      </div>
+    `;
+    document.body.appendChild(ghostEl);
+    
+    if (e.dataTransfer.setDragImage) {
+      e.dataTransfer.setDragImage(ghostEl, 10, 10);
+    }
+    
+    // Clean up after drag starts
+    setTimeout(() => {
+      document.body.removeChild(ghostEl);
+    }, 0);
+  };
+  
   return (
-    <div className="p-4">
-      <div className="mb-4">
-        <h3 className="font-semibold text-gray-900 mb-3">Team Members</h3>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search employees..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9"
-          />
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className="p-4 border-b border-gray-200 bg-gray-50/50 rounded-t-xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Users className="h-5 w-5 mr-2 text-gray-700" />
+            <span className="font-semibold text-gray-800">Staff Members</span>
+          </div>
+          <Badge variant="secondary" className="text-xs">
+            {employees.length}
+          </Badge>
         </div>
       </div>
-
-      <ScrollArea className="h-[400px]">
-        <div className="space-y-2">
-          {filteredEmployees.map((employee) => {
+      
+      <div className="p-3 space-y-2 max-h-[600px] overflow-y-auto">
+        {employees.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <Users className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+            <p className="text-sm">No employees found</p>
+          </div>
+        ) : (
+          employees.map(employee => {
             const initials = employee.name.split(' ').map(n => n[0]).join('');
             
             return (
-              <div
+              <div 
                 key={employee.id}
-                className="flex items-center p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer border border-gray-100"
+                draggable
+                onDragStart={(e) => handleDragStart(e, employee.id)}
+                className={cn(
+                  "flex items-center p-3 rounded-lg hover:bg-gray-50 hover:shadow-sm cursor-move transition-all duration-200 border border-transparent hover:border-gray-200",
+                  "active-touch-state group"
+                )}
               >
-                <Avatar className="h-9 w-9 mr-3 border border-gray-200">
-                  <AvatarImage src={employee.avatarUrl} alt={employee.name} />
+                <Avatar className="h-10 w-10 mr-3 border-2 border-gray-100 group-hover:border-gray-200">
+                  <AvatarImage src={employee.avatarUrl || '/placeholder.svg'} alt={employee.name} />
                   <AvatarFallback 
-                    className="text-xs font-medium"
-                    style={{ backgroundColor: employee.color + '20', color: employee.color }}
+                    className="text-white font-semibold text-sm" 
+                    style={{ backgroundColor: employee.color }}
                   >
                     {initials}
                   </AvatarFallback>
                 </Avatar>
                 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {employee.name}
-                    </p>
+                <div className="flex-1 overflow-hidden">
+                  <div className="font-medium text-sm text-gray-900 truncate">
+                    {employee.name}
                   </div>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="outline" className="text-xs">
                       {employee.role}
                     </Badge>
-                    <span className="text-xs text-gray-500">
-                      £{employee.hourlyRate}/hr
-                    </span>
+                    {employee.hourlyRate && (
+                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        £{employee.hourlyRate}/hr
+                      </span>
+                    )}
+                  </div>
+                  {(employee as any).location && (
+                    <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                      <MapPin className="h-3 w-3" />
+                      {(employee as any).location}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="w-2 h-8 bg-gray-300 rounded-full flex flex-col justify-center items-center gap-1">
+                    <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                    <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                    <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
                   </div>
                 </div>
               </div>
             );
-          })}
-        </div>
-      </ScrollArea>
-
-      {filteredEmployees.length === 0 && (
-        <div className="text-center py-6 text-gray-500">
-          <p className="text-sm">No employees found</p>
-          {searchQuery && (
-            <p className="text-xs mt-1">Try adjusting your search</p>
-          )}
-        </div>
-      )}
+          })
+        )}
+      </div>
     </div>
   );
 };

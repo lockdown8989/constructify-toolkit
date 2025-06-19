@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/hooks/auth';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -37,183 +37,181 @@ import EmployeeDetailsPage from '@/components/people/EmployeeDetailsPage';
 
 const AppRoutes = () => {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/about" element={<About />} />
+    <AuthProvider>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/about" element={<About />} />
 
-          {/* Protected routes with layout */}
-          <Route element={<AppLayout />}>
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/payroll-dashboard"
-              element={
-                <ProtectedRoute requiredRole="payroll">
-                  <PayrollDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/time-clock"
-              element={
-                <ProtectedRoute>
-                  <TimeClock />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/manager-time-clock"
-              element={
-                <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                  <ManagerTimeClock />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/schedule"
-              element={
-                <ProtectedRoute>
-                  <Schedule />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/shift-calendar"
-              element={
-                <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                  <ShiftCalendar />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/schedule-requests"
-              element={
-                <ProtectedRoute>
-                  <ScheduleRequests />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/leave-management"
-              element={
-                <ProtectedRoute>
-                  <LeaveManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/people"
-              element={
-                <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                  <People />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/people/employee/:id"
-              element={
-                <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                  <EmployeeDetailsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/attendance"
-              element={
-                <ProtectedRoute>
-                  <Attendance />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/salary"
-              element={
-                <ProtectedRoute>
-                  <Salary />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/payroll"
-              element={
-                <ProtectedRoute requiredRoles={['admin', 'hr', 'manager', 'payroll']}>
-                  <Payroll />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/payslips"
-              element={
-                <ProtectedRoute requiredRole="payroll">
-                  <Payslips />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/employee-workflow"
-              element={
-                <ProtectedRoute>
-                  <EmployeeWorkflow />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/restaurant-schedule"
-              element={
-                <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                  <RestaurantSchedule />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile-settings"
-              element={
-                <ProtectedRoute>
-                  <ProfileSettings />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/hiring"
-              element={
-                <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                  <Hiring />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
+        {/* Protected routes with layout */}
+        <Route element={<AppLayout />}>
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payroll-dashboard"
+            element={
+              <ProtectedRoute requiredRole="payroll">
+                <PayrollDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/time-clock"
+            element={
+              <ProtectedRoute>
+                <TimeClock />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/manager-time-clock"
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <ManagerTimeClock />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/schedule"
+            element={
+              <ProtectedRoute>
+                <Schedule />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/shift-calendar"
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <ShiftCalendar />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/schedule-requests"
+            element={
+              <ProtectedRoute>
+                <ScheduleRequests />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leave-management"
+            element={
+              <ProtectedRoute>
+                <LeaveManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/people"
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <People />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/people/employee/:id"
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <EmployeeDetailsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/attendance"
+            element={
+              <ProtectedRoute>
+                <Attendance />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/salary"
+            element={
+              <ProtectedRoute>
+                <Salary />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payroll"
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager', 'payroll']}>
+                <Payroll />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payslips"
+            element={
+              <ProtectedRoute requiredRole="payroll">
+                <Payslips />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/employee-workflow"
+            element={
+              <ProtectedRoute>
+                <EmployeeWorkflow />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/restaurant-schedule"
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <RestaurantSchedule />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile-settings"
+            element={
+              <ProtectedRoute>
+                <ProfileSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/hiring"
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <Hiring />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
 
-          {/* 404 route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+        {/* 404 route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AuthProvider>
   );
 };
 
