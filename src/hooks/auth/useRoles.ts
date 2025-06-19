@@ -62,7 +62,8 @@ export const useRoles = (user: User | null) => {
         // Check each role with explicit logging
         const hasAdminRole = userRoles.includes('admin');
         const hasHRRole = userRoles.includes('hr');
-        const hasEmployerRole = userRoles.includes('employer');
+        // Check for both 'employer' and 'manager' to ensure compatibility
+        const hasEmployerRole = userRoles.includes('employer') || userRoles.includes('manager');
         const hasPayrollRole = userRoles.includes('payroll');
         const hasEmployeeRole = userRoles.includes('employee');
         
@@ -72,7 +73,8 @@ export const useRoles = (user: User | null) => {
           manager: hasEmployerRole,
           payroll: hasPayrollRole,
           employee: hasEmployeeRole,
-          jobTitle: employeeData?.job_title
+          jobTitle: employeeData?.job_title,
+          allRoles: userRoles
         });
         
         setIsAdmin(hasAdminRole);

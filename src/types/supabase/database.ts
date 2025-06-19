@@ -1,3 +1,4 @@
+
 import { Json } from '@/integrations/supabase/types';
 import type { 
   Employee, 
@@ -282,7 +283,7 @@ export interface Database {
       [_ in never]: never;
     };
     Enums: {
-      app_role: 'admin' | 'employee' | 'manager';
+      app_role: 'admin' | 'employee' | 'employer' | 'hr' | 'payroll';
     };
     CompositeTypes: {
       [_ in never]: never;
