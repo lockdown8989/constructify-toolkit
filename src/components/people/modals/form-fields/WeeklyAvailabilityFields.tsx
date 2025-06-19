@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { EmployeeFormValues } from '../employee-form-schema';
@@ -30,32 +29,40 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
     const startTimeField = `${day}_start_time` as keyof EmployeeFormValues;
     const endTimeField = `${day}_end_time` as keyof EmployeeFormValues;
     
-    // Set availability
-    form.setValue(availableField, checked);
+    // Set availability with explicit boolean value
+    form.setValue(availableField, checked, { shouldDirty: true, shouldValidate: true });
     
-    // If turning off availability, set default times
+    // If turning off availability, set default times but keep them
     if (!checked) {
-      form.setValue(startTimeField, '09:00');
-      form.setValue(endTimeField, '17:00');
+      form.setValue(startTimeField, '09:00', { shouldDirty: true });
+      form.setValue(endTimeField, '17:00', { shouldDirty: true });
       console.log(`⚠️ ${day} set to unavailable, times reset to defaults`);
     } else {
       // If turning on availability and times are not set, set defaults
       const currentStartTime = form.getValues(startTimeField);
       const currentEndTime = form.getValues(endTimeField);
       
-      if (!currentStartTime) {
-        form.setValue(startTimeField, '09:00');
+      if (!currentStartTime || currentStartTime === '') {
+        form.setValue(startTimeField, '09:00', { shouldDirty: true });
         console.log(`⚙️ ${day} start time set to default: 09:00`);
       }
-      if (!currentEndTime) {
-        form.setValue(endTimeField, '17:00');
+      if (!currentEndTime || currentEndTime === '') {
+        form.setValue(endTimeField, '17:00', { shouldDirty: true });
         console.log(`⚙️ ${day} end time set to default: 17:00`);
       }
       console.log(`✅ ${day} set to available`);
     }
     
-    // Trigger form validation
+    // Mark form as dirty to ensure changes are detected
     form.trigger([availableField, startTimeField, endTimeField]);
+    
+    // Log current form state for debugging
+    console.log(`📋 Form state after ${day} change:`, {
+      [availableField]: form.getValues(availableField),
+      [startTimeField]: form.getValues(startTimeField),
+      [endTimeField]: form.getValues(endTimeField),
+      formIsDirty: form.formState.isDirty
+    });
   };
 
   return (
@@ -65,7 +72,7 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
           <div className="mb-6">
             <h2 className="text-2xl font-semibold text-gray-900 mb-2">Weekly Availability</h2>
             <p className="text-gray-600">
-              Set your regular weekly availability. This helps managers schedule shifts and you'll receive 🔔 notifications 10 minutes before your shifts start and end.
+              Set your regular weekly availability. This helps managers schedule shifts and you'll receive notifications 10 minutes before your shifts start and end.
             </p>
           </div>
           <Separator className="mb-6" />
@@ -95,6 +102,7 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
                                 <Switch 
                                   checked={!!field.value}
                                   onCheckedChange={(checked) => {
+                                    console.log(`🎯 Switch toggled for ${key}: ${checked}`);
                                     field.onChange(checked);
                                     handleAvailabilityChange(key, checked);
                                   }}

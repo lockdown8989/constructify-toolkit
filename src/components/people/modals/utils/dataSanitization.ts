@@ -34,8 +34,14 @@ export const ensureBoolean = (value: any): boolean => {
     return result;
   }
   
-  // Default fallback - treat null/undefined as false, everything else as true
-  const result = value != null;
+  // Handle null/undefined - default to true for availability
+  if (value === null || value === undefined) {
+    console.log('✅ Null/undefined to boolean: defaulting to true');
+    return true;
+  }
+  
+  // Default fallback - treat everything else as true
+  const result = Boolean(value);
   console.log('✅ Default boolean conversion:', { original: value, result });
   return result;
 };

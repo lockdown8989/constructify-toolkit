@@ -50,7 +50,7 @@ export const useEmployeeForm = ({
       friday_shift_id: employeeToEdit?.friday_shift_id || '',
       saturday_shift_id: employeeToEdit?.saturday_shift_id || '',
       sunday_shift_id: employeeToEdit?.sunday_shift_id || '',
-      // Weekly availability with explicit boolean conversion
+      // Weekly availability with explicit boolean conversion and null coalescing
       monday_available: employeeToEdit?.monday_available ?? true,
       monday_start_time: employeeToEdit?.monday_start_time || '09:00',
       monday_end_time: employeeToEdit?.monday_end_time || '17:00',
@@ -97,15 +97,17 @@ export const useEmployeeForm = ({
       const employeeData = transformEmployeeData(values);
 
       console.log('📋 Sanitized employee data prepared:', employeeData);
-      console.log('🔍 Final availability data:', {
+      console.log('🔍 Final availability data before save:', {
         saturday_available: employeeData.saturday_available,
-        sunday_available: employeeData.sunday_available
+        sunday_available: employeeData.sunday_available,
+        saturday_start_time: employeeData.saturday_start_time,
+        saturday_end_time: employeeData.saturday_end_time,
+        sunday_start_time: employeeData.sunday_start_time,
+        sunday_end_time: employeeData.sunday_end_time
       });
 
       if (employeeToEdit) {
         console.log('🔄 Updating existing employee with ID:', employeeToEdit.id);
-        console.log('🔧 Original employee lifecycle:', employeeToEdit.lifecycle);
-        console.log('🔧 New employee lifecycle:', employeeData.lifecycle);
         
         await updateEmployeeMutation.mutateAsync({
           id: employeeToEdit.id,
@@ -113,14 +115,14 @@ export const useEmployeeForm = ({
         });
         toast({
           title: "Employee updated successfully",
-          description: "Employee information and weekly availability have been saved.",
+          description: "Employee information and weekly availability have been saved and synchronized with the restaurant schedule.",
         });
       } else {
         console.log('➕ Creating new employee');
         await addEmployeeMutation.mutateAsync(employeeData);
         toast({
           title: "Employee added successfully", 
-          description: "New employee and weekly availability have been created.",
+          description: "New employee and weekly availability have been created and synchronized with the restaurant schedule.",
         });
       }
       
