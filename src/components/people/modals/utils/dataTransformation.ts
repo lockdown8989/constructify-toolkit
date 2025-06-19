@@ -1,0 +1,50 @@
+
+import { EmployeeFormValues } from '../employee-form-schema';
+import { sanitizeString, sanitizeNumber, ensureBoolean, ensureTimeString } from './dataSanitization';
+
+export const transformEmployeeData = (values: EmployeeFormValues) => {
+  return {
+    name: values.name.trim(),
+    email: sanitizeString(values.email),
+    job_title: values.job_title.trim(),
+    department: values.department.trim(),
+    site: values.site.trim(),
+    location: sanitizeString(values.location),
+    salary: sanitizeNumber(values.salary),
+    hourly_rate: sanitizeNumber(values.hourly_rate),
+    start_date: values.start_date || new Date().toISOString().split('T')[0],
+    status: values.status || 'Active',
+    lifecycle: values.lifecycle || 'Full time',
+    role: 'employee',
+    shift_pattern_id: sanitizeString(values.shift_pattern_id),
+    monday_shift_id: sanitizeString(values.monday_shift_id),
+    tuesday_shift_id: sanitizeString(values.tuesday_shift_id),
+    wednesday_shift_id: sanitizeString(values.wednesday_shift_id),
+    thursday_shift_id: sanitizeString(values.thursday_shift_id),
+    friday_shift_id: sanitizeString(values.friday_shift_id),
+    saturday_shift_id: sanitizeString(values.saturday_shift_id),
+    sunday_shift_id: sanitizeString(values.sunday_shift_id),
+    // Weekly availability with proper type conversion
+    monday_available: ensureBoolean(values.monday_available),
+    monday_start_time: ensureTimeString(values.monday_start_time),
+    monday_end_time: ensureTimeString(values.monday_end_time),
+    tuesday_available: ensureBoolean(values.tuesday_available),
+    tuesday_start_time: ensureTimeString(values.tuesday_start_time),
+    tuesday_end_time: ensureTimeString(values.tuesday_end_time),
+    wednesday_available: ensureBoolean(values.wednesday_available),
+    wednesday_start_time: ensureTimeString(values.wednesday_start_time),
+    wednesday_end_time: ensureTimeString(values.wednesday_end_time),
+    thursday_available: ensureBoolean(values.thursday_available),
+    thursday_start_time: ensureTimeString(values.thursday_start_time),
+    thursday_end_time: ensureTimeString(values.thursday_end_time),
+    friday_available: ensureBoolean(values.friday_available),
+    friday_start_time: ensureTimeString(values.friday_start_time),
+    friday_end_time: ensureTimeString(values.friday_end_time),
+    saturday_available: ensureBoolean(values.saturday_available),
+    saturday_start_time: ensureTimeString(values.saturday_start_time),
+    saturday_end_time: ensureTimeString(values.saturday_end_time),
+    sunday_available: ensureBoolean(values.sunday_available),
+    sunday_start_time: ensureTimeString(values.sunday_start_time),
+    sunday_end_time: ensureTimeString(values.sunday_end_time),
+  };
+};

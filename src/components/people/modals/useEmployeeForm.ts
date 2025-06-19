@@ -1,9 +1,13 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { employeeFormSchema, type EmployeeFormValues } from './employee-form-schema';
 import { useAddEmployee, useUpdateEmployee, Employee } from '@/hooks/use-employees';
 import { useToast } from '@/hooks/use-toast';
+import { validateRequiredFields } from './utils/formValidation';
+import { transformEmployeeData } from './utils/dataTransformation';
+import { useErrorHandling } from './hooks/useErrorHandling';
 
 export interface UseEmployeeFormProps {
   onSuccess: () => void;
@@ -17,8 +21,8 @@ export const useEmployeeForm = ({
   defaultLocation 
 }: UseEmployeeFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { error, handleError, clearError } = useErrorHandling();
 
   const addEmployeeMutation = useAddEmployee();
   const updateEmployeeMutation = useUpdateEmployee();
@@ -35,7 +39,7 @@ export const useEmployeeForm = ({
       location: employeeToEdit?.location || defaultLocation || '',
       salary: employeeToEdit?.salary || 0,
       hourly_rate: employeeToEdit?.hourly_rate || 0,
-      lifecycle: (employeeToEdit?.lifecycle as "Active" | "Inactive" | "Terminated") || 'Active',
+      lifecycle: (employeeToEdit?.lifecycle as "Full time" | "Part time" | "Agency") || 'Full time',
       status: (employeeToEdit?.status as "Active" | "Inactive" | "Pending") || 'Active',
       start_date: employeeToEdit?.start_date || new Date().toISOString().split('T')[0],
       shift_pattern_id: employeeToEdit?.shift_pattern_id || '',
@@ -74,97 +78,14 @@ export const useEmployeeForm = ({
   const onSubmit = form.handleSubmit(async (values) => {
     console.log('🚀 Form submission started with values:', values);
     setIsSubmitting(true);
-    setError(null);
+    clearError();
 
     try {
-      // Sanitize and prepare data
-      const sanitizeString = (str: any): string | null => {
-        if (typeof str !== 'string') return null;
-        const trimmed = str.trim();
-        return trimmed === '' ? null : trimmed;
-      };
-
-      const sanitizeNumber = (num: any): number => {
-        if (typeof num === 'number' && !isNaN(num)) return num;
-        if (typeof num === 'string') {
-          const parsed = parseFloat(num);
-          return isNaN(parsed) ? 0 : parsed;
-        }
-        return 0;
-      };
-
-      const ensureBoolean = (val: any): boolean => {
-        if (typeof val === 'boolean') return val;
-        if (typeof val === 'string') return val.toLowerCase() === 'true';
-        return Boolean(val);
-      };
-
-      const ensureTimeString = (time: any): string => {
-        if (typeof time === 'string' && time.match(/^\d{2}:\d{2}$/)) {
-          return time;
-        }
-        return '09:00';
-      };
-
       // Validate required fields
-      if (!values.name?.trim()) {
-        throw new Error('Name is required');
-      }
-      if (!values.job_title?.trim()) {
-        throw new Error('Job title is required');
-      }
-      if (!values.department?.trim()) {
-        throw new Error('Department is required');
-      }
-      if (!values.site?.trim()) {
-        throw new Error('Site is required');
-      }
+      validateRequiredFields(values);
 
-      // Create the employee data object with proper type conversion
-      const employeeData = {
-        name: values.name.trim(),
-        email: sanitizeString(values.email),
-        job_title: values.job_title.trim(),
-        department: values.department.trim(),
-        site: values.site.trim(),
-        location: sanitizeString(values.location),
-        salary: sanitizeNumber(values.salary),
-        hourly_rate: sanitizeNumber(values.hourly_rate),
-        start_date: values.start_date || new Date().toISOString().split('T')[0],
-        status: values.status || 'Active',
-        lifecycle: values.lifecycle || 'Active',
-        role: 'employee',
-        shift_pattern_id: sanitizeString(values.shift_pattern_id),
-        monday_shift_id: sanitizeString(values.monday_shift_id),
-        tuesday_shift_id: sanitizeString(values.tuesday_shift_id),
-        wednesday_shift_id: sanitizeString(values.wednesday_shift_id),
-        thursday_shift_id: sanitizeString(values.thursday_shift_id),
-        friday_shift_id: sanitizeString(values.friday_shift_id),
-        saturday_shift_id: sanitizeString(values.saturday_shift_id),
-        sunday_shift_id: sanitizeString(values.sunday_shift_id),
-        // Weekly availability with proper type conversion
-        monday_available: ensureBoolean(values.monday_available),
-        monday_start_time: ensureTimeString(values.monday_start_time),
-        monday_end_time: ensureTimeString(values.monday_end_time),
-        tuesday_available: ensureBoolean(values.tuesday_available),
-        tuesday_start_time: ensureTimeString(values.tuesday_start_time),
-        tuesday_end_time: ensureTimeString(values.tuesday_end_time),
-        wednesday_available: ensureBoolean(values.wednesday_available),
-        wednesday_start_time: ensureTimeString(values.wednesday_start_time),
-        wednesday_end_time: ensureTimeString(values.wednesday_end_time),
-        thursday_available: ensureBoolean(values.thursday_available),
-        thursday_start_time: ensureTimeString(values.thursday_start_time),
-        thursday_end_time: ensureTimeString(values.thursday_end_time),
-        friday_available: ensureBoolean(values.friday_available),
-        friday_start_time: ensureTimeString(values.friday_start_time),
-        friday_end_time: ensureTimeString(values.friday_end_time),
-        saturday_available: ensureBoolean(values.saturday_available),
-        saturday_start_time: ensureTimeString(values.saturday_start_time),
-        saturday_end_time: ensureTimeString(values.saturday_end_time),
-        sunday_available: ensureBoolean(values.sunday_available),
-        sunday_start_time: ensureTimeString(values.sunday_start_time),
-        sunday_end_time: ensureTimeString(values.sunday_end_time),
-      };
+      // Transform the data
+      const employeeData = transformEmployeeData(values);
 
       console.log('📋 Sanitized employee data prepared:', employeeData);
 
@@ -190,28 +111,7 @@ export const useEmployeeForm = ({
       console.log('✅ Employee save operation completed successfully');
       onSuccess();
     } catch (err) {
-      console.error('❌ Error submitting employee form:', err);
-      
-      let errorMessage = 'Failed to save employee data';
-      
-      if (err instanceof Error) {
-        errorMessage = err.message;
-        console.error('Error details:', err);
-      }
-
-      // Handle specific database errors
-      if (errorMessage.includes('violates check constraint')) {
-        errorMessage = 'Invalid data format. Please check your input values.';
-      } else if (errorMessage.includes('duplicate key')) {
-        errorMessage = 'An employee with this information already exists.';
-      }
-      
-      setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      handleError(err, 'Failed to save employee data');
     } finally {
       setIsSubmitting(false);
       console.log('🏁 Form submission process completed');

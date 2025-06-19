@@ -52,8 +52,8 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
 
   const handleSave = async () => {
     try {
-      // Convert UI employee back to database format
-      await updateEmployeeMutation.mutateAsync({
+      // Convert UI employee back to database format with all required fields
+      const updateData: Employee = {
         id: employee.id,
         name: editedEmployee.name,
         job_title: editedEmployee.jobTitle,
@@ -61,10 +61,50 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
         site: editedEmployee.site,
         salary: parseFloat(editedEmployee.salary.replace(/[^0-9.]/g, '')),
         status: editedEmployee.status,
+        lifecycle: employee.lifecycle, // Keep existing lifecycle
         email: editedEmployee.email,
         role: editedEmployee.role,
-        start_date: new Date(editedEmployee.startDate).toISOString().split('T')[0]
-      });
+        start_date: new Date(editedEmployee.startDate).toISOString().split('T')[0],
+        // Include all other required fields from original employee
+        hourly_rate: employee.hourly_rate,
+        annual_leave_days: employee.annual_leave_days,
+        sick_leave_days: employee.sick_leave_days,
+        user_id: employee.user_id,
+        manager_id: employee.manager_id,
+        location: employee.location,
+        avatar: employee.avatar,
+        shift_pattern_id: employee.shift_pattern_id,
+        monday_shift_id: employee.monday_shift_id,
+        tuesday_shift_id: employee.tuesday_shift_id,
+        wednesday_shift_id: employee.wednesday_shift_id,
+        thursday_shift_id: employee.thursday_shift_id,
+        friday_shift_id: employee.friday_shift_id,
+        saturday_shift_id: employee.saturday_shift_id,
+        sunday_shift_id: employee.sunday_shift_id,
+        monday_available: employee.monday_available,
+        monday_start_time: employee.monday_start_time,
+        monday_end_time: employee.monday_end_time,
+        tuesday_available: employee.tuesday_available,
+        tuesday_start_time: employee.tuesday_start_time,
+        tuesday_end_time: employee.tuesday_end_time,
+        wednesday_available: employee.wednesday_available,
+        wednesday_start_time: employee.wednesday_start_time,
+        wednesday_end_time: employee.wednesday_end_time,
+        thursday_available: employee.thursday_available,
+        thursday_start_time: employee.thursday_start_time,
+        thursday_end_time: employee.thursday_end_time,
+        friday_available: employee.friday_available,
+        friday_start_time: employee.friday_start_time,
+        friday_end_time: employee.friday_end_time,
+        saturday_available: employee.saturday_available,
+        saturday_start_time: employee.saturday_start_time,
+        saturday_end_time: employee.saturday_end_time,
+        sunday_available: employee.sunday_available,
+        sunday_start_time: employee.sunday_start_time,
+        sunday_end_time: employee.sunday_end_time,
+      };
+
+      await updateEmployeeMutation.mutateAsync(updateData);
 
       toast({
         title: "Employee Updated",
@@ -115,17 +155,17 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
               <Button
                 variant="outline"
                 onClick={handleCancel}
-                disabled={updateEmployee.isPending}
+                disabled={updateEmployeeMutation.isPending}
               >
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={updateEmployee.isPending}
+                disabled={updateEmployeeMutation.isPending}
               >
                 <Save className="h-4 w-4 mr-2" />
-                {updateEmployee.isPending ? 'Saving...' : 'Save Changes'}
+                {updateEmployeeMutation.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
             </>
           ) : (
