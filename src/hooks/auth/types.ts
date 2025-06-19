@@ -21,12 +21,6 @@ export interface AuthContextType {
   deleteAccount: () => Promise<{ success: boolean; error?: string }>;
 }
 
-export const isAuthenticated = () => {
-  // This function is provided for compatibility with older code
-  // It should be avoided in favor of checking auth.user directly
-  return false; // This will be overridden by the actual implementation
-};
-
 // Add the missing mapUIRoleToDBRole function
 export const mapUIRoleToDBRole = (role: UserRole): string => {
   const roleMap: Record<UserRole, string> = {

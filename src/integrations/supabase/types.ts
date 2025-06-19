@@ -1357,6 +1357,36 @@ export type Database = {
         }
         Relationships: []
       }
+      role_audit_log: {
+        Row: {
+          changed_at: string | null
+          changed_by: string
+          changed_user_id: string
+          id: string
+          new_role: string
+          old_role: string | null
+          reason: string | null
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by: string
+          changed_user_id: string
+          id?: string
+          new_role: string
+          old_role?: string | null
+          reason?: string | null
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string
+          changed_user_id?: string
+          id?: string
+          new_role?: string
+          old_role?: string | null
+          reason?: string | null
+        }
+        Relationships: []
+      }
       salary_statistics: {
         Row: {
           base_salary: number
