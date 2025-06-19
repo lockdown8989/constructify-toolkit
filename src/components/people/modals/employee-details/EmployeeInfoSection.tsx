@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,6 @@ import {
   FileText
 } from 'lucide-react';
 import { Employee } from '@/components/people/types';
-import { Employee as DbEmployee } from '@/hooks/use-employees';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,7 +38,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(externalIsEditing);
   const [editedEmployee, setEditedEmployee] = useState<Employee>(employee);
-  const updateEmployeeMutation = useUpdateEmployee();
+  const updateEmployee = useUpdateEmployee();
   const { toast } = useToast();
 
   const handleEdit = () => {
@@ -52,62 +52,19 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
 
   const handleSave = async () => {
     try {
-      // Convert UI employee to database format with all required fields
-      const updateData: DbEmployee = {
+      // Convert UI employee back to database format
+      await updateEmployee.mutateAsync({
         id: employee.id,
         name: editedEmployee.name,
         job_title: editedEmployee.jobTitle,
         department: editedEmployee.department,
         site: editedEmployee.site,
-        salary: typeof editedEmployee.salary === 'string' 
-          ? parseFloat(editedEmployee.salary.replace(/[^0-9.]/g, '')) || 0
-          : editedEmployee.salary || 0,
+        salary: parseFloat(editedEmployee.salary.replace(/[^0-9.]/g, '')),
         status: editedEmployee.status,
-        lifecycle: employee.lifecycle, // Keep existing lifecycle
         email: editedEmployee.email,
-        role: editedEmployee.role || 'employee',
-        start_date: new Date(editedEmployee.startDate).toISOString().split('T')[0],
-        // Map UI properties to database properties with fallbacks
-        hourly_rate: employee.hourly_rate || null,
-        annual_leave_days: employee.annual_leave_days || 25,
-        sick_leave_days: employee.sick_leave_days || 10,
-        user_id: employee.userId || null,
-        manager_id: employee.managerId || null,
-        location: employee.siteIcon === '🌐' ? 'Remote' : 'Office',
-        avatar: employee.avatar || null,
-        shift_pattern_id: employee.shift_pattern_id || null,
-        monday_shift_id: employee.monday_shift_id || null,
-        tuesday_shift_id: employee.tuesday_shift_id || null,
-        wednesday_shift_id: employee.wednesday_shift_id || null,
-        thursday_shift_id: employee.thursday_shift_id || null,
-        friday_shift_id: employee.friday_shift_id || null,
-        saturday_shift_id: employee.saturday_shift_id || null,
-        sunday_shift_id: employee.sunday_shift_id || null,
-        // Weekly availability fields - set defaults if not available
-        monday_available: true,
-        monday_start_time: '09:00',
-        monday_end_time: '17:00',
-        tuesday_available: true,
-        tuesday_start_time: '09:00',
-        tuesday_end_time: '17:00',
-        wednesday_available: true,
-        wednesday_start_time: '09:00',
-        wednesday_end_time: '17:00',
-        thursday_available: true,
-        thursday_start_time: '09:00',
-        thursday_end_time: '17:00',
-        friday_available: true,
-        friday_start_time: '09:00',
-        friday_end_time: '17:00',
-        saturday_available: true,
-        saturday_start_time: '09:00',
-        saturday_end_time: '17:00',
-        sunday_available: true,
-        sunday_start_time: '09:00',
-        sunday_end_time: '17:00',
-      };
-
-      await updateEmployeeMutation.mutateAsync(updateData);
+        role: editedEmployee.role,
+        start_date: new Date(editedEmployee.startDate).toISOString().split('T')[0]
+      });
 
       toast({
         title: "Employee Updated",
@@ -158,17 +115,17 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
               <Button
                 variant="outline"
                 onClick={handleCancel}
-                disabled={updateEmployeeMutation.isPending}
+                disabled={updateEmployee.isPending}
               >
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={updateEmployeeMutation.isPending}
+                disabled={updateEmployee.isPending}
               >
                 <Save className="h-4 w-4 mr-2" />
-                {updateEmployeeMutation.isPending ? 'Saving...' : 'Save Changes'}
+                {updateEmployee.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
             </>
           ) : (

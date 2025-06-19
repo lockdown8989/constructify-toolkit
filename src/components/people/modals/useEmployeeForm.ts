@@ -5,9 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { employeeFormSchema, type EmployeeFormValues } from './employee-form-schema';
 import { useAddEmployee, useUpdateEmployee, Employee } from '@/hooks/use-employees';
 import { useToast } from '@/hooks/use-toast';
-import { validateRequiredFields } from './utils/formValidation';
-import { transformEmployeeData } from './utils/dataTransformation';
-import { useErrorHandling } from './hooks/useErrorHandling';
 
 export interface UseEmployeeFormProps {
   onSuccess: () => void;
@@ -21,11 +18,11 @@ export const useEmployeeForm = ({
   defaultLocation 
 }: UseEmployeeFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const { error, handleError, clearError } = useErrorHandling();
 
-  const addEmployeeMutation = useAddEmployee();
-  const updateEmployeeMutation = useUpdateEmployee();
+  const addEmployee = useAddEmployee();
+  const updateEmployee = useUpdateEmployee();
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),
@@ -39,7 +36,7 @@ export const useEmployeeForm = ({
       location: employeeToEdit?.location || defaultLocation || '',
       salary: employeeToEdit?.salary || 0,
       hourly_rate: employeeToEdit?.hourly_rate || 0,
-      lifecycle: (employeeToEdit?.lifecycle as "Full time" | "Part time" | "Agency") || 'Full time',
+      lifecycle: (employeeToEdit?.lifecycle as "Active" | "Inactive" | "Terminated") || 'Active',
       status: (employeeToEdit?.status as "Active" | "Inactive" | "Pending") || 'Active',
       start_date: employeeToEdit?.start_date || new Date().toISOString().split('T')[0],
       shift_pattern_id: employeeToEdit?.shift_pattern_id || '',
@@ -50,7 +47,7 @@ export const useEmployeeForm = ({
       friday_shift_id: employeeToEdit?.friday_shift_id || '',
       saturday_shift_id: employeeToEdit?.saturday_shift_id || '',
       sunday_shift_id: employeeToEdit?.sunday_shift_id || '',
-      // Weekly availability with explicit boolean conversion and null coalescing
+      // Weekly availability default values
       monday_available: employeeToEdit?.monday_available ?? true,
       monday_start_time: employeeToEdit?.monday_start_time || '09:00',
       monday_end_time: employeeToEdit?.monday_end_time || '17:00',
@@ -76,65 +73,88 @@ export const useEmployeeForm = ({
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
-    console.log('🚀 Form submission started with values:', values);
-    console.log('📋 Weekly availability being submitted:', {
-      saturday_available: values.saturday_available,
-      saturday_start_time: values.saturday_start_time,
-      saturday_end_time: values.saturday_end_time,
-      sunday_available: values.sunday_available,
-      sunday_start_time: values.sunday_start_time,
-      sunday_end_time: values.sunday_end_time
-    });
-    
     setIsSubmitting(true);
-    clearError();
+    setError(null);
 
     try {
-      // Validate required fields
-      validateRequiredFields(values);
+      console.log('Form values before submission:', values);
+      
+      // Create the employee data object with all fields including weekly availability
+      const employeeData = {
+        name: values.name,
+        email: values.email,
+        job_title: values.job_title,
+        department: values.department,
+        site: values.site,
+        location: values.location,
+        salary: values.salary || 0,
+        hourly_rate: values.hourly_rate || 0,
+        start_date: values.start_date || new Date().toISOString().split('T')[0],
+        status: values.status,
+        lifecycle: values.lifecycle,
+        role: 'employee',
+        shift_pattern_id: values.shift_pattern_id || null,
+        monday_shift_id: values.monday_shift_id || null,
+        tuesday_shift_id: values.tuesday_shift_id || null,
+        wednesday_shift_id: values.wednesday_shift_id || null,
+        thursday_shift_id: values.thursday_shift_id || null,
+        friday_shift_id: values.friday_shift_id || null,
+        saturday_shift_id: values.saturday_shift_id || null,
+        sunday_shift_id: values.sunday_shift_id || null,
+        // Weekly availability data - ensure all fields are included with proper boolean handling
+        monday_available: Boolean(values.monday_available),
+        monday_start_time: values.monday_start_time || '09:00',
+        monday_end_time: values.monday_end_time || '17:00',
+        tuesday_available: Boolean(values.tuesday_available),
+        tuesday_start_time: values.tuesday_start_time || '09:00',
+        tuesday_end_time: values.tuesday_end_time || '17:00',
+        wednesday_available: Boolean(values.wednesday_available),
+        wednesday_start_time: values.wednesday_start_time || '09:00',
+        wednesday_end_time: values.wednesday_end_time || '17:00',
+        thursday_available: Boolean(values.thursday_available),
+        thursday_start_time: values.thursday_start_time || '09:00',
+        thursday_end_time: values.thursday_end_time || '17:00',
+        friday_available: Boolean(values.friday_available),
+        friday_start_time: values.friday_start_time || '09:00',
+        friday_end_time: values.friday_end_time || '17:00',
+        saturday_available: Boolean(values.saturday_available),
+        saturday_start_time: values.saturday_start_time || '09:00',
+        saturday_end_time: values.saturday_end_time || '17:00',
+        sunday_available: Boolean(values.sunday_available),
+        sunday_start_time: values.sunday_start_time || '09:00',
+        sunday_end_time: values.sunday_end_time || '17:00',
+      };
 
-      // Transform the data
-      const employeeData = transformEmployeeData(values);
-
-      console.log('📋 Sanitized employee data prepared:', employeeData);
-      console.log('🔍 Final availability data before save:', {
-        saturday_available: employeeData.saturday_available,
-        sunday_available: employeeData.sunday_available,
-        saturday_start_time: employeeData.saturday_start_time,
-        saturday_end_time: employeeData.saturday_end_time,
-        sunday_start_time: employeeData.sunday_start_time,
-        sunday_end_time: employeeData.sunday_end_time
-      });
+      console.log('Employee data being submitted:', employeeData);
 
       if (employeeToEdit) {
-        console.log('🔄 Updating existing employee with ID:', employeeToEdit.id);
-        
-        await updateEmployeeMutation.mutateAsync({
+        await updateEmployee.mutateAsync({
           id: employeeToEdit.id,
           ...employeeData,
         });
         toast({
           title: "Employee updated successfully",
-          description: "Employee information and weekly availability have been saved and synchronized with the restaurant schedule.",
+          description: "Employee information and weekly availability have been saved.",
         });
       } else {
-        console.log('➕ Creating new employee');
-        await addEmployeeMutation.mutateAsync(employeeData);
+        await addEmployee.mutateAsync(employeeData);
         toast({
-          title: "Employee added successfully", 
-          description: "New employee and weekly availability have been created and synchronized with the restaurant schedule.",
+          title: "Employee added successfully",
+          description: "New employee has been created with their weekly availability schedule.",
         });
       }
-      
-      console.log('✅ Employee save operation completed successfully');
       onSuccess();
     } catch (err) {
-      console.error('❌ Form submission error:', err);
-      console.error('❌ Employee data that failed:', employeeToEdit ? { id: employeeToEdit.id, ...transformEmployeeData(values) } : transformEmployeeData(values));
-      handleError(err, 'Failed to save employee data');
+      console.error('Error submitting employee form:', err);
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setError(errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
-      console.log('🏁 Form submission process completed');
     }
   });
 
