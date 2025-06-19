@@ -1,7 +1,7 @@
 
 import React from "react";
 import { LogOut, User, Settings } from "lucide-react";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import AccountTypeDisplay from "@/components/auth/AccountTypeDisplay";
+import AccountTypeDisplay from "./AccountTypeDisplay";
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();

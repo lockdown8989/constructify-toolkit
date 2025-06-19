@@ -8,13 +8,30 @@ import GPSClockingMap from "./GPSClockingMap";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, Users, TrendingUp, AlertTriangle } from "lucide-react";
 
-const ManagerDashboard = () => {
+interface ManagerDashboardProps {
+  firstName: string;
+  employeeCount?: number;
+  hiredCount?: number;
+  interviewStats?: {
+    interviews: number;
+    hired: number;
+    projectTime: number;
+    output: number;
+  };
+}
+
+const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ 
+  firstName,
+  employeeCount = 0,
+  hiredCount = 0,
+  interviewStats 
+}) => {
   const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <DashboardHeader />
+        <DashboardHeader firstName={firstName} />
         
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

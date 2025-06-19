@@ -4,12 +4,12 @@ import CurrentDateTime from './CurrentDateTime';
 import AccountTypeDisplay from '../layout/navigation/AccountTypeDisplay';
 
 interface DashboardHeaderProps {
-  firstName: string;
+  firstName?: string;
   showAccountType?: boolean;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ 
-  firstName, 
+  firstName = 'User', 
   showAccountType = true 
 }) => {
   return (

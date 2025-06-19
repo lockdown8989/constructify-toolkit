@@ -1,85 +1,91 @@
 
-import React, { useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
-import { useEmployees } from '@/hooks/use-employees';
-import DashboardHeader from './DashboardHeader';
-import DashboardStatsSection from '@/components/dashboard/DashboardStatsSection';
-import SalaryTable from '@/components/salary/table/SalaryTable';
-import AttendanceReport from '@/components/dashboard/attendance-report';
-import ManagerTab from '@/components/leave/tabs/ManagerTab';
-import { Employee } from '@/components/salary/table/types';
+import React from "react";
+import { useAuth } from "@/hooks/use-auth";
+import DashboardHeader from "./DashboardHeader";
+import DashboardStatsSection from "./DashboardStatsSection";
+import AttendanceOverview from "./AttendanceOverview";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DollarSign, Users, TrendingUp, FileText } from "lucide-react";
 
 interface PayrollDashboardProps {
   firstName: string;
-  employeeCount: number;
-  hiredCount: number;
+  employeeCount?: number;
+  hiredCount?: number;
 }
 
-const PayrollDashboard: React.FC<PayrollDashboardProps> = ({
+const PayrollDashboard: React.FC<PayrollDashboardProps> = ({ 
   firstName,
-  employeeCount,
-  hiredCount,
+  employeeCount = 0,
+  hiredCount = 0 
 }) => {
   const { user } = useAuth();
-  const { data: employees = [] } = useEmployees();
-  const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
-
-  // Transform employees data for the SalaryTable
-  const salaryEmployees: Employee[] = employees.map(emp => ({
-    id: emp.id,
-    name: emp.name,
-    avatar: emp.avatar || `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'women' : 'men'}/${Math.floor(Math.random() * 99)}.jpg`,
-    title: emp.job_title,
-    salary: `$${emp.salary.toLocaleString()}`,
-    status: emp.status === 'Active' ? 'Paid' as const : emp.status === 'Leave' ? 'Absent' as const : 'Pending' as const,
-    paymentDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-    selected: emp.id === selectedEmployee,
-    department: emp.department
-  }));
-
-  const handleSelectEmployee = (id: string) => {
-    setSelectedEmployee(id === selectedEmployee ? null : id);
-  };
-
-  const handleUpdateStatus = (employeeId: string, newStatus: 'Paid' | 'Absent' | 'Pending') => {
-    // This would typically update the employee status in the database
-    console.log(`Updating employee ${employeeId} status to ${newStatus}`);
-    // For now, just log the action - in a real app this would make an API call
-  };
 
   return (
-    <div className="max-w-[1800px] mx-auto">
-      <DashboardHeader firstName={firstName} />
-      
-      {/* Stats */}
-      <DashboardStatsSection 
-        employeeCount={employeeCount} 
-        hiredCount={hiredCount} 
-        isManager={false} 
-      />
-      
-      {/* Payroll-specific content with salary information */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column - Leave Management */}
-        <div className="lg:col-span-3">
-          <ManagerTab />
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <DashboardHeader firstName={firstName} />
         
-        {/* Middle Column - Salary Table for Payroll Users */}
-        <div className="lg:col-span-5">
-          <SalaryTable 
-            employees={salaryEmployees} 
-            onSelectEmployee={handleSelectEmployee}
-            onUpdateStatus={handleUpdateStatus}
-          />
+        {/* Payroll Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{employeeCount}</div>
+              <p className="text-xs text-muted-foreground">Active employees</p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Monthly Payroll</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">$45,200</div>
+              <p className="text-xs text-muted-foreground">This month</p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Payslips</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">12</div>
+              <p className="text-xs text-muted-foreground">To be processed</p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Overtime Hours</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">128</div>
+              <p className="text-xs text-muted-foreground">This week</p>
+            </CardContent>
+          </Card>
         </div>
-        
-        {/* Right Column - Attendance Report */}
-        <div className="lg:col-span-4">
-          <AttendanceReport 
-            employeeId={selectedEmployee ?? undefined}
-            className="mb-6" 
-          />
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Attendance Overview */}
+          <AttendanceOverview />
+          
+          {/* Additional payroll-specific content can be added here */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Payroll Processing</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Payroll processing tools and reports will be displayed here.</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
