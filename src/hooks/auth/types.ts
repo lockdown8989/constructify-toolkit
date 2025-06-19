@@ -12,6 +12,7 @@ export interface AuthContextType {
   isManager: boolean;
   isEmployee: boolean;
   isPayroll: boolean;
+  rolesLoaded: boolean;
   isAuthenticated: boolean;
   signOut: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error: any; data?: any }>;

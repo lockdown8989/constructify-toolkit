@@ -95,6 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isManager,
     isEmployee,
     isPayroll,
+    rolesLoaded,
     isAuthenticated: !!session?.user,
     ...authActions,
   };
