@@ -83,8 +83,8 @@ export const useRoles = (user: User | null) => {
         setIsHR(hasHRRole);
         setIsManager(hasManagerRole); // This should be true for 'employer' role
         setIsPayroll(hasPayrollRole);
-        // Only set as employee if they have no management roles
-        setIsEmployee(hasEmployeeRole || (!hasAdminRole && !hasHRRole && !hasManagerRole && !hasPayrollRole));
+        // Set employee to false if user has management roles
+        setIsEmployee(!hasAdminRole && !hasHRRole && !hasManagerRole && !hasPayrollRole);
       } else {
         console.log("⚠️ No roles found for user, defaulting to employee");
         setIsAdmin(false);

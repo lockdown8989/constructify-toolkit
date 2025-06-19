@@ -18,8 +18,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Use the roles hook
   const { isAdmin, isHR, isManager, isPayroll, rolesLoaded } = useRoles(user);
   
-  // Employee is anyone who is authenticated but doesn't have other roles
+  // Employee is anyone who is authenticated but doesn't have other roles - FIXED LOGIC
   const isEmployee = !!user && !isAdmin && !isHR && !isManager && !isPayroll;
+
+  console.log("🔐 AuthProvider roles state:", {
+    isAdmin,
+    isHR, 
+    isManager,
+    isPayroll,
+    isEmployee,
+    rolesLoaded,
+    userEmail: user?.email
+  });
 
   // Use auth actions hook
   const authActions = useAuthActions();

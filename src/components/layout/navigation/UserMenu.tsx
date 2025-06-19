@@ -1,7 +1,7 @@
 
 import React from "react";
 import { LogOut, User, Settings } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/auth";
 import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import AccountTypeDisplay from "./AccountTypeDisplay";
+import AccountTypeDisplay from "@/components/auth/AccountTypeDisplay";
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
@@ -36,6 +36,16 @@ const UserMenu = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleProfileClick = () => {
+    console.log("🔗 Navigating to profile page");
+    navigate("/profile");
+  };
+
+  const handleSettingsClick = () => {
+    console.log("🔗 Navigating to settings page");
+    navigate("/settings");
   };
 
   const getUserInitials = () => {
@@ -74,11 +84,11 @@ const UserMenu = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer">
+        <DropdownMenuItem onClick={handleProfileClick} className="cursor-pointer">
           <User className="mr-2 h-4 w-4" />
           <span>Profile</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate("/settings")} className="cursor-pointer">
+        <DropdownMenuItem onClick={handleSettingsClick} className="cursor-pointer">
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>
