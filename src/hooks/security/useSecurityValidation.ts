@@ -9,7 +9,7 @@ interface ValidationResult {
 }
 
 export const useSecurityValidation = () => {
-  const { sanitizeInput } = useInputSanitization();
+  const { sanitizeText, sanitizeEmail, sanitizeName } = useInputSanitization();
   const [rateLimitCache, setRateLimitCache] = useState<Map<string, number>>(new Map());
 
   // Rate limiting for sensitive operations
@@ -37,7 +37,7 @@ export const useSecurityValidation = () => {
   // Validate and sanitize manager ID
   const validateManagerId = useCallback((managerId: string): ValidationResult => {
     const errors: string[] = [];
-    let sanitizedValue = sanitizeInput(managerId);
+    let sanitizedValue = sanitizeText(managerId);
 
     if (!sanitizedValue || sanitizedValue.length < 3) {
       errors.push('Manager ID must be at least 3 characters long');
@@ -56,12 +56,12 @@ export const useSecurityValidation = () => {
       errors,
       sanitizedValue
     };
-  }, [sanitizeInput]);
+  }, [sanitizeText]);
 
   // Validate email without revealing if it exists
   const validateEmailSecure = useCallback((email: string): ValidationResult => {
     const errors: string[] = [];
-    const sanitizedValue = sanitizeInput(email);
+    const sanitizedValue = sanitizeEmail(email);
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(sanitizedValue)) {
@@ -77,12 +77,12 @@ export const useSecurityValidation = () => {
       errors,
       sanitizedValue
     };
-  }, [sanitizeInput]);
+  }, [sanitizeEmail]);
 
   // Validate user names and prevent XSS
   const validateUserName = useCallback((name: string): ValidationResult => {
     const errors: string[] = [];
-    let sanitizedValue = sanitizeInput(name);
+    let sanitizedValue = sanitizeName(name);
 
     if (!sanitizedValue || sanitizedValue.trim().length < 2) {
       errors.push('Name must be at least 2 characters long');
@@ -91,9 +91,6 @@ export const useSecurityValidation = () => {
     if (sanitizedValue.length > 100) {
       errors.push('Name cannot exceed 100 characters');
     }
-
-    // Remove any remaining potentially dangerous characters
-    sanitizedValue = sanitizedValue.replace(/[<>\"']/g, '');
 
     if (!/^[a-zA-Z\s\-\.]+$/.test(sanitizedValue)) {
       errors.push('Name can only contain letters, spaces, hyphens, and periods');
@@ -104,12 +101,12 @@ export const useSecurityValidation = () => {
       errors,
       sanitizedValue
     };
-  }, [sanitizeInput]);
+  }, [sanitizeName]);
 
   // Validate text fields and prevent XSS
   const validateTextField = useCallback((text: string, maxLength: number = 500): ValidationResult => {
     const errors: string[] = [];
-    const sanitizedValue = sanitizeInput(text);
+    const sanitizedValue = sanitizeText(text);
 
     if (sanitizedValue.length > maxLength) {
       errors.push(`Text cannot exceed ${maxLength} characters`);
@@ -120,7 +117,7 @@ export const useSecurityValidation = () => {
       errors,
       sanitizedValue
     };
-  }, [sanitizeInput]);
+  }, [sanitizeText]);
 
   return {
     validateManagerId,
