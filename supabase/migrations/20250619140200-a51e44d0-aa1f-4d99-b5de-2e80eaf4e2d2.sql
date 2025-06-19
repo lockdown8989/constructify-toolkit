@@ -1,6 +1,3 @@
-
-
-
 -- Safe migration to handle UUID fields without type casting issues
 -- We'll use string functions to identify and clean problematic values
 
