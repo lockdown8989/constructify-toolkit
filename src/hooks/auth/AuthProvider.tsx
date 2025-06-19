@@ -17,7 +17,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Use the roles hook
   const { isAdmin, isHR, isManager, isPayroll, rolesLoaded } = useRoles(user);
-  const isEmployee = !isAdmin && !isHR && !isManager && !isPayroll;
+  
+  // Employee is anyone who is authenticated but doesn't have other roles
+  const isEmployee = !!user && !isAdmin && !isHR && !isManager && !isPayroll;
 
   // Use auth actions hook
   const authActions = useAuthActions();
@@ -76,10 +78,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Update loading state when roles are loaded
+  // Update loading state when roles are loaded or user is null
   useEffect(() => {
-    if (user && rolesLoaded) {
-      console.log('📝 User and roles loaded, setting loading to false');
+    if (!user || rolesLoaded) {
+      console.log('📝 Roles loaded or no user, setting loading to false', { user: !!user, rolesLoaded });
       setIsLoading(false);
     }
   }, [user, rolesLoaded]);

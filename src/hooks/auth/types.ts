@@ -27,7 +27,7 @@ export const isAuthenticated = () => {
   return false; // This will be overridden by the actual implementation
 };
 
-// Add the missing mapUIRoleToDBRole function
+// Map UI role names to database role names
 export const mapUIRoleToDBRole = (role: UserRole): string => {
   const roleMap: Record<UserRole, string> = {
     'admin': 'admin',
@@ -36,6 +36,18 @@ export const mapUIRoleToDBRole = (role: UserRole): string => {
     'employee': 'employee',
     'payroll': 'payroll',
     'employer': 'employer'
+  };
+  return roleMap[role] || 'employee'; // Default to employee if role not found
+};
+
+// Map database role names to UI role names
+export const mapDBRoleToUIRole = (role: string): UserRole => {
+  const roleMap: Record<string, UserRole> = {
+    'admin': 'admin',
+    'hr': 'hr',
+    'employer': 'manager', // 'employer' in DB maps to 'manager' in UI
+    'employee': 'employee',
+    'payroll': 'payroll'
   };
   return roleMap[role] || 'employee'; // Default to employee if role not found
 };

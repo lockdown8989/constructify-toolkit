@@ -1357,6 +1357,36 @@ export type Database = {
         }
         Relationships: []
       }
+      role_audit_log: {
+        Row: {
+          changed_at: string | null
+          changed_by: string
+          changed_user_id: string
+          id: string
+          new_role: string
+          old_role: string | null
+          reason: string | null
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by: string
+          changed_user_id: string
+          id?: string
+          new_role: string
+          old_role?: string | null
+          reason?: string | null
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string
+          changed_user_id?: string
+          id?: string
+          new_role?: string
+          old_role?: string | null
+          reason?: string | null
+        }
+        Relationships: []
+      }
       salary_statistics: {
         Row: {
           base_salary: number
@@ -2194,6 +2224,10 @@ export type Database = {
         Args: { p_employee_id: string }
         Returns: Json
       }
+      get_user_role_safe: {
+        Args: { p_user_id: string }
+        Returns: string
+      }
       has_role: {
         Args:
           | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
@@ -2246,6 +2280,10 @@ export type Database = {
           p_sunday_shift_id?: string
         }
         Returns: Json
+      }
+      user_has_role: {
+        Args: { p_user_id: string; p_role: string }
+        Returns: boolean
       }
     }
     Enums: {

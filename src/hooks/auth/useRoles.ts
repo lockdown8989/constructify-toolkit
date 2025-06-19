@@ -29,6 +29,12 @@ export const useRoles = (user: User | null) => {
 
       if (error) {
         console.error('Error fetching user roles:', error);
+        // Set default employee role on error
+        setIsAdmin(false);
+        setIsHR(false);
+        setIsManager(false);
+        setIsPayroll(false);
+        setRolesLoaded(true);
         return;
       }
 
@@ -36,21 +42,25 @@ export const useRoles = (user: User | null) => {
         const userRoles = roles.map(r => r.role);
         console.log("User roles found:", userRoles);
         
-        // Check each role
-        setIsAdmin(userRoles.includes('admin'));
-        setIsHR(userRoles.includes('hr'));
-        
-        // Check for 'employer' role which corresponds to manager in the UI
+        // Check each role with explicit logging
+        const hasAdminRole = userRoles.includes('admin');
+        const hasHRRole = userRoles.includes('hr');
         const hasEmployerRole = userRoles.includes('employer');
-        console.log("Has employer/manager role:", hasEmployerRole);
-        setIsManager(hasEmployerRole);
-        
-        // Check for payroll role and log it specifically
         const hasPayrollRole = userRoles.includes('payroll');
-        console.log("Has payroll role:", hasPayrollRole);
+        
+        console.log("Role checks:", {
+          admin: hasAdminRole,
+          hr: hasHRRole,
+          manager: hasEmployerRole,
+          payroll: hasPayrollRole
+        });
+        
+        setIsAdmin(hasAdminRole);
+        setIsHR(hasHRRole);
+        setIsManager(hasEmployerRole);
         setIsPayroll(hasPayrollRole);
       } else {
-        console.log("No roles found for user");
+        console.log("No roles found for user, defaulting to employee");
         setIsAdmin(false);
         setIsHR(false);
         setIsManager(false);
@@ -60,6 +70,11 @@ export const useRoles = (user: User | null) => {
       setRolesLoaded(true);
     } catch (error) {
       console.error('Error in fetchUserRoles:', error);
+      // Set defaults on error
+      setIsAdmin(false);
+      setIsHR(false);
+      setIsManager(false);
+      setIsPayroll(false);
       setRolesLoaded(true);
     }
   };

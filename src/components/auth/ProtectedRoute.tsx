@@ -16,6 +16,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { user, isLoading, isAdmin, isHR, isManager, isEmployee, isPayroll } = useAuth();
 
+  console.log('ProtectedRoute check:', {
+    isLoading,
+    hasUser: !!user,
+    requiredRole,
+    requiredRoles,
+    userRoles: { isAdmin, isHR, isManager, isEmployee, isPayroll }
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -25,6 +33,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (!user) {
+    console.log('No user, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
 
@@ -37,7 +46,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       (requiredRole === 'employee' && isEmployee) ||
       (requiredRole === 'payroll' && isPayroll);
 
+    console.log('Single role check:', { requiredRole, hasRequiredRole });
+
     if (!hasRequiredRole) {
+      console.log('User does not have required role, redirecting to dashboard');
       return <Navigate to="/dashboard" replace />;
     }
   }
@@ -52,11 +64,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       (role === 'payroll' && isPayroll)
     );
 
+    console.log('Multiple roles check:', { requiredRoles, hasAnyRequiredRole });
+
     if (!hasAnyRequiredRole) {
+      console.log('User does not have any required role, redirecting to dashboard');
       return <Navigate to="/dashboard" replace />;
     }
   }
 
+  console.log('Access granted, rendering children');
   return <>{children}</>;
 };
 

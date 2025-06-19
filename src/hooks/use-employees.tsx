@@ -55,6 +55,8 @@ export function useEmployees(filters?: Partial<{
           .from('employees')
           .select('*');
         
+        console.log('Employee query - User roles:', { isManager, isPayroll, isAdmin, isHR });
+        
         // For payroll users, admins, and HR - show all employees
         if (isPayroll || isAdmin || isHR) {
           console.log("Payroll/Admin/HR user, fetching all employee data");
@@ -70,6 +72,9 @@ export function useEmployees(filters?: Partial<{
           
           if (managerData && managerData.manager_id) {
             query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
+          } else {
+            // If manager doesn't have manager_id set, show all employees (they might be the top-level manager)
+            console.log("Manager without manager_id, showing all employees");
           }
         } else if (!isManager && !isPayroll && !isAdmin && !isHR && user) {
           // For regular employees - show only their own data
@@ -111,7 +116,7 @@ export function useEmployees(filters?: Partial<{
           return true;
         });
         
-        console.log("Fetched and validated employees data:", validEmployees);
+        console.log("Fetched and validated employees data:", validEmployees.length, "employees");
         return validEmployees as Employee[];
         
       } catch (error) {
