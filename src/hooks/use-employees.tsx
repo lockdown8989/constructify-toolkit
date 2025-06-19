@@ -1,10 +1,94 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/types/supabase';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
+import { Database } from '@/types/supabase/database';
 
-export type Employee = Database['public']['Tables']['employees']['Row'] & {
+type EmployeeType = Database['public']['Tables']['employees']['Row'];
+
+const fetchEmployees = async (filters: {
+  department?: string;
+  site?: string;
+  lifecycle?: string;
+  status?: string;
+} = {}) => {
+  let query = supabase.from('employees').select('*');
+
+  if (filters.department) {
+    query = query.eq('department', filters.department);
+  }
+  if (filters.site) {
+    query = query.eq('site', filters.site);
+  }
+  if (filters.lifecycle) {
+    query = query.eq('lifecycle', filters.lifecycle);
+  }
+  if (filters.status) {
+    query = query.eq('status', filters.status);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching employees:', error);
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+
+const useEmployees = (filters: {
+  department?: string;
+  site?: string;
+  lifecycle?: string;
+  status?: string;
+} = {}) => {
+  return useQuery({
+    queryKey: ['employees', filters],
+    queryFn: () => fetchEmployees(filters),
+  });
+};
+
+const fetchEmployeeFilters = async () => {
+  const { data: employees, error } = await supabase
+    .from('employees')
+    .select('department, site');
+
+  if (error) {
+    console.error('Error fetching employee filters:', error);
+    throw new Error(error.message);
+  }
+
+  const departments = [...new Set(employees.map((employee) => employee.department))];
+  const sites = [...new Set(employees.map((employee) => employee.site))];
+
+  return { departments, sites };
+};
+
+const useEmployeeFilters = () => {
+  return useQuery({
+    queryKey: ['employeeFilters'],
+    queryFn: fetchEmployeeFilters,
+  });
+};
+
+export interface Employee {
+  id: string;
+  name: string;
+  job_title: string;
+  department: string;
+  site: string;
+  salary: number;
+  hourly_rate?: number;
+  start_date: string;
+  lifecycle: string;
+  status: string;
+  avatar?: string;
+  location?: string;
+  annual_leave_days?: number;
+  sick_leave_days?: number;
+  user_id?: string;
+  manager_id?: string;
+  role?: string;
+  email?: string;
   shift_pattern_id?: string;
   monday_shift_id?: string;
   tuesday_shift_id?: string;
@@ -13,6 +97,7 @@ export type Employee = Database['public']['Tables']['employees']['Row'] & {
   friday_shift_id?: string;
   saturday_shift_id?: string;
   sunday_shift_id?: string;
+  
   // Weekly availability fields
   monday_available?: boolean;
   monday_start_time?: string;
@@ -35,268 +120,79 @@ export type Employee = Database['public']['Tables']['employees']['Row'] & {
   sunday_available?: boolean;
   sunday_start_time?: string;
   sunday_end_time?: string;
+}
+
+const addEmployee = async (employeeData: Omit<Employee, 'id'>) => {
+  const { data, error } = await supabase
+    .from('employees')
+    .insert([employeeData])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error adding employee:', error);
+    throw new Error(error.message);
+  }
+
+  return data;
 };
-export type NewEmployee = Database['public']['Tables']['employees']['Insert'];
-export type EmployeeUpdate = Database['public']['Tables']['employees']['Update'];
 
-export function useEmployees(filters?: Partial<{
-  status: string;
-  department: string;
-  site: string;
-  lifecycle: string;
-}>) {
-  const { user, isManager, isPayroll, isAdmin, isHR } = useAuth();
-  
-  return useQuery({
-    queryKey: ['employees', filters, isManager, isPayroll, isAdmin, isHR, user?.id],
-    queryFn: async () => {
-      try {
-        let query = supabase
-          .from('employees')
-          .select('*');
-        
-        // For payroll users, admins, and HR - show all employees
-        if (isPayroll || isAdmin || isHR) {
-          console.log("Payroll/Admin/HR user, fetching all employee data");
-          // No restrictions for these roles - they should see all employees
-        } else if (isManager && user) {
-          // For managers - show employees under their management
-          console.log("Manager user, fetching team data");
-          const { data: managerData } = await supabase
-            .from('employees')
-            .select('manager_id')
-            .eq('user_id', user.id)
-            .single();
-          
-          if (managerData && managerData.manager_id) {
-            query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
-          }
-        } else if (!isManager && !isPayroll && !isAdmin && !isHR && user) {
-          // For regular employees - show only their own data
-          console.log("Regular employee user, fetching own data only");
-          const { data: currentEmployeeData } = await supabase
-            .from('employees')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-            
-          if (currentEmployeeData) {
-            query = query.eq('id', currentEmployeeData.id);
-          } else {
-            console.log("No employee record found for user");
-            return [];
-          }
-        }
-        
-        if (filters) {
-          if (filters.status) query = query.eq('status', filters.status);
-          if (filters.department) query = query.eq('department', filters.department);
-          if (filters.site) query = query.eq('site', filters.site);
-          if (filters.lifecycle) query = query.eq('lifecycle', filters.lifecycle);
-        }
-        
-        const { data, error } = await query;
-        
-        if (error) {
-          console.error("Error fetching employees:", error);
-          throw error;
-        }
-        
-        // Validate and clean the employee data
-        const validEmployees = (data || []).filter(employee => {
-          if (!employee || !employee.id || !employee.name) {
-            console.warn('Invalid employee record found:', employee);
-            return false;
-          }
-          return true;
-        });
-        
-        console.log("Fetched and validated employees data:", validEmployees);
-        return validEmployees as Employee[];
-        
-      } catch (error) {
-        console.error("Error in employees query function:", error);
-        throw error;
-      }
-    },
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-  });
-}
-
-export function useEmployee(id: string | undefined) {
-  return useQuery({
-    queryKey: ['employee', id],
-    queryFn: async () => {
-      if (!id) return null;
-      
-      const { data, error } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (error) throw error;
-      return data as Employee;
-    },
-    enabled: !!id
-  });
-}
-
-export function useAddEmployee() {
+const useAddEmployee = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
-  
-  return useMutation({
-    mutationFn: async (newEmployee: NewEmployee) => {
-      const { data, error } = await supabase
-        .from('employees')
-        .insert(newEmployee)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data as Employee;
-    },
+  return useMutation(addEmployee, {
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] });
-      toast({
-        title: "Employee added",
-        description: "New employee has been successfully added."
-      });
+      queryClient.invalidateQueries(['employees']);
     },
-    onError: (error) => {
-      toast({
-        title: "Failed to add employee",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
   });
-}
+};
 
-export function useUpdateEmployee() {
+const updateEmployee = async (employeeData: Employee) => {
+  const { id, ...updates } = employeeData;
+  const { data, error } = await supabase
+    .from('employees')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating employee:', error);
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+
+const useUpdateEmployee = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
-  
-  return useMutation({
-    mutationFn: async ({ id, ...update }: EmployeeUpdate & { id: string }) => {
-      const { data, error } = await supabase
-        .from('employees')
-        .update(update)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data as Employee;
+  return useMutation(updateEmployee, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['employees']);
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] });
-      queryClient.invalidateQueries({ queryKey: ['employee', data.id] });
-      toast({
-        title: "Employee updated",
-        description: "Employee information has been successfully updated."
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to update employee",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
   });
-}
+};
 
-export function useDeleteEmployee() {
+const deleteEmployee = async (id: string) => {
+  const { data, error } = await supabase
+    .from('employees')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting employee:', error);
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+
+const useDeleteEmployee = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
-  
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('employees')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      return id;
+  return useMutation(deleteEmployee, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['employees']);
     },
-    onSuccess: (id) => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] });
-      toast({
-        title: "Employee deleted",
-        description: "Employee has been successfully removed from the system."
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Failed to delete employee",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
   });
-}
+};
 
-export function useEmployeeFilters() {
-  return useQuery({
-    queryKey: ['employee-filters'],
-    queryFn: async () => {
-      const { data: employees, error } = await supabase
-        .from('employees')
-        .select('department, site, lifecycle, status');
-      
-      if (error) throw error;
-      
-      const departments = [...new Set(employees.map(e => e.department))];
-      const sites = [...new Set(employees.map(e => e.site))];
-      const lifecycles = [...new Set(employees.map(e => e.lifecycle))];
-      const statuses = [...new Set(employees.map(e => e.status))];
-      
-      return {
-        departments,
-        sites,
-        lifecycles,
-        statuses
-      };
-    }
-  });
-}
-
-export function useOwnEmployeeData() {
-  const { user } = useAuth();
-  const { toast } = useToast();
-
-  return useQuery({
-    queryKey: ['own-employee-data', user?.id],
-    queryFn: async () => {
-      if (!user) {
-        throw new Error('No authenticated user');
-      }
-
-      console.log("Fetching employee data for user:", user.id);
-      const { data, error } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Error fetching own employee data:", error);
-        return null; // Return null instead of throwing error
-      }
-
-      if (!data) {
-        console.log("No employee record found for user:", user.id);
-        return null; // Return null if no data found
-      }
-
-      return data as Employee;
-    },
-    enabled: !!user,
-    retry: 3, // Retry up to 3 times
-    retryDelay: attempt => Math.min(attempt > 1 ? 2000 : 1000, 30 * 1000),
-  });
-}
+export { useEmployees, useEmployeeFilters, useAddEmployee, useUpdateEmployee, useDeleteEmployee };
