@@ -15,7 +15,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   signOut: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error: any; data?: any }>;
-  signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any; data?: any }>;
+  signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: any; data?: any; requiresConfirmation?: boolean }>;
   resetPassword: (email: string) => Promise<{ error: any; data?: any }>;
   updatePassword: (password: string) => Promise<{ error: any; data?: any }>;
   deleteAccount: () => Promise<{ success: boolean; error?: string }>;
