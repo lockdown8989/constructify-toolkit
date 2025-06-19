@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,10 +26,10 @@ const SessionTimeoutWarning: React.FC = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
-        const sessionStart = new Date(session.created_at).getTime();
+        // Use expires_at if available, otherwise calculate from current time
+        const sessionExpiry = session.expires_at ? session.expires_at * 1000 : Date.now() + SESSION_TIMEOUT;
         const now = Date.now();
-        const timeElapsed = now - sessionStart;
-        const timeUntilTimeout = SESSION_TIMEOUT - timeElapsed;
+        const timeUntilTimeout = sessionExpiry - now;
         
         if (timeUntilTimeout <= WARNING_TIME && timeUntilTimeout > 0) {
           setShowWarning(true);

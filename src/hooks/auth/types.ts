@@ -26,6 +26,24 @@ export const isAuthenticated = (): boolean => {
   return false; // Default fallback - actual implementation uses context
 };
 
+/**
+ * Maps UI role names to database role names
+ * @param uiRole The role name used in the UI
+ * @returns The corresponding database role name
+ */
+export const mapUIRoleToDBRole = (uiRole: UserRole): string => {
+  const roleMap: Record<UserRole, string> = {
+    'employee': 'employee',
+    'employer': 'employer', 
+    'admin': 'admin',
+    'hr': 'hr',
+    'manager': 'employer', // Map manager to employer in DB
+    'payroll': 'payroll'
+  };
+  
+  return roleMap[uiRole] || 'employee';
+};
+
 export interface SecurityConfig {
   sessionTimeout: number;
   maxLoginAttempts: number;
