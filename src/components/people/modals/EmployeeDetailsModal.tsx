@@ -137,7 +137,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       sunday_available: true,
       sunday_start_time: '09:00:00',
       sunday_end_time: '17:00:00'
-    };
+    } as DbEmployee;
   };
 
   return (
