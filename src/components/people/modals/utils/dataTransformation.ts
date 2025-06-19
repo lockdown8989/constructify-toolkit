@@ -1,6 +1,6 @@
 
 import { EmployeeFormValues } from '../employee-form-schema';
-import { sanitizeString, sanitizeNumber, ensureBoolean, ensureTimeString } from './dataSanitization';
+import { sanitizeString, sanitizeNumber, sanitizeUuid, ensureBoolean, ensureTimeString } from './dataSanitization';
 
 export const transformEmployeeData = (values: EmployeeFormValues) => {
   console.log('🔄 Transforming employee data with weekly availability:', {
@@ -25,14 +25,15 @@ export const transformEmployeeData = (values: EmployeeFormValues) => {
     status: values.status || 'Active',
     lifecycle: values.lifecycle || 'Full time',
     role: 'employee',
-    shift_pattern_id: sanitizeString(values.shift_pattern_id),
-    monday_shift_id: sanitizeString(values.monday_shift_id),
-    tuesday_shift_id: sanitizeString(values.tuesday_shift_id),
-    wednesday_shift_id: sanitizeString(values.wednesday_shift_id),
-    thursday_shift_id: sanitizeString(values.thursday_shift_id),
-    friday_shift_id: sanitizeString(values.friday_shift_id),
-    saturday_shift_id: sanitizeString(values.saturday_shift_id),
-    sunday_shift_id: sanitizeString(values.sunday_shift_id),
+    // Properly sanitize UUID fields to prevent "invalid input syntax for type uuid" errors
+    shift_pattern_id: sanitizeUuid(values.shift_pattern_id),
+    monday_shift_id: sanitizeUuid(values.monday_shift_id),
+    tuesday_shift_id: sanitizeUuid(values.tuesday_shift_id),
+    wednesday_shift_id: sanitizeUuid(values.wednesday_shift_id),
+    thursday_shift_id: sanitizeUuid(values.thursday_shift_id),
+    friday_shift_id: sanitizeUuid(values.friday_shift_id),
+    saturday_shift_id: sanitizeUuid(values.saturday_shift_id),
+    sunday_shift_id: sanitizeUuid(values.sunday_shift_id),
     // Weekly availability with explicit boolean conversion and proper logging
     monday_available: ensureBoolean(values.monday_available),
     monday_start_time: values.monday_available ? ensureTimeString(values.monday_start_time) : '09:00',

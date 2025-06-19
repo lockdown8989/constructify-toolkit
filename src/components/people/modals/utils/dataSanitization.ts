@@ -10,6 +10,17 @@ export const sanitizeNumber = (value: any): number => {
   return isNaN(num) ? 0 : num;
 };
 
+export const sanitizeUuid = (value: any): string | null => {
+  if (value === null || value === undefined || value === '') return null;
+  const stringValue = String(value).trim();
+  // Basic UUID format validation (8-4-4-4-12 characters)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(stringValue)) {
+    return stringValue;
+  }
+  return null;
+};
+
 export const ensureBoolean = (value: any): boolean => {
   console.log('🔍 Converting to boolean:', { value, type: typeof value });
   
