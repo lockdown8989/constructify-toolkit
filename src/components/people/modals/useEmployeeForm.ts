@@ -50,26 +50,26 @@ export const useEmployeeForm = ({
       friday_shift_id: employeeToEdit?.friday_shift_id || '',
       saturday_shift_id: employeeToEdit?.saturday_shift_id || '',
       sunday_shift_id: employeeToEdit?.sunday_shift_id || '',
-      // Weekly availability default values
-      monday_available: employeeToEdit?.monday_available !== undefined ? employeeToEdit.monday_available : true,
+      // Weekly availability with explicit boolean conversion
+      monday_available: employeeToEdit?.monday_available ?? true,
       monday_start_time: employeeToEdit?.monday_start_time || '09:00',
       monday_end_time: employeeToEdit?.monday_end_time || '17:00',
-      tuesday_available: employeeToEdit?.tuesday_available !== undefined ? employeeToEdit.tuesday_available : true,
+      tuesday_available: employeeToEdit?.tuesday_available ?? true,
       tuesday_start_time: employeeToEdit?.tuesday_start_time || '09:00',
       tuesday_end_time: employeeToEdit?.tuesday_end_time || '17:00',
-      wednesday_available: employeeToEdit?.wednesday_available !== undefined ? employeeToEdit.wednesday_available : true,
+      wednesday_available: employeeToEdit?.wednesday_available ?? true,
       wednesday_start_time: employeeToEdit?.wednesday_start_time || '09:00',
       wednesday_end_time: employeeToEdit?.wednesday_end_time || '17:00',
-      thursday_available: employeeToEdit?.thursday_available !== undefined ? employeeToEdit.thursday_available : true,
+      thursday_available: employeeToEdit?.thursday_available ?? true,
       thursday_start_time: employeeToEdit?.thursday_start_time || '09:00',
       thursday_end_time: employeeToEdit?.thursday_end_time || '17:00',
-      friday_available: employeeToEdit?.friday_available !== undefined ? employeeToEdit.friday_available : true,
+      friday_available: employeeToEdit?.friday_available ?? true,
       friday_start_time: employeeToEdit?.friday_start_time || '09:00',
       friday_end_time: employeeToEdit?.friday_end_time || '17:00',
-      saturday_available: employeeToEdit?.saturday_available !== undefined ? employeeToEdit.saturday_available : true,
+      saturday_available: employeeToEdit?.saturday_available ?? true,
       saturday_start_time: employeeToEdit?.saturday_start_time || '09:00',
       saturday_end_time: employeeToEdit?.saturday_end_time || '17:00',
-      sunday_available: employeeToEdit?.sunday_available !== undefined ? employeeToEdit.sunday_available : true,
+      sunday_available: employeeToEdit?.sunday_available ?? true,
       sunday_start_time: employeeToEdit?.sunday_start_time || '09:00',
       sunday_end_time: employeeToEdit?.sunday_end_time || '17:00',
     },
@@ -77,6 +77,15 @@ export const useEmployeeForm = ({
 
   const onSubmit = form.handleSubmit(async (values) => {
     console.log('🚀 Form submission started with values:', values);
+    console.log('📋 Weekly availability being submitted:', {
+      saturday_available: values.saturday_available,
+      saturday_start_time: values.saturday_start_time,
+      saturday_end_time: values.saturday_end_time,
+      sunday_available: values.sunday_available,
+      sunday_start_time: values.sunday_start_time,
+      sunday_end_time: values.sunday_end_time
+    });
+    
     setIsSubmitting(true);
     clearError();
 
@@ -88,6 +97,10 @@ export const useEmployeeForm = ({
       const employeeData = transformEmployeeData(values);
 
       console.log('📋 Sanitized employee data prepared:', employeeData);
+      console.log('🔍 Final availability data:', {
+        saturday_available: employeeData.saturday_available,
+        sunday_available: employeeData.sunday_available
+      });
 
       if (employeeToEdit) {
         console.log('🔄 Updating existing employee with ID:', employeeToEdit.id);
@@ -100,14 +113,14 @@ export const useEmployeeForm = ({
         });
         toast({
           title: "Employee updated successfully",
-          description: "Employee information has been saved.",
+          description: "Employee information and weekly availability have been saved.",
         });
       } else {
         console.log('➕ Creating new employee');
         await addEmployeeMutation.mutateAsync(employeeData);
         toast({
           title: "Employee added successfully", 
-          description: "New employee has been created.",
+          description: "New employee and weekly availability have been created.",
         });
       }
       
