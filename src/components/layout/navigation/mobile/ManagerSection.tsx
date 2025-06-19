@@ -8,7 +8,14 @@ interface ManagerSectionProps {
 }
 
 const ManagerSection = ({ hasManagerialAccess, onClose }: ManagerSectionProps) => {
-  if (!hasManagerialAccess) return null;
+  console.log("🎯 ManagerSection render - hasManagerialAccess:", hasManagerialAccess);
+  
+  if (!hasManagerialAccess) {
+    console.log("❌ No managerial access - not rendering manager section");
+    return null;
+  }
+  
+  console.log("✅ Rendering manager navigation section");
   
   return (
     <>
@@ -50,8 +57,12 @@ const ManagerSection = ({ hasManagerialAccess, onClose }: ManagerSectionProps) =
       <MobileNavLink
         to="/manager-time-clock"
         icon={Clock}
-        label="🕒 Manager Time Clock"
-        onClick={onClose}
+        label="⏰ IN AND OUT ⏰"
+        onClick={() => {
+          console.log("🚀 Navigating to manager time clock");
+          onClose();
+        }}
+        className="time-clock-nav-button bg-blue-50 border-l-4 border-l-blue-500 font-semibold"
       />
     </>
   );

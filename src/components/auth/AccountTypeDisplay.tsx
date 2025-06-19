@@ -5,7 +5,18 @@ import { Badge } from '@/components/ui/badge';
 import { User, Shield, Calculator, Users } from 'lucide-react';
 
 const AccountTypeDisplay = () => {
-  const { isAdmin, isHR, isManager, isPayroll, isEmployee } = useAuth();
+  const { isAdmin, isHR, isManager, isPayroll, isEmployee, rolesLoaded } = useAuth();
+
+  // Don't show anything until roles are loaded
+  if (!rolesLoaded) {
+    return (
+      <div className="flex items-center gap-2">
+        <Badge className="bg-gray-100 text-gray-600">
+          Loading...
+        </Badge>
+      </div>
+    );
+  }
 
   const getAccountTypeInfo = () => {
     if (isAdmin) {
@@ -50,6 +61,8 @@ const AccountTypeDisplay = () => {
 
   const accountInfo = getAccountTypeInfo();
   const IconComponent = accountInfo.icon;
+
+  console.log("🏷️ AccountTypeDisplay - showing:", accountInfo.type, { isAdmin, isHR, isManager, isPayroll, isEmployee });
 
   return (
     <div className="flex items-center gap-2">

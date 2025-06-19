@@ -22,28 +22,43 @@ export const useRoles = (user: User | null) => {
 
   const fetchUserRoles = async (userId: string) => {
     try {
-      console.log("Fetching roles for user:", userId);
-      const { data: roles, error } = await supabase
+      console.log("🔄 Fetching roles for user:", userId);
+      
+      // First check user_roles table
+      const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId);
 
-      if (error) {
-        console.error('Error fetching user roles:', error);
-        // Set default employee role on error
-        setIsAdmin(false);
-        setIsHR(false);
-        setIsManager(false);
-        setIsPayroll(false);
-        setIsEmployee(true);
-        setRolesLoaded(true);
-        return;
+      if (rolesError) {
+        console.error('❌ Error fetching user roles:', rolesError);
       }
 
-      if (roles && roles.length > 0) {
-        const userRoles = roles.map(r => r.role);
-        console.log("User roles found:", userRoles);
-        
+      // Also check employee record for role backup
+      const { data: employeeData, error: employeeError } = await supabase
+        .from('employees')
+        .select('role, job_title')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (employeeError) {
+        console.error('❌ Error fetching employee data:', employeeError);
+      }
+
+      console.log("📊 Role data:", { roles, employeeData });
+
+      // Combine roles from both sources
+      const userRoles = roles ? roles.map(r => r.role) : [];
+      const employeeRole = employeeData?.role;
+
+      // Add employee role if it exists and isn't already in user roles
+      if (employeeRole && !userRoles.includes(employeeRole)) {
+        userRoles.push(employeeRole);
+      }
+
+      console.log("🎭 Combined user roles:", userRoles);
+      
+      if (userRoles.length > 0) {
         // Check each role with explicit logging
         const hasAdminRole = userRoles.includes('admin');
         const hasHRRole = userRoles.includes('hr');
@@ -51,12 +66,13 @@ export const useRoles = (user: User | null) => {
         const hasPayrollRole = userRoles.includes('payroll');
         const hasEmployeeRole = userRoles.includes('employee');
         
-        console.log("Role checks:", {
+        console.log("✅ Role checks:", {
           admin: hasAdminRole,
           hr: hasHRRole,
           manager: hasEmployerRole,
           payroll: hasPayrollRole,
-          employee: hasEmployeeRole
+          employee: hasEmployeeRole,
+          jobTitle: employeeData?.job_title
         });
         
         setIsAdmin(hasAdminRole);
@@ -66,7 +82,7 @@ export const useRoles = (user: User | null) => {
         // Set isEmployee to true if they have employee role OR if they have no management roles
         setIsEmployee(hasEmployeeRole || (!hasAdminRole && !hasHRRole && !hasEmployerRole && !hasPayrollRole));
       } else {
-        console.log("No roles found for user, defaulting to employee");
+        console.log("⚠️ No roles found for user, defaulting to employee");
         setIsAdmin(false);
         setIsHR(false);
         setIsManager(false);
@@ -76,7 +92,7 @@ export const useRoles = (user: User | null) => {
       
       setRolesLoaded(true);
     } catch (error) {
-      console.error('Error in fetchUserRoles:', error);
+      console.error('💥 Error in fetchUserRoles:', error);
       // Set defaults on error
       setIsAdmin(false);
       setIsHR(false);

@@ -28,7 +28,7 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
   hasManagerialAccess,
   isPayroll
 }) => {
-  const { user, isManager, isAdmin, isHR } = useAuth();
+  const { user, isManager, isAdmin, isHR, rolesLoaded } = useAuth();
   const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
   
   // Recalculate hasManagerialAccess to ensure it's correct
@@ -37,7 +37,7 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
   // Only show clocking controls for employees who are not managers or payroll users
   const isClockingEnabled = isEmployee && !actualManagerialAccess && !isPayroll && isAuthenticated;
   
-  console.log("MobileNavContent - Debug info:", {
+  console.log("📱 MobileNavContent - Debug info:", {
     isManager,
     isAdmin, 
     isHR,
@@ -45,10 +45,25 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
     actualManagerialAccess,
     hasManagerialAccess,
     isClockingEnabled,
+    rolesLoaded,
     userEmail: user?.email
   });
   
   if (!isOpen) return null;
+
+  // Don't render until roles are loaded
+  if (!rolesLoaded) {
+    return (
+      <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-25" onClick={onClose} />
+        <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-xl">
+          <div className="flex h-full flex-col items-center justify-center">
+            <div className="text-center">Loading...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
@@ -80,13 +95,6 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
                   <ManagerSection 
                     hasManagerialAccess={actualManagerialAccess}
                     onClose={onClose} 
-                  />
-                  
-                  <MobileNavDivider />
-                  <TimeClocksSection 
-                    onClose={onClose}
-                    isAuthenticated={isAuthenticated}
-                    hasManagerialAccess={actualManagerialAccess}
                   />
                 </>
               )}
