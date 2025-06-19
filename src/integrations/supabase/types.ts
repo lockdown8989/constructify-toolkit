@@ -1473,13 +1473,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "schedule_conflicts_resolved_by_fkey"
-            columns: ["resolved_by"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "schedule_conflicts_schedule_id_fkey"
             columns: ["schedule_id"]
             isOneToOne: false
@@ -1546,7 +1539,7 @@ export type Database = {
           id: string
           notes: string | null
           publication_date: string | null
-          published_by: string
+          published_by: string | null
           schedules_count: number | null
           week_end_date: string
           week_start_date: string
@@ -1557,7 +1550,7 @@ export type Database = {
           id?: string
           notes?: string | null
           publication_date?: string | null
-          published_by: string
+          published_by?: string | null
           schedules_count?: number | null
           week_end_date: string
           week_start_date: string
@@ -1568,7 +1561,7 @@ export type Database = {
           id?: string
           notes?: string | null
           publication_date?: string | null
-          published_by?: string
+          published_by?: string | null
           schedules_count?: number | null
           week_end_date?: string
           week_start_date?: string
@@ -1754,13 +1747,6 @@ export type Database = {
           {
             foreignKeyName: "schedules_employee_id_fkey"
             columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "schedules_manager_id_fkey"
-            columns: ["manager_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
