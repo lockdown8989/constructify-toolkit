@@ -1,102 +1,60 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { useAuthLimiting } from "@/hooks/auth/useAuthLimiting";
-import { useInputSanitization } from "@/hooks/auth/useInputSanitization";
 
-type SignInFormProps = {
+type UseSignInFormProps = {
   onSignIn: (email: string, password: string) => Promise<any>;
 };
 
-export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
+export const useSignInForm = ({ onSignIn }: UseSignInFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { 
-    canAttempt, 
-    attemptsRemaining, 
-    remainingBlockTime, 
-    recordFailedAttempt, 
-    recordSuccessfulAuth 
-  } = useAuthLimiting();
-  const { sanitizeEmail, validateEmail } = useInputSanitization();
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const sanitized = sanitizeEmail(e.target.value);
-    setEmail(sanitized);
-    if (errorMessage) setErrorMessage(null);
+    setEmail(e.target.value);
+    if (errorMessage) setErrorMessage("");
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
-    if (errorMessage) setErrorMessage(null);
+    if (errorMessage) setErrorMessage("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!canAttempt) {
-      const minutes = Math.ceil(remainingBlockTime / 60);
-      setErrorMessage(`Too many failed attempts. Please try again in ${minutes} minutes.`);
+    if (!email.trim() || !password) {
+      setErrorMessage("Please enter both email and password");
       return;
     }
-    
+
     setIsLoading(true);
-    setErrorMessage(null);
-    
+    setErrorMessage("");
+
     try {
-      // Input validation
-      if (!email || !password) {
-        setErrorMessage("Email and password are required");
-        setIsLoading(false);
-        return;
-      }
+      const result = await onSignIn(email.trim(), password);
       
-      if (!validateEmail(email)) {
-        setErrorMessage("Please enter a valid email address");
-        setIsLoading(false);
-        return;
-      }
-      
-      const result = await onSignIn(email, password);
-      
-      if (result.error) {
-        recordFailedAttempt();
+      if (result?.error) {
+        console.error("Sign in error:", result.error);
         
-        // Generic error messages for security
-        if (result.error.message === "Invalid login credentials") {
-          setErrorMessage(`Invalid credentials. ${attemptsRemaining - 1} attempts remaining.`);
-        } else if (result.error.message.includes("Email not confirmed")) {
-          setErrorMessage("Please check your email and verify your account before signing in.");
+        // Handle specific error cases
+        if (result.error.message?.includes("Invalid login credentials")) {
+          setErrorMessage("Invalid email or password. Please check your credentials and try again.");
+        } else if (result.error.message?.includes("Email not confirmed")) {
+          setErrorMessage("Please verify your email address before signing in.");
+        } else if (result.error.message?.includes("Too many requests")) {
+          setErrorMessage("Too many sign in attempts. Please wait a moment and try again.");
         } else {
-          setErrorMessage("Sign in failed. Please check your credentials and try again.");
+          setErrorMessage(result.error.message || "Sign in failed. Please try again.");
         }
-        
-        setIsLoading(false);
-        return;
-      }
-      
-      if (result.data?.user) {
-        recordSuccessfulAuth();
-        toast({
-          title: "Welcome back",
-          description: "You have been signed in successfully",
-        });
-        
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 500);
-      } else {
-        setErrorMessage("Sign in failed. Please try again.");
+      } else if (result?.data?.user) {
+        // Successful sign in - redirect will be handled by auth provider
+        console.log("Sign in successful");
       }
     } catch (error) {
-      recordFailedAttempt();
-      setErrorMessage("An unexpected error occurred. Please try again later.");
+      console.error("Sign in exception:", error);
+      setErrorMessage("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -107,9 +65,9 @@ export const useSignInForm = ({ onSignIn }: SignInFormProps) => {
     password,
     isLoading,
     errorMessage,
-    canAttempt,
-    attemptsRemaining,
-    remainingBlockTime,
+    canAttempt: true, // Always allow sign in attempts
+    attemptsRemaining: Infinity, // No rate limiting for sign in
+    remainingBlockTime: 0,
     handleEmailChange,
     handlePasswordChange,
     handleSubmit

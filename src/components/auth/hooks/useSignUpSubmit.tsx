@@ -21,11 +21,6 @@ type UseSignUpSubmitProps = {
     managerId: string | null
   ) => Promise<boolean>;
   getFullName: () => string;
-  canAttempt: boolean;
-  attemptsRemaining: number;
-  remainingBlockTime: number;
-  recordFailedAttempt: () => void;
-  recordSuccessfulAuth: () => void;
   validateForm: () => boolean;
 };
 
@@ -41,11 +36,6 @@ export const useSignUpSubmit = ({
   assignUserRole,
   createOrUpdateEmployeeRecord,
   getFullName,
-  canAttempt,
-  attemptsRemaining,
-  remainingBlockTime,
-  recordFailedAttempt,
-  recordSuccessfulAuth,
   validateForm
 }: UseSignUpSubmitProps) => {
   const { toast } = useToast();
@@ -53,12 +43,6 @@ export const useSignUpSubmit = ({
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!canAttempt) {
-      const minutes = Math.ceil(remainingBlockTime / 60);
-      setSignUpError(`Too many failed attempts. Please try again in ${minutes} minutes.`);
-      return;
-    }
     
     setIsLoading(true);
     setSignUpError(null);
@@ -68,6 +52,7 @@ export const useSignUpSubmit = ({
       
       // Validate form first
       if (!validateForm()) {
+        setSignUpError("Please fill in all required fields");
         setIsLoading(false);
         return;
       }
@@ -107,7 +92,6 @@ export const useSignUpSubmit = ({
       
       if (result.error) {
         console.error("Sign up error:", result.error);
-        recordFailedAttempt();
         
         // Provide more specific error messages
         if (result.error.message.includes("duplicate key") || result.error.message.includes("already registered")) {
@@ -130,7 +114,7 @@ export const useSignUpSubmit = ({
           
           return;
         } else {
-          setSignUpError(`${result.error.message || "Failed to create account. Please try again."} ${attemptsRemaining - 1} attempts remaining.`);
+          setSignUpError(result.error.message || "Failed to create account. Please try again.");
         }
         
         setIsLoading(false);
@@ -138,7 +122,6 @@ export const useSignUpSubmit = ({
       }
       
       if (result.data?.user && !result.data.user.email_confirmed_at) {
-        recordSuccessfulAuth();
         // Handle email confirmation case
         toast({
           title: "Email verification required",
@@ -169,8 +152,6 @@ export const useSignUpSubmit = ({
 
         console.log("Role assignment result:", roleSuccess);
         console.log("Employee record creation result:", employeeSuccess);
-        
-        recordSuccessfulAuth();
         
         // Show appropriate success message based on role
         if (userRole === 'manager') {
@@ -212,14 +193,12 @@ export const useSignUpSubmit = ({
           window.location.href = '/dashboard';
         }, 1500);
       } else {
-        recordFailedAttempt();
         setSignUpError("User created but session not established. Please try signing in.");
         setIsLoading(false);
       }
     } catch (error) {
       console.error("Sign up error:", error);
-      recordFailedAttempt();
-      setSignUpError(`${error instanceof Error ? error.message : "An unexpected error occurred during sign up"} ${attemptsRemaining - 1} attempts remaining.`);
+      setSignUpError(error instanceof Error ? error.message : "An unexpected error occurred during sign up");
       setIsLoading(false);
     }
   };

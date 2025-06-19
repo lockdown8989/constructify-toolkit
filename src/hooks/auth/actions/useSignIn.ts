@@ -36,12 +36,14 @@ export const useSignIn = () => {
       });
       
       if (error) {
-        // Don't log sensitive authentication details in production
+        console.error("Sign in error:", error);
         return { error, data: undefined };
       } else {
+        console.log("Sign in successful:", { userId: data.user?.id, email: data.user?.email });
         return { error: null, data };
       }
     } catch (error) {
+      console.error("Sign in exception:", error);
       return { 
         error: {
           message: error instanceof Error ? "Sign in failed" : "An unexpected error occurred"
