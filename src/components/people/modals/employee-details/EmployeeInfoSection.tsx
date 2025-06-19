@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,7 @@ import {
   FileText
 } from 'lucide-react';
 import { Employee } from '@/components/people/types';
+import { Employee as DbEmployee } from '@/hooks/use-employees';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -52,56 +52,59 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
 
   const handleSave = async () => {
     try {
-      // Convert UI employee back to database format with all required fields
-      const updateData: Employee = {
+      // Convert UI employee to database format with all required fields
+      const updateData: DbEmployee = {
         id: employee.id,
         name: editedEmployee.name,
         job_title: editedEmployee.jobTitle,
         department: editedEmployee.department,
         site: editedEmployee.site,
-        salary: parseFloat(editedEmployee.salary.replace(/[^0-9.]/g, '')),
+        salary: typeof editedEmployee.salary === 'string' 
+          ? parseFloat(editedEmployee.salary.replace(/[^0-9.]/g, '')) || 0
+          : editedEmployee.salary || 0,
         status: editedEmployee.status,
         lifecycle: employee.lifecycle, // Keep existing lifecycle
         email: editedEmployee.email,
-        role: editedEmployee.role,
+        role: editedEmployee.role || 'employee',
         start_date: new Date(editedEmployee.startDate).toISOString().split('T')[0],
-        // Include all other required fields from original employee
-        hourly_rate: employee.hourly_rate,
-        annual_leave_days: employee.annual_leave_days,
-        sick_leave_days: employee.sick_leave_days,
-        user_id: employee.user_id,
-        manager_id: employee.manager_id,
-        location: employee.location,
-        avatar: employee.avatar,
-        shift_pattern_id: employee.shift_pattern_id,
-        monday_shift_id: employee.monday_shift_id,
-        tuesday_shift_id: employee.tuesday_shift_id,
-        wednesday_shift_id: employee.wednesday_shift_id,
-        thursday_shift_id: employee.thursday_shift_id,
-        friday_shift_id: employee.friday_shift_id,
-        saturday_shift_id: employee.saturday_shift_id,
-        sunday_shift_id: employee.sunday_shift_id,
-        monday_available: employee.monday_available,
-        monday_start_time: employee.monday_start_time,
-        monday_end_time: employee.monday_end_time,
-        tuesday_available: employee.tuesday_available,
-        tuesday_start_time: employee.tuesday_start_time,
-        tuesday_end_time: employee.tuesday_end_time,
-        wednesday_available: employee.wednesday_available,
-        wednesday_start_time: employee.wednesday_start_time,
-        wednesday_end_time: employee.wednesday_end_time,
-        thursday_available: employee.thursday_available,
-        thursday_start_time: employee.thursday_start_time,
-        thursday_end_time: employee.thursday_end_time,
-        friday_available: employee.friday_available,
-        friday_start_time: employee.friday_start_time,
-        friday_end_time: employee.friday_end_time,
-        saturday_available: employee.saturday_available,
-        saturday_start_time: employee.saturday_start_time,
-        saturday_end_time: employee.saturday_end_time,
-        sunday_available: employee.sunday_available,
-        sunday_start_time: employee.sunday_start_time,
-        sunday_end_time: employee.sunday_end_time,
+        // Map UI properties to database properties with fallbacks
+        hourly_rate: employee.hourly_rate || null,
+        annual_leave_days: employee.annual_leave_days || 25,
+        sick_leave_days: employee.sick_leave_days || 10,
+        user_id: employee.userId || null,
+        manager_id: employee.managerId || null,
+        location: employee.siteIcon === '🌐' ? 'Remote' : 'Office',
+        avatar: employee.avatar || null,
+        shift_pattern_id: employee.shift_pattern_id || null,
+        monday_shift_id: employee.monday_shift_id || null,
+        tuesday_shift_id: employee.tuesday_shift_id || null,
+        wednesday_shift_id: employee.wednesday_shift_id || null,
+        thursday_shift_id: employee.thursday_shift_id || null,
+        friday_shift_id: employee.friday_shift_id || null,
+        saturday_shift_id: employee.saturday_shift_id || null,
+        sunday_shift_id: employee.sunday_shift_id || null,
+        // Weekly availability fields - set defaults if not available
+        monday_available: true,
+        monday_start_time: '09:00',
+        monday_end_time: '17:00',
+        tuesday_available: true,
+        tuesday_start_time: '09:00',
+        tuesday_end_time: '17:00',
+        wednesday_available: true,
+        wednesday_start_time: '09:00',
+        wednesday_end_time: '17:00',
+        thursday_available: true,
+        thursday_start_time: '09:00',
+        thursday_end_time: '17:00',
+        friday_available: true,
+        friday_start_time: '09:00',
+        friday_end_time: '17:00',
+        saturday_available: true,
+        saturday_start_time: '09:00',
+        saturday_end_time: '17:00',
+        sunday_available: true,
+        sunday_start_time: '09:00',
+        sunday_end_time: '17:00',
       };
 
       await updateEmployeeMutation.mutateAsync(updateData);

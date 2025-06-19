@@ -1,5 +1,6 @@
+
 import { useUpdateLeaveCalendar } from "@/hooks/use-leave-calendar";
-import { useUpdateEmployee } from "@/hooks/use-employees";
+import { useUpdateEmployee, useEmployees } from "@/hooks/use-employees";
 import { useToast } from "@/hooks/use-toast";
 import { createAuditLog } from "../utils/leave-utils";
 import type { LeaveCalendar, AuditLogEntry } from "@/hooks/leave/leave-types";
@@ -10,6 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 export const useLeaveApprovalActions = (currentUser: any) => {
   const { mutate: updateLeave } = useUpdateLeaveCalendar();
   const { mutate: updateEmployee } = useUpdateEmployee();
+  const { data: employees = [] } = useEmployees();
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -20,8 +22,15 @@ export const useLeaveApprovalActions = (currentUser: any) => {
     const end = new Date(endDate);
     
     if (today >= start && today <= end) {
+      // Find the complete employee data
+      const employee = employees.find(emp => emp.id === employeeId);
+      if (!employee) {
+        console.error("Employee not found for status update");
+        return;
+      }
+
       updateEmployee(
-        { id: employeeId, status: "Leave" },
+        { ...employee, status: "Leave" },
         {
           onError: (error) => {
             console.error("Error updating employee status:", error);
