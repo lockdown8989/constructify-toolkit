@@ -14,4 +14,16 @@ export const validateRequiredFields = (values: EmployeeFormValues): void => {
   if (!values.site?.trim()) {
     throw new Error('Site is required');
   }
+  
+  // Validate lifecycle value
+  const validLifecycles = ['Full time', 'Part time', 'Agency'];
+  if (values.lifecycle && !validLifecycles.includes(values.lifecycle)) {
+    throw new Error('Invalid employment status selected');
+  }
+  
+  // Validate status value
+  const validStatuses = ['Active', 'Inactive', 'Pending'];
+  if (values.status && !validStatuses.includes(values.status)) {
+    throw new Error('Invalid current status selected');
+  }
 };

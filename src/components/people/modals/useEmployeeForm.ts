@@ -91,6 +91,9 @@ export const useEmployeeForm = ({
 
       if (employeeToEdit) {
         console.log('🔄 Updating existing employee with ID:', employeeToEdit.id);
+        console.log('🔧 Original employee lifecycle:', employeeToEdit.lifecycle);
+        console.log('🔧 New employee lifecycle:', employeeData.lifecycle);
+        
         await updateEmployeeMutation.mutateAsync({
           id: employeeToEdit.id,
           ...employeeData,
@@ -111,6 +114,8 @@ export const useEmployeeForm = ({
       console.log('✅ Employee save operation completed successfully');
       onSuccess();
     } catch (err) {
+      console.error('❌ Form submission error:', err);
+      console.error('❌ Employee data that failed:', employeeToEdit ? { id: employeeToEdit.id, ...transformEmployeeData(values) } : transformEmployeeData(values));
       handleError(err, 'Failed to save employee data');
     } finally {
       setIsSubmitting(false);

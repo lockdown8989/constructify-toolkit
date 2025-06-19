@@ -14,7 +14,7 @@ export const transformEmployeeData = (values: EmployeeFormValues) => {
     hourly_rate: sanitizeNumber(values.hourly_rate),
     start_date: values.start_date || new Date().toISOString().split('T')[0],
     status: values.status || 'Active',
-    lifecycle: values.lifecycle || 'Full time',
+    lifecycle: values.lifecycle || 'Full time', // Ensure lifecycle is properly set
     role: 'employee',
     shift_pattern_id: sanitizeString(values.shift_pattern_id),
     monday_shift_id: sanitizeString(values.monday_shift_id),
