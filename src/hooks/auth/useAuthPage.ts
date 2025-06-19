@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
+import { useAuthActions } from "./useAuthActions";
 
 export const useAuthPage = () => {
   const { user } = useAuth();
@@ -10,6 +11,9 @@ export const useAuthPage = () => {
   const [searchParams] = useSearchParams();
   const from = location.state?.from?.pathname || "/dashboard";
   const [showResetPassword, setShowResetPassword] = useState(false);
+  
+  // Get auth actions
+  const { signIn, signUp } = useAuthActions();
   
   // Get the tab parameter from URL
   const tabParam = searchParams.get("tab");
@@ -45,6 +49,8 @@ export const useAuthPage = () => {
     isRecoveryMode,
     showResetPassword,
     handleShowResetPassword,
-    handleBackToSignIn
+    handleBackToSignIn,
+    signIn,
+    signUp
   };
 };
