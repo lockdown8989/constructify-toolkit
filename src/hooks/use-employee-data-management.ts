@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const useEmployeeDataManagement = () => {
   const { user } = useAuth();
   const [employeeId, setEmployeeId] = useState<string | null>(null);
+  const [employeeData, setEmployeeData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +24,7 @@ export const useEmployeeDataManagement = () => {
 
         const { data: employeeData, error: employeeError } = await supabase
           .from('employees')
-          .select('id')
+          .select('*')
           .eq('user_id', user.id)
           .maybeSingle();
 
@@ -35,6 +36,7 @@ export const useEmployeeDataManagement = () => {
 
         if (employeeData) {
           setEmployeeId(employeeData.id);
+          setEmployeeData(employeeData);
         } else {
           console.log('No employee record found for user:', user.id);
           setError('No employee record found');
@@ -54,6 +56,7 @@ export const useEmployeeDataManagement = () => {
   useEffect(() => {
     if (!user) {
       setEmployeeId(null);
+      setEmployeeData(null);
       setError(null);
       setIsLoading(false);
     }
@@ -61,6 +64,7 @@ export const useEmployeeDataManagement = () => {
 
   return {
     employeeId,
+    employeeData,
     isLoading,
     error
   };
