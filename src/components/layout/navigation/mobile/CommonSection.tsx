@@ -1,8 +1,7 @@
 
-import { Home, Calendar, FileText, UserCheck } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import React from 'react';
+import { LayoutDashboard, FileText, Bell, UserCheck } from "lucide-react";
 import MobileNavLink from "./MobileNavLink";
-import PayrollSection from "./PayrollSection";
 
 interface CommonSectionProps {
   isAuthenticated: boolean;
@@ -19,49 +18,67 @@ const CommonSection = ({
   isPayroll, 
   onClose 
 }: CommonSectionProps) => {
-  console.log("CommonSection - isPayroll:", isPayroll);
-  
   if (!isAuthenticated) return null;
 
   return (
     <>
-      <MobileNavLink 
-        to="/dashboard" 
-        icon={Home} 
-        label="Dashboard" 
-        onClick={onClose} 
+      <MobileNavLink
+        to="/dashboard"
+        icon={LayoutDashboard}
+        label="🏠 Dashboard"
+        onClick={onClose}
       />
 
-      {/* Show schedule link for non-managers and non-payroll users */}
+      {/* Schedule for non-managers and non-payroll users */}
       {!hasManagerialAccess && !isPayroll && (
-        <MobileNavLink 
-          to="/schedule" 
-          icon={Calendar} 
-          label="Schedule" 
-          onClick={onClose} 
+        <MobileNavLink
+          to="/schedule"
+          icon={LayoutDashboard}
+          label="📅 My Schedule"
+          onClick={onClose}
         />
       )}
 
-      {/* Show attendance for all authenticated users - but only once */}
-      <MobileNavLink 
-        to="/attendance" 
-        icon={UserCheck} 
-        label="📊 Attendance" 
-        onClick={onClose} 
+      {/* Attendance for all authenticated users */}
+      <MobileNavLink
+        to="/attendance"
+        icon={UserCheck}
+        label="📊 Attendance"
+        onClick={onClose}
       />
 
-      {/* Show leave management for all authenticated users */}
-      <MobileNavLink 
-        to="/leave-management" 
-        icon={FileText} 
-        label="Leave" 
-        onClick={onClose} 
+      {/* Leave Management for all users */}
+      <MobileNavLink
+        to="/leave-management"
+        icon={FileText}
+        label="📋 Leave Management"
+        onClick={onClose}
       />
 
-      {/* Payroll Section - Only for payroll users */}
+      {/* Payroll sections - only for payroll users */}
       {isPayroll && (
-        <PayrollSection onClose={onClose} />
+        <>
+          <MobileNavLink
+            to="/payroll-dashboard"
+            icon={LayoutDashboard}
+            label="💰 Payroll Dashboard"
+            onClick={onClose}
+          />
+          <MobileNavLink
+            to="/payslips"
+            icon={FileText}
+            label="📄 Payslips"
+            onClick={onClose}
+          />
+        </>
       )}
+
+      <MobileNavLink
+        to="/notifications"
+        icon={Bell}
+        label="🔔 Notifications"
+        onClick={onClose}
+      />
     </>
   );
 };

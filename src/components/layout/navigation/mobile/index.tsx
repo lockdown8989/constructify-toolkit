@@ -10,7 +10,19 @@ interface MobileNavProps {
 
 const MobileNav: React.FC<MobileNavProps> = ({ isOpen, onClose }) => {
   const { isAdmin, isHR, isManager, isEmployee, isPayroll, isAuthenticated } = useAuth();
-  const hasManagerialAccess = isManager || isAdmin || isHR;
+  
+  // Calculate managerial access properly - exclude payroll users
+  const hasManagerialAccess = (isManager || isAdmin || isHR) && !isPayroll;
+
+  console.log("MobileNav - Role debug:", {
+    isAdmin,
+    isHR, 
+    isManager,
+    isEmployee,
+    isPayroll,
+    hasManagerialAccess,
+    isAuthenticated
+  });
 
   return (
     <MobileNavContent 

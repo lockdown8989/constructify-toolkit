@@ -28,14 +28,25 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
   hasManagerialAccess,
   isPayroll
 }) => {
-  const { user } = useAuth();
+  const { user, isManager, isAdmin, isHR } = useAuth();
   const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
   
-  // Only show clocking controls for employees who are not managers or payroll users
-  const isClockingEnabled = isEmployee && !hasManagerialAccess && !isPayroll && isAuthenticated;
+  // Recalculate hasManagerialAccess to ensure it's correct
+  const actualManagerialAccess = (isManager || isAdmin || isHR) && !isPayroll;
   
-  console.log("MobileNavContent - isPayroll:", isPayroll);
-  console.log("MobileNavContent - isClockingEnabled:", isClockingEnabled);
+  // Only show clocking controls for employees who are not managers or payroll users
+  const isClockingEnabled = isEmployee && !actualManagerialAccess && !isPayroll && isAuthenticated;
+  
+  console.log("MobileNavContent - Debug info:", {
+    isManager,
+    isAdmin, 
+    isHR,
+    isPayroll,
+    actualManagerialAccess,
+    hasManagerialAccess,
+    isClockingEnabled,
+    userEmail: user?.email
+  });
   
   if (!isOpen) return null;
 
@@ -48,20 +59,26 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
           
           <div className="flex-1 overflow-y-auto px-3 py-4">
             <div className="space-y-2">
+              {/* Common sections for all users */}
               <CommonSection 
                 isAuthenticated={isAuthenticated}
                 isEmployee={isEmployee}
-                hasManagerialAccess={hasManagerialAccess}
+                hasManagerialAccess={actualManagerialAccess}
                 isPayroll={isPayroll}
                 onClose={onClose}
               />
               
-              {/* Manager sections - only for managers who are not payroll users */}
-              {isAuthenticated && hasManagerialAccess && !isPayroll && (
+              {/* Manager sections - for managers, admins, and HR (but not payroll) */}
+              {isAuthenticated && actualManagerialAccess && (
                 <>
                   <MobileNavDivider />
+                  <div className="px-2 py-1">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Management
+                    </p>
+                  </div>
                   <ManagerSection 
-                    hasManagerialAccess={hasManagerialAccess}
+                    hasManagerialAccess={actualManagerialAccess}
                     onClose={onClose} 
                   />
                   
@@ -69,17 +86,22 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
                   <TimeClocksSection 
                     onClose={onClose}
                     isAuthenticated={isAuthenticated}
-                    hasManagerialAccess={hasManagerialAccess}
+                    hasManagerialAccess={actualManagerialAccess}
                   />
                 </>
               )}
               
               {/* Employee workflow - only for non-manager, non-payroll employees */}
-              {isEmployee && !hasManagerialAccess && !isPayroll && (
+              {isEmployee && !actualManagerialAccess && !isPayroll && (
                 <>
                   <MobileNavDivider />
+                  <div className="px-2 py-1">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Workflow
+                    </p>
+                  </div>
                   <WorkflowSection 
-                    hasManagerialAccess={hasManagerialAccess}
+                    hasManagerialAccess={actualManagerialAccess}
                     onClose={onClose} 
                   />
                 </>
