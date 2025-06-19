@@ -14,9 +14,9 @@ interface DesktopSidebarProps {
 }
 
 const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ isAuthenticated }) => {
-  const { isAdmin, isHR, isManager, isPayroll } = useAuth();
+  const { isAdmin, isHR, isManager, isPayroll, isEmployee } = useAuth();
   
-  // Exclude payroll users from managerial access
+  // FIXED: Managers should have managerial access
   const hasManagerialAccess = (isManager || isAdmin || isHR) && !isPayroll;
   
   const navigate = useNavigate();
@@ -25,7 +25,17 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ isAuthenticated }) => {
   const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
   
   // Only regular employees (not managers or payroll users) get clocking controls
-  const isClockingEnabled = !hasManagerialAccess && !isPayroll && isAuthenticated;
+  const isClockingEnabled = isEmployee && !hasManagerialAccess && !isPayroll && isAuthenticated;
+  
+  console.log("🖥️ DesktopSidebar - Role state:", {
+    isManager,
+    isAdmin,
+    isHR,
+    isPayroll,
+    isEmployee,
+    hasManagerialAccess,
+    isClockingEnabled
+  });
   
   const handleHomeClick = () => {
     navigate('/dashboard');

@@ -23,12 +23,13 @@ const Dashboard = () => {
                    user?.email?.split('@')[0] || 
                    'User';
 
-  // Determine dashboard type based on role priority
+  // Determine dashboard type based on role priority - FIXED LOGIC
   const getDashboardType = () => {
     console.log("🎯 Dashboard role determination:", { isManager, isAdmin, isHR, isPayroll, isEmployee });
     
+    // Priority order: admin/hr/manager > payroll > employee
+    if (isAdmin || isHR || isManager) return 'manager';
     if (isPayroll) return 'payroll';
-    if (isManager || isAdmin || isHR) return 'manager';
     return 'employee';
   };
 
@@ -83,6 +84,8 @@ const Dashboard = () => {
     projectTime: 0,
     output: 0
   };
+
+  console.log("🎯 Final dashboard type decision:", dashboardType);
 
   return (
     <Tabs defaultValue="dashboard">

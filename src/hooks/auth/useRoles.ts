@@ -59,13 +59,14 @@ export const useRoles = (user: User | null) => {
       console.log("🎭 Combined user roles:", userRoles);
       
       if (userRoles.length > 0) {
-        // Check each role with explicit logging
+        // Check each role with explicit logging - FIXED PRIORITY ORDER
         const hasAdminRole = userRoles.includes('admin');
         const hasHRRole = userRoles.includes('hr');
-        // Check for both 'employer' and 'manager' to ensure compatibility
-        const hasManagerRole = userRoles.includes('employer') || userRoles.includes('manager');
+        // Check for 'employer' role specifically for managers
+        const hasManagerRole = userRoles.includes('employer');
         const hasPayrollRole = userRoles.includes('payroll');
-        const hasEmployeeRole = userRoles.includes('employee');
+        // Only set as employee if no other management roles
+        const hasEmployeeRole = userRoles.includes('employee') && !hasAdminRole && !hasHRRole && !hasManagerRole && !hasPayrollRole;
         
         console.log("✅ Role checks:", {
           admin: hasAdminRole,
@@ -79,9 +80,9 @@ export const useRoles = (user: User | null) => {
         
         setIsAdmin(hasAdminRole);
         setIsHR(hasHRRole);
-        setIsManager(hasManagerRole);
+        setIsManager(hasManagerRole); // This should be true for 'employer' role
         setIsPayroll(hasPayrollRole);
-        // Set isEmployee to true if they have employee role OR if they have no management roles
+        // Only set as employee if they have no management roles
         setIsEmployee(hasEmployeeRole || (!hasAdminRole && !hasHRRole && !hasManagerRole && !hasPayrollRole));
       } else {
         console.log("⚠️ No roles found for user, defaulting to employee");

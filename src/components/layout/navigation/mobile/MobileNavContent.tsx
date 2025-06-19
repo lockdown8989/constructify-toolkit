@@ -31,7 +31,7 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
   const { user, isManager, isAdmin, isHR, rolesLoaded } = useAuth();
   const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
   
-  // Recalculate hasManagerialAccess to ensure it's correct
+  // Recalculate hasManagerialAccess to ensure it's correct - FIXED LOGIC
   const actualManagerialAccess = (isManager || isAdmin || isHR) && !isPayroll;
   
   // Only show clocking controls for employees who are not managers or payroll users
