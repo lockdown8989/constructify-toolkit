@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PeopleTable from '@/components/people/PeopleTable';
@@ -64,7 +65,18 @@ const People = () => {
   // Handle updating employee status
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
-      await updateEmployee.mutateAsync({ id, status });
+      // Find the employee to get all required fields
+      const employee = employees.find(emp => emp.id === id);
+      if (!employee) {
+        console.error("Employee not found");
+        return;
+      }
+      
+      // Update with complete employee object
+      await updateEmployee.mutateAsync({
+        ...employee,
+        status
+      });
     } catch (error) {
       console.error("Error updating status:", error);
     }
