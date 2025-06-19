@@ -25,9 +25,9 @@ const EmploymentStatusFields: React.FC<EmploymentStatusFieldsProps> = ({ form })
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="Active">Active</SelectItem>
-                <SelectItem value="Inactive">Inactive</SelectItem>
-                <SelectItem value="Terminated">Terminated</SelectItem>
+                <SelectItem value="Full time">Full time</SelectItem>
+                <SelectItem value="Part time">Part time</SelectItem>
+                <SelectItem value="Agency">Agency</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
