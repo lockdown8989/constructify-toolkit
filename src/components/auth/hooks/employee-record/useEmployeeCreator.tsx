@@ -16,7 +16,7 @@ export const useEmployeeCreator = () => {
     userRole: UserRole, 
     managerId: string | null
   ) => {
-    console.log(`Creating new employee record with role: ${userRole}, manager ID: ${managerId || 'none'}`);
+    console.log(`🎯 Creating new employee record with role: ${userRole}, manager ID: ${managerId || 'none'}`);
     
     let managerIdToUse = null;
     let managerName = null;
@@ -44,7 +44,7 @@ export const useEmployeeCreator = () => {
     
     // If this is a manager, use their own manager ID
     if (userRole === 'manager') {
-      console.log(`Manager registering with manager ID: ${managerId}`);
+      console.log(`🎯 Manager registering with manager ID: ${managerId}`);
       managerIdToUse = managerId;
     }
     
@@ -62,6 +62,11 @@ export const useEmployeeCreator = () => {
           title: "Account created",
           description: `Your account has been connected to manager: ${managerName}`,
         });
+      } else if (userRole === 'manager') {
+        toast({
+          title: "Manager Account Created",
+          description: `Manager account created successfully. Your Manager ID is ${managerId}`,
+        });
       }
       
       return true;
@@ -77,8 +82,9 @@ export const useEmployeeCreator = () => {
     managerId: string | null
   ) => {
     const jobTitle = userRole === 'manager' ? 'Manager' : 'Employee';
+    const employeeRole = userRole === 'manager' ? 'employer' : 'employee'; // Map to database role
     
-    console.log(`Creating record with job title: ${jobTitle} and manager ID: ${managerId || 'none'}`);
+    console.log(`🎯 Creating record with job title: ${jobTitle}, role: ${employeeRole}, and manager ID: ${managerId || 'none'}`);
     
     try {
       // First check if there's already an employee record for this user
@@ -95,6 +101,7 @@ export const useEmployeeCreator = () => {
           .update({
             name: fullName,
             job_title: jobTitle,
+            role: employeeRole,
             manager_id: managerId
           })
           .eq('user_id', userId);
@@ -117,12 +124,13 @@ export const useEmployeeCreator = () => {
         .insert({
           name: fullName,
           job_title: jobTitle,
-          department: 'General',
+          department: userRole === 'manager' ? 'Management' : 'General',
           site: 'Main Office',
-          salary: 0, // Default salary, to be updated later
+          salary: userRole === 'manager' ? 55000 : 35000, // Different salary for managers
           start_date: new Date().toISOString().split('T')[0],
-          status: 'Present', // Changed from 'Active' to 'Present' to match allowed values
-          lifecycle: 'Employed', // Ensure this matches exactly what the database constraint expects
+          status: 'Active',
+          lifecycle: 'Active',
+          role: employeeRole,
           manager_id: managerId,
           user_id: userId // Link the employee record to the user account
         });
@@ -137,6 +145,7 @@ export const useEmployeeCreator = () => {
         return false;
       }
       
+      console.log(`✅ Employee record created successfully for ${userRole}`);
       return true;
     } catch (error) {
       console.error("Error in insertEmployeeRecord:", error);

@@ -57,7 +57,7 @@ const ManagerSection = ({ hasManagerialAccess, onClose }: ManagerSectionProps) =
       <MobileNavLink
         to="/manager-time-clock"
         icon={Clock}
-        label="⏰ IN AND OUT ⏰"
+        label="⏰ Manager Time Clock"
         onClick={() => {
           console.log("🚀 Navigating to manager time clock");
           onClose();

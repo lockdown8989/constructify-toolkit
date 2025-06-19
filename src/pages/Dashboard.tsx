@@ -25,6 +25,8 @@ const Dashboard = () => {
 
   // Determine dashboard type based on role priority
   const getDashboardType = () => {
+    console.log("🎯 Dashboard role determination:", { isManager, isAdmin, isHR, isPayroll, isEmployee });
+    
     if (isPayroll) return 'payroll';
     if (isManager || isAdmin || isHR) return 'manager';
     return 'employee';
@@ -41,11 +43,12 @@ const Dashboard = () => {
       isEmployee,
       rolesLoaded,
       dashboardType,
-      userId: user?.id
+      userId: user?.id,
+      userEmail: user?.email
     });
     
     if (user && rolesLoaded) {
-      console.log("Dashboard will show:", dashboardType, "dashboard for user:", user.email);
+      console.log("🎯 Dashboard will show:", dashboardType, "dashboard for user:", user.email);
     }
   }, [user, isManager, isAdmin, isHR, isPayroll, isEmployee, rolesLoaded, dashboardType]);
   

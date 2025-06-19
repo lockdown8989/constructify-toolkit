@@ -8,7 +8,7 @@ export const useRoleAssignment = () => {
 
   const assignUserRole = async (userId: string, userRole: UserRole) => {
     try {
-      console.log(`Assigning role ${userRole} to user ${userId}`);
+      console.log(`🎯 Assigning role ${userRole} to user ${userId}`);
       
       // First check if user already has any roles
       const { data: existingRoles, error: roleCheckError } = await supabase
@@ -39,11 +39,14 @@ export const useRoleAssignment = () => {
         case "hr":
           dbRole = "hr";
           break;
+        case "payroll":
+          dbRole = "payroll";
+          break;
         default:
           dbRole = "employee";
       }
       
-      console.log(`Mapped UI role ${userRole} to DB role ${dbRole}`);
+      console.log(`🔄 Mapped UI role ${userRole} to DB role ${dbRole}`);
       
       // Check specifically for the role we're trying to add
       const hasRequestedRole = existingRoles?.some(r => r.role === dbRole);
@@ -67,14 +70,14 @@ export const useRoleAssignment = () => {
           return false;
         } 
         
-        console.log(`Role ${dbRole} inserted successfully`);
+        console.log(`✅ Role ${dbRole} inserted successfully for user ${userId}`);
       } else {
-        console.log(`User already has role: ${dbRole}, not adding again`);
+        console.log(`⚠️ User already has role: ${dbRole}, not adding again`);
       }
       
       return true;
     } catch (error) {
-      console.error("Role assignment error:", error);
+      console.error("💥 Role assignment error:", error);
       return false;
     }
   };

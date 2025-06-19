@@ -63,14 +63,14 @@ export const useRoles = (user: User | null) => {
         const hasAdminRole = userRoles.includes('admin');
         const hasHRRole = userRoles.includes('hr');
         // Check for both 'employer' and 'manager' to ensure compatibility
-        const hasEmployerRole = userRoles.includes('employer') || userRoles.includes('manager');
+        const hasManagerRole = userRoles.includes('employer') || userRoles.includes('manager');
         const hasPayrollRole = userRoles.includes('payroll');
         const hasEmployeeRole = userRoles.includes('employee');
         
         console.log("✅ Role checks:", {
           admin: hasAdminRole,
           hr: hasHRRole,
-          manager: hasEmployerRole,
+          manager: hasManagerRole,
           payroll: hasPayrollRole,
           employee: hasEmployeeRole,
           jobTitle: employeeData?.job_title,
@@ -79,10 +79,10 @@ export const useRoles = (user: User | null) => {
         
         setIsAdmin(hasAdminRole);
         setIsHR(hasHRRole);
-        setIsManager(hasEmployerRole);
+        setIsManager(hasManagerRole);
         setIsPayroll(hasPayrollRole);
         // Set isEmployee to true if they have employee role OR if they have no management roles
-        setIsEmployee(hasEmployeeRole || (!hasAdminRole && !hasHRRole && !hasEmployerRole && !hasPayrollRole));
+        setIsEmployee(hasEmployeeRole || (!hasAdminRole && !hasHRRole && !hasManagerRole && !hasPayrollRole));
       } else {
         console.log("⚠️ No roles found for user, defaulting to employee");
         setIsAdmin(false);
