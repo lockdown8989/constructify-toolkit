@@ -86,24 +86,35 @@ export const useSignUpSubmit = ({
         return;
       }
       
-      // Call the sign up function provided via props
-      const { error, data, requiresConfirmation } = await onSignUp(
-        email, 
-        password, 
-        firstName, 
-        lastName
-      );
+      // Create proper metadata object for Supabase
+      const userMetadata = {
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        full_name: getFullName(),
+        user_role: userRole,
+        manager_id: managerId || null
+      };
       
-      if (error) {
-        console.error("Sign up error:", error);
+      // Call the sign up function with proper metadata
+      const result = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: {
+          data: userMetadata,
+          emailRedirectTo: `${window.location.origin}/auth?verified=true`,
+        },
+      });
+      
+      if (result.error) {
+        console.error("Sign up error:", result.error);
         recordFailedAttempt();
         
         // Provide more specific error messages
-        if (error.message.includes("duplicate key") || error.message.includes("already registered")) {
+        if (result.error.message.includes("duplicate key") || result.error.message.includes("already registered")) {
           setSignUpError("This email is already registered. Please try signing in instead.");
-        } else if (error.message.includes("permission denied") || error.message.includes("Database error")) {
+        } else if (result.error.message.includes("permission denied") || result.error.message.includes("Database error")) {
           setSignUpError("Account created but profile setup encountered an issue. You may need to update your profile details later.");
-          console.error("Database permission error during signup:", error);
+          console.error("Database permission error during signup:", result.error);
           
           // Show toast with more information
           toast({
@@ -119,14 +130,14 @@ export const useSignUpSubmit = ({
           
           return;
         } else {
-          setSignUpError(`${error.message || "Failed to create account. Please try again."} ${attemptsRemaining - 1} attempts remaining.`);
+          setSignUpError(`${result.error.message || "Failed to create account. Please try again."} ${attemptsRemaining - 1} attempts remaining.`);
         }
         
         setIsLoading(false);
         return;
       }
       
-      if (requiresConfirmation) {
+      if (result.data?.user && !result.data.user.email_confirmed_at) {
         recordSuccessfulAuth();
         // Handle email confirmation case
         toast({
@@ -141,17 +152,15 @@ export const useSignUpSubmit = ({
         return;
       }
       
-      // Attempt to get the user
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        console.log(`Got user with ID: ${user.id}, assigning role: ${userRole}, manager ID: ${managerId || 'none'}`);
+      // User is created and confirmed
+      if (result.data?.user) {
+        console.log(`Got user with ID: ${result.data.user.id}, assigning role: ${userRole}, manager ID: ${managerId || 'none'}`);
         
         // Try role assignment and employee record creation in parallel
         const [roleSuccess, employeeSuccess] = await Promise.allSettled([
-          assignUserRole(user.id, userRole),
+          assignUserRole(result.data.user.id, userRole),
           createOrUpdateEmployeeRecord(
-            user.id,
+            result.data.user.id,
             getFullName(),
             userRole,
             managerId
@@ -198,30 +207,10 @@ export const useSignUpSubmit = ({
           });
         }
         
-        // Sign in automatically after successful registration for manager accounts
-        if (userRole === 'manager') {
-          const { error: signInError } = await supabase.auth.signInWithPassword({
-            email,
-            password
-          });
-          
-          if (!signInError) {
-            // Short delay to allow roles to be properly assigned
-            setTimeout(() => {
-              window.location.href = '/dashboard';
-            }, 1500);
-          } else {
-            // If auto-login fails, redirect to auth page
-            setTimeout(() => {
-              window.location.href = '/auth';
-            }, 3000);
-          }
-        } else {
-          // For non-manager accounts, redirect to sign in after a slight delay
-          setTimeout(() => {
-            window.location.href = '/auth';
-          }, 3000);
-        }
+        // Auto-redirect to dashboard for successful signups
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1500);
       } else {
         recordFailedAttempt();
         setSignUpError("User created but session not established. Please try signing in.");

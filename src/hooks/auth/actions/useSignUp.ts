@@ -48,11 +48,14 @@ export const useSignUp = () => {
         };
       }
       
+      // Fix: Ensure metadata is properly formatted as an object
+      const userMetadata = metadata && typeof metadata === 'object' ? metadata : {};
+      
       const { data, error } = await supabase.auth.signUp({
         email: trimmedEmail,
         password,
         options: {
-          data: metadata || {},
+          data: userMetadata,
           emailRedirectTo: `${window.location.origin}/auth?verified=true`,
         },
       });
