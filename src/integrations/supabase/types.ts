@@ -2251,6 +2251,10 @@ export type Database = {
         }
         Returns: Json
       }
+      safe_clean_uuid_field: {
+        Args: { input_text: string }
+        Returns: string
+      }
       safe_user_signout: {
         Args: Record<PropertyKey, never>
         Returns: Json
