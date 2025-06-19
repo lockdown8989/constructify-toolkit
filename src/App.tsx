@@ -4,6 +4,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeProvider } from '@/components/theme-provider';
+import { AuthProvider } from '@/hooks/auth';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import AppRoutes from './routes/routes';
 import './App.css';
@@ -23,12 +24,14 @@ function App() {
     <ErrorBoundary>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-            <TooltipProvider>
-              <AppRoutes />
-              <Toaster />
-            </TooltipProvider>
-          </ThemeProvider>
+          <AuthProvider>
+            <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+              <TooltipProvider>
+                <AppRoutes />
+                <Toaster />
+              </TooltipProvider>
+            </ThemeProvider>
+          </AuthProvider>
         </QueryClientProvider>
       </HelmetProvider>
     </ErrorBoundary>
