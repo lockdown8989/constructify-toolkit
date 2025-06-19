@@ -9,12 +9,8 @@ import {
   FileText, 
   Calculator,
   ClipboardList,
-  BarChart3,
   Clock,
   CalendarDays,
-  Briefcase,
-  FolderOpen,
-  Bell,
   UserCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -104,10 +100,6 @@ const DesktopNav = () => {
           </NavLink>
         </>
       )}
-
-      <NavLink to="/notifications" icon={Bell}>
-        Notifications
-      </NavLink>
     </nav>
   );
 };

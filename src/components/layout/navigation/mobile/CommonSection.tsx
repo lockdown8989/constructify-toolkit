@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, FileText, Bell, UserCheck } from "lucide-react";
+import { LayoutDashboard, FileText, UserCheck } from "lucide-react";
 import MobileNavLink from "./MobileNavLink";
 
 interface CommonSectionProps {
@@ -72,13 +72,6 @@ const CommonSection = ({
           />
         </>
       )}
-
-      <MobileNavLink
-        to="/notifications"
-        icon={Bell}
-        label="🔔 Notifications"
-        onClick={onClose}
-      />
     </>
   );
 };

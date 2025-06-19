@@ -1357,36 +1357,6 @@ export type Database = {
         }
         Relationships: []
       }
-      role_audit_log: {
-        Row: {
-          changed_at: string | null
-          changed_by: string
-          changed_user_id: string
-          id: string
-          new_role: string
-          old_role: string | null
-          reason: string | null
-        }
-        Insert: {
-          changed_at?: string | null
-          changed_by: string
-          changed_user_id: string
-          id?: string
-          new_role: string
-          old_role?: string | null
-          reason?: string | null
-        }
-        Update: {
-          changed_at?: string | null
-          changed_by?: string
-          changed_user_id?: string
-          id?: string
-          new_role?: string
-          old_role?: string | null
-          reason?: string | null
-        }
-        Relationships: []
-      }
       salary_statistics: {
         Row: {
           base_salary: number
@@ -1473,6 +1443,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "schedule_conflicts_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "schedule_conflicts_schedule_id_fkey"
             columns: ["schedule_id"]
             isOneToOne: false
@@ -1539,7 +1516,7 @@ export type Database = {
           id: string
           notes: string | null
           publication_date: string | null
-          published_by: string | null
+          published_by: string
           schedules_count: number | null
           week_end_date: string
           week_start_date: string
@@ -1550,7 +1527,7 @@ export type Database = {
           id?: string
           notes?: string | null
           publication_date?: string | null
-          published_by?: string | null
+          published_by: string
           schedules_count?: number | null
           week_end_date: string
           week_start_date: string
@@ -1561,7 +1538,7 @@ export type Database = {
           id?: string
           notes?: string | null
           publication_date?: string | null
-          published_by?: string | null
+          published_by?: string
           schedules_count?: number | null
           week_end_date?: string
           week_start_date?: string
@@ -1747,6 +1724,13 @@ export type Database = {
           {
             foreignKeyName: "schedules_employee_id_fkey"
             columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedules_manager_id_fkey"
+            columns: ["manager_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
@@ -2210,14 +2194,6 @@ export type Database = {
         Args: { p_employee_id: string }
         Returns: Json
       }
-      get_user_dashboard_type: {
-        Args: { p_user_id: string }
-        Returns: string
-      }
-      get_user_role_safe: {
-        Args: { p_user_id: string }
-        Returns: string
-      }
       has_role: {
         Args:
           | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
@@ -2240,10 +2216,6 @@ export type Database = {
           notification_message?: string
         }
         Returns: Json
-      }
-      safe_clean_uuid_field: {
-        Args: { input_text: string }
-        Returns: string
       }
       safe_user_signout: {
         Args: Record<PropertyKey, never>
@@ -2274,10 +2246,6 @@ export type Database = {
           p_sunday_shift_id?: string
         }
         Returns: Json
-      }
-      user_has_role: {
-        Args: { p_user_id: string; p_role: string }
-        Returns: boolean
       }
     }
     Enums: {
