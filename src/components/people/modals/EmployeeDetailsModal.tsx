@@ -67,14 +67,14 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
     return {
       id: uiEmployee.id,
       name: uiEmployee.name,
-      job_title: uiEmployee.jobTitle || uiEmployee.title || '',
+      job_title: uiEmployee.jobTitle,
       department: uiEmployee.department,
       site: uiEmployee.site,
       salary: typeof uiEmployee.salary === 'string' 
         ? parseFloat(uiEmployee.salary.replace(/[^0-9.]/g, '')) || 0
         : uiEmployee.salary || 0,
-      start_date: uiEmployee.startDate || uiEmployee.start_date
-        ? new Date(uiEmployee.startDate || uiEmployee.start_date).toISOString().split('T')[0]
+      start_date: uiEmployee.startDate
+        ? new Date(uiEmployee.startDate).toISOString().split('T')[0]
         : new Date().toISOString().split('T')[0],
       lifecycle: uiEmployee.lifecycle || 'Active',
       status: uiEmployee.status || 'Active',
