@@ -6,7 +6,7 @@ import { UserInfoFields } from "./components/UserInfoFields";
 import { AccountTypeSelector } from "./components/AccountTypeSelector";
 import { ManagerIdInput } from "./components/ManagerIdInput";
 import { useSignUp } from "./hooks/useSignUp";
-import { AlertCircle, Clock, Wrench } from "lucide-react";
+import { AlertCircle, Clock } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type SignUpFormProps = {
@@ -39,9 +39,6 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
     remainingBlockTime
   } = useSignUp({ onSignUp });
 
-  // Temporarily disable sign up while app is being built
-  const isSignUpTemporarilyDisabled = true;
-
   const formatBlockTime = (seconds: number) => {
     const minutes = Math.ceil(seconds / 60);
     return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
@@ -56,16 +53,6 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
       
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          {isSignUpTemporarilyDisabled && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md flex gap-2 items-start">
-              <Wrench className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
-              <div className="text-sm text-blue-700">
-                <p className="font-medium">Sign up temporarily unavailable</p>
-                <p>We're currently building the app. Sign up will be available soon!</p>
-              </div>
-            </div>
-          )}
-          
           {!canAttempt && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-md flex gap-2 items-start">
               <Clock className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
@@ -100,20 +87,20 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
             onLastNameChange={(e) => setLastName(e.target.value)}
             onEmailChange={(e) => setEmail(e.target.value)}
             onPasswordChange={(e) => setPassword(e.target.value)}
-            disabled={isSignUpTemporarilyDisabled}
+            disabled={false}
           />
           
           <AccountTypeSelector 
             userRole={userRole} 
             onRoleChange={handleRoleChange}
-            disabled={isSignUpTemporarilyDisabled}
+            disabled={false}
           />
           
           {userRole === "manager" && (
             <ManagerIdInput 
               managerId={managerId}
               onGenerateManagerId={generateManagerId}
-              disabled={isSignUpTemporarilyDisabled}
+              disabled={false}
             />
           )}
           
@@ -127,7 +114,7 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
               isValid={isManagerIdValid}
               isChecking={isValidatingManagerId}
               managerName={managerName}
-              disabled={isSignUpTemporarilyDisabled}
+              disabled={false}
             />
           )}
         </CardContent>
@@ -136,14 +123,9 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
           <Button 
             type="submit" 
             className="w-full" 
-            disabled={isLoading || !canAttempt || isSignUpTemporarilyDisabled}
+            disabled={isLoading || !canAttempt}
           >
-            {isSignUpTemporarilyDisabled 
-              ? "Sign Up Unavailable" 
-              : isLoading 
-                ? "Creating account..." 
-                : "Create Account"
-            }
+            {isLoading ? "Creating account..." : "Create Account"}
           </Button>
         </CardFooter>
       </form>
