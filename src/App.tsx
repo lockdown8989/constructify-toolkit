@@ -24,6 +24,8 @@ import TimeClock from './pages/TimeClock';
 import ManagerTimeClock from './pages/ManagerTimeClock';
 import LeaveManagement from './pages/LeaveManagement';
 import ScheduleRequests from './pages/ScheduleRequests';
+import Profile from './pages/Profile';
+import ProfileSettings from './pages/ProfileSettings';
 import BackgroundNotificationService from './services/shift-notifications/background-notification-service';
 import './App.css';
 
@@ -66,6 +68,8 @@ const AppContent = () => {
         }>
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="settings" element={<ProfileSettings />} />
           <Route path="people" element={
             <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
               <People />
