@@ -37,33 +37,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Add debugging hook
   useAuthDebugger({ user, session, isLoading });
 
-  // Placeholder auth functions (to be implemented)
-  const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    return { data, error };
-  };
-
-  const signUp = async (email: string, password: string, userData: any) => {
-    const { data, error } = await supabase.auth.signUp({ 
-      email, 
-      password,
-      options: {
-        data: userData
-      }
-    });
-    return { data, error };
-  };
-
-  const resetPassword = async (email: string) => {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email);
-    return { data, error };
-  };
-
-  const updatePassword = async (password: string) => {
-    const { data, error } = await supabase.auth.updateUser({ password });
-    return { data, error };
-  };
-
   useEffect(() => {
     console.log('🔄 AuthProvider: Setting up auth state listener');
     
@@ -161,11 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isPayroll,
     rolesLoaded,
     isAuthenticated: !!session?.user,
-    signIn,
-    signUp,
-    resetPassword,
-    updatePassword,
-    ...authActions,
+    ...authActions, // This includes signIn, signUp, resetPassword, updatePassword, signOut, deleteAccount
   };
 
   return (

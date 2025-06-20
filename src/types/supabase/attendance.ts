@@ -27,4 +27,5 @@ export interface AttendanceRecord {
   manager_initiated?: boolean;  // This field tracks if the attendance was initiated by a manager
   current_status?: string | null; // New field to track current status explicitly
   on_break?: boolean | null;
+  is_late?: boolean | null;
 }

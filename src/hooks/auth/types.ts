@@ -15,11 +15,11 @@ export interface AuthContextType {
   rolesLoaded: boolean;
   isAuthenticated: boolean;
   signOut: () => Promise<void>;
-  signIn?: (email: string, password: string) => Promise<any>;
-  signUp?: (email: string, password: string, userData: any) => Promise<any>;
-  resetPassword?: (email: string) => Promise<any>;
-  updatePassword?: (password: string) => Promise<any>;
-  deleteAccount?: () => Promise<{ success: boolean; error?: string }>;
+  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string, userData: any) => Promise<any>;
+  resetPassword: (email: string) => Promise<any>;
+  updatePassword: (password: string) => Promise<any>;
+  deleteAccount: () => Promise<{ success: boolean; error?: string }>;
 }
 
 export const isAuthenticated = () => {
