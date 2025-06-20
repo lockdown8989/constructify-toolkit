@@ -2,11 +2,9 @@
 import React from "react";
 import { useAuth } from "@/hooks/use-auth";
 import DashboardHeader from "./DashboardHeader";
-import DashboardStatsSection from "./DashboardStatsSection";
 import AttendanceOverview from "./AttendanceOverview";
 import GPSClockingMap from "./GPSClockingMap";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, Users, TrendingUp, AlertTriangle } from "lucide-react";
+import UnifiedStatsCard from "./UnifiedStatsCard";
 
 interface ManagerDashboardProps {
   firstName: string;
@@ -21,10 +19,7 @@ interface ManagerDashboardProps {
 }
 
 const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ 
-  firstName,
-  employeeCount = 0,
-  hiredCount = 0,
-  interviewStats 
+  firstName = 'Manager'
 }) => {
   const { user } = useAuth();
 
@@ -33,56 +28,14 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <DashboardHeader firstName={firstName} />
         
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Employees</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">24</div>
-              <p className="text-xs text-muted-foreground">Currently clocked in</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Today's Hours</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">186.5</div>
-              <p className="text-xs text-muted-foreground">Total hours worked</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Overtime</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">12.3</div>
-              <p className="text-xs text-muted-foreground">Hours this week</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Alerts</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">3</div>
-              <p className="text-xs text-muted-foreground">Require attention</p>
-            </CardContent>
-          </Card>
+        {/* Unified Stats Card */}
+        <div className="mb-8">
+          <UnifiedStatsCard />
         </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* GPS Clocking Map - replaces Employee Composition */}
+          {/* GPS Clocking Map */}
           <GPSClockingMap />
           
           {/* Attendance Overview */}
