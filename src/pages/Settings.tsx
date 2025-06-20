@@ -1,6 +1,6 @@
 
-import { useAuth } from "@/hooks/use-auth";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { useAuth } from "@/hooks/auth";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { RegionSettings } from "@/components/settings/RegionSettings";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
@@ -14,14 +14,12 @@ import { AppearanceSection } from "@/components/settings/sections/AppearanceSect
 import { LocalizationSection } from "@/components/settings/sections/LocalizationSection";
 import { SettingsBackButton } from "@/components/settings/sections/SettingsBackButton";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
   const { user, isLoading } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
   
   // Get section from location state or URL parameter
   const getInitialSection = () => {
@@ -51,7 +49,7 @@ const Settings = () => {
   }
   
   return (
-    <div className="relative container mx-auto py-12 px-4 md:py-20 md:pt-24 max-w-3xl">
+    <div className="relative container mx-auto py-6 px-4 max-w-4xl">
       <Button 
         variant="ghost" 
         size="icon" 

@@ -1,5 +1,5 @@
 
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/auth";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { useProfileData } from "@/components/profile/useProfileData";
@@ -22,7 +22,7 @@ const Profile = () => {
   }
   
   return (
-    <div className="container mx-auto py-20 pt-24 px-4">
+    <div className="container mx-auto py-6 px-4 max-w-4xl">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">{t('profile')}</h1>
@@ -32,9 +32,9 @@ const Profile = () => {
           <Separator className="mt-4" />
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('personalInfo')}</CardTitle>
+        <Card className="border rounded-xl shadow-sm">
+          <CardHeader className="bg-muted/30">
+            <CardTitle className="text-xl font-medium">{t('personalInfo')}</CardTitle>
             <CardDescription>
               {t('updatePersonalInfo')}
             </CardDescription>
