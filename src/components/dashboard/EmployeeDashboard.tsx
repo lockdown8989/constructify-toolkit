@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import EmployeeAttendanceSummary from '@/components/dashboard/EmployeeAttendanceSummary';
@@ -50,11 +51,11 @@ const EmployeeDashboard: React.FC<{ firstName: string }> = ({ firstName }) => {
 
   if (isLoading || loadingEmployee) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <h1 className="text-2xl font-bold mb-6">Hello {firstName}</h1>
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <p className="ml-2">Loading your dashboard...</p>
+      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
+        <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Hello {firstName}</h1>
+        <div className="flex justify-center items-center h-32 sm:h-64">
+          <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin" />
+          <p className="ml-2 text-sm sm:text-base">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -62,41 +63,54 @@ const EmployeeDashboard: React.FC<{ firstName: string }> = ({ firstName }) => {
 
   if (error && !resolvedEmployeeId) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <h1 className="text-2xl font-bold mb-6">Hello {firstName}</h1>
+      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
+        <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Hello {firstName}</h1>
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded relative">
-          <p>We're still setting up your employee profile. Some features might be limited.</p>
+          <p className="text-sm sm:text-base">We're still setting up your employee profile. Some features might be limited.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <h1 className="text-2xl font-bold mb-6">Hello {firstName}</h1>
-      <div className="grid gap-6">
-        <EmployeeAttendanceSummary employeeId={resolvedEmployeeId} />
+    <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
+      <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6">Hello {firstName}</h1>
+      
+      {/* Mobile-first responsive grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+        {/* Attendance Summary - Full width on mobile, spans 2 cols on xl */}
+        <div className="lg:col-span-2 xl:col-span-2">
+          <EmployeeAttendanceSummary employeeId={resolvedEmployeeId} />
+        </div>
         
-        {resolvedEmployeeId && (
-          <>
-            {/* Add Payslip List component */}
-            <PayslipList employeeId={resolvedEmployeeId} />
-            
-            <Card className="p-6">
-              <h3 className="text-xs font-semibold text-gray-500 mb-5 uppercase tracking-wider">
+        {/* Statistics - Responsive positioning */}
+        <div className="lg:col-span-2 xl:col-span-1">
+          {resolvedEmployeeId && (
+            <Card className="p-4 sm:p-6 h-full">
+              <h3 className="text-xs font-semibold text-gray-500 mb-4 sm:mb-5 uppercase tracking-wider">
                 Statistics
               </h3>
               <EmployeeStatistics employeeId={resolvedEmployeeId} />
             </Card>
-            
-            <Card className="p-6">
-              <h3 className="text-xs font-semibold text-gray-500 mb-5 uppercase tracking-wider">
+          )}
+        </div>
+        
+        {/* Payslips - Full width on mobile and tablet */}
+        <div className="lg:col-span-2 xl:col-span-3">
+          {resolvedEmployeeId && <PayslipList employeeId={resolvedEmployeeId} />}
+        </div>
+        
+        {/* Documents - Full width */}
+        <div className="lg:col-span-2 xl:col-span-3">
+          {resolvedEmployeeId && (
+            <Card className="p-4 sm:p-6">
+              <h3 className="text-xs font-semibold text-gray-500 mb-4 sm:mb-5 uppercase tracking-wider">
                 Documents
               </h3>
               <DocumentList employeeId={resolvedEmployeeId} />
             </Card>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
