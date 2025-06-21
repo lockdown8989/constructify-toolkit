@@ -22,16 +22,20 @@ export const useCustomPasswordReset = () => {
         };
       }
       
+      console.log("Calling send-password-reset function with email:", trimmedEmail);
+      
       // Call our custom edge function instead of Supabase's built-in reset
       const { data, error } = await supabase.functions.invoke('send-password-reset', {
         body: { email: trimmedEmail }
       });
       
+      console.log("Edge function response:", { data, error });
+      
       if (error) {
         console.error("Password reset error:", error);
         return { 
           error: {
-            message: "Unable to send reset email at this time"
+            message: "Unable to send reset email at this time. Please try again."
           } as AuthError,
           data: undefined
         };
@@ -48,7 +52,7 @@ export const useCustomPasswordReset = () => {
       console.error("Exception in resetPassword:", error);
       return { 
         error: {
-          message: "Unable to send reset email at this time"
+          message: "Unable to send reset email at this time. Please try again."
         } as AuthError,
         data: undefined
       };

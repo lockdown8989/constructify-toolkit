@@ -33,8 +33,11 @@ export const ResetPasswordForm = ({ onBackToSignIn }: ResetPasswordFormProps) =>
     }
     
     try {
+      console.log("Starting password reset for email:", email);
       const { error } = await resetPassword(email);
+      
       if (error) {
+        console.error("Password reset failed:", error);
         setError(error.message);
         toast({
           title: "Error",
@@ -42,6 +45,7 @@ export const ResetPasswordForm = ({ onBackToSignIn }: ResetPasswordFormProps) =>
           variant: "destructive",
         });
       } else {
+        console.log("Password reset request successful");
         setIsSubmitted(true);
         toast({
           title: "Reset link sent",
@@ -49,7 +53,13 @@ export const ResetPasswordForm = ({ onBackToSignIn }: ResetPasswordFormProps) =>
         });
       }
     } catch (err) {
+      console.error("Unexpected error during password reset:", err);
       setError("An unexpected error occurred. Please try again.");
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
