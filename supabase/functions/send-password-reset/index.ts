@@ -53,6 +53,20 @@ const handler = async (req: Request): Promise<Response> => {
       }
     });
 
+    // First, check if the user exists in our database
+    console.log("Checking if user exists in database...");
+    const { data: existingUser, error: userCheckError } = await supabase
+      .from('profiles')
+      .select('id')
+      .ilike('email', email.trim())
+      .maybeSingle();
+
+    if (userCheckError) {
+      console.error("Error checking user existence:", userCheckError);
+    }
+
+    console.log("User check result:", { existingUser, userCheckError });
+
     // Generate reset token using Supabase Auth Admin API
     console.log("Generating password reset link...");
     const { data, error } = await supabase.auth.admin.generateLink({
@@ -83,8 +97,10 @@ const handler = async (req: Request): Promise<Response> => {
       const resetLink = data.properties.action_link;
       console.log("Sending password reset email to:", email);
       
+      // Use a verified sender email - you need to verify this domain in Resend
+      // For testing, we'll use the default Resend domain
       const emailResponse = await resend.emails.send({
-        from: "TeamPulse <noreply@resend.dev>",
+        from: "TeamPulse <onboarding@resend.dev>", // Using Resend's default verified domain
         to: [email],
         subject: "Reset Your TeamPulse Password",
         html: `
@@ -125,12 +141,32 @@ const handler = async (req: Request): Promise<Response> => {
         `,
       });
 
-      console.log("Password reset email sent successfully:", emailResponse);
+      console.log("Password reset email response:", emailResponse);
       
       if (emailResponse.error) {
-        console.error("Resend error:", emailResponse.error);
-        throw new Error("Failed to send email");
+        console.error("Resend error details:", emailResponse.error);
+        
+        // Check if it's a domain verification error
+        if (emailResponse.error.message?.includes('domain') || emailResponse.error.message?.includes('verify')) {
+          console.error("Domain verification required for Resend");
+          // Still return success for security, but log the actual error
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              message: "If an account with this email exists, you will receive a password reset link.",
+              debug: "Email service configuration needed - check Resend domain verification"
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json", ...corsHeaders },
+            }
+          );
+        }
+        
+        throw new Error(`Email delivery failed: ${emailResponse.error.message}`);
       }
+
+      console.log("Email sent successfully with ID:", emailResponse.data?.id);
     }
 
     // Always return success for security (don't reveal if email exists)
