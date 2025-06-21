@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, svix-id, svix-timestamp, svix-signature",
 };
 
 interface ResendWebhookEvent {
@@ -38,6 +38,39 @@ interface ResendWebhookEvent {
   };
 }
 
+// Verify webhook signature from Resend
+const verifyWebhookSignature = async (
+  body: string,
+  signature: string,
+  timestamp: string,
+  secret: string
+): Promise<boolean> => {
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    
+    const payload = `${timestamp}.${body}`;
+    const expectedSignature = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+    const expectedSignatureHex = Array.from(new Uint8Array(expectedSignature))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    
+    // Resend sends signature in format "v1,signature"
+    const receivedSignature = signature.split(',')[1];
+    
+    return expectedSignatureHex === receivedSignature;
+  } catch (error) {
+    console.error("Error verifying webhook signature:", error);
+    return false;
+  }
+};
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -52,7 +85,46 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const event: ResendWebhookEvent = await req.json();
+    const body = await req.text();
+    
+    // Get webhook signing secret
+    const webhookSecret = Deno.env.get("RESEND_WEBHOOK_SECRET");
+    
+    if (webhookSecret) {
+      // Verify webhook signature if secret is provided
+      const signature = req.headers.get("svix-signature");
+      const timestamp = req.headers.get("svix-timestamp");
+      
+      if (!signature || !timestamp) {
+        console.error("Missing webhook signature headers");
+        return new Response(
+          JSON.stringify({ error: "Missing signature headers" }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+      
+      const isValid = await verifyWebhookSignature(body, signature, timestamp, webhookSecret);
+      
+      if (!isValid) {
+        console.error("Invalid webhook signature");
+        return new Response(
+          JSON.stringify({ error: "Invalid signature" }),
+          {
+            status: 401,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+      
+      console.log("✅ Webhook signature verified successfully");
+    } else {
+      console.warn("⚠️ RESEND_WEBHOOK_SECRET not set - webhook signature verification skipped");
+    }
+    
+    const event: ResendWebhookEvent = JSON.parse(body);
     
     console.log("Received Resend webhook event:", {
       type: event.type,
@@ -111,10 +183,12 @@ const handler = async (req: Request): Promise<Response> => {
         
       case 'email.bounced':
         console.log(`❌ Email bounced for ${event.data.to[0]} - Type: ${event.data.bounce?.type}`);
+        // You could add logic here to mark the email as invalid in your database
         break;
         
       case 'email.complained':
         console.log(`⚠️ Email complained by ${event.data.to[0]} - Type: ${event.data.complaint?.feedback_type}`);
+        // You could add logic here to unsubscribe the user or mark them as complained
         break;
         
       case 'email.delivery_delayed':
@@ -129,13 +203,12 @@ const handler = async (req: Request): Promise<Response> => {
     if (event.data?.subject?.includes('Reset Your TeamPulse Password')) {
       const recipientEmail = event.data.to[0];
       
-      // You could update user notification preferences or log password reset attempts
       console.log(`Password reset email ${event.type} for ${recipientEmail}`);
       
       if (event.type === 'email.delivered') {
         console.log(`✅ Password reset email successfully delivered to ${recipientEmail}`);
       } else if (event.type === 'email.bounced') {
-        console.log(`❌ Password reset email bounced for ${recipientEmail}`);
+        console.log(`❌ Password reset email bounced for ${recipientEmail} - Reason: ${event.data.bounce?.type}`);
       }
     }
 
