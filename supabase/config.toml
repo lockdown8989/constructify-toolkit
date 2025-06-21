@@ -1,37 +1,25 @@
 
-project_id = "your-project-id"
+project_id = "fphmujxruswmvlwceodl"
 
-[api]
-enabled = true
-port = 54321
-schemas = ["public", "graphql_public"]
-extra_search_path = ["public", "extensions"]
-max_rows = 1000
+[database]
+default_extensions = ["pgcrypto", "uuid-ossp", "pg_net", "pg_cron"]
 
-[db]
-port = 54322
-shadow_port = 54320
-major_version = 15
+[[functions]]
+name = "clean-shift-history"
+verify_jwt = true
 
-[studio]
-enabled = true
-port = 54323
-api_url = "http://127.0.0.1:54321"
+[[functions]]
+name = "sync-open-shift-to-calendar"
+verify_jwt = true
 
-[inbucket]
-enabled = true
-port = 54324
-smtp_port = 54325
-pop3_port = 54326
-
-[functions.send-password-reset]
+[[functions]]
+name = "send-password-reset"
 verify_jwt = false
 
-[auth]
-enabled = true
-port = 54327
-site_url = "http://localhost:3000"
-additional_redirect_urls = ["https://localhost:3000"]
-jwt_expiry = 3600
-refresh_token_rotation_enabled = true
-security_update_password_require_reauthentication = true
+[[functions]]
+name = "send-webhook"
+verify_jwt = false
+
+[[functions]]
+name = "resend-webhook"
+verify_jwt = false
