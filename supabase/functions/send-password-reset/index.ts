@@ -40,27 +40,33 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    console.log("Processing password reset for email:", email);
+
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
 
-    // Check if user exists (for security, we don't reveal if email exists)
-    const { data: user } = await supabase.auth.admin.getUserByEmail(email);
-    
-    // Generate reset token using Supabase Auth
+    // Generate reset token using Supabase Auth Admin API
+    console.log("Generating password reset link...");
     const { data, error } = await supabase.auth.admin.generateLink({
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: `${Deno.env.get("SUPABASE_URL")?.replace('//', '//').split('/')[2] ? `https://${Deno.env.get("SUPABASE_URL")?.replace('//', '//').split('/')[2].split('.')[0]}.lovableproject.com` : 'http://localhost:3000'}/auth?type=recovery`,
+        redirectTo: `${Deno.env.get("SUPABASE_URL")?.includes('supabase.co') ? 
+          `https://${Deno.env.get("SUPABASE_URL")?.split('//')[1]?.split('.')[0]}.lovableproject.com` : 
+          'http://localhost:3000'}/auth?type=recovery`,
       }
     });
 
     if (error) {
       console.error("Error generating reset link:", error);
-      // Return success for security (don't reveal if email exists)
       return new Response(
         JSON.stringify({ 
           success: true, 
@@ -73,9 +79,9 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Only send email if user exists and we have a valid reset link
-    if (user && data?.properties?.action_link) {
+    if (data?.properties?.action_link) {
       const resetLink = data.properties.action_link;
+      console.log("Sending password reset email to:", email);
       
       const emailResponse = await resend.emails.send({
         from: "TeamPulse <noreply@resend.dev>",
@@ -120,6 +126,11 @@ const handler = async (req: Request): Promise<Response> => {
       });
 
       console.log("Password reset email sent successfully:", emailResponse);
+      
+      if (emailResponse.error) {
+        console.error("Resend error:", emailResponse.error);
+        throw new Error("Failed to send email");
+      }
     }
 
     // Always return success for security (don't reveal if email exists)
