@@ -11,6 +11,7 @@ interface ProfileData {
   department: string;
   email: string;
   manager_id: string;
+  avatar_url: string | null;
 }
 
 export const useProfileForm = (user: User | null) => {
@@ -22,6 +23,7 @@ export const useProfileForm = (user: User | null) => {
     department: "",
     email: "",
     manager_id: "",
+    avatar_url: null,
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -33,7 +35,7 @@ export const useProfileForm = (user: User | null) => {
         // Fetch profile data
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("first_name, last_name, position, department")
+          .select("first_name, last_name, position, department, avatar_url")
           .eq("id", user.id)
           .maybeSingle();
         
@@ -60,6 +62,7 @@ export const useProfileForm = (user: User | null) => {
           department: profileData?.department || "",
           email: user.email || "",
           manager_id: employeeData?.manager_id || "",
+          avatar_url: profileData?.avatar_url || null,
         });
       } catch (error) {
         console.error("Error:", error);
@@ -72,6 +75,10 @@ export const useProfileForm = (user: User | null) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAvatarChange = (url: string | null) => {
+    setProfile((prev) => ({ ...prev, avatar_url: url }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -168,7 +175,8 @@ export const useProfileForm = (user: User | null) => {
               status: 'Present',
               lifecycle: 'Employed',
               salary: 0,
-              user_id: user.id
+              user_id: user.id,
+              avatar_url: profile.avatar_url
             });
 
           if (insertError) {
@@ -203,6 +211,7 @@ export const useProfileForm = (user: User | null) => {
     profile,
     isSaving,
     handleChange,
-    handleSubmit
+    handleSubmit,
+    handleAvatarChange
   };
 };

@@ -5,10 +5,12 @@ import { CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Mail, User as UserIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 
 interface PersonalInfoFormProps {
   user: User | null;
@@ -24,6 +26,7 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
     last_name: "",
     position: "",
     department: "",
+    avatar_url: null as string | null,
   });
 
   useEffect(() => {
@@ -36,7 +39,7 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
       try {
         const { data, error } = await supabase
           .from("profiles")
-          .select("first_name, last_name, position, department")
+          .select("first_name, last_name, position, department, avatar_url")
           .eq("id", user.id)
           .maybeSingle();
 
@@ -56,6 +59,7 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
             last_name: data.last_name || "",
             position: data.position || "",
             department: data.department || "",
+            avatar_url: data.avatar_url || null,
           });
         }
       } catch (error) {
@@ -71,6 +75,10 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAvatarChange = (url: string | null) => {
+    setProfile((prev) => ({ ...prev, avatar_url: url }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -103,7 +111,7 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
       toast({
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
-        variant: "success",
+        variant: "default",
       });
     } catch (error) {
       console.error("Error:", error);
@@ -126,9 +134,25 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
     );
   }
 
+  const userInitials = `${profile.first_name?.[0] || user?.email?.[0] || 'U'}${profile.last_name?.[0] || ''}`.toUpperCase();
+
   return (
     <form onSubmit={handleSubmit}>
-      <CardContent className="space-y-4 p-6">
+      <CardContent className="space-y-6 p-6">
+        {/* Avatar Upload Section */}
+        <div className="flex flex-col items-center space-y-4">
+          <h3 className="text-lg font-medium">Profile Picture</h3>
+          <AvatarUpload
+            currentAvatarUrl={profile.avatar_url}
+            onAvatarChange={handleAvatarChange}
+            userInitials={userInitials}
+            size="lg"
+            disabled={isSaving}
+          />
+        </div>
+
+        <Separator />
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="first_name">First Name</Label>

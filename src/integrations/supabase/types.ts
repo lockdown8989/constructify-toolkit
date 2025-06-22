@@ -582,6 +582,7 @@ export type Database = {
         Row: {
           annual_leave_days: number | null
           avatar: string | null
+          avatar_url: string | null
           department: string
           email: string | null
           friday_available: boolean | null
@@ -631,6 +632,7 @@ export type Database = {
         Insert: {
           annual_leave_days?: number | null
           avatar?: string | null
+          avatar_url?: string | null
           department: string
           email?: string | null
           friday_available?: boolean | null
@@ -680,6 +682,7 @@ export type Database = {
         Update: {
           annual_leave_days?: number | null
           avatar?: string | null
+          avatar_url?: string | null
           department?: string
           email?: string | null
           friday_available?: boolean | null
@@ -1392,6 +1395,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           country: string | null
           created_at: string | null
           department: string | null
@@ -1405,6 +1409,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          avatar_url?: string | null
           country?: string | null
           created_at?: string | null
           department?: string | null
@@ -1418,6 +1423,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          avatar_url?: string | null
           country?: string | null
           created_at?: string | null
           department?: string | null
