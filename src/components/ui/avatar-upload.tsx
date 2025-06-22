@@ -2,6 +2,12 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { 
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
 import { Camera, Upload, Trash2, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -35,11 +41,12 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
   const handleFileSelect = async (file: File) => {
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
+    // Validate file type - support common image formats
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validImageTypes.includes(file.type)) {
       toast({
         title: "Invalid file type",
-        description: "Please select an image file.",
+        description: "Please select an image file (PNG, JPG, JPEG, GIF, WebP).",
         variant: "destructive"
       });
       return;
@@ -63,8 +70,8 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
         throw new Error('User not authenticated');
       }
 
-      // Create unique filename
-      const fileExt = file.name.split('.').pop();
+      // Create unique filename with proper extension
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
       // Delete existing avatar if it exists
@@ -107,7 +114,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
       onAvatarChange(newAvatarUrl);
 
       toast({
-        title: "Avatar updated",
+        title: "Profile picture updated",
         description: "Your profile picture has been updated successfully."
       });
 
@@ -153,7 +160,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
       onAvatarChange(null);
 
       toast({
-        title: "Avatar removed",
+        title: "Profile picture removed",
         description: "Your profile picture has been removed."
       });
 
@@ -167,6 +174,10 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -195,38 +206,64 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
 
   return (
     <div className="flex flex-col items-center space-y-4">
-      <div
-        className={`relative ${sizeClasses[size]} rounded-full border-2 border-dashed ${
-          isDragOver ? 'border-primary bg-primary/5' : 'border-gray-300'
-        } transition-colors`}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-      >
-        <Avatar className={`${sizeClasses[size]} cursor-pointer`}>
-          <AvatarImage src={currentAvatarUrl || undefined} alt="Profile" />
-          <AvatarFallback className="text-lg font-semibold">
-            {userInitials}
-          </AvatarFallback>
-        </Avatar>
-        
-        {isUploading && (
-          <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-            <Loader2 className="h-6 w-6 text-white animate-spin" />
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div
+            className={`relative ${sizeClasses[size]} rounded-full border-2 border-dashed ${
+              isDragOver ? 'border-primary bg-primary/5' : 'border-gray-300'
+            } transition-colors cursor-pointer`}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+          >
+            <Avatar className={`${sizeClasses[size]} cursor-pointer`}>
+              <AvatarImage src={currentAvatarUrl || undefined} alt="Profile" />
+              <AvatarFallback className="text-lg font-semibold">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
+            
+            {isUploading && (
+              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                <Loader2 className="h-6 w-6 text-white animate-spin" />
+              </div>
+            )}
+            
+            {!disabled && !isUploading && (
+              <div className="absolute inset-0 bg-black/0 hover:bg-black/20 rounded-full flex items-center justify-center transition-colors group">
+                <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            )}
           </div>
-        )}
+        </ContextMenuTrigger>
         
-        {!disabled && !isUploading && (
-          <div className="absolute inset-0 bg-black/0 hover:bg-black/20 rounded-full flex items-center justify-center transition-colors group">
-            <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-          </div>
-        )}
-      </div>
+        <ContextMenuContent className="w-48">
+          <ContextMenuItem 
+            onClick={handleUploadClick}
+            disabled={disabled || isUploading}
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <Upload className="h-4 w-4" />
+            {currentAvatarUrl ? 'Change Picture' : 'Upload Picture'}
+          </ContextMenuItem>
+          
+          {currentAvatarUrl && (
+            <ContextMenuItem 
+              onClick={handleRemoveAvatar}
+              disabled={disabled || isUploading}
+              className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+              Remove Picture
+            </ContextMenuItem>
+          )}
+        </ContextMenuContent>
+      </ContextMenu>
 
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) handleFileSelect(file);
@@ -235,37 +272,9 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
         disabled={disabled || isUploading}
       />
 
-      <div className="flex gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={disabled || isUploading}
-          className="flex items-center gap-2"
-        >
-          <Upload className="h-4 w-4" />
-          {currentAvatarUrl ? 'Change' : 'Upload'}
-        </Button>
-        
-        {currentAvatarUrl && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleRemoveAvatar}
-            disabled={disabled || isUploading}
-            className="flex items-center gap-2 text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-            Remove
-          </Button>
-        )}
-      </div>
-
-      <p className="text-xs text-gray-500 text-center">
-        Drag and drop an image here, or click to select.<br />
-        Max file size: 5MB. Supported formats: PNG, JPG, GIF.
+      <p className="text-xs text-gray-500 text-center max-w-xs">
+        Right-click or tap on the avatar to upload or remove your profile picture.<br />
+        Supported formats: PNG, JPG, JPEG, GIF, WebP. Max size: 5MB.
       </p>
     </div>
   );
