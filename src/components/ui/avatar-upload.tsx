@@ -18,6 +18,7 @@ interface AvatarUploadProps {
   userInitials?: string;
   size?: 'sm' | 'md' | 'lg';
   disabled?: boolean;
+  onUploadComplete?: () => void;
 }
 
 export const AvatarUpload: React.FC<AvatarUploadProps> = ({
@@ -25,7 +26,8 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
   onAvatarChange,
   userInitials = 'U',
   size = 'md',
-  disabled = false
+  disabled = false,
+  onUploadComplete
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -112,11 +114,17 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
         .eq('user_id', user.id);
 
       onAvatarChange(newAvatarUrl);
+      onUploadComplete?.();
 
       toast({
         title: "Profile picture updated",
         description: "Your profile picture has been updated successfully."
       });
+
+      // Force a small delay to ensure the UI updates
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
 
     } catch (error) {
       console.error('Error uploading avatar:', error);
@@ -158,11 +166,17 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
         .eq('user_id', user.id);
 
       onAvatarChange(null);
+      onUploadComplete?.();
 
       toast({
         title: "Profile picture removed",
         description: "Your profile picture has been removed."
       });
+
+      // Force a small delay to ensure the UI updates
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
 
     } catch (error) {
       console.error('Error removing avatar:', error);
