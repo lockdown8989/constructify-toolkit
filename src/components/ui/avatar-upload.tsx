@@ -39,6 +39,8 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleFileSelect(file);
+    // Reset the input value so the same file can be selected again
+    e.target.value = '';
   };
 
   return (
@@ -57,6 +59,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
           disabled={disabled}
           isUploading={isUploading}
           onFileSelect={handleFileSelect}
+          onUploadClick={handleUploadClick}
         >
           <div />
         </AvatarDisplay>
@@ -72,7 +75,10 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
       />
 
       <p className="text-xs text-gray-500 text-center max-w-xs">
-        Right-click or tap on the avatar to upload or remove your profile picture.<br />
+        <span className="hidden md:inline">Right-click or </span>
+        <span className="md:hidden">Tap </span>
+        <span className="hidden md:inline">tap </span>
+        on the avatar to upload or remove your profile picture.<br />
         Supported formats: PNG, JPG, JPEG, GIF, WebP. Max size: 5MB.
       </p>
     </div>

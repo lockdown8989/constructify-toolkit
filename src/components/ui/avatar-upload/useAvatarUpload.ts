@@ -75,20 +75,27 @@ export const useAvatarUpload = ({
 
       const newAvatarUrl = urlData.publicUrl;
 
-      // Update profile
+      // Update profile in profiles table
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: newAvatarUrl })
+        .update({ 
+          avatar_url: newAvatarUrl,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', user.id);
 
       if (updateError) throw updateError;
 
-      // Update employee record if it exists
+      // Also update employee record if it exists
       await supabase
         .from('employees')
-        .update({ avatar_url: newAvatarUrl })
+        .update({ 
+          avatar_url: newAvatarUrl,
+          updated_at: new Date().toISOString()
+        })
         .eq('user_id', user.id);
 
+      // Update the UI immediately
       onAvatarChange(newAvatarUrl);
       onUploadComplete?.();
 
@@ -96,11 +103,6 @@ export const useAvatarUpload = ({
         title: "Profile picture updated",
         description: "Your profile picture has been updated successfully."
       });
-
-      // Force a small delay to ensure the UI updates
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
 
     } catch (error) {
       console.error('Error uploading avatar:', error);
@@ -130,7 +132,10 @@ export const useAvatarUpload = ({
       // Update profile
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: null })
+        .update({ 
+          avatar_url: null,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', user.id);
 
       if (updateError) throw updateError;
@@ -138,9 +143,13 @@ export const useAvatarUpload = ({
       // Update employee record
       await supabase
         .from('employees')
-        .update({ avatar_url: null })
+        .update({ 
+          avatar_url: null,
+          updated_at: new Date().toISOString()
+        })
         .eq('user_id', user.id);
 
+      // Update the UI immediately
       onAvatarChange(null);
       onUploadComplete?.();
 
@@ -148,11 +157,6 @@ export const useAvatarUpload = ({
         title: "Profile picture removed",
         description: "Your profile picture has been removed."
       });
-
-      // Force a small delay to ensure the UI updates
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
 
     } catch (error) {
       console.error('Error removing avatar:', error);
