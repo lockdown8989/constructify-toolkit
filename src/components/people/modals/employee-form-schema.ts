@@ -9,8 +9,14 @@ export const employeeFormSchema = z.object({
   department: z.string().min(1, 'Department is required').max(100, 'Department must be less than 100 characters'),
   site: z.string().min(1, 'Site is required').max(100, 'Site must be less than 100 characters'),
   location: z.string().optional(),
-  salary: z.coerce.number().min(0, 'Salary must be positive').default(0),
-  hourly_rate: z.coerce.number().min(0, 'Hourly rate must be positive').default(0),
+  salary: z.union([
+    z.string().transform((val) => val === '' ? 0 : parseFloat(val) || 0),
+    z.number()
+  ]).default(0),
+  hourly_rate: z.union([
+    z.string().transform((val) => val === '' ? 0 : parseFloat(val) || 0),
+    z.number()
+  ]).default(0),
   lifecycle: z.enum(['Active', 'Inactive', 'Terminated', 'On Leave']).default('Active'),
   status: z.enum(['Active', 'Inactive', 'Pending', 'On Leave']).default('Active'),
   start_date: z.string().optional(),

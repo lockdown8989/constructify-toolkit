@@ -80,63 +80,73 @@ export const useEmployeeForm = ({
     setError(null);
 
     try {
-      // First validate the form data
-      const validatedData = employeeFormSchema.parse(values);
-      console.log('✅ Form validation passed:', validatedData);
+      // Ensure all required fields are present
+      if (!values.name?.trim()) {
+        throw new Error('Name is required');
+      }
+      if (!values.job_title?.trim()) {
+        throw new Error('Job title is required');
+      }
+      if (!values.department?.trim()) {
+        throw new Error('Department is required');
+      }
+      if (!values.site?.trim()) {
+        throw new Error('Site is required');
+      }
 
-      // Prepare employee data with proper type handling
-      const employeeData = {
-        name: validatedData.name.trim(),
-        email: validatedData.email?.trim() || null,
-        job_title: validatedData.job_title.trim(),
-        department: validatedData.department.trim(),
-        site: validatedData.site.trim(),
-        location: validatedData.location?.trim() || null,
-        salary: Number(validatedData.salary) || 0,
-        hourly_rate: Number(validatedData.hourly_rate) || 0,
-        start_date: validatedData.start_date || new Date().toISOString().split('T')[0],
-        status: validatedData.status || 'Active',
-        lifecycle: validatedData.lifecycle || 'Active',
+      // Parse and validate data with proper type conversion
+      const processedData = {
+        name: values.name.trim(),
+        email: values.email && values.email.trim() !== '' ? values.email.trim() : null,
+        job_title: values.job_title.trim(),
+        department: values.department.trim(),
+        site: values.site.trim(),
+        location: values.location && values.location.trim() !== '' ? values.location.trim() : null,
+        salary: typeof values.salary === 'string' ? parseFloat(values.salary) || 0 : Number(values.salary) || 0,
+        hourly_rate: typeof values.hourly_rate === 'string' ? parseFloat(values.hourly_rate) || 0 : Number(values.hourly_rate) || 0,
+        start_date: values.start_date || new Date().toISOString().split('T')[0],
+        status: values.status || 'Active',
+        lifecycle: values.lifecycle || 'Active',
         role: 'employee',
-        shift_pattern_id: validatedData.shift_pattern_id?.trim() || null,
-        monday_shift_id: validatedData.monday_shift_id?.trim() || null,
-        tuesday_shift_id: validatedData.tuesday_shift_id?.trim() || null,
-        wednesday_shift_id: validatedData.wednesday_shift_id?.trim() || null,
-        thursday_shift_id: validatedData.thursday_shift_id?.trim() || null,
-        friday_shift_id: validatedData.friday_shift_id?.trim() || null,
-        saturday_shift_id: validatedData.saturday_shift_id?.trim() || null,
-        sunday_shift_id: validatedData.sunday_shift_id?.trim() || null,
-        // Weekly availability
-        monday_available: Boolean(validatedData.monday_available),
-        monday_start_time: validatedData.monday_start_time || '09:00',
-        monday_end_time: validatedData.monday_end_time || '17:00',
-        tuesday_available: Boolean(validatedData.tuesday_available),
-        tuesday_start_time: validatedData.tuesday_start_time || '09:00',
-        tuesday_end_time: validatedData.tuesday_end_time || '17:00',
-        wednesday_available: Boolean(validatedData.wednesday_available),
-        wednesday_start_time: validatedData.wednesday_start_time || '09:00',
-        wednesday_end_time: validatedData.wednesday_end_time || '17:00',
-        thursday_available: Boolean(validatedData.thursday_available),
-        thursday_start_time: validatedData.thursday_start_time || '09:00',
-        thursday_end_time: validatedData.thursday_end_time || '17:00',
-        friday_available: Boolean(validatedData.friday_available),
-        friday_start_time: validatedData.friday_start_time || '09:00',
-        friday_end_time: validatedData.friday_end_time || '17:00',
-        saturday_available: Boolean(validatedData.saturday_available),
-        saturday_start_time: validatedData.saturday_start_time || '09:00',
-        saturday_end_time: validatedData.saturday_end_time || '17:00',
-        sunday_available: Boolean(validatedData.sunday_available),
-        sunday_start_time: validatedData.sunday_start_time || '09:00',
-        sunday_end_time: validatedData.sunday_end_time || '17:00',
+        shift_pattern_id: values.shift_pattern_id && values.shift_pattern_id.trim() !== '' ? values.shift_pattern_id.trim() : null,
+        monday_shift_id: values.monday_shift_id && values.monday_shift_id.trim() !== '' ? values.monday_shift_id.trim() : null,
+        tuesday_shift_id: values.tuesday_shift_id && values.tuesday_shift_id.trim() !== '' ? values.tuesday_shift_id.trim() : null,
+        wednesday_shift_id: values.wednesday_shift_id && values.wednesday_shift_id.trim() !== '' ? values.wednesday_shift_id.trim() : null,
+        thursday_shift_id: values.thursday_shift_id && values.thursday_shift_id.trim() !== '' ? values.thursday_shift_id.trim() : null,
+        friday_shift_id: values.friday_shift_id && values.friday_shift_id.trim() !== '' ? values.friday_shift_id.trim() : null,
+        saturday_shift_id: values.saturday_shift_id && values.saturday_shift_id.trim() !== '' ? values.saturday_shift_id.trim() : null,
+        sunday_shift_id: values.sunday_shift_id && values.sunday_shift_id.trim() !== '' ? values.sunday_shift_id.trim() : null,
+        // Weekly availability with validation
+        monday_available: Boolean(values.monday_available),
+        monday_start_time: values.monday_start_time || '09:00',
+        monday_end_time: values.monday_end_time || '17:00',
+        tuesday_available: Boolean(values.tuesday_available),
+        tuesday_start_time: values.tuesday_start_time || '09:00',
+        tuesday_end_time: values.tuesday_end_time || '17:00',
+        wednesday_available: Boolean(values.wednesday_available),
+        wednesday_start_time: values.wednesday_start_time || '09:00',
+        wednesday_end_time: values.wednesday_end_time || '17:00',
+        thursday_available: Boolean(values.thursday_available),
+        thursday_start_time: values.thursday_start_time || '09:00',
+        thursday_end_time: values.thursday_end_time || '17:00',
+        friday_available: Boolean(values.friday_available),
+        friday_start_time: values.friday_start_time || '09:00',
+        friday_end_time: values.friday_end_time || '17:00',
+        saturday_available: Boolean(values.saturday_available),
+        saturday_start_time: values.saturday_start_time || '09:00',
+        saturday_end_time: values.saturday_end_time || '17:00',
+        sunday_available: Boolean(values.sunday_available),
+        sunday_start_time: values.sunday_start_time || '09:00',
+        sunday_end_time: values.sunday_end_time || '17:00',
       };
 
-      console.log('📋 Prepared employee data:', employeeData);
+      console.log('📋 Processed employee data:', processedData);
 
       if (employeeToEdit) {
         console.log('🔄 Updating existing employee with ID:', employeeToEdit.id);
         await updateEmployee.mutateAsync({
           id: employeeToEdit.id,
-          ...employeeData,
+          ...processedData,
         });
 
         toast({
@@ -145,7 +155,7 @@ export const useEmployeeForm = ({
         });
       } else {
         console.log('➕ Creating new employee');
-        await addEmployee.mutateAsync(employeeData);
+        await addEmployee.mutateAsync(processedData);
         toast({
           title: "Employee added successfully", 
           description: "New employee has been created.",
@@ -173,6 +183,8 @@ export const useEmployeeForm = ({
         errorMessage = 'Invalid data format. Please check your input values.';
       } else if (errorMessage.includes('duplicate key')) {
         errorMessage = 'An employee with this information already exists.';
+      } else if (errorMessage.includes('invalid input syntax')) {
+        errorMessage = 'Invalid data format. Please check numeric fields (salary, hourly rate).';
       }
       
       setError(errorMessage);
