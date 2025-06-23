@@ -109,6 +109,116 @@ const OrganizationFields: React.FC<OrganizationFieldsProps> = ({
     "Youth Services"
   ];
 
+  // Comprehensive site/office options
+  const siteOptions = [
+    // General Office Types
+    "Head Office",
+    "Regional Office",
+    "Branch Office",
+    "Local Office",
+    "Remote Office",
+    "Shared Workspace",
+    "Co-Working Space",
+    "Virtual Office",
+    "Satellite Office",
+    "Mobile Office",
+    "Back Office",
+    "Front Office",
+    "Field Office",
+    "Main Site",
+    "Central Office",
+    "Hub Office",
+    "Customer Service Centre",
+    "Admin Centre",
+    
+    // Council / Government Specific
+    "Town Hall",
+    "Civic Centre",
+    "Council Chambers",
+    "Council Depot",
+    "Waste Depot",
+    "Recycling Centre",
+    "Highways Depot",
+    "Parks Depot",
+    "Housing Office",
+    "Community Centre",
+    "Public Health Clinic",
+    "Children's Services Centre",
+    "Adult Social Care Office",
+    "Environmental Health Office",
+    "Trading Standards Office",
+    "Licensing Office",
+    "Registry Office",
+    "Social Services Office",
+    "Emergency Response Centre",
+    "Benefits Office",
+    "Planning Office",
+    "Education Centre",
+    "Library",
+    "Leisure Centre",
+    "Crematorium",
+    "Cemetery Office",
+    "Registrar Office",
+    "Social Housing Hub",
+    "Day Care Centre",
+    "Youth Centre",
+    
+    // Emergency Services
+    "Police Station",
+    "Fire Station",
+    "Ambulance Station",
+    "Emergency Operations Centre",
+    
+    // Healthcare
+    "GP Surgery",
+    "NHS Trust Office",
+    "Primary Care Centre",
+    "Community Health Centre",
+    "Walk-In Clinic",
+    "Hospital",
+    "Outpatient Centre",
+    "Mental Health Centre",
+    "Rehabilitation Centre",
+    
+    // Transport & Infrastructure
+    "Transport Hub",
+    "Bus Depot",
+    "Train Depot",
+    "Highway Maintenance Yard",
+    "Ports Office",
+    "Airport Operations Office",
+    "Logistics Centre",
+    "Distribution Centre",
+    
+    // Utilities / Waste / Environment
+    "Waste Transfer Station",
+    "Landfill Site",
+    "Incineration Plant",
+    "Water Treatment Plant",
+    "Sewage Treatment Plant",
+    "Energy Centre",
+    "Flood Management Centre",
+    "Environmental Monitoring Station",
+    
+    // Education / Training
+    "School Site",
+    "University Campus",
+    "College Site",
+    "Training Centre",
+    "Apprenticeship Centre",
+    
+    // Miscellaneous Public Services
+    "Citizens Advice Bureau",
+    "Job Centre",
+    "Probation Office",
+    "Courts / Magistrates Office",
+    "Immigration Office",
+    "Passport Office",
+    "Revenue & Customs Office",
+    "Archives & Records Centre",
+    "Coroner's Office"
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
@@ -148,25 +258,12 @@ const OrganizationFields: React.FC<OrganizationFieldsProps> = ({
                   <SelectValue placeholder="Select site" />
                 </SelectTrigger>
               </FormControl>
-              <SelectContent>
-                {sites.length > 0 ? (
-                  sites.map((site) => (
-                    <SelectItem key={site} value={site}>
-                      {site}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <>
-                    <SelectItem value="HQ - San Francisco">HQ - San Francisco</SelectItem>
-                    <SelectItem value="New York Office">New York Office</SelectItem>
-                    <SelectItem value="Remote - US">Remote - US</SelectItem>
-                    <SelectItem value="Remote - International">Remote - International</SelectItem>
-                    <SelectItem value="London">London</SelectItem>
-                    <SelectItem value="Remote EU">Remote EU</SelectItem>
-                    <SelectItem value="San Francisco">San Francisco</SelectItem>
-                    <SelectItem value="New York">New York</SelectItem>
-                  </>
-                )}
+              <SelectContent className="max-h-[200px] overflow-y-auto">
+                {siteOptions.map((site) => (
+                  <SelectItem key={site} value={site}>
+                    {site}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <FormMessage />
