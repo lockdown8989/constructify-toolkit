@@ -62,21 +62,28 @@ const EmployeeScheduleRow: React.FC<EmployeeScheduleRowProps> = ({
         {isMobile && (
           <div className="flex justify-between items-center mb-2">
             <span className="text-xs font-medium text-gray-600">{days[dayIndex]?.substring(0, 3)}</span>
-            <div className={`w-3 h-3 rounded-full ${isAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <div className={`w-4 h-4 rounded-full flex items-center justify-center ${isAvailable ? 'bg-green-500' : 'bg-red-500'}`}>
+              <div className="w-2 h-2 bg-white rounded-full"></div>
+            </div>
           </div>
         )}
 
-        {/* Desktop availability indicator */}
+        {/* Desktop availability indicator - Enhanced */}
         {!isMobile && (
           <div className="absolute top-2 right-2">
-            <div className={`w-3 h-3 rounded-full ${isAvailable ? 'bg-green-500' : 'bg-red-500'}`} title={isAvailable ? 'Available' : 'Not Available'}></div>
+            <div 
+              className={`w-4 h-4 rounded-full flex items-center justify-center shadow-sm ${isAvailable ? 'bg-green-500' : 'bg-red-500'}`} 
+              title={isAvailable ? 'Available' : 'Not Available'}
+            >
+              <div className="w-2 h-2 bg-white rounded-full"></div>
+            </div>
           </div>
         )}
 
-        {/* Availability time display */}
-        {isAvailable && (
-          <div className="text-xs text-gray-500 mb-2">
-            {availability?.start} - {availability?.end}
+        {/* Availability time display - Enhanced */}
+        {isAvailable && availability && (
+          <div className="text-xs text-gray-600 mb-2 font-medium">
+            {availability.start} - {availability.end}
           </div>
         )}
 
@@ -119,9 +126,9 @@ const EmployeeScheduleRow: React.FC<EmployeeScheduleRowProps> = ({
           </Button>
         )}
 
-        {/* Not available message */}
+        {/* Not available message - Enhanced */}
         {!isAvailable && dayShifts.length === 0 && (
-          <div className="text-center text-gray-400 text-xs py-2 rounded-lg bg-gray-100">
+          <div className="text-center text-red-600 text-xs py-2 rounded-lg bg-red-50 border border-red-200">
             Not Available
           </div>
         )}
