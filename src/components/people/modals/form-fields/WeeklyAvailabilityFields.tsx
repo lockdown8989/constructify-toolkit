@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { EmployeeFormValues } from '../employee-form-schema';
@@ -21,6 +22,21 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
     { key: 'saturday', label: 'Saturday' },
     { key: 'sunday', label: 'Sunday' },
   ] as const;
+
+  const handleAvailabilityToggle = (day: string, isAvailable: boolean) => {
+    const startTimeField = `${day}_start_time` as keyof EmployeeFormValues;
+    const endTimeField = `${day}_end_time` as keyof EmployeeFormValues;
+    
+    if (isAvailable) {
+      // Set default times when enabling
+      if (!form.getValues(startTimeField)) {
+        form.setValue(startTimeField, '09:00');
+      }
+      if (!form.getValues(endTimeField)) {
+        form.setValue(endTimeField, '17:00');
+      }
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -56,22 +72,8 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
                                   checked={!!field.value}
                                   onCheckedChange={(checked) => {
                                     field.onChange(checked);
-                                    // If turning off availability, keep the default time fields for when they turn it back on
-                                    if (!checked) {
-                                      // Don't clear the times, just mark as unavailable
-                                      console.log(`${key} set to unavailable`);
-                                    } else {
-                                      // Ensure default times are set when enabling
-                                      const startTimeField = `${key}_start_time` as keyof EmployeeFormValues;
-                                      const endTimeField = `${key}_end_time` as keyof EmployeeFormValues;
-                                      
-                                      if (!form.getValues(startTimeField)) {
-                                        form.setValue(startTimeField, '09:00');
-                                      }
-                                      if (!form.getValues(endTimeField)) {
-                                        form.setValue(endTimeField, '17:00');
-                                      }
-                                    }
+                                    handleAvailabilityToggle(key, checked);
+                                    console.log(`${key} availability set to:`, checked);
                                   }}
                                   className={field.value ? "data-[state=checked]:bg-green-500" : "data-[state=unchecked]:bg-red-500"}
                                 />
@@ -102,7 +104,10 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
                               <Input 
                                 type="time" 
                                 value={timeField.value as string || '09:00'}
-                                onChange={timeField.onChange}
+                                onChange={(e) => {
+                                  timeField.onChange(e.target.value);
+                                  console.log(`${key} start time changed to:`, e.target.value);
+                                }}
                                 className="flex-1"
                                 disabled={!isAvailable}
                               />
@@ -130,7 +135,10 @@ const WeeklyAvailabilityFields: React.FC<WeeklyAvailabilityFieldsProps> = ({ for
                               <Input 
                                 type="time" 
                                 value={timeField.value as string || '17:00'}
-                                onChange={timeField.onChange}
+                                onChange={(e) => {
+                                  timeField.onChange(e.target.value);
+                                  console.log(`${key} end time changed to:`, e.target.value);
+                                }}
                                 className="flex-1"
                                 disabled={!isAvailable}
                               />

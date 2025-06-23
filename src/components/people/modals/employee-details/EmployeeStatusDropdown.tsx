@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Mail, Users, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Mail, Users, Clock, PauseCircle } from 'lucide-react';
 
 interface EmployeeStatusDropdownProps {
   onStatusChange: (status: string) => void;
@@ -31,6 +31,10 @@ const EmployeeStatusDropdown: React.FC<EmployeeStatusDropdownProps> = ({
         <DropdownMenuItem onClick={() => onStatusChange('Inactive')}>
           <XCircle className="mr-2 h-4 w-4 text-gray-500" />
           <span>Set as Inactive</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onStatusChange('On Leave')}>
+          <PauseCircle className="mr-2 h-4 w-4 text-yellow-500" />
+          <span>Set as On Leave</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onStatusChange('Invited')}>
           <Mail className="mr-2 h-4 w-4 text-blue-500" />

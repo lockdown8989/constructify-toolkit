@@ -27,6 +27,7 @@ const EmploymentStatusFields: React.FC<EmploymentStatusFieldsProps> = ({ form })
               <SelectContent>
                 <SelectItem value="Active">Active</SelectItem>
                 <SelectItem value="Inactive">Inactive</SelectItem>
+                <SelectItem value="On Leave">On Leave</SelectItem>
                 <SelectItem value="Terminated">Terminated</SelectItem>
               </SelectContent>
             </Select>
@@ -51,6 +52,7 @@ const EmploymentStatusFields: React.FC<EmploymentStatusFieldsProps> = ({ form })
                 <SelectItem value="Active">Active</SelectItem>
                 <SelectItem value="Inactive">Inactive</SelectItem>
                 <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="On Leave">On Leave</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
