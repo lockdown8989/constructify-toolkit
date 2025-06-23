@@ -19,6 +19,96 @@ const OrganizationFields: React.FC<OrganizationFieldsProps> = ({
 }) => {
   const { data: locations = [] } = useLocations();
 
+  // Comprehensive department list
+  const departmentOptions = [
+    "Accounting",
+    "Adult Social Services",
+    "Animal Control",
+    "Business Development",
+    "Children's Services",
+    "Climate & Sustainability",
+    "Compliance",
+    "Customer Service",
+    "Data Science",
+    "DevOps",
+    "Economic Development",
+    "Education & Schools",
+    "Elderly & Disability Services",
+    "Emergency Management",
+    "Environmental Services",
+    "Event Management",
+    "Facilities Management",
+    "Faculty Development",
+    "Finance",
+    "Fire Department",
+    "Food & Beverage",
+    "Front Desk",
+    "Governance & Elections",
+    "Guest Services",
+    "Hazardous Waste Management",
+    "Health & Social Care",
+    "Healthcare IT",
+    "Housing & Community Development",
+    "Human Resources",
+    "Internal Audit",
+    "IT (Information Technology)",
+    "IT & Digital Services",
+    "Laboratory",
+    "Legal",
+    "Legal & Compliance",
+    "Libraries & Cultural Services",
+    "Licensing & Regulatory Services",
+    "Logistics",
+    "Maintenance",
+    "Marketing",
+    "Medical Administration",
+    "Merchandising",
+    "Nursing",
+    "Operations",
+    "Org Mapping",
+    "Parks & Recreation",
+    "Patient Services",
+    "Payroll",
+    "Pharmacy",
+    "Planning & Zoning",
+    "Police Department",
+    "Procurement / Purchasing",
+    "Procurement & Contracts",
+    "Product Management",
+    "Production",
+    "Public Health",
+    "Public Relations",
+    "Public Safety",
+    "Public Works",
+    "Quality Assurance",
+    "Quality Control",
+    "Radiology",
+    "Reception",
+    "Recycling & Waste Management",
+    "Refuse Collection",
+    "Research Administration",
+    "Research & Development",
+    "Safety & Environmental",
+    "Sales",
+    "Sanitation Services",
+    "Security",
+    "Software Engineering",
+    "Strategy & Planning",
+    "Street Cleaning",
+    "Student Services",
+    "Supply Chain",
+    "Tax & Revenue",
+    "Technical Support",
+    "Tourism & Events",
+    "Training & Development",
+    "Transportation & Traffic",
+    "UI/UX Design",
+    "Waste Services",
+    "Waste Management",
+    "Water & Sewer Services",
+    "Youth Services"
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
@@ -33,25 +123,12 @@ const OrganizationFields: React.FC<OrganizationFieldsProps> = ({
                   <SelectValue placeholder="Select department" />
                 </SelectTrigger>
               </FormControl>
-              <SelectContent>
-                {departments.length > 0 ? (
-                  departments.map((dept) => (
-                    <SelectItem key={dept} value={dept}>
-                      {dept}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <>
-                    <SelectItem value="Engineering">Engineering</SelectItem>
-                    <SelectItem value="Design">Design</SelectItem>
-                    <SelectItem value="Marketing">Marketing</SelectItem>
-                    <SelectItem value="Product">Product</SelectItem>
-                    <SelectItem value="Sales">Sales</SelectItem>
-                    <SelectItem value="Finance">Finance</SelectItem>
-                    <SelectItem value="HR">HR</SelectItem>
-                    <SelectItem value="Data">Data</SelectItem>
-                  </>
-                )}
+              <SelectContent className="max-h-[200px] overflow-y-auto">
+                {departmentOptions.map((dept) => (
+                  <SelectItem key={dept} value={dept}>
+                    {dept}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <FormMessage />

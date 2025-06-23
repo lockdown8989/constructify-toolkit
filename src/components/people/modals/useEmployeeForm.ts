@@ -80,118 +80,63 @@ export const useEmployeeForm = ({
     setError(null);
 
     try {
-      // Validate form data
+      // First validate the form data
       const validatedData = employeeFormSchema.parse(values);
       console.log('✅ Form validation passed:', validatedData);
 
-      // Sanitize and prepare data
-      const sanitizeString = (str: any): string | null => {
-        if (typeof str !== 'string') return null;
-        const trimmed = str.trim();
-        return trimmed === '' ? null : trimmed;
-      };
-
-      const sanitizeNumber = (num: any): number => {
-        if (typeof num === 'number' && !isNaN(num)) return num;
-        if (typeof num === 'string') {
-          const parsed = parseFloat(num);
-          return isNaN(parsed) ? 0 : parsed;
-        }
-        return 0;
-      };
-
-      const ensureBoolean = (val: any): boolean => {
-        if (typeof val === 'boolean') return val;
-        if (typeof val === 'string') return val.toLowerCase() === 'true';
-        return Boolean(val);
-      };
-
-      const ensureTimeString = (time: any): string => {
-        if (typeof time === 'string' && time.match(/^\d{2}:\d{2}$/)) {
-          return time;
-        }
-        return '09:00';
-      };
-
-      // Create the employee data object
+      // Prepare employee data with proper type handling
       const employeeData = {
         name: validatedData.name.trim(),
-        email: sanitizeString(validatedData.email),
+        email: validatedData.email?.trim() || null,
         job_title: validatedData.job_title.trim(),
         department: validatedData.department.trim(),
         site: validatedData.site.trim(),
-        location: sanitizeString(validatedData.location),
-        salary: sanitizeNumber(validatedData.salary),
-        hourly_rate: sanitizeNumber(validatedData.hourly_rate),
+        location: validatedData.location?.trim() || null,
+        salary: Number(validatedData.salary) || 0,
+        hourly_rate: Number(validatedData.hourly_rate) || 0,
         start_date: validatedData.start_date || new Date().toISOString().split('T')[0],
         status: validatedData.status || 'Active',
         lifecycle: validatedData.lifecycle || 'Active',
         role: 'employee',
-        shift_pattern_id: sanitizeString(validatedData.shift_pattern_id),
-        monday_shift_id: sanitizeString(validatedData.monday_shift_id),
-        tuesday_shift_id: sanitizeString(validatedData.tuesday_shift_id),
-        wednesday_shift_id: sanitizeString(validatedData.wednesday_shift_id),
-        thursday_shift_id: sanitizeString(validatedData.thursday_shift_id),
-        friday_shift_id: sanitizeString(validatedData.friday_shift_id),
-        saturday_shift_id: sanitizeString(validatedData.saturday_shift_id),
-        sunday_shift_id: sanitizeString(validatedData.sunday_shift_id),
+        shift_pattern_id: validatedData.shift_pattern_id?.trim() || null,
+        monday_shift_id: validatedData.monday_shift_id?.trim() || null,
+        tuesday_shift_id: validatedData.tuesday_shift_id?.trim() || null,
+        wednesday_shift_id: validatedData.wednesday_shift_id?.trim() || null,
+        thursday_shift_id: validatedData.thursday_shift_id?.trim() || null,
+        friday_shift_id: validatedData.friday_shift_id?.trim() || null,
+        saturday_shift_id: validatedData.saturday_shift_id?.trim() || null,
+        sunday_shift_id: validatedData.sunday_shift_id?.trim() || null,
         // Weekly availability
-        monday_available: ensureBoolean(validatedData.monday_available),
-        monday_start_time: ensureTimeString(validatedData.monday_start_time),
-        monday_end_time: ensureTimeString(validatedData.monday_end_time),
-        tuesday_available: ensureBoolean(validatedData.tuesday_available),
-        tuesday_start_time: ensureTimeString(validatedData.tuesday_start_time),
-        tuesday_end_time: ensureTimeString(validatedData.tuesday_end_time),
-        wednesday_available: ensureBoolean(validatedData.wednesday_available),
-        wednesday_start_time: ensureTimeString(validatedData.wednesday_start_time),
-        wednesday_end_time: ensureTimeString(validatedData.wednesday_end_time),
-        thursday_available: ensureBoolean(validatedData.thursday_available),
-        thursday_start_time: ensureTimeString(validatedData.thursday_start_time),
-        thursday_end_time: ensureTimeString(validatedData.thursday_end_time),
-        friday_available: ensureBoolean(validatedData.friday_available),
-        friday_start_time: ensureTimeString(validatedData.friday_start_time),
-        friday_end_time: ensureTimeString(validatedData.friday_end_time),
-        saturday_available: ensureBoolean(validatedData.saturday_available),
-        saturday_start_time: ensureTimeString(validatedData.saturday_start_time),
-        saturday_end_time: ensureTimeString(validatedData.saturday_end_time),
-        sunday_available: ensureBoolean(validatedData.sunday_available),
-        sunday_start_time: ensureTimeString(validatedData.sunday_start_time),
-        sunday_end_time: ensureTimeString(validatedData.sunday_end_time),
+        monday_available: Boolean(validatedData.monday_available),
+        monday_start_time: validatedData.monday_start_time || '09:00',
+        monday_end_time: validatedData.monday_end_time || '17:00',
+        tuesday_available: Boolean(validatedData.tuesday_available),
+        tuesday_start_time: validatedData.tuesday_start_time || '09:00',
+        tuesday_end_time: validatedData.tuesday_end_time || '17:00',
+        wednesday_available: Boolean(validatedData.wednesday_available),
+        wednesday_start_time: validatedData.wednesday_start_time || '09:00',
+        wednesday_end_time: validatedData.wednesday_end_time || '17:00',
+        thursday_available: Boolean(validatedData.thursday_available),
+        thursday_start_time: validatedData.thursday_start_time || '09:00',
+        thursday_end_time: validatedData.thursday_end_time || '17:00',
+        friday_available: Boolean(validatedData.friday_available),
+        friday_start_time: validatedData.friday_start_time || '09:00',
+        friday_end_time: validatedData.friday_end_time || '17:00',
+        saturday_available: Boolean(validatedData.saturday_available),
+        saturday_start_time: validatedData.saturday_start_time || '09:00',
+        saturday_end_time: validatedData.saturday_end_time || '17:00',
+        sunday_available: Boolean(validatedData.sunday_available),
+        sunday_start_time: validatedData.sunday_start_time || '09:00',
+        sunday_end_time: validatedData.sunday_end_time || '17:00',
       };
 
-      console.log('📋 Sanitized employee data prepared:', employeeData);
+      console.log('📋 Prepared employee data:', employeeData);
 
       if (employeeToEdit) {
         console.log('🔄 Updating existing employee with ID:', employeeToEdit.id);
         await updateEmployee.mutateAsync({
           id: employeeToEdit.id,
           ...employeeData,
-        });
-
-        // Update availability separately to ensure sync
-        await updateAvailability({
-          employeeId: employeeToEdit.id,
-          monday_available: employeeData.monday_available,
-          monday_start_time: employeeData.monday_start_time,
-          monday_end_time: employeeData.monday_end_time,
-          tuesday_available: employeeData.tuesday_available,
-          tuesday_start_time: employeeData.tuesday_start_time,
-          tuesday_end_time: employeeData.tuesday_end_time,
-          wednesday_available: employeeData.wednesday_available,
-          wednesday_start_time: employeeData.wednesday_start_time,
-          wednesday_end_time: employeeData.wednesday_end_time,
-          thursday_available: employeeData.thursday_available,
-          thursday_start_time: employeeData.thursday_start_time,
-          thursday_end_time: employeeData.thursday_end_time,
-          friday_available: employeeData.friday_available,
-          friday_start_time: employeeData.friday_start_time,
-          friday_end_time: employeeData.friday_end_time,
-          saturday_available: employeeData.saturday_available,
-          saturday_start_time: employeeData.saturday_start_time,
-          saturday_end_time: employeeData.saturday_end_time,
-          sunday_available: employeeData.sunday_available,
-          sunday_start_time: employeeData.sunday_start_time,
-          sunday_end_time: employeeData.sunday_end_time,
         });
 
         toast({
