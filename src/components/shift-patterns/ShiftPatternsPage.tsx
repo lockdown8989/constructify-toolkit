@@ -2,7 +2,6 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ShiftPatternManager from './ShiftPatternManager';
-import EmployeeShiftAssignmentComponent from './EmployeeShiftAssignment';
 
 const ShiftPatternsPage = () => {
   return (
@@ -14,20 +13,7 @@ const ShiftPatternsPage = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="patterns" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="patterns">Shift Patterns</TabsTrigger>
-          <TabsTrigger value="assignments">Employee Assignments</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="patterns" className="mt-6">
-          <ShiftPatternManager />
-        </TabsContent>
-        
-        <TabsContent value="assignments" className="mt-6">
-          <EmployeeShiftAssignmentComponent />
-        </TabsContent>
-      </Tabs>
+      <ShiftPatternManager />
     </div>
   );
 };
