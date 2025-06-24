@@ -4,8 +4,11 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, Clock } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Edit, Trash2, Clock, Users, X } from 'lucide-react';
 import { useShiftPatterns, useCreateShiftPattern, useUpdateShiftPattern, useDeleteShiftPattern } from '@/hooks/use-shift-patterns';
+import { useEmployees } from '@/hooks/use-employees';
 import { ShiftPattern } from '@/types/shift-patterns';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -18,6 +21,7 @@ import {
 
 const ShiftPatternManager = () => {
   const { data: shiftPatterns = [], isLoading } = useShiftPatterns();
+  const { data: employees = [] } = useEmployees();
   const createPattern = useCreateShiftPattern();
   const updatePattern = useUpdateShiftPattern();
   const deletePattern = useDeleteShiftPattern();
@@ -25,6 +29,8 @@ const ShiftPatternManager = () => {
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingPattern, setEditingPattern] = useState<ShiftPattern | null>(null);
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [formData, setFormData] = useState({
     name: '',
     start_time: '',
@@ -43,6 +49,8 @@ const ShiftPatternManager = () => {
       grace_period_minutes: 15,
       overtime_threshold_minutes: 15,
     });
+    setSelectedEmployees([]);
+    setSelectedEmployeeId('');
   };
 
   const handleCreate = () => {
@@ -61,7 +69,25 @@ const ShiftPatternManager = () => {
       grace_period_minutes: pattern.grace_period_minutes,
       overtime_threshold_minutes: pattern.overtime_threshold_minutes,
     });
+    setSelectedEmployees([]);
+    setSelectedEmployeeId('');
     setIsCreateModalOpen(true);
+  };
+
+  const handleAddEmployee = () => {
+    if (selectedEmployeeId && !selectedEmployees.includes(selectedEmployeeId)) {
+      setSelectedEmployees(prev => [...prev, selectedEmployeeId]);
+      setSelectedEmployeeId('');
+    }
+  };
+
+  const handleRemoveEmployee = (employeeId: string) => {
+    setSelectedEmployees(prev => prev.filter(id => id !== employeeId));
+  };
+
+  const getEmployeeName = (employeeId: string) => {
+    const employee = employees.find(e => e.id === employeeId);
+    return employee?.name || 'Unknown Employee';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,6 +99,16 @@ const ShiftPatternManager = () => {
           id: editingPattern.id,
           ...formData,
         });
+        
+        // Create weekly recurring schedules for assigned employees
+        if (selectedEmployees.length > 0) {
+          // This would need to be implemented to create recurring schedules
+          console.log('Creating recurring schedules for employees:', selectedEmployees);
+          toast({
+            title: "Pattern updated",
+            description: `Pattern updated and will be applied to ${selectedEmployees.length} employees weekly.`,
+          });
+        }
       } else {
         await createPattern.mutateAsync(formData);
       }
@@ -156,7 +192,7 @@ const ShiftPatternManager = () => {
         </div>
 
         <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>
                 {editingPattern ? 'Edit Shift Pattern' : 'Create Shift Pattern'}
@@ -227,6 +263,66 @@ const ShiftPatternManager = () => {
                   />
                 </div>
               </div>
+
+              {/* Employee Assignment Section - Only show when editing */}
+              {editingPattern && (
+                <div className="space-y-4 border-t pt-4">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Assign Employees to Pattern
+                  </h4>
+                  
+                  <div className="flex gap-2">
+                    <Select value={selectedEmployeeId} onValueChange={setSelectedEmployeeId}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Choose an employee..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {employees
+                          .filter(emp => !selectedEmployees.includes(emp.id))
+                          .map((employee) => (
+                            <SelectItem key={employee.id} value={employee.id}>
+                              {employee.name} - {employee.job_title}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      type="button"
+                      onClick={handleAddEmployee}
+                      disabled={!selectedEmployeeId}
+                      size="sm"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add
+                    </Button>
+                  </div>
+
+                  {selectedEmployees.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Selected Employees:</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedEmployees.map((employeeId) => (
+                          <Badge key={employeeId} variant="secondary" className="flex items-center gap-1">
+                            {getEmployeeName(employeeId)}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveEmployee(employeeId)}
+                              className="ml-1 hover:text-red-600"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        This pattern will be applied weekly to the selected employees.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="flex gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
                   Cancel

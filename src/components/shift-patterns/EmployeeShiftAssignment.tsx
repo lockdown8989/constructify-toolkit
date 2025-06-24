@@ -2,168 +2,103 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Save, Loader2, AlertTriangle } from 'lucide-react';
-import { useShiftPatterns } from '@/hooks/use-shift-patterns';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useEmployees } from '@/hooks/use-employees';
-import { useEmployeeShiftAssignments } from '@/hooks/use-employee-shift-assignments';
-import EmployeeSelector from './components/EmployeeSelector';
-import DefaultPatternSelector from './components/DefaultPatternSelector';
-import DaySpecificAssignments from './components/DaySpecificAssignments';
-import {
-  LoadingState,
-  ErrorState,
-  EmptyEmployeesState,
-  EmptyShiftPatternsState,
-  EmployeeDataLoading
-} from './components/LoadingStates';
+import { useShiftPatterns } from '@/hooks/use-shift-patterns';
+import { Users, Plus, X } from 'lucide-react';
 
-const EmployeeShiftAssignmentComponent = () => {
-  const { data: shiftPatterns = [], isLoading: patternsLoading, error: patternsError } = useShiftPatterns();
-  const { data: employees = [], isLoading: employeesLoading, error: employeesError } = useEmployees();
+interface EmployeeShiftAssignmentProps {
+  patternId: string;
+  onAssignmentChange?: () => void;
+}
+
+const EmployeeShiftAssignment: React.FC<EmployeeShiftAssignmentProps> = ({
+  patternId,
+  onAssignmentChange
+}) => {
+  const { data: employees = [] } = useEmployees();
+  const { data: shiftPatterns = [] } = useShiftPatterns();
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
+  const [assignedEmployees, setAssignedEmployees] = useState<string[]>([]);
+
+  const currentPattern = shiftPatterns.find(p => p.id === patternId);
   
-  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
-  const [selectionError, setSelectionError] = useState<string>('');
-  
-  const {
-    assignments,
-    isLoading,
-    loadingEmployee,
-    loadEmployeeShifts,
-    saveAssignments,
-    handleAssignmentChange,
-    resetAssignments
-  } = useEmployeeShiftAssignments();
-
-  const handleEmployeeSelect = (employeeId: string) => {
-    console.log('Employee selected in main component:', employeeId);
-    setSelectionError('');
-    
-    try {
-      // Validate employeeId before proceeding
-      if (!employeeId || employeeId === 'undefined' || employeeId === 'null' || employeeId === '') {
-        console.log('Clearing employee selection');
-        setSelectedEmployee('');
-        resetAssignments();
-        return;
-      }
-
-      // Check if the employee exists in our employees list
-      const employee = employees.find(emp => emp.id === employeeId);
-      if (!employee) {
-        console.error('Employee not found in list:', employeeId);
-        setSelectionError('Selected employee not found. Please refresh the page and try again.');
-        setSelectedEmployee('');
-        resetAssignments();
-        return;
-      }
-
-      console.log('Valid employee selected:', employee.name);
-      setSelectedEmployee(employeeId);
-      loadEmployeeShifts(employeeId);
-      
-    } catch (error) {
-      console.error('Error in handleEmployeeSelect:', error);
-      setSelectionError('An error occurred while selecting the employee. Please try again.');
-      setSelectedEmployee('');
-      resetAssignments();
+  const handleAssignEmployee = () => {
+    if (selectedEmployeeId && !assignedEmployees.includes(selectedEmployeeId)) {
+      setAssignedEmployees(prev => [...prev, selectedEmployeeId]);
+      setSelectedEmployeeId('');
+      onAssignmentChange?.();
     }
   };
 
-  const handleSave = () => {
-    if (!selectedEmployee) {
-      setSelectionError('Please select an employee first');
-      return;
-    }
-    
-    try {
-      saveAssignments(selectedEmployee);
-    } catch (error) {
-      console.error('Error saving assignments:', error);
-      setSelectionError('Failed to save assignments. Please try again.');
-    }
+  const handleRemoveEmployee = (employeeId: string) => {
+    setAssignedEmployees(prev => prev.filter(id => id !== employeeId));
+    onAssignmentChange?.();
   };
 
-  // Show loading state
-  if (patternsLoading || employeesLoading) {
-    return <LoadingState />;
-  }
-
-  // Show error state
-  if (patternsError || employeesError) {
-    const errorMessage = patternsError?.message || employeesError?.message || 'Failed to load data';
-    return <ErrorState errorMessage={errorMessage} />;
-  }
-
-  // Show empty state if no data
-  if (!employees || employees.length === 0) {
-    return <EmptyEmployeesState />;
-  }
-
-  if (!shiftPatterns || shiftPatterns.length === 0) {
-    return <EmptyShiftPatternsState />;
-  }
+  const getEmployeeName = (employeeId: string) => {
+    const employee = employees.find(e => e.id === employeeId);
+    return employee?.name || 'Unknown Employee';
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5" />
-          Employee Shift Assignment
+          Employee Assignment - {currentPattern?.name}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div>
-          <EmployeeSelector
-            employees={employees}
-            selectedEmployee={selectedEmployee}
-            onEmployeeSelect={handleEmployeeSelect}
-          />
-          {selectionError && (
-            <div className="flex items-center gap-2 mt-2 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-              <AlertTriangle className="h-4 w-4" />
-              {selectionError}
+      <CardContent className="space-y-4">
+        <div className="flex gap-2">
+          <Select value={selectedEmployeeId} onValueChange={setSelectedEmployeeId}>
+            <SelectTrigger className="flex-1">
+              <SelectValue placeholder="Select an employee..." />
+            </SelectTrigger>
+            <SelectContent>
+              {employees
+                .filter(emp => !assignedEmployees.includes(emp.id))
+                .map((employee) => (
+                  <SelectItem key={employee.id} value={employee.id}>
+                    {employee.name} - {employee.job_title}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+          <Button 
+            onClick={handleAssignEmployee}
+            disabled={!selectedEmployeeId}
+            size="sm"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Assign
+          </Button>
+        </div>
+
+        <div className="space-y-2">
+          <h4 className="font-medium">Assigned Employees:</h4>
+          {assignedEmployees.length === 0 ? (
+            <p className="text-gray-500 text-sm">No employees assigned to this pattern.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {assignedEmployees.map((employeeId) => (
+                <Badge key={employeeId} variant="secondary" className="flex items-center gap-1">
+                  {getEmployeeName(employeeId)}
+                  <button
+                    onClick={() => handleRemoveEmployee(employeeId)}
+                    className="ml-1 hover:text-red-600"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
             </div>
           )}
         </div>
-
-        {selectedEmployee && (
-          <div className="space-y-4">
-            {loadingEmployee ? (
-              <EmployeeDataLoading />
-            ) : (
-              <>
-                <DefaultPatternSelector
-                  shiftPatterns={shiftPatterns}
-                  selectedPatternId={assignments.shift_pattern_id}
-                  onPatternChange={(value) => handleAssignmentChange('shift_pattern_id', value)}
-                />
-
-                <DaySpecificAssignments
-                  shiftPatterns={shiftPatterns}
-                  assignments={assignments}
-                  onAssignmentChange={handleAssignmentChange}
-                />
-
-                <Button onClick={handleSave} disabled={isLoading} className="w-full">
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Assignments
-                    </>
-                  )}
-                </Button>
-              </>
-            )}
-          </div>
-        )}
       </CardContent>
     </Card>
   );
 };
 
-export default EmployeeShiftAssignmentComponent;
+export default EmployeeShiftAssignment;
