@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -95,16 +94,32 @@ const ShiftPatternManager = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.name || !formData.start_time || !formData.end_time) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       if (editingPattern) {
-        // Update the pattern
-        await updatePattern.mutateAsync({
+        console.log('Updating pattern with data:', formData);
+        console.log('Selected employees:', selectedEmployees);
+        
+        // Update the pattern first
+        const updatedPattern = await updatePattern.mutateAsync({
           id: editingPattern.id,
           ...formData,
         });
         
+        console.log('Pattern updated successfully:', updatedPattern);
+        
         // Create recurring schedules for assigned employees if any are selected
         if (selectedEmployees.length > 0) {
+          console.log('Creating recurring schedules for employees:', selectedEmployees);
+          
           await createRecurringSchedules.mutateAsync({
             employeeIds: selectedEmployees,
             shiftPatternId: editingPattern.id,
@@ -113,10 +128,29 @@ const ShiftPatternManager = () => {
             endTime: formData.end_time,
             weeksToGenerate: 12
           });
+          
+          toast({
+            title: "Success",
+            description: `Shift pattern updated and assigned to ${selectedEmployees.length} employee(s). Schedules created for the next 12 weeks.`,
+          });
+        } else {
+          toast({
+            title: "Success",
+            description: "Shift pattern updated successfully.",
+          });
         }
       } else {
         // Create new pattern
-        await createPattern.mutateAsync(formData);
+        console.log('Creating new pattern with data:', formData);
+        
+        const newPattern = await createPattern.mutateAsync(formData);
+        
+        console.log('Pattern created successfully:', newPattern);
+        
+        toast({
+          title: "Success",
+          description: "Shift pattern created successfully.",
+        });
       }
       
       setIsCreateModalOpen(false);
@@ -124,6 +158,11 @@ const ShiftPatternManager = () => {
       setEditingPattern(null);
     } catch (error) {
       console.error('Error saving shift pattern:', error);
+      toast({
+        title: "Error",
+        description: `Failed to ${editingPattern ? 'update' : 'create'} shift pattern. Please try again.`,
+        variant: "destructive",
+      });
     }
   };
 
@@ -355,7 +394,10 @@ const ShiftPatternManager = () => {
                   disabled={createPattern.isPending || updatePattern.isPending || createRecurringSchedules.isPending}
                   className="sm:w-auto w-full"
                 >
-                  {editingPattern ? 'Update Pattern' : 'Create Pattern'}
+                  {(createPattern.isPending || updatePattern.isPending || createRecurringSchedules.isPending) ? 
+                    'Processing...' : 
+                    (editingPattern ? 'Update Pattern' : 'Create Pattern')
+                  }
                 </Button>
               </div>
             </form>
