@@ -25,8 +25,10 @@ export function useCreateRecurringSchedules() {
         patternName,
         startTime, 
         endTime, 
-        weeksToGenerate = 12 // Generate 12 weeks by default
+        weeksToGenerate = 12
       } = params;
+
+      console.log('Creating recurring schedules with params:', params);
 
       const schedules = [];
       const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 }); // Start from Monday
@@ -48,7 +50,7 @@ export function useCreateRecurringSchedules() {
               start_time: startDateTime.toISOString(),
               end_time: endDateTime.toISOString(),
               status: 'pending',
-              published: false,
+              published: true,
               recurring: true,
               shift_type: 'pattern',
               template_id: shiftPatternId,
@@ -59,33 +61,49 @@ export function useCreateRecurringSchedules() {
         }
       }
 
+      console.log(`Generated ${schedules.length} schedule entries`);
+
+      // First, delete any existing recurring schedules for this pattern and employees
+      if (schedules.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('schedules')
+          .delete()
+          .eq('template_id', shiftPatternId)
+          .eq('recurring', true)
+          .in('employee_id', employeeIds);
+
+        if (deleteError) {
+          console.error('Error deleting existing recurring schedules:', deleteError);
+        }
+      }
+
       // Insert all schedules in batches
       const batchSize = 100;
       const results = [];
       
       for (let i = 0; i < schedules.length; i += batchSize) {
         const batch = schedules.slice(i, i + batchSize);
+        console.log(`Inserting batch ${Math.floor(i/batchSize) + 1} with ${batch.length} schedules`);
+        
         const { data, error } = await supabase
           .from('schedules')
           .insert(batch)
           .select();
         
         if (error) {
-          console.error('Error creating recurring schedules:', error);
+          console.error('Error creating recurring schedules batch:', error);
           throw error;
         }
         
         results.push(...(data || []));
       }
 
+      console.log(`Successfully created ${results.length} recurring schedules`);
       return results;
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
-      toast({
-        title: "Recurring schedules created",
-        description: `Created ${data.length} schedules for ${variables.employeeIds.length} employees over ${variables.weeksToGenerate || 12} weeks.`,
-      });
+      console.log(`Recurring schedules created successfully: ${data.length} schedules for ${variables.employeeIds.length} employees`);
     },
     onError: (error) => {
       console.error('Failed to create recurring schedules:', error);

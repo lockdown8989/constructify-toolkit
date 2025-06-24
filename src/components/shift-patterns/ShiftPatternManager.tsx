@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -106,7 +107,7 @@ const ShiftPatternManager = () => {
     try {
       if (editingPattern) {
         console.log('Updating pattern with data:', formData);
-        console.log('Selected employees:', selectedEmployees);
+        console.log('Selected employees for assignment:', selectedEmployees);
         
         // Update the pattern first
         const updatedPattern = await updatePattern.mutateAsync({
@@ -120,19 +121,28 @@ const ShiftPatternManager = () => {
         if (selectedEmployees.length > 0) {
           console.log('Creating recurring schedules for employees:', selectedEmployees);
           
-          await createRecurringSchedules.mutateAsync({
-            employeeIds: selectedEmployees,
-            shiftPatternId: editingPattern.id,
-            patternName: formData.name,
-            startTime: formData.start_time,
-            endTime: formData.end_time,
-            weeksToGenerate: 12
-          });
-          
-          toast({
-            title: "Success",
-            description: `Shift pattern updated and assigned to ${selectedEmployees.length} employee(s). Schedules created for the next 12 weeks.`,
-          });
+          try {
+            await createRecurringSchedules.mutateAsync({
+              employeeIds: selectedEmployees,
+              shiftPatternId: editingPattern.id,
+              patternName: formData.name,
+              startTime: formData.start_time,
+              endTime: formData.end_time,
+              weeksToGenerate: 12
+            });
+            
+            toast({
+              title: "Success",
+              description: `Shift pattern updated and assigned to ${selectedEmployees.length} employee(s). Schedules created for the next 12 weeks.`,
+            });
+          } catch (scheduleError) {
+            console.error('Error creating recurring schedules:', scheduleError);
+            toast({
+              title: "Pattern Updated",
+              description: "Shift pattern updated, but there was an issue creating the recurring schedules. Please try assigning employees again.",
+              variant: "destructive",
+            });
+          }
         } else {
           toast({
             title: "Success",
