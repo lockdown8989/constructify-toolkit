@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { useEmployees } from '@/hooks/use-employees';
 import { useCreateRecurringSchedules } from '@/hooks/use-recurring-schedules';
 import { ShiftPattern } from '@/types/shift-patterns';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,7 @@ const ShiftPatternManager = () => {
   const [editingPattern, setEditingPattern] = useState<ShiftPattern | null>(null);
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
+  const [patternEmployees, setPatternEmployees] = useState<Record<string, any[]>>({});
   const [formData, setFormData] = useState({
     name: '',
     start_time: '',
@@ -41,6 +43,53 @@ const ShiftPatternManager = () => {
     grace_period_minutes: 15,
     overtime_threshold_minutes: 15,
   });
+
+  // Fetch assigned employees for each pattern
+  useEffect(() => {
+    const fetchPatternEmployees = async () => {
+      if (shiftPatterns.length === 0) return;
+      
+      const patternEmployeeMap: Record<string, any[]> = {};
+      
+      for (const pattern of shiftPatterns) {
+        try {
+          // Get employees assigned to this pattern via recurring schedules
+          const { data: schedules, error } = await supabase
+            .from('schedules')
+            .select(`
+              employee_id,
+              employees!inner(id, name, job_title)
+            `)
+            .eq('template_id', pattern.id)
+            .eq('recurring', true)
+            .eq('shift_type', 'pattern');
+
+          if (error) {
+            console.error('Error fetching pattern employees:', error);
+            continue;
+          }
+
+          // Get unique employees for this pattern
+          const uniqueEmployees = schedules?.reduce((acc: any[], schedule: any) => {
+            const employee = schedule.employees;
+            if (employee && !acc.find(emp => emp.id === employee.id)) {
+              acc.push(employee);
+            }
+            return acc;
+          }, []) || [];
+
+          patternEmployeeMap[pattern.id] = uniqueEmployees;
+        } catch (error) {
+          console.error('Error fetching employees for pattern:', pattern.id, error);
+          patternEmployeeMap[pattern.id] = [];
+        }
+      }
+      
+      setPatternEmployees(patternEmployeeMap);
+    };
+
+    fetchPatternEmployees();
+  }, [shiftPatterns]);
 
   const resetForm = () => {
     setFormData({
@@ -215,30 +264,57 @@ const ShiftPatternManager = () => {
       <CardContent className="space-y-4">
         <div className="grid gap-4">
           {shiftPatterns.map((pattern) => (
-            <div key={pattern.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg gap-4">
-              <div className="flex-1">
-                <h3 className="font-medium text-base sm:text-lg">{pattern.name}</h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  {formatTime(pattern.start_time)} - {formatTime(pattern.end_time)}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Break: {pattern.break_duration}min | Grace: {pattern.grace_period_minutes}min
-                </p>
-              </div>
-              <div className="flex gap-2 self-end sm:self-auto">
-                <Button variant="outline" size="sm" onClick={() => handleEdit(pattern)}>
-                  <Edit className="h-4 w-4" />
-                  <span className="hidden sm:inline ml-2">Edit</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDelete(pattern.id)}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span className="hidden sm:inline ml-2">Delete</span>
-                </Button>
+            <div key={pattern.id} className="flex flex-col p-4 border rounded-lg gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="flex-1">
+                  <h3 className="font-medium text-base sm:text-lg">{pattern.name}</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {formatTime(pattern.start_time)} - {formatTime(pattern.end_time)}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Break: {pattern.break_duration}min | Grace: {pattern.grace_period_minutes}min
+                  </p>
+                  
+                  {/* Assigned Employees Section */}
+                  {patternEmployees[pattern.id] && patternEmployees[pattern.id].length > 0 && (
+                    <div className="mt-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Users className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Assigned Employees ({patternEmployees[pattern.id].length})
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {patternEmployees[pattern.id].slice(0, 3).map((employee) => (
+                          <Badge key={employee.id} variant="secondary" className="text-xs">
+                            {employee.name}
+                          </Badge>
+                        ))}
+                        {patternEmployees[pattern.id].length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{patternEmployees[pattern.id].length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex gap-2 self-end sm:self-start">
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(pattern)}>
+                    <Edit className="h-4 w-4" />
+                    <span className="hidden sm:inline ml-2">Edit</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete(pattern.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="hidden sm:inline ml-2">Delete</span>
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
