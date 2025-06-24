@@ -1,25 +1,17 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Clock, Users, X } from 'lucide-react';
+import { Plus, Clock } from 'lucide-react';
 import { useShiftPatterns, useCreateShiftPattern, useUpdateShiftPattern, useDeleteShiftPattern } from '@/hooks/use-shift-patterns';
 import { useEmployees } from '@/hooks/use-employees';
 import { useCreateRecurringSchedules } from '@/hooks/use-recurring-schedules';
 import { ShiftPattern } from '@/types/shift-patterns';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { usePatternEmployees } from './hooks/usePatternEmployees';
+import { useShiftPatternForm } from './hooks/useShiftPatternForm';
+import { ShiftPatternCard } from './components/ShiftPatternCard';
+import { ShiftPatternDialog } from './components/ShiftPatternDialog';
 
 const ShiftPatternManager = () => {
   const { data: shiftPatterns = [], isLoading } = useShiftPatterns();
@@ -32,77 +24,19 @@ const ShiftPatternManager = () => {
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingPattern, setEditingPattern] = useState<ShiftPattern | null>(null);
-  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
-  const [patternEmployees, setPatternEmployees] = useState<Record<string, any[]>>({});
-  const [formData, setFormData] = useState({
-    name: '',
-    start_time: '',
-    end_time: '',
-    break_duration: 30,
-    grace_period_minutes: 15,
-    overtime_threshold_minutes: 15,
-  });
-
-  // Fetch assigned employees for each pattern
-  useEffect(() => {
-    const fetchPatternEmployees = async () => {
-      if (shiftPatterns.length === 0) return;
-      
-      const patternEmployeeMap: Record<string, any[]> = {};
-      
-      for (const pattern of shiftPatterns) {
-        try {
-          // Get employees assigned to this pattern via recurring schedules
-          const { data: schedules, error } = await supabase
-            .from('schedules')
-            .select(`
-              employee_id,
-              employees!inner(id, name, job_title)
-            `)
-            .eq('template_id', pattern.id)
-            .eq('recurring', true)
-            .eq('shift_type', 'pattern');
-
-          if (error) {
-            console.error('Error fetching pattern employees:', error);
-            continue;
-          }
-
-          // Get unique employees for this pattern
-          const uniqueEmployees = schedules?.reduce((acc: any[], schedule: any) => {
-            const employee = schedule.employees;
-            if (employee && !acc.find(emp => emp.id === employee.id)) {
-              acc.push(employee);
-            }
-            return acc;
-          }, []) || [];
-
-          patternEmployeeMap[pattern.id] = uniqueEmployees;
-        } catch (error) {
-          console.error('Error fetching employees for pattern:', pattern.id, error);
-          patternEmployeeMap[pattern.id] = [];
-        }
-      }
-      
-      setPatternEmployees(patternEmployeeMap);
-    };
-
-    fetchPatternEmployees();
-  }, [shiftPatterns]);
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      start_time: '',
-      end_time: '',
-      break_duration: 30,
-      grace_period_minutes: 15,
-      overtime_threshold_minutes: 15,
-    });
-    setSelectedEmployees([]);
-    setSelectedEmployeeId('');
-  };
+  
+  const patternEmployees = usePatternEmployees(shiftPatterns);
+  const {
+    formData,
+    setFormData,
+    selectedEmployees,
+    selectedEmployeeId,
+    setSelectedEmployeeId,
+    resetForm,
+    loadPatternData,
+    handleAddEmployee,
+    handleRemoveEmployee,
+  } = useShiftPatternForm();
 
   const handleCreate = () => {
     setEditingPattern(null);
@@ -112,28 +46,8 @@ const ShiftPatternManager = () => {
 
   const handleEdit = (pattern: ShiftPattern) => {
     setEditingPattern(pattern);
-    setFormData({
-      name: pattern.name,
-      start_time: pattern.start_time,
-      end_time: pattern.end_time,
-      break_duration: pattern.break_duration,
-      grace_period_minutes: pattern.grace_period_minutes,
-      overtime_threshold_minutes: pattern.overtime_threshold_minutes,
-    });
-    setSelectedEmployees([]);
-    setSelectedEmployeeId('');
+    loadPatternData(pattern);
     setIsCreateModalOpen(true);
-  };
-
-  const handleAddEmployee = () => {
-    if (selectedEmployeeId && !selectedEmployees.includes(selectedEmployeeId)) {
-      setSelectedEmployees(prev => [...prev, selectedEmployeeId]);
-      setSelectedEmployeeId('');
-    }
-  };
-
-  const handleRemoveEmployee = (employeeId: string) => {
-    setSelectedEmployees(prev => prev.filter(id => id !== employeeId));
   };
 
   const getEmployeeName = (employeeId: string) => {
@@ -235,13 +149,7 @@ const ShiftPatternManager = () => {
     }
   };
 
-  const formatTime = (time: string) => {
-    return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
+  const isDialogLoading = createPattern.isPending || updatePattern.isPending || createRecurringSchedules.isPending;
 
   if (isLoading) {
     return <div className="p-4">Loading shift patterns...</div>;
@@ -264,59 +172,13 @@ const ShiftPatternManager = () => {
       <CardContent className="space-y-4">
         <div className="grid gap-4">
           {shiftPatterns.map((pattern) => (
-            <div key={pattern.id} className="flex flex-col p-4 border rounded-lg gap-4">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                <div className="flex-1">
-                  <h3 className="font-medium text-base sm:text-lg">{pattern.name}</h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {formatTime(pattern.start_time)} - {formatTime(pattern.end_time)}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Break: {pattern.break_duration}min | Grace: {pattern.grace_period_minutes}min
-                  </p>
-                  
-                  {/* Assigned Employees Section */}
-                  {patternEmployees[pattern.id] && patternEmployees[pattern.id].length > 0 && (
-                    <div className="mt-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Users className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm font-medium text-gray-700">
-                          Assigned Employees ({patternEmployees[pattern.id].length})
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {patternEmployees[pattern.id].slice(0, 3).map((employee) => (
-                          <Badge key={employee.id} variant="secondary" className="text-xs">
-                            {employee.name}
-                          </Badge>
-                        ))}
-                        {patternEmployees[pattern.id].length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{patternEmployees[pattern.id].length - 3} more
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex gap-2 self-end sm:self-start">
-                  <Button variant="outline" size="sm" onClick={() => handleEdit(pattern)}>
-                    <Edit className="h-4 w-4" />
-                    <span className="hidden sm:inline ml-2">Edit</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDelete(pattern.id)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span className="hidden sm:inline ml-2">Delete</span>
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <ShiftPatternCard
+              key={pattern.id}
+              pattern={pattern}
+              assignedEmployees={patternEmployees[pattern.id] || []}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
           ))}
           {shiftPatterns.length === 0 && (
             <p className="text-center text-gray-500 py-8 text-sm sm:text-base">
@@ -325,170 +187,22 @@ const ShiftPatternManager = () => {
           )}
         </div>
 
-        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-          <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-lg sm:text-xl">
-                {editingPattern ? 'Edit Shift Pattern' : 'Create Shift Pattern'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-              <div>
-                <Label htmlFor="name" className="text-sm font-medium">Pattern Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  placeholder="e.g., Morning Shift, Afternoon Shift"
-                  required
-                  className="mt-1"
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="start_time" className="text-sm font-medium">Start Time</Label>
-                  <Input
-                    id="start_time"
-                    type="time"
-                    value={formData.start_time}
-                    onChange={(e) => setFormData({...formData, start_time: e.target.value})}
-                    required
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="end_time" className="text-sm font-medium">End Time</Label>
-                  <Input
-                    id="end_time"
-                    type="time"
-                    value={formData.end_time}
-                    onChange={(e) => setFormData({...formData, end_time: e.target.value})}
-                    required
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="break_duration" className="text-sm font-medium">Break (minutes)</Label>
-                  <Input
-                    id="break_duration"
-                    type="number"
-                    value={formData.break_duration}
-                    onChange={(e) => setFormData({...formData, break_duration: parseInt(e.target.value)})}
-                    min="0"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="grace_period" className="text-sm font-medium">Grace Period (minutes)</Label>
-                  <Input
-                    id="grace_period"
-                    type="number"
-                    value={formData.grace_period_minutes}
-                    onChange={(e) => setFormData({...formData, grace_period_minutes: parseInt(e.target.value)})}
-                    min="0"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="overtime_threshold" className="text-sm font-medium">Overtime Threshold (minutes)</Label>
-                  <Input
-                    id="overtime_threshold"
-                    type="number"
-                    value={formData.overtime_threshold_minutes}
-                    onChange={(e) => setFormData({...formData, overtime_threshold_minutes: parseInt(e.target.value)})}
-                    min="0"
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-
-              {/* Employee Assignment Section - Only show when editing */}
-              {editingPattern && (
-                <div className="space-y-4 border-t pt-4">
-                  <h4 className="font-medium flex items-center gap-2 text-base">
-                    <Users className="h-4 w-4" />
-                    Assign Employees to Pattern
-                  </h4>
-                  
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Select value={selectedEmployeeId} onValueChange={setSelectedEmployeeId}>
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Choose an employee..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {employees
-                          .filter(emp => !selectedEmployees.includes(emp.id))
-                          .map((employee) => (
-                            <SelectItem key={employee.id} value={employee.id}>
-                              {employee.name} - {employee.job_title}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                    <Button 
-                      type="button"
-                      onClick={handleAddEmployee}
-                      disabled={!selectedEmployeeId}
-                      size="sm"
-                      className="sm:w-auto w-full"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add
-                    </Button>
-                  </div>
-
-                  {selectedEmployees.length > 0 && (
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Selected Employees:</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedEmployees.map((employeeId) => (
-                          <Badge key={employeeId} variant="secondary" className="flex items-center gap-1 text-xs">
-                            {getEmployeeName(employeeId)}
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveEmployee(employeeId)}
-                              className="ml-1 hover:text-red-600"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                      <p className="text-xs sm:text-sm text-gray-600">
-                        This pattern will be applied weekly to the selected employees for the next 12 weeks.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="flex flex-col sm:flex-row gap-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="sm:w-auto w-full"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={createPattern.isPending || updatePattern.isPending || createRecurringSchedules.isPending}
-                  className="sm:w-auto w-full"
-                >
-                  {(createPattern.isPending || updatePattern.isPending || createRecurringSchedules.isPending) ? 
-                    'Processing...' : 
-                    (editingPattern ? 'Update Pattern' : 'Create Pattern')
-                  }
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <ShiftPatternDialog
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          editingPattern={editingPattern}
+          formData={formData}
+          onFormDataChange={setFormData}
+          employees={employees}
+          selectedEmployees={selectedEmployees}
+          selectedEmployeeId={selectedEmployeeId}
+          onEmployeeIdChange={setSelectedEmployeeId}
+          onAddEmployee={handleAddEmployee}
+          onRemoveEmployee={handleRemoveEmployee}
+          getEmployeeName={getEmployeeName}
+          onSubmit={handleSubmit}
+          isLoading={isDialogLoading}
+        />
       </CardContent>
     </Card>
   );
