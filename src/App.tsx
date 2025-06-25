@@ -9,7 +9,7 @@ import { startAttendanceMonitoring, stopAttendanceMonitoring } from "@/services/
 import Dashboard from "./pages/Dashboard";
 import Schedule from "./pages/Schedule";
 import Settings from "./pages/Settings";
-import RequireAuth from "./components/auth/RequireAuth";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./hooks/use-auth";
 import ShiftPatterns from "./pages/ShiftPatterns";
 import Attendance from "./pages/Attendance";
@@ -34,15 +34,17 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
-            <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-            <Route path="/schedule" element={<RequireAuth><Schedule /></RequireAuth>} />
-            <Route path="/shiftcalendar" element={<RequireAuth><ShiftCalendar /></RequireAuth>} />
-            <Route path="/shiftpatterns" element={<RequireAuth><ShiftPatterns /></RequireAuth>} />
-            <Route path="/attendance" element={<RequireAuth><Attendance /></RequireAuth>} />
-            <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
-          </Routes>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
+              <Route path="/shiftcalendar" element={<ProtectedRoute><ShiftCalendar /></ProtectedRoute>} />
+              <Route path="/shiftpatterns" element={<ProtectedRoute><ShiftPatterns /></ProtectedRoute>} />
+              <Route path="/attendance" element={<ProtectedRoute><Attendance /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            </Routes>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

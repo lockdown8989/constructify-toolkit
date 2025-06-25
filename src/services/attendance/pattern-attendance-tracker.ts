@@ -60,35 +60,37 @@ export const trackPatternBasedAttendance = async (
     const assignment = assignments[0];
     const pattern = assignment.shift_patterns;
     
-    metrics.shiftPatternId = pattern.id;
-    metrics.scheduledStart = pattern.start_time;
-    metrics.scheduledEnd = pattern.end_time;
+    if (pattern) {
+      metrics.shiftPatternId = pattern.id;
+      metrics.scheduledStart = pattern.start_time;
+      metrics.scheduledEnd = pattern.end_time;
 
-    // Calculate scheduled times for today
-    const today = checkInTime.toDateString();
-    const scheduledStartTime = new Date(`${today} ${pattern.start_time}`);
-    const scheduledEndTime = new Date(`${today} ${pattern.end_time}`);
-    
-    // Add grace period to start time
-    const graceStartTime = new Date(scheduledStartTime.getTime() + (pattern.grace_period_minutes * 60000));
-    
-    // Check if late
-    if (checkInTime > graceStartTime) {
-      metrics.isLate = true;
-      metrics.lateMinutes = Math.floor((checkInTime.getTime() - scheduledStartTime.getTime()) / 60000);
-    }
-
-    // Check overtime if checked out
-    if (checkOutTime) {
-      const overtimeThresholdTime = new Date(scheduledEndTime.getTime() + (pattern.overtime_threshold_minutes * 60000));
+      // Calculate scheduled times for today
+      const today = checkInTime.toDateString();
+      const scheduledStartTime = new Date(`${today} ${pattern.start_time}`);
+      const scheduledEndTime = new Date(`${today} ${pattern.end_time}`);
       
-      if (checkOutTime > overtimeThresholdTime) {
-        metrics.isOvertime = true;
-        metrics.overtimeMinutes = Math.floor((checkOutTime.getTime() - scheduledEndTime.getTime()) / 60000);
+      // Add grace period to start time
+      const graceStartTime = new Date(scheduledStartTime.getTime() + (pattern.grace_period_minutes * 60000));
+      
+      // Check if late
+      if (checkInTime > graceStartTime) {
+        metrics.isLate = true;
+        metrics.lateMinutes = Math.floor((checkInTime.getTime() - scheduledStartTime.getTime()) / 60000);
       }
-    }
 
-    console.log('Pattern-based attendance metrics:', metrics);
+      // Check overtime if checked out
+      if (checkOutTime) {
+        const overtimeThresholdTime = new Date(scheduledEndTime.getTime() + (pattern.overtime_threshold_minutes * 60000));
+        
+        if (checkOutTime > overtimeThresholdTime) {
+          metrics.isOvertime = true;
+          metrics.overtimeMinutes = Math.floor((checkOutTime.getTime() - scheduledEndTime.getTime()) / 60000);
+        }
+      }
+
+      console.log('Pattern-based attendance metrics:', metrics);
+    }
   }
 
   return metrics;
@@ -164,7 +166,7 @@ export const trackMissedClockOut = async () => {
 
         // Notify employee and managers about overtime
         const employee = session.employees;
-        if (employee?.user_id) {
+        if (employee && employee.user_id) {
           await sendNotification({
             user_id: employee.user_id,
             title: '⏰ Overtime Alert',
@@ -230,16 +232,18 @@ export const checkLateArrivals = async () => {
     for (const arrival of lateArrivals) {
       const employee = arrival.employees;
       
-      // Notify all managers
-      for (const manager of managers) {
-        await sendNotification({
-          user_id: manager.user_id,
-          title: '⏰ Late Arrival Alert',
-          message: `${employee.name} arrived ${arrival.late_minutes} minutes late today.`,
-          type: 'warning',
-          related_entity: 'attendance',
-          related_id: arrival.id
-        });
+      if (employee && employee.name) {
+        // Notify all managers
+        for (const manager of managers) {
+          await sendNotification({
+            user_id: manager.user_id,
+            title: '⏰ Late Arrival Alert',
+            message: `${employee.name} arrived ${arrival.late_minutes} minutes late today.`,
+            type: 'warning',
+            related_entity: 'attendance',
+            related_id: arrival.id
+          });
+        }
       }
     }
 
