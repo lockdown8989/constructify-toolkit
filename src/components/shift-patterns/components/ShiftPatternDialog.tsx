@@ -136,18 +136,16 @@ export const ShiftPatternDialog = ({
             </div>
           </div>
 
-          {/* Employee Assignment Section - Only show when editing */}
-          {editingPattern && (
-            <EmployeeAssignment
-              employees={employees}
-              selectedEmployees={selectedEmployees}
-              selectedEmployeeId={selectedEmployeeId}
-              onEmployeeIdChange={onEmployeeIdChange}
-              onAddEmployee={onAddEmployee}
-              onRemoveEmployee={onRemoveEmployee}
-              getEmployeeName={getEmployeeName}
-            />
-          )}
+          {/* Employee Assignment Section - Show for both create and edit */}
+          <EmployeeAssignment
+            employees={employees}
+            selectedEmployees={selectedEmployees}
+            selectedEmployeeId={selectedEmployeeId}
+            onEmployeeIdChange={onEmployeeIdChange}
+            onAddEmployee={onAddEmployee}
+            onRemoveEmployee={onRemoveEmployee}
+            getEmployeeName={getEmployeeName}
+          />
 
           <div className="flex flex-col sm:flex-row gap-2 pt-4">
             <Button 
