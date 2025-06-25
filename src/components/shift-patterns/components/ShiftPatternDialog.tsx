@@ -136,76 +136,18 @@ export const ShiftPatternDialog = ({
             </div>
           </div>
 
-          {/* Employee Assignment Section - Enhanced with mini menu */}
-          <div className="border-t pt-4">
-            <Label className="text-sm font-medium mb-3 block">Assign Employees</Label>
-            
-            {/* Mini Employee Menu */}
-            <div className="bg-gray-50 rounded-lg p-4 mb-4">
-              <h4 className="text-sm font-medium mb-2">Current Employees</h4>
-              <div className="max-h-32 overflow-y-auto space-y-2">
-                {employees.length > 0 ? (
-                  employees.map((employee) => (
-                    <div 
-                      key={employee.id}
-                      className="flex items-center justify-between p-2 bg-white rounded border hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">{employee.name}</span>
-                        <span className="text-xs text-gray-500">{employee.job_title || 'No title'}</span>
-                      </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant={selectedEmployees.includes(employee.id) ? "default" : "outline"}
-                        onClick={() => {
-                          if (selectedEmployees.includes(employee.id)) {
-                            onRemoveEmployee(employee.id);
-                          } else {
-                            onEmployeeIdChange(employee.id);
-                            onAddEmployee();
-                          }
-                        }}
-                        className="text-xs"
-                      >
-                        {selectedEmployees.includes(employee.id) ? 'Remove' : 'Add'}
-                      </Button>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-sm text-gray-500 text-center py-2">
-                    No employees available
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Selected Employees Display */}
-            {selectedEmployees.length > 0 && (
-              <div className="bg-blue-50 rounded-lg p-3">
-                <h5 className="text-sm font-medium mb-2 text-blue-900">
-                  Selected Employees ({selectedEmployees.length})
-                </h5>
-                <div className="flex flex-wrap gap-2">
-                  {selectedEmployees.map((employeeId) => (
-                    <div 
-                      key={employeeId}
-                      className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs"
-                    >
-                      <span>{getEmployeeName(employeeId)}</span>
-                      <button
-                        type="button"
-                        onClick={() => onRemoveEmployee(employeeId)}
-                        className="ml-1 text-blue-600 hover:text-blue-800"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Employee Assignment Section - Only show when editing */}
+          {editingPattern && (
+            <EmployeeAssignment
+              employees={employees}
+              selectedEmployees={selectedEmployees}
+              selectedEmployeeId={selectedEmployeeId}
+              onEmployeeIdChange={onEmployeeIdChange}
+              onAddEmployee={onAddEmployee}
+              onRemoveEmployee={onRemoveEmployee}
+              getEmployeeName={getEmployeeName}
+            />
+          )}
 
           <div className="flex flex-col sm:flex-row gap-2 pt-4">
             <Button 

@@ -13,7 +13,6 @@ import { usePatternEmployees } from './hooks/usePatternEmployees';
 import { useShiftPatternForm } from './hooks/useShiftPatternForm';
 import { ShiftPatternCard } from './components/ShiftPatternCard';
 import { ShiftPatternDialog } from './components/ShiftPatternDialog';
-import { sendNotification } from '@/services/notifications/notification-sender';
 
 const ShiftPatternManager = () => {
   const { data: shiftPatterns = [], isLoading } = useShiftPatterns();
@@ -56,28 +55,6 @@ const ShiftPatternManager = () => {
   const getEmployeeName = (employeeId: string) => {
     const employee = employees.find(e => e.id === employeeId);
     return employee?.name || 'Unknown Employee';
-  };
-
-  const notifyEmployees = async (employeeIds: string[], patternName: string, startTime: string, endTime: string) => {
-    console.log('Notifying employees about shift pattern assignment:', { employeeIds, patternName });
-    
-    for (const employeeId of employeeIds) {
-      const employee = employees.find(e => e.id === employeeId);
-      if (employee?.user_id) {
-        try {
-          await sendNotification({
-            user_id: employee.user_id,
-            title: '🔔 New Shift Pattern Assigned',
-            message: `You have been assigned to the "${patternName}" shift pattern (${startTime} - ${endTime}). Your schedule has been updated for the next 12 weeks.`,
-            type: 'info',
-            related_entity: 'shift_patterns'
-          });
-          console.log(`Notification sent to employee: ${employee.name}`);
-        } catch (error) {
-          console.error(`Failed to notify employee ${employee.name}:`, error);
-        }
-      }
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -125,9 +102,6 @@ const ShiftPatternManager = () => {
               weeksToGenerate: 12
             });
             
-            // Notify employees about the assignment
-            await notifyEmployees(selectedEmployees, formData.name, formData.start_time, formData.end_time);
-            
             // Manually refresh pattern employees after successful assignment
             setTimeout(() => {
               refreshPatternEmployees();
@@ -135,7 +109,7 @@ const ShiftPatternManager = () => {
             
             toast({
               title: "Success",
-              description: `Shift pattern updated and assigned to ${selectedEmployees.length} employee(s). Schedules created for the next 12 weeks and notifications sent.`,
+              description: `Shift pattern updated and assigned to ${selectedEmployees.length} employee(s). Schedules created for the next 12 weeks.`,
             });
           } catch (assignmentError) {
             console.error('Error assigning employees or creating schedules:', assignmentError);
@@ -159,47 +133,10 @@ const ShiftPatternManager = () => {
         
         console.log('Pattern created successfully:', newPattern);
         
-        // Assign employees to the new pattern if any are selected
-        if (selectedEmployees.length > 0) {
-          console.log('Assigning employees to new pattern:', selectedEmployees);
-          
-          try {
-            await assignEmployeesToPattern.mutateAsync({
-              shiftPatternId: newPattern.id,
-              employeeIds: selectedEmployees,
-            });
-            
-            // Create recurring schedules for assigned employees
-            await createRecurringSchedules.mutateAsync({
-              employeeIds: selectedEmployees,
-              shiftPatternId: newPattern.id,
-              patternName: formData.name,
-              startTime: formData.start_time,
-              endTime: formData.end_time,
-              weeksToGenerate: 12
-            });
-            
-            // Notify employees about the assignment
-            await notifyEmployees(selectedEmployees, formData.name, formData.start_time, formData.end_time);
-            
-            toast({
-              title: "Success",
-              description: `Shift pattern created and assigned to ${selectedEmployees.length} employee(s). Schedules created for the next 12 weeks and notifications sent.`,
-            });
-          } catch (assignmentError) {
-            console.error('Error assigning employees or creating schedules:', assignmentError);
-            toast({
-              title: "Pattern Created",
-              description: "Shift pattern created, but there was an issue with employee assignments. Please try again.",
-              variant: "destructive",
-            });
-          }
-        } else {
-          toast({
-            title: "Success",
-            description: "Shift pattern created successfully.",
-          });
-        }
+        toast({
+          title: "Success",
+          description: "Shift pattern created successfully.",
+        });
       }
       
       setIsCreateModalOpen(false);
