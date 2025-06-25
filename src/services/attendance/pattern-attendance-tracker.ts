@@ -163,9 +163,10 @@ export const trackMissedClockOut = async () => {
         }
 
         // Notify employee and managers about overtime
-        if (session.employees?.user_id) {
+        const employee = session.employees;
+        if (employee?.user_id) {
           await sendNotification({
-            user_id: session.employees.user_id,
+            user_id: employee.user_id,
             title: '⏰ Overtime Alert',
             message: `You have been working for ${overtimeMinutes} minutes of overtime. Please remember to clock out.`,
             type: 'warning',
@@ -174,7 +175,7 @@ export const trackMissedClockOut = async () => {
           });
         }
 
-        console.log(`Updated overtime for employee ${session.employees?.name}: ${overtimeMinutes} minutes`);
+        console.log(`Updated overtime for employee ${employee?.name}: ${overtimeMinutes} minutes`);
       }
     }
   } catch (error) {
