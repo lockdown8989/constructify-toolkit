@@ -60,7 +60,7 @@ export const trackPatternBasedAttendance = async (
     const assignment = assignments[0];
     const pattern = assignment.shift_patterns;
     
-    if (pattern) {
+    if (pattern && typeof pattern === 'object' && !Array.isArray(pattern)) {
       metrics.shiftPatternId = pattern.id;
       metrics.scheduledStart = pattern.start_time;
       metrics.scheduledEnd = pattern.end_time;
@@ -166,7 +166,7 @@ export const trackMissedClockOut = async () => {
 
         // Notify employee and managers about overtime
         const employee = session.employees;
-        if (employee && employee.user_id) {
+        if (employee && typeof employee === 'object' && !Array.isArray(employee) && employee.user_id) {
           await sendNotification({
             user_id: employee.user_id,
             title: '⏰ Overtime Alert',
@@ -177,7 +177,7 @@ export const trackMissedClockOut = async () => {
           });
         }
 
-        console.log(`Updated overtime for employee ${employee?.name}: ${overtimeMinutes} minutes`);
+        console.log(`Updated overtime for employee ${employee && typeof employee === 'object' && !Array.isArray(employee) ? employee.name : 'Unknown'}: ${overtimeMinutes} minutes`);
       }
     }
   } catch (error) {
@@ -232,7 +232,7 @@ export const checkLateArrivals = async () => {
     for (const arrival of lateArrivals) {
       const employee = arrival.employees;
       
-      if (employee && employee.name) {
+      if (employee && typeof employee === 'object' && !Array.isArray(employee) && employee.name) {
         // Notify all managers
         for (const manager of managers) {
           await sendNotification({
