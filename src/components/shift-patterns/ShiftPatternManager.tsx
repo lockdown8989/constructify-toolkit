@@ -25,7 +25,7 @@ const ShiftPatternManager = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingPattern, setEditingPattern] = useState<ShiftPattern | null>(null);
   
-  const patternEmployees = usePatternEmployees(shiftPatterns);
+  const { patternEmployees, refreshPatternEmployees } = usePatternEmployees(shiftPatterns);
   const {
     formData,
     setFormData,
@@ -94,6 +94,11 @@ const ShiftPatternManager = () => {
               weeksToGenerate: 12
             });
             
+            // Manually refresh pattern employees after successful assignment
+            setTimeout(() => {
+              refreshPatternEmployees();
+            }, 1000);
+            
             toast({
               title: "Success",
               description: `Shift pattern updated and assigned to ${selectedEmployees.length} employee(s). Schedules created for the next 12 weeks.`,
@@ -143,6 +148,8 @@ const ShiftPatternManager = () => {
     if (window.confirm('Are you sure you want to delete this shift pattern?')) {
       try {
         await deletePattern.mutateAsync(id);
+        // Refresh pattern employees after deletion
+        refreshPatternEmployees();
       } catch (error) {
         console.error('Error deleting shift pattern:', error);
       }

@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +28,21 @@ export function useCreateRecurringSchedules() {
       } = params;
 
       console.log('Creating recurring schedules with params:', params);
+
+      // First, delete any existing recurring schedules for this pattern and employees
+      console.log('Deleting existing recurring schedules for pattern:', shiftPatternId);
+      const { error: deleteError } = await supabase
+        .from('schedules')
+        .delete()
+        .eq('template_id', shiftPatternId)
+        .eq('recurring', true)
+        .eq('shift_type', 'pattern')
+        .in('employee_id', employeeIds);
+
+      if (deleteError) {
+        console.error('Error deleting existing recurring schedules:', deleteError);
+        // Don't throw error here, continue with creation
+      }
 
       const schedules = [];
       const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 }); // Start from Monday
@@ -63,20 +77,6 @@ export function useCreateRecurringSchedules() {
 
       console.log(`Generated ${schedules.length} schedule entries`);
 
-      // First, delete any existing recurring schedules for this pattern and employees
-      if (schedules.length > 0) {
-        const { error: deleteError } = await supabase
-          .from('schedules')
-          .delete()
-          .eq('template_id', shiftPatternId)
-          .eq('recurring', true)
-          .in('employee_id', employeeIds);
-
-        if (deleteError) {
-          console.error('Error deleting existing recurring schedules:', deleteError);
-        }
-      }
-
       // Insert all schedules in batches
       const batchSize = 100;
       const results = [];
@@ -102,8 +102,17 @@ export function useCreateRecurringSchedules() {
       return results;
     },
     onSuccess: (data, variables) => {
+      // Invalidate multiple query keys to ensure all related data is refreshed
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
+      queryClient.invalidateQueries({ queryKey: ['shift-patterns'] });
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      
       console.log(`Recurring schedules created successfully: ${data.length} schedules for ${variables.employeeIds.length} employees`);
+      
+      // Force a refetch after a short delay to ensure data consistency
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['schedules'] });
+      }, 500);
     },
     onError: (error) => {
       console.error('Failed to create recurring schedules:', error);
