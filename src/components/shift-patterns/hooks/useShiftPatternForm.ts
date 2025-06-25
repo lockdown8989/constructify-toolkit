@@ -45,6 +45,7 @@ export const useShiftPatternForm = () => {
       grace_period_minutes: pattern.grace_period_minutes,
       overtime_threshold_minutes: pattern.overtime_threshold_minutes,
     });
+    // Reset selected employees - they will be loaded from the pattern employees data
     setSelectedEmployees([]);
     setSelectedEmployeeId('');
   };
@@ -60,6 +61,11 @@ export const useShiftPatternForm = () => {
     setSelectedEmployees(prev => prev.filter(id => id !== employeeId));
   };
 
+  // New function to load existing employee assignments
+  const loadExistingEmployeeAssignments = (employeeIds: string[]) => {
+    setSelectedEmployees(employeeIds);
+  };
+
   return {
     formData,
     setFormData,
@@ -70,5 +76,6 @@ export const useShiftPatternForm = () => {
     loadPatternData,
     handleAddEmployee,
     handleRemoveEmployee,
+    loadExistingEmployeeAssignments,
   };
 };

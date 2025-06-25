@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Clock } from 'lucide-react';
@@ -38,7 +38,16 @@ const ShiftPatternManager = () => {
     loadPatternData,
     handleAddEmployee,
     handleRemoveEmployee,
+    loadExistingEmployeeAssignments,
   } = useShiftPatternForm();
+
+  // Load existing employee assignments when editing a pattern
+  useEffect(() => {
+    if (editingPattern && patternEmployees[editingPattern.id]) {
+      const assignedEmployeeIds = patternEmployees[editingPattern.id].map(emp => emp.id);
+      loadExistingEmployeeAssignments(assignedEmployeeIds);
+    }
+  }, [editingPattern, patternEmployees, loadExistingEmployeeAssignments]);
 
   const handleCreate = () => {
     setEditingPattern(null);
@@ -82,17 +91,17 @@ const ShiftPatternManager = () => {
         
         console.log('Pattern updated successfully:', updatedPattern);
         
-        // Assign employees to the pattern using the new assignment system
-        if (selectedEmployees.length > 0) {
-          console.log('Assigning employees to pattern:', selectedEmployees);
+        // Always assign employees to the pattern, even if the array is empty (to clear existing assignments)
+        console.log('Assigning employees to pattern:', selectedEmployees);
+        
+        try {
+          await assignEmployeesToPattern.mutateAsync({
+            shiftPatternId: editingPattern.id,
+            employeeIds: selectedEmployees,
+          });
           
-          try {
-            await assignEmployeesToPattern.mutateAsync({
-              shiftPatternId: editingPattern.id,
-              employeeIds: selectedEmployees,
-            });
-            
-            // Create recurring schedules for assigned employees
+          // Create recurring schedules only if there are selected employees
+          if (selectedEmployees.length > 0) {
             await createRecurringSchedules.mutateAsync({
               employeeIds: selectedEmployees,
               shiftPatternId: editingPattern.id,
@@ -102,27 +111,28 @@ const ShiftPatternManager = () => {
               weeksToGenerate: 12
             });
             
-            // Manually refresh pattern employees after successful assignment
-            setTimeout(() => {
-              refreshPatternEmployees();
-            }, 1000);
-            
             toast({
               title: "Success",
               description: `Shift pattern updated and assigned to ${selectedEmployees.length} employee(s). Schedules created for the next 12 weeks.`,
             });
-          } catch (assignmentError) {
-            console.error('Error assigning employees or creating schedules:', assignmentError);
+          } else {
             toast({
-              title: "Pattern Updated",
-              description: "Shift pattern updated, but there was an issue with employee assignments. Please try again.",
-              variant: "destructive",
+              title: "Success",
+              description: "Shift pattern updated and all employee assignments cleared.",
             });
           }
-        } else {
+          
+          // Manually refresh pattern employees after successful assignment
+          setTimeout(() => {
+            refreshPatternEmployees();
+          }, 1000);
+          
+        } catch (assignmentError) {
+          console.error('Error assigning employees or creating schedules:', assignmentError);
           toast({
-            title: "Success",
-            description: "Shift pattern updated successfully.",
+            title: "Pattern Updated",
+            description: "Shift pattern updated, but there was an issue with employee assignments. Please try again.",
+            variant: "destructive",
           });
         }
       } else {
