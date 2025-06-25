@@ -17,16 +17,15 @@ export const usePatternEmployees = (shiftPatterns: ShiftPattern[]) => {
     
     for (const pattern of shiftPatterns) {
       try {
-        // Get employees assigned to this pattern via recurring schedules
-        const { data: schedules, error } = await supabase
-          .from('schedules')
+        // Get employees assigned to this pattern via the new assignments table
+        const { data: assignments, error } = await supabase
+          .from('shift_pattern_assignments')
           .select(`
             employee_id,
             employees!inner(id, name, job_title)
           `)
-          .eq('template_id', pattern.id)
-          .eq('recurring', true)
-          .eq('shift_type', 'pattern');
+          .eq('shift_pattern_id', pattern.id)
+          .eq('is_active', true);
 
         if (error) {
           console.error('Error fetching pattern employees for pattern', pattern.id, ':', error);
@@ -34,16 +33,10 @@ export const usePatternEmployees = (shiftPatterns: ShiftPattern[]) => {
           continue;
         }
 
-        console.log('Raw schedules data for pattern', pattern.id, ':', schedules);
+        console.log('Raw assignments data for pattern', pattern.id, ':', assignments);
 
-        // Get unique employees for this pattern
-        const uniqueEmployees = schedules?.reduce((acc: any[], schedule: any) => {
-          const employee = schedule.employees;
-          if (employee && !acc.find(emp => emp.id === employee.id)) {
-            acc.push(employee);
-          }
-          return acc;
-        }, []) || [];
+        // Extract unique employees for this pattern
+        const uniqueEmployees = assignments?.map(assignment => assignment.employees).filter(Boolean) || [];
 
         console.log('Unique employees for pattern', pattern.id, ':', uniqueEmployees);
         patternEmployeeMap[pattern.id] = uniqueEmployees;
@@ -61,22 +54,45 @@ export const usePatternEmployees = (shiftPatterns: ShiftPattern[]) => {
     fetchPatternEmployees();
   }, [shiftPatterns]);
 
-  // Listen for schedule changes to refetch data
+  // Listen for changes in shift pattern assignments
   useEffect(() => {
     const invalidateAndRefetch = () => {
-      console.log('Schedules data changed, refetching pattern employees');
+      console.log('Shift pattern assignments changed, refetching pattern employees');
       fetchPatternEmployees();
     };
 
     // Listen for query invalidation
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      if (event.query.queryKey[0] === 'schedules') {
+      if (event.query.queryKey[0] === 'shift_pattern_assignments' || event.query.queryKey[0] === 'schedules') {
         invalidateAndRefetch();
       }
     });
 
     return unsubscribe;
   }, [queryClient, shiftPatterns]);
+
+  // Set up real-time subscription for shift pattern assignments
+  useEffect(() => {
+    const channel = supabase
+      .channel('shift_pattern_assignments_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',  // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'shift_pattern_assignments'
+        },
+        (payload) => {
+          console.log('Real-time shift pattern assignment change:', payload);
+          fetchPatternEmployees();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [shiftPatterns]);
 
   // Manual refresh function
   const refreshPatternEmployees = () => {

@@ -6,6 +6,7 @@ import { Plus, Clock } from 'lucide-react';
 import { useShiftPatterns, useCreateShiftPattern, useUpdateShiftPattern, useDeleteShiftPattern } from '@/hooks/use-shift-patterns';
 import { useEmployees } from '@/hooks/use-employees';
 import { useCreateRecurringSchedules } from '@/hooks/use-recurring-schedules';
+import { useAssignEmployeesToPattern } from '@/hooks/use-shift-pattern-assignments';
 import { ShiftPattern } from '@/types/shift-patterns';
 import { useToast } from '@/hooks/use-toast';
 import { usePatternEmployees } from './hooks/usePatternEmployees';
@@ -20,6 +21,7 @@ const ShiftPatternManager = () => {
   const updatePattern = useUpdateShiftPattern();
   const deletePattern = useDeleteShiftPattern();
   const createRecurringSchedules = useCreateRecurringSchedules();
+  const assignEmployeesToPattern = useAssignEmployeesToPattern();
   const { toast } = useToast();
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -80,11 +82,17 @@ const ShiftPatternManager = () => {
         
         console.log('Pattern updated successfully:', updatedPattern);
         
-        // Create recurring schedules for assigned employees if any are selected
+        // Assign employees to the pattern using the new assignment system
         if (selectedEmployees.length > 0) {
-          console.log('Creating recurring schedules for employees:', selectedEmployees);
+          console.log('Assigning employees to pattern:', selectedEmployees);
           
           try {
+            await assignEmployeesToPattern.mutateAsync({
+              shiftPatternId: editingPattern.id,
+              employeeIds: selectedEmployees,
+            });
+            
+            // Create recurring schedules for assigned employees
             await createRecurringSchedules.mutateAsync({
               employeeIds: selectedEmployees,
               shiftPatternId: editingPattern.id,
@@ -103,11 +111,11 @@ const ShiftPatternManager = () => {
               title: "Success",
               description: `Shift pattern updated and assigned to ${selectedEmployees.length} employee(s). Schedules created for the next 12 weeks.`,
             });
-          } catch (scheduleError) {
-            console.error('Error creating recurring schedules:', scheduleError);
+          } catch (assignmentError) {
+            console.error('Error assigning employees or creating schedules:', assignmentError);
             toast({
               title: "Pattern Updated",
-              description: "Shift pattern updated, but there was an issue creating the recurring schedules. Please try assigning employees again.",
+              description: "Shift pattern updated, but there was an issue with employee assignments. Please try again.",
               variant: "destructive",
             });
           }
@@ -156,7 +164,7 @@ const ShiftPatternManager = () => {
     }
   };
 
-  const isDialogLoading = createPattern.isPending || updatePattern.isPending || createRecurringSchedules.isPending;
+  const isDialogLoading = createPattern.isPending || updatePattern.isPending || createRecurringSchedules.isPending || assignEmployeesToPattern.isPending;
 
   if (isLoading) {
     return <div className="p-4">Loading shift patterns...</div>;
