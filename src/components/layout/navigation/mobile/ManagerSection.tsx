@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Users, CalendarDays, Building2, Clock, DollarSign, Briefcase, Timer } from 'lucide-react';
-import { MobileNavLink } from './MobileNavLink';
+import MobileNavLink from './MobileNavLink';
 
 export const ManagerSection = () => {
   return (
