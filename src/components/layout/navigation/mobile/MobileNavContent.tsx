@@ -92,7 +92,10 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
                       Management
                     </p>
                   </div>
-                  <ManagerSection />
+                  <ManagerSection 
+                    hasManagerialAccess={actualManagerialAccess}
+                    onClose={onClose} 
+                  />
                 </>
               )}
               
