@@ -6,7 +6,7 @@ import { useTimeClock } from '@/hooks/time-clock';
 import MobileNavHeader from './MobileNavHeader';
 import TimeClocksSection from './TimeClocksSection';
 import CommonSection from './CommonSection';
-import { ManagerSection } from './ManagerSection';
+import ManagerSection from './ManagerSection';
 import WorkflowSection from './WorkflowSection';
 import ClockingControls from './ClockingControls';
 import MobileNavDivider from './MobileNavDivider';

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -6,7 +7,7 @@ import { useTimeClock } from "@/hooks/time-clock";
 
 import SidebarHeader from './sidebar/SidebarHeader';
 import TimeClockControls from './sidebar/TimeClockControls';
-import { NavigationLinks } from './sidebar/NavigationLinks';
+import NavigationLinks from './sidebar/NavigationLinks';
 
 interface DesktopSidebarProps {
   isAuthenticated: boolean;
