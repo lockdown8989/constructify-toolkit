@@ -1956,6 +1956,54 @@ export type Database = {
           },
         ]
       }
+      shift_pattern_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          created_at: string | null
+          employee_id: string
+          id: string
+          is_active: boolean | null
+          shift_pattern_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          is_active?: boolean | null
+          shift_pattern_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          is_active?: boolean | null
+          shift_pattern_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_pattern_assignments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_pattern_assignments_shift_pattern_id_fkey"
+            columns: ["shift_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "shift_patterns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shift_patterns: {
         Row: {
           break_duration: number

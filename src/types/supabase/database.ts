@@ -92,6 +92,39 @@ export interface Database {
         }>;
         Relationships: [];
       };
+      shift_pattern_assignments: {
+        Row: {
+          id: string;
+          shift_pattern_id: string;
+          employee_id: string;
+          assigned_at: string;
+          assigned_by: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          shift_pattern_id: string;
+          employee_id: string;
+          assigned_at?: string;
+          assigned_by?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<{
+          id: string;
+          shift_pattern_id: string;
+          employee_id: string;
+          assigned_at: string;
+          assigned_by: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        }>;
+        Relationships: [];
+      };
       open_shifts: {
         Row: OpenShiftType;
         Insert: Omit<OpenShiftType, 'id' | 'created_at'> & { id?: string; created_at?: string };
