@@ -25,6 +25,23 @@ export const EmployeeAssignment = ({
   onRemoveEmployee,
   getEmployeeName,
 }: EmployeeAssignmentProps) => {
+  // Filter out employees that are already selected
+  const availableEmployees = employees.filter(emp => 
+    emp && emp.id && !selectedEmployees.includes(emp.id)
+  );
+
+  const handleAddEmployee = () => {
+    console.log('Add employee clicked, selectedEmployeeId:', selectedEmployeeId);
+    if (selectedEmployeeId && selectedEmployeeId.trim() !== '') {
+      onAddEmployee();
+    }
+  };
+
+  const handleEmployeeChange = (value: string) => {
+    console.log('Employee selection changed to:', value);
+    onEmployeeIdChange(value);
+  };
+
   return (
     <div className="space-y-4 border-t pt-4">
       <h4 className="font-medium flex items-center gap-2 text-base">
@@ -33,24 +50,30 @@ export const EmployeeAssignment = ({
       </h4>
       
       <div className="flex flex-col sm:flex-row gap-2">
-        <Select value={selectedEmployeeId} onValueChange={onEmployeeIdChange}>
-          <SelectTrigger className="flex-1">
-            <SelectValue placeholder="Choose an employee..." />
-          </SelectTrigger>
-          <SelectContent>
-            {employees
-              .filter(emp => !selectedEmployees.includes(emp.id))
-              .map((employee) => (
-                <SelectItem key={employee.id} value={employee.id}>
-                  {employee.name} - {employee.job_title}
+        <div className="flex-1">
+          <Select value={selectedEmployeeId || ''} onValueChange={handleEmployeeChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Choose an employee..." />
+            </SelectTrigger>
+            <SelectContent>
+              {availableEmployees.length === 0 ? (
+                <SelectItem value="no-employees" disabled>
+                  {employees.length === 0 ? 'No employees available' : 'All employees already assigned'}
                 </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
+              ) : (
+                availableEmployees.map((employee) => (
+                  <SelectItem key={employee.id} value={employee.id}>
+                    {employee.name} - {employee.job_title || 'No Title'}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        </div>
         <Button 
           type="button"
-          onClick={onAddEmployee}
-          disabled={!selectedEmployeeId}
+          onClick={handleAddEmployee}
+          disabled={!selectedEmployeeId || selectedEmployeeId.trim() === '' || availableEmployees.length === 0}
           size="sm"
           className="sm:w-auto w-full"
         >

@@ -51,18 +51,34 @@ export const useShiftPatternForm = () => {
   };
 
   const handleAddEmployee = () => {
-    if (selectedEmployeeId && !selectedEmployees.includes(selectedEmployeeId)) {
-      setSelectedEmployees(prev => [...prev, selectedEmployeeId]);
-      setSelectedEmployeeId('');
+    console.log('handleAddEmployee called with selectedEmployeeId:', selectedEmployeeId);
+    console.log('Current selectedEmployees:', selectedEmployees);
+    
+    if (selectedEmployeeId && selectedEmployeeId.trim() !== '' && !selectedEmployees.includes(selectedEmployeeId)) {
+      console.log('Adding employee:', selectedEmployeeId);
+      setSelectedEmployees(prev => {
+        const newList = [...prev, selectedEmployeeId];
+        console.log('New selectedEmployees list:', newList);
+        return newList;
+      });
+      setSelectedEmployeeId(''); // Clear selection after adding
+    } else {
+      console.log('Employee not added - either empty ID or already selected');
     }
   };
 
   const handleRemoveEmployee = (employeeId: string) => {
-    setSelectedEmployees(prev => prev.filter(id => id !== employeeId));
+    console.log('Removing employee:', employeeId);
+    setSelectedEmployees(prev => {
+      const newList = prev.filter(id => id !== employeeId);
+      console.log('New selectedEmployees list after removal:', newList);
+      return newList;
+    });
   };
 
   // New function to load existing employee assignments
   const loadExistingEmployeeAssignments = (employeeIds: string[]) => {
+    console.log('Loading existing employee assignments:', employeeIds);
     setSelectedEmployees(employeeIds);
   };
 
