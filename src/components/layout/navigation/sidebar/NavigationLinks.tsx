@@ -17,7 +17,7 @@ import {
   Briefcase
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import SidebarNavLink from './SidebarNavLink';
+import { SidebarNavLink } from './SidebarNavLink';
 
 export const NavigationLinks = () => {
   const { isAdmin, isManager, isHR, isPayroll } = useAuth();
