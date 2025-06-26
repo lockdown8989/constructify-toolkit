@@ -51,19 +51,29 @@ export const useShiftPatternForm = () => {
   };
 
   const handleAddEmployee = () => {
-    console.log('handleAddEmployee called with selectedEmployeeId:', selectedEmployeeId);
-    console.log('Current selectedEmployees:', selectedEmployees);
+    console.log('useShiftPatternForm handleAddEmployee called:', {
+      selectedEmployeeId,
+      currentSelectedEmployees: selectedEmployees,
+      isAlreadySelected: selectedEmployees.includes(selectedEmployeeId)
+    });
     
     if (selectedEmployeeId && selectedEmployeeId.trim() !== '' && !selectedEmployees.includes(selectedEmployeeId)) {
-      console.log('Adding employee:', selectedEmployeeId);
+      console.log('Adding employee to selectedEmployees:', selectedEmployeeId);
       setSelectedEmployees(prev => {
         const newList = [...prev, selectedEmployeeId];
-        console.log('New selectedEmployees list:', newList);
+        console.log('Updated selectedEmployees:', newList);
         return newList;
       });
-      setSelectedEmployeeId(''); // Clear selection after adding
+      
+      // Clear the selection after adding
+      console.log('Clearing selectedEmployeeId');
+      setSelectedEmployeeId('');
     } else {
-      console.log('Employee not added - either empty ID or already selected');
+      console.log('Employee not added - conditions not met:', {
+        hasSelectedEmployeeId: !!selectedEmployeeId,
+        isNotEmpty: selectedEmployeeId?.trim() !== '',
+        isNotAlreadySelected: !selectedEmployees.includes(selectedEmployeeId)
+      });
     }
   };
 

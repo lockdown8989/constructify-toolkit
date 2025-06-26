@@ -25,21 +25,35 @@ export const EmployeeAssignment = ({
   onRemoveEmployee,
   getEmployeeName,
 }: EmployeeAssignmentProps) => {
+  console.log('EmployeeAssignment render:', {
+    employees: employees?.length || 0,
+    selectedEmployees,
+    selectedEmployeeId,
+    availableEmployeesCount: employees?.filter(emp => emp && emp.id && !selectedEmployees.includes(emp.id))?.length || 0
+  });
+
   // Filter out employees that are already selected
   const availableEmployees = employees.filter(emp => 
     emp && emp.id && !selectedEmployees.includes(emp.id)
   );
 
   const handleAddEmployee = () => {
-    console.log('Add employee clicked, selectedEmployeeId:', selectedEmployeeId);
-    if (selectedEmployeeId && selectedEmployeeId.trim() !== '') {
+    console.log('EmployeeAssignment handleAddEmployee called:', {
+      selectedEmployeeId,
+      canAdd: selectedEmployeeId && selectedEmployeeId.trim() !== '' && selectedEmployeeId !== 'no-employees'
+    });
+    
+    if (selectedEmployeeId && selectedEmployeeId.trim() !== '' && selectedEmployeeId !== 'no-employees') {
+      console.log('Calling onAddEmployee');
       onAddEmployee();
     }
   };
 
   const handleEmployeeChange = (value: string) => {
-    console.log('Employee selection changed to:', value);
-    onEmployeeIdChange(value);
+    console.log('Employee selection changed:', { value, isValidSelection: value !== 'no-employees' });
+    if (value !== 'no-employees') {
+      onEmployeeIdChange(value);
+    }
   };
 
   return (
@@ -55,7 +69,7 @@ export const EmployeeAssignment = ({
             <SelectTrigger>
               <SelectValue placeholder="Choose an employee..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white z-50">
               {availableEmployees.length === 0 ? (
                 <SelectItem value="no-employees" disabled>
                   {employees.length === 0 ? 'No employees available' : 'All employees already assigned'}
@@ -73,7 +87,7 @@ export const EmployeeAssignment = ({
         <Button 
           type="button"
           onClick={handleAddEmployee}
-          disabled={!selectedEmployeeId || selectedEmployeeId.trim() === '' || availableEmployees.length === 0}
+          disabled={!selectedEmployeeId || selectedEmployeeId.trim() === '' || selectedEmployeeId === 'no-employees' || availableEmployees.length === 0}
           size="sm"
           className="sm:w-auto w-full"
         >
