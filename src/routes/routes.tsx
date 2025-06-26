@@ -28,6 +28,7 @@ import Profile from '@/pages/Profile';
 import Hiring from '@/pages/Hiring';
 import About from '@/pages/About';
 import NotFound from '@/pages/NotFound';
+import ShiftPatterns from '@/pages/ShiftPatterns';
 
 // Import the ShiftCalendar component
 import ShiftCalendar from '@/components/schedule/ShiftCalendar';
@@ -91,6 +92,14 @@ const AppRoutes = () => {
             element={
               <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
                 <ShiftCalendar />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/shift-patterns"
+            element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <ShiftPatterns />
               </ProtectedRoute>
             }
           />

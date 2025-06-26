@@ -1,71 +1,18 @@
 
-import { Users, Calendar, Receipt, ClipboardCheck, Clock, BarChart3, Settings } from "lucide-react";
-import MobileNavLink from "./MobileNavLink";
+import React from 'react';
+import { Users, CalendarDays, Building2, Clock, DollarSign, Briefcase, Timer } from 'lucide-react';
+import { MobileNavLink } from './MobileNavLink';
 
-interface ManagerSectionProps {
-  hasManagerialAccess: boolean;
-  onClose: () => void;
-}
-
-const ManagerSection = ({ hasManagerialAccess, onClose }: ManagerSectionProps) => {
-  console.log("🎯 ManagerSection render - hasManagerialAccess:", hasManagerialAccess);
-  
-  if (!hasManagerialAccess) {
-    console.log("❌ No managerial access - not rendering manager section");
-    return null;
-  }
-  
-  console.log("✅ Rendering manager navigation section");
-  
+export const ManagerSection = () => {
   return (
     <>
-      <MobileNavLink
-        to="/people"
-        icon={Users}
-        label="👥 Team Members"
-        onClick={onClose}
-      />
-      
-      <MobileNavLink
-        to="/restaurant-schedule"
-        icon={Clock}
-        label="🕐 Restaurant Schedule"
-        onClick={onClose}
-      />
-      
-      <MobileNavLink
-        to="/schedule"
-        icon={Calendar}
-        label="📆 Schedule Calendar"
-        onClick={onClose}
-      />
-
-      <MobileNavLink
-        to="/shift-calendar"
-        icon={Calendar}
-        label="📅 Shift Calendar"
-        onClick={onClose}
-      />
-
-      <MobileNavLink
-        to="/shift-patterns"
-        icon={Settings}
-        label="⚙️ Shift Patterns"
-        onClick={onClose}
-      />
-
-      <MobileNavLink
-        to="/manager-time-clock"
-        icon={Clock}
-        label="⏰ Manager Time Clock"
-        onClick={() => {
-          console.log("🚀 Navigating to manager time clock");
-          onClose();
-        }}
-        className="time-clock-nav-button bg-blue-50 border-l-4 border-l-blue-500 font-semibold"
-      />
+      <MobileNavLink to="/people" icon={Users} label="People" />
+      <MobileNavLink to="/shift-calendar" icon={CalendarDays} label="Shift Calendar" />
+      <MobileNavLink to="/shift-patterns" icon={Timer} label="Shift Patterns" />
+      <MobileNavLink to="/restaurant-schedule" icon={Building2} label="Restaurant Schedule" />
+      <MobileNavLink to="/manager-time-clock" icon={Clock} label="Manager Time Clock" />
+      <MobileNavLink to="/payroll" icon={DollarSign} label="Payroll" />
+      <MobileNavLink to="/hiring" icon={Briefcase} label="Hiring" />
     </>
   );
 };
-
-export default ManagerSection;
