@@ -25,9 +25,13 @@ export const RotaCalendarSync: React.FC<RotaCalendarSyncProps> = ({
   const patternsWithEmployees = shiftPatterns.filter(
     pattern => patternEmployees[pattern.id]?.length > 0
   ).length;
-  const totalEmployees = Object.values(patternEmployees).reduce(
-    (sum, employees) => sum + employees.length, 0
-  );
+  
+  // Calculate unique employees across all patterns
+  const uniqueEmployeeIds = new Set<string>();
+  Object.values(patternEmployees).forEach(employees => {
+    employees.forEach(emp => uniqueEmployeeIds.add(emp.id));
+  });
+  const totalEmployees = uniqueEmployeeIds.size;
 
   return (
     <Card>

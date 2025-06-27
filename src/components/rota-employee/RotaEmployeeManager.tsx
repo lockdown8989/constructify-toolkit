@@ -9,88 +9,11 @@ import { useCreateRecurringSchedules } from '@/hooks/use-recurring-schedules';
 import { useAssignEmployeesToPattern } from '@/hooks/use-shift-pattern-assignments';
 import { ShiftPattern } from '@/types/shift-patterns';
 import { useToast } from '@/hooks/use-toast';
+import { usePatternEmployees } from '../shift-patterns/hooks/usePatternEmployees';
+import { useShiftPatternForm } from '../shift-patterns/hooks/useShiftPatternForm';
 import { RotaPatternCard } from './components/RotaPatternCard';
 import { RotaPatternDialog } from './components/RotaPatternDialog';
 import { RotaCalendarSync } from './components/RotaCalendarSync';
-
-// Simple hook to manage pattern employees if the original is missing
-const usePatternEmployees = (shiftPatterns: ShiftPattern[]) => {
-  const [patternEmployees, setPatternEmployees] = useState<Record<string, any[]>>({});
-  
-  const refreshPatternEmployees = () => {
-    // Simple implementation - you can enhance this later
-    console.log('Refreshing pattern employees');
-  };
-
-  return { patternEmployees, refreshPatternEmployees };
-};
-
-// Simple hook for shift pattern form if the original is missing  
-const useShiftPatternForm = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    start_time: '09:00',
-    end_time: '17:00',
-    break_duration: 30,
-    grace_period_minutes: 15,
-    overtime_threshold_minutes: 15,
-  });
-  
-  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      start_time: '09:00',
-      end_time: '17:00',
-      break_duration: 30,
-      grace_period_minutes: 15,
-      overtime_threshold_minutes: 15,
-    });
-    setSelectedEmployees([]);
-    setSelectedEmployeeId('');
-  };
-
-  const loadPatternData = (pattern: ShiftPattern) => {
-    setFormData({
-      name: pattern.name,
-      start_time: pattern.start_time,
-      end_time: pattern.end_time,
-      break_duration: pattern.break_duration,
-      grace_period_minutes: pattern.grace_period_minutes,
-      overtime_threshold_minutes: pattern.overtime_threshold_minutes,
-    });
-  };
-
-  const handleAddEmployee = () => {
-    if (selectedEmployeeId && !selectedEmployees.includes(selectedEmployeeId)) {
-      setSelectedEmployees([...selectedEmployees, selectedEmployeeId]);
-      setSelectedEmployeeId('');
-    }
-  };
-
-  const handleRemoveEmployee = (employeeId: string) => {
-    setSelectedEmployees(selectedEmployees.filter(id => id !== employeeId));
-  };
-
-  const loadExistingEmployeeAssignments = (employeeIds: string[]) => {
-    setSelectedEmployees(employeeIds);
-  };
-
-  return {
-    formData,
-    setFormData,
-    selectedEmployees,
-    selectedEmployeeId,
-    setSelectedEmployeeId,
-    resetForm,
-    loadPatternData,
-    handleAddEmployee,
-    handleRemoveEmployee,
-    loadExistingEmployeeAssignments,
-  };
-};
 
 const RotaEmployeeManager = () => {
   const { data: shiftPatterns = [], isLoading } = useShiftPatterns();
@@ -228,10 +151,28 @@ const RotaEmployeeManager = () => {
         // Create new pattern
         const newPattern = await createPattern.mutateAsync(formData);
         
-        toast({
-          title: "Success",
-          description: "Rota pattern created successfully.",
-        });
+        // If we have selected employees, assign them to the new pattern
+        if (selectedEmployees.length > 0 && newPattern) {
+          await assignEmployeesToPattern.mutateAsync({
+            shiftPatternId: newPattern.id,
+            employeeIds: selectedEmployees,
+          });
+          
+          toast({
+            title: "Success",
+            description: `Rota pattern created and assigned to ${selectedEmployees.length} employee(s).`,
+          });
+          
+          // Refresh pattern employees after successful assignment
+          setTimeout(() => {
+            refreshPatternEmployees();
+          }, 1000);
+        } else {
+          toast({
+            title: "Success",
+            description: "Rota pattern created successfully.",
+          });
+        }
       }
       
       setIsCreateModalOpen(false);
