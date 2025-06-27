@@ -43,7 +43,7 @@ export const NavigationLinks = () => {
         <>
           <SidebarNavLink to="/people" icon={Users} label="People" isActive={isActive('/people')} isCollapsed={false} />
           <SidebarNavLink to="/shift-calendar" icon={CalendarDays} label="Shift Calendar" isActive={isActive('/shift-calendar')} isCollapsed={false} />
-          <SidebarNavLink to="/shift-patterns" icon={Timer} label="Shift Patterns" isActive={isActive('/shift-patterns')} isCollapsed={false} />
+          <SidebarNavLink to="/rota-employee" icon={Timer} label="Rota Employee" isActive={isActive('/rota-employee')} isCollapsed={false} />
           <SidebarNavLink to="/restaurant-schedule" icon={Building2} label="Restaurant Schedule" isActive={isActive('/restaurant-schedule')} isCollapsed={false} />
           <SidebarNavLink to="/manager-time-clock" icon={Clock} label="Manager Time Clock" isActive={isActive('/manager-time-clock')} isCollapsed={false} />
         </>
