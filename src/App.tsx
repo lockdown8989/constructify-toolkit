@@ -17,6 +17,7 @@ import PayrollDashboard from './pages/PayrollDashboard';
 import Payslips from './pages/Payslips';
 import Schedule from './pages/Schedule';
 import ShiftPatterns from './pages/ShiftPatterns';
+import RotaEmployee from './pages/RotaEmployee';
 import RestaurantSchedule from './pages/RestaurantSchedule';
 import ShiftCalendar from './pages/ShiftCalendar';
 import EmployeeWorkflow from './pages/EmployeeWorkflow';
@@ -97,6 +98,11 @@ const AppContent = () => {
           <Route path="shift-patterns" element={
             <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
               <ShiftPatterns />
+            </ProtectedRoute>
+          } />
+          <Route path="rota-employee" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+              <RotaEmployee />
             </ProtectedRoute>
           } />
           <Route path="restaurant-schedule" element={
