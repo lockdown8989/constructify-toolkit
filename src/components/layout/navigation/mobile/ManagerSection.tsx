@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, CalendarDays, Building2, Clock, DollarSign, Timer } from 'lucide-react';
+import { Users, CalendarDays, Building2, Clock, Timer } from 'lucide-react';
 import MobileNavLink from './MobileNavLink';
 
 export const ManagerSection = () => {
@@ -11,7 +11,6 @@ export const ManagerSection = () => {
       <MobileNavLink to="/shift-patterns" icon={Timer} label="Shift Patterns" />
       <MobileNavLink to="/restaurant-schedule" icon={Building2} label="Restaurant Schedule" />
       <MobileNavLink to="/manager-time-clock" icon={Clock} label="Manager Time Clock" />
-      <MobileNavLink to="/payroll" icon={DollarSign} label="Payroll" />
     </>
   );
 };

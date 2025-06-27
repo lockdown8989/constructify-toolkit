@@ -46,13 +46,13 @@ export const NavigationLinks = () => {
           <SidebarNavLink to="/shift-patterns" icon={Timer} label="Shift Patterns" isActive={isActive('/shift-patterns')} isCollapsed={false} />
           <SidebarNavLink to="/restaurant-schedule" icon={Building2} label="Restaurant Schedule" isActive={isActive('/restaurant-schedule')} isCollapsed={false} />
           <SidebarNavLink to="/manager-time-clock" icon={Clock} label="Manager Time Clock" isActive={isActive('/manager-time-clock')} isCollapsed={false} />
-          <SidebarNavLink to="/payroll" icon={DollarSign} label="Payroll" isActive={isActive('/payroll')} isCollapsed={false} />
         </>
       )}
 
-      {/* Payroll Specific Items */}
+      {/* Payroll Specific Items - Only for dedicated payroll users */}
       {isPayroll && (
         <>
+          <SidebarNavLink to="/payroll" icon={DollarSign} label="Payroll" isActive={isActive('/payroll')} isCollapsed={false} />
           <SidebarNavLink to="/payroll-dashboard" icon={BarChart3} label="Payroll Dashboard" isActive={isActive('/payroll-dashboard')} isCollapsed={false} />
           <SidebarNavLink to="/payslips" icon={FileText} label="Payslips" isActive={isActive('/payslips')} isCollapsed={false} />
         </>

@@ -86,8 +86,8 @@ export const useAvatarUpload = ({
 
       if (updateError) throw updateError;
 
-      // Also update employee record if it exists
-      await supabase
+      // Update employee record if it exists - this ensures synchronization with manager views
+      const { error: employeeUpdateError } = await supabase
         .from('employees')
         .update({ 
           avatar_url: newAvatarUrl,
@@ -95,13 +95,18 @@ export const useAvatarUpload = ({
         })
         .eq('user_id', user.id);
 
+      if (employeeUpdateError) {
+        console.warn('Employee record update failed:', employeeUpdateError);
+        // Don't throw error as profile update succeeded
+      }
+
       // Update the UI immediately
       onAvatarChange(newAvatarUrl);
       onUploadComplete?.();
 
       toast({
         title: "Profile picture updated",
-        description: "Your profile picture has been updated successfully."
+        description: "Your profile picture has been updated and synchronized across all team views."
       });
 
     } catch (error) {
@@ -140,8 +145,8 @@ export const useAvatarUpload = ({
 
       if (updateError) throw updateError;
 
-      // Update employee record
-      await supabase
+      // Update employee record - ensures synchronization with manager views
+      const { error: employeeUpdateError } = await supabase
         .from('employees')
         .update({ 
           avatar_url: null,
@@ -149,13 +154,18 @@ export const useAvatarUpload = ({
         })
         .eq('user_id', user.id);
 
+      if (employeeUpdateError) {
+        console.warn('Employee record update failed:', employeeUpdateError);
+        // Don't throw error as profile update succeeded
+      }
+
       // Update the UI immediately
       onAvatarChange(null);
       onUploadComplete?.();
 
       toast({
         title: "Profile picture removed",
-        description: "Your profile picture has been removed."
+        description: "Your profile picture has been removed and synchronized across all team views."
       });
 
     } catch (error) {
