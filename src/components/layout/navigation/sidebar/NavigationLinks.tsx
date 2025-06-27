@@ -13,51 +13,53 @@ import {
   CalendarDays,
   ClipboardList,
   Building2,
-  Timer,
-  Briefcase
+  Timer
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useLocation } from 'react-router-dom';
 import SidebarNavLink from './SidebarNavLink';
 
 export const NavigationLinks = () => {
   const { isAdmin, isManager, isHR, isPayroll } = useAuth();
   const hasManagerAccess = isAdmin || isManager || isHR;
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <div className="space-y-1">
       {/* Common Navigation Items */}
-      <SidebarNavLink to="/dashboard" icon={BarChart3} label="Dashboard" />
-      <SidebarNavLink to="/schedule" icon={Calendar} label="Schedule" />
-      <SidebarNavLink to="/time-clock" icon={Clock} label="Time Clock" />
-      <SidebarNavLink to="/attendance" icon={UserCheck} label="Attendance" />
-      <SidebarNavLink to="/salary" icon={DollarSign} label="Salary" />
-      <SidebarNavLink to="/leave-management" icon={FileText} label="Leave Management" />
-      <SidebarNavLink to="/schedule-requests" icon={Bell} label="Schedule Requests" />
-      <SidebarNavLink to="/employee-workflow" icon={ClipboardList} label="Employee Workflow" />
+      <SidebarNavLink to="/dashboard" icon={BarChart3} label="Dashboard" isActive={isActive('/dashboard')} isCollapsed={false} />
+      <SidebarNavLink to="/schedule" icon={Calendar} label="Schedule" isActive={isActive('/schedule')} isCollapsed={false} />
+      <SidebarNavLink to="/time-clock" icon={Clock} label="Time Clock" isActive={isActive('/time-clock')} isCollapsed={false} />
+      <SidebarNavLink to="/attendance" icon={UserCheck} label="Attendance" isActive={isActive('/attendance')} isCollapsed={false} />
+      <SidebarNavLink to="/salary" icon={DollarSign} label="Salary" isActive={isActive('/salary')} isCollapsed={false} />
+      <SidebarNavLink to="/leave-management" icon={FileText} label="Leave Management" isActive={isActive('/leave-management')} isCollapsed={false} />
+      <SidebarNavLink to="/schedule-requests" icon={Bell} label="Schedule Requests" isActive={isActive('/schedule-requests')} isCollapsed={false} />
+      <SidebarNavLink to="/employee-workflow" icon={ClipboardList} label="Employee Workflow" isActive={isActive('/employee-workflow')} isCollapsed={false} />
 
       {/* Manager/Admin Only Items */}
       {hasManagerAccess && (
         <>
-          <SidebarNavLink to="/people" icon={Users} label="People" />
-          <SidebarNavLink to="/shift-calendar" icon={CalendarDays} label="Shift Calendar" />
-          <SidebarNavLink to="/shift-patterns" icon={Timer} label="Shift Patterns" />
-          <SidebarNavLink to="/restaurant-schedule" icon={Building2} label="Restaurant Schedule" />
-          <SidebarNavLink to="/manager-time-clock" icon={Clock} label="Manager Time Clock" />
-          <SidebarNavLink to="/payroll" icon={DollarSign} label="Payroll" />
-          <SidebarNavLink to="/hiring" icon={Briefcase} label="Hiring" />
+          <SidebarNavLink to="/people" icon={Users} label="People" isActive={isActive('/people')} isCollapsed={false} />
+          <SidebarNavLink to="/shift-calendar" icon={CalendarDays} label="Shift Calendar" isActive={isActive('/shift-calendar')} isCollapsed={false} />
+          <SidebarNavLink to="/shift-patterns" icon={Timer} label="Shift Patterns" isActive={isActive('/shift-patterns')} isCollapsed={false} />
+          <SidebarNavLink to="/restaurant-schedule" icon={Building2} label="Restaurant Schedule" isActive={isActive('/restaurant-schedule')} isCollapsed={false} />
+          <SidebarNavLink to="/manager-time-clock" icon={Clock} label="Manager Time Clock" isActive={isActive('/manager-time-clock')} isCollapsed={false} />
+          <SidebarNavLink to="/payroll" icon={DollarSign} label="Payroll" isActive={isActive('/payroll')} isCollapsed={false} />
         </>
       )}
 
       {/* Payroll Specific Items */}
       {isPayroll && (
         <>
-          <SidebarNavLink to="/payroll-dashboard" icon={BarChart3} label="Payroll Dashboard" />
-          <SidebarNavLink to="/payslips" icon={FileText} label="Payslips" />
+          <SidebarNavLink to="/payroll-dashboard" icon={BarChart3} label="Payroll Dashboard" isActive={isActive('/payroll-dashboard')} isCollapsed={false} />
+          <SidebarNavLink to="/payslips" icon={FileText} label="Payslips" isActive={isActive('/payslips')} isCollapsed={false} />
         </>
       )}
 
       {/* Settings */}
-      <SidebarNavLink to="/settings" icon={Settings} label="Settings" />
+      <SidebarNavLink to="/settings" icon={Settings} label="Settings" isActive={isActive('/settings')} isCollapsed={false} />
     </div>
   );
 };
