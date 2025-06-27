@@ -32,18 +32,27 @@ const RestaurantScheduleContent = () => {
       previousWeek,
       nextWeek,
       viewMode,
-      setViewMode
+      setViewMode,
+      isLoading: scheduleLoading
     } = useRestaurantSchedule();
     
     console.log('RestaurantScheduleContent hooks loaded successfully', { 
       employeesCount: employees?.length, 
-      shiftsCount: shifts?.length 
+      shiftsCount: shifts?.length,
+      scheduleLoading 
     });
     
-    const { employeeData, isLoading: isLoadingEmployeeData } = useEmployeeDataManagement();
+    const { employeeData, isLoading: isLoadingEmployeeData, error } = useEmployeeDataManagement();
     const { toast } = useToast();
     const isMobile = useIsMobile();
     const { handleAddNote, handleAddBreak } = useShiftUtilities(updateShift);
+    
+    // Use the employees from the restaurant schedule hook, but fall back to raw data if needed
+    const finalEmployees = employees && employees.length > 0 ? employees : [];
+    
+    console.log('Final employees being used:', finalEmployees);
+    console.log('Employee data from management hook:', employeeData);
+    console.log('Error from employee data:', error);
     
     // Organize shifts by employee and day for the role sections
     const organizedShifts = useMemo(() => {
@@ -51,7 +60,7 @@ const RestaurantScheduleContent = () => {
       const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
       
       // Initialize the structure
-      employees.forEach(employee => {
+      finalEmployees.forEach(employee => {
         result[employee.id] = {};
         days.forEach(day => {
           result[employee.id][day] = [];
@@ -66,7 +75,7 @@ const RestaurantScheduleContent = () => {
       });
       
       return result;
-    }, [employees, shifts]);
+    }, [finalEmployees, shifts]);
     
     // Handle assigning an open shift
     const handleAssignOpenShift = (openShiftId: string, employeeId?: string) => {
@@ -86,9 +95,14 @@ const RestaurantScheduleContent = () => {
       }
     };
     
-    if (isLoadingEmployeeData) {
-      console.log('Loading employee data...');
+    if (isLoadingEmployeeData || scheduleLoading) {
+      console.log('Loading data...');
       return <RestaurantScheduleLoading />;
+    }
+
+    if (error) {
+      console.error('Error loading employee data:', error);
+      return <RestaurantScheduleError />;
     }
     
     console.log('RestaurantScheduleContent rendering main content');
@@ -100,7 +114,7 @@ const RestaurantScheduleContent = () => {
         />
         
         <RestaurantScheduleGrid
-          employees={employees}
+          employees={finalEmployees}
           weekStats={weekStats}
           openShifts={openShifts as OpenShiftType[]}
           formatCurrency={formatCurrency}

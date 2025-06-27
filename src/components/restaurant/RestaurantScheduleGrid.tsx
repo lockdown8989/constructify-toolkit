@@ -1,38 +1,28 @@
 
-import { useState, useMemo, useCallback } from 'react';
-import { Employee, Shift } from '@/types/restaurant-schedule';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { LayoutGrid, AlertCircle, Calendar, Grid3X3, List } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Calendar } from 'lucide-react';
+import { WeekStats, Employee } from '@/types/restaurant-schedule';
 import { OpenShiftType } from '@/types/supabase/schedules';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useToast } from '@/hooks/use-toast';
-import WeeklyGrid from '@/components/restaurant/WeeklyGrid';
-import MonthlyScheduleView from '@/components/restaurant/views/MonthlyScheduleView';
-import ListView from '@/components/restaurant/views/ListView';
-import OpenShiftActions from '@/components/restaurant/OpenShiftActions';
-import EmployeeList from '@/components/restaurant/EmployeeList';
-import ShiftDialogManager from '@/components/restaurant/ShiftDialogManager';
-import { toast as sonnerToast } from 'sonner';
-
-type ViewMode = 'week' | 'month' | 'list';
+import EmployeeScheduleRow from './EmployeeScheduleRow';
 
 interface RestaurantScheduleGridProps {
   employees: Employee[];
-  weekStats: any;
+  weekStats: WeekStats;
   openShifts: OpenShiftType[];
   formatCurrency: (amount: number) => string;
   handleAssignOpenShift: (openShiftId: string, employeeId?: string) => void;
   previousWeek: () => void;
   nextWeek: () => void;
   isMobile: boolean;
-  addOpenShift: (shift: any) => void;
-  addShift: (shift: Omit<Shift, 'id'>) => Promise<void>;
-  updateShift: (shift: Shift) => Promise<void>;
-  removeShift: (shiftId: string) => Promise<void>;
+  addOpenShift: (openShift: any) => void;
+  addShift: (shift: any) => void;
+  updateShift: (shift: any) => void;
+  removeShift: (shiftId: string) => void;
 }
 
-const RestaurantScheduleGrid = ({
+const RestaurantScheduleGrid: React.FC<RestaurantScheduleGridProps> = ({
   employees,
   weekStats,
   openShifts,
@@ -45,210 +35,115 @@ const RestaurantScheduleGrid = ({
   addShift,
   updateShift,
   removeShift
-}: RestaurantScheduleGridProps) => {
-  const [showEmployeePanel, setShowEmployeePanel] = useState(!isMobile);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [locationName, setLocationName] = useState("Main Location");
-  const [viewMode, setViewMode] = useState<ViewMode>('week');
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const { toast } = useToast();
+}) => {
+  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  // Filter employees based on search query and location
-  const filteredEmployees = useMemo(() => {
-    let filtered = employees;
-    
-    // Filter by location - check if employee has location property and filter accordingly
-    filtered = filtered.filter(employee => {
-      const employeeLocation = (employee as any).location;
-      return !employeeLocation || employeeLocation === locationName;
-    });
-    
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(employee => {
-        const employeeLocation = (employee as any).location;
-        return employee.name.toLowerCase().includes(query) ||
-               employee.role.toLowerCase().includes(query) ||
-               (employeeLocation && employeeLocation.toLowerCase().includes(query));
-      });
-    }
-    
-    return filtered;
-  }, [employees, searchQuery, locationName]);
+  console.log('RestaurantScheduleGrid - employees:', employees);
+  console.log('RestaurantScheduleGrid - weekStats:', weekStats);
 
-  // Create a callback to handle successful shift creation
-  const handleShiftCreated = useCallback(() => {
-    toast({
-      title: "Shift created successfully",
-      description: "The shift has been added to the schedule.",
-    });
-  }, [toast]);
-  
-  // Get the shift dialog manager with all its functions and component
-  const shiftDialog = ShiftDialogManager({ 
-    addShift, 
-    updateShift, 
-    onResponseComplete: handleShiftCreated 
-  });
-
-  const toggleEmployeePanel = () => {
-    setShowEmployeePanel(!showEmployeePanel);
-  };
-
-  // Get mock shifts data for views
-  const mockShifts: Shift[] = [];
-
-  // Current week calculation
-  const currentWeek = useMemo(() => {
-    const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1); // Monday
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday
-    
-    return { start: startOfWeek, end: endOfWeek };
-  }, []);
-
-  if (filteredEmployees.length === 0) {
+  if (!employees || employees.length === 0) {
     return (
-      <Card className="p-8 text-center mb-6">
-        <div className="flex flex-col items-center gap-2">
-          <AlertCircle className="h-10 w-10 text-amber-500" />
-          <h3 className="text-lg font-semibold mt-2">
-            {searchQuery ? "No employees found" : "No Employees Found"}
-          </h3>
-          <p className="text-gray-600 max-w-md mx-auto mb-4">
-            {searchQuery 
-              ? `No employees match "${searchQuery}" at ${locationName}. Try adjusting your search.`
-              : "There are no employees available to schedule. Add employees to get started with scheduling."
-            }
-          </p>
-          {searchQuery && (
-            <Button variant="outline" onClick={() => setSearchQuery("")}>
-              Clear Search
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Weekly Schedule</span>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={previousWeek}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium">
+                {weekStats?.weekRange || 'Current Week'}
+              </span>
+              <Button variant="outline" size="sm" onClick={nextWeek}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-12">
+            <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Employees Found</h3>
+            <p className="text-gray-500 mb-4">
+              There are no employees available to schedule. Add employees to get started with scheduling.
+            </p>
+            <Button onClick={() => window.location.href = '/people'}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Employees
             </Button>
-          )}
-          {!searchQuery && (
-            <Button variant="default">Add Employees</Button>
-          )}
-        </div>
+          </div>
+        </CardContent>
       </Card>
     );
   }
 
-  const renderScheduleView = () => {
-    switch (viewMode) {
-      case 'month':
-        return (
-          <MonthlyScheduleView
-            currentDate={currentDate}
-            employees={filteredEmployees}
-            shifts={mockShifts}
-            openShifts={openShifts}
-            onDateClick={setCurrentDate}
-          />
-        );
-      case 'list':
-        return (
-          <ListView
-            employees={filteredEmployees}
-            shifts={mockShifts}
-            openShifts={openShifts}
-            currentWeek={currentWeek}
-          />
-        );
-      default:
-        return (
-          <WeeklyGrid 
-            weekStats={weekStats}
-            openShifts={openShifts} 
-            employees={filteredEmployees}
-            daysDisplayNames={isMobile 
-              ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] 
-              : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']}
-            formatCurrency={formatCurrency}
-            handleAssignOpenShift={handleAssignOpenShift}
-            previousWeek={previousWeek}
-            nextWeek={nextWeek}
-            isMobile={isMobile}
-          />
-        );
-    }
-  };
-
   return (
-    <>
-      <div className="flex flex-col sm:flex-row justify-between gap-3 mb-3 sm:mb-4">
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={toggleEmployeePanel}
-            className="flex items-center gap-2"
-          >
-            {showEmployeePanel ? "Hide" : "Show"} Staff
-            <LayoutGrid className="h-4 w-4" />
-          </Button>
-          
-          {/* View Mode Selector */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-            <Button 
-              variant={viewMode === 'week' ? 'default' : 'ghost'} 
-              size="sm" 
-              onClick={() => setViewMode('week')}
-              className="h-8 px-3 rounded-md"
-            >
-              <Grid3X3 className="h-3 w-3 mr-1" />
-              Week
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span>Weekly Schedule</span>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={previousWeek}>
+              <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button 
-              variant={viewMode === 'month' ? 'default' : 'ghost'} 
-              size="sm" 
-              onClick={() => setViewMode('month')}
-              className="h-8 px-3 rounded-md"
-            >
-              <Calendar className="h-3 w-3 mr-1" />
-              Month
-            </Button>
-            <Button 
-              variant={viewMode === 'list' ? 'default' : 'ghost'} 
-              size="sm" 
-              onClick={() => setViewMode('list')}
-              className="h-8 px-3 rounded-md"
-            >
-              <List className="h-3 w-3 mr-1" />
-              List
+            <span className="text-sm font-medium">
+              {weekStats?.weekRange || 'Current Week'}
+            </span>
+            <Button variant="outline" size="sm" onClick={nextWeek}>
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-          
-          {searchQuery && (
-            <div className="text-sm text-gray-600">
-              Showing {filteredEmployees.length} of {employees.length} employees
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Desktop Header */}
+        {!isMobile && (
+          <div className="grid grid-cols-8 gap-0 mb-4">
+            <div className="p-3 font-medium text-gray-700 bg-gray-50 border-r border-gray-200">
+              Employee ({employees.length})
             </div>
-          )}
-        </div>
-        
-        <OpenShiftActions addOpenShift={addOpenShift} />
-      </div>
-      
-      <div className={`grid ${showEmployeePanel && viewMode === 'week' ? 'grid-cols-1 lg:grid-cols-[320px_1fr]' : 'grid-cols-1'} gap-4 mb-6`}>
-        {/* Employee list panel - only show for week view */}
-        {showEmployeePanel && !isMobile && viewMode === 'week' && (
-          <Card className="overflow-hidden h-fit bg-white rounded-xl shadow-sm">
-            <EmployeeList employees={filteredEmployees} />
-          </Card>
+            {dayNames.map(day => (
+              <div key={day} className="p-3 font-medium text-gray-700 bg-gray-50 border-r border-gray-200 last:border-r-0 text-center">
+                {day}
+              </div>
+            ))}
+          </div>
         )}
-        
-        {/* Schedule view */}
-        <Card className="overflow-hidden bg-white rounded-xl shadow-sm border border-gray-100">
-          {renderScheduleView()}
-        </Card>
-      </div>
 
-      {/* Shift edit dialog */}
-      {shiftDialog.ShiftDialogComponent}
-    </>
+        {/* Employee Rows */}
+        <div className="space-y-0">
+          {employees.map(employee => (
+            <EmployeeScheduleRow
+              key={employee.id}
+              employee={employee}
+              days={days}
+              openShifts={openShifts}
+              onAssignOpenShift={handleAssignOpenShift}
+              isMobile={isMobile}
+            />
+          ))}
+        </div>
+
+        {/* Week Summary */}
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-medium text-gray-900">Week Summary</h3>
+              <p className="text-sm text-gray-600">
+                Total Hours: {weekStats?.totalHours || 0} | 
+                Total Cost: {formatCurrency(weekStats?.totalCost || 0)}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-600">
+                {employees.length} employees scheduled
+              </p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
