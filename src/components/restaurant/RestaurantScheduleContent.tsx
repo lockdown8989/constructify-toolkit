@@ -84,9 +84,14 @@ const RestaurantScheduleContent = () => {
       }
       
       return {
-        ...weekStats,
+        weekRange: weekStats.weekRange,
         startDate: weekStats.startDate || new Date(),
         endDate: weekStats.endDate || new Date(),
+        totalHours: weekStats.totalHours,
+        totalCost: weekStats.totalCost,
+        dailyHours: weekStats.dailyHours,
+        dailyCosts: weekStats.dailyCosts,
+        roles: weekStats.roles,
         openShiftsTotalHours: weekStats.openShiftsTotalHours || 0,
         openShiftsTotalCount: weekStats.openShiftsTotalCount || 0
       };
@@ -158,6 +163,11 @@ const RestaurantScheduleContent = () => {
         });
       }
     };
+
+    // Handle adding open shift with proper type conversion
+    const handleAddOpenShift = (openShift: Omit<OpenShiftType, 'id'>) => {
+      addOpenShift(openShift);
+    };
     
     if (isLoadingEmployeeData || scheduleLoading) {
       console.log('Loading data...');
@@ -186,7 +196,7 @@ const RestaurantScheduleContent = () => {
           previousWeek={previousWeek}
           nextWeek={nextWeek}
           isMobile={isMobile}
-          addOpenShift={addOpenShift}
+          addOpenShift={handleAddOpenShift}
           addShift={addShift}
           updateShift={updateShift}
           removeShift={removeShift}

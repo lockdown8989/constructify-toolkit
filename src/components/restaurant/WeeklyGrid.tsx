@@ -1,35 +1,44 @@
 
 import React from 'react';
-import { Employee, OpenShift } from '@/types/restaurant-schedule';
+import { Employee, WeekStats } from '@/types/restaurant-schedule';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar, Grid3X3, List } from 'lucide-react';
 import EmployeeScheduleRow from './EmployeeScheduleRow';
 import { OpenShiftType } from '@/types/supabase/schedules';
 
 interface WeeklyGridProps {
-  weekStats: any;
-  openShifts: OpenShiftType[];
   employees: Employee[];
-  daysDisplayNames: string[];
+  weekStats: WeekStats;
+  openShifts: OpenShiftType[];
   formatCurrency: (amount: number) => string;
   handleAssignOpenShift: (openShiftId: string, employeeId?: string) => void;
   previousWeek: () => void;
   nextWeek: () => void;
   isMobile: boolean;
+  addOpenShift: (openShift: Omit<OpenShiftType, 'id'>) => void;
+  addShift: (shift: any) => void;
+  updateShift: (id: string, updates: any) => void;
+  removeShift: (id: string) => void;
+  onDateClick?: (date: Date) => void;
 }
 
 const WeeklyGrid: React.FC<WeeklyGridProps> = ({
+  employees,
   weekStats,
   openShifts,
-  employees,
-  daysDisplayNames,
   formatCurrency,
   handleAssignOpenShift,
   previousWeek,
   nextWeek,
-  isMobile
+  isMobile,
+  addOpenShift,
+  addShift,
+  updateShift,
+  removeShift,
+  onDateClick
 }) => {
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  const daysDisplayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100">
