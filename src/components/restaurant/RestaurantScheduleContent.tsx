@@ -85,15 +85,15 @@ const RestaurantScheduleContent = () => {
       
       return {
         weekRange: weekStats.weekRange,
-        startDate: weekStats.startDate || new Date(),
-        endDate: weekStats.endDate || new Date(),
+        startDate: weekStats.startDate,
+        endDate: weekStats.endDate,
         totalHours: weekStats.totalHours,
         totalCost: weekStats.totalCost,
         dailyHours: weekStats.dailyHours,
         dailyCosts: weekStats.dailyCosts,
         roles: weekStats.roles,
-        openShiftsTotalHours: weekStats.openShiftsTotalHours || 0,
-        openShiftsTotalCount: weekStats.openShiftsTotalCount || 0
+        openShiftsTotalHours: weekStats.openShiftsTotalHours,
+        openShiftsTotalCount: weekStats.openShiftsTotalCount
       };
     }, [weekStats]);
     
@@ -166,7 +166,14 @@ const RestaurantScheduleContent = () => {
 
     // Handle adding open shift with proper type conversion
     const handleAddOpenShift = (openShift: Omit<OpenShiftType, 'id'>) => {
-      addOpenShift(openShift);
+      // Convert priority to match OpenShift type if needed
+      const convertedOpenShift = {
+        ...openShift,
+        priority: openShift.priority === 'normal' || openShift.priority === 'high' || openShift.priority === 'low' 
+          ? openShift.priority as 'low' | 'normal' | 'high'
+          : 'normal' as const
+      };
+      addOpenShift(convertedOpenShift);
     };
     
     if (isLoadingEmployeeData || scheduleLoading) {
@@ -182,11 +189,7 @@ const RestaurantScheduleContent = () => {
     console.log('RestaurantScheduleContent rendering main content');
     
     return (
-      <div className="container py-6 sm:py-8 max-w-[1400px] px-3 md:px-6 mx-auto">
-        <RestaurantScheduleHeader 
-          setViewMode={(mode) => setViewMode(mode as 'week' | 'day')}
-        />
-        
+      <div className="container py-6 sm:py-8 max-w-[1400px] px-3 md:px-6 mx-auto">        
         <RestaurantScheduleGrid
           employees={finalEmployees}
           weekStats={enhancedWeekStats}

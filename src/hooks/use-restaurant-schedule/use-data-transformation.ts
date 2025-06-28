@@ -24,7 +24,7 @@ export const useDataTransformation = (
       color: `#${Math.floor(Math.random()*16777215).toString(16)}`, // Generate random color
       hourlyRate: emp.hourly_rate || 15,
       maxHours: 40,
-      avatarUrl: emp.avatar || emp.avatar_url || undefined,
+      avatarUrl: emp.avatar || undefined,
       availability: {
         monday: { 
           available: emp.monday_available !== false, 
