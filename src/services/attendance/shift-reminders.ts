@@ -67,9 +67,10 @@ export const checkAndSendClockOutReminders = async () => {
             .eq('id', attendance.id);
           
           // Send reminder notification
-          if (shift.employees?.user_id) {
+          const employee = shift.employees as any;
+          if (employee && employee.user_id) {
             await sendNotification({
-              user_id: shift.employees.user_id,
+              user_id: employee.user_id,
               title: '⏰ Clock Out Reminder',
               message: `Your shift "${shift.title}" ended ${timePastEnd} minutes ago. Please clock out now to avoid additional overtime charges.`,
               type: 'warning',
