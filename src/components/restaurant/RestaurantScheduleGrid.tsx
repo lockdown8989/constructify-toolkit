@@ -13,11 +13,12 @@ interface RestaurantScheduleGridProps {
   previousWeek: () => void;
   nextWeek: () => void;
   isMobile: boolean;
-  addOpenShift: (openShift: Omit<OpenShiftType, 'id'>) => void;
   addShift: (shift: Omit<Shift, 'id'>) => void;
   updateShift: (id: string, updates: Partial<Shift>) => void;
   removeShift: (id: string) => void;
   onDateClick?: (date: Date) => void;
+  currentView?: 'week' | 'month' | 'list';
+  onViewChange?: (view: 'week' | 'month' | 'list') => void;
 }
 
 const RestaurantScheduleGrid: React.FC<RestaurantScheduleGridProps> = ({
@@ -29,11 +30,12 @@ const RestaurantScheduleGrid: React.FC<RestaurantScheduleGridProps> = ({
   previousWeek,
   nextWeek,
   isMobile,
-  addOpenShift,
   addShift,
   updateShift,
   removeShift,
-  onDateClick
+  onDateClick,
+  currentView,
+  onViewChange
 }) => {
   console.log('RestaurantScheduleGrid rendering with employees:', employees.length);
   
@@ -63,11 +65,12 @@ const RestaurantScheduleGrid: React.FC<RestaurantScheduleGridProps> = ({
       previousWeek={previousWeek}
       nextWeek={nextWeek}
       isMobile={isMobile}
-      addOpenShift={addOpenShift}
       addShift={addShift}
       updateShift={updateShift}
       removeShift={removeShift}
       onDateClick={onDateClick}
+      currentView={currentView}
+      onViewChange={onViewChange}
     />
   );
 };

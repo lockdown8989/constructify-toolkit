@@ -8,11 +8,11 @@ import { useShiftUtilities } from '@/components/restaurant/ShiftUtilities';
 import { formatCurrency } from '@/components/restaurant/utils/schedule-utils';
 import { toast as sonnerToast } from 'sonner';
 import { OpenShiftType } from '@/types/supabase/schedules';
-import { OpenShift } from '@/types/restaurant-schedule';
 
 export const useRestaurantScheduleLogic = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isDateDialogOpen, setIsDateDialogOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<'week' | 'month' | 'list'>('week');
   
   const { 
     employees,
@@ -118,17 +118,17 @@ export const useRestaurantScheduleLogic = () => {
   };
 
   // Handle adding open shift with proper type conversion
-  const handleAddOpenShift = (openShift: Omit<OpenShift, 'id'>) => {
-    // Convert to OpenShiftType format with required properties
+  const handleAddOpenShift = (openShift: Omit<OpenShiftType, 'id'>) => {
+    // Convert to proper format with required properties
     const convertedOpenShift: Omit<OpenShiftType, 'id'> = {
       title: openShift.title || 'Open Shift',
       role: openShift.role,
-      start_time: openShift.start_time || `${new Date().toISOString().split('T')[0]}T${openShift.startTime}:00`,
-      end_time: openShift.end_time || `${new Date().toISOString().split('T')[0]}T${openShift.endTime}:00`,
+      start_time: openShift.start_time || `${new Date().toISOString().split('T')[0]}T09:00:00`,
+      end_time: openShift.end_time || `${new Date().toISOString().split('T')[0]}T17:00:00`,
       location: openShift.location || '',
       notes: openShift.notes || '',
       status: openShift.status || 'open',
-      priority: (openShift.priority as 'low' | 'normal' | 'high') || 'normal',
+      priority: openShift.priority || 'normal',
       expiration_date: openShift.expiration_date || null,
       created_platform: openShift.created_platform || 'desktop',
       last_modified_platform: openShift.last_modified_platform || 'desktop',
@@ -156,11 +156,18 @@ export const useRestaurantScheduleLogic = () => {
     setIsDateDialogOpen(true);
   };
 
+  // Handle view changes
+  const handleViewChange = (view: 'week' | 'month' | 'list') => {
+    setCurrentView(view);
+  };
+
   return {
     // State
     selectedDate,
     isDateDialogOpen,
     setIsDateDialogOpen,
+    currentView,
+    handleViewChange,
     
     // Data
     finalEmployees,

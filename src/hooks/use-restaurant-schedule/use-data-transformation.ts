@@ -87,8 +87,8 @@ export const useDataTransformation = (
         role: schedule.title || 'General',
         notes: schedule.notes || '',
         status: schedule.status || 'confirmed',
-        hasBreak: schedule.break_duration ? schedule.break_duration > 0 : false,
-        breakDuration: schedule.break_duration || 0
+        hasBreak: false, // Default value since break_duration doesn't exist
+        breakDuration: 0 // Default value since break_duration doesn't exist
       };
     });
   }, [schedulesData]);

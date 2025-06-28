@@ -13,6 +13,8 @@ const RestaurantScheduleContent = () => {
     selectedDate,
     isDateDialogOpen,
     setIsDateDialogOpen,
+    currentView,
+    handleViewChange,
     finalEmployees,
     shifts,
     openShifts,
@@ -57,11 +59,12 @@ const RestaurantScheduleContent = () => {
         previousWeek={previousWeek}
         nextWeek={nextWeek}
         isMobile={isMobile}
-        addOpenShift={handleAddOpenShift}
         addShift={addShift}
         updateShift={updateShift}
         removeShift={removeShift}
         onDateClick={handleDateClick}
+        currentView={currentView}
+        onViewChange={handleViewChange}
       />
       
       <RestaurantScheduleRoles
