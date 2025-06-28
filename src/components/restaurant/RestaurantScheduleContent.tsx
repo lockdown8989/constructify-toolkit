@@ -42,7 +42,7 @@ const RestaurantScheduleContent = () => {
       scheduleLoading 
     });
     
-    const { employeeData, isLoading: isLoadingEmployeeData, error } = useEmployeeDataManagement();
+    const { allEmployees, isLoading: isLoadingEmployeeData, error } = useEmployeeDataManagement();
     const { toast } = useToast();
     const isMobile = useIsMobile();
     const { handleAddNote, handleAddBreak } = useShiftUtilities(updateShift);
@@ -51,8 +51,40 @@ const RestaurantScheduleContent = () => {
     const finalEmployees = employees && employees.length > 0 ? employees : [];
     
     console.log('Final employees being used:', finalEmployees);
-    console.log('Employee data from management hook:', employeeData);
+    console.log('Employee data from management hook:', allEmployees);
     console.log('Error from employee data:', error);
+    
+    // Create a proper WeekStats object with all required properties
+    const enhancedWeekStats = useMemo(() => {
+      if (!weekStats) {
+        return {
+          weekRange: 'Current Week',
+          startDate: new Date(),
+          endDate: new Date(),
+          totalHours: 0,
+          totalCost: 0,
+          dailyHours: {
+            monday: 0, tuesday: 0, wednesday: 0, thursday: 0, 
+            friday: 0, saturday: 0, sunday: 0
+          },
+          dailyCosts: {
+            monday: 0, tuesday: 0, wednesday: 0, thursday: 0, 
+            friday: 0, saturday: 0, sunday: 0
+          },
+          roles: [],
+          openShiftsTotalHours: 0,
+          openShiftsTotalCount: 0
+        };
+      }
+      
+      return {
+        ...weekStats,
+        startDate: weekStats.startDate || new Date(),
+        endDate: weekStats.endDate || new Date(),
+        openShiftsTotalHours: weekStats.openShiftsTotalHours || 0,
+        openShiftsTotalCount: weekStats.openShiftsTotalCount || 0
+      };
+    }, [weekStats]);
     
     // Organize shifts by employee and day for the role sections
     const organizedShifts = useMemo(() => {
@@ -115,7 +147,7 @@ const RestaurantScheduleContent = () => {
         
         <RestaurantScheduleGrid
           employees={finalEmployees}
-          weekStats={weekStats}
+          weekStats={enhancedWeekStats}
           openShifts={openShifts as OpenShiftType[]}
           formatCurrency={formatCurrency}
           handleAssignOpenShift={handleAssignOpenShift}
@@ -129,7 +161,7 @@ const RestaurantScheduleContent = () => {
         />
         
         <RestaurantScheduleRoles
-          weekStats={weekStats}
+          weekStats={enhancedWeekStats}
           organizedShifts={organizedShifts}
           removeShift={removeShift}
           handleAddNote={handleAddNote}

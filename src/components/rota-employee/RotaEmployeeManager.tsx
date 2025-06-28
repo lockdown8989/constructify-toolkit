@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Plus, Users, Calendar } from 'lucide-react';
 import { useShiftPatterns, useCreateShiftPattern, useUpdateShiftPattern, useDeleteShiftPattern } from '@/hooks/use-shift-patterns';
 import { useEmployees } from '@/hooks/use-employees';
-import { useCreateRecurringSchedules } from '@/hooks/use-recurring-schedules';
-import { useAssignEmployeesToPattern } from '@/hooks/use-shift-pattern-assignments';
-import { ShiftPattern } from '@/types/shift-patterns';
 import { useToast } from '@/hooks/use-toast';
 import { usePatternEmployees } from '../shift-patterns/hooks/usePatternEmployees';
 import { useShiftPatternForm } from '../shift-patterns/hooks/useShiftPatternForm';
+import { useAssignEmployeesToPattern } from '@/hooks/use-shift-pattern-assignments';
+import { createAndConfirmRecurringRotas } from '@/services/rota-management/rota-auto-confirm';
+import { ShiftPattern } from '@/types/shift-patterns';
 import { RotaPatternCard } from './components/RotaPatternCard';
 import { RotaPatternDialog } from './components/RotaPatternDialog';
 import { RotaCalendarSync } from './components/RotaCalendarSync';
@@ -21,7 +21,6 @@ const RotaEmployeeManager = () => {
   const createPattern = useCreateShiftPattern();
   const updatePattern = useUpdateShiftPattern();
   const deletePattern = useDeleteShiftPattern();
-  const createRecurringSchedules = useCreateRecurringSchedules();
   const assignEmployeesToPattern = useAssignEmployeesToPattern();
   const { toast } = useToast();
   
@@ -84,8 +83,8 @@ const RotaEmployeeManager = () => {
         return;
       }
 
-      // Create recurring schedules for the next 12 weeks
-      await createRecurringSchedules.mutateAsync({
+      // Create and auto-confirm recurring schedules
+      const result = await createAndConfirmRecurringRotas({
         employeeIds: assignedEmployees.map(emp => emp.id),
         shiftPatternId: patternId,
         patternName: pattern.name,
@@ -94,10 +93,14 @@ const RotaEmployeeManager = () => {
         weeksToGenerate: 12
       });
 
-      toast({
-        title: "Rota synced successfully",
-        description: `${pattern.name} has been synced to ${assignedEmployees.length} employee calendars for the next 12 weeks.`,
-      });
+      if (result.success) {
+        toast({
+          title: "Rota synced successfully",
+          description: `${pattern.name} has been synced to ${assignedEmployees.length} employee calendars for the next 12 weeks. All shifts are automatically confirmed and employees will be notified.`,
+        });
+      } else {
+        throw new Error('Failed to sync rota');
+      }
 
     } catch (error) {
       console.error('Error syncing rota to calendar:', error);
@@ -160,7 +163,7 @@ const RotaEmployeeManager = () => {
           
           toast({
             title: "Success",
-            description: `Rota pattern created and assigned to ${selectedEmployees.length} employee(s).`,
+            description: `Rota pattern created and assigned to ${selectedEmployees.length} employee(s). Use "Sync to Calendar" to create confirmed shifts for employees.`,
           });
           
           // Refresh pattern employees after successful assignment
@@ -170,7 +173,7 @@ const RotaEmployeeManager = () => {
         } else {
           toast({
             title: "Success",
-            description: "Rota pattern created successfully.",
+            description: "Rota pattern created successfully. Assign employees and sync to calendar to create confirmed shifts.",
           });
         }
       }
@@ -189,17 +192,26 @@ const RotaEmployeeManager = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this rota pattern?')) {
+    if (window.confirm('Are you sure you want to delete this rota pattern? This will not affect already created shifts.')) {
       try {
         await deletePattern.mutateAsync(id);
         refreshPatternEmployees();
+        toast({
+          title: "Success",
+          description: "Rota pattern deleted successfully.",
+        });
       } catch (error) {
         console.error('Error deleting rota pattern:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete rota pattern. Please try again.",
+          variant: "destructive",
+        });
       }
     }
   };
 
-  const isDialogLoading = createPattern.isPending || updatePattern.isPending || createRecurringSchedules.isPending || assignEmployeesToPattern.isPending;
+  const isDialogLoading = createPattern.isPending || updatePattern.isPending || assignEmployeesToPattern.isPending;
 
   if (isLoading) {
     return (
@@ -224,6 +236,9 @@ const RotaEmployeeManager = () => {
               Create Rota
             </Button>
           </div>
+          <p className="text-sm text-gray-600 mt-2">
+            Create rota patterns and sync them to employee calendars. All rota shifts are automatically confirmed - no employee response needed.
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4">
@@ -243,7 +258,7 @@ const RotaEmployeeManager = () => {
                 <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No rota patterns yet</h3>
                 <p className="text-gray-500 mb-4">
-                  Create your first rota pattern to assign schedules to employees.
+                  Create your first rota pattern to assign automatic schedules to employees.
                 </p>
                 <Button onClick={handleCreate}>
                   <Plus className="h-4 w-4 mr-2" />
