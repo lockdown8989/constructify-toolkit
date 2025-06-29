@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/auth";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/hooks/use-language";
-import { Loader2, ArrowLeft, User, Bell, Palette } from "lucide-react";
+import { Loader2, ArrowLeft, User, Bell, Palette, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
@@ -12,6 +12,7 @@ import { ThemeSelector } from "@/components/settings/ThemeSelector";
 import { PersonalInfoForm } from "@/components/profile-settings/PersonalInfoForm";
 import RegionalPreferencesForm from "@/components/profile-settings/RegionalPreferencesForm";
 import { DeleteAccountSection } from "@/components/profile-settings/DeleteAccountSection";
+import WeeklyAvailabilitySection from "@/components/profile/WeeklyAvailabilitySection";
 
 const ProfileSettings = () => {
   const { user, isLoading } = useAuth();
@@ -55,6 +56,8 @@ const ProfileSettings = () => {
             <DeleteAccountSection />
           </Card>
         );
+      case 'availability':
+        return <WeeklyAvailabilitySection />;
       case 'notifications':
         return (
           <Card className="border rounded-xl shadow-sm">
@@ -132,6 +135,14 @@ const ProfileSettings = () => {
               >
                 <User className="mr-2 h-4 w-4" />
                 {t('personalInfo')}
+              </Button>
+              <Button
+                variant={activeSection === 'availability' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => setActiveSection('availability')}
+              >
+                <Clock className="mr-2 h-4 w-4" />
+                Weekly Availability
               </Button>
               <Button
                 variant={activeSection === 'notifications' ? 'default' : 'ghost'}
