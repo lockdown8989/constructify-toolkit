@@ -7,24 +7,28 @@ import { User, Building, Briefcase, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useEmployeeForm } from './useEmployeeForm';
 import EmployeeFormFields from './EmployeeFormFields';
+import { Employee as DbEmployee } from '@/hooks/use-employees';
 
 interface AddEmployeeModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultLocation?: string;
+  employeeToEdit?: DbEmployee;
 }
 
 const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   isOpen,
   onClose,
-  defaultLocation
+  defaultLocation,
+  employeeToEdit
 }) => {
   const [activeTab, setActiveTab] = useState('personal');
   const isMobile = useIsMobile();
   
   const { form, onSubmit, isSubmitting, error } = useEmployeeForm({
     onSuccess: onClose,
-    defaultLocation
+    defaultLocation,
+    employeeToEdit
   });
 
   const departments = ['HR', 'Engineering', 'Marketing', 'Sales', 'Operations'];
@@ -35,7 +39,9 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
       <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[95vh]' : 'max-w-4xl max-h-[90vh]'} overflow-y-auto`}>
         <DialogHeader className="sticky top-0 bg-white z-10 pb-4 border-b">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold">Add New Employee</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">
+              {employeeToEdit ? 'Edit Employee' : 'Add New Employee'}
+            </DialogTitle>
             <Button
               variant="ghost"
               size="icon"
@@ -46,7 +52,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
             </Button>
           </div>
           <p className="text-sm text-gray-600 mt-1">
-            Add a new team member to your organization.
+            {employeeToEdit ? 'Update team member information.' : 'Add a new team member to your organization.'}
           </p>
         </DialogHeader>
 
@@ -97,7 +103,10 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               disabled={isSubmitting}
               className="flex-1"
             >
-              {isSubmitting ? 'Adding Employee...' : 'Add Employee'}
+              {isSubmitting 
+                ? (employeeToEdit ? 'Updating Employee...' : 'Adding Employee...') 
+                : (employeeToEdit ? 'Update Employee' : 'Add Employee')
+              }
             </Button>
           </div>
         </form>
