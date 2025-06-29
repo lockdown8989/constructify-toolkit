@@ -135,8 +135,7 @@ const WeeklyGrid: React.FC<WeeklyGridProps> = ({
           employees={employees}
           shifts={[]} // You might need to pass actual shifts data here
           openShifts={openShifts}
-          weekStats={weekStats}
-          formatCurrency={formatCurrency}
+          currentWeek={{ start: weekStats.startDate, end: weekStats.endDate }}
         />
       )}
 

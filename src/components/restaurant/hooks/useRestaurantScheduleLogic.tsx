@@ -8,6 +8,7 @@ import { useShiftUtilities } from '@/components/restaurant/ShiftUtilities';
 import { formatCurrency } from '@/components/restaurant/utils/schedule-utils';
 import { toast as sonnerToast } from 'sonner';
 import { OpenShiftType } from '@/types/supabase/schedules';
+import { OpenShift } from '@/types/restaurant-schedule';
 
 export const useRestaurantScheduleLogic = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -118,8 +119,8 @@ export const useRestaurantScheduleLogic = () => {
   };
 
   // Handle adding open shift with proper type conversion
-  const handleAddOpenShift = (openShift: Omit<OpenShiftType, 'id'>) => {
-    // Convert to proper format with required properties
+  const handleAddOpenShift = (openShift: Omit<OpenShift, 'id'>) => {
+    // Convert OpenShift to OpenShiftType format with required properties
     const convertedOpenShift: Omit<OpenShiftType, 'id'> = {
       title: openShift.title || 'Open Shift',
       role: openShift.role,
