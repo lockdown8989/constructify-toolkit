@@ -1,3 +1,4 @@
+
 import { useMemo, useState } from 'react';
 import { useRestaurantSchedule } from '@/hooks/use-restaurant-schedule';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
@@ -8,6 +9,7 @@ import { formatCurrency } from '@/components/restaurant/utils/schedule-utils';
 import { toast as sonnerToast } from 'sonner';
 import { OpenShiftType } from '@/types/supabase/schedules';
 import { OpenShift } from '@/types/restaurant-schedule';
+import { format } from 'date-fns';
 
 export const useRestaurantScheduleLogic = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -117,34 +119,28 @@ export const useRestaurantScheduleLogic = () => {
     }
   };
 
-  // Handle adding open shift - fix the type issue by ensuring all required properties
+  // Handle adding open shift - convert OpenShift to the expected type
   const handleAddOpenShift = (openShift: Partial<OpenShift>) => {
-    // Create a proper OpenShiftType with all required fields
-    const convertedOpenShift: Omit<OpenShiftType, 'id'> = {
+    // Convert OpenShift to OpenShiftType and add the required day property
+    const startTime = openShift.start_time || openShift.startTime || `${new Date().toISOString().split('T')[0]}T09:00:00`;
+    const dayName = format(new Date(startTime), 'EEEE').toLowerCase();
+    
+    const convertedOpenShift: Omit<OpenShift, 'id'> = {
+      day: dayName, // Required property for OpenShift
+      startTime: openShift.startTime || format(new Date(startTime), 'HH:mm'),
+      endTime: openShift.endTime || format(new Date(openShift.end_time || openShift.endTime || `${new Date().toISOString().split('T')[0]}T17:00:00`), 'HH:mm'),
       title: openShift.title || 'Open Shift',
-      role: openShift.role || null,
-      start_time: openShift.start_time || openShift.startTime || `${new Date().toISOString().split('T')[0]}T09:00:00`,
-      end_time: openShift.end_time || openShift.endTime || `${new Date().toISOString().split('T')[0]}T17:00:00`,
-      location: openShift.location || '',
+      role: openShift.role || '',
       notes: openShift.notes || '',
-      status: openShift.status || 'open',
       priority: openShift.priority || 'normal',
-      expiration_date: openShift.expiration_date || null,
+      location: openShift.location || '',
+      status: openShift.status || 'open',
+      start_time: startTime,
+      end_time: openShift.end_time || openShift.endTime || `${new Date().toISOString().split('T')[0]}T17:00:00`,
+      expiration_date: openShift.expiration_date || '',
       created_platform: openShift.created_platform || 'desktop',
       last_modified_platform: openShift.last_modified_platform || 'desktop',
-      mobile_notification_sent: openShift.mobile_notification_sent || false,
-      drag_disabled: false,
-      mobile_friendly_view: null,
-      created_by: null,
-      created_at: new Date().toISOString(),
-      notification_sent: false,
-      position_order: null,
-      auto_assign: false,
-      applications_count: 0,
-      last_dragged_by: null,
-      last_dragged_at: null,
-      department: null,
-      minimum_experience: null
+      mobile_notification_sent: openShift.mobile_notification_sent || false
     };
     
     addOpenShift(convertedOpenShift);
