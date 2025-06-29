@@ -8,7 +8,7 @@ export const employeeFormSchema = z.object({
   job_title: z.string().min(1, 'Job title is required').max(100, 'Job title must be less than 100 characters'),
   department: z.string().min(1, 'Department is required').max(100, 'Department must be less than 100 characters'),
   site: z.string().min(1, 'Site is required').max(100, 'Site must be less than 100 characters'),
-  location: z.string().optional(),
+  location: z.enum(['Office', 'Remote', 'Hybrid']).default('Office'),
   salary: z.union([
     z.string().transform((val) => val === '' ? 0 : parseFloat(val) || 0),
     z.number()
@@ -16,10 +16,13 @@ export const employeeFormSchema = z.object({
   hourly_rate: z.union([
     z.string().transform((val) => val === '' ? 0 : parseFloat(val) || 0),
     z.number()
-  ]).default(0),
-  lifecycle: z.enum(['Active', 'Inactive', 'Terminated', 'On Leave']).default('Active'),
-  status: z.enum(['Active', 'Inactive', 'Pending', 'On Leave']).default('Active'),
+  ]).optional(),
+  lifecycle: z.enum(['Active', 'Inactive', 'Terminated']).default('Active'),
+  status: z.enum(['Active', 'Inactive', 'On Leave']).default('Active'),
   start_date: z.string().optional(),
+  annual_leave_days: z.number().default(25),
+  sick_leave_days: z.number().default(10),
+  role: z.enum(['employee', 'manager', 'admin', 'hr']).default('employee'),
   shift_pattern_id: z.string().optional(),
   monday_shift_id: z.string().optional(),
   tuesday_shift_id: z.string().optional(),
