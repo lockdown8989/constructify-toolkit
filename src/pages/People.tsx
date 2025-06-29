@@ -139,8 +139,8 @@ const People = () => {
         
         {/* Add Employee Modal */}
         <AddEmployeeModal
-          open={isAddPersonModalOpen}
-          onOpenChange={setIsAddPersonModalOpen}
+          isOpen={isAddPersonModalOpen}
+          onClose={() => setIsAddPersonModalOpen(false)}
           departments={filterOptions?.departments || []}
           sites={filterOptions?.sites || []}
         />

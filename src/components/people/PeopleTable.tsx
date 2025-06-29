@@ -180,8 +180,8 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
       {/* Edit Employee Modal */}
       {selectedEmployeeDetails && isEditModalOpen && (
         <AddEmployeeModal
-          open={isEditModalOpen}
-          onOpenChange={setIsEditModalOpen}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
           departments={[]}
           sites={[]}
           employeeToEdit={mapToDbEmployee(selectedEmployeeDetails)}

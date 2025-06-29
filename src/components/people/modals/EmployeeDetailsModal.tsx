@@ -127,13 +127,11 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
 
       {isEditModalOpen && (
         <AddEmployeeModal
-          open={isEditModalOpen}
-          onOpenChange={(open) => {
-            setIsEditModalOpen(open);
-            if (!open) {
-              // Refresh the parent modal data when edit modal closes
-              onClose();
-            }
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            // Refresh the parent modal data when edit modal closes
+            onClose();
           }}
           departments={[]}
           sites={[]}
