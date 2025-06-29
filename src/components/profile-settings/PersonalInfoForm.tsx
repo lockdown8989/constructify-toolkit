@@ -11,6 +11,7 @@ import { Loader2, Mail, User as UserIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { ManagerIdField } from "@/components/profile/ManagerIdField";
 
 interface PersonalInfoFormProps {
   user: User | null;
@@ -21,12 +22,14 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
   const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isManager, setIsManager] = useState(false);
   const [profile, setProfile] = useState({
     first_name: "",
     last_name: "",
     position: "",
     department: "",
     avatar_url: null as string | null,
+    manager_id: null as string | null,
   });
 
   useEffect(() => {
@@ -37,29 +40,52 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
       }
 
       try {
-        const { data, error } = await supabase
+        // Fetch profile data
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("first_name, last_name, position, department, avatar_url")
           .eq("id", user.id)
           .maybeSingle();
 
-        if (error) {
-          console.error("Error fetching profile:", error);
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
           toast({
             title: "Error loading profile",
-            description: error.message,
+            description: profileError.message,
             variant: "destructive",
           });
           return;
         }
 
-        if (data) {
+        // Fetch employee data for manager_id and role
+        const { data: employeeData, error: employeeError } = await supabase
+          .from("employees")
+          .select("manager_id, role")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (employeeError && employeeError.code !== 'PGRST116') {
+          console.error("Error fetching employee data:", employeeError);
+        }
+
+        // Check if user is a manager
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        const userIsManager = roleData?.role === 'employer' || roleData?.role === 'admin' || roleData?.role === 'hr' || employeeData?.role === 'manager';
+        setIsManager(userIsManager);
+
+        if (profileData) {
           setProfile({
-            first_name: data.first_name || "",
-            last_name: data.last_name || "",
-            position: data.position || "",
-            department: data.department || "",
-            avatar_url: data.avatar_url || null,
+            first_name: profileData.first_name || "",
+            last_name: profileData.last_name || "",
+            position: profileData.position || "",
+            department: profileData.department || "",
+            avatar_url: profileData.avatar_url || null,
+            manager_id: employeeData?.manager_id || null,
           });
         }
       } catch (error) {
@@ -88,7 +114,8 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
     setIsSaving(true);
 
     try {
-      const { error } = await supabase
+      // Update profile data
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({
           first_name: profile.first_name,
@@ -99,13 +126,27 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
         })
         .eq("id", user.id);
 
-      if (error) {
+      if (profileError) {
         toast({
           title: "Error updating profile",
-          description: error.message,
+          description: profileError.message,
           variant: "destructive",
         });
         return;
+      }
+
+      // Update employee data if manager_id changed
+      if (profile.manager_id !== null) {
+        const { error: employeeError } = await supabase
+          .from("employees")
+          .update({
+            manager_id: profile.manager_id,
+          })
+          .eq("user_id", user.id);
+
+        if (employeeError) {
+          console.error("Error updating employee manager_id:", employeeError);
+        }
       }
 
       toast({
@@ -220,6 +261,14 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
             placeholder="e.g. Engineering"
           />
         </div>
+
+        {/* Manager ID Field */}
+        <ManagerIdField 
+          managerId={profile.manager_id} 
+          onChange={handleChange}
+          isManager={isManager}
+          isEditable={!isManager}
+        />
       </CardContent>
       
       <CardFooter className="border-t bg-muted/10 p-6">
