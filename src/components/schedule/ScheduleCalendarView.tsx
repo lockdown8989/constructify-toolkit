@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { format, isBefore, startOfDay } from 'date-fns';
@@ -15,6 +14,7 @@ import AddShiftSheet from './components/AddShiftSheet';
 import DateActionDialog from './components/DateActionDialog';
 import ScheduleDateContextMenu from './components/ScheduleDateContextMenu';
 import ScheduleDatePopover from './components/ScheduleDatePopover';
+import DateDetailsDialog from './components/DateDetailsDialog';
 import { useShiftActions } from '@/hooks/use-shift-actions';
 import { useOpenShifts } from '@/hooks/use-open-shifts';
 import { Badge } from '@/components/ui/badge';
@@ -55,6 +55,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
   
   const [isAddShiftOpen, setIsAddShiftOpen] = useState(false);
   const [isDateActionOpen, setIsDateActionOpen] = useState(false);
+  const [isDateDetailsOpen, setIsDateDetailsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [animatingDate, setAnimatingDate] = useState<Date | null>(null);
 
@@ -109,9 +110,12 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
   };
 
   const handleDateClick = (clickedDate: Date) => {
+    setSelectedDate(clickedDate);
     if (isManager) {
-      setSelectedDate(clickedDate);
       setIsDateActionOpen(true);
+    } else {
+      // For employees, show details directly
+      setIsDateDetailsOpen(true);
     }
   };
 
@@ -175,18 +179,24 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
       return format(scheduleDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
     });
 
+    const dayOpenShifts = openShifts.filter(shift => {
+      const shiftDate = new Date(shift.start_time);
+      return format(shiftDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
+    });
+
     const hasSchedules = daySchedules.length > 0;
+    const hasOpenShifts = dayOpenShifts.length > 0;
     const hasPendingSchedules = daySchedules.some(s => s.status === 'pending');
     const isAnimating = animatingDate && format(animatingDate, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd');
 
     const dayContent = (
       <div className={`relative w-full h-full flex flex-col items-center justify-center p-1 min-h-[40px] ${
-        hasSchedules ? 'font-semibold' : ''
+        hasSchedules || hasOpenShifts ? 'font-semibold' : ''
       } ${isAnimating ? 'animate-pulse bg-green-100 rounded-lg' : ''}`}>
         <span className="text-sm">{format(day, 'd')}</span>
-        {hasSchedules && (
+        {(hasSchedules || hasOpenShifts) && (
           <div className="flex gap-0.5 mt-1">
-            {daySchedules.slice(0, 3).map((schedule, i) => (
+            {daySchedules.slice(0, 2).map((schedule, i) => (
               <div 
                 key={i} 
                 className={`w-1.5 h-1.5 rounded-full ${
@@ -194,7 +204,13 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
                 }`}
               ></div>
             ))}
-            {daySchedules.length > 3 && (
+            {dayOpenShifts.slice(0, 2).map((shift, i) => (
+              <div 
+                key={`open-${i}`} 
+                className="w-1.5 h-1.5 rounded-full bg-amber-500"
+              ></div>
+            ))}
+            {(daySchedules.length + dayOpenShifts.length) > 4 && (
               <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
             )}
           </div>
@@ -208,35 +224,18 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
       </div>
     );
 
-    if (!isManager) {
-      return hasSchedules ? (
-        <ScheduleDatePopover
-          date={day}
-          schedules={schedules}
-          employeeNames={employeeNames}
-        >
-          {dayContent}
-        </ScheduleDatePopover>
-      ) : dayContent;
-    }
-
+    // Enhanced click functionality - show details for any date with schedules/open shifts
     return (
-      <ScheduleDatePopover
-        date={day}
-        schedules={schedules}
-        employeeNames={employeeNames}
+      <div 
+        onClick={() => {
+          if (hasSchedules || hasOpenShifts || isManager) {
+            handleDateClick(day);
+          }
+        }}
+        className={`cursor-pointer ${(hasSchedules || hasOpenShifts || isManager) ? 'hover:bg-gray-100' : ''}`}
       >
-        <ScheduleDateContextMenu
-          date={day}
-          schedules={schedules}
-          isManager={isManager}
-          onEditShift={shiftActions.handleEditShift}
-          onAddShift={shiftActions.handleAddShift}
-          onDeleteShift={shiftActions.handleDeleteShift}
-        >
-          {dayContent}
-        </ScheduleDateContextMenu>
-      </ScheduleDatePopover>
+        {dayContent}
+      </div>
     );
   };
 
@@ -399,6 +398,15 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
         onClose={() => setIsDateActionOpen(false)}
         selectedDate={selectedDate}
         onAddShift={handleAddShift}
+      />
+
+      <DateDetailsDialog
+        isOpen={isDateDetailsOpen}
+        onOpenChange={setIsDateDetailsOpen}
+        selectedDate={selectedDate}
+        schedules={schedules}
+        openShifts={openShifts}
+        employeeNames={employeeNames}
       />
 
       <AddShiftSheet

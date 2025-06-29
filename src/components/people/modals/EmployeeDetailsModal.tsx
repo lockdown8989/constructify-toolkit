@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useDeleteEmployee, Employee as DbEmployee } from '@/hooks/use-employees';
@@ -133,8 +132,6 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
             // Refresh the parent modal data when edit modal closes
             onClose();
           }}
-          departments={[]}
-          sites={[]}
           employeeToEdit={mapToDbEmployee(employee)}
         />
       )}

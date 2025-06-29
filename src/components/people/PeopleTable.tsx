@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -182,8 +181,6 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
         <AddEmployeeModal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
-          departments={[]}
-          sites={[]}
           employeeToEdit={mapToDbEmployee(selectedEmployeeDetails)}
         />
       )}

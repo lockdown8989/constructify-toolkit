@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PeopleTable from '@/components/people/PeopleTable';
@@ -141,8 +140,6 @@ const People = () => {
         <AddEmployeeModal
           isOpen={isAddPersonModalOpen}
           onClose={() => setIsAddPersonModalOpen(false)}
-          departments={filterOptions?.departments || []}
-          sites={filterOptions?.sites || []}
         />
       </div>
     </div>
