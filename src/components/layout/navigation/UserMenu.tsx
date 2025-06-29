@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { LogOut, User, Settings } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
 import {
@@ -62,11 +62,6 @@ const UserMenu = () => {
     }
   };
 
-  const handleProfileClick = () => {
-    console.log("🔗 Navigating to profile page");
-    navigate("/profile");
-  };
-
   const handleSettingsClick = () => {
     console.log("🔗 Navigating to settings page");
     navigate("/settings");
@@ -109,10 +104,6 @@ const UserMenu = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleProfileClick} className="cursor-pointer">
-          <User className="mr-2 h-4 w-4" />
-          <span>Profile</span>
-        </DropdownMenuItem>
         <DropdownMenuItem onClick={handleSettingsClick} className="cursor-pointer">
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
