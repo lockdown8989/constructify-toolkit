@@ -1,4 +1,3 @@
-
 import { useMemo, useState } from 'react';
 import { useRestaurantSchedule } from '@/hooks/use-restaurant-schedule';
 import { useEmployeeDataManagement } from '@/hooks/use-employee-data-management';
@@ -118,14 +117,14 @@ export const useRestaurantScheduleLogic = () => {
     }
   };
 
-  // Handle adding open shift with proper type conversion
-  const handleAddOpenShift = (openShift: Omit<OpenShift, 'id'>) => {
-    // Convert OpenShift to OpenShiftType format with required properties
+  // Handle adding open shift - fix the type issue by ensuring all required properties
+  const handleAddOpenShift = (openShift: Partial<OpenShift>) => {
+    // Create a proper OpenShiftType with all required fields
     const convertedOpenShift: Omit<OpenShiftType, 'id'> = {
       title: openShift.title || 'Open Shift',
-      role: openShift.role,
-      start_time: openShift.start_time || `${new Date().toISOString().split('T')[0]}T09:00:00`,
-      end_time: openShift.end_time || `${new Date().toISOString().split('T')[0]}T17:00:00`,
+      role: openShift.role || null,
+      start_time: openShift.start_time || openShift.startTime || `${new Date().toISOString().split('T')[0]}T09:00:00`,
+      end_time: openShift.end_time || openShift.endTime || `${new Date().toISOString().split('T')[0]}T17:00:00`,
       location: openShift.location || '',
       notes: openShift.notes || '',
       status: openShift.status || 'open',
