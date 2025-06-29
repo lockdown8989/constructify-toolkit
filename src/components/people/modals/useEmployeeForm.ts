@@ -111,25 +111,72 @@ export const useEmployeeForm = ({ onSuccess, defaultLocation, employeeToEdit }: 
     try {
       setError(null);
       
+      // Transform form data to match Employee type requirements
+      const employeeData = {
+        name: data.name || '',
+        email: data.email || '',
+        job_title: data.job_title || '',
+        department: data.department || '',
+        site: data.site || '',
+        salary: typeof data.salary === 'number' ? data.salary : Number(data.salary) || 0,
+        hourly_rate: data.hourly_rate,
+        start_date: data.start_date || new Date().toISOString().split('T')[0],
+        lifecycle: data.lifecycle || 'Active',
+        status: data.status || 'Active',
+        location: data.location || 'Office',
+        annual_leave_days: data.annual_leave_days || 25,
+        sick_leave_days: data.sick_leave_days || 10,
+        role: data.role || 'employee',
+        shift_pattern_id: data.shift_pattern_id,
+        monday_shift_id: data.monday_shift_id,
+        tuesday_shift_id: data.tuesday_shift_id,
+        wednesday_shift_id: data.wednesday_shift_id,
+        thursday_shift_id: data.thursday_shift_id,
+        friday_shift_id: data.friday_shift_id,
+        saturday_shift_id: data.saturday_shift_id,
+        sunday_shift_id: data.sunday_shift_id,
+        monday_available: data.monday_available ?? true,
+        monday_start_time: data.monday_start_time || '09:00',
+        monday_end_time: data.monday_end_time || '17:00',
+        tuesday_available: data.tuesday_available ?? true,
+        tuesday_start_time: data.tuesday_start_time || '09:00',
+        tuesday_end_time: data.tuesday_end_time || '17:00',
+        wednesday_available: data.wednesday_available ?? true,
+        wednesday_start_time: data.wednesday_start_time || '09:00',
+        wednesday_end_time: data.wednesday_end_time || '17:00',
+        thursday_available: data.thursday_available ?? true,
+        thursday_start_time: data.thursday_start_time || '09:00',
+        thursday_end_time: data.thursday_end_time || '17:00',
+        friday_available: data.friday_available ?? true,
+        friday_start_time: data.friday_start_time || '09:00',
+        friday_end_time: data.friday_end_time || '17:00',
+        saturday_available: data.saturday_available ?? true,
+        saturday_start_time: data.saturday_start_time || '09:00',
+        saturday_end_time: data.saturday_end_time || '17:00',
+        sunday_available: data.sunday_available ?? true,
+        sunday_start_time: data.sunday_start_time || '09:00',
+        sunday_end_time: data.sunday_end_time || '17:00',
+      };
+      
       if (employeeToEdit) {
         // Update existing employee
         await updateEmployee.mutateAsync({
           id: employeeToEdit.id,
-          ...data
+          ...employeeData
         });
         
         toast({
           title: "Employee updated",
-          description: `${data.name} has been updated successfully.`,
+          description: `${employeeData.name} has been updated successfully.`,
           variant: "default"
         });
       } else {
-        // Create new employee
-        await addEmployee.mutateAsync(data);
+        // Create new employee - cast to the correct type
+        await addEmployee.mutateAsync(employeeData as any);
         
         toast({
           title: "Employee added",
-          description: `${data.name} has been added to the team.`,
+          description: `${employeeData.name} has been added to the team.`,
           variant: "default"
         });
       }
