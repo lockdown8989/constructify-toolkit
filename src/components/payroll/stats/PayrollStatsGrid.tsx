@@ -40,6 +40,10 @@ export const PayrollStatsGrid: React.FC<PayrollStatsGridProps> = ({
     });
   };
 
+  // Ensure we're displaying the actual employee count
+  const displayedEmployeeCount = totalEmployees || 0;
+  console.log('PayrollStatsGrid - Employee count:', displayedEmployeeCount);
+
   const stats = [
     {
       title: "Total Payroll",
@@ -52,8 +56,8 @@ export const PayrollStatsGrid: React.FC<PayrollStatsGridProps> = ({
     },
     {
       title: "Total Employees",
-      value: formatNumber(totalEmployees),
-      rawValue: totalEmployees,
+      value: formatNumber(displayedEmployeeCount),
+      rawValue: displayedEmployeeCount,
       icon: Users,
       color: "bg-blue-50 text-blue-600",
       iconColor: "bg-blue-100",

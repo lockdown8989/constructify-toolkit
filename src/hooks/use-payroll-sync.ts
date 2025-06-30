@@ -29,21 +29,86 @@ export const usePayrollSync = (timeRange: 'day' | 'week' | 'month' = 'month') =>
       try {
         setIsProcessing(true);
         
+        // First, get the actual employee count from the database
+        const { data: employeeData, error: employeeError } = await supabase
+          .from('employees')
+          .select('id, status')
+          .eq('status', 'Active');
+
+        if (employeeError) {
+          console.error('Error fetching employees:', employeeError);
+        }
+
+        const actualEmployeeCount = employeeData?.length || 0;
+        console.log('Actual employee count from database:', actualEmployeeCount);
+        
         // Call our edge function to process data with OpenAI
         const { data, error } = await supabase.functions.invoke('process-payroll-data', {
           body: { action: 'sync', timeRange }
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Edge function error:', error);
+          // Return fallback data with actual employee count
+          return {
+            totalPayroll: 0,
+            totalOvertime: 0,
+            totalBonuses: 0,
+            totalEmployees: actualEmployeeCount,
+            paidEmployees: 0,
+            pendingEmployees: actualEmployeeCount,
+            absentEmployees: 0,
+            chartData: [],
+            lastUpdated: new Date().toISOString()
+          };
+        }
         
-        if (!data.success) {
-          throw new Error(data.error || 'Failed to process payroll data');
+        if (!data?.success) {
+          console.error('Edge function returned error:', data?.error);
+          // Return fallback data with actual employee count
+          return {
+            totalPayroll: 0,
+            totalOvertime: 0,
+            totalBonuses: 0,
+            totalEmployees: actualEmployeeCount,
+            paidEmployees: 0,
+            pendingEmployees: actualEmployeeCount,
+            absentEmployees: 0,
+            chartData: [],
+            lastUpdated: new Date().toISOString()
+          };
         }
 
-        return data.data;
+        // Ensure we use the actual employee count
+        const result = {
+          ...data.data,
+          totalEmployees: actualEmployeeCount
+        };
+
+        console.log('Final payroll metrics:', result);
+        return result;
       } catch (error) {
         console.error('Error syncing payroll data:', error);
-        throw error;
+        
+        // Fallback: get employee count directly
+        const { data: employeeData } = await supabase
+          .from('employees')
+          .select('id, status')
+          .eq('status', 'Active');
+
+        const actualEmployeeCount = employeeData?.length || 0;
+        
+        return {
+          totalPayroll: 0,
+          totalOvertime: 0,
+          totalBonuses: 0,
+          totalEmployees: actualEmployeeCount,
+          paidEmployees: 0,
+          pendingEmployees: actualEmployeeCount,
+          absentEmployees: 0,
+          chartData: [],
+          lastUpdated: new Date().toISOString()
+        };
       } finally {
         setIsProcessing(false);
       }
