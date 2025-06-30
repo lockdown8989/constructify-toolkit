@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PeopleTable from '@/components/people/PeopleTable';
-import { AlertCircle, Users, Briefcase } from 'lucide-react';
+import { AlertCircle, Users, Briefcase, Trash2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useEmployees, useEmployeeFilters, useAddEmployee, useUpdateEmployee } from '@/hooks/use-employees';
 import { useToast } from '@/hooks/use-toast';
@@ -12,15 +13,20 @@ import FilterSection from '@/components/people/FilterSection';
 import ErrorDisplay from '@/components/people/ErrorDisplay';
 import { useEmployeeData } from '@/components/people/useEmployeeData';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { cleanupExampleEmployees } from '@/utils/employee-cleanup';
+import { useAuth } from '@/hooks/use-auth';
 
 const People = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isManager, isPayroll, isAdmin } = useAuth();
   
   // State for modal
   const [isAddPersonModalOpen, setIsAddPersonModalOpen] = useState(false);
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
   
   // State for filters and sorting
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,7 +43,8 @@ const People = () => {
   const { 
     data: employees = [], 
     isLoading, 
-    error 
+    error,
+    refetch
   } = useEmployees(activeFilters);
   
   // Fetch filter options
@@ -55,6 +62,57 @@ const People = () => {
     sortField,
     sortDirection
   );
+
+  // Auto-cleanup example employees on component mount for admin/manager users
+  useEffect(() => {
+    if ((isManager || isPayroll || isAdmin) && employees.length === 0 && !isLoading) {
+      const autoCleanup = async () => {
+        console.log('Auto-cleaning example employees...');
+        const result = await cleanupExampleEmployees();
+        if (result.success && result.cleanedCount > 0) {
+          toast({
+            title: "Cleanup Complete",
+            description: `Removed ${result.cleanedCount} example employees from the system.`
+          });
+          refetch();
+        }
+      };
+      
+      const timer = setTimeout(autoCleanup, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [employees.length, isLoading, isManager, isPayroll, isAdmin, refetch, toast]);
+  
+  // Handle manual cleanup
+  const handleCleanupExamples = async () => {
+    setIsCleaningUp(true);
+    try {
+      const result = await cleanupExampleEmployees();
+      if (result.success) {
+        toast({
+          title: "Cleanup Complete",
+          description: result.cleanedCount > 0 
+            ? `Removed ${result.cleanedCount} example employees.`
+            : "No example employees found to remove."
+        });
+        refetch();
+      } else {
+        toast({
+          title: "Cleanup Failed",
+          description: result.error || "Failed to cleanup example employees.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Cleanup Error",
+        description: "An error occurred during cleanup.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCleaningUp(false);
+    }
+  };
   
   // Handle adding new employee
   const handleAddPerson = () => {
@@ -95,14 +153,29 @@ const People = () => {
   return (
     <div className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
       <div className="max-w-[1800px] mx-auto">
-        <div className="flex items-center mb-8">
-          <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-3 rounded-2xl mr-4 shadow-sm">
-            <Briefcase className="h-7 w-7 text-white" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-3 rounded-2xl mr-4 shadow-sm">
+              <Briefcase className="h-7 w-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight text-apple-gray-900">Team Members</h1>
+              <p className="text-apple-gray-500 text-sm mt-1">Manage your team and their permissions</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-apple-gray-900">Team Members</h1>
-            <p className="text-apple-gray-500 text-sm mt-1">Manage your team and their permissions</p>
-          </div>
+          
+          {/* Cleanup button for admins/managers */}
+          {(isManager || isPayroll || isAdmin) && (
+            <Button
+              onClick={handleCleanupExamples}
+              disabled={isCleaningUp}
+              variant="outline"
+              className="ml-4"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {isCleaningUp ? "Cleaning..." : "Remove Examples"}
+            </Button>
+          )}
         </div>
         
         {/* Page Header with Add Person Button */}
