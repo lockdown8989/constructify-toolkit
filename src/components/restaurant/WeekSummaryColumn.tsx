@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { WeekStats } from '@/types/restaurant-schedule';
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ const WeekSummaryColumn = ({
   const dateRange = formatDateRange(weekStats.startDate, weekStats.endDate);
 
   // Use the provided formatCurrency function or the imported one
-  const currencyFormatter = customFormatCurrency || formatCurrency;
+  const currencyFormatter = customFormatCurrency || ((amount: number, currency?: string) => formatCurrency(amount, currency || 'USD'));
   
   return (
     <div className="col-span-1 bg-gray-50 border-r border-gray-200 flex flex-col">

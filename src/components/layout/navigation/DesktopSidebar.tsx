@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -44,9 +45,13 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ isAuthenticated }) => {
     setIsCollapsed(!isCollapsed);
   };
   
+  if (!isAuthenticated) {
+    return null;
+  }
+  
   return (
     <div className={cn(
-      "desktop-sidebar flex-col h-screen border-r transition-all duration-300", 
+      "desktop-sidebar flex flex-col h-screen border-r bg-white transition-all duration-300 sticky top-0", 
       isCollapsed ? "w-[70px]" : "w-[240px]"
     )}>
       <SidebarHeader 
@@ -54,7 +59,7 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ isAuthenticated }) => {
         toggleCollapse={toggleCollapse}
       />
       
-      <div className="sidebar-content">
+      <div className="sidebar-content flex-1 overflow-y-auto">
         <TimeClockControls
           isClockingEnabled={isClockingEnabled}
           isCollapsed={isCollapsed}

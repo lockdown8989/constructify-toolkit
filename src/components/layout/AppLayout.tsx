@@ -12,14 +12,20 @@ const AppLayout = () => {
   
   return (
     <div className="flex min-h-screen w-full">
-      {/* Only render Desktop Sidebar when not on mobile */}
-      {!isMobile && <DesktopSidebar isAuthenticated={isAuthenticated} />}
+      {/* Desktop Sidebar - Always render on desktop */}
+      {!isMobile && (
+        <div className="flex-shrink-0">
+          <DesktopSidebar isAuthenticated={isAuthenticated} />
+        </div>
+      )}
       
       <div className="flex flex-col flex-grow w-full">
         <Navbar />
-        <div className="container py-4 px-4 md:px-6 flex-1">
-          <Outlet />
-        </div>
+        <main className="flex-1 overflow-auto">
+          <div className="container py-4 px-4 md:px-6 h-full">
+            <Outlet />
+          </div>
+        </main>
       </div>
     </div>
   );
