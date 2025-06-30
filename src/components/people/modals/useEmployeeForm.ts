@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,16 +19,16 @@ export const useEmployeeForm = ({ onSuccess, defaultLocation, employeeToEdit }: 
 
   // Set default values based on whether we're editing or creating
   const defaultValues: EmployeeFormValues = employeeToEdit ? {
-    name: employeeToEdit.name,
+    name: employeeToEdit.name || '',
     email: employeeToEdit.email || '',
-    job_title: employeeToEdit.job_title,
-    department: employeeToEdit.department,
-    site: employeeToEdit.site,
-    salary: employeeToEdit.salary,
+    job_title: employeeToEdit.job_title || '',
+    department: employeeToEdit.department || '',
+    site: employeeToEdit.site || '',
+    salary: employeeToEdit.salary || 0,
     hourly_rate: employeeToEdit.hourly_rate || undefined,
-    start_date: employeeToEdit.start_date,
-    lifecycle: employeeToEdit.lifecycle as 'Active' | 'Inactive' | 'Terminated',
-    status: employeeToEdit.status as 'Active' | 'Inactive' | 'On Leave',
+    start_date: employeeToEdit.start_date || new Date().toISOString().split('T')[0],
+    lifecycle: (employeeToEdit.lifecycle as 'Active' | 'Inactive' | 'Terminated') || 'Active',
+    status: (employeeToEdit.status as 'Active' | 'Inactive' | 'On Leave') || 'Active',
     location: (employeeToEdit.location as 'Office' | 'Remote' | 'Hybrid') || 'Office',
     annual_leave_days: employeeToEdit.annual_leave_days || 25,
     sick_leave_days: employeeToEdit.sick_leave_days || 10,
@@ -102,7 +101,8 @@ export const useEmployeeForm = ({ onSuccess, defaultLocation, employeeToEdit }: 
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),
-    defaultValues
+    defaultValues,
+    mode: 'onChange'
   });
 
   const isSubmitting = addEmployee.isPending || updateEmployee.isPending;
@@ -110,6 +110,7 @@ export const useEmployeeForm = ({ onSuccess, defaultLocation, employeeToEdit }: 
   const onSubmit = async (data: EmployeeFormValues) => {
     try {
       setError(null);
+      console.log('Submitting employee form with data:', data);
       
       // Transform form data to match Employee type requirements
       const employeeData = {
@@ -160,6 +161,7 @@ export const useEmployeeForm = ({ onSuccess, defaultLocation, employeeToEdit }: 
       
       if (employeeToEdit) {
         // Update existing employee
+        console.log('Updating employee with ID:', employeeToEdit.id);
         await updateEmployee.mutateAsync({
           id: employeeToEdit.id,
           ...employeeData
@@ -171,7 +173,8 @@ export const useEmployeeForm = ({ onSuccess, defaultLocation, employeeToEdit }: 
           variant: "default"
         });
       } else {
-        // Create new employee - cast to the correct type
+        // Create new employee
+        console.log('Creating new employee');
         await addEmployee.mutateAsync(employeeData as any);
         
         toast({
@@ -184,11 +187,12 @@ export const useEmployeeForm = ({ onSuccess, defaultLocation, employeeToEdit }: 
       onSuccess();
     } catch (error) {
       console.error('Form submission error:', error);
-      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      setError(errorMessage);
       
       toast({
         title: employeeToEdit ? "Update failed" : "Add employee failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description: errorMessage,
         variant: "destructive"
       });
     }

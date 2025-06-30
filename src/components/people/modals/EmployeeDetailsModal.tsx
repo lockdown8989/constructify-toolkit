@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useDeleteEmployee, Employee as DbEmployee } from '@/hooks/use-employees';
@@ -33,6 +34,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   if (!employee) return null;
 
   const handleEdit = () => {
+    console.log('Edit button clicked for employee:', employee);
     if (onEdit) {
       onEdit(employee);
       onClose();
@@ -61,12 +63,18 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
     }
   };
 
+  const handleEditModalClose = () => {
+    console.log('Edit modal closing');
+    setIsEditModalOpen(false);
+    // Don't close the parent modal here - let the user see the updated details
+  };
+
   // Convert UI Employee to DB Employee format for editing
   const mapToDbEmployee = (uiEmployee: Employee): DbEmployee => {
     return {
       id: uiEmployee.id,
       name: uiEmployee.name,
-      job_title: uiEmployee.jobTitle || '',
+      job_title: uiEmployee.jobTitle || uiEmployee.title || '',
       department: uiEmployee.department,
       site: uiEmployee.site,
       salary: typeof uiEmployee.salary === 'string' 
@@ -93,7 +101,28 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       thursday_shift_id: uiEmployee.thursday_shift_id || null,
       friday_shift_id: uiEmployee.friday_shift_id || null,
       saturday_shift_id: uiEmployee.saturday_shift_id || null,
-      sunday_shift_id: uiEmployee.sunday_shift_id || null
+      sunday_shift_id: uiEmployee.sunday_shift_id || null,
+      monday_available: uiEmployee.monday_available ?? true,
+      monday_start_time: uiEmployee.monday_start_time || '09:00',
+      monday_end_time: uiEmployee.monday_end_time || '17:00',
+      tuesday_available: uiEmployee.tuesday_available ?? true,
+      tuesday_start_time: uiEmployee.tuesday_start_time || '09:00',
+      tuesday_end_time: uiEmployee.tuesday_end_time || '17:00',
+      wednesday_available: uiEmployee.wednesday_available ?? true,
+      wednesday_start_time: uiEmployee.wednesday_start_time || '09:00',
+      wednesday_end_time: uiEmployee.wednesday_end_time || '17:00',
+      thursday_available: uiEmployee.thursday_available ?? true,
+      thursday_start_time: uiEmployee.thursday_start_time || '09:00',
+      thursday_end_time: uiEmployee.thursday_end_time || '17:00',
+      friday_available: uiEmployee.friday_available ?? true,
+      friday_start_time: uiEmployee.friday_start_time || '09:00',
+      friday_end_time: uiEmployee.friday_end_time || '17:00',
+      saturday_available: uiEmployee.saturday_available ?? true,
+      saturday_start_time: uiEmployee.saturday_start_time || '09:00',
+      saturday_end_time: uiEmployee.saturday_end_time || '17:00',
+      sunday_available: uiEmployee.sunday_available ?? true,
+      sunday_start_time: uiEmployee.sunday_start_time || '09:00',
+      sunday_end_time: uiEmployee.sunday_end_time || '17:00',
     };
   };
 
@@ -127,11 +156,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       {isEditModalOpen && (
         <AddEmployeeModal
           isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            // Refresh the parent modal data when edit modal closes
-            onClose();
-          }}
+          onClose={handleEditModalClose}
           employeeToEdit={mapToDbEmployee(employee)}
         />
       )}
