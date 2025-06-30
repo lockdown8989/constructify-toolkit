@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DollarSign, Download, Settings, Loader2, RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface PayrollHeaderProps {
   lastUpdated?: string;
@@ -15,6 +16,12 @@ export const PayrollHeader: React.FC<PayrollHeaderProps> = ({
   isProcessing,
   onManualSync
 }) => {
+  const navigate = useNavigate();
+
+  const handlePayrollSettings = () => {
+    navigate('/payroll-settings');
+  };
+
   return (
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
@@ -46,7 +53,11 @@ export const PayrollHeader: React.FC<PayrollHeaderProps> = ({
           )}
           Sync Data
         </Button>
-        <Button variant="outline" size="sm">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handlePayrollSettings}
+        >
           <Settings className="h-4 w-4 mr-2" />
           Payroll Settings
         </Button>

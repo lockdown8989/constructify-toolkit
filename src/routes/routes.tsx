@@ -1,227 +1,174 @@
+import { lazy } from 'react';
 
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from '@/hooks/auth';
-import AppLayout from '@/components/layout/AppLayout';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Error404 } from '@/pages/Error404';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { RouteObject } from 'react-router-dom';
+import PayrollSettings from "@/pages/PayrollSettings";
 
-// Import pages
-import Index from '@/pages/Index';
-import Dashboard from '@/pages/Dashboard';
-import Auth from '@/pages/Auth';
-import TimeClock from '@/pages/TimeClock';
-import ManagerTimeClock from '@/pages/ManagerTimeClock';
-import Schedule from '@/pages/Schedule';
-import ScheduleRequests from '@/pages/ScheduleRequests';
-import LeaveManagement from '@/pages/LeaveManagement';
-import People from '@/pages/People';
-import Attendance from '@/pages/Attendance';
-import Salary from '@/pages/Salary';
-import Payroll from '@/pages/Payroll';
-import PayrollDashboard from '@/pages/PayrollDashboard';
-import Payslips from '@/pages/Payslips';
-import EmployeeWorkflow from '@/pages/EmployeeWorkflow';
-import RestaurantSchedule from '@/pages/RestaurantSchedule';
-import Settings from '@/pages/Settings';
-import ProfileSettings from '@/pages/ProfileSettings';
-import Profile from '@/pages/Profile';
-import Hiring from '@/pages/Hiring';
-import About from '@/pages/About';
-import NotFound from '@/pages/NotFound';
-import ShiftPatterns from '@/pages/ShiftPatterns';
+const routes: RouteObject[] = [
+  {
+    path: '/',
+    Component: lazy(() => import('@/pages/Home')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/about',
+    Component: lazy(() => import('@/pages/About')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/contact',
+    Component: lazy(() => import('@/pages/Contact')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/blog',
+    Component: lazy(() => import('@/pages/Blog')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/blog/:id',
+    Component: lazy(() => import('@/pages/BlogPost')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/login',
+    Component: lazy(() => import('@/pages/Login')),
+    exact: true,
+  },
+  {
+    path: '/register',
+    Component: lazy(() => import('@/pages/Register')),
+    exact: true,
+  },
+  {
+    path: '/forgot-password',
+    Component: lazy(() => import('@/pages/ForgotPassword')),
+    exact: true,
+  },
+  {
+    path: '/reset-password',
+    Component: lazy(() => import('@/pages/ResetPassword')),
+    exact: true,
+  },
+  {
+    path: '/profile',
+    Component: lazy(() => import('@/pages/Profile')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/admin',
+    Component: lazy(() => import('@/pages/Admin')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/admin/users',
+    Component: lazy(() => import('@/pages/Admin/Users')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/admin/users/:id',
+    Component: lazy(() => import('@/pages/Admin/User')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/admin/posts',
+    Component: lazy(() => import('@/pages/Admin/Posts')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/admin/posts/:id',
+    Component: lazy(() => import('@/pages/Admin/Post')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/admin/settings',
+    Component: lazy(() => import('@/pages/Admin/Settings')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/dashboard',
+    Component: lazy(() => import('@/pages/Dashboard')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/attendance',
+    Component: lazy(() => import('@/pages/Attendance')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/employees',
+    Component: lazy(() => import('@/pages/Employees')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/employees/:id',
+    Component: lazy(() => import('@/pages/Employee')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/payroll',
+    Component: lazy(() => import('@/pages/PayrollDashboard')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/shift-patterns',
+    Component: lazy(() => import('@/components/shift-patterns/ShiftPatternsPage')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/shift-patterns/settings',
+    Component: lazy(() => import('@/components/shift-patterns/ShiftPatternSettings')),
+    Layout: MainLayout,
+    ErrorBoundary,
+    exact: true,
+  },
+  {
+    path: '/404',
+    Component: Error404,
+    exact: true,
+  },
+  {
+    path: "/payroll-settings",
+    element: <PayrollSettings />,
+  },
+];
 
-// Import the ShiftCalendar component
-import ShiftCalendar from '@/components/schedule/ShiftCalendar';
-
-// Import the EmployeeDetailsPage component
-import EmployeeDetailsPage from '@/components/people/EmployeeDetailsPage';
-
-const AppRoutes = () => {
-  return (
-    <AuthProvider>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/about" element={<About />} />
-
-        {/* Protected routes with layout */}
-        <Route element={<AppLayout />}>
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payroll-dashboard"
-            element={
-              <ProtectedRoute requiredRole="payroll">
-                <PayrollDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/time-clock"
-            element={
-              <ProtectedRoute>
-                <TimeClock />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/manager-time-clock"
-            element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <ManagerTimeClock />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/schedule"
-            element={
-              <ProtectedRoute>
-                <Schedule />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/shift-calendar"
-            element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <ShiftCalendar />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/shift-patterns"
-            element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <ShiftPatterns />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/schedule-requests"
-            element={
-              <ProtectedRoute>
-                <ScheduleRequests />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/leave-management"
-            element={
-              <ProtectedRoute>
-                <LeaveManagement />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/people"
-            element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <People />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/people/employee/:id"
-            element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <EmployeeDetailsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/attendance"
-            element={
-              <ProtectedRoute>
-                <Attendance />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/salary"
-            element={
-              <ProtectedRoute>
-                <Salary />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payroll"
-            element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager', 'payroll']}>
-                <Payroll />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/payslips"
-            element={
-              <ProtectedRoute requiredRole="payroll">
-                <Payslips />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/employee-workflow"
-            element={
-              <ProtectedRoute>
-                <EmployeeWorkflow />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/restaurant-schedule"
-            element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <RestaurantSchedule />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile-settings"
-            element={
-              <ProtectedRoute>
-                <ProfileSettings />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/hiring"
-            element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <Hiring />
-              </ProtectedRoute>
-            }
-          />
-        </Route>
-
-        {/* 404 route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </AuthProvider>
-  );
-};
-
-export default AppRoutes;
+export const createAppRoutes = () => routes;

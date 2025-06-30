@@ -51,27 +51,27 @@ const PayrollDashboard = () => {
     refetchInterval: 30000
   });
 
-  // Enhanced employee data query with better error handling
-  const { data: employeeData, isLoading: employeeLoading } = useQuery({
-    queryKey: ['payroll-employees-data'],
+  // Direct employee data query with better filtering
+  const { data: employeeDataDirect, isLoading: employeeLoading } = useQuery({
+    queryKey: ['employees-for-payroll'],
     queryFn: async () => {
-      console.log('Fetching employee data for payroll dashboard...');
+      console.log('Fetching employees directly for payroll dashboard...');
       const { data, error } = await supabase
         .from('employees')
-        .select('id, name, email, job_title, salary, status, avatar')
-        .in('status', ['Active', 'Inactive', 'Pending'])
+        .select('*')
+        .neq('status', 'Deleted')
         .order('name');
       
       if (error) {
-        console.error('Error fetching employee data:', error);
-        return [];
+        console.error('Error fetching employees directly:', error);
+        throw error;
       }
       
-      console.log('Employee data fetched:', data);
+      console.log('Direct employee data fetched:', data);
       return data || [];
     },
-    refetchInterval: 30000, // Refetch every 30 seconds for live updates
-    staleTime: 0, // Always refetch
+    refetchInterval: 15000,
+    staleTime: 0,
   });
   
   // Redirect if not payroll user
@@ -86,26 +86,26 @@ const PayrollDashboard = () => {
     );
   }
 
+  // Use direct employee data for accurate count
+  const actualEmployeeCount = employeeDataDirect?.length || 0;
+  const overtimeHours = Math.round((overtimeData || 0) / 60);
+
   // Convert employee data to the format expected by the table
-  const employees = employeeData?.map(emp => ({
+  const employees = employeeDataDirect?.map(emp => ({
     id: emp.id,
     name: emp.name || 'Unknown',
     email: emp.email || `${emp.name?.toLowerCase().replace(' ', '.')}@company.com`,
     position: emp.job_title || 'Employee',
     salary: `$${(emp.salary || 0).toFixed(2)}`,
-    status: Math.random() > 0.5 ? 'Paid' : 'Pending', // Randomly assign for demo
+    status: Math.random() > 0.5 ? 'Paid' : 'Pending',
     overtime: Math.random() > 0.7 ? `${Math.floor(Math.random() * 20)}hrs` : '-',
     avatar: emp.avatar || "/lovable-uploads/ff00229e-c65b-41be-aef7-572c8937cac0.png"
   })) || [];
 
-  // Use the live employee count from payroll metrics
-  const actualEmployeeCount = payrollMetrics.totalEmployees;
-  const overtimeHours = Math.round((overtimeData || 0) / 60);
-
-  console.log('Dashboard render - Employee counts:', {
+  console.log('PayrollDashboard render - Employee counts:', {
     payrollMetricsTotal: payrollMetrics.totalEmployees,
     actualEmployeeCount,
-    employeeDataLength: employeeData?.length,
+    employeeDataDirectLength: employeeDataDirect?.length,
     employeeLoading
   });
 
