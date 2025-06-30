@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChevronRight, MoreVertical, CheckCircle, XCircle, Mail, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -70,7 +69,7 @@ const EmployeeMobileCard: React.FC<EmployeeMobileCardProps> = ({
   // Extract numeric value from salary string and format with British pounds
   const formatSalaryDisplay = (salaryString: string): string => {
     const numericValue = parseInt(salaryString.replace(/[^0-9]/g, ''));
-    return formatCurrency(numericValue, 'GBP');
+    return formatCurrency(numericValue, true, 'GBP');
   };
 
   return (
