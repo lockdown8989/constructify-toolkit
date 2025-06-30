@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { usePayrollSync } from '@/hooks/use-payroll-sync';
-import { PayrollStatsGrid } from '@/components/payroll/stats/PayrollStatsGrid';
 import { PayrollOverviewChart } from '@/components/payroll/charts/PayrollOverviewChart';
 import { PayrollStatsModal } from '@/components/payroll/stats/PayrollStatsModal';
 import { PayrollHeader } from '@/components/payroll/header/PayrollHeader';
@@ -51,6 +50,25 @@ const PayrollDashboard = () => {
       return data?.reduce((sum, record) => sum + (record.overtime_minutes || 0), 0) || 0;
     },
     refetchInterval: 30000
+  });
+
+  // Fetch live employee count directly
+  const { data: employeeCount } = useQuery({
+    queryKey: ['live-employee-count'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('id', { count: 'exact' })
+        .eq('status', 'Active');
+      
+      if (error) {
+        console.error('Error fetching employee count:', error);
+        return 0;
+      }
+      
+      return data?.length || 0;
+    },
+    refetchInterval: 10000 // Refetch every 10 seconds for live updates
   });
   
   // Redirect if not payroll user
@@ -118,7 +136,8 @@ const PayrollDashboard = () => {
     }
   ];
 
-  const actualEmployeeCount = payrollMetrics.totalEmployees;
+  // Use the live employee count instead of the one from payrollMetrics
+  const actualEmployeeCount = employeeCount || 0;
   const overtimeHours = Math.round((overtimeData || 0) / 60);
 
   const handleCardClick = (statType: 'total' | 'employees' | 'paid' | 'pending' | 'absent', value: number) => {
@@ -157,14 +176,6 @@ const PayrollDashboard = () => {
             pendingEmployees={payrollMetrics.pendingEmployees}
             overtimeHours={overtimeHours}
             onCardClick={handleCardClick}
-          />
-
-          <PayrollStatsGrid
-            totalPayroll={payrollMetrics.totalPayroll}
-            totalEmployees={payrollMetrics.totalEmployees}
-            paidEmployees={payrollMetrics.paidEmployees}
-            pendingEmployees={payrollMetrics.pendingEmployees}
-            absentEmployees={payrollMetrics.absentEmployees}
           />
 
           <PayrollOverviewChart

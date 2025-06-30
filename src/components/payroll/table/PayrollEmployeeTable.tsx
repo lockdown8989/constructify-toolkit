@@ -118,7 +118,7 @@ export const PayrollEmployeeTable: React.FC<PayrollEmployeeTableProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {employees.slice(0, actualEmployeeCount).map((employee) => (
+                {employees.slice(0, Math.max(actualEmployeeCount, employees.length)).map((employee) => (
                   <tr key={employee.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4">
                       <input type="checkbox" className="rounded border-gray-300" />
