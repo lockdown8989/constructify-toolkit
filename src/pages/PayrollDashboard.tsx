@@ -6,18 +6,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Calendar, DollarSign, TrendingUp, Users, Download, Settings, Filter, Grid, List, Search, Loader2, RefreshCw } from 'lucide-react';
+import { Calendar, DollarSign, TrendingUp, Users, Download, Settings, Filter, Grid, List, Search, Loader2, RefreshCw, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { usePayrollSync } from '@/hooks/use-payroll-sync';
 import { PayrollStatsGrid } from '@/components/payroll/stats/PayrollStatsGrid';
 import { PayrollOverviewChart } from '@/components/payroll/charts/PayrollOverviewChart';
-import { formatCurrency } from '@/utils/format';
+import { formatCurrency, formatNumber } from '@/utils/format';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { PayrollStatsModal } from '@/components/payroll/stats/PayrollStatsModal';
 
 const PayrollDashboard = () => {
   const { user, isPayroll } = useAuth();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [timeRange, setTimeRange] = useState<'day' | 'week' | 'month'>('month');
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    statType: 'total' | 'employees' | 'paid' | 'pending' | 'absent';
+    statValue: number | string;
+  }>({
+    isOpen: false,
+    statType: 'total',
+    statValue: 0,
+  });
   
   const { 
     payrollMetrics, 
@@ -27,6 +39,21 @@ const PayrollDashboard = () => {
     manualSync,
     refetch 
   } = usePayrollSync(timeRange);
+
+  // Fetch live overtime data for accurate display
+  const { data: overtimeData } = useQuery({
+    queryKey: ['overtime-hours'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('attendance')
+        .select('overtime_minutes')
+        .gte('date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+      
+      if (error) throw error;
+      return data?.reduce((sum, record) => sum + (record.overtime_minutes || 0), 0) || 0;
+    },
+    refetchInterval: 30000
+  });
   
   // Redirect if not payroll user
   if (!isPayroll) {
@@ -113,6 +140,17 @@ const PayrollDashboard = () => {
     setTimeRange(newRange);
   };
 
+  // Calculate overtime hours from minutes
+  const overtimeHours = Math.round((overtimeData || 0) / 60);
+
+  const handleCardClick = (statType: 'total' | 'employees' | 'paid' | 'pending' | 'absent', value: number) => {
+    setModalState({
+      isOpen: true,
+      statType,
+      statValue: value,
+    });
+  };
+
   return (
     <div className="container py-6 animate-fade-in">
       {/* Header */}
@@ -177,7 +215,66 @@ const PayrollDashboard = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          {/* Live Stats Grid */}
+          {/* Live Stats Grid with accurate data */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            {/* Total Payroll Card */}
+            <Card 
+              className="border shadow-sm bg-green-50 text-green-600 border-opacity-50 cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105"
+              onClick={() => handleCardClick('total', payrollMetrics.totalPayroll)}
+            >
+              <CardContent className="p-4 flex flex-col">
+                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center mb-3">
+                  <DollarSign className="h-5 w-5" />
+                </div>
+                <p className="text-sm font-medium mb-1">Total Payroll</p>
+                <p className="text-xl font-bold">{formatCurrency(payrollMetrics.totalPayroll)}</p>
+              </CardContent>
+            </Card>
+
+            {/* Total Employees Card */}
+            <Card 
+              className="border shadow-sm bg-blue-50 text-blue-600 border-opacity-50 cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105"
+              onClick={() => handleCardClick('employees', actualEmployeeCount)}
+            >
+              <CardContent className="p-4 flex flex-col">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-3">
+                  <Users className="h-5 w-5" />
+                </div>
+                <p className="text-sm font-medium mb-1">Total Employees</p>
+                <p className="text-xl font-bold">{formatNumber(actualEmployeeCount)}</p>
+              </CardContent>
+            </Card>
+
+            {/* Pending Payslips Card */}
+            <Card 
+              className="border shadow-sm bg-amber-50 text-amber-600 border-opacity-50 cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105"
+              onClick={() => handleCardClick('pending', payrollMetrics.pendingEmployees)}
+            >
+              <CardContent className="p-4 flex flex-col">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center mb-3">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <p className="text-sm font-medium mb-1">Pending Payslips</p>
+                <p className="text-xl font-bold">{formatNumber(payrollMetrics.pendingEmployees)}</p>
+              </CardContent>
+            </Card>
+
+            {/* Overtime Hours Card */}
+            <Card 
+              className="border shadow-sm bg-purple-50 text-purple-600 border-opacity-50 cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105"
+              onClick={() => handleCardClick('total', overtimeHours)}
+            >
+              <CardContent className="p-4 flex flex-col">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center mb-3">
+                  <TrendingUp className="h-5 w-5" />
+                </div>
+                <p className="text-sm font-medium mb-1">Overtime Hours</p>
+                <p className="text-xl font-bold">{overtimeHours}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Replace the PayrollStatsGrid with individual cards above */}
           <PayrollStatsGrid
             totalPayroll={payrollMetrics.totalPayroll}
             totalEmployees={payrollMetrics.totalEmployees}
@@ -385,6 +482,13 @@ const PayrollDashboard = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <PayrollStatsModal
+        isOpen={modalState.isOpen}
+        onClose={() => setModalState(prev => ({ ...prev, isOpen: false }))}
+        statType={modalState.statType}
+        statValue={modalState.statValue}
+      />
     </div>
   );
 };
