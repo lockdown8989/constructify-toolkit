@@ -12,6 +12,10 @@ import { PayrollHeader } from '@/components/payroll/header/PayrollHeader';
 import { PayrollStatsCards } from '@/components/payroll/cards/PayrollStatsCards';
 import { PayrollEmployeeTable } from '@/components/payroll/table/PayrollEmployeeTable';
 import { PayrollInsights } from '@/components/payroll/insights/PayrollInsights';
+import { PayrollProcessingTab } from '@/components/payroll/tabs/PayrollProcessingTab';
+import { PayrollReportsTab } from '@/components/payroll/tabs/PayrollReportsTab';
+import { PayrollCalendarTab } from '@/components/payroll/tabs/PayrollCalendarTab';
+import { PayrollApprovalsTab } from '@/components/payroll/tabs/PayrollApprovalsTab';
 import { formatCurrency } from '@/utils/format';
 
 const PayrollDashboard = () => {
@@ -171,47 +175,19 @@ const PayrollDashboard = () => {
         </TabsContent>
 
         <TabsContent value="processing">
-          <Card>
-            <CardHeader>
-              <CardTitle>Payroll Processing</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Payroll processing interface will be implemented here</p>
-            </CardContent>
-          </Card>
+          <PayrollProcessingTab employees={employees} />
         </TabsContent>
 
         <TabsContent value="reports">
-          <Card>
-            <CardHeader>
-              <CardTitle>Payroll Reports</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Payroll reports and analytics will be implemented here</p>
-            </CardContent>
-          </Card>
+          <PayrollReportsTab />
         </TabsContent>
 
         <TabsContent value="calendar">
-          <Card>
-            <CardHeader>
-              <CardTitle>Payroll Calendar</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Payroll calendar view will be implemented here</p>
-            </CardContent>
-          </Card>
+          <PayrollCalendarTab />
         </TabsContent>
 
         <TabsContent value="approvals">
-          <Card>
-            <CardHeader>
-              <CardTitle>Payroll Approvals</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Payroll approval workflow will be implemented here</p>
-            </CardContent>
-          </Card>
+          <PayrollApprovalsTab />
         </TabsContent>
       </Tabs>
 
