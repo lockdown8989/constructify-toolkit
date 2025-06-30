@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Users, Filter, Search, Grid, List, Settings, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Employee {
   id: string;
@@ -36,6 +38,8 @@ export const PayrollEmployeeTable: React.FC<PayrollEmployeeTableProps> = ({
   onSearchChange,
   onViewModeChange
 }) => {
+  const { toast } = useToast();
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Paid':
@@ -48,6 +52,58 @@ export const PayrollEmployeeTable: React.FC<PayrollEmployeeTableProps> = ({
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
+
+  const handleEmployeeSettings = async (employeeId: string, employeeName: string) => {
+    try {
+      // Navigate to employee details or open settings modal
+      toast({
+        title: "Employee Settings",
+        description: `Opening settings for ${employeeName}`,
+      });
+      
+      // Here you could implement navigation to employee details page
+      // or open a settings modal
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to open employee settings",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleViewEmployee = async (employeeId: string, employeeName: string) => {
+    try {
+      // Fetch and display employee details
+      const { data: employeeData, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('id', employeeId)
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Employee Details",
+        description: `Viewing details for ${employeeName}`,
+      });
+
+      // Here you could open a modal or navigate to employee details page
+      console.log('Employee data:', employeeData);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load employee details",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredEmployees = employees.filter(employee =>
+    employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    employee.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    employee.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <Card>
@@ -118,7 +174,7 @@ export const PayrollEmployeeTable: React.FC<PayrollEmployeeTableProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {employees.slice(0, Math.max(actualEmployeeCount, employees.length)).map((employee) => (
+                {filteredEmployees.map((employee) => (
                   <tr key={employee.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4">
                       <input type="checkbox" className="rounded border-gray-300" />
@@ -143,10 +199,20 @@ export const PayrollEmployeeTable: React.FC<PayrollEmployeeTableProps> = ({
                     <td className="py-3 px-4">{getStatusBadge(employee.status)}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleEmployeeSettings(employee.id, employee.name)}
+                          title="Employee Settings"
+                        >
                           <Settings className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleViewEmployee(employee.id, employee.name)}
+                          title="View Employee Details"
+                        >
                           👁
                         </Button>
                       </div>

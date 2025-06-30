@@ -1,5 +1,5 @@
 
-export const formatCurrency = (amount: number, currency: string = 'USD', locale: string = 'en-US'): string => {
+export const formatCurrency = (amount: number, currency: string = 'GBP', locale: string = 'en-GB'): string => {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency,
@@ -9,7 +9,7 @@ export const formatCurrency = (amount: number, currency: string = 'USD', locale:
 };
 
 export const formatNumber = (num: number): string => {
-  return new Intl.NumberFormat('en-US').format(num);
+  return new Intl.NumberFormat('en-GB').format(num);
 };
 
 export const formatPercentage = (value: number): string => {
@@ -18,9 +18,9 @@ export const formatPercentage = (value: number): string => {
 
 export const formatTime = (time: string | Date): string => {
   const date = typeof time === 'string' ? new Date(time) : time;
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('en-GB', {
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true,
+    hour12: false,
   }).format(date);
 };

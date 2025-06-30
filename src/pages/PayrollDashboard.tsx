@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +12,7 @@ import { PayrollHeader } from '@/components/payroll/header/PayrollHeader';
 import { PayrollStatsCards } from '@/components/payroll/cards/PayrollStatsCards';
 import { PayrollEmployeeTable } from '@/components/payroll/table/PayrollEmployeeTable';
 import { PayrollInsights } from '@/components/payroll/insights/PayrollInsights';
+import { formatCurrency } from '@/utils/format';
 
 const PayrollDashboard = () => {
   const { user, isPayroll } = useAuth();
@@ -90,13 +92,13 @@ const PayrollDashboard = () => {
   const actualEmployeeCount = employeeDataDirect?.length || 0;
   const overtimeHours = Math.round((overtimeData || 0) / 60);
 
-  // Convert employee data to the format expected by the table
+  // Convert employee data to the format expected by the table with GBP formatting
   const employees = employeeDataDirect?.map(emp => ({
     id: emp.id,
     name: emp.name || 'Unknown',
     email: emp.email || `${emp.name?.toLowerCase().replace(' ', '.')}@company.com`,
     position: emp.job_title || 'Employee',
-    salary: `$${(emp.salary || 0).toFixed(2)}`,
+    salary: formatCurrency(emp.salary || 0), // This will now use GBP by default
     status: Math.random() > 0.5 ? 'Paid' : 'Pending',
     overtime: Math.random() > 0.7 ? `${Math.floor(Math.random() * 20)}hrs` : '-',
     avatar: emp.avatar || "/lovable-uploads/ff00229e-c65b-41be-aef7-572c8937cac0.png"
