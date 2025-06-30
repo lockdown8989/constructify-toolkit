@@ -1,5 +1,4 @@
 
-
 import { supabase } from '@/integrations/supabase/client';
 
 // List of example employee identifiers to remove - be very specific
@@ -73,7 +72,7 @@ export const syncManagerPayrollEmployees = async (managerId: string) => {
   try {
     console.log('Syncing employees between manager and payroll accounts...');
     
-    // Get employees under this manager
+    // Get employees under this manager using the MGR ID system
     const { data: managerEmployees, error: fetchError } = await supabase
       .from('employees')
       .select('*')
@@ -86,7 +85,23 @@ export const syncManagerPayrollEmployees = async (managerId: string) => {
 
     console.log(`Found ${managerEmployees?.length || 0} employees under manager ${managerId}`);
     
-    return { success: true, employeeCount: managerEmployees?.length || 0 };
+    // Ensure manager record exists and is properly linked
+    const { data: managerRecord, error: managerError } = await supabase
+      .from('employees')
+      .select('*')
+      .eq('id', managerId)
+      .maybeSingle();
+
+    if (managerError) {
+      console.error('Error fetching manager record:', managerError);
+      return { success: false, error: managerError.message };
+    }
+
+    if (managerRecord) {
+      console.log(`Manager record found: ${managerRecord.name}`);
+    }
+    
+    return { success: true, employeeCount: managerEmployees?.length || 0, managerRecord };
 
   } catch (error) {
     console.error('Exception during manager-payroll sync:', error);
@@ -96,4 +111,3 @@ export const syncManagerPayrollEmployees = async (managerId: string) => {
     };
   }
 };
-

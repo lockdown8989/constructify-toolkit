@@ -118,6 +118,7 @@ export function useEmployees(filters?: Partial<{
             console.error('Error fetching manager data:', managerError);
           } else if (managerData) {
             // Show employees managed by this manager (using manager's employee ID as MGR ID)
+            // PLUS include the manager themselves in the list
             query = query.or(`manager_id.eq.${managerData.id},user_id.eq.${user.id}`);
           } else {
             // If manager doesn't have employee record, show only their own data
