@@ -39,7 +39,7 @@ export type Employee = Database['public']['Tables']['employees']['Row'] & {
 export type NewEmployee = Database['public']['Tables']['employees']['Insert'];
 export type EmployeeUpdate = Database['public']['Tables']['employees']['Update'];
 
-// List of example employee names/emails to filter out
+// List of exact example employee names/emails to filter out - be very specific
 const EXAMPLE_EMPLOYEE_IDENTIFIERS = [
   'rhaenyra@stellia.com',
   'daemon@stellia.com', 
@@ -55,11 +55,12 @@ const EXAMPLE_EMPLOYEE_IDENTIFIERS = [
 ];
 
 const isExampleEmployee = (employee: Employee): boolean => {
+  // Only filter if it's an exact match to known example identifiers
   const nameMatch = EXAMPLE_EMPLOYEE_IDENTIFIERS.some(identifier => 
-    employee.name?.toLowerCase().includes(identifier.toLowerCase())
+    employee.name?.toLowerCase() === identifier.toLowerCase()
   );
   const emailMatch = employee.email && EXAMPLE_EMPLOYEE_IDENTIFIERS.some(identifier => 
-    employee.email?.toLowerCase().includes(identifier.toLowerCase())
+    employee.email?.toLowerCase() === identifier.toLowerCase()
   );
   
   return nameMatch || emailMatch;
@@ -159,15 +160,16 @@ export function useEmployees(filters?: Partial<{
           return [];
         }
         
-        // Filter out example employees and validate data
+        // Only filter out exact example employee matches - preserve all real employees
         const validEmployees = (data || [])
           .filter(employee => {
             if (!employee || !employee.id || !employee.name) {
               console.warn('Invalid employee record found:', employee);
               return false;
             }
+            // Only filter if it's an exact match to example employees
             if (isExampleEmployee(employee)) {
-              console.log('Filtering out example employee:', employee.name);
+              console.log('Filtering out exact example employee match:', employee.name);
               return false;
             }
             return true;

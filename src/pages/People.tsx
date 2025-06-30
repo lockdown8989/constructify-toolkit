@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PeopleTable from '@/components/people/PeopleTable';
@@ -62,43 +63,16 @@ const People = () => {
     sortDirection
   );
 
-  // More aggressive auto-cleanup for payroll users
+  // Less aggressive auto-cleanup - only run for payroll users and only if no employees found
   useEffect(() => {
-    if (isPayroll && !isLoading) {
+    if (isPayroll && !isLoading && employees.length === 0) {
       const autoCleanup = async () => {
-        console.log('Payroll user detected - running aggressive cleanup...');
-        const result = await cleanupExampleEmployees();
-        if (result.success) {
-          if (result.cleanedCount > 0) {
-            toast({
-              title: "Example Employees Removed",
-              description: `Cleaned up ${result.cleanedCount} example employees. Real employee data synchronized.`
-            });
-          } else {
-            toast({
-              title: "Data Synchronized",
-              description: "Employee data synchronized with manager accounts."
-            });
-          }
-          refetch();
-        }
-      };
-      
-      const timer = setTimeout(autoCleanup, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [isPayroll, isLoading, refetch, toast]);
-
-  // Regular auto-cleanup for manager/admin users
-  useEffect(() => {
-    if ((isManager || isAdmin) && employees.length === 0 && !isLoading) {
-      const autoCleanup = async () => {
-        console.log('Auto-cleaning example employees...');
+        console.log('Payroll user with no employees - running cleanup...');
         const result = await cleanupExampleEmployees();
         if (result.success && result.cleanedCount > 0) {
           toast({
-            title: "Cleanup Complete",
-            description: `Removed ${result.cleanedCount} example employees from the system.`
+            title: "Example Employees Removed",
+            description: `Cleaned up ${result.cleanedCount} example employees.`
           });
           refetch();
         }
@@ -107,9 +81,9 @@ const People = () => {
       const timer = setTimeout(autoCleanup, 2000);
       return () => clearTimeout(timer);
     }
-  }, [employees.length, isLoading, isManager, isAdmin, refetch, toast]);
+  }, [isPayroll, isLoading, employees.length, refetch, toast]);
   
-  // Handle manual cleanup
+  // Handle manual cleanup - only remove exact example matches
   const handleCleanupExamples = async () => {
     setIsCleaningUp(true);
     try {
@@ -190,8 +164,8 @@ const People = () => {
             </div>
           </div>
           
-          {/* Cleanup button for admins/managers/payroll */}
-          {(isManager || isPayroll || isAdmin) && (
+          {/* Cleanup button for admins/payroll only (not for managers to preserve their data) */}
+          {(isPayroll || isAdmin) && (
             <Button
               onClick={handleCleanupExamples}
               disabled={isCleaningUp}
@@ -199,7 +173,7 @@ const People = () => {
               className="ml-4"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              {isCleaningUp ? "Syncing..." : "Sync Data"}
+              {isCleaningUp ? "Cleaning..." : "Remove Examples"}
             </Button>
           )}
         </div>
