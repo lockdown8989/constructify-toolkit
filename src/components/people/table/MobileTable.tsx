@@ -93,10 +93,8 @@ const MobileTable: React.FC<MobileTableProps> = ({
                   key={employee.id}
                   employee={employee}
                   isSelected={selectedEmployees.includes(employee.id)}
-                  isExpanded={expandedEmployee === employee.id}
                   onSelect={onSelectEmployee}
-                  onToggleExpand={onToggleExpand}
-                  onCardClick={onEmployeeClick}
+                  onRowClick={onEmployeeClick}
                   onStatusChange={onStatusChange}
                 />
               ))}

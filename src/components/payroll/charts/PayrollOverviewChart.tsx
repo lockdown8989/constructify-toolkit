@@ -125,7 +125,7 @@ export const PayrollOverviewChart: React.FC<PayrollOverviewChartProps> = ({
                   className="text-xs"
                 />
                 <YAxis 
-                  tickFormatter={(value) => formatCurrency(value, false)}
+                  tickFormatter={(value) => formatCurrency(value, 'USD')}
                   className="text-xs"
                 />
                 <Tooltip content={<CustomTooltip />} />
