@@ -1,20 +1,18 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/auth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Calendar, DollarSign, TrendingUp, Users, Download, Settings, Filter, Grid, List, Search, Loader2, RefreshCw, FileText } from 'lucide-react';
-import { format } from 'date-fns';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { usePayrollSync } from '@/hooks/use-payroll-sync';
 import { PayrollStatsGrid } from '@/components/payroll/stats/PayrollStatsGrid';
 import { PayrollOverviewChart } from '@/components/payroll/charts/PayrollOverviewChart';
-import { formatCurrency, formatNumber } from '@/utils/format';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { PayrollStatsModal } from '@/components/payroll/stats/PayrollStatsModal';
+import { PayrollHeader } from '@/components/payroll/header/PayrollHeader';
+import { PayrollStatsCards } from '@/components/payroll/cards/PayrollStatsCards';
+import { PayrollEmployeeTable } from '@/components/payroll/table/PayrollEmployeeTable';
+import { PayrollInsights } from '@/components/payroll/insights/PayrollInsights';
 
 const PayrollDashboard = () => {
   const { user, isPayroll } = useAuth();
@@ -120,27 +118,7 @@ const PayrollDashboard = () => {
     }
   ];
 
-  // Use the actual total employees from payroll metrics
   const actualEmployeeCount = payrollMetrics.totalEmployees;
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Paid':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Paid</Badge>;
-      case 'Pending':
-        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Pending</Badge>;
-      case 'Processing':
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Processing</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
-  const handleTimeRangeChange = (newRange: 'day' | 'week' | 'month') => {
-    setTimeRange(newRange);
-  };
-
-  // Calculate overtime hours from minutes
   const overtimeHours = Math.round((overtimeData || 0) / 60);
 
   const handleCardClick = (statType: 'total' | 'employees' | 'paid' | 'pending' | 'absent', value: number) => {
@@ -151,59 +129,17 @@ const PayrollDashboard = () => {
     });
   };
 
+  const handleTimeRangeChange = (newRange: 'day' | 'week' | 'month') => {
+    setTimeRange(newRange);
+  };
+
   return (
     <div className="container py-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <DollarSign className="h-6 w-6 text-blue-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Payroll</h1>
-            <p className="text-gray-600">Manage employee payroll and payments</p>
-            {payrollMetrics.lastUpdated && (
-              <p className="text-xs text-muted-foreground">
-                Last sync: {new Date(payrollMetrics.lastUpdated).toLocaleTimeString()}
-              </p>
-            )}
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={manualSync}
-            disabled={isProcessing}
-          >
-            {isProcessing ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4 mr-2" />
-            )}
-            Sync Data
-          </Button>
-          <Button variant="outline" size="sm">
-            <Settings className="h-4 w-4 mr-2" />
-            Payroll Settings
-          </Button>
-          <Select defaultValue="26 Jan 2024 — 25 Feb 2024">
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="26 Jan 2024 — 25 Feb 2024">26 Jan 2024 — 25 Feb 2024</SelectItem>
-              <SelectItem value="26 Dec 2023 — 25 Jan 2024">26 Dec 2023 — 25 Jan 2024</SelectItem>
-              <SelectItem value="26 Nov 2023 — 25 Dec 2023">26 Nov 2023 — 25 Dec 2023</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
-          </Button>
-        </div>
-      </div>
+      <PayrollHeader
+        lastUpdated={payrollMetrics.lastUpdated}
+        isProcessing={isProcessing}
+        onManualSync={manualSync}
+      />
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
@@ -215,66 +151,14 @@ const PayrollDashboard = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          {/* Live Stats Grid with accurate data */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            {/* Total Payroll Card */}
-            <Card 
-              className="border shadow-sm bg-green-50 text-green-600 border-opacity-50 cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105"
-              onClick={() => handleCardClick('total', payrollMetrics.totalPayroll)}
-            >
-              <CardContent className="p-4 flex flex-col">
-                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center mb-3">
-                  <DollarSign className="h-5 w-5" />
-                </div>
-                <p className="text-sm font-medium mb-1">Total Payroll</p>
-                <p className="text-xl font-bold">{formatCurrency(payrollMetrics.totalPayroll)}</p>
-              </CardContent>
-            </Card>
+          <PayrollStatsCards
+            totalPayroll={payrollMetrics.totalPayroll}
+            totalEmployees={actualEmployeeCount}
+            pendingEmployees={payrollMetrics.pendingEmployees}
+            overtimeHours={overtimeHours}
+            onCardClick={handleCardClick}
+          />
 
-            {/* Total Employees Card */}
-            <Card 
-              className="border shadow-sm bg-blue-50 text-blue-600 border-opacity-50 cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105"
-              onClick={() => handleCardClick('employees', actualEmployeeCount)}
-            >
-              <CardContent className="p-4 flex flex-col">
-                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-3">
-                  <Users className="h-5 w-5" />
-                </div>
-                <p className="text-sm font-medium mb-1">Total Employees</p>
-                <p className="text-xl font-bold">{formatNumber(actualEmployeeCount)}</p>
-              </CardContent>
-            </Card>
-
-            {/* Pending Payslips Card */}
-            <Card 
-              className="border shadow-sm bg-amber-50 text-amber-600 border-opacity-50 cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105"
-              onClick={() => handleCardClick('pending', payrollMetrics.pendingEmployees)}
-            >
-              <CardContent className="p-4 flex flex-col">
-                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center mb-3">
-                  <FileText className="h-5 w-5" />
-                </div>
-                <p className="text-sm font-medium mb-1">Pending Payslips</p>
-                <p className="text-xl font-bold">{formatNumber(payrollMetrics.pendingEmployees)}</p>
-              </CardContent>
-            </Card>
-
-            {/* Overtime Hours Card */}
-            <Card 
-              className="border shadow-sm bg-purple-50 text-purple-600 border-opacity-50 cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105"
-              onClick={() => handleCardClick('total', overtimeHours)}
-            >
-              <CardContent className="p-4 flex flex-col">
-                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center mb-3">
-                  <TrendingUp className="h-5 w-5" />
-                </div>
-                <p className="text-sm font-medium mb-1">Overtime Hours</p>
-                <p className="text-xl font-bold">{overtimeHours}</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Replace the PayrollStatsGrid with individual cards above */}
           <PayrollStatsGrid
             totalPayroll={payrollMetrics.totalPayroll}
             totalEmployees={payrollMetrics.totalEmployees}
@@ -283,7 +167,6 @@ const PayrollDashboard = () => {
             absentEmployees={payrollMetrics.absentEmployees}
           />
 
-          {/* Live Payroll Chart */}
           <PayrollOverviewChart
             data={payrollMetrics.chartData}
             timeRange={timeRange}
@@ -293,149 +176,17 @@ const PayrollDashboard = () => {
             lastUpdated={payrollMetrics.lastUpdated}
           />
 
-          {/* AI Insights */}
-          {payrollMetrics.analysis && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  AI Insights
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium mb-2">Key Metrics</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="bg-blue-50 p-3 rounded-lg">
-                        <p className="text-sm text-blue-600 font-medium">Average Salary</p>
-                        <p className="text-lg font-bold">{formatCurrency(payrollMetrics.analysis.averageSalary || 0)}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {payrollMetrics.analysis.insights && (
-                    <div>
-                      <h4 className="font-medium mb-2">Analysis</h4>
-                      <p className="text-sm text-muted-foreground">{payrollMetrics.analysis.insights}</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <PayrollInsights analysis={payrollMetrics.analysis} />
 
-          {/* Employee Table - synchronized with actual count */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Employee ({actualEmployeeCount} total)
-                </CardTitle>
-                <div className="flex items-center gap-3">
-                  <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filter
-                  </Button>
-                  <div className="relative">
-                    <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <Input 
-                      placeholder="Search employees"
-                      className="pl-10 w-64"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex items-center gap-1 border rounded-lg p-1">
-                    <Button
-                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setViewMode('grid')}
-                    >
-                      <Grid className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant={viewMode === 'list' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setViewMode('list')}
-                    >
-                      <List className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {/* Show loading state or actual employees */}
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                  <span>Loading employees...</span>
-                </div>
-              ) : actualEmployeeCount === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No employees found</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4">
-                          <input type="checkbox" className="rounded border-gray-300" />
-                        </th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-600">Employee</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-600">Position</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-600">Salary</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-600">Recurring</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-600">Overtime</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-600">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {employees.slice(0, actualEmployeeCount).map((employee) => (
-                        <tr key={employee.id} className="border-b hover:bg-gray-50">
-                          <td className="py-3 px-4">
-                            <input type="checkbox" className="rounded border-gray-300" />
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                                <span className="text-sm font-medium text-gray-600">
-                                  {employee.name.split(' ').map(n => n[0]).join('')}
-                                </span>
-                              </div>
-                              <div>
-                                <p className="font-medium text-gray-900">{employee.name}</p>
-                                <p className="text-sm text-gray-500">{employee.email}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 text-gray-600">{employee.position}</td>
-                          <td className="py-3 px-4 font-medium">{employee.salary}</td>
-                          <td className="py-3 px-4 text-gray-600">Recurring</td>
-                          <td className="py-3 px-4 text-gray-600">{employee.overtime}</td>
-                          <td className="py-3 px-4">{getStatusBadge(employee.status)}</td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-2">
-                              <Button variant="ghost" size="sm">
-                                <Settings className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                👁
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <PayrollEmployeeTable
+            employees={employees}
+            actualEmployeeCount={actualEmployeeCount}
+            searchQuery={searchQuery}
+            viewMode={viewMode}
+            isLoading={isLoading}
+            onSearchChange={setSearchQuery}
+            onViewModeChange={setViewMode}
+          />
         </TabsContent>
 
         <TabsContent value="processing">
