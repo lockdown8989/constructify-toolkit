@@ -58,7 +58,7 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
   // Extract numeric value from salary string and format with British pounds
   const formatSalaryDisplay = (salaryString: string): string => {
     const numericValue = parseInt(salaryString.replace(/[^0-9]/g, ''));
-    return formatCurrency(numericValue, true, 'GBP');
+    return formatCurrency(numericValue);
   };
 
   return (
