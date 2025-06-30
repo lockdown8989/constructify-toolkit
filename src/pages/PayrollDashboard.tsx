@@ -51,26 +51,26 @@ const PayrollDashboard = () => {
     refetchInterval: 30000
   });
 
-  // Enhanced employee count query with better error handling
-  const { data: employeeCount, isLoading: employeeLoading } = useQuery({
-    queryKey: ['live-employee-count'],
+  // Enhanced employee data query with better error handling
+  const { data: employeeData, isLoading: employeeLoading } = useQuery({
+    queryKey: ['payroll-employees-data'],
     queryFn: async () => {
-      console.log('Fetching live employee count...');
-      const { data, error, count } = await supabase
+      console.log('Fetching employee data for payroll dashboard...');
+      const { data, error } = await supabase
         .from('employees')
-        .select('id, name, status', { count: 'exact' })
-        .eq('status', 'Active');
+        .select('id, name, email, job_title, salary, status, avatar')
+        .in('status', ['Active', 'Inactive', 'Pending'])
+        .order('name');
       
       if (error) {
-        console.error('Error fetching employee count:', error);
-        return 0;
+        console.error('Error fetching employee data:', error);
+        return [];
       }
       
-      const actualCount = data?.length || count || 0;
-      console.log('Live employee count query result:', { data, count: actualCount });
-      return actualCount;
+      console.log('Employee data fetched:', data);
+      return data || [];
     },
-    refetchInterval: 10000, // Refetch every 10 seconds for live updates
+    refetchInterval: 30000, // Refetch every 30 seconds for live updates
     staleTime: 0, // Always refetch
   });
   
@@ -86,67 +86,26 @@ const PayrollDashboard = () => {
     );
   }
 
-  const employees = [
-    {
-      id: "1",
-      name: "Rhaenyra Targaryen",
-      email: "rhaenyra@stellia.com",
-      position: "Product Designer",
-      salary: "$1,250.00",
-      status: "Paid",
-      overtime: "12hrs",
-      avatar: "/lovable-uploads/ff00229e-c65b-41be-aef7-572c8937cac0.png"
-    },
-    {
-      id: "2", 
-      name: "Daemon Targaryen",
-      email: "daemon@stellia.com",
-      position: "Finance Manager",
-      salary: "$1,150.00",
-      status: "Pending",
-      overtime: "2hrs",
-      avatar: "/lovable-uploads/ff00229e-c65b-41be-aef7-572c8937cac0.png"
-    },
-    {
-      id: "3",
-      name: "Jon Snow",
-      email: "jon@stellia.com", 
-      position: "Sr Graphic Designer",
-      salary: "$1,000.00",
-      status: "Paid",
-      overtime: "-",
-      avatar: "/lovable-uploads/ff00229e-c65b-41be-aef7-572c8937cac0.png"
-    },
-    {
-      id: "4",
-      name: "Aegon Targaryen",
-      email: "aegon@stellia.com",
-      position: "Lead Product Designer", 
-      salary: "$1,500.00",
-      status: "Paid",
-      overtime: "10hrs",
-      avatar: "/lovable-uploads/ff00229e-c65b-41be-aef7-572c8937cac0.png"
-    },
-    {
-      id: "5",
-      name: "Alicent Hightower",
-      email: "alicent@stellia.com",
-      position: "Project Manager",
-      salary: "$1,325.00", 
-      status: "Paid",
-      overtime: "8hrs",
-      avatar: "/lovable-uploads/ff00229e-c65b-41be-aef7-572c8937cac0.png"
-    }
-  ];
+  // Convert employee data to the format expected by the table
+  const employees = employeeData?.map(emp => ({
+    id: emp.id,
+    name: emp.name || 'Unknown',
+    email: emp.email || `${emp.name?.toLowerCase().replace(' ', '.')}@company.com`,
+    position: emp.job_title || 'Employee',
+    salary: `$${(emp.salary || 0).toFixed(2)}`,
+    status: Math.random() > 0.5 ? 'Paid' : 'Pending', // Randomly assign for demo
+    overtime: Math.random() > 0.7 ? `${Math.floor(Math.random() * 20)}hrs` : '-',
+    avatar: emp.avatar || "/lovable-uploads/ff00229e-c65b-41be-aef7-572c8937cac0.png"
+  })) || [];
 
-  // Use the live employee count from both sources, prioritizing the direct query
-  const actualEmployeeCount = employeeCount ?? payrollMetrics.totalEmployees ?? 0;
+  // Use the live employee count from payroll metrics
+  const actualEmployeeCount = payrollMetrics.totalEmployees;
   const overtimeHours = Math.round((overtimeData || 0) / 60);
 
   console.log('Dashboard render - Employee counts:', {
-    employeeCount,
     payrollMetricsTotal: payrollMetrics.totalEmployees,
     actualEmployeeCount,
+    employeeDataLength: employeeData?.length,
     employeeLoading
   });
 

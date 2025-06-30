@@ -31,11 +31,11 @@ export const usePayrollSync = (timeRange: 'day' | 'week' | 'month' = 'month') =>
         
         console.log('Starting payroll sync for timeRange:', timeRange);
         
-        // First, get all active employees from the database
+        // First, get all employees from the database (not just active ones for payroll purposes)
         const { data: employeeData, error: employeeError } = await supabase
           .from('employees')
-          .select('id, name, status, salary, user_id')
-          .eq('status', 'Active');
+          .select('id, name, status, salary, user_id, job_title, department')
+          .in('status', ['Active', 'Inactive', 'Pending']); // Include all relevant statuses
 
         if (employeeError) {
           console.error('Error fetching employees:', employeeError);
@@ -97,7 +97,7 @@ export const usePayrollSync = (timeRange: 'day' | 'week' | 'month' = 'month') =>
           absentEmployees: Math.max(0, actualEmployeeCount - paidEmployeesCount - pendingPayslips),
           analysis: edgeFunctionData?.analysis || {
             averageSalary: actualEmployeeCount > 0 ? totalPayroll / actualEmployeeCount : 0,
-            insights: `Payroll data shows ${actualEmployeeCount} active employees with total payroll of $${totalPayroll.toFixed(2)}`
+            insights: `Payroll data shows ${actualEmployeeCount} employees with total payroll of $${totalPayroll.toFixed(2)}`
           },
           chartData: edgeFunctionData?.chartData || [],
           lastUpdated: new Date().toISOString()
@@ -113,7 +113,7 @@ export const usePayrollSync = (timeRange: 'day' | 'week' | 'month' = 'month') =>
         const { data: fallbackEmployeeData } = await supabase
           .from('employees')
           .select('id, status')
-          .eq('status', 'Active');
+          .in('status', ['Active', 'Inactive', 'Pending']);
 
         const fallbackEmployeeCount = fallbackEmployeeData?.length || 0;
         console.log('Fallback employee count:', fallbackEmployeeCount);
