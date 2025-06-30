@@ -14,7 +14,6 @@ interface EmployeeDetailsModalProps {
   employee: Employee | null;
   isOpen: boolean;
   onClose: () => void;
-  onStatusChange?: (id: string, status: string) => void;
   onEdit?: (employee: Employee) => void;
 }
 
@@ -22,7 +21,6 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   employee,
   isOpen,
   onClose,
-  onStatusChange,
   onEdit
 }) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -133,7 +131,6 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         <DialogContent className={`p-0 overflow-hidden rounded-2xl ${isMobile ? 'w-[95vw] max-w-[95vw]' : 'sm:max-w-[500px]'} max-h-[90vh] flex flex-col`}>
           <EmployeeHeader 
             employee={employee}
-            onStatusChange={onStatusChange}
             onEdit={handleEdit}
             onDelete={() => setIsDeleteDialogOpen(true)}
           />

@@ -6,21 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Settings, Trash2, X } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { DialogTitle, DialogClose } from '@/components/ui/dialog';
-import EmployeeStatusDropdown from './EmployeeStatusDropdown';
 import { Employee } from '@/components/people/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface EmployeeHeaderProps {
   employee: Employee;
-  onStatusChange?: (id: string, status: string) => void;
   onEdit?: () => void;
   onDelete: () => void;
 }
 
 const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
   employee,
-  onStatusChange,
   onEdit,
   onDelete,
 }) => {
@@ -28,12 +25,6 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
   const statusColors = {
     green: 'bg-apple-green/15 text-apple-green hover:bg-apple-green/15',
     gray: 'bg-apple-gray-200 text-apple-gray-700 hover:bg-apple-gray-200'
-  };
-
-  const handleStatusChange = (status: string) => {
-    if (onStatusChange) {
-      onStatusChange(employee.id, status);
-    }
   };
 
   return (
@@ -52,9 +43,6 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
         </div>
         
         <div className={`flex gap-2 ${isMobile ? 'self-end' : ''} sticky top-0`}>
-          {onStatusChange && (
-            <EmployeeStatusDropdown onStatusChange={handleStatusChange} />
-          )}
           {onEdit && (
             <TooltipProvider>
               <Tooltip>
