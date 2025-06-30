@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,7 @@ interface Employee {
   status: string;
   overtime: string;
   avatar: string;
+  payrollHistory?: any[]; // Add this optional property
 }
 
 interface PayrollEmployeeTableProps {
@@ -62,7 +62,6 @@ export const PayrollEmployeeTable: React.FC<PayrollEmployeeTableProps> = ({
     setIsProcessing(prev => ({ ...prev, [employee.id]: true }));
     
     try {
-      // Fetch detailed employee data for settings
       const { data: employeeData, error } = await supabase
         .from('employees')
         .select('*')
@@ -94,7 +93,6 @@ export const PayrollEmployeeTable: React.FC<PayrollEmployeeTableProps> = ({
     setIsProcessing(prev => ({ ...prev, [employee.id]: true }));
     
     try {
-      // Fetch detailed employee data including payroll information
       const { data: employeeData, error: employeeError } = await supabase
         .from('employees')
         .select('*')
@@ -103,7 +101,6 @@ export const PayrollEmployeeTable: React.FC<PayrollEmployeeTableProps> = ({
 
       if (employeeError) throw employeeError;
 
-      // Fetch payroll history for this employee
       const { data: payrollHistory, error: payrollError } = await supabase
         .from('payroll')
         .select('*')

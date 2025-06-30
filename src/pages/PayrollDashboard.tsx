@@ -142,7 +142,6 @@ const PayrollDashboard = () => {
 
         <TabsContent value="overview" className="space-y-6">
           <PayrollStatsCards
-            totalPayroll={payrollMetrics.totalPayroll}
             totalEmployees={actualEmployeeCount}
             pendingEmployees={payrollMetrics.pendingEmployees}
             overtimeHours={overtimeHours}
