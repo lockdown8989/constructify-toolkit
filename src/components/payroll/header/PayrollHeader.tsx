@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pound, Download, Settings, Loader2, RefreshCw } from 'lucide-react';
+import { PoundSterling, Download, Settings, Loader2, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface PayrollHeaderProps {
@@ -26,7 +26,7 @@ export const PayrollHeader: React.FC<PayrollHeaderProps> = ({
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
         <div className="p-2 bg-blue-100 rounded-lg">
-          <Pound className="h-6 w-6 text-blue-600" />
+          <PoundSterling className="h-6 w-6 text-blue-600" />
         </div>
         <div>
           <h1 className="text-2xl font-bold">Payroll</h1>
