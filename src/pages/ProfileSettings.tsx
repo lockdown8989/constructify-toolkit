@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import PersonalInfoForm from '@/components/profile-settings/PersonalInfoForm';
 import RegionalPreferencesForm from '@/components/profile-settings/RegionalPreferencesForm';
-import DeleteAccountSection from '@/components/profile-settings/DeleteAccountSection';
+import { DeleteAccountSection } from '@/components/profile-settings/DeleteAccountSection';
 
 const ProfileSettings = () => {
   const navigate = useNavigate();

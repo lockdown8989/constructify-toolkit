@@ -6,9 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import ManagerIdField from './ManagerIdField';
-import BasicInfoFields from './BasicInfoFields';
-import EmailField from './EmailField';
-import WeeklyAvailabilitySection from './WeeklyAvailabilitySection';
+import { BasicInfoFields } from './BasicInfoFields';
+import { EmailField } from './EmailField';
+import { WeeklyAvailabilitySection } from './WeeklyAvailabilitySection';
 import { useProfileForm } from './useProfileForm';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -16,15 +16,14 @@ const ProfileForm = () => {
   const { user, isManager, isPayroll, isAdmin } = useAuth();
   
   const {
-    formData,
-    isLoading,
+    profile,
     isSaving,
     handleChange,
     handleSubmit,  
-    isEditable
-  } = useProfileForm();
+    handleAvatarChange
+  } = useProfileForm(user);
 
-  if (isLoading) {
+  if (!user) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
@@ -35,6 +34,8 @@ const ProfileForm = () => {
     );
   }
 
+  const isEditable = true; // Allow editing for profile form
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Card>
@@ -43,13 +44,13 @@ const ProfileForm = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <BasicInfoFields 
-            formData={formData}
+            formData={profile}
             onChange={handleChange}
             isEditable={isEditable}
           />
           
           <EmailField 
-            email={formData.email}
+            email={profile.email}
             onChange={handleChange}
             isEditable={false}
           />
@@ -63,11 +64,11 @@ const ProfileForm = () => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="job_title">Job Title</Label>
+              <Label htmlFor="position">Job Title</Label>
               <Input
-                id="job_title"
-                name="job_title"
-                value={formData.job_title || ''}
+                id="position"
+                name="position"
+                value={profile.position || ''}
                 onChange={handleChange}
                 placeholder="Your job title"
                 disabled={!isEditable}
@@ -79,7 +80,7 @@ const ProfileForm = () => {
               <Input
                 id="department"
                 name="department"
-                value={formData.department || ''}
+                value={profile.department || ''}
                 onChange={handleChange}
                 placeholder="Your department"
                 disabled={!isEditable}
@@ -88,7 +89,7 @@ const ProfileForm = () => {
           </div>
 
           <ManagerIdField
-            managerId={formData.manager_id}
+            managerId={profile.manager_id}
             onChange={handleChange}
             isManager={isManager}
             isEditable={isEditable}
@@ -97,7 +98,7 @@ const ProfileForm = () => {
       </Card>
 
       <WeeklyAvailabilitySection 
-        formData={formData}
+        formData={profile}
         onChange={handleChange}
         isEditable={isEditable}
       />
