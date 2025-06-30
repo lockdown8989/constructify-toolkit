@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { MoreVertical, ChevronRight, Check } from 'lucide-react';
@@ -58,7 +59,7 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
   // Extract numeric value from salary string and format with British pounds
   const formatSalaryDisplay = (salaryString: string): string => {
     const numericValue = parseInt(salaryString.replace(/[^0-9]/g, ''));
-    return formatCurrency(numericValue);
+    return formatCurrency(numericValue, 'GBP');
   };
 
   return (

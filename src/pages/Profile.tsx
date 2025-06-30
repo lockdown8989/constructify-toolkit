@@ -1,7 +1,7 @@
 
 import { useAuth } from "@/hooks/auth";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import ProfileForm from "@/components/profile/ProfileForm";
+import { ProfileForm } from "@/components/profile/ProfileForm";
 import { useProfileData } from "@/components/profile/useProfileData";
 import { Loader2, Clock, Settings } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
@@ -44,7 +44,11 @@ const Profile = () => {
               </CardDescription>
             </CardHeader>
             
-            <ProfileForm />
+            <ProfileForm 
+              user={user}
+              isManager={isManager}
+              managerId={managerId}
+            />
           </Card>
 
           {/* Quick Actions */}

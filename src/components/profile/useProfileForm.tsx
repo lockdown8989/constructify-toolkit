@@ -81,67 +81,6 @@ export const useProfileForm = (user: User | null) => {
     setProfile((prev) => ({ ...prev, avatar_url: url }));
   };
 
-  const syncWithManagerAndPayroll = async (managerId: string, employeeId: string) => {
-    try {
-      console.log(`Synchronizing employee ${employeeId} with manager ID ${managerId}`);
-      
-      // Find the manager's employee record
-      const { data: managerEmployee, error: managerError } = await supabase
-        .from("employees")
-        .select("id, user_id, name")
-        .eq("manager_id", managerId)
-        .maybeSingle();
-
-      if (managerError) {
-        console.error("Error finding manager:", managerError);
-        return;
-      }
-
-      if (managerEmployee) {
-        console.log(`Found manager: ${managerEmployee.name}`);
-        
-        // Update the employee's manager_id to link them properly
-        const { error: updateError } = await supabase
-          .from("employees")
-          .update({ manager_id: managerId })
-          .eq("id", employeeId);
-
-        if (updateError) {
-          console.error("Error updating employee manager link:", updateError);
-        } else {
-          console.log("Successfully synchronized employee with manager");
-        }
-
-        // Find payroll users to sync with
-        const { data: payrollUsers, error: payrollError } = await supabase
-          .from("user_roles")
-          .select("user_id")
-          .eq("role", "payroll");
-
-        if (payrollError) {
-          console.error("Error finding payroll users:", payrollError);
-          return;
-        }
-
-        // Update payroll users' employee records to have the same manager_id for synchronization
-        for (const payrollUser of payrollUsers) {
-          const { error: payrollSyncError } = await supabase
-            .from("employees")
-            .update({ manager_id: managerId })
-            .eq("user_id", payrollUser.user_id);
-
-          if (payrollSyncError) {
-            console.error("Error syncing with payroll user:", payrollSyncError);
-          } else {
-            console.log("Successfully synchronized with payroll administrator");
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error in manager/payroll synchronization:", error);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -186,7 +125,7 @@ export const useProfileForm = (user: User | null) => {
         }
       }
 
-      // Handle manager ID update and synchronization
+      // Update manager ID in employees table
       if (profile.manager_id) {
         // Check if employee record exists
         const { data: existingEmployee, error: checkError } = await supabase
@@ -198,7 +137,7 @@ export const useProfileForm = (user: User | null) => {
         if (checkError) {
           console.error("Error checking employee record:", checkError);
         } else if (existingEmployee) {
-          // Update existing record and sync with manager/payroll
+          // Update existing record
           const { error: updateError } = await supabase
             .from("employees")
             .update({ manager_id: profile.manager_id })
@@ -213,9 +152,6 @@ export const useProfileForm = (user: User | null) => {
             });
             return;
           }
-
-          // Synchronize with manager and payroll accounts
-          await syncWithManagerAndPayroll(profile.manager_id, existingEmployee.id);
         } else {
           // Create new employee record
           const { data: profileData } = await supabase
@@ -228,7 +164,7 @@ export const useProfileForm = (user: User | null) => {
             `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() : 
             user.email?.split('@')[0] || 'Employee';
 
-          const { data: newEmployee, error: insertError } = await supabase
+          const { error: insertError } = await supabase
             .from("employees")
             .insert({
               name: fullName,
@@ -236,14 +172,12 @@ export const useProfileForm = (user: User | null) => {
               department: profile.department || 'General',
               site: 'Main Office',
               manager_id: profile.manager_id,
-              status: 'Active',
+              status: 'Present',
               lifecycle: 'Employed',
               salary: 0,
               user_id: user.id,
               avatar_url: profile.avatar_url
-            })
-            .select()
-            .single();
+            });
 
           if (insertError) {
             console.error("Error creating employee record:", insertError);
@@ -254,17 +188,12 @@ export const useProfileForm = (user: User | null) => {
             });
             return;
           }
-
-          // Synchronize with manager and payroll accounts
-          if (newEmployee) {
-            await syncWithManagerAndPayroll(profile.manager_id, newEmployee.id);
-          }
         }
       }
       
       toast({
-        title: "Profile updated successfully",
-        description: "Your profile has been updated and synchronized with your manager and payroll accounts.",
+        title: "Profile updated",
+        description: "Your profile has been successfully updated.",
       });
     } catch (error) {
       console.error("Error:", error);

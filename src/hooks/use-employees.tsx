@@ -39,33 +39,6 @@ export type Employee = Database['public']['Tables']['employees']['Row'] & {
 export type NewEmployee = Database['public']['Tables']['employees']['Insert'];
 export type EmployeeUpdate = Database['public']['Tables']['employees']['Update'];
 
-// List of exact example employee names/emails to filter out - be very specific
-const EXAMPLE_EMPLOYEE_IDENTIFIERS = [
-  'rhaenyra@stellia.com',
-  'daemon@stellia.com', 
-  'jon@stellia.com',
-  'Rhaenyra Targaryen',
-  'Daemon Targaryen',
-  'Jon Snow',
-  'John Doe',
-  'Jane Smith',
-  'Example Employee',
-  'Test Employee',
-  'Demo User'
-];
-
-const isExampleEmployee = (employee: Employee): boolean => {
-  // Only filter if it's an exact match to known example identifiers
-  const nameMatch = EXAMPLE_EMPLOYEE_IDENTIFIERS.some(identifier => 
-    employee.name?.toLowerCase() === identifier.toLowerCase()
-  );
-  const emailMatch = employee.email && EXAMPLE_EMPLOYEE_IDENTIFIERS.some(identifier => 
-    employee.email?.toLowerCase() === identifier.toLowerCase()
-  );
-  
-  return nameMatch || emailMatch;
-};
-
 export function useEmployees(filters?: Partial<{
   status: string;
   department: string;
@@ -90,40 +63,27 @@ export function useEmployees(filters?: Partial<{
         
         console.log('Employee query - User roles:', { isManager, isPayroll, isAdmin, isHR });
         
-        // For payroll users, admins, and HR - show all employees (synchronized via MGR ID)
+        // For payroll users, admins, and HR - show all employees
         if (isPayroll || isAdmin || isHR) {
           console.log("Payroll/Admin/HR user, fetching all employee data");
-          // Get current user's employee record to find their manager_id for synchronization
-          const { data: currentUserEmployee } = await supabase
+          // No restrictions for these roles - they should see all employees
+        } else if (isManager && user) {
+          // For managers - show employees under their management
+          console.log("Manager user, fetching team data");
+          const { data: managerData, error: managerError } = await supabase
             .from('employees')
             .select('manager_id')
             .eq('user_id', user.id)
             .maybeSingle();
           
-          // If payroll user has a manager_id, show employees under that manager
-          if (currentUserEmployee?.manager_id && isPayroll) {
-            query = query.eq('manager_id', currentUserEmployee.manager_id);
-          }
-          // Otherwise show all employees for admin/HR
-        } else if (isManager && user) {
-          // For managers - show employees under their management using MGR ID
-          console.log("Manager user, fetching team data");
-          const { data: managerData, error: managerError } = await supabase
-            .from('employees')
-            .select('id, manager_id')
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
           if (managerError) {
             console.error('Error fetching manager data:', managerError);
-          } else if (managerData) {
-            // Show employees managed by this manager (using manager's employee ID as MGR ID)
-            // PLUS include the manager themselves in the list
-            query = query.or(`manager_id.eq.${managerData.id},user_id.eq.${user.id}`);
+            // Continue with showing all employees if manager data fetch fails
+          } else if (managerData && managerData.manager_id) {
+            query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
           } else {
-            // If manager doesn't have employee record, show only their own data
-            console.log("Manager without employee record, showing own data only");
-            query = query.eq('user_id', user.id);
+            // If manager doesn't have manager_id set, show all employees (they might be the top-level manager)
+            console.log("Manager without manager_id, showing all employees");
           }
         } else if (!isManager && !isPayroll && !isAdmin && !isHR && user) {
           // For regular employees - show only their own data
@@ -158,34 +118,31 @@ export function useEmployees(filters?: Partial<{
         
         if (error) {
           console.error("Error fetching employees:", error);
+          // Return empty array instead of throwing to prevent app crashes
           return [];
         }
         
-        // Only filter out exact example employee matches - preserve all real employees
-        const validEmployees = (data || [])
-          .filter(employee => {
-            if (!employee || !employee.id || !employee.name) {
-              console.warn('Invalid employee record found:', employee);
-              return false;
-            }
-            // Only filter if it's an exact match to example employees
-            if (isExampleEmployee(employee)) {
-              console.log('Filtering out exact example employee match:', employee.name);
-              return false;
-            }
-            return true;
-          });
+        // Validate and clean the employee data
+        const validEmployees = (data || []).filter(employee => {
+          if (!employee || !employee.id || !employee.name) {
+            console.warn('Invalid employee record found:', employee);
+            return false;
+          }
+          return true;
+        });
         
         console.log("Fetched and validated employees data:", validEmployees.length, "employees");
         return validEmployees as Employee[];
         
       } catch (error) {
         console.error("Error in employees query function:", error);
+        // Return empty array instead of throwing to prevent app crashes
         return [];
       }
     },
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    // Don't throw errors to prevent app crashes
     throwOnError: false,
   });
 }
@@ -316,13 +273,10 @@ export function useEmployeeFilters() {
       
       if (error) throw error;
       
-      // Filter out example employees from filter options
-      const filteredEmployees = employees.filter(e => !isExampleEmployee(e as Employee));
-      
-      const departments = [...new Set(filteredEmployees.map(e => e.department))];
-      const sites = [...new Set(filteredEmployees.map(e => e.site))];
-      const lifecycles = [...new Set(filteredEmployees.map(e => e.lifecycle))];
-      const statuses = [...new Set(filteredEmployees.map(e => e.status))];
+      const departments = [...new Set(employees.map(e => e.department))];
+      const sites = [...new Set(employees.map(e => e.site))];
+      const lifecycles = [...new Set(employees.map(e => e.lifecycle))];
+      const statuses = [...new Set(employees.map(e => e.status))];
       
       return {
         departments,
@@ -365,12 +319,6 @@ export function useOwnEmployeeData() {
           return null;
         }
 
-        // Check if this is an example employee
-        if (isExampleEmployee(data as Employee)) {
-          console.log("Filtering out example employee from own data");
-          return null;
-        }
-
         return data as Employee;
       } catch (error) {
         console.error("Exception in useOwnEmployeeData:", error);
@@ -380,6 +328,7 @@ export function useOwnEmployeeData() {
     enabled: !!user,
     retry: 2,
     retryDelay: attempt => Math.min(attempt > 1 ? 2000 : 1000, 10 * 1000),
+    // Don't throw errors to prevent app crashes
     throwOnError: false,
   });
 }
