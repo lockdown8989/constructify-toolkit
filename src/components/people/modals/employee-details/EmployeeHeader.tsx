@@ -3,12 +3,11 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Settings, Trash2, X } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Employee } from '@/components/people/types';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface EmployeeHeaderProps {
   employee: Employee;
@@ -27,13 +26,6 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
     gray: 'bg-apple-gray-200 text-apple-gray-700 hover:bg-apple-gray-200'
   };
 
-  const handleEdit = () => {
-    console.log('Settings button clicked for employee:', employee);
-    if (onEdit) {
-      onEdit(employee);
-    }
-  };
-
   return (
     <div className="bg-gradient-to-br from-apple-gray-50 to-apple-gray-100/60 p-4 sm:p-6 rounded-t-xl backdrop-blur-sm sticky top-0 z-10 shadow-sm">
       <div className={`flex items-start ${isMobile ? 'flex-col gap-4' : 'gap-5'}`}>
@@ -50,25 +42,6 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
         </div>
         
         <div className={`flex gap-2 ${isMobile ? 'self-end' : ''} sticky top-0`}>
-          {onEdit && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="rounded-full border-apple-blue/30 bg-white/80 hover:bg-apple-blue/5 shadow-sm transition-all duration-300 ease-in-out" 
-                    onClick={handleEdit}
-                  >
-                    <Settings className="h-4 w-4 text-apple-blue stroke-[2.5px] transition-transform hover:scale-110" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="bg-apple-gray-900 text-white">
-                  <p>Employee Settings</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
           <Button 
             variant="outline" 
             size="icon"

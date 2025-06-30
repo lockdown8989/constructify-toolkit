@@ -29,12 +29,14 @@ interface EmployeeInfoSectionProps {
   employee: Employee;
   isEditing: boolean;
   onSave: () => void;
+  onEdit?: () => void;
 }
 
 const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
   employee,
   isEditing: externalIsEditing,
-  onSave: externalOnSave
+  onSave: externalOnSave,
+  onEdit
 }) => {
   const [isEditing, setIsEditing] = useState(externalIsEditing);
   const [editedEmployee, setEditedEmployee] = useState<Employee>(employee);
@@ -42,7 +44,11 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
   const { toast } = useToast();
 
   const handleEdit = () => {
-    setIsEditing(true);
+    if (onEdit) {
+      onEdit();
+    } else {
+      setIsEditing(true);
+    }
   };
 
   const handleCancel = () => {
@@ -109,7 +115,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
     <div className="space-y-6">
       {/* Action Buttons */}
       {!externalIsEditing && (
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 px-6 pt-4">
           {isEditing ? (
             <>
               <Button
@@ -138,7 +144,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
       )}
 
       {/* Personal Information */}
-      <Card className="p-6">
+      <Card className="p-6 mx-6">
         <div className="flex items-center gap-2 mb-4">
           <User className="h-5 w-5 text-blue-600" />
           <h3 className="text-lg font-semibold">Personal Information</h3>
@@ -180,7 +186,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
       </Card>
 
       {/* Employment Information */}
-      <Card className="p-6">
+      <Card className="p-6 mx-6">
         <div className="flex items-center gap-2 mb-4">
           <Briefcase className="h-5 w-5 text-blue-600" />
           <h3 className="text-lg font-semibold">Employment Details</h3>
@@ -300,10 +306,12 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
         </div>
       </Card>
 
-      <Separator />
+      <div className="mx-6">
+        <Separator />
+      </div>
 
       {/* Documents Section */}
-      <div>
+      <div className="mx-6">
         <div className="flex items-center gap-2 mb-4">
           <FileText className="h-5 w-5 text-blue-600" />
           <h3 className="text-lg font-semibold">Documents</h3>

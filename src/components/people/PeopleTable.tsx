@@ -73,6 +73,12 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setSelectedEmployeeDetails(null);
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setSelectedEmployeeDetails(null);
   };
 
   const handleStatusChange = (id: string, status: string) => {
@@ -172,14 +178,13 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
         employee={selectedEmployeeDetails}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        onEdit={handleEditEmployee}
       />
 
       {/* Edit Employee Modal */}
       {selectedEmployeeDetails && isEditModalOpen && (
         <AddEmployeeModal
           isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
+          onClose={handleEditModalClose}
           employeeToEdit={mapToDbEmployee(selectedEmployeeDetails)}
         />
       )}

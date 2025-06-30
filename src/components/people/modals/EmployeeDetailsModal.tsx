@@ -31,18 +31,9 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
 
   if (!employee) return null;
 
-  const handleEdit = (employeeToEdit: Employee) => {
-    console.log('Edit function called with employee:', employeeToEdit);
-    console.log('onEdit prop exists:', !!onEdit);
-    
-    if (onEdit) {
-      console.log('Calling parent onEdit function');
-      onEdit(employeeToEdit);
-      onClose();
-    } else {
-      console.log('Opening edit modal');
-      setIsEditModalOpen(true);
-    }
+  const handleEdit = () => {
+    console.log('Opening edit modal for employee:', employee);
+    setIsEditModalOpen(true);
   };
 
   const handleDelete = async () => {
@@ -105,27 +96,27 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       friday_shift_id: uiEmployee.friday_shift_id || null,
       saturday_shift_id: uiEmployee.saturday_shift_id || null,
       sunday_shift_id: uiEmployee.sunday_shift_id || null,
-      monday_available: true,
-      monday_start_time: '09:00',
-      monday_end_time: '17:00',
-      tuesday_available: true,
-      tuesday_start_time: '09:00',
-      tuesday_end_time: '17:00',
-      wednesday_available: true,
-      wednesday_start_time: '09:00',
-      wednesday_end_time: '17:00',
-      thursday_available: true,
-      thursday_start_time: '09:00',
-      thursday_end_time: '17:00',
-      friday_available: true,
-      friday_start_time: '09:00',
-      friday_end_time: '17:00',
-      saturday_available: true,
-      saturday_start_time: '09:00',
-      saturday_end_time: '17:00',
-      sunday_available: true,
-      sunday_start_time: '09:00',
-      sunday_end_time: '17:00',
+      monday_available: uiEmployee.monday_available ?? true,
+      monday_start_time: uiEmployee.monday_start_time || '09:00',
+      monday_end_time: uiEmployee.monday_end_time || '17:00',
+      tuesday_available: uiEmployee.tuesday_available ?? true,
+      tuesday_start_time: uiEmployee.tuesday_start_time || '09:00',
+      tuesday_end_time: uiEmployee.tuesday_end_time || '17:00',
+      wednesday_available: uiEmployee.wednesday_available ?? true,
+      wednesday_start_time: uiEmployee.wednesday_start_time || '09:00',
+      wednesday_end_time: uiEmployee.wednesday_end_time || '17:00',
+      thursday_available: uiEmployee.thursday_available ?? true,
+      thursday_start_time: uiEmployee.thursday_start_time || '09:00',
+      thursday_end_time: uiEmployee.thursday_end_time || '17:00',
+      friday_available: uiEmployee.friday_available ?? true,
+      friday_start_time: uiEmployee.friday_start_time || '09:00',
+      friday_end_time: uiEmployee.friday_end_time || '17:00',
+      saturday_available: uiEmployee.saturday_available ?? true,
+      saturday_start_time: uiEmployee.saturday_start_time || '09:00',
+      saturday_end_time: uiEmployee.saturday_end_time || '17:00',
+      sunday_available: uiEmployee.sunday_available ?? true,
+      sunday_start_time: uiEmployee.sunday_start_time || '09:00',
+      sunday_end_time: uiEmployee.sunday_end_time || '17:00',
     };
   };
 
@@ -137,7 +128,6 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         <DialogContent className={`p-0 overflow-hidden rounded-2xl ${isMobile ? 'w-[95vw] max-w-[95vw]' : 'sm:max-w-[500px]'} max-h-[90vh] flex flex-col`}>
           <EmployeeHeader 
             employee={employee}
-            onEdit={handleEdit}
             onDelete={() => setIsDeleteDialogOpen(true)}
           />
           <div className="flex-1 overflow-auto">
@@ -145,6 +135,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
               employee={employee} 
               isEditing={false}
               onSave={() => {}}
+              onEdit={handleEdit}
             />
           </div>
         </DialogContent>
