@@ -93,6 +93,9 @@ const PayrollDashboard = () => {
     }
   ];
 
+  // Use the actual total employees from payroll metrics
+  const actualEmployeeCount = payrollMetrics.totalEmployees;
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Paid':
@@ -225,13 +228,13 @@ const PayrollDashboard = () => {
             </Card>
           )}
 
-          {/* Employee Table - keeping existing structure */}
+          {/* Employee Table - synchronized with actual count */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Employee ({payrollMetrics.totalEmployees} total)
+                  Employee ({actualEmployeeCount} total)
                 </CardTitle>
                 <div className="flex items-center gap-3">
                   <Button variant="outline" size="sm">
@@ -267,67 +270,77 @@ const PayrollDashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              {/* ... keep existing employee table code */}
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4">
-                        <input type="checkbox" className="rounded border-gray-300" />
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Employee</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Position</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Salary</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Recurring</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Overtime</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {employees.map((employee) => (
-                      <tr key={employee.id} className="border-b hover:bg-gray-50">
-                        <td className="py-3 px-4">
+              {/* Show loading state or actual employees */}
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  <span>Loading employees...</span>
+                </div>
+              ) : actualEmployeeCount === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No employees found</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4">
                           <input type="checkbox" className="rounded border-gray-300" />
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                              <span className="text-sm font-medium text-gray-600">
-                                {employee.name.split(' ').map(n => n[0]).join('')}
-                              </span>
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">{employee.name}</p>
-                              <p className="text-sm text-gray-500">{employee.email}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-600">{employee.position}</td>
-                        <td className="py-3 px-4 font-medium">{employee.salary}</td>
-                        <td className="py-3 px-4 text-gray-600">Recurring</td>
-                        <td className="py-3 px-4 text-gray-600">{employee.overtime}</td>
-                        <td className="py-3 px-4">{getStatusBadge(employee.status)}</td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm">
-                              <Settings className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              👁
-                            </Button>
-                          </div>
-                        </td>
+                        </th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-600">Employee</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-600">Position</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-600">Salary</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-600">Recurring</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-600">Overtime</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-600">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {employees.slice(0, actualEmployeeCount).map((employee) => (
+                        <tr key={employee.id} className="border-b hover:bg-gray-50">
+                          <td className="py-3 px-4">
+                            <input type="checkbox" className="rounded border-gray-300" />
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                <span className="text-sm font-medium text-gray-600">
+                                  {employee.name.split(' ').map(n => n[0]).join('')}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">{employee.name}</p>
+                                <p className="text-sm text-gray-500">{employee.email}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-gray-600">{employee.position}</td>
+                          <td className="py-3 px-4 font-medium">{employee.salary}</td>
+                          <td className="py-3 px-4 text-gray-600">Recurring</td>
+                          <td className="py-3 px-4 text-gray-600">{employee.overtime}</td>
+                          <td className="py-3 px-4">{getStatusBadge(employee.status)}</td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <Button variant="ghost" size="sm">
+                                <Settings className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm">
+                                👁
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* ... keep existing TabsContent for other tabs */}
         <TabsContent value="processing">
           <Card>
             <CardHeader>
