@@ -3,7 +3,7 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, X } from 'lucide-react';
+import { Settings, Trash2, X } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { DialogTitle, DialogClose } from '@/components/ui/dialog';
 import EmployeeStatusDropdown from './EmployeeStatusDropdown';
@@ -65,11 +65,11 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
                     className="rounded-full border-apple-blue/30 bg-white/80 hover:bg-apple-blue/5 shadow-sm transition-all duration-300 ease-in-out" 
                     onClick={onEdit}
                   >
-                    <Pencil className="h-4 w-4 text-apple-blue stroke-[2.5px] transition-transform hover:scale-110" />
+                    <Settings className="h-4 w-4 text-apple-blue stroke-[2.5px] transition-transform hover:scale-110" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="bg-apple-gray-900 text-white">
-                  <p>Edit Employee Details</p>
+                  <p>Employee Settings</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
