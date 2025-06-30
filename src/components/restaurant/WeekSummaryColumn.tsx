@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { WeekStats } from '@/types/restaurant-schedule';
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ const WeekSummaryColumn = ({
   const dateRange = formatDateRange(weekStats.startDate, weekStats.endDate);
 
   // Use the provided formatCurrency function or the imported one
-  const currencyFormatter = customFormatCurrency || formatCurrency;
+  const currencyFormatter = customFormatCurrency || ((amount: number) => formatCurrency(amount, true));
   
   return (
     <div className="col-span-1 bg-gray-50 border-r border-gray-200 flex flex-col">
@@ -81,7 +82,7 @@ const WeekSummaryColumn = ({
           <div className="flex flex-col items-end">
             <span className="text-gray-500 text-xs">Cost</span>
             <Badge variant="outline" className="bg-gray-100 hover:bg-gray-100">
-              {currencyFormatter(weekStats.totalCost, 'GBP')}
+              {currencyFormatter(weekStats.totalCost)}
             </Badge>
           </div>
         </div>
