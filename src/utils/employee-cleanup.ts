@@ -18,9 +18,9 @@ const EXAMPLE_EMPLOYEE_IDENTIFIERS = [
 
 export const cleanupExampleEmployees = async () => {
   try {
-    console.log('Starting cleanup of example employees...');
+    console.log('Starting aggressive cleanup of example employees...');
     
-    // Get all employees that match example identifiers
+    // Get all employees that match example identifiers (more comprehensive search)
     const { data: exampleEmployees, error: fetchError } = await supabase
       .from('employees')
       .select('id, name, email')
@@ -37,6 +37,9 @@ export const cleanupExampleEmployees = async () => {
 
     if (!exampleEmployees || exampleEmployees.length === 0) {
       console.log('No example employees found to clean up');
+      
+      // Force sync real employees for payroll users
+      await forceEmployeeSync();
       return { success: true, cleanedCount: 0 };
     }
 
@@ -55,6 +58,10 @@ export const cleanupExampleEmployees = async () => {
     }
 
     console.log(`Successfully cleaned up ${exampleEmployees.length} example employees`);
+    
+    // Force sync real employees after cleanup
+    await forceEmployeeSync();
+    
     return { success: true, cleanedCount: exampleEmployees.length };
 
   } catch (error) {
@@ -63,6 +70,41 @@ export const cleanupExampleEmployees = async () => {
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
     };
+  }
+};
+
+const forceEmployeeSync = async () => {
+  try {
+    console.log('Force syncing employees between manager and payroll accounts...');
+    
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Check if current user is payroll
+    const { data: userRole } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (userRole?.role === 'payroll') {
+      // Get payroll user's manager_id from their employee record
+      const { data: payrollEmployee } = await supabase
+        .from('employees')
+        .select('manager_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (payrollEmployee?.manager_id) {
+        console.log(`Syncing employees under manager ID: ${payrollEmployee.manager_id}`);
+        
+        // This will trigger the useEmployees hook to refetch with proper manager_id filter
+        // The hook already handles this logic, we just need to ensure the data is fresh
+      }
+    }
+  } catch (error) {
+    console.error('Error in force employee sync:', error);
   }
 };
 

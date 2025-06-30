@@ -1,75 +1,123 @@
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Copy } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import React from 'react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Copy, RefreshCw } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface ManagerIdFieldProps {
   managerId: string | null;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isManager: boolean;
-  isEditable?: boolean;
+  isEditable: boolean;
 }
 
-export const ManagerIdField = ({ managerId, onChange, isManager, isEditable = false }: ManagerIdFieldProps) => {
+const ManagerIdField: React.FC<ManagerIdFieldProps> = ({
+  managerId,
+  onChange,
+  isManager,
+  isEditable
+}) => {
   const { toast } = useToast();
-  
-  const copyManagerId = () => {
+
+  const handleCopyManagerId = () => {
     if (managerId) {
       navigator.clipboard.writeText(managerId);
       toast({
-        title: "Manager ID copied",
-        description: "Manager ID has been copied to clipboard",
+        title: "Manager ID Copied",
+        description: "Your Manager ID has been copied to clipboard. Share this with your employees."
       });
     }
   };
-  
-  // Don't render this component if the ID is already shown prominently (for managers)
-  if (isManager && managerId) return null;
-  
-  return (
-    <div className="space-y-2">
-      <Label htmlFor="manager_id">
-        {isManager ? "Your Manager ID" : "Your Manager's ID"}
-      </Label>
-      <div className="flex">
+
+  const generateManagerId = () => {
+    const newId = `MGR-${Math.floor(Math.random() * 90000) + 10000}`;
+    const event = {
+      target: { name: 'manager_id', value: newId }
+    } as React.ChangeEvent<HTMLInputElement>;
+    onChange(event);
+    
+    toast({
+      title: "Manager ID Generated",
+      description: "New Manager ID created. Don't forget to save your changes."
+    });
+  };
+
+  if (isManager) {
+    return (
+      <div className="space-y-2">
+        <Label htmlFor="manager_id">Your Manager ID</Label>
+        <div className="flex gap-2">
+          <Input
+            id="manager_id"
+            name="manager_id"
+            value={managerId || ''}
+            onChange={onChange}
+            placeholder="Generate or enter your Manager ID"
+            className="flex-1"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={generateManagerId}
+            title="Generate Manager ID"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+          {managerId && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={handleCopyManagerId}
+              title="Copy Manager ID"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Share your Manager ID with employees so they can connect to your account
+        </p>
+      </div>
+    );
+  }
+
+  if (!isEditable) {
+    return (
+      <div className="space-y-2">
+        <Label htmlFor="manager_id">Manager ID</Label>
         <Input
           id="manager_id"
           name="manager_id"
-          value={managerId || ""}
-          onChange={onChange}
-          disabled={!isEditable}
-          className={`${!isEditable ? 'bg-gray-100' : ''} ${isManager ? 'font-mono' : ''}`}
-          placeholder={isManager && !managerId ? "Loading or generating ID..." : isEditable ? "Enter your manager's ID (e.g., MGR-12345)" : "Not available"}
+          value={managerId || 'Not assigned'}
+          disabled
+          className="bg-gray-50"
         />
-        {isManager && managerId && (
-          <Button 
-            type="button" 
-            variant="outline" 
-            className="ml-2" 
-            onClick={copyManagerId}
-            title="Copy Manager ID"
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
-        )}
+        <p className="text-xs text-muted-foreground">
+          Contact your administrator to update your manager assignment
+        </p>
       </div>
-      {isManager ? (
-        <p className="text-xs text-gray-500">
-          {managerId 
-            ? "Share this ID with your employees to connect them to your account" 
-            : "Save your profile first to generate a Manager ID"}
-        </p>
-      ) : (
-        <p className="text-xs text-gray-500">
-          {isEditable
-            ? "Enter your manager's ID to connect to their account"
-            : managerId 
-              ? "This is the ID of your manager's account" 
-              : "No manager connected to your account"}
-        </p>
-      )}
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="manager_id">Manager ID (Optional)</Label>
+      <Input
+        id="manager_id"
+        name="manager_id"
+        value={managerId || ''}
+        onChange={onChange}
+        placeholder="Enter your manager's ID"
+      />
+      <p className="text-xs text-muted-foreground">
+        Enter your manager's ID to connect to their account
+      </p>
     </div>
   );
 };
+
+export default ManagerIdField;

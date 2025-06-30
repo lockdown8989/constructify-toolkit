@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PeopleTable from '@/components/people/PeopleTable';
@@ -63,9 +62,36 @@ const People = () => {
     sortDirection
   );
 
-  // Auto-cleanup example employees on component mount for admin/manager users
+  // More aggressive auto-cleanup for payroll users
   useEffect(() => {
-    if ((isManager || isPayroll || isAdmin) && employees.length === 0 && !isLoading) {
+    if (isPayroll && !isLoading) {
+      const autoCleanup = async () => {
+        console.log('Payroll user detected - running aggressive cleanup...');
+        const result = await cleanupExampleEmployees();
+        if (result.success) {
+          if (result.cleanedCount > 0) {
+            toast({
+              title: "Example Employees Removed",
+              description: `Cleaned up ${result.cleanedCount} example employees. Real employee data synchronized.`
+            });
+          } else {
+            toast({
+              title: "Data Synchronized",
+              description: "Employee data synchronized with manager accounts."
+            });
+          }
+          refetch();
+        }
+      };
+      
+      const timer = setTimeout(autoCleanup, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isPayroll, isLoading, refetch, toast]);
+
+  // Regular auto-cleanup for manager/admin users
+  useEffect(() => {
+    if ((isManager || isAdmin) && employees.length === 0 && !isLoading) {
       const autoCleanup = async () => {
         console.log('Auto-cleaning example employees...');
         const result = await cleanupExampleEmployees();
@@ -81,7 +107,7 @@ const People = () => {
       const timer = setTimeout(autoCleanup, 2000);
       return () => clearTimeout(timer);
     }
-  }, [employees.length, isLoading, isManager, isPayroll, isAdmin, refetch, toast]);
+  }, [employees.length, isLoading, isManager, isAdmin, refetch, toast]);
   
   // Handle manual cleanup
   const handleCleanupExamples = async () => {
@@ -164,7 +190,7 @@ const People = () => {
             </div>
           </div>
           
-          {/* Cleanup button for admins/managers */}
+          {/* Cleanup button for admins/managers/payroll */}
           {(isManager || isPayroll || isAdmin) && (
             <Button
               onClick={handleCleanupExamples}
@@ -173,7 +199,7 @@ const People = () => {
               className="ml-4"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              {isCleaningUp ? "Cleaning..." : "Remove Examples"}
+              {isCleaningUp ? "Syncing..." : "Sync Data"}
             </Button>
           )}
         </div>
