@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 interface EmployeeHeaderProps {
   employee: Employee;
-  onEdit?: () => void;
+  onEdit?: (employee: Employee) => void;
   onDelete: () => void;
 }
 
@@ -25,6 +25,13 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
   const statusColors = {
     green: 'bg-apple-green/15 text-apple-green hover:bg-apple-green/15',
     gray: 'bg-apple-gray-200 text-apple-gray-700 hover:bg-apple-gray-200'
+  };
+
+  const handleEdit = () => {
+    console.log('Settings button clicked for employee:', employee);
+    if (onEdit) {
+      onEdit(employee);
+    }
   };
 
   return (
@@ -51,7 +58,7 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
                     variant="outline" 
                     size="icon" 
                     className="rounded-full border-apple-blue/30 bg-white/80 hover:bg-apple-blue/5 shadow-sm transition-all duration-300 ease-in-out" 
-                    onClick={onEdit}
+                    onClick={handleEdit}
                   >
                     <Settings className="h-4 w-4 text-apple-blue stroke-[2.5px] transition-transform hover:scale-110" />
                   </Button>

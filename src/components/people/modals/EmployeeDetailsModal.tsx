@@ -31,10 +31,10 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
 
   if (!employee) return null;
 
-  const handleEdit = () => {
-    console.log('Edit button clicked for employee:', employee);
+  const handleEdit = (employeeToEdit: Employee) => {
+    console.log('Edit function called with employee:', employeeToEdit);
     if (onEdit) {
-      onEdit(employee);
+      onEdit(employeeToEdit);
       onClose();
     } else {
       setIsEditModalOpen(true);
