@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,13 +6,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Calendar, DollarSign, TrendingUp, Users, Download, Settings, Filter, Grid, List, Search } from 'lucide-react';
+import { Calendar, DollarSign, TrendingUp, Users, Download, Settings, Filter, Grid, List, Search, Loader2, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
+import { usePayrollSync } from '@/hooks/use-payroll-sync';
+import { PayrollStatsGrid } from '@/components/payroll/stats/PayrollStatsGrid';
+import { PayrollOverviewChart } from '@/components/payroll/charts/PayrollOverviewChart';
+import { formatCurrency } from '@/utils/format';
 
 const PayrollDashboard = () => {
   const { user, isPayroll } = useAuth();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [searchQuery, setSearchQuery] = useState('');
+  const [timeRange, setTimeRange] = useState<'day' | 'week' | 'month'>('month');
+  
+  const { 
+    payrollMetrics, 
+    isLoading, 
+    isProcessing, 
+    error, 
+    manualSync,
+    refetch 
+  } = usePayrollSync(timeRange);
   
   // Redirect if not payroll user
   if (!isPayroll) {
@@ -26,37 +39,6 @@ const PayrollDashboard = () => {
       </div>
     );
   }
-
-  const payrollStats = [
-    {
-      title: "Monthly Payroll",
-      value: "$3,230,250.00",
-      change: "+12.5%",
-      changeType: "positive" as const,
-      icon: DollarSign
-    },
-    {
-      title: "Overtime",
-      value: "$220,500.00",
-      change: "-5.3%",
-      changeType: "negative" as const,
-      icon: TrendingUp
-    },
-    {
-      title: "Bonuses & Incentives",
-      value: "$150,000.00",
-      change: "-12.3%",
-      changeType: "negative" as const,
-      icon: TrendingUp
-    },
-    {
-      title: "Total Employees",
-      value: "248",
-      change: "+3.2%",
-      changeType: "positive" as const,
-      icon: Users
-    }
-  ];
 
   const employees = [
     {
@@ -124,6 +106,10 @@ const PayrollDashboard = () => {
     }
   };
 
+  const handleTimeRangeChange = (newRange: 'day' | 'week' | 'month') => {
+    setTimeRange(newRange);
+  };
+
   return (
     <div className="container py-6 animate-fade-in">
       {/* Header */}
@@ -135,10 +121,28 @@ const PayrollDashboard = () => {
           <div>
             <h1 className="text-2xl font-bold">Payroll</h1>
             <p className="text-gray-600">Manage employee payroll and payments</p>
+            {payrollMetrics.lastUpdated && (
+              <p className="text-xs text-muted-foreground">
+                Last sync: {new Date(payrollMetrics.lastUpdated).toLocaleTimeString()}
+              </p>
+            )}
           </div>
         </div>
         
         <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={manualSync}
+            disabled={isProcessing}
+          >
+            {isProcessing ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" />
+            )}
+            Sync Data
+          </Button>
           <Button variant="outline" size="sm">
             <Settings className="h-4 w-4 mr-2" />
             Payroll Settings
@@ -170,70 +174,64 @@ const PayrollDashboard = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {payrollStats.map((stat, index) => (
-              <Card key={index}>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <p className="text-2xl font-bold">{stat.value}</p>
-                        <span className={`text-sm ${stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'}`}>
-                          {stat.change}
-                        </span>
+          {/* Live Stats Grid */}
+          <PayrollStatsGrid
+            totalPayroll={payrollMetrics.totalPayroll}
+            totalEmployees={payrollMetrics.totalEmployees}
+            paidEmployees={payrollMetrics.paidEmployees}
+            pendingEmployees={payrollMetrics.pendingEmployees}
+            absentEmployees={payrollMetrics.absentEmployees}
+          />
+
+          {/* Live Payroll Chart */}
+          <PayrollOverviewChart
+            data={payrollMetrics.chartData}
+            timeRange={timeRange}
+            onTimeRangeChange={handleTimeRangeChange}
+            isLoading={isLoading}
+            onRefresh={refetch}
+            lastUpdated={payrollMetrics.lastUpdated}
+          />
+
+          {/* AI Insights */}
+          {payrollMetrics.analysis && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  AI Insights
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium mb-2">Key Metrics</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <p className="text-sm text-blue-600 font-medium">Average Salary</p>
+                        <p className="text-lg font-bold">{formatCurrency(payrollMetrics.analysis.averageSalary || 0)}</p>
                       </div>
                     </div>
-                    <div className="p-3 bg-blue-100 rounded-lg">
-                      <stat.icon className="h-6 w-6 text-blue-600" />
-                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  
+                  {payrollMetrics.analysis.insights && (
+                    <div>
+                      <h4 className="font-medium mb-2">Analysis</h4>
+                      <p className="text-sm text-muted-foreground">{payrollMetrics.analysis.insights}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Chart Section */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Payroll Overview</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm">Day</Button>
-                  <Button variant="outline" size="sm">Week</Button>
-                  <Button variant="default" size="sm">Month</Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg flex items-center justify-center">
-                <p className="text-gray-500">Payroll Chart Visualization</p>
-              </div>
-              <div className="flex items-center justify-center gap-6 mt-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Monthly Payroll</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-300 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Overtime</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Bonuses & Incentives</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Employee Table */}
+          {/* Employee Table - keeping existing structure */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Employee
+                  Employee ({payrollMetrics.totalEmployees} total)
                 </CardTitle>
                 <div className="flex items-center gap-3">
                   <Button variant="outline" size="sm">
@@ -269,6 +267,7 @@ const PayrollDashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
+              {/* ... keep existing employee table code */}
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -328,6 +327,7 @@ const PayrollDashboard = () => {
           </Card>
         </TabsContent>
 
+        {/* ... keep existing TabsContent for other tabs */}
         <TabsContent value="processing">
           <Card>
             <CardHeader>
