@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -52,13 +51,14 @@ const PayrollDashboard = () => {
     refetchInterval: 30000
   });
 
-  // Fetch live employee count directly
-  const { data: employeeCount } = useQuery({
+  // Enhanced employee count query with better error handling
+  const { data: employeeCount, isLoading: employeeLoading } = useQuery({
     queryKey: ['live-employee-count'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      console.log('Fetching live employee count...');
+      const { data, error, count } = await supabase
         .from('employees')
-        .select('id', { count: 'exact' })
+        .select('id, name, status', { count: 'exact' })
         .eq('status', 'Active');
       
       if (error) {
@@ -66,9 +66,12 @@ const PayrollDashboard = () => {
         return 0;
       }
       
-      return data?.length || 0;
+      const actualCount = data?.length || count || 0;
+      console.log('Live employee count query result:', { data, count: actualCount });
+      return actualCount;
     },
-    refetchInterval: 10000 // Refetch every 10 seconds for live updates
+    refetchInterval: 10000, // Refetch every 10 seconds for live updates
+    staleTime: 0, // Always refetch
   });
   
   // Redirect if not payroll user
@@ -136,9 +139,16 @@ const PayrollDashboard = () => {
     }
   ];
 
-  // Use the live employee count instead of the one from payrollMetrics
-  const actualEmployeeCount = employeeCount || 0;
+  // Use the live employee count from both sources, prioritizing the direct query
+  const actualEmployeeCount = employeeCount ?? payrollMetrics.totalEmployees ?? 0;
   const overtimeHours = Math.round((overtimeData || 0) / 60);
+
+  console.log('Dashboard render - Employee counts:', {
+    employeeCount,
+    payrollMetricsTotal: payrollMetrics.totalEmployees,
+    actualEmployeeCount,
+    employeeLoading
+  });
 
   const handleCardClick = (statType: 'total' | 'employees' | 'paid' | 'pending' | 'absent', value: number) => {
     setModalState({
@@ -194,7 +204,7 @@ const PayrollDashboard = () => {
             actualEmployeeCount={actualEmployeeCount}
             searchQuery={searchQuery}
             viewMode={viewMode}
-            isLoading={isLoading}
+            isLoading={isLoading || employeeLoading}
             onSearchChange={setSearchQuery}
             onViewModeChange={setViewMode}
           />

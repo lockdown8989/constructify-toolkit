@@ -22,27 +22,29 @@ export const usePayrollSync = (timeRange: 'day' | 'week' | 'month' = 'month') =>
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Query for live payroll metrics
+  // Query for live payroll metrics with enhanced employee data fetching
   const { data: payrollMetrics, isLoading, error, refetch } = useQuery({
     queryKey: ['payroll-sync', timeRange],
     queryFn: async (): Promise<PayrollMetrics> => {
       try {
         setIsProcessing(true);
         
-        // Get the actual employee count from the database with better error handling
+        console.log('Starting payroll sync for timeRange:', timeRange);
+        
+        // First, get all active employees from the database
         const { data: employeeData, error: employeeError } = await supabase
           .from('employees')
-          .select('id, status')
+          .select('id, name, status, salary, user_id')
           .eq('status', 'Active');
 
-        let actualEmployeeCount = 0;
         if (employeeError) {
           console.error('Error fetching employees:', employeeError);
-        } else {
-          actualEmployeeCount = employeeData?.length || 0;
+          throw employeeError;
         }
 
+        const actualEmployeeCount = employeeData?.length || 0;
         console.log('Live employee count from database:', actualEmployeeCount);
+        console.log('Employee data:', employeeData);
         
         // Get payroll data for calculations
         const { data: payrollData, error: payrollError } = await supabase
@@ -54,12 +56,21 @@ export const usePayrollSync = (timeRange: 'day' | 'week' | 'month' = 'month') =>
           console.error('Error fetching payroll data:', payrollError);
         }
 
+        // Calculate payroll metrics
         const totalPayroll = payrollData?.reduce((sum, record) => sum + (record.salary_paid || 0), 0) || 0;
         const pendingPayslips = payrollData?.filter(record => 
           record.payment_status === 'pending' || record.payment_status === 'processing'
         ).length || 0;
 
+        // Calculate paid employees (those with successful payroll records)
+        const paidEmployeeIds = new Set(
+          payrollData?.filter(record => record.payment_status === 'paid')
+            .map(record => record.employee_id) || []
+        );
+        const paidEmployeesCount = Math.min(paidEmployeeIds.size, actualEmployeeCount);
+
         // Try to call the edge function for advanced processing
+        let edgeFunctionData = null;
         try {
           const { data, error } = await supabase.functions.invoke('process-payroll-data', {
             body: { action: 'sync', timeRange }
@@ -67,55 +78,53 @@ export const usePayrollSync = (timeRange: 'day' | 'week' | 'month' = 'month') =>
 
           if (error) {
             console.error('Edge function error:', error);
-          }
-
-          if (data?.success && data?.data) {
-            // Use edge function data but override with our live employee count
-            const result = {
-              ...data.data,
-              totalEmployees: actualEmployeeCount
-            };
-            console.log('Using edge function data with live employee count:', result);
-            return result;
+          } else if (data?.success && data?.data) {
+            edgeFunctionData = data.data;
+            console.log('Edge function returned data:', edgeFunctionData);
           }
         } catch (edgeError) {
           console.error('Edge function call failed:', edgeError);
         }
 
-        // Fallback: return manual calculations with live data
-        const fallbackResult = {
+        // Prepare the final result with live employee count
+        const result = {
           totalPayroll,
-          totalOvertime: 0,
-          totalBonuses: 0,
-          totalEmployees: actualEmployeeCount,
-          paidEmployees: actualEmployeeCount - pendingPayslips,
+          totalOvertime: edgeFunctionData?.totalOvertime || 0,
+          totalBonuses: edgeFunctionData?.totalBonuses || 0,
+          totalEmployees: actualEmployeeCount, // Always use live count
+          paidEmployees: paidEmployeesCount,
           pendingEmployees: pendingPayslips,
-          absentEmployees: 0,
-          chartData: [],
+          absentEmployees: Math.max(0, actualEmployeeCount - paidEmployeesCount - pendingPayslips),
+          analysis: edgeFunctionData?.analysis || {
+            averageSalary: actualEmployeeCount > 0 ? totalPayroll / actualEmployeeCount : 0,
+            insights: `Payroll data shows ${actualEmployeeCount} active employees with total payroll of $${totalPayroll.toFixed(2)}`
+          },
+          chartData: edgeFunctionData?.chartData || [],
           lastUpdated: new Date().toISOString()
         };
 
-        console.log('Using fallback payroll metrics:', fallbackResult);
-        return fallbackResult;
+        console.log('Final payroll metrics:', result);
+        return result;
         
       } catch (error) {
         console.error('Error syncing payroll data:', error);
         
-        // Final fallback: get at least employee count
-        const { data: employeeData } = await supabase
+        // Fallback: get at least employee count
+        const { data: fallbackEmployeeData } = await supabase
           .from('employees')
           .select('id, status')
           .eq('status', 'Active');
 
-        const actualEmployeeCount = employeeData?.length || 0;
+        const fallbackEmployeeCount = fallbackEmployeeData?.length || 0;
+        console.log('Fallback employee count:', fallbackEmployeeCount);
         
         return {
           totalPayroll: 0,
           totalOvertime: 0,
           totalBonuses: 0,
-          totalEmployees: actualEmployeeCount,
+          totalEmployees: fallbackEmployeeCount,
           paidEmployees: 0,
-          pendingEmployees: actualEmployeeCount,
+          pendingEmployees: fallbackEmployeeCount,
           absentEmployees: 0,
           chartData: [],
           lastUpdated: new Date().toISOString()
@@ -131,7 +140,7 @@ export const usePayrollSync = (timeRange: 'day' | 'week' | 'month' = 'month') =>
   // Set up real-time subscriptions for live updates
   useEffect(() => {
     const channel = supabase
-      .channel('payroll-changes')
+      .channel('payroll-employee-changes')
       .on(
         'postgres_changes',
         {
@@ -139,8 +148,8 @@ export const usePayrollSync = (timeRange: 'day' | 'week' | 'month' = 'month') =>
           schema: 'public',
           table: 'payroll'
         },
-        () => {
-          // Invalidate and refetch when payroll data changes
+        (payload) => {
+          console.log('Payroll table changed:', payload);
           queryClient.invalidateQueries({ queryKey: ['payroll-sync'] });
           queryClient.invalidateQueries({ queryKey: ['live-employee-count'] });
         }
@@ -152,8 +161,8 @@ export const usePayrollSync = (timeRange: 'day' | 'week' | 'month' = 'month') =>
           schema: 'public',
           table: 'employees'
         },
-        () => {
-          // Invalidate and refetch when employee data changes
+        (payload) => {
+          console.log('Employees table changed:', payload);
           queryClient.invalidateQueries({ queryKey: ['payroll-sync'] });
           queryClient.invalidateQueries({ queryKey: ['live-employee-count'] });
         }
@@ -174,9 +183,10 @@ export const usePayrollSync = (timeRange: 'day' | 'week' | 'month' = 'month') =>
       queryClient.invalidateQueries({ queryKey: ['live-employee-count'] });
       toast({
         title: "Data Synchronized",
-        description: "Payroll data has been updated successfully.",
+        description: "Payroll and employee data has been updated successfully.",
       });
     } catch (error) {
+      console.error('Manual sync error:', error);
       toast({
         title: "Sync Failed",
         description: "Failed to synchronize payroll data. Please try again.",
