@@ -33,10 +33,14 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
 
   const handleEdit = (employeeToEdit: Employee) => {
     console.log('Edit function called with employee:', employeeToEdit);
+    console.log('onEdit prop exists:', !!onEdit);
+    
     if (onEdit) {
+      console.log('Calling parent onEdit function');
       onEdit(employeeToEdit);
       onClose();
     } else {
+      console.log('Opening edit modal');
       setIsEditModalOpen(true);
     }
   };
@@ -64,17 +68,18 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   const handleEditModalClose = () => {
     console.log('Edit modal closing');
     setIsEditModalOpen(false);
-    // Don't close the parent modal here - let the user see the updated details
   };
 
   // Convert UI Employee to DB Employee format for editing
   const mapToDbEmployee = (uiEmployee: Employee): DbEmployee => {
+    console.log('Converting UI Employee to DB Employee:', uiEmployee);
+    
     return {
       id: uiEmployee.id,
-      name: uiEmployee.name,
+      name: uiEmployee.name || '',
       job_title: uiEmployee.jobTitle || '',
-      department: uiEmployee.department,
-      site: uiEmployee.site,
+      department: uiEmployee.department || '',
+      site: uiEmployee.site || '',
       salary: typeof uiEmployee.salary === 'string' 
         ? parseFloat(uiEmployee.salary.replace(/[^0-9.]/g, '')) || 0
         : uiEmployee.salary || 0,
@@ -100,7 +105,6 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       friday_shift_id: uiEmployee.friday_shift_id || null,
       saturday_shift_id: uiEmployee.saturday_shift_id || null,
       sunday_shift_id: uiEmployee.sunday_shift_id || null,
-      // Set default availability for all days since UI Employee doesn't have these fields
       monday_available: true,
       monday_start_time: '09:00',
       monday_end_time: '17:00',
@@ -124,6 +128,8 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       sunday_end_time: '17:00',
     };
   };
+
+  const dbEmployee = mapToDbEmployee(employee);
 
   return (
     <>
@@ -151,13 +157,11 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         onDelete={handleDelete}
       />
 
-      {isEditModalOpen && (
-        <AddEmployeeModal
-          isOpen={isEditModalOpen}
-          onClose={handleEditModalClose}
-          employeeToEdit={mapToDbEmployee(employee)}
-        />
-      )}
+      <AddEmployeeModal
+        isOpen={isEditModalOpen}
+        onClose={handleEditModalClose}
+        employeeToEdit={dbEmployee}
+      />
     </>
   );
 };
