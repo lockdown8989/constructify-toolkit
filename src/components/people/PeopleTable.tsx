@@ -172,7 +172,6 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
         employee={selectedEmployeeDetails}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        onStatusChange={handleStatusChange}
         onEdit={handleEditEmployee}
       />
 
