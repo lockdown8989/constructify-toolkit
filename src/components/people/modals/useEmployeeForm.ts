@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,6 +17,8 @@ export const useEmployeeForm = ({ onSuccess, defaultLocation, employeeToEdit }: 
   const addEmployee = useAddEmployee();
   const updateEmployee = useUpdateEmployee();
   const { toast } = useToast();
+
+  console.log('useEmployeeForm initialized with:', { employeeToEdit, defaultLocation });
 
   // Set default values based on whether we're editing or creating
   const defaultValues: EmployeeFormValues = employeeToEdit ? {

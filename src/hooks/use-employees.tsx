@@ -204,6 +204,8 @@ export function useUpdateEmployee() {
   
   return useMutation({
     mutationFn: async ({ id, ...update }: EmployeeUpdate & { id: string }) => {
+      console.log('Updating employee with data:', { id, ...update });
+      
       const { data, error } = await supabase
         .from('employees')
         .update(update)
@@ -211,7 +213,12 @@ export function useUpdateEmployee() {
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Update employee error:', error);
+        throw error;
+      }
+      
+      console.log('Employee updated successfully:', data);
       return data as Employee;
     },
     onSuccess: (data) => {
@@ -223,6 +230,7 @@ export function useUpdateEmployee() {
       });
     },
     onError: (error) => {
+      console.error('Update employee mutation error:', error);
       toast({
         title: "Failed to update employee",
         description: error.message,

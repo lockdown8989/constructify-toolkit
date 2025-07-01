@@ -61,66 +61,104 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
     setIsEditModalOpen(false);
   };
 
-  // Convert UI Employee to DB Employee format for editing
+  // Convert UI Employee to DB Employee format for editing with proper error handling
   const mapToDbEmployee = (uiEmployee: Employee): DbEmployee => {
     console.log('Converting UI Employee to DB Employee:', uiEmployee);
     
-    return {
-      id: uiEmployee.id,
-      name: uiEmployee.name || '',
-      job_title: uiEmployee.jobTitle || '',
-      department: uiEmployee.department || '',
-      site: uiEmployee.site || '',
-      salary: typeof uiEmployee.salary === 'string' 
-        ? parseFloat(uiEmployee.salary.replace(/[^0-9.]/g, '')) || 0
-        : uiEmployee.salary || 0,
-      start_date: uiEmployee.startDate 
-        ? new Date(uiEmployee.startDate).toISOString().split('T')[0]
-        : new Date().toISOString().split('T')[0],
-      lifecycle: uiEmployee.lifecycle || 'Active',
-      status: uiEmployee.status || 'Active',
-      avatar: uiEmployee.avatar,
-      location: uiEmployee.siteIcon === '🌐' ? 'Remote' : 'Office',
-      annual_leave_days: uiEmployee.annual_leave_days || 25,
-      sick_leave_days: uiEmployee.sick_leave_days || 10,
-      manager_id: uiEmployee.managerId || null,
-      user_id: uiEmployee.userId || null,
-      email: uiEmployee.email,
-      role: uiEmployee.role || 'employee',
-      hourly_rate: uiEmployee.hourly_rate || null,
-      shift_pattern_id: uiEmployee.shift_pattern_id || null,
-      monday_shift_id: uiEmployee.monday_shift_id || null,
-      tuesday_shift_id: uiEmployee.tuesday_shift_id || null,
-      wednesday_shift_id: uiEmployee.wednesday_shift_id || null,
-      thursday_shift_id: uiEmployee.thursday_shift_id || null,
-      friday_shift_id: uiEmployee.friday_shift_id || null,
-      saturday_shift_id: uiEmployee.saturday_shift_id || null,
-      sunday_shift_id: uiEmployee.sunday_shift_id || null,
-      monday_available: uiEmployee.monday_available ?? true,
-      monday_start_time: uiEmployee.monday_start_time || '09:00',
-      monday_end_time: uiEmployee.monday_end_time || '17:00',
-      tuesday_available: uiEmployee.tuesday_available ?? true,
-      tuesday_start_time: uiEmployee.tuesday_start_time || '09:00',
-      tuesday_end_time: uiEmployee.tuesday_end_time || '17:00',
-      wednesday_available: uiEmployee.wednesday_available ?? true,
-      wednesday_start_time: uiEmployee.wednesday_start_time || '09:00',
-      wednesday_end_time: uiEmployee.wednesday_end_time || '17:00',
-      thursday_available: uiEmployee.thursday_available ?? true,
-      thursday_start_time: uiEmployee.thursday_start_time || '09:00',
-      thursday_end_time: uiEmployee.thursday_end_time || '17:00',
-      friday_available: uiEmployee.friday_available ?? true,
-      friday_start_time: uiEmployee.friday_start_time || '09:00',
-      friday_end_time: uiEmployee.friday_end_time || '17:00',
-      saturday_available: uiEmployee.saturday_available ?? true,
-      saturday_start_time: uiEmployee.saturday_start_time || '09:00',
-      saturday_end_time: uiEmployee.saturday_end_time || '17:00',
-      sunday_available: uiEmployee.sunday_available ?? true,
-      sunday_start_time: uiEmployee.sunday_start_time || '09:00',
-      sunday_end_time: uiEmployee.sunday_end_time || '17:00',
-    };
+    try {
+      // Parse salary if it's a string
+      let salaryValue = 0;
+      if (typeof uiEmployee.salary === 'string') {
+        // Remove currency symbols and non-numeric characters except decimal point
+        const cleanSalary = uiEmployee.salary.replace(/[^0-9.]/g, '');
+        salaryValue = parseFloat(cleanSalary) || 0;
+      } else if (typeof uiEmployee.salary === 'number') {
+        salaryValue = uiEmployee.salary;
+      }
+
+      // Parse date safely
+      let startDateValue = new Date().toISOString().split('T')[0];
+      if (uiEmployee.startDate) {
+        try {
+          const parsedDate = new Date(uiEmployee.startDate);
+          if (!isNaN(parsedDate.getTime())) {
+            startDateValue = parsedDate.toISOString().split('T')[0];
+          }
+        } catch (dateError) {
+          console.warn('Date parsing error, using current date:', dateError);
+        }
+      }
+    
+      const dbEmployee: DbEmployee = {
+        id: uiEmployee.id,
+        name: uiEmployee.name || '',
+        job_title: uiEmployee.jobTitle || '',
+        department: uiEmployee.department || '',
+        site: uiEmployee.site || '',
+        salary: salaryValue,
+        start_date: startDateValue,
+        lifecycle: uiEmployee.lifecycle || 'Active',
+        status: uiEmployee.status || 'Active',
+        avatar: uiEmployee.avatar,
+        location: uiEmployee.siteIcon === '🌐' ? 'Remote' : 'Office',
+        annual_leave_days: uiEmployee.annual_leave_days || 25,
+        sick_leave_days: uiEmployee.sick_leave_days || 10,
+        manager_id: uiEmployee.managerId || null,
+        user_id: uiEmployee.userId || null,
+        email: uiEmployee.email,
+        role: uiEmployee.role || 'employee',
+        hourly_rate: uiEmployee.hourly_rate || null,
+        shift_pattern_id: uiEmployee.shift_pattern_id || null,
+        monday_shift_id: uiEmployee.monday_shift_id || null,
+        tuesday_shift_id: uiEmployee.tuesday_shift_id || null,
+        wednesday_shift_id: uiEmployee.wednesday_shift_id || null,
+        thursday_shift_id: uiEmployee.thursday_shift_id || null,
+        friday_shift_id: uiEmployee.friday_shift_id || null,
+        saturday_shift_id: uiEmployee.saturday_shift_id || null,
+        sunday_shift_id: uiEmployee.sunday_shift_id || null,
+        monday_available: uiEmployee.monday_available ?? true,
+        monday_start_time: uiEmployee.monday_start_time || '09:00',
+        monday_end_time: uiEmployee.monday_end_time || '17:00',
+        tuesday_available: uiEmployee.tuesday_available ?? true,
+        tuesday_start_time: uiEmployee.tuesday_start_time || '09:00',
+        tuesday_end_time: uiEmployee.tuesday_end_time || '17:00',
+        wednesday_available: uiEmployee.wednesday_available ?? true,
+        wednesday_start_time: uiEmployee.wednesday_start_time || '09:00',
+        wednesday_end_time: uiEmployee.wednesday_end_time || '17:00',
+        thursday_available: uiEmployee.thursday_available ?? true,
+        thursday_start_time: uiEmployee.thursday_start_time || '09:00',
+        thursday_end_time: uiEmployee.thursday_end_time || '17:00',
+        friday_available: uiEmployee.friday_available ?? true,
+        friday_start_time: uiEmployee.friday_start_time || '09:00',
+        friday_end_time: uiEmployee.friday_end_time || '17:00',
+        saturday_available: uiEmployee.saturday_available ?? true,
+        saturday_start_time: uiEmployee.saturday_start_time || '09:00',
+        saturday_end_time: uiEmployee.saturday_end_time || '17:00',
+        sunday_available: uiEmployee.sunday_available ?? true,
+        sunday_start_time: uiEmployee.sunday_start_time || '09:00',
+        sunday_end_time: uiEmployee.sunday_end_time || '17:00',
+      };
+      
+      console.log('Converted to DB Employee:', dbEmployee);
+      return dbEmployee;
+    } catch (error) {
+      console.error('Error converting employee data:', error);
+      toast({
+        title: "Conversion Error",
+        description: "Failed to convert employee data for editing",
+        variant: "destructive"
+      });
+      throw error;
+    }
   };
 
-  const dbEmployee = mapToDbEmployee(employee);
+  let dbEmployee: DbEmployee;
+  try {
+    dbEmployee = mapToDbEmployee(employee);
+  } catch (error) {
+    console.error('Failed to convert employee for editing:', error);
+    return null;
+  }
 
   return (
     <>
@@ -148,11 +186,13 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         onDelete={handleDelete}
       />
 
-      <AddEmployeeModal
-        isOpen={isEditModalOpen}
-        onClose={handleEditModalClose}
-        employeeToEdit={dbEmployee}
-      />
+      {isEditModalOpen && (
+        <AddEmployeeModal
+          isOpen={isEditModalOpen}
+          onClose={handleEditModalClose}
+          employeeToEdit={dbEmployee}
+        />
+      )}
     </>
   );
 };

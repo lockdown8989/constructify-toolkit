@@ -2,27 +2,20 @@
 import { z } from 'zod';
 
 export const employeeFormSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name must be less than 100 characters'),
-  email: z.string().email('Please enter a valid email address').optional().or(z.literal('')),
-  phone: z.string().optional(),
-  job_title: z.string().min(1, 'Job title is required').max(100, 'Job title must be less than 100 characters'),
-  department: z.string().min(1, 'Department is required').max(100, 'Department must be less than 100 characters'),
-  site: z.string().min(1, 'Site is required').max(100, 'Site must be less than 100 characters'),
-  location: z.enum(['Office', 'Remote', 'Hybrid']).default('Office'),
-  salary: z.union([
-    z.string().transform((val) => val === '' ? 0 : parseFloat(val) || 0),
-    z.number()
-  ]).default(0),
-  hourly_rate: z.union([
-    z.string().transform((val) => val === '' ? 0 : parseFloat(val) || 0),
-    z.number()
-  ]).optional(),
-  lifecycle: z.enum(['Active', 'Inactive', 'Terminated']).default('Active'),
-  status: z.enum(['Active', 'Inactive', 'On Leave']).default('Active'),
-  start_date: z.string().optional(),
-  annual_leave_days: z.number().default(25),
-  sick_leave_days: z.number().default(10),
-  role: z.enum(['employee', 'manager', 'admin', 'hr']).default('employee'),
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Valid email is required').optional().or(z.literal('')),
+  job_title: z.string().min(1, 'Job title is required'),
+  department: z.string().min(1, 'Department is required'),
+  site: z.string().min(1, 'Site is required'),
+  salary: z.number().min(0, 'Salary must be positive'),
+  hourly_rate: z.number().min(0, 'Hourly rate must be positive').optional(),
+  start_date: z.string().min(1, 'Start date is required'),
+  lifecycle: z.enum(['Active', 'Inactive', 'Terminated']),
+  status: z.enum(['Active', 'Inactive', 'On Leave']),
+  location: z.enum(['Office', 'Remote', 'Hybrid']),
+  annual_leave_days: z.number().min(0).max(365),
+  sick_leave_days: z.number().min(0).max(365),
+  role: z.enum(['employee', 'manager', 'admin', 'hr']),
   shift_pattern_id: z.string().optional(),
   monday_shift_id: z.string().optional(),
   tuesday_shift_id: z.string().optional(),
@@ -31,35 +24,28 @@ export const employeeFormSchema = z.object({
   friday_shift_id: z.string().optional(),
   saturday_shift_id: z.string().optional(),
   sunday_shift_id: z.string().optional(),
-  
   // Weekly availability fields
-  monday_available: z.boolean().default(true),
-  monday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
-  monday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
-  
-  tuesday_available: z.boolean().default(true),
-  tuesday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
-  tuesday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
-  
-  wednesday_available: z.boolean().default(true),
-  wednesday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
-  wednesday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
-  
-  thursday_available: z.boolean().default(true),
-  thursday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
-  thursday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
-  
-  friday_available: z.boolean().default(true),
-  friday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
-  friday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
-  
-  saturday_available: z.boolean().default(true),
-  saturday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
-  saturday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
-  
-  sunday_available: z.boolean().default(true),
-  sunday_start_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('09:00'),
-  sunday_end_time: z.string().regex(/^\d{2}:\d{2}$/, 'Invalid time format').default('17:00'),
+  monday_available: z.boolean().optional(),
+  monday_start_time: z.string().optional(),
+  monday_end_time: z.string().optional(),
+  tuesday_available: z.boolean().optional(),
+  tuesday_start_time: z.string().optional(),
+  tuesday_end_time: z.string().optional(),
+  wednesday_available: z.boolean().optional(),
+  wednesday_start_time: z.string().optional(),
+  wednesday_end_time: z.string().optional(),
+  thursday_available: z.boolean().optional(),
+  thursday_start_time: z.string().optional(),
+  thursday_end_time: z.string().optional(),
+  friday_available: z.boolean().optional(),
+  friday_start_time: z.string().optional(),
+  friday_end_time: z.string().optional(),
+  saturday_available: z.boolean().optional(),
+  saturday_start_time: z.string().optional(),
+  saturday_end_time: z.string().optional(),
+  sunday_available: z.boolean().optional(),
+  sunday_start_time: z.string().optional(),
+  sunday_end_time: z.string().optional(),
 });
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
