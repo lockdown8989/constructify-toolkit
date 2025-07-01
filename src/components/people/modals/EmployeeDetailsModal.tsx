@@ -61,7 +61,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
     setIsEditModalOpen(false);
   };
 
-  // Convert UI Employee to DB Employee format for editing with simplified conversion
+  // Simplified conversion function
   const mapToDbEmployee = (uiEmployee: Employee): DbEmployee => {
     console.log('Converting UI Employee to DB Employee:', uiEmployee);
     
@@ -148,12 +148,13 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className={`p-0 overflow-hidden rounded-2xl ${isMobile ? 'w-[95vw] max-w-[95vw]' : 'sm:max-w-[500px]'} max-h-[90vh] flex flex-col`}>
+        <DialogContent className={`p-0 overflow-hidden ${isMobile ? 'w-[95vw] max-w-[95vw] max-h-[95vh]' : 'sm:max-w-[600px] max-h-[90vh]'} flex flex-col border-0 shadow-2xl`}>
           <EmployeeHeader 
             employee={employee}
             onDelete={() => setIsDeleteDialogOpen(true)}
+            onEdit={handleEdit}
           />
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto bg-gray-50">
             <EmployeeInfoSection 
               employee={employee} 
               isEditing={false}
