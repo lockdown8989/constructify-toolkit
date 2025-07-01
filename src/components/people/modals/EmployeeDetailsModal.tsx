@@ -61,15 +61,14 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
     setIsEditModalOpen(false);
   };
 
-  // Convert UI Employee to DB Employee format for editing with proper error handling
+  // Convert UI Employee to DB Employee format for editing with simplified conversion
   const mapToDbEmployee = (uiEmployee: Employee): DbEmployee => {
     console.log('Converting UI Employee to DB Employee:', uiEmployee);
     
     try {
-      // Parse salary if it's a string
+      // Parse salary safely
       let salaryValue = 0;
       if (typeof uiEmployee.salary === 'string') {
-        // Remove currency symbols and non-numeric characters except decimal point
         const cleanSalary = uiEmployee.salary.replace(/[^0-9.]/g, '');
         salaryValue = parseFloat(cleanSalary) || 0;
       } else if (typeof uiEmployee.salary === 'number') {
@@ -108,35 +107,6 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         email: uiEmployee.email,
         role: uiEmployee.role || 'employee',
         hourly_rate: uiEmployee.hourly_rate || null,
-        shift_pattern_id: uiEmployee.shift_pattern_id || null,
-        monday_shift_id: uiEmployee.monday_shift_id || null,
-        tuesday_shift_id: uiEmployee.tuesday_shift_id || null,
-        wednesday_shift_id: uiEmployee.wednesday_shift_id || null,
-        thursday_shift_id: uiEmployee.thursday_shift_id || null,
-        friday_shift_id: uiEmployee.friday_shift_id || null,
-        saturday_shift_id: uiEmployee.saturday_shift_id || null,
-        sunday_shift_id: uiEmployee.sunday_shift_id || null,
-        monday_available: uiEmployee.monday_available ?? true,
-        monday_start_time: uiEmployee.monday_start_time || '09:00',
-        monday_end_time: uiEmployee.monday_end_time || '17:00',
-        tuesday_available: uiEmployee.tuesday_available ?? true,
-        tuesday_start_time: uiEmployee.tuesday_start_time || '09:00',
-        tuesday_end_time: uiEmployee.tuesday_end_time || '17:00',
-        wednesday_available: uiEmployee.wednesday_available ?? true,
-        wednesday_start_time: uiEmployee.wednesday_start_time || '09:00',
-        wednesday_end_time: uiEmployee.wednesday_end_time || '17:00',
-        thursday_available: uiEmployee.thursday_available ?? true,
-        thursday_start_time: uiEmployee.thursday_start_time || '09:00',
-        thursday_end_time: uiEmployee.thursday_end_time || '17:00',
-        friday_available: uiEmployee.friday_available ?? true,
-        friday_start_time: uiEmployee.friday_start_time || '09:00',
-        friday_end_time: uiEmployee.friday_end_time || '17:00',
-        saturday_available: uiEmployee.saturday_available ?? true,
-        saturday_start_time: uiEmployee.saturday_start_time || '09:00',
-        saturday_end_time: uiEmployee.saturday_end_time || '17:00',
-        sunday_available: uiEmployee.sunday_available ?? true,
-        sunday_start_time: uiEmployee.sunday_start_time || '09:00',
-        sunday_end_time: uiEmployee.sunday_end_time || '17:00',
       };
       
       console.log('Converted to DB Employee:', dbEmployee);
@@ -157,7 +127,22 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
     dbEmployee = mapToDbEmployee(employee);
   } catch (error) {
     console.error('Failed to convert employee for editing:', error);
-    return null;
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="p-6">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-red-600 mb-2">Error Loading Employee</h3>
+            <p className="text-gray-600">Unable to load employee data for editing.</p>
+            <button 
+              onClick={onClose}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Close
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   return (
