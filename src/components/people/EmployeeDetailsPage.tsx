@@ -40,6 +40,11 @@ const EmployeeDetailsPage = () => {
     );
   }
 
+  const handleEdit = () => {
+    // Navigate to edit mode or open modal - for now just log
+    console.log('Edit employee:', employee.id);
+  };
+
   return (
     <div className="container mx-auto py-8 space-y-6">
       {/* Header */}
@@ -61,6 +66,7 @@ const EmployeeDetailsPage = () => {
           <EmployeeHeader
             employee={employee}
             onDelete={() => {}}
+            onEdit={handleEdit}
           />
         </CardContent>
       </Card>
@@ -75,6 +81,7 @@ const EmployeeDetailsPage = () => {
             employee={employee}
             isEditing={false}
             onSave={() => {}}
+            onEdit={handleEdit}
           />
         </CardContent>
       </Card>
