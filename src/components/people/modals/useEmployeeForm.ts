@@ -20,41 +20,48 @@ export const useEmployeeForm = ({ onSuccess, defaultLocation, employeeToEdit }: 
 
   console.log('useEmployeeForm initialized with:', { employeeToEdit, defaultLocation });
 
-  // Set default values based on whether we're editing or creating
-  const defaultValues: EmployeeFormValues = employeeToEdit ? {
-    name: employeeToEdit.name || '',
-    email: employeeToEdit.email || '',
-    job_title: employeeToEdit.job_title || '',
-    department: employeeToEdit.department || '',
-    site: employeeToEdit.site || '',
-    salary: employeeToEdit.salary || 0,
-    hourly_rate: employeeToEdit.hourly_rate || undefined,
-    start_date: employeeToEdit.start_date || new Date().toISOString().split('T')[0],
-    lifecycle: (employeeToEdit.lifecycle as 'Active' | 'Inactive' | 'Terminated') || 'Active',
-    status: (employeeToEdit.status as 'Active' | 'Inactive' | 'On Leave') || 'Active',
-    location: (employeeToEdit.location as 'Office' | 'Remote' | 'Hybrid') || 'Office',
-    annual_leave_days: employeeToEdit.annual_leave_days || 25,
-    sick_leave_days: employeeToEdit.sick_leave_days || 10,
-    role: (employeeToEdit.role as 'employee' | 'manager' | 'admin' | 'hr') || 'employee',
-  } : {
-    name: '',
-    email: '',
-    job_title: '',
-    department: '',
-    site: '',
-    salary: 0,
-    start_date: new Date().toISOString().split('T')[0],
-    lifecycle: 'Active' as const,
-    status: 'Active' as const,
-    location: (defaultLocation as 'Office' | 'Remote' | 'Hybrid') || 'Office',
-    annual_leave_days: 25,
-    sick_leave_days: 10,
-    role: 'employee' as const,
+  // Safe default values with proper type checking
+  const getDefaultValues = (): EmployeeFormValues => {
+    if (employeeToEdit) {
+      return {
+        name: employeeToEdit.name || '',
+        email: employeeToEdit.email || '',
+        job_title: employeeToEdit.job_title || '',
+        department: employeeToEdit.department || '',
+        site: employeeToEdit.site || '',
+        salary: typeof employeeToEdit.salary === 'number' ? employeeToEdit.salary : 0,
+        hourly_rate: employeeToEdit.hourly_rate || undefined,
+        start_date: employeeToEdit.start_date || new Date().toISOString().split('T')[0],
+        lifecycle: (employeeToEdit.lifecycle as 'Active' | 'Inactive' | 'Terminated') || 'Active',
+        status: (employeeToEdit.status as 'Active' | 'Inactive' | 'On Leave') || 'Active',
+        location: (employeeToEdit.location as 'Office' | 'Remote' | 'Hybrid') || 'Office',
+        annual_leave_days: employeeToEdit.annual_leave_days || 25,
+        sick_leave_days: employeeToEdit.sick_leave_days || 10,
+        role: (employeeToEdit.role as 'employee' | 'manager' | 'admin' | 'hr') || 'employee',
+      };
+    }
+
+    // Default values for new employee
+    return {
+      name: '',
+      email: '',
+      job_title: '',
+      department: '',
+      site: '',
+      salary: 0,
+      start_date: new Date().toISOString().split('T')[0],
+      lifecycle: 'Active' as const,
+      status: 'Active' as const,
+      location: (defaultLocation as 'Office' | 'Remote' | 'Hybrid') || 'Office',
+      annual_leave_days: 25,
+      sick_leave_days: 10,
+      role: 'employee' as const,
+    };
   };
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),
-    defaultValues,
+    defaultValues: getDefaultValues(),
     mode: 'onChange'
   });
 
@@ -65,21 +72,35 @@ export const useEmployeeForm = ({ onSuccess, defaultLocation, employeeToEdit }: 
       setError(null);
       console.log('Submitting employee form with data:', data);
       
+      // Validate required fields
+      if (!data.name?.trim()) {
+        throw new Error('Employee name is required');
+      }
+      if (!data.job_title?.trim()) {
+        throw new Error('Job title is required');
+      }
+      if (!data.department?.trim()) {
+        throw new Error('Department is required');
+      }
+      if (!data.site?.trim()) {
+        throw new Error('Site is required');
+      }
+      
       // Transform form data to match Employee type requirements
       const employeeData = {
-        name: data.name || '',
-        email: data.email || '',
-        job_title: data.job_title || '',
-        department: data.department || '',
-        site: data.site || '',
-        salary: typeof data.salary === 'number' ? data.salary : Number(data.salary) || 0,
-        hourly_rate: data.hourly_rate,
+        name: data.name.trim(),
+        email: data.email?.trim() || null,
+        job_title: data.job_title.trim(),
+        department: data.department.trim(),
+        site: data.site.trim(),
+        salary: Math.max(0, Number(data.salary) || 0),
+        hourly_rate: data.hourly_rate ? Math.max(0, Number(data.hourly_rate)) : null,
         start_date: data.start_date || new Date().toISOString().split('T')[0],
         lifecycle: data.lifecycle || 'Active',
         status: data.status || 'Active',
         location: data.location || 'Office',
-        annual_leave_days: data.annual_leave_days || 25,
-        sick_leave_days: data.sick_leave_days || 10,
+        annual_leave_days: Math.max(0, Math.min(365, data.annual_leave_days || 25)),
+        sick_leave_days: Math.max(0, Math.min(365, data.sick_leave_days || 10)),
         role: data.role || 'employee',
       };
       
