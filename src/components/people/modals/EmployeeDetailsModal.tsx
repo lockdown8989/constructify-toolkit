@@ -61,7 +61,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
     setIsEditModalOpen(false);
   };
 
-  // Simplified conversion function
+  // Improved conversion function with better error handling
   const mapToDbEmployee = (uiEmployee: Employee): DbEmployee => {
     console.log('Converting UI Employee to DB Employee:', uiEmployee);
     
@@ -69,7 +69,8 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       // Parse salary safely
       let salaryValue = 0;
       if (typeof uiEmployee.salary === 'string') {
-        const cleanSalary = uiEmployee.salary.replace(/[^0-9.]/g, '');
+        // Remove currency symbols and commas, then parse
+        const cleanSalary = uiEmployee.salary.replace(/[£$,\s]/g, '');
         salaryValue = parseFloat(cleanSalary) || 0;
       } else if (typeof uiEmployee.salary === 'number') {
         salaryValue = uiEmployee.salary;
@@ -79,7 +80,21 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       let startDateValue = new Date().toISOString().split('T')[0];
       if (uiEmployee.startDate) {
         try {
-          const parsedDate = new Date(uiEmployee.startDate);
+          // Handle different date formats
+          const dateStr = uiEmployee.startDate;
+          let parsedDate: Date;
+          
+          if (dateStr.includes(',')) {
+            // Handle "Month Day, Year" format
+            parsedDate = new Date(dateStr);
+          } else if (dateStr.includes('-')) {
+            // Handle ISO format
+            parsedDate = new Date(dateStr);
+          } else {
+            // Fallback to current date
+            parsedDate = new Date();
+          }
+          
           if (!isNaN(parsedDate.getTime())) {
             startDateValue = parsedDate.toISOString().split('T')[0];
           }
@@ -98,51 +113,34 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         start_date: startDateValue,
         lifecycle: uiEmployee.lifecycle || 'Active',
         status: uiEmployee.status || 'Active',
-        avatar: uiEmployee.avatar,
+        avatar: uiEmployee.avatar || null,
         location: uiEmployee.siteIcon === '🌐' ? 'Remote' : 'Office',
         annual_leave_days: uiEmployee.annual_leave_days || 25,
         sick_leave_days: uiEmployee.sick_leave_days || 10,
         manager_id: uiEmployee.managerId || null,
         user_id: uiEmployee.userId || null,
-        email: uiEmployee.email,
+        email: uiEmployee.email || null,
         role: uiEmployee.role || 'employee',
         hourly_rate: uiEmployee.hourly_rate || null,
       };
       
-      console.log('Converted to DB Employee:', dbEmployee);
+      console.log('Successfully converted to DB Employee:', dbEmployee);
       return dbEmployee;
     } catch (error) {
       console.error('Error converting employee data:', error);
-      toast({
-        title: "Conversion Error",
-        description: "Failed to convert employee data for editing",
-        variant: "destructive"
-      });
-      throw error;
+      throw new Error('Failed to prepare employee data for editing');
     }
   };
 
-  let dbEmployee: DbEmployee;
+  // Safe conversion with error handling
+  let dbEmployee: DbEmployee | null = null;
+  let conversionError: string | null = null;
+  
   try {
     dbEmployee = mapToDbEmployee(employee);
   } catch (error) {
     console.error('Failed to convert employee for editing:', error);
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="p-6">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-red-600 mb-2">Error Loading Employee</h3>
-            <p className="text-gray-600">Unable to load employee data for editing.</p>
-            <button 
-              onClick={onClose}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Close
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
+    conversionError = error instanceof Error ? error.message : 'Unknown conversion error';
   }
 
   return (
@@ -172,12 +170,30 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         onDelete={handleDelete}
       />
 
-      {isEditModalOpen && (
+      {isEditModalOpen && dbEmployee && !conversionError && (
         <AddEmployeeModal
           isOpen={isEditModalOpen}
           onClose={handleEditModalClose}
           employeeToEdit={dbEmployee}
         />
+      )}
+
+      {/* Show error dialog if conversion failed */}
+      {isEditModalOpen && conversionError && (
+        <Dialog open={isEditModalOpen} onOpenChange={handleEditModalClose}>
+          <DialogContent className="p-6">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-red-600 mb-2">Error Loading Employee Data</h3>
+              <p className="text-gray-600 mb-4">{conversionError}</p>
+              <button 
+                onClick={handleEditModalClose}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Close
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </>
   );
