@@ -3,7 +3,7 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, X, Edit } from 'lucide-react';
+import { Trash2, X, Edit, Settings } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Employee } from '@/components/people/types';
@@ -12,12 +12,14 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface EmployeeHeaderProps {
   employee: Employee;
   onEdit?: () => void;
+  onEditAccount?: () => void;
   onDelete: () => void;
 }
 
 const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
   employee,
   onEdit,
+  onEditAccount,
   onDelete,
 }) => {
   const isMobile = useIsMobile();
@@ -68,16 +70,29 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
           {employee.status}
         </Badge>
 
-        {/* Action Button */}
-        {onEdit && (
-          <Button 
-            onClick={onEdit}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-medium transition-colors duration-200 flex items-center gap-2"
-          >
-            <Edit className="h-4 w-4" />
-            Edit Profile
-          </Button>
-        )}
+        {/* Action Buttons */}
+        <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-3 w-full max-w-xs`}>
+          {onEdit && (
+            <Button 
+              onClick={onEdit}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-medium transition-colors duration-200 flex items-center gap-2 flex-1"
+            >
+              <Edit className="h-4 w-4" />
+              Edit Profile
+            </Button>
+          )}
+          
+          {onEditAccount && (
+            <Button 
+              onClick={onEditAccount}
+              variant="outline"
+              className="border-green-600 text-green-600 hover:bg-green-50 px-6 py-2 rounded-full font-medium transition-colors duration-200 flex items-center gap-2 flex-1"
+            >
+              <Settings className="h-4 w-4" />
+              Edit Account
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Delete button - positioned at bottom right, less prominent */}

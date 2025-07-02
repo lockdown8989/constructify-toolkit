@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useDeleteEmployee, Employee as DbEmployee } from '@/hooks/use-employees';
@@ -7,6 +6,7 @@ import { Employee, mapDbEmployeeToUiEmployee } from '../types';
 import EmployeeHeader from './employee-details/EmployeeHeader';
 import EmployeeInfoSection from './employee-details/EmployeeInfoSection';
 import DeleteConfirmationDialog from './employee-details/DeleteConfirmationDialog';
+import EmployeeAccountEditDialog from './employee-details/EmployeeAccountEditDialog';
 import AddEmployeeModal from './AddEmployeeModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -25,6 +25,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
 }) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAccountEditDialogOpen, setIsAccountEditDialogOpen] = useState(false);
   const deleteEmployee = useDeleteEmployee();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -34,6 +35,11 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   const handleEdit = () => {
     console.log('Opening edit modal for employee:', employee);
     setIsEditModalOpen(true);
+  };
+
+  const handleEditAccount = () => {
+    console.log('Opening account edit dialog for employee:', employee);
+    setIsAccountEditDialogOpen(true);
   };
 
   const handleDelete = async () => {
@@ -59,6 +65,11 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   const handleEditModalClose = () => {
     console.log('Edit modal closing');
     setIsEditModalOpen(false);
+  };
+
+  const handleAccountEditDialogClose = () => {
+    console.log('Account edit dialog closing');
+    setIsAccountEditDialogOpen(false);
   };
 
   // Improved conversion function with better error handling and email synchronization
@@ -166,6 +177,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
             employee={employee}
             onDelete={() => setIsDeleteDialogOpen(true)}
             onEdit={handleEdit}
+            onEditAccount={handleEditAccount}
           />
           <div className="flex-1 overflow-auto bg-gray-50">
             <EmployeeInfoSection 
@@ -185,11 +197,17 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         onDelete={handleDelete}
       />
 
-      {isEditModalOpen && dbEmployee && (
+      <EmployeeAccountEditDialog
+        employee={employee}
+        isOpen={isAccountEditDialogOpen}
+        onClose={handleAccountEditDialogClose}
+      />
+
+      {isEditModalOpen && (
         <AddEmployeeModal
           isOpen={isEditModalOpen}
           onClose={handleEditModalClose}
-          employeeToEdit={dbEmployee}
+          employeeToEdit={employee ? mapToDbEmployee(employee) : undefined}
         />
       )}
 
