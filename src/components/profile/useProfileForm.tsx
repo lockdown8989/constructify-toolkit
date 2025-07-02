@@ -44,10 +44,10 @@ export const useProfileForm = (user: User | null) => {
           return;
         }
 
-        // Fetch manager ID from employees table
+        // Fetch manager ID and email from employees table
         const { data: employeeData, error: employeeError } = await supabase
           .from("employees")
-          .select("manager_id")
+          .select("manager_id, email")
           .eq("user_id", user.id)
           .maybeSingle();
 
@@ -60,7 +60,7 @@ export const useProfileForm = (user: User | null) => {
           last_name: profileData?.last_name || "",
           position: profileData?.position || "",
           department: profileData?.department || "",
-          email: user.email || "",
+          email: employeeData?.email || user.email || "",
           manager_id: employeeData?.manager_id || "",
           avatar_url: profileData?.avatar_url || null,
         });
@@ -109,7 +109,7 @@ export const useProfileForm = (user: User | null) => {
         return;
       }
 
-      // Update email if changed
+      // Update email in auth if changed
       if (profile.email !== user.email) {
         const { error: emailError } = await supabase.auth.updateUser({
           email: profile.email
@@ -125,69 +125,70 @@ export const useProfileForm = (user: User | null) => {
         }
       }
 
-      // Update manager ID in employees table
-      if (profile.manager_id) {
-        // Check if employee record exists
-        const { data: existingEmployee, error: checkError } = await supabase
+      // Update employee record with synchronized email and manager ID
+      const { data: existingEmployee, error: checkError } = await supabase
+        .from("employees")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Error checking employee record:", checkError);
+      } else if (existingEmployee) {
+        // Update existing employee record with email sync
+        const { error: updateError } = await supabase
           .from("employees")
-          .select("id")
-          .eq("user_id", user.id)
+          .update({ 
+            manager_id: profile.manager_id,
+            email: profile.email // Sync email to employee record
+          })
+          .eq("user_id", user.id);
+
+        if (updateError) {
+          console.error("Error updating employee record:", updateError);
+          toast({
+            title: "Error updating employee data",
+            description: updateError.message,
+            variant: "destructive",
+          });
+          return;
+        }
+      } else if (profile.manager_id) {
+        // Create new employee record if it doesn't exist
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("first_name, last_name")
+          .eq("id", user.id)
           .maybeSingle();
 
-        if (checkError) {
-          console.error("Error checking employee record:", checkError);
-        } else if (existingEmployee) {
-          // Update existing record
-          const { error: updateError } = await supabase
-            .from("employees")
-            .update({ manager_id: profile.manager_id })
-            .eq("user_id", user.id);
+        const fullName = profileData ? 
+          `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() : 
+          user.email?.split('@')[0] || 'Employee';
 
-          if (updateError) {
-            console.error("Error updating manager ID:", updateError);
-            toast({
-              title: "Error updating manager ID",
-              description: updateError.message,
-              variant: "destructive",
-            });
-            return;
-          }
-        } else {
-          // Create new employee record
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("first_name, last_name")
-            .eq("id", user.id)
-            .maybeSingle();
+        const { error: insertError } = await supabase
+          .from("employees")
+          .insert({
+            name: fullName,
+            job_title: profile.position || 'Employee',
+            department: profile.department || 'General',
+            site: 'Main Office',
+            manager_id: profile.manager_id,
+            status: 'Present',
+            lifecycle: 'Employed',
+            salary: 0,
+            user_id: user.id,
+            email: profile.email, // Sync email to new employee record
+            avatar_url: profile.avatar_url
+          });
 
-          const fullName = profileData ? 
-            `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() : 
-            user.email?.split('@')[0] || 'Employee';
-
-          const { error: insertError } = await supabase
-            .from("employees")
-            .insert({
-              name: fullName,
-              job_title: profile.position || 'Employee',
-              department: profile.department || 'General',
-              site: 'Main Office',
-              manager_id: profile.manager_id,
-              status: 'Present',
-              lifecycle: 'Employed',
-              salary: 0,
-              user_id: user.id,
-              avatar_url: profile.avatar_url
-            });
-
-          if (insertError) {
-            console.error("Error creating employee record:", insertError);
-            toast({
-              title: "Error updating manager ID",
-              description: insertError.message,
-              variant: "destructive",
-            });
-            return;
-          }
+        if (insertError) {
+          console.error("Error creating employee record:", insertError);
+          toast({
+            title: "Error creating employee record",
+            description: insertError.message,
+            variant: "destructive",
+          });
+          return;
         }
       }
       

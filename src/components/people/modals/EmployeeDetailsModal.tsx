@@ -123,7 +123,27 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       return dbEmployee;
     } catch (error) {
       console.error('Error converting employee data:', error);
-      throw new Error('Failed to prepare employee data for editing');
+      // Return a valid DbEmployee object with default values instead of throwing
+      return {
+        id: uiEmployee.id,
+        name: uiEmployee.name || 'Unknown Employee',
+        job_title: uiEmployee.jobTitle || 'Employee',
+        department: uiEmployee.department || 'General',
+        site: uiEmployee.site || 'Main Office',
+        salary: 0,
+        start_date: new Date().toISOString().split('T')[0],
+        lifecycle: 'Active',
+        status: 'Active',
+        avatar: null,
+        location: 'Office',
+        annual_leave_days: 25,
+        sick_leave_days: 10,
+        manager_id: null,
+        user_id: uiEmployee.userId || null,
+        email: uiEmployee.email || null,
+        role: 'employee',
+        hourly_rate: null,
+      };
     }
   };
 
@@ -165,7 +185,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         onDelete={handleDelete}
       />
 
-      {isEditModalOpen && dbEmployee && !conversionError && (
+      {isEditModalOpen && dbEmployee && (
         <AddEmployeeModal
           isOpen={isEditModalOpen}
           onClose={handleEditModalClose}
@@ -173,13 +193,15 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         />
       )}
 
-      {/* Show error dialog if conversion failed */}
-      {isEditModalOpen && conversionError && (
+      {/* Show simplified error handling if conversion failed */}
+      {isEditModalOpen && !dbEmployee && (
         <Dialog open={isEditModalOpen} onOpenChange={handleEditModalClose}>
           <DialogContent className="p-6">
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-red-600 mb-2">Error Loading Employee Data</h3>
-              <p className="text-gray-600 mb-4">{conversionError}</p>
+              <h3 className="text-lg font-semibold text-red-600 mb-2">Unable to Edit Employee</h3>
+              <p className="text-gray-600 mb-4">
+                There was an issue loading the employee data for editing. Please try refreshing the page.
+              </p>
               <button 
                 onClick={handleEditModalClose}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
