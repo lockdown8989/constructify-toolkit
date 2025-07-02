@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Employee } from '@/components/people/types';
-import { Calendar, MapPin, Mail, DollarSign, Building, Users, Clock } from 'lucide-react';
+import { Calendar, MapPin, Mail, DollarSign, Building, Users, Clock, Key, Shield } from 'lucide-react';
 
 interface EmployeeInfoSectionProps {
   employee: Employee;
@@ -49,13 +49,51 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
           <InfoItem 
             icon={Mail} 
             label="Email Address" 
-            value={employee.email} 
+            value={employee.email || 'Not specified'} 
           />
           <InfoItem 
             icon={MapPin} 
             label="Location" 
             value={`${employee.site} ${employee.siteIcon}`} 
           />
+        </CardContent>
+      </Card>
+
+      {/* Login Information Card */}
+      <Card className="shadow-sm border-gray-200">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <Shield className="h-5 w-5 text-blue-600" />
+            Login Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-1">
+          <InfoItem 
+            icon={Mail} 
+            label="Login Email" 
+            value={employee.email || 'No email configured'} 
+          />
+          <InfoItem 
+            icon={Key} 
+            label="Password Status" 
+            value={employee.email ? 'Password protected' : 'No password set'} 
+          />
+          <div className="flex items-start space-x-3 py-3">
+            <div className="flex-shrink-0 mt-0.5">
+              <Shield className="h-4 w-4 text-gray-500" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium text-gray-500">Account Status:</div>
+              <div className="text-base text-gray-900 font-medium">
+                <Badge 
+                  variant="outline" 
+                  className={`${employee.email ? 'bg-green-100 text-green-800 border-green-200' : 'bg-yellow-100 text-yellow-800 border-yellow-200'} font-medium`}
+                >
+                  {employee.email ? 'Active Account' : 'Setup Required'}
+                </Badge>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 

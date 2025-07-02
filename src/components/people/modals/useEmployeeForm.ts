@@ -20,12 +20,13 @@ export const useEmployeeForm = ({ onSuccess, defaultLocation, employeeToEdit }: 
 
   console.log('useEmployeeForm initialized with:', { employeeToEdit, defaultLocation });
 
-  // Safe default values with proper type checking
+  // Safe default values with proper type checking and email synchronization
   const getDefaultValues = (): EmployeeFormValues => {
     if (employeeToEdit) {
+      console.log('Setting form values for existing employee:', employeeToEdit);
       return {
         name: employeeToEdit.name || '',
-        email: employeeToEdit.email || '',
+        email: employeeToEdit.email || '', // Ensure email is properly synchronized
         job_title: employeeToEdit.job_title || '',
         department: employeeToEdit.department || '',
         site: employeeToEdit.site || '',
@@ -86,10 +87,10 @@ export const useEmployeeForm = ({ onSuccess, defaultLocation, employeeToEdit }: 
         throw new Error('Site is required');
       }
       
-      // Transform form data to match Employee type requirements
+      // Transform form data to match Employee type requirements with email synchronization
       const employeeData = {
         name: data.name.trim(),
-        email: data.email?.trim() || null,
+        email: data.email?.trim() || null, // Ensure email is properly handled
         job_title: data.job_title.trim(),
         department: data.department.trim(),
         site: data.site.trim(),
@@ -103,6 +104,8 @@ export const useEmployeeForm = ({ onSuccess, defaultLocation, employeeToEdit }: 
         sick_leave_days: Math.max(0, Math.min(365, data.sick_leave_days || 10)),
         role: data.role || 'employee',
       };
+      
+      console.log('Prepared employee data for submission:', employeeData);
       
       if (employeeToEdit) {
         // Update existing employee

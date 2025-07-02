@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 export const employeeFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Valid email is required').optional().or(z.literal('')),
+  email: z.string().email('Valid email is required').optional().or(z.literal('')).transform(val => val === '' ? undefined : val),
   job_title: z.string().min(1, 'Job title is required'),
   department: z.string().min(1, 'Department is required'),
   site: z.string().min(1, 'Site is required'),

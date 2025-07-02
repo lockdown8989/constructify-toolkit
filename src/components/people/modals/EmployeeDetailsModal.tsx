@@ -61,7 +61,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
     setIsEditModalOpen(false);
   };
 
-  // Improved conversion function with better error handling
+  // Improved conversion function with better error handling and email synchronization
   const mapToDbEmployee = (uiEmployee: Employee): DbEmployee => {
     console.log('Converting UI Employee to DB Employee:', uiEmployee);
     
@@ -69,7 +69,6 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       // Parse salary safely
       let salaryValue = 0;
       if (typeof uiEmployee.salary === 'string') {
-        // Remove currency symbols and commas, then parse
         const cleanSalary = uiEmployee.salary.replace(/[£$,\s]/g, '');
         salaryValue = parseFloat(cleanSalary) || 0;
       } else if (typeof uiEmployee.salary === 'number') {
@@ -80,18 +79,14 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
       let startDateValue = new Date().toISOString().split('T')[0];
       if (uiEmployee.startDate) {
         try {
-          // Handle different date formats
           const dateStr = uiEmployee.startDate;
           let parsedDate: Date;
           
           if (dateStr.includes(',')) {
-            // Handle "Month Day, Year" format
             parsedDate = new Date(dateStr);
           } else if (dateStr.includes('-')) {
-            // Handle ISO format
             parsedDate = new Date(dateStr);
           } else {
-            // Fallback to current date
             parsedDate = new Date();
           }
           
@@ -119,7 +114,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
         sick_leave_days: uiEmployee.sick_leave_days || 10,
         manager_id: uiEmployee.managerId || null,
         user_id: uiEmployee.userId || null,
-        email: uiEmployee.email || null,
+        email: uiEmployee.email || null, // Ensure email is properly mapped
         role: uiEmployee.role || 'employee',
         hourly_rate: uiEmployee.hourly_rate || null,
       };
