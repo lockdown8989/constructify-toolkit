@@ -1,9 +1,9 @@
 
 import React from "react";
-import EnhancedCalendarView from "@/components/leave/EnhancedCalendarView";
+import ModernLeaveCalendar from "@/components/leave/ModernLeaveCalendar";
 
 const CalendarTab: React.FC = () => {
-  return <EnhancedCalendarView />;
+  return <ModernLeaveCalendar />;
 };
 
 export default CalendarTab;
