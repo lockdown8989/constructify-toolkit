@@ -30,7 +30,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     // Personal Information
     name: employee?.name || '',
     email: employee?.email || '',
-    location: employee?.location || 'Office',
+    location: employee?.site || 'Office', // Using site instead of location
     
     // Login Information
     loginEmail: employee?.email || '',
@@ -41,11 +41,11 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     lastName: employee?.name?.split(' ')[1] || '',
     position: employee?.jobTitle || '',
     department: employee?.department || '',
-    managerId: employee?.manager_id || '',
+    managerId: employee?.managerId || '', // Using managerId instead of manager_id
     
     // Employment Details
     jobTitle: employee?.jobTitle || '',
-    salary: employee?.salary || 0,
+    salary: Number(employee?.salary?.replace(/[^0-9.-]+/g, '') || 0), // Convert string to number
     startDate: employee?.startDate || new Date().toISOString().split('T')[0],
     status: employee?.status || 'Active',
     lifecycle: employee?.lifecycle || 'Active',
