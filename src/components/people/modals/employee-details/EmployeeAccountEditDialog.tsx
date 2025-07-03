@@ -30,25 +30,23 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     // Personal Information
     name: employee?.name || '',
     email: employee?.email || '',
-    location: employee?.site || 'Office', // Using site instead of location
+    location: employee?.site || 'Office',
     
-    // Login Information - Use the employee's actual email, not a hardcoded one
+    // Login Information - Use the employee's actual email
     loginEmail: employee?.email || '',
     password: '123Qwe@×', // As specified by user
     
-    // Profile Information (from second image)
+    // Profile Information
     firstName: employee?.name?.split(' ')[0] || '',
     lastName: employee?.name?.split(' ')[1] || '',
-    position: employee?.jobTitle || '',
+    position: employee?.job_title || '',
     department: employee?.department || '',
-    managerId: employee?.managerId || '', // Using managerId instead of manager_id
+    managerId: employee?.manager_id || '',
     
     // Employment Details
-    jobTitle: employee?.jobTitle || '',
-    salary: typeof employee?.salary === 'string' ? 
-      Number(employee?.salary?.replace(/[^0-9.-]+/g, '') || 0) : 
-      Number(employee?.salary || 0), // Ensure it's always a number
-    startDate: employee?.startDate || new Date().toISOString().split('T')[0],
+    jobTitle: employee?.job_title || '',
+    salary: Number(employee?.salary || 0),
+    startDate: employee?.start_date || new Date().toISOString().split('T')[0],
     status: employee?.status || 'Active',
     lifecycle: employee?.lifecycle || 'Active',
     
@@ -60,6 +58,32 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Update form data when employee prop changes
+  React.useEffect(() => {
+    if (employee) {
+      setFormData({
+        name: employee.name || '',
+        email: employee.email || '',
+        location: employee.site || 'Office',
+        loginEmail: employee.email || '',
+        password: '123Qwe@×',
+        firstName: employee.name?.split(' ')[0] || '',
+        lastName: employee.name?.split(' ')[1] || '',
+        position: employee.job_title || '',
+        department: employee.department || '',
+        managerId: employee.manager_id || '',
+        jobTitle: employee.job_title || '',
+        salary: Number(employee.salary || 0),
+        startDate: employee.start_date || new Date().toISOString().split('T')[0],
+        status: employee.status || 'Active',
+        lifecycle: employee.lifecycle || 'Active',
+        role: employee.role || 'employee',
+        annual_leave_days: employee.annual_leave_days || 25,
+        sick_leave_days: employee.sick_leave_days || 10,
+      });
+    }
+  }, [employee]);
+
   if (!employee) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,22 +94,27 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
       // Combine first and last name
       const fullName = `${formData.firstName} ${formData.lastName}`.trim();
       
-      await updateEmployee.mutateAsync({
+      // Prepare update data with correct field mappings
+      const updateData = {
         id: employee.id,
         name: fullName || formData.name,
         email: formData.loginEmail || null,
         job_title: formData.jobTitle || formData.position,
         department: formData.department,
+        site: formData.location, // Use site instead of location
         salary: formData.salary,
         start_date: formData.startDate,
         status: formData.status,
         lifecycle: formData.lifecycle,
-        location: formData.location,
         role: formData.role,
         annual_leave_days: formData.annual_leave_days,
         sick_leave_days: formData.sick_leave_days,
-        managerId: formData.managerId || null,
-      });
+        manager_id: formData.managerId || null,
+      };
+
+      console.log('Submitting employee update:', updateData);
+
+      await updateEmployee.mutateAsync(updateData);
 
       toast({
         title: "Account updated",
@@ -284,7 +313,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                   type="number"
                   min="0"
                   value={formData.salary}
-                  onChange={(e) => handleInputChange('salary', parseInt(e.target.value) || 0)}
+                  onChange={(e) => handleInputChange('salary', Number(e.target.value) || 0)}
                 />
               </div>
             </div>

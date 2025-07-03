@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { sendNotification } from './notification-sender';
 
@@ -92,4 +91,12 @@ export const notifyDocumentAssignment = async (
     console.error('Error in document assignment notification:', error);
     return false;
   }
+};
+
+export const assignDocumentToEmployee = async (
+  employeeId: string,
+  documentName: string,
+  dueDate?: string
+) => {
+  return await notifyDocumentAssignment(employeeId, documentName, dueDate);
 };
