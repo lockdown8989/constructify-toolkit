@@ -1,12 +1,13 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { X, Shield, Mail, Key, User, Clock, Settings } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { X, Shield, Mail, Key, User, Clock, Settings, Building, DollarSign, Calendar } from 'lucide-react';
 import { Employee } from '@/components/people/types';
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateEmployee } from '@/hooks/use-employees';
@@ -26,9 +27,31 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
   const updateEmployee = useUpdateEmployee();
   
   const [formData, setFormData] = useState({
+    // Personal Information
+    name: employee?.name || '',
     email: employee?.email || '',
-    role: employee?.role || 'employee',
+    location: employee?.location || 'Office',
+    
+    // Login Information
+    loginEmail: employee?.email || '',
+    password: '123Qwe@×', // As specified by user
+    
+    // Profile Information (from second image)
+    firstName: employee?.name?.split(' ')[0] || '',
+    lastName: employee?.name?.split(' ')[1] || '',
+    position: employee?.jobTitle || '',
+    department: employee?.department || '',
+    managerId: employee?.manager_id || '',
+    
+    // Employment Details
+    jobTitle: employee?.jobTitle || '',
+    salary: employee?.salary || 0,
+    startDate: employee?.startDate || new Date().toISOString().split('T')[0],
     status: employee?.status || 'Active',
+    lifecycle: employee?.lifecycle || 'Active',
+    
+    // Account Settings
+    role: employee?.role || 'employee',
     annual_leave_days: employee?.annual_leave_days || 25,
     sick_leave_days: employee?.sick_leave_days || 10,
   });
@@ -42,13 +65,24 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     setIsSubmitting(true);
 
     try {
+      // Combine first and last name
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+      
       await updateEmployee.mutateAsync({
         id: employee.id,
-        email: formData.email || null,
-        role: formData.role,
+        name: fullName || formData.name,
+        email: formData.loginEmail || null,
+        job_title: formData.jobTitle || formData.position,
+        department: formData.department,
+        salary: formData.salary,
+        start_date: formData.startDate,
         status: formData.status,
+        lifecycle: formData.lifecycle,
+        location: formData.location,
+        role: formData.role,
         annual_leave_days: formData.annual_leave_days,
         sick_leave_days: formData.sick_leave_days,
+        manager_id: formData.managerId || null,
       });
 
       toast({
@@ -76,7 +110,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5 text-green-600" />
@@ -88,13 +122,184 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Account Status Section */}
+          {/* Personal Information Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-blue-600" />
+              <h3 className="text-lg font-semibold">Personal Information</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={(e) => handleInputChange('firstName', e.target.value)}
+                  placeholder="First name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => handleInputChange('lastName', e.target.value)}
+                  placeholder="Last name"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                placeholder="employee@company.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="location">Location</Label>
+              <Select 
+                value={formData.location} 
+                onValueChange={(value) => handleInputChange('location', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Office">Office</SelectItem>
+                  <SelectItem value="Remote">Remote</SelectItem>
+                  <SelectItem value="Hybrid">Hybrid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Login Information Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Shield className="h-4 w-4 text-blue-600" />
-              <h3 className="text-lg font-semibold">Account Status</h3>
+              <h3 className="text-lg font-semibold">Login Information</h3>
             </div>
             
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="loginEmail">Login Email</Label>
+                <Input
+                  id="loginEmail"
+                  type="email"
+                  value={formData.loginEmail}
+                  onChange={(e) => handleInputChange('loginEmail', e.target.value)}
+                  placeholder="cupra300c@gmail.com"
+                />
+                <p className="text-xs text-gray-500">
+                  This email will be used for login and system notifications
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  placeholder="Enter password"
+                />
+                <p className="text-xs text-gray-500">
+                  Current password: {formData.password}
+                </p>
+              </div>
+
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Key className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium">Account Status</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Current Status:</span>
+                  <Badge variant={formData.loginEmail ? 'default' : 'secondary'}>
+                    {formData.loginEmail ? 'Active Account' : 'Setup Required'}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Employment Details Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Building className="h-4 w-4 text-blue-600" />
+              <h3 className="text-lg font-semibold">Employment Details</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="position">Position/Job Title</Label>
+                <Input
+                  id="position"
+                  value={formData.position}
+                  onChange={(e) => handleInputChange('position', e.target.value)}
+                  placeholder="Job title"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="department">Department</Label>
+                <Input
+                  id="department"
+                  value={formData.department}
+                  onChange={(e) => handleInputChange('department', e.target.value)}
+                  placeholder="Department"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => handleInputChange('startDate', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="salary">Salary</Label>
+                <Input
+                  id="salary"
+                  type="number"
+                  min="0"
+                  value={formData.salary}
+                  onChange={(e) => handleInputChange('salary', parseInt(e.target.value) || 0)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="managerId">Manager's ID</Label>
+              <Input
+                id="managerId"
+                value={formData.managerId}
+                onChange={(e) => handleInputChange('managerId', e.target.value)}
+                placeholder="Enter manager's ID (e.g., MGR-94226)"
+              />
+              <p className="text-xs text-gray-500">
+                Enter your manager's ID to connect to their account
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="status">Employment Status</Label>
@@ -107,6 +312,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Present">Present</SelectItem>
                     <SelectItem value="Inactive">Inactive</SelectItem>
                     <SelectItem value="On Leave">On Leave</SelectItem>
                     <SelectItem value="Terminated">Terminated</SelectItem>
@@ -132,50 +338,9 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                 </Select>
               </div>
             </div>
-
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Current Status:</span>
-                <Badge variant={formData.status === 'Active' ? 'default' : 'secondary'}>
-                  {formData.status}
-                </Badge>
-              </div>
-            </div>
           </div>
 
-          {/* Login Information Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-blue-600" />
-              <h3 className="text-lg font-semibold">Login Information</h3>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="employee@company.com"
-                />
-                <p className="text-xs text-gray-500">
-                  This email will be used for login and system notifications
-                </p>
-              </div>
-
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Key className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium">Password Status</span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  {formData.email ? 'Password protected account' : 'No password set - login disabled'}
-                </p>
-              </div>
-            </div>
-          </div>
+          <Separator />
 
           {/* Leave Entitlements Section */}
           <div className="space-y-4">
