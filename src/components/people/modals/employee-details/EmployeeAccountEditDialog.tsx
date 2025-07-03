@@ -32,7 +32,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     email: employee?.email || '',
     location: employee?.site || 'Office', // Using site instead of location
     
-    // Login Information
+    // Login Information - Use the employee's actual email, not a hardcoded one
     loginEmail: employee?.email || '',
     password: '123Qwe@×', // As specified by user
     
@@ -45,7 +45,9 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     
     // Employment Details
     jobTitle: employee?.jobTitle || '',
-    salary: Number(employee?.salary?.replace(/[^0-9.-]+/g, '') || 0), // Convert string to number
+    salary: typeof employee?.salary === 'string' ? 
+      Number(employee?.salary?.replace(/[^0-9.-]+/g, '') || 0) : 
+      Number(employee?.salary || 0), // Ensure it's always a number
     startDate: employee?.startDate || new Date().toISOString().split('T')[0],
     status: employee?.status || 'Active',
     lifecycle: employee?.lifecycle || 'Active',
@@ -82,7 +84,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         role: formData.role,
         annual_leave_days: formData.annual_leave_days,
         sick_leave_days: formData.sick_leave_days,
-        manager_id: formData.managerId || null,
+        managerId: formData.managerId || null,
       });
 
       toast({
@@ -197,7 +199,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                   type="email"
                   value={formData.loginEmail}
                   onChange={(e) => handleInputChange('loginEmail', e.target.value)}
-                  placeholder="cupra300c@gmail.com"
+                  placeholder="employee@company.com"
                 />
                 <p className="text-xs text-gray-500">
                   This email will be used for login and system notifications

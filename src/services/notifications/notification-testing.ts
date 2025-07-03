@@ -1,75 +1,80 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { sendNotification } from './notification-sender';
-import type { NotificationResult } from '@/models/notification';
 
-/**
- * Creates a test notification for the current user
- */
-export const sendTestNotification = async (userId: string): Promise<NotificationResult> => {
+export const testNotificationSystem = async () => {
   try {
-    console.log('NotificationTest: Sending test notification to user:', userId);
+    console.log('Testing notification system...');
     
-    if (!userId) {
-      console.error('NotificationTest: Cannot send test notification - no user ID provided');
-      return {
-        success: false,
-        message: 'No user ID provided'
-      };
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('No authenticated user found');
+      return false;
     }
-    
-    const success = await sendNotification({
-      user_id: userId,
-      title: 'Test Notification',
-      message: 'This is a test notification. If you can see this, notifications are working correctly!',
+
+    // Send a test notification
+    const result = await sendNotification({
+      user_id: user.id,
+      title: '🧪 Test Notification',
+      message: 'This is a test notification to verify the system is working correctly.',
       type: 'info',
-      related_entity: 'test',
-      related_id: 'test-notification'
+      related_entity: 'system',
+      related_id: 'test'
     });
-    
-    return {
-      success,
-      message: success ? 'Test notification sent successfully' : 'Failed to send test notification'
-    };
+
+    if (result.success) {
+      console.log('Test notification sent successfully');
+      return true;
+    } else {
+      console.error('Test notification failed:', result.error);
+      return false;
+    }
   } catch (error) {
-    console.error('Exception in sendTestNotification:', error);
-    return {
-      success: false,
-      message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
-    };
+    console.error('Error testing notification system:', error);
+    return false;
   }
 };
 
-/**
- * Verifies that the notifications table exists and is accessible
- */
-export const verifyNotificationsTable = async (): Promise<NotificationResult> => {
+export const sendTestNotificationToManagers = async () => {
   try {
-    console.log('NotificationTest: Verifying notifications table');
-    
-    // Try to query the notifications table
-    const { count, error } = await supabase
-      .from('notifications')
-      .select('*', { count: 'exact', head: true });
-    
+    // Get all managers
+    const { data: managers, error } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .in('role', ['employer', 'admin', 'hr']);
+
     if (error) {
-      console.error('NotificationTest: Error verifying notifications table:', error);
-      return {
-        success: false,
-        message: `Database error: ${error.message}`
-      };
+      console.error('Error fetching managers:', error);
+      return false;
     }
+
+    if (!managers || managers.length === 0) {
+      console.log('No managers found');
+      return false;
+    }
+
+    // Send test notifications to all managers
+    const results = await Promise.all(
+      managers.map(manager => 
+        sendNotification({
+          user_id: manager.user_id,
+          title: '🧪 Manager Test Notification',
+          message: 'This is a test notification for managers to verify the notification system.',
+          type: 'info',
+          related_entity: 'system',
+          related_id: 'manager-test'
+        })
+      )
+    );
+
+    const successCount = results.filter(result => result.success).length;
+    console.log(`Sent ${successCount} test notifications to managers`);
     
-    return {
-      success: true,
-      message: `Notifications table verified successfully. Table has ${count} notifications.`,
-      data: { count }
-    };
+    return successCount > 0;
   } catch (error) {
-    console.error('Exception in verifyNotificationsTable:', error);
-    return {
-      success: false,
-      message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
-    };
+    console.error('Error sending test notifications to managers:', error);
+    return false;
   }
 };

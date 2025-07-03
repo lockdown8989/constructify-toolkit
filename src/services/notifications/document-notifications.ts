@@ -1,76 +1,95 @@
 
-import { sendNotification } from './notification-sender';
 import { supabase } from '@/integrations/supabase/client';
+import { sendNotification } from './notification-sender';
 
-/**
- * Sends a notification to an employee about a document upload
- */
-export const sendDocumentUploadNotification = async (
+export const notifyDocumentUpload = async (
   employeeId: string,
-  documentType: string,
-  documentName: string
-): Promise<boolean> => {
+  documentName: string,
+  uploadedBy: string
+) => {
   try {
-    // Get employee user_id from employee record
+    // Get the employee's user_id
     const { data: employee, error: employeeError } = await supabase
       .from('employees')
       .select('user_id, name')
       .eq('id', employeeId)
       .single();
-    
+
     if (employeeError || !employee?.user_id) {
-      console.error('Error getting employee user_id:', employeeError);
+      console.error('Error finding employee:', employeeError);
       return false;
     }
 
-    // Format document type for display
-    const formattedDocType = documentType.charAt(0).toUpperCase() + documentType.slice(1);
-    
-    // Send the notification
-    const success = await sendNotification({
+    // Send notification to the employee
+    const result = await sendNotification({
       user_id: employee.user_id,
-      title: `New ${formattedDocType} Uploaded`,
-      message: `A new ${documentType.toLowerCase()} document (${documentName}) has been uploaded to your profile.`,
+      title: '📄 New Document Uploaded',
+      message: `A new document "${documentName}" has been uploaded to your profile by ${uploadedBy}.`,
       type: 'info',
       related_entity: 'documents',
       related_id: employeeId
     });
-    
-    return success;
+
+    // Also notify managers
+    const { data: managers } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .in('role', ['employer', 'admin', 'hr']);
+
+    if (managers) {
+      for (const manager of managers) {
+        await sendNotification({
+          user_id: manager.user_id,
+          title: '📄 Document Uploaded',
+          message: `New document "${documentName}" has been uploaded for ${employee.name}.`,
+          type: 'info',
+          related_entity: 'documents',
+          related_id: employeeId
+        });
+      }
+    }
+
+    return result.success;
   } catch (error) {
-    console.error('Error sending document notification:', error);
+    console.error('Error in document notification:', error);
     return false;
   }
 };
 
-/**
- * Assigns a document to an employee
- */
-export const assignDocumentToEmployee = async (
-  documentId: string,
+export const notifyDocumentAssignment = async (
   employeeId: string,
-  isRequired: boolean = false,
+  documentName: string,
   dueDate?: string
-): Promise<{ success: boolean; message: string; data?: any }> => {
+) => {
   try {
-    // Call the edge function to assign the document
-    const { data, error } = await supabase.functions.invoke('notify-on-document-upload', {
-      body: JSON.stringify({
-        documentId,
-        employeeId,
-        isRequired,
-        dueDate
-      })
-    });
-    
-    if (error) {
-      console.error('Error assigning document:', error);
-      return { success: false, message: `Failed to assign document: ${error.message}` };
+    // Get the employee's user_id
+    const { data: employee, error: employeeError } = await supabase
+      .from('employees')
+      .select('user_id')
+      .eq('id', employeeId)
+      .single();
+
+    if (employeeError || !employee?.user_id) {
+      console.error('Error finding employee:', employeeError);
+      return false;
     }
-    
-    return data;
+
+    const message = dueDate 
+      ? `Document "${documentName}" has been assigned to you. Due date: ${dueDate}.`
+      : `Document "${documentName}" has been assigned to you.`;
+
+    const result = await sendNotification({
+      user_id: employee.user_id,
+      title: '📋 Document Assignment',
+      message,
+      type: 'info',
+      related_entity: 'document_assignments',
+      related_id: employeeId
+    });
+
+    return result.success;
   } catch (error) {
-    console.error('Error calling document assignment function:', error);
-    return { success: false, message: `Error: ${error.message}` };
+    console.error('Error in document assignment notification:', error);
+    return false;
   }
 };
