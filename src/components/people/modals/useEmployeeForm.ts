@@ -90,7 +90,7 @@ export const useEmployeeForm = ({ onSuccess, defaultLocation, employeeToEdit }: 
       // Transform form data to match Employee type requirements with email synchronization
       const employeeData = {
         name: data.name.trim(),
-        email: data.email?.trim() || null, // Ensure email is properly handled
+        email: data.email?.trim() || null,
         job_title: data.job_title.trim(),
         department: data.department.trim(),
         site: data.site.trim(),
@@ -121,13 +121,13 @@ export const useEmployeeForm = ({ onSuccess, defaultLocation, employeeToEdit }: 
           variant: "default"
         });
       } else {
-        // Create new employee
+        // Create new employee - this will trigger manager notifications via the hook
         console.log('Creating new employee');
         await addEmployee.mutateAsync(employeeData as any);
         
         toast({
           title: "Employee added",
-          description: `${employeeData.name} has been added to the team.`,
+          description: `${employeeData.name} has been added to the team. Managers have been notified.`,
           variant: "default"
         });
       }

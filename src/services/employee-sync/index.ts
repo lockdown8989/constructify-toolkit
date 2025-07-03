@@ -6,10 +6,21 @@ import { initializeAttendance } from './attendance-sync';
 import { setupEmployeeSalary } from './salary-sync';
 import { assignLeavePolicy } from './leave-sync';
 import { initializePayslipTemplate } from './payslip-sync';
+import { notifyManagersOfNewEmployee } from '@/services/notifications/notification-sender';
 
 export const syncEmployeeData = async (employee: Employee, isNew: boolean = false) => {
   try {
     console.log(`${isNew ? 'Creating' : 'Updating'} employee synchronization for:`, employee.name);
+    
+    // If this is a new employee, notify managers
+    if (isNew) {
+      await notifyManagersOfNewEmployee(
+        employee.name,
+        employee.job_title || 'Employee',
+        employee.department || 'General',
+        employee.id
+      );
+    }
     
     // Start all sync operations in parallel for efficiency
     const results = await Promise.allSettled([
