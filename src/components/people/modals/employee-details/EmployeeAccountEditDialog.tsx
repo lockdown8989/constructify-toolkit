@@ -39,14 +39,14 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     // Profile Information
     firstName: employee?.name?.split(' ')[0] || '',
     lastName: employee?.name?.split(' ')[1] || '',
-    position: employee?.job_title || '',
+    position: employee?.jobTitle || '',
     department: employee?.department || '',
-    managerId: employee?.manager_id || '',
+    managerId: employee?.managerId || '',
     
     // Employment Details
-    jobTitle: employee?.job_title || '',
+    jobTitle: employee?.jobTitle || '',
     salary: Number(employee?.salary || 0),
-    startDate: employee?.start_date || new Date().toISOString().split('T')[0],
+    startDate: employee?.startDate || new Date().toISOString().split('T')[0],
     status: employee?.status || 'Active',
     lifecycle: employee?.lifecycle || 'Active',
     
@@ -69,12 +69,12 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         password: '123Qwe@×',
         firstName: employee.name?.split(' ')[0] || '',
         lastName: employee.name?.split(' ')[1] || '',
-        position: employee.job_title || '',
+        position: employee.jobTitle || '',
         department: employee.department || '',
-        managerId: employee.manager_id || '',
-        jobTitle: employee.job_title || '',
+        managerId: employee.managerId || '',
+        jobTitle: employee.jobTitle || '',
         salary: Number(employee.salary || 0),
-        startDate: employee.start_date || new Date().toISOString().split('T')[0],
+        startDate: employee.startDate || new Date().toISOString().split('T')[0],
         status: employee.status || 'Active',
         lifecycle: employee.lifecycle || 'Active',
         role: employee.role || 'employee',
@@ -99,17 +99,17 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         id: employee.id,
         name: fullName || formData.name,
         email: formData.loginEmail || null,
-        job_title: formData.jobTitle || formData.position,
+        jobTitle: formData.jobTitle || formData.position,
         department: formData.department,
         site: formData.location, // Use site instead of location
         salary: formData.salary,
-        start_date: formData.startDate,
+        startDate: formData.startDate,
         status: formData.status,
         lifecycle: formData.lifecycle,
         role: formData.role,
         annual_leave_days: formData.annual_leave_days,
         sick_leave_days: formData.sick_leave_days,
-        manager_id: formData.managerId || null,
+        managerId: formData.managerId || null,
       };
 
       console.log('Submitting employee update:', updateData);
