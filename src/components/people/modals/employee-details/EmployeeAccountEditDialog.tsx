@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import { X, Shield, Mail, Key, User, Clock, Settings, Building, DollarSign, Cale
 import { Employee } from '@/components/people/types';
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateEmployee } from '@/hooks/use-employees';
-import { useEmployeeSync } from '@/hooks/use-employees';
+import { useEmployeeSync } from '@/hooks/use-employee-sync';
 
 interface EmployeeAccountEditDialogProps {
   employee: Employee | null;
@@ -40,14 +41,14 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     // Profile Information
     firstName: employee?.name?.split(' ')[0] || '',
     lastName: employee?.name?.split(' ')[1] || '',
-    position: employee?.jobTitle || '',
+    position: employee?.job_title || '',
     department: employee?.department || '',
-    managerId: employee?.managerId || '',
+    managerId: employee?.manager_id || '',
     
     // Employment Details
-    jobTitle: employee?.jobTitle || '',
+    job_title: employee?.job_title || '',
     salary: Number(employee?.salary || 0),
-    startDate: employee?.startDate || new Date().toISOString().split('T')[0],
+    start_date: employee?.start_date || new Date().toISOString().split('T')[0],
     status: employee?.status || 'Active',
     lifecycle: employee?.lifecycle || 'Active',
     
@@ -70,12 +71,12 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         password: '123Qwe@×',
         firstName: employee.name?.split(' ')[0] || '',
         lastName: employee.name?.split(' ')[1] || '',
-        position: employee.jobTitle || '',
+        position: employee.job_title || '',
         department: employee.department || '',
-        managerId: employee.managerId || '',
-        jobTitle: employee.jobTitle || '',
+        managerId: employee.manager_id || '',
+        job_title: employee.job_title || '',
         salary: Number(employee.salary || 0),
-        startDate: employee.startDate || new Date().toISOString().split('T')[0],
+        start_date: employee.start_date || new Date().toISOString().split('T')[0],
         status: employee.status || 'Active',
         lifecycle: employee.lifecycle || 'Active',
         role: employee.role || 'employee',
@@ -95,16 +96,16 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
       // Combine first and last name
       const fullName = `${formData.firstName} ${formData.lastName}`.trim();
       
-      // Prepare sync data with correct field mappings
+      // Prepare sync data with correct field mappings for both hooks
       const syncData = {
         id: employee.id,
         name: fullName || formData.name,
         email: formData.loginEmail || formData.email,
-        jobTitle: formData.jobTitle || formData.position,
+        jobTitle: formData.job_title || formData.position,
         department: formData.department,
         salary: formData.salary,
         site: formData.location,
-        startDate: formData.startDate,
+        startDate: formData.start_date,
         status: formData.status,
         lifecycle: formData.lifecycle,
         role: formData.role,
@@ -113,9 +114,31 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         managerId: formData.managerId || undefined,
       };
 
+      // Also prepare data for the standard update hook
+      const updateData = {
+        id: employee.id,
+        name: fullName || formData.name,
+        email: formData.loginEmail || formData.email,
+        job_title: formData.job_title || formData.position,
+        department: formData.department,
+        salary: formData.salary,
+        site: formData.location,
+        start_date: formData.start_date,
+        status: formData.status,
+        lifecycle: formData.lifecycle,
+        role: formData.role,
+        annual_leave_days: formData.annual_leave_days,
+        sick_leave_days: formData.sick_leave_days,
+        manager_id: formData.managerId || null,
+      };
+
+      console.log('Updating employee with data:', updateData);
       console.log('Syncing employee data:', syncData);
 
-      // Use the sync function to update and synchronize
+      // First update the employee record
+      await updateEmployee.mutateAsync(updateData);
+
+      // Then sync with manager team
       await syncEmployee(syncData);
 
       toast({
@@ -305,12 +328,12 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startDate">Start Date</Label>
+                <Label htmlFor="start_date">Start Date</Label>
                 <Input
-                  id="startDate"
+                  id="start_date"
                   type="date"
-                  value={formData.startDate}
-                  onChange={(e) => handleInputChange('startDate', e.target.value)}
+                  value={formData.start_date}
+                  onChange={(e) => handleInputChange('start_date', e.target.value)}
                 />
               </div>
 
@@ -433,7 +456,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
               disabled={isSubmitting || isSyncing}
               className="bg-green-600 hover:bg-green-700"
             >
-              {isSubmitting || isSyncing ? 'Syncing...' : 'Save & Sync Changes'}
+              {isSubmitting || isSyncing ? 'Saving Changes...' : 'Save & Sync Changes'}
             </Button>
           </div>
         </form>
