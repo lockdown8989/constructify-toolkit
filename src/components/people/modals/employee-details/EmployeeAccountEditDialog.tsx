@@ -41,14 +41,14 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     // Profile Information
     firstName: employee?.name?.split(' ')[0] || '',
     lastName: employee?.name?.split(' ')[1] || '',
-    position: employee?.job_title || '',
+    position: employee?.jobTitle || employee?.job_title || '',
     department: employee?.department || '',
-    managerId: employee?.manager_id || '',
+    managerId: employee?.managerId || employee?.manager_id || '',
     
     // Employment Details
-    job_title: employee?.job_title || '',
+    job_title: employee?.jobTitle || employee?.job_title || '',
     salary: Number(employee?.salary || 0),
-    start_date: employee?.start_date || new Date().toISOString().split('T')[0],
+    start_date: employee?.startDate || employee?.start_date || new Date().toISOString().split('T')[0],
     status: employee?.status || 'Active',
     lifecycle: employee?.lifecycle || 'Active',
     
@@ -71,12 +71,12 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         password: '123Qwe@×',
         firstName: employee.name?.split(' ')[0] || '',
         lastName: employee.name?.split(' ')[1] || '',
-        position: employee.job_title || '',
+        position: employee.jobTitle || employee.job_title || '',
         department: employee.department || '',
-        managerId: employee.manager_id || '',
-        job_title: employee.job_title || '',
+        managerId: employee.managerId || employee.manager_id || '',
+        job_title: employee.jobTitle || employee.job_title || '',
         salary: Number(employee.salary || 0),
-        start_date: employee.start_date || new Date().toISOString().split('T')[0],
+        start_date: employee.startDate || employee.start_date || new Date().toISOString().split('T')[0],
         status: employee.status || 'Active',
         lifecycle: employee.lifecycle || 'Active',
         role: employee.role || 'employee',
@@ -96,25 +96,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
       // Combine first and last name
       const fullName = `${formData.firstName} ${formData.lastName}`.trim();
       
-      // Prepare sync data with correct field mappings for both hooks
-      const syncData = {
-        id: employee.id,
-        name: fullName || formData.name,
-        email: formData.loginEmail || formData.email,
-        jobTitle: formData.job_title || formData.position,
-        department: formData.department,
-        salary: formData.salary,
-        site: formData.location,
-        startDate: formData.start_date,
-        status: formData.status,
-        lifecycle: formData.lifecycle,
-        role: formData.role,
-        annual_leave_days: formData.annual_leave_days,
-        sick_leave_days: formData.sick_leave_days,
-        managerId: formData.managerId || undefined,
-      };
-
-      // Also prepare data for the standard update hook
+      // Prepare update data for the standard update hook
       const updateData = {
         id: employee.id,
         name: fullName || formData.name,
@@ -130,6 +112,24 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         annual_leave_days: formData.annual_leave_days,
         sick_leave_days: formData.sick_leave_days,
         manager_id: formData.managerId || null,
+      };
+
+      // Prepare sync data for the sync hook with correct field mappings
+      const syncData = {
+        id: employee.id,
+        name: fullName || formData.name,
+        email: formData.loginEmail || formData.email,
+        jobTitle: formData.job_title || formData.position,
+        department: formData.department,
+        salary: formData.salary,
+        site: formData.location,
+        startDate: formData.start_date,
+        status: formData.status,
+        lifecycle: formData.lifecycle,
+        role: formData.role,
+        annual_leave_days: formData.annual_leave_days,
+        sick_leave_days: formData.sick_leave_days,
+        managerId: formData.managerId || undefined,
       };
 
       console.log('Updating employee with data:', updateData);

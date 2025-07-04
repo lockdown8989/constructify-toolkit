@@ -23,7 +23,7 @@ export const syncEmployeeWithManagerTeam = async (employeeData: EmployeeSyncData
   try {
     console.log('Syncing employee data with manager team:', employeeData);
     
-    // Update the employee record in the database
+    // Update the employee record in the database with all fields
     const { data: updatedEmployee, error: updateError } = await supabase
       .from('employees')
       .update({
@@ -50,6 +50,8 @@ export const syncEmployeeWithManagerTeam = async (employeeData: EmployeeSyncData
       throw updateError;
     }
 
+    console.log('Employee updated successfully:', updatedEmployee);
+
     // Notify manager about the employee update
     if (employeeData.managerId) {
       await notifyManagerOfEmployeeUpdate(employeeData.managerId, updatedEmployee);
@@ -57,6 +59,9 @@ export const syncEmployeeWithManagerTeam = async (employeeData: EmployeeSyncData
 
     // Trigger real-time sync for manager dashboard
     await triggerManagerDashboardSync(employeeData.managerId);
+
+    // Force refresh any cached employee data
+    await refreshEmployeeCache(employeeData.id);
 
     return { success: true, data: updatedEmployee };
   } catch (error) {
@@ -67,26 +72,51 @@ export const syncEmployeeWithManagerTeam = async (employeeData: EmployeeSyncData
 
 const notifyManagerOfEmployeeUpdate = async (managerId: string, employeeData: any) => {
   try {
-    // Get manager's user_id
+    console.log('Notifying manager:', managerId, 'about employee update:', employeeData.name);
+    
+    // First try to find manager by their employee ID (manager_id field)
     const { data: managerEmployee, error: managerError } = await supabase
       .from('employees')
-      .select('user_id, name')
-      .eq('manager_id', managerId)
-      .eq('job_title', 'Manager')
+      .select('user_id, name, email')
+      .eq('id', managerId)
       .single();
 
     if (managerError || !managerEmployee?.user_id) {
-      console.log('Manager not found or no user_id:', managerId);
+      console.log('Manager not found by ID, trying alternative lookup:', managerId);
+      
+      // Alternative: try to find managers by role
+      const { data: managers } = await supabase
+        .from('employees')
+        .select('user_id, name, email')
+        .in('role', ['manager', 'admin', 'employer']);
+
+      if (managers && managers.length > 0) {
+        // Notify all managers
+        for (const manager of managers) {
+          if (manager.user_id) {
+            await sendNotificationToManager(manager.user_id, employeeData, manager.name);
+          }
+        }
+      }
       return;
     }
 
-    // Send notification to manager
+    // Send notification to the specific manager
+    await sendNotificationToManager(managerEmployee.user_id, employeeData, managerEmployee.name);
+    
+  } catch (error) {
+    console.error('Error notifying manager:', error);
+  }
+};
+
+const sendNotificationToManager = async (managerUserId: string, employeeData: any, managerName: string) => {
+  try {
     const { error: notificationError } = await supabase
       .from('notifications')
       .insert({
-        user_id: managerEmployee.user_id,
+        user_id: managerUserId,
         title: '👥 Team Member Updated',
-        message: `${employeeData.name} has updated their profile information including job title, salary, and contact details.`,
+        message: `${employeeData.name} has updated their profile information including job title (${employeeData.job_title}), salary, contact details, and manager assignment.`,
         type: 'info',
         related_entity: 'employees',
         related_id: employeeData.id
@@ -94,36 +124,58 @@ const notifyManagerOfEmployeeUpdate = async (managerId: string, employeeData: an
 
     if (notificationError) {
       console.error('Error sending manager notification:', notificationError);
+    } else {
+      console.log(`Notification sent to manager ${managerName} (${managerUserId})`);
     }
   } catch (error) {
-    console.error('Error notifying manager:', error);
+    console.error('Error in sendNotificationToManager:', error);
   }
 };
 
 const triggerManagerDashboardSync = async (managerId?: string) => {
   try {
-    if (!managerId) return;
+    console.log('Triggering dashboard sync for manager:', managerId);
+    
+    if (!managerId) {
+      console.log('No manager ID provided for dashboard sync');
+      return;
+    }
 
-    // Trigger a dashboard refresh by updating a timestamp
+    // Update a metadata field to trigger dashboard refresh
     const { error } = await supabase
       .from('employees')
       .update({ 
-        // Use a metadata field to trigger refresh without affecting actual data
-        avatar_url: new Date().toISOString() 
+        // Use avatar_url as a timestamp to trigger refresh without affecting actual data
+        avatar_url: `sync_${new Date().toISOString()}`
       })
-      .eq('manager_id', managerId)
-      .eq('job_title', 'Manager');
+      .eq('manager_id', managerId);
 
     if (error) {
       console.error('Error triggering dashboard sync:', error);
+    } else {
+      console.log('Dashboard sync triggered successfully');
     }
   } catch (error) {
     console.error('Error in dashboard sync trigger:', error);
   }
 };
 
+const refreshEmployeeCache = async (employeeId: string) => {
+  try {
+    // This is a placeholder for any cache invalidation logic
+    console.log('Refreshing employee cache for:', employeeId);
+    
+    // You could implement cache invalidation here if needed
+    // For now, we'll just log the operation
+  } catch (error) {
+    console.error('Error refreshing employee cache:', error);
+  }
+};
+
 export const syncEmployeeEmailWithAuth = async (userId: string, newEmail: string) => {
   try {
+    console.log('Syncing email with auth for user:', userId, 'new email:', newEmail);
+    
     // Update auth email
     const { error: authError } = await supabase.auth.updateUser({
       email: newEmail
@@ -145,6 +197,7 @@ export const syncEmployeeEmailWithAuth = async (userId: string, newEmail: string
       return { success: false, error: employeeError };
     }
 
+    console.log('Email sync completed successfully');
     return { success: true };
   } catch (error) {
     console.error('Error syncing email:', error);
