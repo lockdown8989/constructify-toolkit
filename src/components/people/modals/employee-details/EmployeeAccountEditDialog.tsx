@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import { X, Shield, Mail, Key, User, Clock, Settings, Building, DollarSign, Cale
 import { Employee } from '@/components/people/types';
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateEmployee } from '@/hooks/use-employees';
+import { useEmployeeSync } from '@/hooks/use-employees';
 
 interface EmployeeAccountEditDialogProps {
   employee: Employee | null;
@@ -25,6 +25,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const updateEmployee = useUpdateEmployee();
+  const { syncEmployee, isSyncing } = useEmployeeSync();
   
   const [formData, setFormData] = useState({
     // Personal Information
@@ -94,31 +95,32 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
       // Combine first and last name
       const fullName = `${formData.firstName} ${formData.lastName}`.trim();
       
-      // Prepare update data with correct field mappings
-      const updateData = {
+      // Prepare sync data with correct field mappings
+      const syncData = {
         id: employee.id,
         name: fullName || formData.name,
-        email: formData.loginEmail || null,
+        email: formData.loginEmail || formData.email,
         jobTitle: formData.jobTitle || formData.position,
         department: formData.department,
-        site: formData.location, // Use site instead of location
         salary: formData.salary,
+        site: formData.location,
         startDate: formData.startDate,
         status: formData.status,
         lifecycle: formData.lifecycle,
         role: formData.role,
         annual_leave_days: formData.annual_leave_days,
         sick_leave_days: formData.sick_leave_days,
-        managerId: formData.managerId || null,
+        managerId: formData.managerId || undefined,
       };
 
-      console.log('Submitting employee update:', updateData);
+      console.log('Syncing employee data:', syncData);
 
-      await updateEmployee.mutateAsync(updateData);
+      // Use the sync function to update and synchronize
+      await syncEmployee(syncData);
 
       toast({
         title: "Account updated",
-        description: `${employee.name}'s account has been updated successfully.`,
+        description: `${employee.name}'s account has been updated and synchronized with manager team.`,
         variant: "default"
       });
 
@@ -191,6 +193,9 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 placeholder="employee@company.com"
               />
+              <p className="text-xs text-gray-500">
+                This email will be synchronized with your manager's team view
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -252,12 +257,12 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
               <div className="p-3 bg-blue-50 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Key className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium">Account Status</span>
+                  <span className="text-sm font-medium">Synchronization Status</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Current Status:</span>
+                  <span className="text-sm">Manager Team Sync:</span>
                   <Badge variant={formData.loginEmail ? 'default' : 'secondary'}>
-                    {formData.loginEmail ? 'Active Account' : 'Setup Required'}
+                    {formData.loginEmail ? 'Active' : 'Setup Required'}
                   </Badge>
                 </div>
               </div>
@@ -282,6 +287,9 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                   onChange={(e) => handleInputChange('position', e.target.value)}
                   placeholder="Job title"
                 />
+                <p className="text-xs text-gray-500">
+                  Will be synchronized with manager's team view
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -315,6 +323,9 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                   value={formData.salary}
                   onChange={(e) => handleInputChange('salary', Number(e.target.value) || 0)}
                 />
+                <p className="text-xs text-gray-500">
+                  Salary information will be synchronized with manager
+                </p>
               </div>
             </div>
 
@@ -327,7 +338,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                 placeholder="Enter manager's ID (e.g., MGR-94226)"
               />
               <p className="text-xs text-gray-500">
-                Enter your manager's ID to connect to their account
+                Enter your manager's ID to sync with their team view
               </p>
             </div>
 
@@ -413,16 +424,16 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
               type="button"
               variant="outline"
               onClick={onClose}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isSyncing}
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
-              disabled={isSubmitting}
+              disabled={isSubmitting || isSyncing}
               className="bg-green-600 hover:bg-green-700"
             >
-              {isSubmitting ? 'Saving...' : 'Save Changes'}
+              {isSubmitting || isSyncing ? 'Syncing...' : 'Save & Sync Changes'}
             </Button>
           </div>
         </form>

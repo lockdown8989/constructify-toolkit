@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Employee } from '@/types/employee';
 import { createDefaultShift } from './shift-sync';
@@ -56,6 +55,9 @@ export const syncEmployeeData = async (employee: Employee, isNew: boolean = fals
     throw error;
   }
 };
+
+// Add the new synchronization export
+export { syncEmployeeWithManagerTeam, syncEmployeeEmailWithAuth } from './employee-data-sync';
 
 // Hook into employee creation/updates
 export const setupRealtimeSubscriptions = () => {
