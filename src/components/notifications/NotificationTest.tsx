@@ -56,7 +56,7 @@ const NotificationTest = () => {
       } else {
         toast({
           title: 'Test failed',
-          description: testResult.message,
+          description: testResult.error || 'Unknown error occurred',
           variant: 'destructive',
         });
       }
