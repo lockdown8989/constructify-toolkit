@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -197,21 +198,330 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     });
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className={`${isSmallScreen ? 'w-[95vw] max-w-[95vw] h-[95vh]' : 'sm:max-w-[800px] max-h-[90vh]'} overflow-y-auto p-0`}>
-          <div className="p-4 sm:p-6">
-            <DialogHeader className="flex flex-row items-center justify-between mb-4">
-              <DialogTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5 text-green-600" />
-                <span className={`${isMobile ? 'text-lg' : 'text-xl'}`}>Edit Account - {employee.name}</span>
-              </DialogTitle>
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                <X className="h-4 w-4" />
-              </Button>
-            </DialogHeader>
+  const MobileContent = () => (
+    <div className="ios-sheet-content overflow-y-auto pb-safe-area-inset-bottom">
+      <SheetHeader className="px-4 pt-4 pb-2 border-b border-gray-100">
+        <SheetTitle className="text-lg font-semibold text-left">
+          Edit Account - {employee.name}
+        </SheetTitle>
+      </SheetHeader>
+      
+      <form onSubmit={handleSubmit} className="px-4 py-4 space-y-6">
+        {/* Personal Information Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+              <User className="h-4 w-4 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">First Name</Label>
+                <Input
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={(e) => handleInputChange('firstName', e.target.value)}
+                  placeholder="First name"
+                  className="ios-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Last Name</Label>
+                <Input
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => handleInputChange('lastName', e.target.value)}
+                  placeholder="Last name"
+                  className="ios-input"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                placeholder="employee@company.com"
+                className="ios-input"
+              />
+              <p className="text-xs text-gray-500">Synchronized with manager's team view</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
+              <Select value={formData.location} onValueChange={(value) => handleInputChange('location', value)}>
+                <SelectTrigger className="ios-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Office">Office</SelectItem>
+                  <SelectItem value="Remote">Remote</SelectItem>
+                  <SelectItem value="Hybrid">Hybrid</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-px bg-gray-200"></div>
+
+        {/* Login Information Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+              <Shield className="h-4 w-4 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">Login Information</h3>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="loginEmail" className="text-sm font-medium text-gray-700">Login Email</Label>
+              <Input
+                id="loginEmail"
+                type="email"
+                value={formData.loginEmail}
+                onChange={(e) => handleInputChange('loginEmail', e.target.value)}
+                placeholder="employee@company.com"
+                className="ios-input"
+              />
+            </div>
+            
+            <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+              <div className="flex items-center gap-2 mb-1">
+                <Key className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-900">Sync Status</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-blue-700">Manager Team:</span>
+                <Badge variant={formData.loginEmail ? 'default' : 'secondary'} className="text-xs">
+                  {formData.loginEmail ? 'Active' : 'Setup Required'}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-px bg-gray-200"></div>
+
+        {/* Employment Details Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+              <Building className="h-4 w-4 text-green-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">Employment Details</h3>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="position" className="text-sm font-medium text-gray-700">Job Title</Label>
+              <Input
+                id="position"
+                value={formData.position}
+                onChange={(e) => handleInputChange('position', e.target.value)}
+                placeholder="Job title"
+                className="ios-input"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="department" className="text-sm font-medium text-gray-700">Department</Label>
+              <Input
+                id="department"
+                value={formData.department}
+                onChange={(e) => handleInputChange('department', e.target.value)}
+                placeholder="Department"
+                className="ios-input"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="managerId" className="text-sm font-medium text-gray-700">Manager ID</Label>
+              <Input
+                id="managerId"
+                value={formData.managerId}
+                onChange={(e) => handleInputChange('managerId', e.target.value)}
+                placeholder="e.g., MGR-94226"
+                className="ios-input"
+              />
+              <p className="text-xs text-gray-500">Sync with manager's team view</p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="start_date" className="text-sm font-medium text-gray-700">Start Date</Label>
+                <Input
+                  id="start_date"
+                  type="date"
+                  value={formData.start_date}
+                  onChange={(e) => handleInputChange('start_date', e.target.value)}
+                  className="ios-input"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="status" className="text-sm font-medium text-gray-700">Status</Label>
+                <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
+                  <SelectTrigger className="ios-select">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Present">Present</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                    <SelectItem value="On Leave">On Leave</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-px bg-gray-200"></div>
+
+        {/* Salary Section */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+              <DollarSign className="h-4 w-4 text-green-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">Salary Information</h3>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="salary" className="text-sm font-medium text-gray-700">Annual Salary (£)</Label>
+              <Input
+                id="salary"
+                type="number"
+                min="0"
+                value={formData.salary}
+                onChange={(e) => handleInputChange('salary', Number(e.target.value) || 0)}
+                className="ios-input"
+                placeholder="0"
+              />
+            </div>
+            
+            {formData.salary > 0 && (
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div className="text-center">
+                    <div className="text-xs text-gray-600 mb-1">Annual</div>
+                    <div className="text-lg font-bold text-green-700">
+                      {formatCurrency(salaryBreakdown.annual, 'GBP')}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs text-gray-600 mb-1">Monthly</div>
+                    <div className="text-lg font-bold text-blue-700">
+                      {formatCurrency(salaryBreakdown.monthly, 'GBP')}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-gray-600 mb-1">Per Hour</div>
+                  <div className="text-md font-semibold text-purple-700">
+                    {formatCurrency(salaryBreakdown.hourly, 'GBP')}
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-green-200">
+                  <div className="text-xs text-gray-600 text-center">
+                    Based on 40 hrs/week, 52 weeks/year
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="h-px bg-gray-200"></div>
+
+        {/* Leave Entitlements */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+              <Clock className="h-4 w-4 text-orange-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">Leave Entitlements</h3>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="annual_leave" className="text-sm font-medium text-gray-700">Annual Leave</Label>
+              <Input
+                id="annual_leave"
+                type="number"
+                min="0"
+                max="365"
+                value={formData.annual_leave_days}
+                onChange={(e) => handleInputChange('annual_leave_days', parseInt(e.target.value) || 0)}
+                className="ios-input"
+                placeholder="25"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sick_leave" className="text-sm font-medium text-gray-700">Sick Leave</Label>
+              <Input
+                id="sick_leave"
+                type="number"
+                min="0"
+                max="365"
+                value={formData.sick_leave_days}
+                onChange={(e) => handleInputChange('sick_leave_days', parseInt(e.target.value) || 0)}
+                className="ios-input"
+                placeholder="10"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 -mx-4 -mb-4">
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isSubmitting || isSyncing}
+              className="flex-1 ios-button-outline"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting || isSyncing}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 ios-button-primary"
+            >
+              {isSubmitting || isSyncing ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+
+  const DesktopContent = () => (
+    <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto p-0">
+      <div className="p-6">
+        <DialogHeader className="flex flex-row items-center justify-between mb-6">
+          <DialogTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5 text-blue-600" />
+            <span className="text-xl">Edit Account - {employee.name}</span>
+          </DialogTitle>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Same content as mobile but with desktop styling */}
           {/* Personal Information Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -219,7 +529,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
               <h3 className="text-lg font-semibold">Personal Information</h3>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
                 <Input
@@ -229,7 +539,6 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                   placeholder="First name"
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="lastName">Last Name</Label>
                 <Input
@@ -297,20 +606,6 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  placeholder="Enter password"
-                />
-                <p className="text-xs text-gray-500">
-                  Current password: {formData.password}
-                </p>
-              </div>
-
               <div className="p-3 bg-blue-50 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Key className="h-4 w-4 text-blue-600" />
@@ -335,7 +630,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
               <h3 className="text-lg font-semibold">Employment Details</h3>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="position">Position/Job Title</Label>
                 <Input
@@ -360,7 +655,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start_date">Start Date</Label>
                 <Input
@@ -372,7 +667,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="salary">Salary</Label>
+                <Label htmlFor="salary">Annual Salary (£)</Label>
                 <Input
                   id="salary"
                   type="number"
@@ -399,7 +694,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="status">Employment Status</Label>
                 <Select 
@@ -450,7 +745,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
             
             <Card className="bg-gradient-to-br from-green-50 to-blue-50 border-green-200">
               <CardContent className="p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="text-center p-3 bg-white/60 rounded-lg">
                     <div className="text-xs text-gray-600 mb-1">Annual Salary</div>
                     <div className="text-lg font-bold text-green-700">
@@ -471,24 +766,6 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                       {formatCurrency(salaryBreakdown.hourly, 'GBP')}
                     </div>
                   </div>
-                  
-                  {!isMobile && (
-                    <>
-                      <div className="text-center p-3 bg-white/60 rounded-lg">
-                        <div className="text-xs text-gray-600 mb-1">Weekly</div>
-                        <div className="text-md font-semibold text-gray-700">
-                          {formatCurrency(salaryBreakdown.weekly, 'GBP')}
-                        </div>
-                      </div>
-                      
-                      <div className="text-center p-3 bg-white/60 rounded-lg">
-                        <div className="text-xs text-gray-600 mb-1">Daily</div>
-                        <div className="text-md font-semibold text-gray-700">
-                          {formatCurrency(salaryBreakdown.daily, 'GBP')}
-                        </div>
-                      </div>
-                    </>
-                  )}
                 </div>
                 
                 {salaryBreakdown.annual > 0 && (
@@ -511,7 +788,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
               <h3 className="text-lg font-semibold">Leave Entitlements</h3>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="annual_leave">Annual Leave Days</Label>
                 <Input
@@ -551,14 +828,29 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
             <Button 
               type="submit" 
               disabled={isSubmitting || isSyncing}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-blue-600 hover:bg-blue-700"
             >
               {isSubmitting || isSyncing ? 'Saving Changes...' : 'Save & Sync Changes'}
             </Button>
           </div>
         </form>
       </div>
-      </DialogContent>
+    </DialogContent>
+  );
+
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl ios-sheet">
+          <MobileContent />
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DesktopContent />
     </Dialog>
   );
 };

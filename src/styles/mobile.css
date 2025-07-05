@@ -177,6 +177,86 @@
   @apply transition-all duration-300 ease-in-out;
 }
 
+/* iOS-style sheet components */
+.ios-sheet {
+  @apply bg-white border-0 shadow-2xl;
+}
+
+.ios-sheet-content {
+  @apply relative;
+  background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
+  min-height: 100%;
+}
+
+.ios-input {
+  @apply h-12 rounded-xl border-gray-200 bg-white text-base font-medium;
+  border: 1px solid #E5E7EB;
+  transition: all 0.2s ease-in-out;
+}
+
+.ios-input:focus {
+  @apply ring-2 ring-blue-500/20 border-blue-500;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.ios-select {
+  @apply h-12 rounded-xl border-gray-200 bg-white text-base font-medium;
+}
+
+.ios-button-primary {
+  @apply h-12 rounded-xl font-semibold text-white transition-all duration-200;
+  background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.ios-button-primary:hover {
+  @apply transform scale-[1.02];
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.ios-button-outline {
+  @apply h-12 rounded-xl font-semibold border-2 border-gray-300 bg-white text-gray-700 transition-all duration-200;
+}
+
+.ios-button-outline:hover {
+  @apply bg-gray-50 border-gray-400;
+}
+
+/* Safe area handling for iOS */
+.pb-safe-area-inset-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Enhanced scrolling for iOS */
+.ios-sheet-content {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* iOS-style section headers */
+.ios-section-header {
+  @apply sticky top-0 bg-white/90 backdrop-blur-sm z-10 py-3 px-4 border-b border-gray-100;
+}
+
+/* iOS-style dividers */
+.ios-divider {
+  @apply h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent;
+}
+
+/* Apple-style focus ring */
+.ios-focus-ring:focus {
+  @apply outline-none ring-2 ring-blue-500/50 ring-offset-2 ring-offset-white;
+}
+
+/* Enhanced touch feedback */
+.ios-touch-feedback {
+  @apply transition-all duration-150 ease-out;
+}
+
+.ios-touch-feedback:active {
+  @apply transform scale-[0.98] opacity-80;
+}
+
 .calendar-day-cell:hover {
   @apply transform scale-[1.02] shadow-lg z-10;
 }
