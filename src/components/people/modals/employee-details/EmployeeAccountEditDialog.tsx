@@ -7,11 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { X, Shield, Mail, Key, User, Clock, Settings, Building, DollarSign, Calendar } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { X, Shield, Mail, Key, User, Clock, Settings, Building, DollarSign, Calendar, Calculator } from 'lucide-react';
 import { Employee } from '@/components/people/types';
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateEmployee } from '@/hooks/use-employees';
 import { useEmployeeSync } from '@/hooks/use-employee-sync';
+import { useIsMobile, useIsSmallScreen } from '@/hooks/use-mobile';
+import { formatCurrency } from '@/utils/format';
 
 interface EmployeeAccountEditDialogProps {
   employee: Employee | null;
@@ -27,6 +30,8 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
   const { toast } = useToast();
   const updateEmployee = useUpdateEmployee();
   const { syncEmployee, isSyncing } = useEmployeeSync();
+  const isMobile = useIsMobile();
+  const isSmallScreen = useIsSmallScreen();
   
   const [formData, setFormData] = useState({
     // Personal Information
@@ -160,22 +165,51 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     }
   };
 
+  // Calculate salary breakdown
+  const salaryBreakdown = React.useMemo(() => {
+    const annualSalary = formData.salary || 0;
+    const monthlySalary = annualSalary / 12;
+    const weeklySalary = annualSalary / 52;
+    const dailySalary = annualSalary / 260; // Assuming 260 working days per year
+    const hourlySalary = annualSalary / (40 * 52); // Assuming 40 hours per week
+    
+    return {
+      annual: annualSalary,
+      monthly: monthlySalary,
+      weekly: weeklySalary,
+      daily: dailySalary,
+      hourly: hourlySalary
+    };
+  }, [formData.salary]);
+
   const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      
+      // Sync email fields to ensure both are updated
+      if (field === 'email') {
+        updated.loginEmail = value;
+      } else if (field === 'loginEmail') {
+        updated.email = value;
+      }
+      
+      return updated;
+    });
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-green-600" />
-            Edit Account - {employee.name}
-          </DialogTitle>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </DialogHeader>
+        <DialogContent className={`${isSmallScreen ? 'w-[95vw] max-w-[95vw] h-[95vh]' : 'sm:max-w-[800px] max-h-[90vh]'} overflow-y-auto p-0`}>
+          <div className="p-4 sm:p-6">
+            <DialogHeader className="flex flex-row items-center justify-between mb-4">
+              <DialogTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-green-600" />
+                <span className={`${isMobile ? 'text-lg' : 'text-xl'}`}>Edit Account - {employee.name}</span>
+              </DialogTitle>
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Personal Information Section */}
@@ -407,6 +441,69 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
 
           <Separator />
 
+          {/* Salary Breakdown Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Calculator className="h-4 w-4 text-blue-600" />
+              <h3 className="text-lg font-semibold">Salary Breakdown</h3>
+            </div>
+            
+            <Card className="bg-gradient-to-br from-green-50 to-blue-50 border-green-200">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="text-center p-3 bg-white/60 rounded-lg">
+                    <div className="text-xs text-gray-600 mb-1">Annual Salary</div>
+                    <div className="text-lg font-bold text-green-700">
+                      {formatCurrency(salaryBreakdown.annual, 'GBP')}
+                    </div>
+                  </div>
+                  
+                  <div className="text-center p-3 bg-white/60 rounded-lg">
+                    <div className="text-xs text-gray-600 mb-1">Monthly Salary</div>
+                    <div className="text-lg font-bold text-blue-700">
+                      {formatCurrency(salaryBreakdown.monthly, 'GBP')}
+                    </div>
+                  </div>
+                  
+                  <div className="text-center p-3 bg-white/60 rounded-lg">
+                    <div className="text-xs text-gray-600 mb-1">Per Hour</div>
+                    <div className="text-lg font-bold text-purple-700">
+                      {formatCurrency(salaryBreakdown.hourly, 'GBP')}
+                    </div>
+                  </div>
+                  
+                  {!isMobile && (
+                    <>
+                      <div className="text-center p-3 bg-white/60 rounded-lg">
+                        <div className="text-xs text-gray-600 mb-1">Weekly</div>
+                        <div className="text-md font-semibold text-gray-700">
+                          {formatCurrency(salaryBreakdown.weekly, 'GBP')}
+                        </div>
+                      </div>
+                      
+                      <div className="text-center p-3 bg-white/60 rounded-lg">
+                        <div className="text-xs text-gray-600 mb-1">Daily</div>
+                        <div className="text-md font-semibold text-gray-700">
+                          {formatCurrency(salaryBreakdown.daily, 'GBP')}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+                
+                {salaryBreakdown.annual > 0 && (
+                  <div className="mt-4 pt-3 border-t border-white/40">
+                    <div className="text-xs text-gray-600 text-center">
+                      Calculations based on 40 hours/week, 52 weeks/year, 260 working days/year
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <Separator />
+
           {/* Leave Entitlements Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -460,6 +557,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
             </Button>
           </div>
         </form>
+      </div>
       </DialogContent>
     </Dialog>
   );
