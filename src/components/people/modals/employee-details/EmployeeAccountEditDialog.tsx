@@ -185,7 +185,15 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => {
-      const updated = { ...prev, [field]: value };
+      const updated = { ...prev };
+      
+      // Handle salary field specifically to ensure proper number conversion
+      if (field === 'salary') {
+        const numValue = typeof value === 'string' ? parseFloat(value) : value;
+        updated[field] = isNaN(numValue) || numValue < 0 ? 0 : numValue;
+      } else {
+        updated[field] = value;
+      }
       
       // Sync email fields to ensure both are updated
       if (field === 'email') {
@@ -412,7 +420,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                   type="number"
                   min="0"
                   value={formData.salary}
-                  onChange={(e) => handleInputChange('salary', Number(e.target.value) || 0)}
+                  onChange={(e) => handleInputChange('salary', e.target.value)}
                   className="ios-input"
                   placeholder="0"
                 />
@@ -687,7 +695,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                   type="number"
                   min="0"
                   value={formData.salary}
-                  onChange={(e) => handleInputChange('salary', Number(e.target.value) || 0)}
+                  onChange={(e) => handleInputChange('salary', e.target.value)}
                 />
                 <p className="text-xs text-gray-500">
                   Salary information will be synchronized with manager
