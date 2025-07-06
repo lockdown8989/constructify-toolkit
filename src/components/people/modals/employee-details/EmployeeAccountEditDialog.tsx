@@ -841,7 +841,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl ios-sheet">
+        <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl ios-sheet overflow-hidden">
           <MobileContent />
         </SheetContent>
       </Sheet>
