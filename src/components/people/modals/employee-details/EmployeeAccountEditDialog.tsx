@@ -199,8 +199,8 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
   };
 
   const MobileContent = () => (
-    <div className="ios-sheet-content overflow-y-auto pb-safe-area-inset-bottom">
-      <SheetHeader className="px-4 pt-4 pb-2 border-b border-gray-100">
+    <div className="ios-sheet-content h-full overflow-y-auto momentum-scroll pb-safe-area-inset-bottom">
+      <SheetHeader className="sticky top-0 bg-white/95 backdrop-blur-sm z-10 px-4 pt-4 pb-2 border-b border-gray-100">
         <SheetTitle className="text-lg font-semibold text-left">
           Edit Account - {employee.name}
         </SheetTitle>
