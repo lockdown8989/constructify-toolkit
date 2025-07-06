@@ -199,15 +199,23 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
   };
 
   const MobileContent = () => (
-    <div className="flex flex-col h-full">
-      <SheetHeader className="flex-shrink-0 bg-white/95 backdrop-blur-sm z-10 px-4 pt-4 pb-2 border-b border-gray-100">
-        <SheetTitle className="text-lg font-semibold text-left">
-          Edit Account - {employee.name}
-        </SheetTitle>
-      </SheetHeader>
+    <div className="flex flex-col h-full max-h-[90vh]">
+      <div className="flex-shrink-0 bg-white/95 backdrop-blur-sm z-10 px-6 pt-6 pb-4 border-b border-gray-100/50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+              <Settings className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Edit Account</h2>
+              <p className="text-sm text-gray-500">{employee.name}</p>
+            </div>
+          </div>
+        </div>
+      </div>
       
-      <div className="flex-1 overflow-y-auto momentum-scroll ios-sheet-content">
-        <form onSubmit={handleSubmit} className="px-4 py-4 space-y-6 pb-safe-area-inset-bottom">
+      <div className="flex-1 overflow-y-scroll overscroll-behavior-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-8 min-h-full">
           {/* Personal Information Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-3">
@@ -483,28 +491,32 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 -mx-4 -mb-4">
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                disabled={isSubmitting || isSyncing}
-                className="flex-1 ios-button-outline"
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting || isSyncing}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 ios-button-primary"
-              >
-                {isSubmitting || isSyncing ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
-          </div>
+          {/* Safe area bottom padding */}
+          <div className="h-20 flex-shrink-0"></div>
         </form>
+        
+        {/* Fixed Action Buttons */}
+        <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/50 p-6 pb-8">
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isSubmitting || isSyncing}
+              className="flex-1 ios-button-outline"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting || isSyncing}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 ios-button-primary"
+              onClick={handleSubmit}
+            >
+              {isSubmitting || isSyncing ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
