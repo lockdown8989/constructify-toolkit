@@ -143,13 +143,15 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
 
       // First update the employee record
       await updateEmployee.mutateAsync(updateData);
+      console.log('✅ Employee database update completed');
 
-      // Then sync with manager team
+      // Then sync with manager team - this ensures Manager ID, Email, and Location are synchronized
       await syncEmployee(syncData);
+      console.log('✅ Manager team synchronization completed');
 
       toast({
-        title: "Account updated",
-        description: `${employee.name}'s account has been updated and synchronized with manager team.`,
+        title: "Account updated & synchronized",
+        description: `${employee.name}'s account updated successfully. Manager ID: ${formData.managerId || 'None'}, Email: ${formData.loginEmail}, Location: ${formData.location} - all synchronized with manager team.`,
         variant: "default"
       });
 
@@ -184,6 +186,11 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
   }, [formData.salary]);
 
   const handleInputChange = (field: string, value: any) => {
+    // Store current scroll position to prevent jumping
+    const scrollContainer = document.querySelector('[style*="WebkitOverflowScrolling: touch"]') || 
+                           document.querySelector('.overflow-y-scroll');
+    const currentScrollTop = scrollContainer?.scrollTop || 0;
+    
     setFormData(prev => {
       const updated = { ...prev };
       
@@ -203,6 +210,13 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
       }
       
       return updated;
+    });
+
+    // Restore scroll position after state update to prevent jumping
+    requestAnimationFrame(() => {
+      if (scrollContainer && scrollContainer.scrollTop !== currentScrollTop) {
+        scrollContainer.scrollTop = currentScrollTop;
+      }
     });
   };
 
