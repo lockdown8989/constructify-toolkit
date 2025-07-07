@@ -186,10 +186,12 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
   }, [formData.salary]);
 
   const handleInputChange = (field: string, value: any) => {
-    // Store current scroll position to prevent jumping
-    const scrollContainer = document.querySelector('[style*="WebkitOverflowScrolling: touch"]') || 
-                           document.querySelector('.overflow-y-scroll');
+    // Store current scroll position and active element to prevent jumping
+    const scrollContainer = document.querySelector('[data-scroll-container="true"]') || 
+                           document.querySelector('.overflow-y-scroll') ||
+                           document.querySelector('[style*="overflow-y: scroll"]');
     const currentScrollTop = scrollContainer?.scrollTop || 0;
+    const activeElement = document.activeElement as HTMLElement;
     
     setFormData(prev => {
       const updated = { ...prev };
@@ -212,12 +214,16 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
       return updated;
     });
 
-    // Restore scroll position after state update to prevent jumping
-    requestAnimationFrame(() => {
+    // Restore scroll position and focus after state update to prevent jumping
+    setTimeout(() => {
       if (scrollContainer && scrollContainer.scrollTop !== currentScrollTop) {
         scrollContainer.scrollTop = currentScrollTop;
       }
-    });
+      // Maintain focus if the active element lost focus
+      if (activeElement && document.activeElement !== activeElement) {
+        activeElement.focus();
+      }
+    }, 0);
   };
 
   const MobileContent = () => (
@@ -236,7 +242,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-scroll overscroll-behavior-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="flex-1 overflow-y-scroll overscroll-behavior-contain" style={{ WebkitOverflowScrolling: 'touch' }} data-scroll-container="true">
         <form onSubmit={handleSubmit} className="px-6 py-6 space-y-8 min-h-full">
           {/* Personal Information Section */}
           <div className="space-y-4">
