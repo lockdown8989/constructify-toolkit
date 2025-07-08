@@ -23,11 +23,8 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
   const estimatedAnnualFromHourly = hourlyRate > 0 ? hourlyRate * 40 * 52 : 0; // 40h/week, 52 weeks
   
   // Update annual salary when hourly rate changes (if user has entered hourly rate)
-  useEffect(() => {
-    if (hourlyRate > 0 && form.getValues('salary') === 0) {
-      form.setValue('salary', estimatedAnnualFromHourly);
-    }
-  }, [hourlyRate, form]);
+  // Removed automatic setValue to prevent layout jumping during typing
+  // Users can see the estimated annual in the description text
   
   // Common departments for UK and USA that typically use hourly rates
   const hourlyRateDepartments = ['Hospital', 'Healthcare', 'Waste Services', 'Council', 'Retail', 'Hospitality', 'Cleaning'];

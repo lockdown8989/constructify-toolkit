@@ -123,9 +123,16 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
           />
           <InfoItem 
             icon={DollarSign} 
-            label="Salary" 
+            label="Annual Salary" 
             value={employee.salary} 
           />
+          {employee.hourly_rate && (
+            <InfoItem 
+              icon={Clock} 
+              label="Hourly Rate" 
+              value={`£${employee.hourly_rate.toFixed(2)} per hour`} 
+            />
+          )}
           <div className="flex items-start space-x-3 py-3">
             <div className="flex-shrink-0 mt-0.5">
               <Clock className="h-4 w-4 text-gray-500" />
