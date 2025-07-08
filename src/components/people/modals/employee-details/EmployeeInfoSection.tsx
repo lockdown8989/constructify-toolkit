@@ -126,7 +126,7 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
             label="Annual Salary" 
             value={employee.salary} 
           />
-          {employee.hourly_rate && (
+          {employee.hourly_rate && employee.hourly_rate > 0 && (
             <InfoItem 
               icon={Clock} 
               label="Hourly Rate" 

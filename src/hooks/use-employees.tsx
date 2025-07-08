@@ -193,6 +193,7 @@ export function useUpdateEmployee() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       queryClient.invalidateQueries({ queryKey: ['employee', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['employee-details', data.id] });
       toast({
         title: "Employee updated",
         description: "Employee information has been successfully updated."

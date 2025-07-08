@@ -1,7 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useDeleteEmployee, Employee as DbEmployee } from '@/hooks/use-employees';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Employee, mapDbEmployeeToUiEmployee } from '../types';
 import EmployeeHeader from './employee-details/EmployeeHeader';
@@ -18,7 +20,7 @@ interface EmployeeDetailsModalProps {
 }
 
 const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
-  employee,
+  employee: initialEmployee,
   isOpen,
   onClose,
   onEdit
@@ -28,6 +30,32 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   const deleteEmployee = useDeleteEmployee();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+
+  // Fetch latest employee data when modal is open
+  const { data: latestEmployeeData } = useQuery({
+    queryKey: ['employee-details', initialEmployee?.id],
+    queryFn: async () => {
+      if (!initialEmployee?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('id', initialEmployee.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching employee details:', error);
+        return null;
+      }
+      
+      return mapDbEmployeeToUiEmployee(data);
+    },
+    enabled: isOpen && !!initialEmployee?.id,
+    refetchOnWindowFocus: false,
+  });
+
+  // Use latest data if available, otherwise fallback to initial employee
+  const employee = latestEmployeeData || initialEmployee;
 
   if (!employee) return null;
 
@@ -59,6 +87,8 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   const handleAccountEditDialogClose = () => {
     console.log('Account edit dialog closing');
     setIsAccountEditDialogOpen(false);
+    // Refetch employee data after edit
+    // The query will automatically refetch due to query invalidation in the update hook
   };
 
   return (
