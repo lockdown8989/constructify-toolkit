@@ -227,18 +227,27 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
   };
 
   const MobileContent = () => (
-    <div className="flex flex-col h-full max-h-[90vh]">
-      <div className="flex-shrink-0 bg-white/95 backdrop-blur-sm z-10 px-6 pt-6 pb-4 border-b border-gray-100/50">
+    <div className="flex flex-col h-full max-h-[90vh] bg-gray-50">
+      {/* iOS-style Header */}
+      <div className="flex-shrink-0 bg-white/95 backdrop-blur-sm z-10 px-6 pt-6 pb-4 border-b border-gray-200/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-              <Settings className="h-5 w-5 text-blue-600" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+              <Settings className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Edit Account</h2>
-              <p className="text-sm text-gray-500">{employee.name}</p>
+              <h2 className="text-xl font-semibold text-gray-900 tracking-tight">Edit Account</h2>
+              <p className="text-sm text-gray-600 font-medium">{employee.name}</p>
             </div>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="h-10 w-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors touch-target"
+          >
+            <X className="h-5 w-5 text-gray-600" />
+          </Button>
         </div>
       </div>
       
@@ -257,38 +266,51 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    placeholder="First name"
-                    className="ios-input"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    placeholder="Last name"
-                    className="ios-input"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="employee@company.com"
-                  className="ios-input"
-                />
-                <p className="text-xs text-gray-500">Synchronized with manager's team view</p>
-              </div>
+                   <Input
+                     id="firstName"
+                     value={formData.firstName}
+                     onChange={(e) => handleInputChange('firstName', e.target.value)}
+                     placeholder="First name"
+                     className="ios-input ios-focus-ring"
+                     autoComplete="given-name"
+                     autoCapitalize="words"
+                     autoCorrect="off"
+                     spellCheck="false"
+                   />
+                 </div>
+                 <div className="space-y-2">
+                   <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Last Name</Label>
+                   <Input
+                     id="lastName"
+                     value={formData.lastName}
+                     onChange={(e) => handleInputChange('lastName', e.target.value)}
+                     placeholder="Last name"
+                     className="ios-input ios-focus-ring"
+                     autoComplete="family-name"
+                     autoCapitalize="words"
+                     autoCorrect="off"
+                     spellCheck="false"
+                   />
+                 </div>
+               </div>
+               
+               <div className="space-y-2">
+                 <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</Label>
+                 <Input
+                   id="email"
+                   type="email"
+                   value={formData.email}
+                   onChange={(e) => handleInputChange('email', e.target.value)}
+                   placeholder="employee@company.com"
+                   className="ios-input ios-focus-ring"
+                   autoComplete="email"
+                   autoCapitalize="none"
+                   autoCorrect="off"
+                   spellCheck="false"
+                   inputMode="email"
+                 />
+                 <p className="text-xs text-gray-500">Synchronized with manager's team view</p>
+               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
@@ -318,17 +340,22 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
             </div>
             
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="loginEmail" className="text-sm font-medium text-gray-700">Login Email</Label>
-                <Input
-                  id="loginEmail"
-                  type="email"
-                  value={formData.loginEmail}
-                  onChange={(e) => handleInputChange('loginEmail', e.target.value)}
-                  placeholder="employee@company.com"
-                  className="ios-input"
-                />
-              </div>
+               <div className="space-y-2">
+                 <Label htmlFor="loginEmail" className="text-sm font-medium text-gray-700">Login Email</Label>
+                 <Input
+                   id="loginEmail"
+                   type="email"
+                   value={formData.loginEmail}
+                   onChange={(e) => handleInputChange('loginEmail', e.target.value)}
+                   placeholder="employee@company.com"
+                   className="ios-input ios-focus-ring"
+                   autoComplete="email"
+                   autoCapitalize="none"
+                   autoCorrect="off"
+                   spellCheck="false"
+                   inputMode="email"
+                 />
+               </div>
               
               <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
                 <div className="flex items-center gap-2 mb-1">
@@ -357,39 +384,49 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
             </div>
             
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="position" className="text-sm font-medium text-gray-700">Job Title</Label>
-                <Input
-                  id="position"
-                  value={formData.position}
-                  onChange={(e) => handleInputChange('position', e.target.value)}
-                  placeholder="Job title"
-                  className="ios-input"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="department" className="text-sm font-medium text-gray-700">Department</Label>
-                <Input
-                  id="department"
-                  value={formData.department}
-                  onChange={(e) => handleInputChange('department', e.target.value)}
-                  placeholder="Department"
-                  className="ios-input"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="managerId" className="text-sm font-medium text-gray-700">Manager ID</Label>
-                <Input
-                  id="managerId"
-                  value={formData.managerId}
-                  onChange={(e) => handleInputChange('managerId', e.target.value)}
-                  placeholder="e.g., MGR-94226"
-                  className="ios-input"
-                />
-                <p className="text-xs text-gray-500">Sync with manager's team view</p>
-              </div>
+               <div className="space-y-2">
+                 <Label htmlFor="position" className="text-sm font-medium text-gray-700">Job Title</Label>
+                 <Input
+                   id="position"
+                   value={formData.position}
+                   onChange={(e) => handleInputChange('position', e.target.value)}
+                   placeholder="Job title"
+                   className="ios-input ios-focus-ring"
+                   autoComplete="organization-title"
+                   autoCapitalize="words"
+                   autoCorrect="off"
+                 />
+               </div>
+               
+               <div className="space-y-2">
+                 <Label htmlFor="department" className="text-sm font-medium text-gray-700">Department</Label>
+                 <Input
+                   id="department"
+                   value={formData.department}
+                   onChange={(e) => handleInputChange('department', e.target.value)}
+                   placeholder="Department"
+                   className="ios-input ios-focus-ring"
+                   autoComplete="organization"
+                   autoCapitalize="words"
+                   autoCorrect="off"
+                 />
+               </div>
+               
+               <div className="space-y-2">
+                 <Label htmlFor="managerId" className="text-sm font-medium text-gray-700">Manager ID</Label>
+                 <Input
+                   id="managerId"
+                   value={formData.managerId}
+                   onChange={(e) => handleInputChange('managerId', e.target.value)}
+                   placeholder="e.g., MGR-94226"
+                   className="ios-input ios-focus-ring"
+                   autoComplete="off"
+                   autoCapitalize="none"
+                   autoCorrect="off"
+                   spellCheck="false"
+                 />
+                 <p className="text-xs text-gray-500">Sync with manager's team view</p>
+               </div>
               
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
@@ -433,18 +470,21 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
             </div>
             
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="salary" className="text-sm font-medium text-gray-700">Annual Salary (£)</Label>
-                <Input
-                  id="salary"
-                  type="number"
-                  min="0"
-                  value={formData.salary}
-                  onChange={(e) => handleInputChange('salary', e.target.value)}
-                  className="ios-input"
-                  placeholder="0"
-                />
-              </div>
+               <div className="space-y-2">
+                 <Label htmlFor="salary" className="text-sm font-medium text-gray-700">Annual Salary (£)</Label>
+                 <Input
+                   id="salary"
+                   type="number"
+                   min="0"
+                   value={formData.salary}
+                   onChange={(e) => handleInputChange('salary', e.target.value)}
+                   className="ios-input ios-focus-ring"
+                   placeholder="35000"
+                   inputMode="decimal"
+                   pattern="[0-9]*"
+                   autoComplete="off"
+                 />
+               </div>
               
               {formData.salary > 0 && (
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
@@ -490,32 +530,38 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
             </div>
             
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="annual_leave" className="text-sm font-medium text-gray-700">Annual Leave</Label>
-                <Input
-                  id="annual_leave"
-                  type="number"
-                  min="0"
-                  max="365"
-                  value={formData.annual_leave_days}
-                  onChange={(e) => handleInputChange('annual_leave_days', parseInt(e.target.value) || 0)}
-                  className="ios-input"
-                  placeholder="25"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sick_leave" className="text-sm font-medium text-gray-700">Sick Leave</Label>
-                <Input
-                  id="sick_leave"
-                  type="number"
-                  min="0"
-                  max="365"
-                  value={formData.sick_leave_days}
-                  onChange={(e) => handleInputChange('sick_leave_days', parseInt(e.target.value) || 0)}
-                  className="ios-input"
-                  placeholder="10"
-                />
-              </div>
+               <div className="space-y-2">
+                 <Label htmlFor="annual_leave" className="text-sm font-medium text-gray-700">Annual Leave</Label>
+                 <Input
+                   id="annual_leave"
+                   type="number"
+                   min="0"
+                   max="365"
+                   value={formData.annual_leave_days}
+                   onChange={(e) => handleInputChange('annual_leave_days', parseInt(e.target.value) || 0)}
+                   className="ios-input ios-focus-ring"
+                   placeholder="25"
+                   inputMode="numeric"
+                   pattern="[0-9]*"
+                   autoComplete="off"
+                 />
+               </div>
+               <div className="space-y-2">
+                 <Label htmlFor="sick_leave" className="text-sm font-medium text-gray-700">Sick Leave</Label>
+                 <Input
+                   id="sick_leave"
+                   type="number"
+                   min="0"
+                   max="365"
+                   value={formData.sick_leave_days}
+                   onChange={(e) => handleInputChange('sick_leave_days', parseInt(e.target.value) || 0)}
+                   className="ios-input ios-focus-ring"
+                   placeholder="10"
+                   inputMode="numeric"
+                   pattern="[0-9]*"
+                   autoComplete="off"
+                 />
+               </div>
             </div>
           </div>
 
@@ -524,24 +570,31 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         </form>
         
         {/* Fixed Action Buttons */}
-        <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/50 p-6 pb-8">
+        <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/50 px-6 py-4 pb-safe-area-inset-bottom">
           <div className="flex gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               disabled={isSubmitting || isSyncing}
-              className="flex-1 ios-button-outline"
+              className="flex-1 ios-button-outline ios-touch-feedback touch-target"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={isSubmitting || isSyncing}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 ios-button-primary"
+              className="flex-1 ios-button-primary ios-touch-feedback touch-target"
               onClick={handleSubmit}
             >
-              {isSubmitting || isSyncing ? 'Saving...' : 'Save Changes'}
+              {isSubmitting || isSyncing ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Saving...
+                </div>
+              ) : (
+                'Save Changes'
+              )}
             </Button>
           </div>
         </div>
