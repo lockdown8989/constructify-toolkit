@@ -31,9 +31,7 @@ export const NavigationLinks = () => {
       {/* Common Navigation Items */}
       <SidebarNavLink to="/dashboard" icon={BarChart3} label="Dashboard" isActive={isActive('/dashboard')} isCollapsed={false} />
       <SidebarNavLink to="/schedule" icon={Calendar} label="Schedule" isActive={isActive('/schedule')} isCollapsed={false} />
-      <SidebarNavLink to="/time-clock" icon={Clock} label="Time Clock" isActive={isActive('/time-clock')} isCollapsed={false} />
       <SidebarNavLink to="/attendance" icon={UserCheck} label="Attendance" isActive={isActive('/attendance')} isCollapsed={false} />
-      <SidebarNavLink to="/salary" icon={DollarSign} label="Salary" isActive={isActive('/salary')} isCollapsed={false} />
       <SidebarNavLink to="/leave-management" icon={FileText} label="Leave Management" isActive={isActive('/leave-management')} isCollapsed={false} />
       <SidebarNavLink to="/schedule-requests" icon={Bell} label="Schedule Requests" isActive={isActive('/schedule-requests')} isCollapsed={false} />
       <SidebarNavLink to="/employee-workflow" icon={ClipboardList} label="Employee Workflow" isActive={isActive('/employee-workflow')} isCollapsed={false} />
@@ -57,9 +55,6 @@ export const NavigationLinks = () => {
           <SidebarNavLink to="/payslips" icon={FileText} label="Payslips" isActive={isActive('/payslips')} isCollapsed={false} />
         </>
       )}
-
-      {/* Settings */}
-      <SidebarNavLink to="/settings" icon={Settings} label="Settings" isActive={isActive('/settings')} isCollapsed={false} />
     </div>
   );
 };
