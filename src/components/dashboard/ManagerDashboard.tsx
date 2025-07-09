@@ -5,6 +5,7 @@ import DashboardHeader from "./DashboardHeader";
 import AttendanceOverview from "./AttendanceOverview";
 import GPSClockingMap from "./GPSClockingMap";
 import UnifiedStatsCard from "./UnifiedStatsCard";
+import LaborHoursCard from "./LaborHoursCard";
 
 interface ManagerDashboardProps {
   firstName: string;
@@ -31,6 +32,13 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
         {/* Unified Stats Card */}
         <div className="mb-8">
           <UnifiedStatsCard />
+        </div>
+
+        {/* Labor Hours Card */}
+        <div className="mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <LaborHoursCard />
+          </div>
         </div>
 
         {/* Main Content Grid */}
