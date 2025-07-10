@@ -12,39 +12,69 @@ export function useOpenShifts() {
   const queryClient = useQueryClient();
   const { cancelShift } = useShiftCancellation();
 
+  // Function to expire old shifts
+  const expireShifts = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('expire-shifts');
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data?.expiredShifts > 0) {
+        console.log(`Expired ${data.expiredShifts} shifts`);
+        queryClient.invalidateQueries({ queryKey: ['open-shifts'] });
+      }
+    },
+    onError: (error) => {
+      console.error('Error expiring shifts:', error);
+    }
+  });
+
   const { data: openShifts = [], isLoading } = useQuery({
     queryKey: ['open-shifts'],
     queryFn: async () => {
+      // First, expire any old shifts
+      try {
+        await supabase.functions.invoke('expire-shifts');
+      } catch (error) {
+        console.warn('Failed to expire shifts:', error);
+      }
+      
       const now = new Date().toISOString();
       
       const { data, error } = await supabase
         .from('open_shifts')
         .select('*')
-        // Filter to only show future shifts that haven't expired
-        .gte('start_time', now)
-        .or(`expiration_date.is.null,expiration_date.gte.${now}`)
+        // Include all shifts for the next 7 days, including expired ones for display
+        .gte('start_time', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // Last 24 hours
+        .lte('start_time', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()) // Next 7 days
         .order('position_order', { ascending: true, nullsFirst: false })
         .order('start_time', { ascending: true });
 
       if (error) throw error;
       
-      // Additional client-side filtering for extra safety
-      const filteredData = (data || []).filter(shift => {
+      // Process all shifts but mark expired ones
+      const processedData = (data || []).map(shift => {
         const shiftStartTime = new Date(shift.start_time);
         const now = new Date();
         
-        // Filter out shifts that have already started
-        if (shiftStartTime <= now) {
-          return false;
-        }
+        // Check if shift is expired
+        const isExpired = shift.status === 'expired' || 
+                         shiftStartTime <= now || 
+                         (shift.expiration_date && isAfter(now, parseISO(shift.expiration_date)));
         
-        // Filter out shifts that have expired
-        if (shift.expiration_date && isAfter(now, parseISO(shift.expiration_date))) {
-          return false;
-        }
-        
-        return true;
+        return {
+          ...shift,
+          isExpired,
+          effectiveStatus: isExpired ? 'expired' : shift.status
+        };
       });
+      
+      // Show available shifts and recently expired ones (for reference)
+      const filteredData = processedData.filter(shift => 
+        shift.status !== 'cancelled' && 
+        shift.status !== 'assigned'
+      );
       
       // Process data to ensure compatibility with both formats
       return filteredData.map((shift: any) => ({
@@ -153,6 +183,7 @@ export function useOpenShifts() {
     openShifts,
     isLoading,
     assignShift,
-    cancelShift
+    cancelShift,
+    expireShifts
   };
 }

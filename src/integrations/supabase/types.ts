@@ -2384,6 +2384,14 @@ export type Database = {
         }
         Returns: string
       }
+      mark_expired_open_shifts: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      process_shift_expiration: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       publish_weekly_schedule: {
         Args: {
           start_date: string

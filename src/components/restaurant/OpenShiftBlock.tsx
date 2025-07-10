@@ -27,9 +27,11 @@ const OpenShiftBlock = ({
   const { user } = useAuth();
   
   // Check if the shift has expired
-  const isExpired = openShift.expiration_date 
-    ? isAfter(new Date(), parseISO(openShift.expiration_date))
-    : false;
+  const isExpired = openShift.isExpired || 
+    openShift.status === 'expired' ||
+    openShift.effectiveStatus === 'expired' ||
+    (openShift.expiration_date && isAfter(new Date(), parseISO(openShift.expiration_date))) ||
+    (new Date(openShift.start_time) <= new Date());
 
   // Get day and date for the shift
   const getShiftDay = () => {
@@ -71,10 +73,10 @@ const OpenShiftBlock = ({
   const showStatusLabel = status === 'completed' || status === 'pending';
 
   return (
-    <Card className={`mb-3 overflow-hidden border border-gray-200 rounded-lg ${isExpired ? 'opacity-60' : ''}`}>
-      {showStatusLabel && (
-        <div className="text-xs font-semibold px-3 py-1 text-green-500">
-          {getStatusLabel()}
+    <Card className={`mb-3 overflow-hidden border border-gray-200 rounded-lg ${isExpired ? 'opacity-60 bg-gray-50' : ''}`}>
+      {(showStatusLabel || isExpired) && (
+        <div className={`text-xs font-semibold px-3 py-1 ${isExpired ? 'text-red-500 bg-red-50' : 'text-green-500'}`}>
+          {isExpired ? 'EXPIRED' : getStatusLabel()}
         </div>
       )}
       <div className="flex">

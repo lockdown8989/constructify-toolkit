@@ -51,6 +51,8 @@ export interface OpenShift {
   created_platform?: string;
   last_modified_platform?: string;
   mobile_notification_sent?: boolean;
+  isExpired?: boolean;
+  effectiveStatus?: string;
 }
 
 export interface StaffRole {
