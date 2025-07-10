@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { generatePayslipPDF } from '@/utils/exports';
 import { useEmployees } from '@/hooks/use-employees';
 import { usePreviousMonthPayslips } from '@/hooks/use-payroll-history';
+import { useShiftResponse } from '@/hooks/use-shift-response';
 
 const EmployeeWorkflow: React.FC = () => {
   const { toast } = useToast();
@@ -22,6 +23,7 @@ const EmployeeWorkflow: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
   const [isDownloading, setIsDownloading] = useState<Record<string, boolean>>({});
+  const [shiftResponseLoading, setShiftResponseLoading] = useState<Record<string, 'accept' | 'decline' | null>>({});
   
   // Get employee attendance data
   const { data: attendanceData, isLoading: isLoadingAttendance } = 
@@ -42,6 +44,9 @@ const EmployeeWorkflow: React.FC = () => {
   
   // Get payslips data
   const { data: payslipsData, isLoading: isLoadingPayslips } = usePreviousMonthPayslips();
+  
+  // Get shift response hook
+  const { respondToShift } = useShiftResponse();
   
   // Check if employee has an active session
   useEffect(() => {
@@ -139,6 +144,36 @@ const EmployeeWorkflow: React.FC = () => {
       });
     } finally {
       setIsDownloading(prev => ({ ...prev, [payslipId]: false }));
+    }
+  };
+
+  // Handle shift response
+  const handleShiftResponse = async (shiftId: string, response: 'accepted' | 'rejected') => {
+    setShiftResponseLoading(prev => ({ 
+      ...prev, 
+      [shiftId]: response === 'accepted' ? 'accept' : 'decline' 
+    }));
+    
+    try {
+      await respondToShift.mutateAsync({
+        scheduleId: shiftId,
+        response
+      });
+      
+      toast({
+        title: response === 'accepted' ? "Shift Accepted" : "Shift Declined",
+        description: `You have ${response} the shift successfully.`,
+        variant: response === 'accepted' ? "default" : "destructive"
+      });
+    } catch (error) {
+      console.error(`Error ${response === 'accepted' ? 'accepting' : 'declining'} shift:`, error);
+      toast({
+        title: `Failed to ${response === 'accepted' ? 'Accept' : 'Decline'} Shift`,
+        description: "Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setShiftResponseLoading(prev => ({ ...prev, [shiftId]: null }));
     }
   };
   
@@ -369,11 +404,32 @@ const EmployeeWorkflow: React.FC = () => {
                             
                             {shift.status === 'pending' && (
                               <div className="flex gap-2 mt-2">
-                                <Button size="sm" variant="outline" className="w-full">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="w-full flex items-center text-green-600 border-green-200 hover:bg-green-50 bg-white"
+                                  onClick={() => handleShiftResponse(shift.id, 'accepted')}
+                                  disabled={shiftResponseLoading[shift.id] !== null}
+                                >
+                                  {shiftResponseLoading[shift.id] === 'accept' ? (
+                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                  ) : (
+                                    <CheckCircle className="w-4 h-4 mr-1" />
+                                  )}
                                   Accept
                                 </Button>
-                                <Button size="sm" variant="outline" className="w-full" 
-                                   style={{ color: 'rgb(239 68 68)', borderColor: 'rgb(239 68 68)' }}>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="w-full flex items-center text-red-600 border-red-200 hover:bg-red-50 bg-white"
+                                  onClick={() => handleShiftResponse(shift.id, 'rejected')}
+                                  disabled={shiftResponseLoading[shift.id] !== null}
+                                >
+                                  {shiftResponseLoading[shift.id] === 'decline' ? (
+                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                  ) : (
+                                    <span className="w-4 h-4 mr-1 text-lg leading-none">×</span>
+                                  )}
                                   Decline
                                 </Button>
                               </div>
