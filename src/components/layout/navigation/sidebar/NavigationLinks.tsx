@@ -30,7 +30,6 @@ export const NavigationLinks = () => {
     <div className="space-y-1">
       {/* Common Navigation Items */}
       <SidebarNavLink to="/dashboard" icon={BarChart3} label="Dashboard" isActive={isActive('/dashboard')} isCollapsed={false} />
-      <SidebarNavLink to="/schedule" icon={Calendar} label="Schedule" isActive={isActive('/schedule')} isCollapsed={false} />
       <SidebarNavLink to="/attendance" icon={UserCheck} label="Attendance" isActive={isActive('/attendance')} isCollapsed={false} />
       <SidebarNavLink to="/leave-management" icon={FileText} label="Leave Management" isActive={isActive('/leave-management')} isCollapsed={false} />
       <SidebarNavLink to="/schedule-requests" icon={Bell} label="Schedule Requests" isActive={isActive('/schedule-requests')} isCollapsed={false} />
