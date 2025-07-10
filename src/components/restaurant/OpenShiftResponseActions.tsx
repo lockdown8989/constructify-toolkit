@@ -46,12 +46,12 @@ const OpenShiftResponseActions = ({
   };
 
   return (
-    <div className={`${className}`}>
+    <div className={`flex space-x-2 ${className}`}>
       <Button
         onClick={() => handleResponse('confirmed')}
-        variant="default"
+        variant="outline"
         size="sm"
-        className="bg-green-500 hover:bg-green-600 text-white rounded-full px-5"
+        className="flex items-center text-green-600 border-green-200 hover:bg-green-50 bg-white"
         disabled={loading !== null}
       >
         {loading === 'confirmed' ? (
@@ -59,7 +59,21 @@ const OpenShiftResponseActions = ({
         ) : (
           <Check className="w-4 h-4 mr-1" />
         )}
-        accept
+        Accept
+      </Button>
+      <Button
+        onClick={() => handleResponse('rejected')}
+        variant="outline"
+        size="sm"
+        className="flex items-center text-red-600 border-red-200 hover:bg-red-50 bg-white"
+        disabled={loading !== null}
+      >
+        {loading === 'rejected' ? (
+          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+        ) : (
+          <X className="w-4 h-4 mr-1" />
+        )}
+        Decline
       </Button>
     </div>
   );
