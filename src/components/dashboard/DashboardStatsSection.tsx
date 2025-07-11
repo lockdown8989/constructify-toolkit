@@ -3,8 +3,11 @@ import React, { useState } from 'react';
 import { Users, FolderOpen, Clock, TrendingUp, AlertTriangle } from 'lucide-react';
 import StatCard from '@/components/dashboard/StatCard';
 import { useDashboardStats } from '@/hooks/use-dashboard-stats';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 
 interface DashboardStatsSectionProps {
@@ -22,6 +25,36 @@ const DashboardStatsSection: React.FC<DashboardStatsSectionProps> = ({
 }) => {
   const { stats, isLoading } = useDashboardStats();
   const [selectedStat, setSelectedStat] = useState<StatType>(null);
+
+  // Fetch detailed alerts when modal is open
+  const { data: alertDetails } = useQuery({
+    queryKey: ['alert-details'],
+    queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Get attendance issues
+      const { data: attendanceIssues } = await supabase
+        .from('attendance')
+        .select(`
+          id,
+          employee_id,
+          date,
+          is_late,
+          late_minutes,
+          overtime_minutes,
+          overtime_status,
+          attendance_status,
+          check_in,
+          check_out,
+          employees!inner(name)
+        `)
+        .eq('date', today)
+        .or('is_late.eq.true,overtime_status.eq.pending,attendance_status.eq.Pending,check_out.is.null');
+
+      return attendanceIssues || [];
+    },
+    enabled: selectedStat === 'alerts',
+  });
 
   const handleStatClick = (statType: StatType) => {
     setSelectedStat(statType);
@@ -108,7 +141,7 @@ const DashboardStatsSection: React.FC<DashboardStatsSectionProps> = ({
         return {
           title: 'Alerts - Require Attention',
           content: (
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-96 overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 <Card className="p-4">
                   <h4 className="font-semibold text-sm text-gray-600">Active Alerts</h4>
@@ -116,18 +149,69 @@ const DashboardStatsSection: React.FC<DashboardStatsSectionProps> = ({
                   <p className="text-xs text-gray-500">Need attention</p>
                 </Card>
                 <Card className="p-4">
-                  <h4 className="font-semibold text-sm text-gray-600">Alert Types</h4>
-                  <div className="text-xs text-gray-600 space-y-1">
-                    <p>• Late arrivals</p>
-                    <p>• Pending overtime</p>
-                    <p>• Missing clock-outs</p>
-                  </div>
+                  <h4 className="font-semibold text-sm text-gray-600">Last Updated</h4>
+                  <p className="text-sm font-semibold">{format(new Date(), 'HH:mm:ss')}</p>
+                  <p className="text-xs text-gray-500">Real-time data</p>
                 </Card>
               </div>
-              <div className="text-sm text-gray-600">
-                <p>• Check attendance records for details</p>
-                <p>• Resolve by reviewing individual cases</p>
-                <p>• Automated detection system</p>
+              
+              {alertDetails && alertDetails.length > 0 ? (
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-sm text-gray-700">Alert Details:</h4>
+                  {alertDetails.map((alert: any) => (
+                    <Card key={alert.id} className="p-3 border-l-4 border-l-red-500">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <h5 className="font-medium text-sm">{alert.employees?.name || 'Unknown Employee'}</h5>
+                          <div className="flex gap-2 flex-wrap">
+                            {alert.is_late && (
+                              <Badge variant="destructive" className="text-xs">
+                                Late by {alert.late_minutes} min
+                              </Badge>
+                            )}
+                            {alert.overtime_status === 'pending' && (
+                              <Badge variant="outline" className="text-xs">
+                                Overtime Pending
+                              </Badge>
+                            )}
+                            {alert.attendance_status === 'Pending' && (
+                              <Badge variant="secondary" className="text-xs">
+                                Attendance Pending
+                              </Badge>
+                            )}
+                            {alert.check_in && !alert.check_out && (
+                              <Badge variant="outline" className="text-xs border-orange-500 text-orange-600">
+                                Not Clocked Out
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            {alert.check_in && `Clocked in: ${format(new Date(alert.check_in), 'HH:mm')}`}
+                            {alert.overtime_minutes > 0 && ` • Overtime: ${alert.overtime_minutes} min`}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {format(new Date(alert.date), 'MMM dd')}
+                        </Badge>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-gray-500">No specific alert details available</p>
+                  <p className="text-xs text-gray-400 mt-1">Alerts may include late arrivals, pending approvals, or missing records</p>
+                </div>
+              )}
+              
+              <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                <p className="font-medium">Alert Types:</p>
+                <ul className="text-xs space-y-1 mt-1">
+                  <li>• Late arrivals (beyond grace period)</li>
+                  <li>• Pending overtime approvals</li>
+                  <li>• Missing clock-out records</li>
+                  <li>• Attendance status requiring review</li>
+                </ul>
               </div>
             </div>
           )
