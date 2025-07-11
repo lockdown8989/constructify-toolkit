@@ -106,7 +106,7 @@ const AttendanceOverview = () => {
               </div>
             </div>
             <div className="text-right">
-              <span className="text-xs text-green-600 font-medium">+1</span>
+              <span className="text-xs text-green-600 font-medium">Live</span>
             </div>
           </div>
         </Card>
@@ -152,7 +152,7 @@ const AttendanceOverview = () => {
               </div>
             </div>
             <div className="text-right">
-              <span className="text-xs text-green-600 font-medium">+38</span>
+              <span className="text-xs text-green-600 font-medium">Live</span>
             </div>
           </div>
         </Card>
@@ -198,7 +198,7 @@ const AttendanceOverview = () => {
               </div>
             </div>
             <div className="text-right">
-              <span className="text-xs text-green-600 font-medium">+5</span>
+              <span className="text-xs text-green-600 font-medium">Live</span>
             </div>
           </div>
         </Card>

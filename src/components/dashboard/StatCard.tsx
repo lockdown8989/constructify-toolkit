@@ -13,6 +13,7 @@ interface StatCardProps {
   };
   className?: string;
   valueClassName?: string;
+  onClick?: () => void;
 }
 
 const StatCard: React.FC<StatCardProps> = ({
@@ -23,13 +24,16 @@ const StatCard: React.FC<StatCardProps> = ({
   trend,
   className,
   valueClassName,
+  onClick,
 }) => {
   return (
     <div 
       className={cn(
         "bg-white rounded-3xl p-6 card-shadow transition-all hover:translate-y-[-2px]",
+        onClick && "cursor-pointer",
         className
       )}
+      onClick={onClick}
     >
       <div className="flex items-start justify-between mb-4">
         <h3 className="text-sm font-medium text-gray-500">{title}</h3>
