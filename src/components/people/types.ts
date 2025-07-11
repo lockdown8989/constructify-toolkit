@@ -69,7 +69,7 @@ export const mapDbEmployeeToUiEmployee = (dbEmployee: any): Employee => {
     lifecycle: dbEmployee.lifecycle || 'Active',
     status: dbEmployee.status || 'Active',
     statusColor,
-    avatar: dbEmployee.avatar,
+    avatar: dbEmployee.avatar_url,
     managerId: dbEmployee.manager_id,
     userId: dbEmployee.user_id,
     annual_leave_days: dbEmployee.annual_leave_days,
