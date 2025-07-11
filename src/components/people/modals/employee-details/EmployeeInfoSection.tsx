@@ -78,6 +78,11 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
             label="Password Status" 
             value={employee.email ? 'Password protected' : 'No password set'} 
           />
+          <InfoItem 
+            icon={Shield} 
+            label="PIN Code" 
+            value={employee.pin_code || '1234'} 
+          />
           <div className="flex items-start space-x-3 py-3">
             <div className="flex-shrink-0 mt-0.5">
               <Shield className="h-4 w-4 text-gray-500" />

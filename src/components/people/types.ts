@@ -22,6 +22,7 @@ export interface Employee {
   phone?: string;
   hourly_rate?: number;
   role?: string;
+  pin_code?: string;
 }
 
 export interface PeopleTableProps {
@@ -77,5 +78,6 @@ export const mapDbEmployeeToUiEmployee = (dbEmployee: any): Employee => {
     phone: dbEmployee.phone,
     hourly_rate: dbEmployee.hourly_rate,
     role: dbEmployee.role,
+    pin_code: dbEmployee.pin_code,
   };
 };

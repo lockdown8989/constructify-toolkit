@@ -149,10 +149,6 @@ const PinCodeVerification: React.FC<PinCodeVerificationProps> = ({
               <X className="h-6 w-6" />
             </Button>
           </div>
-          
-          <div className="text-xs text-center text-gray-400 mt-4">
-            <strong>Employee PIN: {employeePinCode || 'Loading...'}</strong>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
