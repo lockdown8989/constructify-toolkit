@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, Loader2 } from 'lucide-react';
@@ -15,17 +15,27 @@ interface EmployeeAttendanceSummaryProps {
 const EmployeeAttendanceSummary: React.FC<EmployeeAttendanceSummaryProps> = ({ employeeId }) => {
   const queryClient = useQueryClient();
   const { data: attendanceData, isLoading } = useAttendance(employeeId ?? undefined);
+  const [currentTime, setCurrentTime] = useState(new Date());
   
-  const currentTime = format(new Date(), 'dd MMM yyyy, hh:mm a');
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+  
+  const formattedTime = format(currentTime, 'dd MMM yyyy, hh:mm:ss a');
   
   const stats = {
     onTime: attendanceData?.present || 0,
     workFromHome: 0, // Can be expanded with actual WFH data
     lateAttendance: attendanceData?.late || 0,
     absent: attendanceData?.absent || 0,
-    totalHours: 1434,
+    totalHours: (attendanceData?.present || 0) * 8, // Calculate based on present days
     maxHours: 1500,
-    percentageRank: 91.3
+    percentageRank: attendanceData?.present ? Math.min(95, (attendanceData.present / (attendanceData.present + attendanceData.absent + attendanceData.late)) * 100) : 0
   };
 
   if (isLoading && employeeId) {
@@ -47,7 +57,7 @@ const EmployeeAttendanceSummary: React.FC<EmployeeAttendanceSummaryProps> = ({ e
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-2 sm:space-y-0">
         <div className="space-y-1">
           <h2 className="text-xs sm:text-sm text-gray-500">Current time</h2>
-          <p className="text-lg sm:text-xl lg:text-2xl font-semibold break-all sm:break-normal">{currentTime}</p>
+          <p className="text-lg sm:text-xl lg:text-2xl font-semibold break-all sm:break-normal font-mono">{formattedTime}</p>
         </div>
         <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 self-start sm:self-auto" />
       </div>
