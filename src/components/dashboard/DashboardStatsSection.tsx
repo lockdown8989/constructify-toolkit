@@ -27,31 +27,45 @@ const DashboardStatsSection: React.FC<DashboardStatsSectionProps> = ({
   const [selectedStat, setSelectedStat] = useState<StatType>(null);
 
   // Fetch detailed alerts when modal is open
-  const { data: alertDetails } = useQuery({
+  const { data: alertDetails, isLoading: alertsLoading } = useQuery({
     queryKey: ['alert-details'],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
       
-      // Get attendance issues
-      const { data: attendanceIssues } = await supabase
-        .from('attendance')
-        .select(`
-          id,
-          employee_id,
-          date,
-          is_late,
-          late_minutes,
-          overtime_minutes,
-          overtime_status,
-          attendance_status,
-          check_in,
-          check_out,
-          employees!inner(name)
-        `)
-        .eq('date', today)
-        .or('is_late.eq.true,overtime_status.eq.pending,attendance_status.eq.Pending,check_out.is.null');
+      try {
+        // Get attendance issues with proper join
+        const { data: attendanceIssues, error } = await supabase
+          .from('attendance')
+          .select(`
+            id,
+            employee_id,
+            date,
+            is_late,
+            late_minutes,
+            overtime_minutes,
+            overtime_status,
+            attendance_status,
+            check_in,
+            check_out,
+            current_status,
+            employees (
+              name
+            )
+          `)
+          .eq('date', today)
+          .or('is_late.eq.true,overtime_status.eq.pending,attendance_status.eq.Pending,check_out.is.null');
 
-      return attendanceIssues || [];
+        if (error) {
+          console.error('Error fetching alert details:', error);
+          return [];
+        }
+
+        console.log('Alert details fetched:', attendanceIssues);
+        return attendanceIssues || [];
+      } catch (error) {
+        console.error('Error in alert details query:', error);
+        return [];
+      }
     },
     enabled: selectedStat === 'alerts',
   });
@@ -154,8 +168,11 @@ const DashboardStatsSection: React.FC<DashboardStatsSectionProps> = ({
                   <p className="text-xs text-gray-500">Real-time data</p>
                 </Card>
               </div>
-              
-              {alertDetails && alertDetails.length > 0 ? (
+              {alertsLoading ? (
+                <div className="text-center py-4">
+                  <p className="text-sm text-gray-500">Loading alert details...</p>
+                </div>
+              ) : alertDetails && alertDetails.length > 0 ? (
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm text-gray-700">Alert Details:</h4>
                   {alertDetails.map((alert: any) => (
@@ -170,7 +187,7 @@ const DashboardStatsSection: React.FC<DashboardStatsSectionProps> = ({
                               </Badge>
                             )}
                             {alert.overtime_status === 'pending' && (
-                              <Badge variant="outline" className="text-xs">
+                              <Badge variant="outline" className="text-xs border-orange-500 text-orange-600">
                                 Overtime Pending
                               </Badge>
                             )}
@@ -184,10 +201,16 @@ const DashboardStatsSection: React.FC<DashboardStatsSectionProps> = ({
                                 Not Clocked Out
                               </Badge>
                             )}
+                            {alert.current_status === 'on-break' && (
+                              <Badge variant="outline" className="text-xs border-blue-500 text-blue-600">
+                                On Break
+                              </Badge>
+                            )}
                           </div>
                           <p className="text-xs text-gray-500">
                             {alert.check_in && `Clocked in: ${format(new Date(alert.check_in), 'HH:mm')}`}
                             {alert.overtime_minutes > 0 && ` • Overtime: ${alert.overtime_minutes} min`}
+                            {alert.current_status && ` • Status: ${alert.current_status}`}
                           </p>
                         </div>
                         <Badge variant="outline" className="text-xs">
@@ -199,8 +222,12 @@ const DashboardStatsSection: React.FC<DashboardStatsSectionProps> = ({
                 </div>
               ) : (
                 <div className="text-center py-4">
-                  <p className="text-sm text-gray-500">No specific alert details available</p>
-                  <p className="text-xs text-gray-400 mt-1">Alerts may include late arrivals, pending approvals, or missing records</p>
+                  <p className="text-sm text-gray-500">
+                    {alertsLoading ? 'Loading...' : 'No specific alert details available'}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {alertsLoading ? 'Fetching alert data...' : 'Alerts may include late arrivals, pending approvals, or missing records'}
+                  </p>
                 </div>
               )}
               
