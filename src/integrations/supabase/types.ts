@@ -605,6 +605,7 @@ export type Database = {
           monday_shift_id: string | null
           monday_start_time: string | null
           name: string
+          pin_code: string | null
           role: string | null
           salary: number
           saturday_available: boolean | null
@@ -655,6 +656,7 @@ export type Database = {
           monday_shift_id?: string | null
           monday_start_time?: string | null
           name: string
+          pin_code?: string | null
           role?: string | null
           salary: number
           saturday_available?: boolean | null
@@ -705,6 +707,7 @@ export type Database = {
           monday_shift_id?: string | null
           monday_start_time?: string | null
           name?: string
+          pin_code?: string | null
           role?: string | null
           salary?: number
           saturday_available?: boolean | null
@@ -2354,6 +2357,10 @@ export type Database = {
       end_employee_break: {
         Args: { p_attendance_id: string }
         Returns: boolean
+      }
+      generate_pin_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_employee_attendance_status: {
         Args: { p_employee_id: string }

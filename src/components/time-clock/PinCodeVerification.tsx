@@ -4,6 +4,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PinCodeVerificationProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface PinCodeVerificationProps {
   onSuccess: () => void;
   employeeName: string;
   action: 'in' | 'out';
+  employeeId: string;
 }
 
 const DEFAULT_PIN = '1234'; // Default PIN for all employees
@@ -20,24 +22,44 @@ const PinCodeVerification: React.FC<PinCodeVerificationProps> = ({
   onClose,
   onSuccess,
   employeeName,
-  action
+  action,
+  employeeId
 }) => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [pinDots, setPinDots] = useState('');
+  const [employeePinCode, setEmployeePinCode] = useState('');
   const { toast } = useToast();
 
-  // Reset PIN when dialog opens
+  // Fetch employee PIN code when dialog opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && employeeId) {
       setPin('');
       setError('');
       setPinDots('');
+      
+      const fetchEmployeePinCode = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('employees')
+            .select('pin_code')
+            .eq('id', employeeId)
+            .single();
+          
+          if (error) throw error;
+          setEmployeePinCode(data.pin_code || '1234');
+        } catch (error) {
+          console.error('Error fetching employee PIN code:', error);
+          setEmployeePinCode('1234'); // Fallback to default
+        }
+      };
+      
+      fetchEmployeePinCode();
     }
-  }, [isOpen]);
+  }, [isOpen, employeeId]);
 
   const handlePinComplete = (value: string) => {
-    if (value === DEFAULT_PIN) {
+    if (value === employeePinCode) {
       toast({
         title: "PIN Verified",
         description: "Authentication successful",
@@ -129,7 +151,7 @@ const PinCodeVerification: React.FC<PinCodeVerificationProps> = ({
           </div>
           
           <div className="text-xs text-center text-gray-400 mt-4">
-            <strong>Default PIN for all employees: 1234</strong>
+            <strong>Employee PIN: {employeePinCode || 'Loading...'}</strong>
           </div>
         </div>
       </DialogContent>

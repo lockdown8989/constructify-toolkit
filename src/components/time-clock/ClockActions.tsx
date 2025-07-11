@@ -284,6 +284,7 @@ const ClockActions = ({
         onSuccess={handlePinSuccess}
         employeeName={selectedEmployeeName}
         action={pendingAction === 'in' ? 'in' : 'out'}
+        employeeId={selectedEmployee || ''}
       />
 
       {/* Confirmation Dialog */}
