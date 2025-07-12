@@ -1,12 +1,13 @@
 
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal, User, Download } from "lucide-react";
 import { useEmployeeDataManagement } from "@/hooks/use-employee-data-management";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import AttendanceDetailsModal from "./AttendanceDetailsModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,12 +19,12 @@ const AttendanceHeader = () => {
   const { employeeData, isLoading } = useEmployeeDataManagement();
   const { isManager } = useAuth();
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
   const { toast } = useToast();
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   const handleViewDetails = () => {
     if (employeeData?.id) {
-      navigate(`/people/employee/${employeeData.id}`);
+      setIsDetailsModalOpen(true);
     } else {
       toast({
         title: "No employee selected",
@@ -84,7 +85,15 @@ const AttendanceHeader = () => {
   }
 
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 gap-4">
+    <>
+      <AttendanceDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        employeeId={employeeData?.id}
+        employeeName={employeeData?.name}
+      />
+      
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 gap-4">
       <div className="flex items-start md:items-center gap-3 md:gap-4">
         <Avatar className="h-12 w-12 md:h-16 md:w-16 shrink-0">
           <AvatarImage src={employeeData?.avatar || "/placeholder.svg"} />
@@ -142,7 +151,8 @@ const AttendanceHeader = () => {
           </Button>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 
