@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AttendanceHeader from "@/components/attendance/AttendanceHeader";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import AttendanceControls from "@/components/attendance/AttendanceControls";
@@ -18,16 +18,25 @@ const Attendance = () => {
   console.log('Employee data:', employeeData);
   
   // For employees, always use their own employee ID
-  // For managers/admins/payroll, allow selection of different employees
+  // For managers/admins/payroll, allow selection of different employees but default to their own
   const canViewAllEmployees = isManager || isAdmin || isHR || isPayroll;
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | undefined>(
-    canViewAllEmployees ? undefined : employeeData?.id
+    // Default to their own employee ID for everyone initially
+    employeeData?.id
   );
+
+  // Sync selectedEmployeeId when employeeData loads
+  useEffect(() => {
+    if (employeeData?.id && !selectedEmployeeId) {
+      setSelectedEmployeeId(employeeData.id);
+    }
+  }, [employeeData?.id, selectedEmployeeId]);
 
   // Determine if this user can view all employees or just their own data
   const effectiveEmployeeId = canViewAllEmployees ? selectedEmployeeId : employeeData?.id;
   
   console.log('Effective employee ID for attendance:', effectiveEmployeeId);
+  console.log('Selected employee ID:', selectedEmployeeId);
   console.log('Can view all employees:', canViewAllEmployees);
   
   if (isLoading) {
