@@ -8,18 +8,18 @@ import { useEmployeeDataManagement } from "@/hooks/use-employee-data-management"
 import { useAuth } from "@/hooks/use-auth";
 
 const Attendance = () => {
-  const { user, isManager, isAdmin, isHR } = useAuth();
+  const { user, isManager, isAdmin, isHR, isPayroll } = useAuth();
   const { employeeData, isLoading } = useEmployeeDataManagement();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
   
   // Add debugging
-  console.log('Attendance page - Auth info:', { user: user?.id, isManager, isAdmin, isHR });
+  console.log('Attendance page - Auth info:', { user: user?.id, isManager, isAdmin, isHR, isPayroll });
   console.log('Employee data:', employeeData);
   
   // For employees, always use their own employee ID
-  // For managers/admins, allow selection of different employees
-  const canViewAllEmployees = isManager || isAdmin || isHR;
+  // For managers/admins/payroll, allow selection of different employees
+  const canViewAllEmployees = isManager || isAdmin || isHR || isPayroll;
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | undefined>(
     canViewAllEmployees ? undefined : employeeData?.id
   );
