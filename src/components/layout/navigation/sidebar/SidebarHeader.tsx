@@ -17,7 +17,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ isCollapsed, toggleCollap
         <div className="flex-1 text-center">
           <Link to="/" className="flex items-center justify-center gap-2">
             <img 
-              src="/lovable-uploads/2fa83748-5338-4dcb-9c43-f84070f43aec.png" 
+              src="/lovable-uploads/6498c422-3293-40e4-99c1-a94a137934f6.png" 
               alt="TeamPulse Logo" 
               className="h-8 w-auto animate-bounce hover:animate-spin hover:scale-110 transition-all duration-500 cursor-pointer"
             />
