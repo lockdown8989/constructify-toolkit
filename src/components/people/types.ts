@@ -23,6 +23,9 @@ export interface Employee {
   hourly_rate?: number;
   role?: string;
   pin_code?: string;
+  employment_type?: string;
+  job_description?: string;
+  probation_end_date?: string;
 }
 
 export interface PeopleTableProps {
@@ -79,5 +82,8 @@ export const mapDbEmployeeToUiEmployee = (dbEmployee: any): Employee => {
     hourly_rate: dbEmployee.hourly_rate,
     role: dbEmployee.role,
     pin_code: dbEmployee.pin_code,
+    employment_type: dbEmployee.employment_type,
+    job_description: dbEmployee.job_description,
+    probation_end_date: dbEmployee.probation_end_date,
   };
 };

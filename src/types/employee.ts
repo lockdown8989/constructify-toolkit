@@ -19,6 +19,9 @@ export interface Employee {
   selected?: boolean;
   email?: string;
   role?: string;
+  employment_type?: string;
+  job_description?: string;
+  probation_end_date?: string;
   shift_pattern_id?: string;
   monday_shift_id?: string;
   tuesday_shift_id?: string;

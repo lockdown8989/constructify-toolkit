@@ -18,6 +18,9 @@ export interface Employee {
   manager_id?: string;
   role?: string;
   email?: string;
+  employment_type?: string;
+  job_description?: string;
+  probation_end_date?: string;
   shift_pattern_id?: string;
   monday_shift_id?: string;
   tuesday_shift_id?: string;

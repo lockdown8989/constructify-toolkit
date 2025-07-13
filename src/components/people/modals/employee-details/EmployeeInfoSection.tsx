@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Employee } from '@/components/people/types';
-import { Calendar, MapPin, Mail, DollarSign, Building, Users, Clock, Key, Shield } from 'lucide-react';
+import { Calendar, MapPin, Mail, DollarSign, Building, Users, Clock, Key, Shield, FileText, AlertCircle } from 'lucide-react';
 
 interface EmployeeInfoSectionProps {
   employee: Employee;
@@ -29,6 +29,33 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
       </div>
     </div>
   );
+
+  const getEmploymentTypeColor = (type: string) => {
+    switch (type) {
+      case 'Full-Time':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'Part-Time':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Agency':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const parseNumericSalary = (salaryString: string): number => {
+    const cleaned = salaryString.replace(/[£$,]/g, '');
+    return parseFloat(cleaned) || 0;
+  };
+
+  const formatMonthlySalary = (annualSalary: string): string => {
+    const annual = parseNumericSalary(annualSalary);
+    if (annual > 0) {
+      const monthly = (annual / 12).toFixed(2);
+      return `£${parseFloat(monthly).toLocaleString()}`;
+    }
+    return 'Not calculated';
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -131,12 +158,53 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
             label="Annual Salary" 
             value={employee.salary} 
           />
+          <InfoItem 
+            icon={DollarSign} 
+            label="Monthly Salary" 
+            value={formatMonthlySalary(employee.salary)} 
+          />
           {employee.hourly_rate && employee.hourly_rate > 0 && (
             <InfoItem 
               icon={Clock} 
               label="Hourly Rate" 
               value={`£${employee.hourly_rate.toFixed(2)} per hour`} 
             />
+          )}
+          <div className="flex items-start space-x-3 py-3">
+            <div className="flex-shrink-0 mt-0.5">
+              <Building className="h-4 w-4 text-gray-500" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium text-gray-500">Employment Type:</div>
+              <div className="mt-1">
+                <Badge 
+                  variant="outline" 
+                  className={`${getEmploymentTypeColor(employee.employment_type || 'Full-Time')} font-medium`}
+                >
+                  {employee.employment_type || 'Full-Time'}
+                </Badge>
+              </div>
+            </div>
+          </div>
+          {employee.probation_end_date && (
+            <InfoItem 
+              icon={AlertCircle} 
+              label="Probation End Date" 
+              value={new Date(employee.probation_end_date).toLocaleDateString()} 
+            />
+          )}
+          {employee.job_description && (
+            <div className="flex items-start space-x-3 py-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <FileText className="h-4 w-4 text-gray-500" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium text-gray-500">Job Description:</div>
+                <div className="text-base text-gray-900 font-medium whitespace-pre-wrap">
+                  {employee.job_description}
+                </div>
+              </div>
+            </div>
           )}
           <div className="flex items-start space-x-3 py-3">
             <div className="flex-shrink-0 mt-0.5">

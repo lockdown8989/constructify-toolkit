@@ -590,12 +590,14 @@ export type Database = {
           avatar_url: string | null
           department: string
           email: string | null
+          employment_type: string | null
           friday_available: boolean | null
           friday_end_time: string | null
           friday_shift_id: string | null
           friday_start_time: string | null
           hourly_rate: number | null
           id: string
+          job_description: string | null
           job_title: string
           lifecycle: string
           location: string | null
@@ -606,6 +608,7 @@ export type Database = {
           monday_start_time: string | null
           name: string
           pin_code: string | null
+          probation_end_date: string | null
           role: string | null
           salary: number
           saturday_available: boolean | null
@@ -641,12 +644,14 @@ export type Database = {
           avatar_url?: string | null
           department: string
           email?: string | null
+          employment_type?: string | null
           friday_available?: boolean | null
           friday_end_time?: string | null
           friday_shift_id?: string | null
           friday_start_time?: string | null
           hourly_rate?: number | null
           id?: string
+          job_description?: string | null
           job_title: string
           lifecycle?: string
           location?: string | null
@@ -657,6 +662,7 @@ export type Database = {
           monday_start_time?: string | null
           name: string
           pin_code?: string | null
+          probation_end_date?: string | null
           role?: string | null
           salary: number
           saturday_available?: boolean | null
@@ -692,12 +698,14 @@ export type Database = {
           avatar_url?: string | null
           department?: string
           email?: string | null
+          employment_type?: string | null
           friday_available?: boolean | null
           friday_end_time?: string | null
           friday_shift_id?: string | null
           friday_start_time?: string | null
           hourly_rate?: number | null
           id?: string
+          job_description?: string | null
           job_title?: string
           lifecycle?: string
           location?: string | null
@@ -708,6 +716,7 @@ export type Database = {
           monday_start_time?: string | null
           name?: string
           pin_code?: string | null
+          probation_end_date?: string | null
           role?: string | null
           salary?: number
           saturday_available?: boolean | null
