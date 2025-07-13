@@ -15,12 +15,13 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ isCollapsed, toggleCollap
     <div className="flex items-center p-4 border-b">
       {!isCollapsed && (
         <div className="flex-1 text-center">
-          <Link to="/" className="inline-block">
+          <Link to="/" className="flex items-center justify-center gap-2">
             <img 
               src="/lovable-uploads/2fa83748-5338-4dcb-9c43-f84070f43aec.png" 
-              alt="TeamPulse" 
-              className="h-8 w-auto animate-pulse hover:animate-bounce transition-all duration-300"
+              alt="TeamPulse Logo" 
+              className="h-8 w-auto animate-bounce hover:animate-spin hover:scale-110 transition-all duration-500 cursor-pointer"
             />
+            <span className="font-semibold text-lg">TeamPulse</span>
           </Link>
         </div>
       )}
