@@ -14,6 +14,7 @@ interface AvatarContextMenuProps {
   isUploading: boolean;
   onUploadClick: () => void;
   onRemoveClick: () => void;
+  onAvatarSelectClick?: () => void;
   children: React.ReactNode;
 }
 
@@ -23,6 +24,7 @@ export const AvatarContextMenu: React.FC<AvatarContextMenuProps> = ({
   isUploading,
   onUploadClick,
   onRemoveClick,
+  onAvatarSelectClick,
   children
 }) => {
   // On mobile, we'll use a different approach - the context menu might not work well
@@ -42,21 +44,21 @@ export const AvatarContextMenu: React.FC<AvatarContextMenuProps> = ({
       
       <ContextMenuContent className="w-48">
         <ContextMenuItem 
+          onClick={onAvatarSelectClick}
+          disabled={disabled || isUploading}
+          className="flex items-center gap-2 cursor-pointer focus:bg-primary/10"
+        >
+          <Camera className="h-4 w-4" />
+          Choose Avatar
+        </ContextMenuItem>
+        
+        <ContextMenuItem 
           onClick={onUploadClick}
           disabled={disabled || isUploading}
           className="flex items-center gap-2 cursor-pointer focus:bg-primary/10"
         >
-          {currentAvatarUrl ? (
-            <>
-              <Camera className="h-4 w-4" />
-              Change Picture
-            </>
-          ) : (
-            <>
-              <Upload className="h-4 w-4" />
-              Upload Picture
-            </>
-          )}
+          <Upload className="h-4 w-4" />
+          Upload Custom Image
         </ContextMenuItem>
         
         {currentAvatarUrl && (

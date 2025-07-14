@@ -11,6 +11,7 @@ interface AvatarDisplayProps {
   isUploading: boolean;
   onFileSelect: (file: File) => void;
   onUploadClick: () => void;
+  onAvatarClick?: () => void;
   children: React.ReactNode;
 }
 
@@ -28,6 +29,7 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   isUploading,
   onFileSelect,
   onUploadClick,
+  onAvatarClick,
   children
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -68,13 +70,14 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
     setIsTouched(false);
   };
 
-  // Handle single tap/click for mobile
+  // Handle single tap/click for mobile and desktop
   const handleClick = (e: React.MouseEvent) => {
-    // Prevent the context menu trigger on mobile single tap
-    if (window.innerWidth <= 768) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (!disabled && !isUploading) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!disabled && !isUploading) {
+      if (onAvatarClick) {
+        onAvatarClick();
+      } else {
         onUploadClick();
       }
     }

@@ -1,8 +1,9 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useAvatarUpload } from './avatar-upload/useAvatarUpload';
 import { AvatarDisplay } from './avatar-upload/AvatarDisplay';
 import { AvatarContextMenu } from './avatar-upload/AvatarContextMenu';
+import { AvatarSelectionMenu } from './avatar-upload/AvatarSelectionMenu';
 
 interface AvatarUploadProps {
   currentAvatarUrl?: string | null;
@@ -22,7 +23,8 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
   onUploadComplete
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { isUploading, uploadAvatar, removeAvatar } = useAvatarUpload({
+  const [isSelectionMenuOpen, setIsSelectionMenuOpen] = useState(false);
+  const { isUploading, uploadAvatar, removeAvatar, selectPredefinedAvatar } = useAvatarUpload({
     currentAvatarUrl,
     onAvatarChange,
     onUploadComplete
@@ -43,6 +45,14 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
     e.target.value = '';
   };
 
+  const handleAvatarClick = () => {
+    setIsSelectionMenuOpen(true);
+  };
+
+  const handleSelectPredefinedAvatar = (avatarUrl: string) => {
+    selectPredefinedAvatar(avatarUrl);
+  };
+
   return (
     <div className="flex flex-col items-center space-y-4">
       <AvatarContextMenu
@@ -51,6 +61,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
         isUploading={isUploading}
         onUploadClick={handleUploadClick}
         onRemoveClick={removeAvatar}
+        onAvatarSelectClick={handleAvatarClick}
       >
         <AvatarDisplay
           currentAvatarUrl={currentAvatarUrl}
@@ -60,10 +71,20 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
           isUploading={isUploading}
           onFileSelect={handleFileSelect}
           onUploadClick={handleUploadClick}
+          onAvatarClick={handleAvatarClick}
         >
           <div />
         </AvatarDisplay>
       </AvatarContextMenu>
+
+      <AvatarSelectionMenu
+        isOpen={isSelectionMenuOpen}
+        onClose={() => setIsSelectionMenuOpen(false)}
+        onSelectAvatar={handleSelectPredefinedAvatar}
+        onUploadClick={handleUploadClick}
+        currentAvatarUrl={currentAvatarUrl}
+        userInitials={userInitials}
+      />
 
       <input
         ref={fileInputRef}
@@ -74,11 +95,11 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
         disabled={disabled || isUploading}
       />
 
-      <p className="text-xs text-gray-500 text-center max-w-xs">
+      <p className="text-xs text-muted-foreground text-center max-w-xs">
         <span className="hidden md:inline">Right-click or </span>
         <span className="md:hidden">Tap </span>
         <span className="hidden md:inline">tap </span>
-        on the avatar to upload or remove your profile picture.<br />
+        on the avatar to choose from predefined avatars or upload your own picture.<br />
         Supported formats: PNG, JPG, JPEG, GIF, WebP. Max size: 5MB.
       </p>
     </div>
