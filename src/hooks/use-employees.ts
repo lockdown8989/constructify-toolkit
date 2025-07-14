@@ -16,6 +16,7 @@ export interface Employee {
   lifecycle: string;
   status: string;
   avatar?: string;
+  avatar_url?: string;
   location?: string;
   annual_leave_days?: number;
   sick_leave_days?: number;

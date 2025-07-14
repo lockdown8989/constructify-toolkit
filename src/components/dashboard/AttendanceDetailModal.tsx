@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 interface Employee {
   id: string;
   name: string;
-  avatar?: string;
+  avatar_url?: string;
   job_title?: string;
   department?: string;
 }
@@ -66,7 +66,7 @@ const AttendanceDetailModal: React.FC<AttendanceDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto sm:max-w-[95vw] sm:h-[85vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {getIcon()}
@@ -84,25 +84,25 @@ const AttendanceDetailModal: React.FC<AttendanceDetailModalProps> = ({
               {employees.map((employee) => (
                 <div 
                   key={employee.id} 
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg hover:bg-gray-50 gap-3"
                 >
                   <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={employee.avatar} />
+                    <Avatar className="w-10 h-10 flex-shrink-0">
+                      <AvatarImage src={employee.avatar_url} />
                       <AvatarFallback className="bg-gray-200">
                         {employee.name.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     
-                    <div>
-                      <div className="font-medium text-gray-900">{employee.name}</div>
-                      <div className="text-sm text-gray-500">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-gray-900 truncate">{employee.name}</div>
+                      <div className="text-sm text-gray-500 truncate">
                         {employee.job_title} {employee.department && `• ${employee.department}`}
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2">
                     <Badge className={getStatusColor()}>
                       {type === 'holiday' ? 'On Holiday' : 
                        type === 'clocked-in' ? 'Present' : 'Absent'}

@@ -84,9 +84,9 @@ const AttendanceOverview = () => {
                       className="w-8 h-8 rounded-full overflow-hidden border-2 border-white"
                       style={{ marginLeft: index > 0 ? '-8px' : '0' }}
                     >
-                      {employee.avatar ? (
+                      {employee.avatar_url ? (
                         <img 
-                          src={employee.avatar} 
+                          src={employee.avatar_url} 
                           alt={employee.name}
                           className="w-full h-full object-cover"
                         />
@@ -130,9 +130,9 @@ const AttendanceOverview = () => {
                       className="w-8 h-8 rounded-full overflow-hidden border-2 border-white"
                       style={{ marginLeft: index > 0 ? '-8px' : '0' }}
                     >
-                      {employee.avatar ? (
+                      {employee.avatar_url ? (
                         <img 
-                          src={employee.avatar} 
+                          src={employee.avatar_url} 
                           alt={employee.name}
                           className="w-full h-full object-cover"
                         />
@@ -176,9 +176,9 @@ const AttendanceOverview = () => {
                       className="w-8 h-8 rounded-full overflow-hidden border-2 border-white opacity-60"
                       style={{ marginLeft: index > 0 ? '-8px' : '0' }}
                     >
-                      {employee.avatar ? (
+                      {employee.avatar_url ? (
                         <img 
-                          src={employee.avatar} 
+                          src={employee.avatar_url} 
                           alt={employee.name}
                           className="w-full h-full object-cover"
                         />
