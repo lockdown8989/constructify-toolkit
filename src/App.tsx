@@ -192,16 +192,16 @@ function App() {
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-          <AuthProvider>
+        <AuthProvider>
+          <ThemeProvider defaultTheme="light" storageKey="ui-theme">
             <LanguageProvider>
               <TooltipProvider>
                 <AppContent />
                 <Toaster />
               </TooltipProvider>
             </LanguageProvider>
-          </AuthProvider>
-        </ThemeProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </HelmetProvider>
   );
