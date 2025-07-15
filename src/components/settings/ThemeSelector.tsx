@@ -1,5 +1,5 @@
 
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme-provider";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Sun, Moon } from "lucide-react";
