@@ -2,7 +2,6 @@
 import { Card } from "@/components/ui/card";
 import { Palette } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
-import { ThemeSelector } from "@/components/settings/ThemeSelector";
 
 export const AppearanceSection = () => {
   const { t } = useLanguage();
@@ -16,7 +15,9 @@ export const AppearanceSection = () => {
         </h2>
       </div>
       <div className="py-4 px-6">
-        <ThemeSelector />
+        <p className="text-muted-foreground text-sm">
+          Additional appearance customization options will be available here in the future.
+        </p>
       </div>
     </Card>
   );

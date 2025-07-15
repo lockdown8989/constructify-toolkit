@@ -3,7 +3,6 @@ import { useAuth } from "@/hooks/auth"
 import { useIsMobile } from "@/hooks/use-mobile"
 import NotificationBell from '@/components/notifications/NotificationBell'
 import MobileNav from "./navigation/MobileNav"
-import ThemeToggle from "./navigation/ThemeToggle"
 import UserMenu from "./navigation/UserMenu"
 import AuthButtons from "./navigation/AuthButtons"
 
@@ -21,8 +20,6 @@ const Navbar = () => {
         
         {/* Push all the right side elements to the end */}
         <div className="ml-auto flex items-center space-x-2">
-          <ThemeToggle />
-          
           {/* Add notification bell before user account menu */}
           {isAuthenticated && <NotificationBell />}
           

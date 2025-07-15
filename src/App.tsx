@@ -6,7 +6,6 @@ import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider, useAuth } from './hooks/auth';
-import { ThemeProvider } from './components/theme-provider';
 import { LanguageProvider } from './hooks/use-language';
 import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -193,14 +192,12 @@ function App() {
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <ThemeProvider defaultTheme="system" storageKey="hr-app-theme">
-            <LanguageProvider>
-              <TooltipProvider>
-                <AppContent />
-                <Toaster />
-              </TooltipProvider>
-            </LanguageProvider>
-          </ThemeProvider>
+          <LanguageProvider>
+            <TooltipProvider>
+              <AppContent />
+              <Toaster />
+            </TooltipProvider>
+          </LanguageProvider>
         </AuthProvider>
       </QueryClientProvider>
     </HelmetProvider>

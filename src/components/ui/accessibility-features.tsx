@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useTheme } from '@/components/theme-provider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -25,7 +24,6 @@ interface AccessibilitySettings {
 }
 
 export const AccessibilityFeatures = () => {
-  const { theme, setTheme } = useTheme();
   const { t } = useLanguage();
   const [settings, setSettings] = useState<AccessibilitySettings>({
     highContrast: false,
@@ -120,36 +118,6 @@ export const AccessibilityFeatures = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Theme Selection */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Theme Preference</Label>
-          <div className="flex gap-2">
-            <Button
-              variant={theme === 'light' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setTheme('light')}
-              className="flex-1"
-            >
-              {t('light_mode')}
-            </Button>
-            <Button
-              variant={theme === 'dark' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setTheme('dark')}
-              className="flex-1"
-            >
-              {t('dark_mode')}
-            </Button>
-            <Button
-              variant={theme === 'system' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setTheme('system')}
-              className="flex-1"
-            >
-              {t('system_mode')}
-            </Button>
-          </div>
-        </div>
 
         {/* Accessibility Options */}
         <div className="space-y-4">

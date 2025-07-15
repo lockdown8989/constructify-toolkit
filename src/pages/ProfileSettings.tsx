@@ -8,7 +8,6 @@ import { Loader2, ArrowLeft, User, Bell, Palette, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
-import { ThemeSelector } from "@/components/settings/ThemeSelector";
 import { PersonalInfoForm } from "@/components/profile-settings/PersonalInfoForm";
 import RegionalPreferencesForm from "@/components/profile-settings/RegionalPreferencesForm";
 import { DeleteAccountSection } from "@/components/profile-settings/DeleteAccountSection";
@@ -82,7 +81,9 @@ const ProfileSettings = () => {
               <CardDescription>{t('customizeAppearance')}</CardDescription>
             </CardHeader>
             <div className="p-6">
-              <ThemeSelector />
+              <p className="text-muted-foreground text-sm">
+                Additional appearance customization options will be available here in the future.
+              </p>
             </div>
           </Card>
         );
