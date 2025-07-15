@@ -5,11 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { translations, TranslationKey } from '@/utils/translations';
 import { useToast } from '@/hooks/use-toast';
 
-type LanguageCode = 'en' | 'es' | 'bg' | 'pl' | 'ro';
+type LanguageCode = 'en' | 'es' | 'fr' | 'bg' | 'pl' | 'ro';
 
 export const languageOptions = [
   { value: 'en', label: 'English' },
   { value: 'es', label: 'Español (Spanish)' },
+  { value: 'fr', label: 'Français (French)' },
   { value: 'bg', label: 'Български (Bulgarian)' },
   { value: 'pl', label: 'Polski (Polish)' },
   { value: 'ro', label: 'Română (Romanian)' }
