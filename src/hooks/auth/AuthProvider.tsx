@@ -38,11 +38,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useAuthDebugger({ user, session, isLoading });
 
   useEffect(() => {
+    let mounted = true;
     console.log('🔄 AuthProvider: Setting up auth state listener');
     
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (!mounted) return;
+        
         console.log('🔐 Auth state change event:', {
           event,
           hasSession: !!session,
@@ -52,36 +55,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           sessionExpires: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : null
         });
         
-        // Handle token refresh failures and auth errors
+        // Handle token refresh
         if (event === 'TOKEN_REFRESHED') {
           console.log('🔄 Token refreshed successfully');
-          setSession(session);
-          setUser(session?.user ?? null);
+          if (session) {
+            setSession(session);
+            setUser(session.user);
+            setIsLoading(false);
+          }
           return;
         }
         
+        // Handle explicit sign out
         if (event === 'SIGNED_OUT') {
-          console.log('🔄 User signed out or deleted, clearing state');
+          console.log('🔄 User signed out, clearing state');
           setSession(null);
           setUser(null);
           setIsLoading(false);
           return;
         }
         
-        // Handle authentication errors
+        // Handle other auth events (but don't clear session unnecessarily)
         if (event === 'PASSWORD_RECOVERY' || event === 'USER_UPDATED') {
-          console.log('🔄 Password recovery or user update event');
-          // Don't clear session for these events
+          console.log('🔄 Password recovery or user update event - maintaining session');
           return;
         }
         
-        // Update session and user state for all other events
+        // For INITIAL_SESSION and SIGNED_IN events
+        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+          console.log(`🔄 ${event} event - updating session state`);
+          setSession(session);
+          setUser(session?.user ?? null);
+          setIsLoading(false);
+          return;
+        }
+        
+        // For any other events, update state but maintain session if valid
         setSession(session);
         setUser(session?.user ?? null);
-        
-        // Only set loading to false if there's no user
         if (!session?.user) {
-          console.log('📝 No user session, setting loading to false');
           setIsLoading(false);
         }
       }
@@ -89,38 +101,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // THEN check for existing session
     console.log('🔄 AuthProvider: Checking for existing session');
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('Error getting session:', error);
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        if (!mounted) return;
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          setSession(null);
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('📋 Initial session check:', {
+          hasSession: !!session,
+          hasUser: !!session?.user,
+          userId: session?.user?.id,
+          timestamp: new Date().toISOString(),
+          sessionExpires: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : null
+        });
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        if (!mounted) return;
+        console.error('Exception in getSession:', error);
         setSession(null);
         setUser(null);
         setIsLoading(false);
-        return;
-      }
-
-      console.log('📋 Initial session check:', {
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        userId: session?.user?.id,
-        timestamp: new Date().toISOString()
       });
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      // If no session, we can stop loading immediately
-      if (!session?.user) {
-        console.log('📝 No initial session, setting loading to false');
-        setIsLoading(false);
-      }
-    }).catch((error) => {
-      console.error('Exception in getSession:', error);
-      setSession(null);
-      setUser(null);
-      setIsLoading(false);
-    });
 
     return () => {
+      mounted = false;
       console.log('🔄 AuthProvider: Cleaning up auth subscription');
       subscription.unsubscribe();
     };
