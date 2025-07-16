@@ -2312,6 +2312,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_overtime: {
+        Args: {
+          p_attendance_id: string
+          p_approved: boolean
+          p_manager_notes?: string
+        }
+        Returns: boolean
+      }
       calculate_attendance_metrics: {
         Args: {
           p_attendance_id: string
@@ -2346,6 +2354,10 @@ export type Database = {
       can_edit_shift: {
         Args: { shift_id: string }
         Returns: boolean
+      }
+      check_attendance_violations: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       check_location_within_restriction: {
         Args: {

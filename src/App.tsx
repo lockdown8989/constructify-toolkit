@@ -14,6 +14,7 @@ import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import BackgroundNotificationService from './services/shift-notifications/background-notification-service';
 import LoadingSpinner from './components/ui/loading-spinner';
+import { useAttendanceMonitoring } from './hooks/use-attendance-monitoring';
 import './App.css';
 
 // Lazy load pages for better performance
@@ -34,6 +35,7 @@ const LeaveManagement = lazy(() => import('./pages/LeaveManagement'));
 const ScheduleRequests = lazy(() => import('./pages/ScheduleRequests'));
 const Profile = lazy(() => import('./pages/Profile'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
+const OvertimeManagement = lazy(() => import('./pages/OvertimeManagement'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +52,9 @@ const queryClient = new QueryClient({
 // Create a separate component that uses useAuth
 const AppContent = () => {
   const { user } = useAuth();
+  
+  // Initialize attendance monitoring
+  useAttendanceMonitoring();
 
   // Start background notification service when user is authenticated
   useEffect(() => {
@@ -177,6 +182,13 @@ const AppContent = () => {
             <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
               <Suspense fallback={<LoadingSpinner />}>
                 <ManagerTimeClock />
+              </Suspense>
+            </ProtectedRoute>
+          } />
+          <Route path="overtime-management" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <OvertimeManagement />
               </Suspense>
             </ProtectedRoute>
           } />
