@@ -260,10 +260,6 @@ const RotaEmployeeManager = () => {
               Employee Rota Patterns
             </CardTitle>
             <div className="flex gap-2">
-              <Button onClick={handleAutoApproveAllRotas} variant="outline" size="sm" disabled={autoApprovingRotas}>
-                <Calendar className="h-4 w-4 mr-2" />
-                {autoApprovingRotas ? "Auto-Approving..." : "Auto-Approve All Pending"}
-              </Button>
               <Button onClick={handleCreate} size="sm" className="self-start sm:self-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Rota
