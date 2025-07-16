@@ -31,7 +31,7 @@ const RotaEmployeeManager = () => {
   const [editingPattern, setEditingPattern] = useState<ShiftTemplate | null>(null);
   const [syncingRotas, setSyncingRotas] = useState<string[]>([]);
   const [autoApprovingRotas, setAutoApprovingRotas] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'patterns' | 'schedule' | 'single-shifts'>('patterns');
+  const [currentTab, setCurrentTab] = useState<'patterns' | 'single-shifts'>('patterns');
   
   const { patternEmployees, refreshPatternEmployees } = usePatternEmployees(shiftPatterns as any);
   const {
@@ -420,15 +420,11 @@ const RotaEmployeeManager = () => {
 
   return (
     <div className="space-y-6">
-      <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as 'patterns' | 'schedule' | 'single-shifts')}>
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as 'patterns' | 'single-shifts')}>
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="patterns" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Rota Patterns
-          </TabsTrigger>
-          <TabsTrigger value="schedule" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Employee Schedule
           </TabsTrigger>
           <TabsTrigger value="single-shifts" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
@@ -513,10 +509,6 @@ const RotaEmployeeManager = () => {
               }
             }}
           />
-        </TabsContent>
-
-        <TabsContent value="schedule" className="mt-6">
-          <EmployeeRotaSchedule />
         </TabsContent>
 
         <TabsContent value="single-shifts" className="mt-6">
