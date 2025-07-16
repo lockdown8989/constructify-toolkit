@@ -59,7 +59,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ isAuthenticated, isMan
                     className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 md:px-8 py-4 md:py-6 text-base md:text-lg rounded-xl shadow-2xl shadow-purple-500/25 transition-all duration-300 hover:scale-105 hover:shadow-purple-500/40"
                   >
                     <Link to="/auth" className="flex items-center gap-2">
-                      Try the Demo
+                      Try TeamPulse Demo
                       <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
                     </Link>
                   </Button>

@@ -22,10 +22,12 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({ isAuthenticated })
         <div className="flex items-center justify-between h-14 md:h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Clock className="w-3 h-3 md:w-5 md:h-5 text-white" />
-            </div>
-            <span className="text-lg md:text-xl font-bold text-white">SchedulePro</span>
+            <img 
+              src="/lovable-uploads/6498c422-3293-40e4-99c1-a94a137934f6.png" 
+              alt="TeamPulse Logo" 
+              className="h-6 w-6 md:h-8 md:w-8"
+            />
+            <span className="text-lg md:text-xl font-bold text-white">TeamPulse</span>
           </Link>
 
           {/* Center Navigation - Hidden on mobile */}
