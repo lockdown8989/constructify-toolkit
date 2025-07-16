@@ -51,24 +51,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           timestamp: new Date().toISOString()
         });
         
-        // Handle user deletion or account removal - Fixed event type check
+        // Handle explicit sign out only
         if (event === 'SIGNED_OUT') {
-          console.log('🔄 User signed out, clearing state');
+          console.log('🔄 User explicitly signed out, clearing state');
           setSession(null);
           setUser(null);
           setIsLoading(false);
-          
-          // Clear any cached data
-          localStorage.clear();
-          sessionStorage.clear();
-          
           return;
         }
         
+        // Update session and user state
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Only set loading to false after roles are loaded or user is null
+        // Only set loading to false if there's no user
         if (!session?.user) {
           console.log('📝 No user session, setting loading to false');
           setIsLoading(false);
@@ -117,20 +113,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Update loading state - ensure auth persists regardless of role loading
   useEffect(() => {
-    // If we have a user but roles are still loading, keep showing authenticated state
-    // Only set loading to false when either: no user OR roles are loaded
-    if (!user) {
+    // If we have a user, they should stay authenticated regardless of role loading status
+    if (user) {
+      console.log('📝 User authenticated, setting loading to false regardless of roles');
+      setIsLoading(false);
+    } else if (!user) {
       console.log('📝 No user, setting loading to false');
       setIsLoading(false);
-    } else if (rolesLoaded) {
-      console.log('📝 User authenticated and roles loaded, setting loading to false');
-      setIsLoading(false);
-    } else {
-      console.log('📝 User authenticated but roles still loading, keeping auth state');
-      // Don't set loading to false yet - let roles finish loading
-      // But ensure the user stays authenticated during role loading
     }
-  }, [user, rolesLoaded]);
+  }, [user]);
 
   const value: AuthContextType = {
     user,
