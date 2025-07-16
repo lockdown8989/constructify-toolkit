@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ import { RotaPatternDialog } from './components/RotaPatternDialog';
 import { RotaCalendarSync } from './components/RotaCalendarSync';
 
 const RotaEmployeeManager = () => {
-  const { data: shiftPatterns = [], isLoading } = useShiftPatterns();
+  const { data: shiftPatterns = [], isLoading, refetch: refetchPatterns } = useShiftPatterns();
   const { data: employees = [] } = useEmployees();
   const createPattern = useCreateShiftPattern();
   const updatePattern = useUpdateShiftPattern();
@@ -67,7 +68,7 @@ const RotaEmployeeManager = () => {
     return employee?.name || 'Unknown Employee';
   };
 
-  // Enhanced handleAddEmployee with better confirmation and validation
+  // Enhanced handleAddEmployee with immediate UI feedback
   const handleAddEmployee = async () => {
     console.log('RotaEmployeeManager handleAddEmployee called:', {
       selectedEmployeeId,
@@ -304,17 +305,27 @@ const RotaEmployeeManager = () => {
         }
       }
       
-      // Force refresh pattern employees data immediately
-      setTimeout(() => {
-        console.log('Refreshing pattern employees after assignment');
-        refreshPatternEmployees();
-      }, 500);
+      // Multiple refresh strategies to ensure data synchronization
+      console.log('Starting comprehensive data refresh...');
       
-      // Additional refresh after a longer delay to ensure data is synced
-      setTimeout(() => {
+      // 1. Immediate refresh
+      await refreshPatternEmployees();
+      
+      // 2. Refetch shift patterns to get latest data
+      await refetchPatterns();
+      
+      // 3. Additional refresh after short delay
+      setTimeout(async () => {
         console.log('Secondary refresh of pattern employees');
-        refreshPatternEmployees();
-      }, 2000);
+        await refreshPatternEmployees();
+      }, 1000);
+      
+      // 4. Final refresh to ensure UI synchronization
+      setTimeout(async () => {
+        console.log('Final refresh to ensure UI sync');
+        await refreshPatternEmployees();
+        await refetchPatterns();
+      }, 2500);
       
       setIsCreateModalOpen(false);
       resetForm();
@@ -334,7 +345,11 @@ const RotaEmployeeManager = () => {
     if (window.confirm('Are you sure you want to delete this rota pattern? This will not affect already created shifts.')) {
       try {
         await deletePattern.mutateAsync(id);
-        refreshPatternEmployees();
+        
+        // Comprehensive refresh after deletion
+        await refreshPatternEmployees();
+        await refetchPatterns();
+        
         toast({
           title: "Success",
           description: "Rota pattern deleted successfully.",

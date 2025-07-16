@@ -1,16 +1,21 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ShiftTemplate } from '@/types/schedule';
 
 export const usePatternEmployees = (shiftPatterns: ShiftTemplate[]) => {
   const [patternEmployees, setPatternEmployees] = useState<Record<string, any[]>>({});
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const queryClient = useQueryClient();
 
-  const fetchPatternEmployees = async () => {
-    if (shiftPatterns.length === 0) return;
+  const fetchPatternEmployees = useCallback(async () => {
+    if (shiftPatterns.length === 0) {
+      setPatternEmployees({});
+      return;
+    }
     
+    setIsRefreshing(true);
     console.log('Fetching pattern employees for patterns:', shiftPatterns.map(p => p.id));
     
     const patternEmployeeMap: Record<string, any[]> = {};
@@ -48,28 +53,31 @@ export const usePatternEmployees = (shiftPatterns: ShiftTemplate[]) => {
     
     console.log('Final pattern employee map:', patternEmployeeMap);
     setPatternEmployees(patternEmployeeMap);
-  };
+    setIsRefreshing(false);
+  }, [shiftPatterns]);
 
   useEffect(() => {
     fetchPatternEmployees();
-  }, [shiftPatterns]);
+  }, [fetchPatternEmployees]);
 
   // Listen for changes in shift pattern assignments
   useEffect(() => {
-    const invalidateAndRefetch = () => {
+    const invalidateAndRefetch = async () => {
       console.log('Shift pattern assignments changed, refetching pattern employees');
-      fetchPatternEmployees();
+      await fetchPatternEmployees();
     };
 
     // Listen for query invalidation
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      if (event.query.queryKey[0] === 'shift_template_assignments' || event.query.queryKey[0] === 'schedules') {
+      if (event.query.queryKey[0] === 'shift_template_assignments' || 
+          event.query.queryKey[0] === 'schedules' ||
+          event.query.queryKey[0] === 'shift-patterns') {
         invalidateAndRefetch();
       }
     });
 
     return unsubscribe;
-  }, [queryClient, shiftPatterns]);
+  }, [queryClient, fetchPatternEmployees]);
 
   // Set up real-time subscription for shift pattern assignments
   useEffect(() => {
@@ -92,13 +100,22 @@ export const usePatternEmployees = (shiftPatterns: ShiftTemplate[]) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [shiftPatterns]);
+  }, [fetchPatternEmployees]);
 
-  // Manual refresh function
-  const refreshPatternEmployees = () => {
-    console.log('Manual refresh of pattern employees');
-    fetchPatternEmployees();
+  // Manual refresh function with force option
+  const refreshPatternEmployees = useCallback(async (force = true) => {
+    console.log('Manual refresh of pattern employees', force ? '(forced)' : '');
+    if (force) {
+      // Invalidate related queries first
+      queryClient.invalidateQueries({ queryKey: ['shift_template_assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['shift-patterns'] });
+    }
+    await fetchPatternEmployees();
+  }, [fetchPatternEmployees, queryClient]);
+
+  return { 
+    patternEmployees, 
+    refreshPatternEmployees,
+    isRefreshing
   };
-
-  return { patternEmployees, refreshPatternEmployees };
 };
