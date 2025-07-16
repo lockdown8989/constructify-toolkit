@@ -5,6 +5,7 @@ import NotificationBell from '@/components/notifications/NotificationBell'
 import MobileNav from "./navigation/MobileNav"
 import UserMenu from "./navigation/UserMenu"
 import AuthButtons from "./navigation/AuthButtons"
+import ThemeToggle from "./navigation/ThemeToggle"
 
 const Navbar = () => {
   const { user } = useAuth()
@@ -22,6 +23,8 @@ const Navbar = () => {
         <div className="ml-auto flex items-center space-x-2">
           {/* Add notification bell before user account menu */}
           {isAuthenticated && <NotificationBell />}
+          
+          <ThemeToggle />
           
           {isAuthenticated ? (
             <UserMenu />

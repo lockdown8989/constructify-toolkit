@@ -14,10 +14,8 @@ export const useRoles = (user: User | null) => {
   // Automatically fetch roles when user changes
   useEffect(() => {
     if (user) {
-      console.log("🔄 useRoles: User found, fetching roles for:", user.id);
       fetchUserRoles(user.id);
     } else {
-      console.log("🔄 useRoles: No user, resetting roles");
       resetRoles();
     }
   }, [user?.id]);
@@ -26,10 +24,7 @@ export const useRoles = (user: User | null) => {
     try {
       console.log("🔄 Fetching roles for user:", userId);
       
-      // Set loading state immediately
-      setRolesLoaded(false);
-      
-      // First check user_roles table with better error handling
+      // First check user_roles table
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
         .select('role')
@@ -37,7 +32,6 @@ export const useRoles = (user: User | null) => {
 
       if (rolesError) {
         console.error('❌ Error fetching user roles:', rolesError);
-        // Continue with fallback - don't return here
       }
 
       // Also check employee record for role backup
@@ -49,7 +43,6 @@ export const useRoles = (user: User | null) => {
 
       if (employeeError) {
         console.error('❌ Error fetching employee data:', employeeError);
-        // Continue with fallback - don't return here
       }
 
       console.log("📊 Role data:", { roles, employeeData });
@@ -82,7 +75,8 @@ export const useRoles = (user: User | null) => {
           payroll: hasPayrollRole,
           employee: hasEmployeeRole,
           jobTitle: employeeData?.job_title,
-          allRoles: userRoles
+          allRoles: userRoles,
+          userEmail: user?.email
         });
         
         setIsAdmin(hasAdminRole);
@@ -93,7 +87,6 @@ export const useRoles = (user: User | null) => {
         setIsEmployee(!hasAdminRole && !hasHRRole && !hasManagerRole && !hasPayrollRole);
       } else {
         console.log("⚠️ No roles found for user, defaulting to employee");
-        // FIXED: Don't fail auth if roles aren't found - just default to employee
         setIsAdmin(false);
         setIsHR(false);
         setIsManager(false);
@@ -101,17 +94,16 @@ export const useRoles = (user: User | null) => {
         setIsEmployee(true);
       }
       
-      // Always set roles as loaded to prevent infinite loading
       setRolesLoaded(true);
     } catch (error) {
       console.error('💥 Error in fetchUserRoles:', error);
-      // FIXED: Set defaults on error and mark as loaded to prevent auth failure
+      // Set defaults on error
       setIsAdmin(false);
       setIsHR(false);
       setIsManager(false);
       setIsPayroll(false);
       setIsEmployee(true);
-      setRolesLoaded(true); // Critical: mark as loaded even on error
+      setRolesLoaded(true);
     }
   };
 

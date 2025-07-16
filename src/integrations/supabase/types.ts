@@ -575,13 +575,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "employee_location_logs_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "employee_location_logs_restriction_id_fkey"
             columns: ["restriction_id"]
             isOneToOne: false

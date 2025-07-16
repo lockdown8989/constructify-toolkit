@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Use the roles hook with debouncing to prevent excessive re-renders
+  // Use the roles hook
   const { isAdmin, isManager, isHR, isEmployee, isPayroll, rolesLoaded } = useRoles(user);
 
   // Determine primary user role
@@ -58,41 +58,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     let isMounted = true;
 
-    console.log('🔄 AuthProvider: Setting up auth state listener');
-
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (!isMounted) return;
         
-        console.log('🔐 Auth state change event:', { 
-          event, 
-          hasSession: !!session, 
-          hasUser: !!session?.user,
-          userId: session?.user?.id,
-          timestamp: new Date().toISOString()
-        });
+        console.log('Auth state changed:', event, session?.user?.email);
+        setSession(session);
+        setUser(session?.user ?? null);
         
-        // Handle refresh token errors that cause automatic logout
-        if (event === 'TOKEN_REFRESHED') {
-          console.log('📝 Token refreshed successfully');
-        } else if (event === 'SIGNED_OUT') {
-          console.log('📝 User signed out, clearing auth state');
-          // Clear any cached auth state
-          setSession(null);
-          setUser(null);
-          setIsLoading(false); // FIXED: Don't leave loading state stuck
-        } else if (event === 'SIGNED_IN') {
-          console.log('📝 User signed in successfully');
-        }
-        
-        // Only update state if we have a valid session or explicit sign out
-        if (session || event === 'SIGNED_OUT') {
-          setSession(session);
-          setUser(session?.user ?? null);
-        }
-        
-        // FIXED: Always set loading to false after auth events to prevent hanging
         if (isMounted) {
           setIsLoading(false);
         }
@@ -100,16 +74,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     // Get initial session
-    console.log('🔄 AuthProvider: Checking for existing session');
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!isMounted) return;
-      
-      console.log('📋 Initial session check:', {
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        userId: session?.user?.id,
-        timestamp: new Date().toISOString()
-      });
       
       setSession(session);
       setUser(session?.user ?? null);
@@ -117,16 +83,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (isMounted) {
         setIsLoading(false);
       }
-    }).catch((error) => {
-      console.error('📋 Error getting initial session:', error);
-      // Even if there's an error, set loading to false so the app doesn't hang
-      if (isMounted) {
-        setIsLoading(false);
-      }
     });
 
     return () => {
-      console.log('🔄 AuthProvider: Cleaning up auth subscription');
       isMounted = false;
       subscription.unsubscribe();
     };
@@ -139,32 +98,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       throw error;
     }
   };
-
-  // Add debug logging for auth provider state
-  useEffect(() => {
-    console.log('🔐 AuthProvider roles state:', {
-      isAdmin,
-      isHR,
-      isManager,
-      isPayroll,
-      isEmployee,
-      rolesLoaded,
-      userEmail: user?.email
-    });
-    
-    // FIXED: Only set loading to false after roles are actually loaded for authenticated users
-    // or immediately for unauthenticated users
-    if (!user) {
-      console.log('📝 No user, setting loading to false immediately');
-      setIsLoading(false);
-    } else if (user && rolesLoaded) {
-      console.log('📝 User exists and roles loaded, setting loading to false', { user: !!user, rolesLoaded });
-      setIsLoading(false);
-    } else if (user && !rolesLoaded) {
-      console.log('📝 User exists but roles not loaded yet, keeping loading true');
-      // Keep loading true until roles are loaded
-    }
-  }, [user, rolesLoaded, isAdmin, isHR, isManager, isPayroll, isEmployee]);
 
   return (
     <AuthContext.Provider value={{ 
