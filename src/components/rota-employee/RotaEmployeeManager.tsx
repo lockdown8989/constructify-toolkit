@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { usePatternEmployees } from '../shift-patterns/hooks/usePatternEmployees';
 import { useShiftPatternForm } from '../shift-patterns/hooks/useShiftPatternForm';
 import { useAssignEmployeesToPattern } from '@/hooks/use-shift-pattern-assignments';
-import { createAndConfirmRecurringRotas } from '@/services/rota-management/rota-auto-confirm';
+import { createAndConfirmRecurringRotas, batchApproveAllPendingRotas } from '@/services/rota-management/rota-auto-confirm';
 import { ShiftPattern } from '@/types/shift-patterns';
 import { RotaPatternCard } from './components/RotaPatternCard';
 import { RotaPatternDialog } from './components/RotaPatternDialog';
@@ -27,6 +27,7 @@ const RotaEmployeeManager = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingPattern, setEditingPattern] = useState<ShiftPattern | null>(null);
   const [syncingRotas, setSyncingRotas] = useState<string[]>([]);
+  const [autoApprovingRotas, setAutoApprovingRotas] = useState(false);
   
   const { patternEmployees, refreshPatternEmployees } = usePatternEmployees(shiftPatterns);
   const {
@@ -65,6 +66,33 @@ const RotaEmployeeManager = () => {
   const getEmployeeName = (employeeId: string) => {
     const employee = employees.find(e => e.id === employeeId);
     return employee?.name || 'Unknown Employee';
+  };
+
+  const handleAutoApproveAllRotas = async () => {
+    setAutoApprovingRotas(true);
+    
+    try {
+      const result = await batchApproveAllPendingRotas();
+      
+      if (result.success) {
+        toast({
+          title: "Rotas Auto-Approved",
+          description: result.message || "All pending rota shifts have been automatically confirmed.",
+        });
+      } else {
+        throw new Error('Failed to auto-approve rotas');
+      }
+
+    } catch (error) {
+      console.error('Error auto-approving rotas:', error);
+      toast({
+        title: "Auto-approval failed",
+        description: "Failed to auto-approve pending rotas. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setAutoApprovingRotas(false);
+    }
   };
 
   const handleSyncToCalendar = async (patternId: string) => {
@@ -231,10 +259,16 @@ const RotaEmployeeManager = () => {
               <Users className="h-5 w-5" />
               Employee Rota Patterns
             </CardTitle>
-            <Button onClick={handleCreate} size="sm" className="self-start sm:self-auto">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Rota
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleAutoApproveAllRotas} variant="outline" size="sm" disabled={autoApprovingRotas}>
+                <Calendar className="h-4 w-4 mr-2" />
+                {autoApprovingRotas ? "Auto-Approving..." : "Auto-Approve All Pending"}
+              </Button>
+              <Button onClick={handleCreate} size="sm" className="self-start sm:self-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Rota
+              </Button>
+            </div>
           </div>
           <p className="text-sm text-gray-600 mt-2">
             Create rota patterns and sync them to employee calendars. All rota shifts are automatically confirmed - no employee response needed.
