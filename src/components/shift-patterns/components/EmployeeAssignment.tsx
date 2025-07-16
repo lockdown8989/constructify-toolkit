@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Users, X } from 'lucide-react';
+import { Plus, Users, X, AlertCircle } from 'lucide-react';
 
 interface EmployeeAssignmentProps {
   employees: any[];
@@ -32,9 +32,22 @@ export const EmployeeAssignment = ({
     availableEmployeesCount: employees?.filter(emp => emp && emp.id && !selectedEmployees.includes(emp.id))?.length || 0
   });
 
+  // Validate and filter employees
+  const validEmployees = employees.filter(emp => 
+    emp && 
+    emp.id && 
+    typeof emp.id === 'string' && 
+    emp.id.trim() !== '' &&
+    emp.name && 
+    typeof emp.name === 'string' &&
+    emp.name.trim() !== ''
+  );
+
+  console.log('Valid employees after filtering:', validEmployees.length);
+
   // Filter out employees that are already selected
-  const availableEmployees = employees.filter(emp => 
-    emp && emp.id && !selectedEmployees.includes(emp.id)
+  const availableEmployees = validEmployees.filter(emp => 
+    !selectedEmployees.includes(emp.id)
   );
 
   const handleAddEmployee = () => {
@@ -44,6 +57,13 @@ export const EmployeeAssignment = ({
     });
     
     if (selectedEmployeeId && selectedEmployeeId.trim() !== '' && selectedEmployeeId !== 'no-employees') {
+      // Validate that the selected employee exists in available employees
+      const employeeExists = availableEmployees.some(emp => emp.id === selectedEmployeeId);
+      if (!employeeExists) {
+        console.error('Selected employee not found in available employees');
+        return;
+      }
+      
       console.log('Calling onAddEmployee');
       onAddEmployee();
     }
@@ -63,6 +83,15 @@ export const EmployeeAssignment = ({
         Assign Employees to Pattern
       </h4>
       
+      {validEmployees.length === 0 && (
+        <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-md">
+          <AlertCircle className="h-4 w-4 text-orange-600" />
+          <p className="text-sm text-orange-700">
+            No valid employees found. Please ensure employees are properly configured.
+          </p>
+        </div>
+      )}
+      
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="flex-1">
           <Select value={selectedEmployeeId || ''} onValueChange={handleEmployeeChange}>
@@ -72,7 +101,7 @@ export const EmployeeAssignment = ({
             <SelectContent className="bg-white z-50">
               {availableEmployees.length === 0 ? (
                 <SelectItem value="no-employees" disabled>
-                  {employees.length === 0 ? 'No employees available' : 'All employees already assigned'}
+                  {validEmployees.length === 0 ? 'No valid employees available' : 'All employees already assigned'}
                 </SelectItem>
               ) : (
                 availableEmployees.map((employee) => (
@@ -100,18 +129,22 @@ export const EmployeeAssignment = ({
         <div className="space-y-2">
           <Label className="text-sm font-medium">Selected Employees:</Label>
           <div className="flex flex-wrap gap-2">
-            {selectedEmployees.map((employeeId) => (
-              <Badge key={employeeId} variant="secondary" className="flex items-center gap-1 text-xs">
-                {getEmployeeName(employeeId)}
-                <button
-                  type="button"
-                  onClick={() => onRemoveEmployee(employeeId)}
-                  className="ml-1 hover:text-red-600"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
+            {selectedEmployees.map((employeeId) => {
+              const employeeName = getEmployeeName(employeeId);
+              return (
+                <Badge key={employeeId} variant="secondary" className="flex items-center gap-1 text-xs">
+                  {employeeName}
+                  <button
+                    type="button"
+                    onClick={() => onRemoveEmployee(employeeId)}
+                    className="ml-1 hover:text-red-600"
+                    aria-label={`Remove ${employeeName}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              );
+            })}
           </div>
           <p className="text-xs sm:text-sm text-gray-600">
             This pattern will be applied weekly to the selected employees for the next 12 weeks.

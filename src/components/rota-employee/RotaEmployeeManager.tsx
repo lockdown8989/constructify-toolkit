@@ -154,13 +154,26 @@ const RotaEmployeeManager = () => {
       return;
     }
 
+    // Validate that at least one employee is selected
+    if (selectedEmployees.length === 0) {
+      toast({
+        title: "Warning",
+        description: "No employees selected. The rota pattern will be created but no employees will be assigned.",
+        variant: "destructive",
+      });
+    }
+
     try {
       if (editingPattern) {
+        console.log('Updating existing pattern:', editingPattern.id);
+        
         // Update the pattern first
         const updatedPattern = await updatePattern.mutateAsync({
           id: editingPattern.id,
           ...formData,
         });
+        
+        console.log('Pattern updated, now assigning employees:', selectedEmployees);
         
         // Assign employees to the pattern
         await assignEmployeesToPattern.mutateAsync({
@@ -179,11 +192,20 @@ const RotaEmployeeManager = () => {
         }, 1000);
         
       } else {
+        console.log('Creating new pattern with data:', formData);
+        
         // Create new pattern
         const newPattern = await createPattern.mutateAsync(formData);
         
+        console.log('New pattern created:', newPattern);
+        
         // If we have selected employees, assign them to the new pattern
         if (selectedEmployees.length > 0 && newPattern) {
+          console.log('Assigning employees to new pattern:', {
+            patternId: newPattern.id,
+            employeeIds: selectedEmployees
+          });
+          
           await assignEmployeesToPattern.mutateAsync({
             shiftPatternId: newPattern.id,
             employeeIds: selectedEmployees,
@@ -211,9 +233,10 @@ const RotaEmployeeManager = () => {
       setEditingPattern(null);
     } catch (error) {
       console.error('Error saving rota pattern:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
         title: "Error",
-        description: `Failed to ${editingPattern ? 'update' : 'create'} rota pattern. Please try again.`,
+        description: `Failed to ${editingPattern ? 'update' : 'create'} rota pattern: ${errorMessage}`,
         variant: "destructive",
       });
     }
