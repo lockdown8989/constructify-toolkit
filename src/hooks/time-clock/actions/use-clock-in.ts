@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useAttendanceMetadata } from '../use-attendance-metadata';
 import { getDeviceIdentifier } from '../utils/device-utils';
-import { checkRotaCompliance } from '@/services/attendance/rota-compliance';
+
 import { debugTimeInfo } from '@/utils/timezone-utils';
 
 export const useClockIn = (

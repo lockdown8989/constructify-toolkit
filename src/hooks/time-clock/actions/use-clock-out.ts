@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useAttendanceMetadata } from '../use-attendance-metadata';
 import { debugTimeInfo } from '@/utils/timezone-utils';
-import { checkRotaCompliance } from '@/services/attendance/rota-compliance';
+
 
 export const useClockOut = (
   setStatus: (status: 'clocked-in' | 'clocked-out' | 'on-break') => void,
