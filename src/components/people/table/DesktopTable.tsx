@@ -2,7 +2,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import EmployeeTableHeader from './EmployeeTableHeader';
-import EmployeeTableRow from './EmployeeTableRow';
+import { EmployeeTableRow } from './EmployeeTableRow';
 import { Employee } from '../types';
 
 interface DesktopTableProps {

@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import EmployeeMobileCard from './EmployeeMobileCard';
+import { EmployeeMobileCard } from './EmployeeMobileCard';
 import { Employee } from '../types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronDown } from 'lucide-react';

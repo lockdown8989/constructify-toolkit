@@ -3,7 +3,7 @@ import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Employee } from '@/types/employee';
-import { EmployeeStatusDropdown } from '../modals/employee-details/EmployeeStatusDropdown';
+import EmployeeStatusDropdown from '../modals/employee-details/EmployeeStatusDropdown';
 
 interface EmployeeTableRowProps {
   employee: Employee;

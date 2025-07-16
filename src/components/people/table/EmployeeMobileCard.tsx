@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { User, Building, MapPin, Briefcase, PoundSterling } from 'lucide-react';
 import { Employee } from '@/types/employee';
-import { EmployeeStatusDropdown } from '../modals/employee-details/EmployeeStatusDropdown';
+import EmployeeStatusDropdown from '../modals/employee-details/EmployeeStatusDropdown';
 
 interface EmployeeMobileCardProps {
   employee: Employee;
