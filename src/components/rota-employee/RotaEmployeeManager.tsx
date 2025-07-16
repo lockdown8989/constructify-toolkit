@@ -68,12 +68,13 @@ const RotaEmployeeManager = () => {
     return employee?.name || 'Unknown Employee';
   };
 
-  // Enhanced handleAddEmployee with immediate UI feedback
+  // Enhanced handleAddEmployee with immediate database save
   const handleAddEmployee = async () => {
     console.log('RotaEmployeeManager handleAddEmployee called:', {
       selectedEmployeeId,
       selectedEmployees,
       employeesCount: employees.length,
+      editingPattern: editingPattern?.id,
       availableEmployees: employees.filter(emp => 
         emp && emp.id && !selectedEmployees.includes(emp.id)
       ).length
@@ -124,18 +125,35 @@ const RotaEmployeeManager = () => {
     try {
       console.log('Adding employee:', employee.name);
       
+      // If we're editing an existing pattern, save to database immediately
+      if (editingPattern) {
+        console.log('Saving employee assignment to database for pattern:', editingPattern.id);
+        
+        await assignEmployeesToPattern.mutateAsync({
+          shiftPatternId: editingPattern.id,
+          employeeIds: [selectedEmployeeId], // Single employee assignment
+        });
+        
+        console.log('Employee assignment saved to database');
+        
+        // Trigger multiple refreshes to ensure UI updates
+        setTimeout(() => refreshPatternEmployees(true), 100);
+        setTimeout(() => refreshPatternEmployees(true), 500);
+        setTimeout(() => refreshPatternEmployees(true), 1000);
+      }
+      
       // Add employee to the local state
       formHandleAddEmployee();
       
       // Clear the selection after adding
       setSelectedEmployeeId('');
       
-      console.log('Employee added successfully to local state:', employee.name);
+      console.log('Employee added successfully:', employee.name);
       
       // Show immediate confirmation
       toast({
         title: "✅ Employee Added",
-        description: `${employee.name} has been added to the rota. Save the rota to confirm the assignment.`,
+        description: `Successfully added ${employee.name} to the rota!`,
       });
       
     } catch (error) {
