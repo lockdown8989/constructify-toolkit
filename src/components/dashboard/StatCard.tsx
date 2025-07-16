@@ -29,22 +29,22 @@ const StatCard: React.FC<StatCardProps> = ({
   return (
     <div 
       className={cn(
-        "bg-white rounded-3xl p-6 card-shadow transition-all hover:translate-y-[-2px]",
+        "bg-card rounded-3xl p-6 shadow-sm border transition-all hover:translate-y-[-2px]",
         onClick && "cursor-pointer",
         className
       )}
       onClick={onClick}
     >
       <div className="flex items-start justify-between mb-4">
-        <h3 className="text-sm font-medium text-gray-500">{title}</h3>
-        {icon && <div className="text-gray-400">{icon}</div>}
+        <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+        {icon && <div className="text-muted-foreground">{icon}</div>}
       </div>
       
       <div className="space-y-1">
         <div className="flex items-end space-x-2">
           <h2 
             className={cn(
-              "text-4xl font-semibold",
+              "text-4xl font-semibold text-foreground",
               valueClassName
             )}
           >
@@ -62,7 +62,7 @@ const StatCard: React.FC<StatCardProps> = ({
         </div>
         
         {description && (
-          <p className="text-sm text-gray-500">{description}</p>
+          <p className="text-sm text-muted-foreground">{description}</p>
         )}
       </div>
     </div>

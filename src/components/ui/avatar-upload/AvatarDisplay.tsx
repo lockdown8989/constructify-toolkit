@@ -1,145 +1,87 @@
 
-import React, { useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Camera, Loader2 } from 'lucide-react';
+import React from 'react';
+import { User } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AvatarDisplayProps {
-  currentAvatarUrl?: string | null;
-  userInitials: string;
-  size: 'sm' | 'md' | 'lg';
-  disabled: boolean;
-  isUploading: boolean;
-  onFileSelect: (file: File) => void;
-  onUploadClick: () => void;
-  onAvatarClick?: () => void;
-  children: React.ReactNode;
+  avatarUrl?: string;
+  firstName?: string;
+  lastName?: string;
+  size?: 'sm' | 'md' | 'lg';
+  onClick?: () => void;
+  className?: string;
 }
 
-const sizeClasses = {
-  sm: 'h-16 w-16',
-  md: 'h-24 w-24',
-  lg: 'h-32 w-32'
-};
-
-export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
-  currentAvatarUrl,
-  userInitials,
-  size,
-  disabled,
-  isUploading,
-  onFileSelect,
-  onUploadClick,
-  onAvatarClick,
-  children
+const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
+  avatarUrl,
+  firstName,
+  lastName,
+  size = 'md',
+  onClick,
+  className
 }) => {
-  const [isDragOver, setIsDragOver] = useState(false);
-  const [isTouched, setIsTouched] = useState(false);
+  const sizeClasses = {
+    sm: 'h-8 w-8 text-xs',
+    md: 'h-10 w-10 text-sm', 
+    lg: 'h-12 w-12 text-base'
+  };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    if (disabled || isUploading) return;
-    
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      onFileSelect(files[0]);
+  const iconSizes = {
+    sm: 'h-4 w-4',
+    md: 'h-5 w-5',
+    lg: 'h-6 w-6'
+  };
+
+  const getInitials = () => {
+    if (firstName && lastName) {
+      return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
     }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (!disabled && !isUploading) {
-      setIsDragOver(true);
+    if (firstName) {
+      return firstName.charAt(0).toUpperCase();
     }
+    return '';
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-  };
-
-  const handleTouchStart = () => {
-    if (!disabled && !isUploading) {
-      setIsTouched(true);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    setIsTouched(false);
-  };
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!disabled && !isUploading) {
-      if (onAvatarClick) {
-        onAvatarClick();
-      } else {
-        onUploadClick();
-      }
-    }
-  };
-
-  // Check if current avatar is a gradient
-  const isGradientAvatar = currentAvatarUrl && currentAvatarUrl.startsWith('linear-gradient');
+  const isGradientClass = avatarUrl && (
+    avatarUrl.startsWith('bg-gradient-') || 
+    avatarUrl.includes('gradient')
+  );
 
   return (
     <div
-      className={`relative ${sizeClasses[size]} rounded-full border-2 border-dashed transition-all duration-200 cursor-pointer ${
-        isDragOver 
-          ? 'border-primary bg-primary/5 scale-105' 
-          : isTouched 
-          ? 'border-primary/50 bg-primary/5 scale-98' 
-          : 'border-gray-300'
-      } ${disabled || isUploading ? 'opacity-60 cursor-not-allowed' : 'hover:border-primary/50 hover:bg-primary/5'}`}
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onClick={handleClick}
+      className={cn(
+        "relative rounded-full flex items-center justify-center font-semibold transition-all",
+        sizeClasses[size],
+        onClick && "cursor-pointer hover:opacity-80",
+        className
+      )}
+      onClick={onClick}
     >
-      <Avatar className={`${sizeClasses[size]} transition-transform duration-200 ${isTouched ? 'scale-95' : ''}`}>
-        {!isGradientAvatar && (
-          <AvatarImage 
-            src={currentAvatarUrl || undefined} 
-            alt="Profile" 
-            className="object-cover"
-          />
-        )}
-        <AvatarFallback 
-          className={`text-lg font-semibold ${
-            isGradientAvatar 
-              ? 'text-white' 
-              : 'bg-primary text-primary-foreground'
-          }`}
-          style={isGradientAvatar ? { background: currentAvatarUrl } : undefined}
-        >
-          {userInitials}
-        </AvatarFallback>
-      </Avatar>
-      
-      {isUploading && (
-        <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center z-10">
-          <Loader2 className="h-6 w-6 text-white animate-spin" />
+      {avatarUrl && !isGradientClass ? (
+        <img
+          src={avatarUrl}
+          alt="Avatar"
+          className="h-full w-full rounded-full object-cover"
+        />
+      ) : isGradientClass ? (
+        <div className={cn("h-full w-full rounded-full flex items-center justify-center", avatarUrl)}>
+          <span className="text-white font-semibold text-shadow">
+            {getInitials() || <User className={cn("text-white", iconSizes[size])} />}
+          </span>
+        </div>
+      ) : (
+        <div className="h-full w-full rounded-full bg-muted flex items-center justify-center">
+          {getInitials() ? (
+            <span className="text-muted-foreground font-semibold">
+              {getInitials()}
+            </span>
+          ) : (
+            <User className={cn("text-muted-foreground", iconSizes[size])} />
+          )}
         </div>
       )}
-      
-      {!disabled && !isUploading && (
-        <div className="absolute inset-0 bg-black/0 hover:bg-black/20 rounded-full flex items-center justify-center transition-all duration-200 group">
-          <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-        </div>
-      )}
-
-      {/* Mobile upload indicator */}
-      {!disabled && !isUploading && (
-        <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1.5 shadow-lg md:hidden">
-          <Camera className="h-3 w-3 text-primary-foreground" />
-        </div>
-      )}
-
-      {children}
     </div>
   );
 };
+
+export default AvatarDisplay;

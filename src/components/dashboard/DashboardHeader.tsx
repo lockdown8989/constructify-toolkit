@@ -15,7 +15,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl md:text-4xl font-bold">Hello {firstName}</h1>
+        <h1 className="text-2xl md:text-4xl font-bold text-foreground">Hello {firstName}</h1>
         {showAccountType && <AccountTypeDisplay />}
       </div>
       <CurrentDateTime className="md:w-auto w-full mt-4 md:mt-0" />

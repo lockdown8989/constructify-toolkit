@@ -37,8 +37,8 @@ const CurrentDateTime: React.FC<CurrentDateTimeProps> = ({ className }) => {
     <Card className={`p-4 ${className}`}>
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-medium text-gray-500">Current Date & Time</h3>
-          <p className="text-xl font-bold mt-1">{formattedTime}</p>
+          <h3 className="text-sm font-medium text-muted-foreground">Current Date & Time</h3>
+          <p className="text-xl font-bold mt-1 text-foreground">{formattedTime}</p>
           <p className="text-sm text-muted-foreground">{formattedDate}</p>
         </div>
         <Clock className="h-8 w-8 text-muted-foreground" />

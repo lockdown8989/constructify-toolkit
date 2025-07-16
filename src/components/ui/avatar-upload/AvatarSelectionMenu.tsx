@@ -1,111 +1,72 @@
 
 import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { predefinedAvatars, getAvatarVariant } from '@/data/predefined-avatars';
-import { Upload } from 'lucide-react';
+import { predefinedAvatars } from '@/data/predefined-avatars';
 
 interface AvatarSelectionMenuProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelectAvatar: (avatarUrl: string) => void;
-  onUploadClick: () => void;
-  currentAvatarUrl?: string | null;
-  userInitials: string;
+  currentAvatar?: string;
+  onSelect: (avatar: string) => void;
+  onUpload: () => void;
+  onRemove: () => void;
 }
 
-export const AvatarSelectionMenu: React.FC<AvatarSelectionMenuProps> = ({
-  isOpen,
-  onClose,
-  onSelectAvatar,
-  onUploadClick,
-  currentAvatarUrl,
-  userInitials
+const AvatarSelectionMenu: React.FC<AvatarSelectionMenuProps> = ({
+  currentAvatar,
+  onSelect,
+  onUpload,
+  onRemove
 }) => {
-  const handleAvatarSelect = (avatarUrl: string) => {
-    onSelectAvatar(avatarUrl);
-    onClose();
-  };
-
-  const handleUpload = () => {
-    onUploadClick();
-    onClose();
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Choose Your Avatar</DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          {/* Upload option */}
-          <Button
-            onClick={handleUpload}
-            variant="outline"
-            className="w-full flex items-center gap-2"
+    <div className="p-4 max-w-md">
+      <h3 className="text-lg font-semibold mb-4 text-foreground">Choose Avatar</h3>
+      
+      {/* Predefined Avatars Grid */}
+      <div className="grid grid-cols-4 gap-3 mb-6">
+        {predefinedAvatars.map((avatar) => (
+          <button
+            key={avatar.id}
+            onClick={() => onSelect(avatar.gradientClass)}
+            className={cn(
+              "relative w-16 h-16 rounded-full border-2 transition-all hover:scale-105",
+              currentAvatar === avatar.gradientClass 
+                ? "border-primary ring-2 ring-primary/50" 
+                : "border-border hover:border-primary/50"
+            )}
           >
-            <Upload className="h-4 w-4" />
-            Upload Custom Image
+            <div className={cn("w-full h-full rounded-full", avatar.gradientClass)} />
+            {currentAvatar === avatar.gradientClass && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Check className="h-6 w-6 text-white drop-shadow-lg" />
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Action Buttons */}
+      <div className="space-y-2">
+        <Button
+          onClick={onUpload}
+          variant="outline"
+          className="w-full"
+        >
+          Upload Custom Image
+        </Button>
+        
+        {currentAvatar && (
+          <Button
+            onClick={onRemove}
+            variant="outline"
+            className="w-full text-destructive hover:text-destructive"
+          >
+            Remove Avatar
           </Button>
-          
-          {/* Current avatar display */}
-          {currentAvatarUrl && (
-            <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-              <Avatar className="h-10 w-10">
-                {currentAvatarUrl.startsWith('linear-gradient') ? (
-                  <AvatarFallback 
-                    className="text-white"
-                    style={{ background: currentAvatarUrl }}
-                  >
-                    {userInitials}
-                  </AvatarFallback>
-                ) : (
-                  <>
-                    <AvatarImage src={currentAvatarUrl} alt="Current" />
-                    <AvatarFallback>{userInitials}</AvatarFallback>
-                  </>
-                )}
-              </Avatar>
-              <span className="text-sm text-muted-foreground">Current avatar</span>
-            </div>
-          )}
-          
-          {/* Predefined avatars grid */}
-          <div className="grid grid-cols-6 gap-2 max-h-60 overflow-y-auto">
-            {predefinedAvatars.slice(0, 48).map((avatar, index) => (
-              <button
-                key={index}
-                onClick={() => handleAvatarSelect(avatar)}
-                className="relative group focus:outline-none focus:ring-2 focus:ring-primary rounded-full"
-              >
-                <div 
-                  className="w-12 h-12 rounded-full p-1 transition-transform group-hover:scale-110 group-active:scale-95"
-                  style={{ background: avatar }}
-                >
-                  <div className="w-full h-full rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <span className="text-white font-medium text-xs">
-                      {userInitials}
-                    </span>
-                  </div>
-                </div>
-                {currentAvatarUrl === avatar && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full" />
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        )}
+      </div>
+    </div>
   );
 };
+
+export default AvatarSelectionMenu;
