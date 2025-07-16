@@ -29,7 +29,7 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
     job_title: emp.jobTitle,
     department: emp.department,
     site: emp.site,
-    salary: parseInt(emp.salary.replace(/[^0-9]/g, '')),
+    salary: typeof emp.salary === 'string' ? parseInt(emp.salary.replace(/[^0-9]/g, '')) : emp.salary || 0,
     status: emp.status,
     employment_type: emp.employment_type,
     start_date: emp.startDate,

@@ -36,7 +36,7 @@ const MobileTable: React.FC<MobileTableProps> = ({
     job_title: emp.jobTitle,
     department: emp.department,
     site: emp.site,
-    salary: parseInt(emp.salary.replace(/[^0-9]/g, '')),
+    salary: typeof emp.salary === 'string' ? parseInt(emp.salary.replace(/[^0-9]/g, '')) : emp.salary || 0,
     status: emp.status,
     employment_type: emp.employment_type,
     start_date: emp.startDate,
@@ -54,6 +54,14 @@ const MobileTable: React.FC<MobileTableProps> = ({
   const handleStatusChange = (employee: any, newStatus: string) => {
     if (onStatusChange) {
       onStatusChange(employee.id, newStatus);
+    }
+  };
+
+  const handleEmployeeClick = (convertedEmployee: any) => {
+    // Find the original employee and call onEmployeeClick with it
+    const originalEmployee = employees.find(emp => emp.id === convertedEmployee.id);
+    if (originalEmployee && onEmployeeClick) {
+      onEmployeeClick(originalEmployee);
     }
   };
   
@@ -120,7 +128,7 @@ const MobileTable: React.FC<MobileTableProps> = ({
                 <EmployeeMobileCard
                   key={employee.id}
                   employee={convertEmployee(employee)}
-                  onEmployeeClick={onEmployeeClick}
+                  onEmployeeClick={handleEmployeeClick}
                   onStatusChange={handleStatusChange}
                   isUpdating={false}
                 />
