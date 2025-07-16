@@ -1,16 +1,11 @@
 
 import React from 'react';
-import { cn } from '@/lib/utils';
-import { MoreVertical, ChevronRight, Check } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Employee } from '../types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { formatCurrency } from '@/utils/format';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { Employee } from '../types';
+import EmployeeStatusDropdown from '../modals/employee-details/EmployeeStatusDropdown';
+import { useAuth } from '@/hooks/use-auth';
 
 interface EmployeeTableRowProps {
   employee: Employee;
@@ -27,11 +22,36 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
   onRowClick,
   onStatusChange,
 }) => {
+  const { isManager, isAdmin, isHR } = useAuth();
+  const canEditStatus = isManager || isAdmin || isHR;
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'inactive':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'on leave':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'invited':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'absent':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const handleStatusChange = (newStatus: string) => {
+    console.log('Updating employee status:', employee.id, newStatus);
+    if (onStatusChange) {
+      onStatusChange(employee.id, newStatus);
+    }
+  };
+
   const handleRowClick = (e: React.MouseEvent) => {
-    // Don't trigger row click when clicking the checkbox, actions, or dropdown
-    if ((e.target as HTMLElement).tagName === 'INPUT' ||
-        (e.target as HTMLElement).closest('input[type="checkbox"]') ||
-        (e.target as HTMLElement).closest('[data-dropdown]')) {
+    // Don't trigger row click if clicking on the checkbox or status dropdown
+    if ((e.target as HTMLElement).closest('[data-prevent-row-click]')) {
       return;
     }
     
@@ -39,120 +59,68 @@ const EmployeeTableRow: React.FC<EmployeeTableRowProps> = ({
       onRowClick(employee);
     }
   };
-  
-  const getInitials = (name: string): string => {
-    return name
-      .split(' ')
-      .map(part => part.charAt(0))
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
-
-  const statusColors = {
-    Active: "bg-green-100 text-green-700 border border-green-200",
-    Inactive: "bg-gray-100 text-gray-700 border border-gray-200",
-    Invited: "bg-blue-100 text-blue-700 border border-blue-200",
-    Absent: "bg-amber-100 text-amber-700 border border-amber-200"
-  };
-
-  // Extract numeric value from salary string and format with British pounds
-  const formatSalaryDisplay = (salaryString: string): string => {
-    const numericValue = parseInt(salaryString.replace(/[^0-9]/g, ''));
-    return formatCurrency(numericValue, 'GBP');
-  };
 
   return (
-    <tr
-      className={cn(
-        "transition-colors group hover:bg-gray-50 cursor-pointer",
-        isSelected && "bg-blue-50 hover:bg-blue-50"
-      )}
-      onClick={handleRowClick}
-      style={{ lineHeight: "1.4", minHeight: 64 }}
-    >
-      <td className="py-3 px-4 whitespace-nowrap">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => onSelect(employee.id)}
-          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-5 h-5"
-          onClick={e => e.stopPropagation()}
-        />
+    <tr className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={handleRowClick}>
+      <td className="px-4 py-3">
+        <div data-prevent-row-click>
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onSelect(employee.id)}
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+        </div>
       </td>
-      <td className="py-3 px-4 whitespace-nowrap min-w-[200px]">
-        <div className="flex items-center gap-4">
-          <Avatar className="h-12 w-12 rounded-full border border-gray-200 flex-shrink-0">
-            <AvatarImage
-              src={employee.avatar}
-              alt={employee.name}
-              className="object-cover"
-            />
-            <AvatarFallback className="bg-blue-100 text-blue-700 font-medium">
-              {getInitials(employee.name)}
+      
+      <td className="px-4 py-3">
+        <div className="flex items-center space-x-3">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={employee.avatar} alt={employee.name} />
+            <AvatarFallback className="text-xs">
+              {employee.name.split(' ').map(n => n[0]).join('').toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div>
-            <div className="font-semibold text-gray-900 text-base">{employee.name}</div>
+            <div className="font-medium text-gray-900">{employee.name}</div>
             <div className="text-sm text-gray-500">{employee.jobTitle}</div>
           </div>
         </div>
       </td>
-      <td className="py-3 px-4 whitespace-nowrap">
-        <span className="text-gray-700 font-medium">{employee.department}</span>
-      </td>
-      <td className="py-3 px-4 whitespace-nowrap">
+      
+      <td className="px-4 py-3 text-sm text-gray-900">{employee.department}</td>
+      
+      <td className="px-4 py-3 text-sm text-gray-900">{employee.site}</td>
+      
+      <td className="px-4 py-3 text-sm text-gray-900">
         <div className="flex items-center">
-          <span className="mr-1">{employee.siteIcon}</span>
-          <span className="text-gray-700">{employee.site}</span>
+          <span className="text-gray-600">{employee.siteIcon}</span>
+          <span className="ml-1">{employee.location}</span>
         </div>
       </td>
-      <td className="py-3 px-4 whitespace-nowrap">
-        <span className="font-medium text-gray-900">{formatSalaryDisplay(employee.salary)}</span>
-      </td>
-      <td className="py-3 px-4 whitespace-nowrap">
-        <span className="text-gray-700">{employee.startDate}</span>
-      </td>
-      <td className="py-3 px-4 whitespace-nowrap">
-        <span className="text-gray-700">{employee.lifecycle}</span>
-      </td>
-      <td className="py-3 px-4 whitespace-nowrap">
-        <span className={cn(
-          "inline-block px-2 py-1 rounded-full text-xs font-medium",
-          statusColors[employee.status as keyof typeof statusColors]
-        )}>
+      
+      <td className="px-4 py-3">
+        <Badge 
+          variant="outline" 
+          className={cn("text-xs", getStatusColor(employee.status))}
+        >
           {employee.status}
-        </span>
+        </Badge>
       </td>
-      <td className="py-3 px-4 whitespace-nowrap text-right">
-        <div className="flex items-center justify-end space-x-2" onClick={e => e.stopPropagation()}>
-          {onStatusChange && (
-            <div data-dropdown>
-              <DropdownMenu>
-                <DropdownMenuTrigger className="p-1.5 rounded-full hover:bg-gray-200">
-                  <MoreVertical className="h-5 w-5 text-gray-500" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => onStatusChange(employee.id, 'Active')}>
-                    Set as Active
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onStatusChange(employee.id, 'Inactive')}>
-                    Set as Inactive
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onStatusChange(employee.id, 'Invited')}>
-                    Set as Invited
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onStatusChange(employee.id, 'Absent')}>
-                    Set as Absent
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
-          <button className="p-1.5 rounded-full hover:bg-gray-200 text-gray-500">
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        </div>
+      
+      <td className="px-4 py-3 text-sm text-gray-500">{employee.startDate}</td>
+      
+      <td className="px-4 py-3 text-sm text-gray-500">{employee.lifecycle}</td>
+      
+      <td className="px-4 py-3">
+        {canEditStatus && (
+          <div data-prevent-row-click>
+            <EmployeeStatusDropdown
+              currentStatus={employee.status}
+              onStatusChange={handleStatusChange}
+            />
+          </div>
+        )}
       </td>
     </tr>
   );
