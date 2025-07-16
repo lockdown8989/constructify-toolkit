@@ -20,29 +20,36 @@ export const useRoles = (user: User | null) => {
   }, [user?.id]);
 
   const fetchUserRoles = async (userId: string) => {
+    console.log("🔄 Fetching roles for user:", userId);
+    
     try {
-      console.log("🔄 Fetching roles for user:", userId);
-      
-      // First check user_roles table
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId);
+      // Use Promise.allSettled to prevent one failure from breaking everything
+      const [rolesResult, employeeResult] = await Promise.allSettled([
+        supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId),
+        supabase
+          .from('employees')
+          .select('role, job_title')
+          .eq('user_id', userId)
+          .maybeSingle()
+      ]);
 
-      if (rolesError) {
-        console.error('❌ Error fetching user roles:', rolesError);
-        // Continue with defaults if roles fetch fails
+      // Handle roles result
+      let roles = null;
+      if (rolesResult.status === 'fulfilled' && !rolesResult.value.error) {
+        roles = rolesResult.value.data;
+      } else {
+        console.warn('⚠️ Failed to fetch user_roles:', rolesResult.status === 'rejected' ? rolesResult.reason : rolesResult.value.error);
       }
 
-      // Also check employee record for role backup
-      const { data: employeeData, error: employeeError } = await supabase
-        .from('employees')
-        .select('role, job_title')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (employeeError) {
-        console.error('❌ Error fetching employee data:', employeeError);
+      // Handle employee result
+      let employeeData = null;
+      if (employeeResult.status === 'fulfilled' && !employeeResult.value.error) {
+        employeeData = employeeResult.value.data;
+      } else {
+        console.warn('⚠️ Failed to fetch employee data:', employeeResult.status === 'rejected' ? employeeResult.reason : employeeResult.value.error);
       }
 
       console.log("📊 Role data:", { roles, employeeData });
@@ -91,15 +98,17 @@ export const useRoles = (user: User | null) => {
         setIsEmployee(true);
       }
       
-      setRolesLoaded(true);
     } catch (error) {
-      console.error('💥 Error in fetchUserRoles:', error);
-      // Set defaults on error
+      console.error('💥 Critical error in fetchUserRoles:', error);
+      // Set safe defaults that won't break auth
       setIsAdmin(false);
       setIsHR(false);
       setIsManager(false);
       setIsPayroll(false);
       setIsEmployee(true);
+    } finally {
+      // Always mark roles as loaded to prevent auth blocking
+      console.log("📝 Marking roles as loaded for user:", userId);
       setRolesLoaded(true);
     }
   };

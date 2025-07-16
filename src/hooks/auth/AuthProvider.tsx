@@ -115,11 +115,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Update loading state when roles are loaded or user is null
+  // Update loading state - ensure auth persists regardless of role loading
   useEffect(() => {
-    if (!user || rolesLoaded) {
-      console.log('📝 Roles loaded or no user, setting loading to false', { user: !!user, rolesLoaded });
+    // If we have a user but roles are still loading, keep showing authenticated state
+    // Only set loading to false when either: no user OR roles are loaded
+    if (!user) {
+      console.log('📝 No user, setting loading to false');
       setIsLoading(false);
+    } else if (rolesLoaded) {
+      console.log('📝 User authenticated and roles loaded, setting loading to false');
+      setIsLoading(false);
+    } else {
+      console.log('📝 User authenticated but roles still loading, keeping auth state');
+      // Don't set loading to false yet - let roles finish loading
+      // But ensure the user stays authenticated during role loading
     }
   }, [user, rolesLoaded]);
 
