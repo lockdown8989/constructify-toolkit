@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useEmployeeRotaLogic } from '../hooks/useEmployeeRotaLogic';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar, Users } from 'lucide-react';
+import { addMonths, subMonths } from 'date-fns';
+import CalendarHeader from '@/components/leave/calendar/CalendarHeader';
 
 const EmployeeRotaSchedule = () => {
+  const [currentDate, setCurrentDate] = useState(new Date());
   const {
     selectedDate,
     isDateDialogOpen,
@@ -16,6 +19,14 @@ const EmployeeRotaSchedule = () => {
     isMobile,
     handleDateClick,
   } = useEmployeeRotaLogic();
+
+  const handlePrevMonth = () => {
+    setCurrentDate(subMonths(currentDate, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(addMonths(currentDate, 1));
+  };
 
   if (isLoading) {
     return (
@@ -42,11 +53,12 @@ const EmployeeRotaSchedule = () => {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Employee Rota Schedule
-          </CardTitle>
+        <CardHeader className="pb-2">
+          <CalendarHeader 
+            currentDate={currentDate}
+            onPrevMonth={handlePrevMonth}
+            onNextMonth={handleNextMonth}
+          />
           <p className="text-sm text-gray-600">
             View and manage employee schedules based on their assigned rota patterns
           </p>
