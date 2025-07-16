@@ -49,7 +49,7 @@ export const useSignInForm = ({ onSignIn }: UseSignInFormProps = {}) => {
         // Handle specific error cases
         if (result.error.message?.includes("Invalid login credentials") || 
             result.error.message?.includes("Invalid email or password")) {
-          setErrorMessage(result.error.message);
+          setErrorMessage("Invalid email or password. Please check your credentials and try again.");
           setShowResetOption(true); // Show reset option for credential errors
         } else if (result.error.message?.includes("Email not confirmed")) {
           setErrorMessage("Please verify your email address before signing in.");
@@ -61,6 +61,7 @@ export const useSignInForm = ({ onSignIn }: UseSignInFormProps = {}) => {
       } else if (result?.data?.user) {
         // Successful sign in - redirect will be handled by auth provider
         console.log("✅ Sign in successful for:", result.data.user.email);
+        setErrorMessage(""); // Clear any previous errors
       }
     } catch (error) {
       console.error("Sign in exception:", error);
