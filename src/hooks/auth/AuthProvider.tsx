@@ -48,19 +48,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           hasSession: !!session,
           hasUser: !!session?.user,
           userId: session?.user?.id,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          sessionExpires: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : null
         });
         
-        // Handle explicit sign out only
+        // Handle token refresh failures and auth errors
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('🔄 Token refreshed successfully');
+          setSession(session);
+          setUser(session?.user ?? null);
+          return;
+        }
+        
         if (event === 'SIGNED_OUT') {
-          console.log('🔄 User explicitly signed out, clearing state');
+          console.log('🔄 User signed out or deleted, clearing state');
           setSession(null);
           setUser(null);
           setIsLoading(false);
           return;
         }
         
-        // Update session and user state
+        // Handle authentication errors
+        if (event === 'PASSWORD_RECOVERY' || event === 'USER_UPDATED') {
+          console.log('🔄 Password recovery or user update event');
+          // Don't clear session for these events
+          return;
+        }
+        
+        // Update session and user state for all other events
         setSession(session);
         setUser(session?.user ?? null);
         
