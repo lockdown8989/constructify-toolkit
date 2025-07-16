@@ -262,11 +262,6 @@ const RotaEmployeeManager = () => {
           description: `Rota pattern updated and assigned to ${selectedEmployees.length} employee(s).`,
         });
         
-        // Refresh pattern employees after successful assignment
-        setTimeout(() => {
-          refreshPatternEmployees();
-        }, 1000);
-        
       } else {
         console.log('Creating new pattern with data:', formData);
         
@@ -291,11 +286,6 @@ const RotaEmployeeManager = () => {
             title: "Success",
             description: `Rota pattern created and assigned to ${selectedEmployees.length} employee(s). Use "Sync to Calendar" to create confirmed shifts for employees.`,
           });
-          
-          // Refresh pattern employees after successful assignment
-          setTimeout(() => {
-            refreshPatternEmployees();
-          }, 1000);
         } else {
           toast({
             title: "Success",
@@ -303,6 +293,18 @@ const RotaEmployeeManager = () => {
           });
         }
       }
+      
+      // Force refresh pattern employees data immediately
+      setTimeout(() => {
+        console.log('Refreshing pattern employees after assignment');
+        refreshPatternEmployees();
+      }, 500);
+      
+      // Additional refresh after a longer delay to ensure data is synced
+      setTimeout(() => {
+        console.log('Secondary refresh of pattern employees');
+        refreshPatternEmployees();
+      }, 2000);
       
       setIsCreateModalOpen(false);
       resetForm();

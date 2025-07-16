@@ -26,12 +26,30 @@ export const RotaCalendarSync: React.FC<RotaCalendarSyncProps> = ({
     pattern => patternEmployees[pattern.id]?.length > 0
   ).length;
   
-  // Calculate unique employees across all patterns
+  // Calculate unique employees across all patterns - improved logic
   const uniqueEmployeeIds = new Set<string>();
+  
+  console.log('RotaCalendarSync - patternEmployees:', patternEmployees);
+  
+  // Iterate through all patterns and collect unique employee IDs
   Object.values(patternEmployees).forEach(employees => {
-    employees.forEach(emp => uniqueEmployeeIds.add(emp.id));
+    if (Array.isArray(employees)) {
+      employees.forEach(emp => {
+        if (emp && emp.id) {
+          uniqueEmployeeIds.add(emp.id);
+        }
+      });
+    }
   });
+  
   const totalEmployees = uniqueEmployeeIds.size;
+  
+  console.log('RotaCalendarSync - Calculated totals:', {
+    totalPatterns,
+    patternsWithEmployees,
+    totalEmployees,
+    uniqueEmployeeIds: Array.from(uniqueEmployeeIds)
+  });
 
   return (
     <Card>
@@ -87,6 +105,14 @@ export const RotaCalendarSync: React.FC<RotaCalendarSyncProps> = ({
           <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
             <p className="text-yellow-800">
               No rotas are ready for synchronization. Please assign employees to your rota patterns first.
+            </p>
+          </div>
+        )}
+        
+        {totalEmployees === 0 && totalPatterns > 0 && (
+          <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-200">
+            <p className="text-orange-800">
+              No employees have been assigned to any rota patterns yet. Add employees to your rotas to enable synchronization.
             </p>
           </div>
         )}
