@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AuthFormData } from '@/lib/auth/types';
 import { validateSignUpForm } from '@/lib/auth/validation';
+import { AccountTypeSelector } from '../components/AccountTypeSelector';
+import { useUserRole, UserRole } from '../hooks/useUserRole';
 
 interface SignUpFormProps {
   onSubmit: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;
@@ -22,6 +24,9 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Role management
+  const { userRole, handleRoleChange, managerId, setManagerId, generateManagerId } = useUserRole();
 
   const {
     register,
@@ -210,6 +215,41 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
           <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
         )}
       </div>
+
+      {/* Account Type Selection */}
+      <AccountTypeSelector 
+        userRole={userRole}
+        onRoleChange={handleRoleChange}
+        disabled={isFormLoading}
+      />
+
+      {/* Manager ID Field - Only show for managers */}
+      {userRole === 'manager' && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-base font-medium">Manager ID</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={generateManagerId}
+              disabled={isFormLoading}
+            >
+              Generate ID
+            </Button>
+          </div>
+          <Input
+            type="text"
+            placeholder="Enter or generate manager ID"
+            value={managerId}
+            onChange={(e) => setManagerId(e.target.value)}
+            disabled={isFormLoading}
+          />
+          <p className="text-xs text-muted-foreground">
+            Manager ID is required for manager accounts
+          </p>
+        </div>
+      )}
 
       <Button type="submit" className="w-full" disabled={isFormLoading}>
         {isFormLoading ? (
