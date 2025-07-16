@@ -1,46 +1,170 @@
 
-import React from 'react';
-import { User, Settings, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from "react";
+import { LogOut, Settings } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/hooks/use-auth';
-import { useNavigate } from 'react-router-dom';
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
+import AccountTypeDisplay from "./AccountTypeDisplay";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchUserAvatar = async () => {
+      if (!user) return;
+      
+      try {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("avatar_url")
+          .eq("id", user.id)
+          .maybeSingle();
+        
+        if (profileData?.avatar_url) {
+          setAvatarUrl(profileData.avatar_url);
+        }
+      } catch (error) {
+        console.error("Error fetching user avatar:", error);
+      }
+    };
+
+    fetchUserAvatar();
+  }, [user]);
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+    try {
+      await signOut();
+      navigate("/auth");
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
+      });
+    } catch (error) {
+      console.error("Sign out error:", error);
+      toast({
+        title: "Error signing out",
+        description: "There was a problem signing out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
+  const handleSettingsClick = () => {
+    console.log("🔗 Navigating to settings page");
+    navigate("/settings");
+  };
+
+  const handleAvatarClick = () => {
+    setIsAvatarDialogOpen(true);
+  };
+
+  const handleAvatarChange = (url: string | null) => {
+    setAvatarUrl(url);
+  };
+
+  const getUserInitials = () => {
+    const firstName = user?.user_metadata?.first_name || "";
+    const lastName = user?.user_metadata?.last_name || "";
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "U";
+  };
+
+  const getUserDisplayName = () => {
+    const firstName = user?.user_metadata?.first_name || "";
+    const lastName = user?.user_metadata?.last_name || "";
+    return `${firstName} ${lastName}`.trim() || user?.email || "User";
+  };
+
+  // Check if current avatar is a gradient
+  const isGradientAvatar = avatarUrl && avatarUrl.startsWith('linear-gradient');
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="touch-target">
-          <User className="h-5 w-5" />
-          <span className="sr-only">User menu</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => navigate('/profile-settings')}>
-          <Settings className="mr-2 h-4 w-4" />
-          Settings
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button 
+            className="flex items-center space-x-2 rounded-full p-1 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
+            onClick={handleAvatarClick}
+          >
+            <Avatar className="h-8 w-8">
+              {!isGradientAvatar && (
+                <AvatarImage src={avatarUrl || undefined} alt="Profile" />
+              )}
+              <AvatarFallback 
+                className={`text-sm font-medium ${
+                  isGradientAvatar 
+                    ? 'text-white' 
+                    : 'bg-primary text-primary-foreground'
+                }`}
+                style={isGradientAvatar ? { background: avatarUrl } : undefined}
+              >
+                {getUserInitials()}
+              </AvatarFallback>
+            </Avatar>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-64" align="end">
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-2">
+              <p className="text-sm font-medium leading-none">
+                {getUserDisplayName()}
+              </p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {user?.email}
+              </p>
+              <AccountTypeDisplay />
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleSettingsClick} className="cursor-pointer">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Sign out</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Avatar</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <AvatarUpload
+              currentAvatarUrl={avatarUrl}
+              onAvatarChange={handleAvatarChange}
+              userInitials={getUserInitials()}
+              size="lg"
+              onUploadComplete={() => setIsAvatarDialogOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

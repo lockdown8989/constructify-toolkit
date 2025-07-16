@@ -1,5 +1,5 @@
 
-import { useAuth } from "@/hooks/use-auth"
+import { useAuth } from "@/hooks/auth"
 import { useIsMobile } from "@/hooks/use-mobile"
 import NotificationBell from '@/components/notifications/NotificationBell'
 import MobileNav from "./navigation/MobileNav"
@@ -17,14 +17,10 @@ const Navbar = () => {
   return (
     <div className="border-b sticky top-0 bg-background z-40 safe-area-inset">
       <div className="flex h-16 items-center px-4">
-        {/* Mobile Navigation - Show hamburger menu button on mobile */}
         {isMobile && <MobileNav isAuthenticated={isAuthenticated} />}
         
-        {/* Spacer to push right side elements to the end */}
-        <div className="flex-1" />
-        
-        {/* Right side elements */}
-        <div className="flex items-center space-x-2">
+        {/* Push all the right side elements to the end */}
+        <div className="ml-auto flex items-center space-x-2">
           {/* Add notification bell before user account menu */}
           {isAuthenticated && <NotificationBell />}
           

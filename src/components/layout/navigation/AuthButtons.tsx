@@ -1,20 +1,21 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button"
+import { Link } from "react-router-dom"
 
 const AuthButtons = () => {
-  const navigate = useNavigate();
-
   return (
-    <div className="flex items-center space-x-2">
-      <Button variant="ghost" onClick={() => navigate('/auth')}>
-        Sign In
-      </Button>
-      <Button onClick={() => navigate('/auth')}>
-        Get Started
-      </Button>
-    </div>
+    <>
+      <Link to="/auth">
+        <Button variant="ghost" size="sm">
+          Sign In
+        </Button>
+      </Link>
+      <Link to="/auth?tab=signup">
+        <Button variant="ghost" size="sm">
+          Sign Up
+        </Button>
+      </Link>
+    </>
   );
 };
 

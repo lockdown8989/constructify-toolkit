@@ -379,81 +379,6 @@ export type Database = {
           },
         ]
       }
-      data_processing_log: {
-        Row: {
-          action_type: string
-          created_at: string | null
-          id: string
-          ip_address: unknown | null
-          legal_basis: string
-          processed_data: Json | null
-          processor_id: string | null
-          record_id: string | null
-          table_name: string
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          action_type: string
-          created_at?: string | null
-          id?: string
-          ip_address?: unknown | null
-          legal_basis: string
-          processed_data?: Json | null
-          processor_id?: string | null
-          record_id?: string | null
-          table_name: string
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          action_type?: string
-          created_at?: string | null
-          id?: string
-          ip_address?: unknown | null
-          legal_basis?: string
-          processed_data?: Json | null
-          processor_id?: string | null
-          record_id?: string | null
-          table_name?: string
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      data_retention_policy: {
-        Row: {
-          created_at: string | null
-          deletion_criteria: Json | null
-          id: string
-          is_active: boolean | null
-          last_cleanup_date: string | null
-          retention_period_days: number
-          table_name: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          deletion_criteria?: Json | null
-          id?: string
-          is_active?: boolean | null
-          last_cleanup_date?: string | null
-          retention_period_days: number
-          table_name: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          deletion_criteria?: Json | null
-          id?: string
-          is_active?: boolean | null
-          last_cleanup_date?: string | null
-          retention_period_days?: number
-          table_name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       document_assignments: {
         Row: {
           assigned_at: string | null
@@ -1340,71 +1265,50 @@ export type Database = {
       }
       profiles: {
         Row: {
-          anonymization_date: string | null
           avatar_url: string | null
           country: string | null
           created_at: string | null
-          data_processing_consent: boolean | null
-          data_retention_override: number | null
-          deletion_requested_date: string | null
           department: string | null
           first_name: string | null
           id: string
           last_name: string | null
-          last_privacy_policy_accepted: string | null
-          marketing_consent: boolean | null
           oauth_id: string | null
           oauth_provider: string | null
           position: string | null
           preferred_currency: string | null
           preferred_language: string | null
-          privacy_policy_version: string | null
           theme: string | null
           updated_at: string | null
         }
         Insert: {
-          anonymization_date?: string | null
           avatar_url?: string | null
           country?: string | null
           created_at?: string | null
-          data_processing_consent?: boolean | null
-          data_retention_override?: number | null
-          deletion_requested_date?: string | null
           department?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
-          last_privacy_policy_accepted?: string | null
-          marketing_consent?: boolean | null
           oauth_id?: string | null
           oauth_provider?: string | null
           position?: string | null
           preferred_currency?: string | null
           preferred_language?: string | null
-          privacy_policy_version?: string | null
           theme?: string | null
           updated_at?: string | null
         }
         Update: {
-          anonymization_date?: string | null
           avatar_url?: string | null
           country?: string | null
           created_at?: string | null
-          data_processing_consent?: boolean | null
-          data_retention_override?: number | null
-          deletion_requested_date?: string | null
           department?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
-          last_privacy_policy_accepted?: string | null
-          marketing_consent?: boolean | null
           oauth_id?: string | null
           oauth_provider?: string | null
           position?: string | null
           preferred_currency?: string | null
           preferred_language?: string | null
-          privacy_policy_version?: string | null
           theme?: string | null
           updated_at?: string | null
         }
@@ -2143,48 +2047,6 @@ export type Database = {
           },
         ]
       }
-      user_consent: {
-        Row: {
-          consent_date: string | null
-          consent_given: boolean
-          consent_type: string
-          consent_withdrawn_date: string | null
-          created_at: string | null
-          id: string
-          ip_address: unknown | null
-          privacy_policy_version: string | null
-          updated_at: string | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          consent_date?: string | null
-          consent_given?: boolean
-          consent_type: string
-          consent_withdrawn_date?: string | null
-          created_at?: string | null
-          id?: string
-          ip_address?: unknown | null
-          privacy_policy_version?: string | null
-          updated_at?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          consent_date?: string | null
-          consent_given?: boolean
-          consent_type?: string
-          consent_withdrawn_date?: string | null
-          created_at?: string | null
-          id?: string
-          ip_address?: unknown | null
-          privacy_policy_version?: string | null
-          updated_at?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -2274,10 +2136,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      anonymize_user_data: {
-        Args: { target_user_id: string }
-        Returns: Json
-      }
       approve_overtime: {
         Args: {
           p_attendance_id: string
@@ -2333,10 +2191,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      cleanup_expired_data: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
       create_shift_notifications: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2355,10 +2209,6 @@ export type Database = {
       end_employee_break: {
         Args: { p_attendance_id: string }
         Returns: boolean
-      }
-      export_user_data: {
-        Args: { target_user_id: string }
-        Returns: Json
       }
       generate_pin_code: {
         Args: Record<PropertyKey, never>

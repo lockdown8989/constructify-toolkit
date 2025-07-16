@@ -1,22 +1,24 @@
 
-import React from 'react';
-import { X } from 'lucide-react';
+import { Link } from "react-router-dom";
+import { SheetTitle } from "@/components/sheet";
 
 interface MobileNavHeaderProps {
   onClose: () => void;
 }
 
-const MobileNavHeader: React.FC<MobileNavHeaderProps> = ({ onClose }) => {
+const MobileNavHeader = ({ onClose }: MobileNavHeaderProps) => {
   return (
-    <div className="flex items-center justify-between p-4 border-b border-gray-200">
-      <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
-      <button
-        onClick={onClose}
-        className="p-2 rounded-md hover:bg-gray-100 transition-colors"
-      >
-        <X className="h-5 w-5" />
-        <span className="sr-only">Close menu</span>
-      </button>
+    <div className="flex items-center px-6 pt-8 pb-4">
+      <div className="flex-1 text-center">
+        <Link to="/" onClick={onClose} className="flex items-center gap-2">
+          <img 
+            src="/lovable-uploads/6498c422-3293-40e4-99c1-a94a137934f6.png" 
+            alt="TeamPulse Logo" 
+            className="h-8 w-auto animate-bounce hover:animate-spin hover:scale-110 transition-all duration-500 cursor-pointer"
+          />
+          <SheetTitle className="font-semibold text-lg">TeamPulse</SheetTitle>
+        </Link>
+      </div>
     </div>
   );
 };

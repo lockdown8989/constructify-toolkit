@@ -1,72 +1,76 @@
 
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Home, 
-  Calendar, 
-  Users, 
-  Settings,
-  FileText,
-  Clock
-} from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import { useTimeClock } from "@/hooks/time-clock";
+
+import SidebarHeader from './sidebar/SidebarHeader';
+import TimeClockControls from './sidebar/TimeClockControls';
+import { NavigationLinks } from './sidebar/NavigationLinks';
 
 interface DesktopSidebarProps {
   isAuthenticated: boolean;
 }
 
 const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ isAuthenticated }) => {
+  const { isAdmin, isHR, isManager, isPayroll, isEmployee } = useAuth();
+  
+  // FIXED: Managers should have managerial access
+  const hasManagerialAccess = (isManager || isAdmin || isHR) && !isPayroll;
+  
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAdmin, isManager, isHR } = useAuth();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { status, handleClockIn, handleClockOut, handleBreakStart, handleBreakEnd } = useTimeClock();
+  
+  // Only regular employees (not managers or payroll users) get clocking controls
+  const isClockingEnabled = isEmployee && !hasManagerialAccess && !isPayroll && isAuthenticated;
+  
+  console.log("🖥️ DesktopSidebar - Role state:", {
+    isManager,
+    isAdmin,
+    isHR,
+    isPayroll,
+    isEmployee,
+    hasManagerialAccess,
+    isClockingEnabled
+  });
+  
+  const handleHomeClick = () => {
+    navigate('/dashboard');
+  };
 
-  const navigationItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home },
-    { name: 'Time Clock', href: '/time-clock', icon: Clock },
-    { name: 'Calendar', href: '/calendar', icon: Calendar },
-    { name: 'Documents', href: '/documents', icon: FileText },
-  ];
-
-  // Add management items for managers, HR, and admins
-  if (isManager || isAdmin || isHR) {
-    navigationItems.push(
-      { name: 'Employees', href: '/employees', icon: Users },
-      { name: 'Settings', href: '/settings', icon: Settings }
-    );
-  }
-
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+  
   if (!isAuthenticated) {
     return null;
   }
-
+  
   return (
-    <div className="w-64 bg-white border-r border-gray-200 h-full">
-      <div className="flex flex-col h-full">
-        <div className="p-4">
-          <h2 className="text-lg font-semibold text-gray-900">Navigation</h2>
-        </div>
+    <div className={cn(
+      "desktop-sidebar flex flex-col h-screen border-r bg-white transition-all duration-300 sticky top-0", 
+      isCollapsed ? "w-[70px]" : "w-[240px]"
+    )}>
+      <SidebarHeader 
+        isCollapsed={isCollapsed}
+        toggleCollapse={toggleCollapse}
+      />
+      
+      <div className="sidebar-content flex-1 overflow-y-auto">
+        <TimeClockControls
+          isClockingEnabled={isClockingEnabled}
+          isCollapsed={isCollapsed}
+          status={status}
+          onClockIn={handleClockIn}
+          onClockOut={handleClockOut}
+          onBreakStart={handleBreakStart}
+          onBreakEnd={handleBreakEnd}
+        />
         
-        <nav className="flex-1 px-4 space-y-2">
-          {navigationItems.map((item) => {
-            const isActive = location.pathname === item.href;
-            const Icon = item.icon;
-            
-            return (
-              <button
-                key={item.name}
-                onClick={() => navigate(item.href)}
-                className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isActive
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                <Icon className="mr-3 h-5 w-5" />
-                {item.name}
-              </button>
-            );
-          })}
-        </nav>
+        <NavigationLinks />
       </div>
     </div>
   );
