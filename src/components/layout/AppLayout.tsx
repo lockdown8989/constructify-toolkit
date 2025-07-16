@@ -12,8 +12,8 @@ const AppLayout = () => {
   
   return (
     <div className="flex min-h-screen w-full">
-      {/* Desktop Sidebar - Always render on desktop */}
-      {!isMobile && (
+      {/* Desktop Sidebar - Always render on desktop when authenticated */}
+      {!isMobile && isAuthenticated && (
         <div className="flex-shrink-0">
           <DesktopSidebar isAuthenticated={isAuthenticated} />
         </div>
