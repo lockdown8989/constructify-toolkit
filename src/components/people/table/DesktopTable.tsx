@@ -50,6 +50,14 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
     }
   };
 
+  const handleEmployeeClick = (convertedEmployee: any) => {
+    // Find the original employee and call onEmployeeClick with it
+    const originalEmployee = employees.find(emp => emp.id === convertedEmployee.id);
+    if (originalEmployee && onEmployeeClick) {
+      onEmployeeClick(originalEmployee);
+    }
+  };
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200 table-fixed">
@@ -73,7 +81,7 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
                 employee={convertEmployee(employee)}
                 isSelected={selectedEmployees.includes(employee.id)}
                 onSelect={onSelectEmployee}
-                onRowClick={onEmployeeClick}
+                onEmployeeClick={handleEmployeeClick}
                 onStatusChange={handleStatusChange}
                 isUpdating={false}
               />
