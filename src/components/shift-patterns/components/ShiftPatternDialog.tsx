@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -9,24 +8,26 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ShiftPattern } from '@/types/shift-patterns';
+import { ShiftTemplate } from '@/types/schedule';
 import { EmployeeAssignment } from './EmployeeAssignment';
 
-interface FormData {
+export interface ShiftPatternFormData {
   name: string;
   start_time: string;
   end_time: string;
   break_duration: number;
-  grace_period_minutes: number;
-  overtime_threshold_minutes: number;
+  days_of_week: number[];
+  requirements: Record<string, any>;
+  role?: string;
+  location?: string;
 }
 
 interface ShiftPatternDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  editingPattern: ShiftPattern | null;
-  formData: FormData;
-  onFormDataChange: (data: FormData) => void;
+  editingPattern: ShiftTemplate | null;
+  formData: ShiftPatternFormData;
+  onFormDataChange: (data: ShiftPatternFormData) => void;
   employees: any[];
   selectedEmployees: string[];
   selectedEmployeeId: string;
@@ -100,40 +101,16 @@ export const ShiftPatternDialog = ({
             </div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="break_duration" className="text-sm font-medium">Break (minutes)</Label>
-              <Input
-                id="break_duration"
-                type="number"
-                value={formData.break_duration}
-                onChange={(e) => onFormDataChange({...formData, break_duration: parseInt(e.target.value)})}
-                min="0"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="grace_period" className="text-sm font-medium">Grace Period (minutes)</Label>
-              <Input
-                id="grace_period"
-                type="number"
-                value={formData.grace_period_minutes}
-                onChange={(e) => onFormDataChange({...formData, grace_period_minutes: parseInt(e.target.value)})}
-                min="0"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="overtime_threshold" className="text-sm font-medium">Overtime Threshold (minutes)</Label>
-              <Input
-                id="overtime_threshold"
-                type="number"
-                value={formData.overtime_threshold_minutes}
-                onChange={(e) => onFormDataChange({...formData, overtime_threshold_minutes: parseInt(e.target.value)})}
-                min="0"
-                className="mt-1"
-              />
-            </div>
+          <div>
+            <Label htmlFor="break_duration" className="text-sm font-medium">Break Duration (minutes)</Label>
+            <Input
+              id="break_duration"
+              type="number"
+              value={formData.break_duration}
+              onChange={(e) => onFormDataChange({...formData, break_duration: parseInt(e.target.value)})}
+              min="0"
+              className="mt-1"
+            />
           </div>
 
           {/* Employee Assignment Section - Only show when editing */}

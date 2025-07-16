@@ -7,12 +7,12 @@ import { useShiftPatterns, useCreateShiftPattern, useUpdateShiftPattern, useDele
 import { useEmployees } from '@/hooks/use-employees';
 import { useCreateRecurringSchedules } from '@/hooks/use-recurring-schedules';
 import { useAssignEmployeesToPattern } from '@/hooks/use-shift-pattern-assignments';
-import { ShiftPattern } from '@/types/shift-patterns';
+import { ShiftTemplate } from '@/types/schedule';
 import { useToast } from '@/hooks/use-toast';
 import { usePatternEmployees } from './hooks/usePatternEmployees';
 import { useShiftPatternForm } from './hooks/useShiftPatternForm';
 import { ShiftPatternCard } from './components/ShiftPatternCard';
-import { ShiftPatternDialog } from './components/ShiftPatternDialog';
+import { ShiftPatternDialog, ShiftPatternFormData } from './components/ShiftPatternDialog';
 
 const ShiftPatternManager = () => {
   const { data: shiftPatterns = [], isLoading } = useShiftPatterns();
@@ -25,7 +25,7 @@ const ShiftPatternManager = () => {
   const { toast } = useToast();
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [editingPattern, setEditingPattern] = useState<ShiftPattern | null>(null);
+  const [editingPattern, setEditingPattern] = useState<ShiftTemplate | null>(null);
   
   const { patternEmployees, refreshPatternEmployees } = usePatternEmployees(shiftPatterns);
   const {
@@ -55,7 +55,7 @@ const ShiftPatternManager = () => {
     setIsCreateModalOpen(true);
   };
 
-  const handleEdit = (pattern: ShiftPattern) => {
+  const handleEdit = (pattern: ShiftTemplate) => {
     setEditingPattern(pattern);
     loadPatternData(pattern);
     setIsCreateModalOpen(true);

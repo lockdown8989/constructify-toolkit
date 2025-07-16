@@ -76,8 +76,10 @@ const AIPatternGenerator = () => {
             start_time: aiSuggestion.start_time || '09:00:00',
             end_time: aiSuggestion.end_time || '17:00:00',
             break_duration: aiSuggestion.break_duration || 30,
-            grace_period_minutes: aiSuggestion.grace_period_minutes || 5,
-            overtime_threshold_minutes: aiSuggestion.overtime_threshold_minutes || 480
+            days_of_week: aiSuggestion.days_of_week || [1, 2, 3, 4, 5], // Monday to Friday by default
+            requirements: aiSuggestion.requirements || {},
+            role: aiSuggestion.role || null,
+            location: aiSuggestion.location || null
           });
 
           toast({

@@ -3,12 +3,12 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, Users } from 'lucide-react';
-import { ShiftPattern } from '@/types/shift-patterns';
+import { ShiftTemplate } from '@/types/schedule';
 
 interface ShiftPatternCardProps {
-  pattern: ShiftPattern;
+  pattern: ShiftTemplate;
   assignedEmployees: any[];
-  onEdit: (pattern: ShiftPattern) => void;
+  onEdit: (pattern: ShiftTemplate) => void;
   onDelete: (id: string) => void;
 }
 
@@ -30,7 +30,7 @@ export const ShiftPatternCard = ({ pattern, assignedEmployees, onEdit, onDelete 
             {formatTime(pattern.start_time)} - {formatTime(pattern.end_time)}
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            Break: {pattern.break_duration}min | Grace: {pattern.grace_period_minutes}min
+            Break: {pattern.break_duration}min
           </p>
           
           {/* Assigned Employees Section */}
