@@ -16,51 +16,31 @@ const LandingPage: React.FC = () => {
   const isAuthenticated = !!user;
   
   return (
-    <>
-      {/* Hide on mobile/tablet - only show on desktop */}
-      <div className="hidden xl:block min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden relative">
-        {/* Background animated particles */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -inset-10 opacity-30">
-            <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
-            <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
-            <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
-          </div>
-        </div>
-
-        {/* Top Navigation */}
-        <TopNavigation isAuthenticated={isAuthenticated} />
-
-        {/* Main content */}
-        <div className="relative z-10">
-          <HeroSection isAuthenticated={isAuthenticated} isManager={isManager} />
-          <FeaturesSection />
-          <HowItWorksSection />
-          <TestimonialsSection />
-          <FooterSection />
-        </div>
-
-        {/* Floating chatbot */}
-        <FloatingChatbot />
-      </div>
-
-      {/* Mobile/Tablet fallback - redirect to dashboard or show simple message */}
-      <div className="xl:hidden min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-purple-900 text-white p-6">
-        <div className="text-center space-y-6">
-          <h1 className="text-3xl font-bold">Employee Scheduling System</h1>
-          <p className="text-lg text-gray-300">Please use a desktop computer to access the full experience.</p>
-          {isAuthenticated ? (
-            <Button asChild size="lg" className="bg-purple-600 hover:bg-purple-700">
-              <Link to="/dashboard">Go to Dashboard</Link>
-            </Button>
-          ) : (
-            <Button asChild size="lg" className="bg-purple-600 hover:bg-purple-700">
-              <Link to="/auth">Sign In</Link>
-            </Button>
-          )}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden relative">
+      {/* Background animated particles */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -inset-10 opacity-30">
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
+          <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
         </div>
       </div>
-    </>
+
+      {/* Top Navigation */}
+      <TopNavigation isAuthenticated={isAuthenticated} />
+
+      {/* Main content */}
+      <div className="relative z-10">
+        <HeroSection isAuthenticated={isAuthenticated} isManager={isManager} />
+        <FeaturesSection />
+        <HowItWorksSection />
+        <TestimonialsSection />
+        <FooterSection />
+      </div>
+
+      {/* Floating chatbot */}
+      <FloatingChatbot />
+    </div>
   );
 };
 

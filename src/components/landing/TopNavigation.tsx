@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -17,18 +18,18 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({ isAuthenticated })
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black/10 backdrop-blur-lg border-b border-white/10">
-      <div className="container mx-auto px-6">
-        <div className="flex items-center justify-between h-16">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="flex items-center justify-between h-14 md:h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Clock className="w-5 h-5 text-white" />
+            <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Clock className="w-3 h-3 md:w-5 md:h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-white">SchedulePro</span>
+            <span className="text-lg md:text-xl font-bold text-white">SchedulePro</span>
           </Link>
 
-          {/* Center Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          {/* Center Navigation - Hidden on mobile */}
+          <div className="hidden lg:flex items-center space-x-8">
             {navItems.map((item) => (
               <a
                 key={item.name}
@@ -42,18 +43,20 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({ isAuthenticated })
           </div>
 
           {/* Auth Buttons */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 md:space-x-4">
             {!isAuthenticated ? (
               <>
                 <Button 
                   variant="ghost" 
                   asChild
-                  className="text-gray-300 hover:text-white hover:bg-white/10"
+                  size="sm"
+                  className="text-gray-300 hover:text-white hover:bg-white/10 hidden sm:flex"
                 >
                   <Link to="/auth">Sign In</Link>
                 </Button>
                 <Button 
                   asChild 
+                  size="sm"
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
                 >
                   <Link to="/auth">Get Started</Link>
@@ -62,6 +65,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({ isAuthenticated })
             ) : (
               <Button 
                 asChild 
+                size="sm"
                 className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
               >
                 <Link to="/dashboard">Dashboard</Link>
