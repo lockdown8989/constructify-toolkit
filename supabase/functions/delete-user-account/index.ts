@@ -48,30 +48,80 @@ serve(async (req) => {
     
     console.log("Deleting user:", user.id);
     
-    // Delete all user data first before removing the user account
-    // Start with tables that may have foreign key constraints
-    const tables = [
+    // Get employee record first (if exists) to handle cascade deletions properly
+    const { data: employeeRecord } = await supabaseAdmin
+      .from('employees')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    if (employeeRecord) {
+      console.log("Found employee record:", employeeRecord.id);
+      
+      // Delete employee-related data first (in correct order to avoid FK violations)
+      const employeeRelatedTables = [
+        'shift_notifications',
+        'shift_applications', 
+        'clock_notifications',
+        'employee_location_logs',
+        'shift_pattern_assignments',
+        'attendance',
+        'availability_patterns',
+        'availability_requests', 
+        'calendar_preferences',
+        'document_assignments',
+        'documents',
+        'leave_calendar',
+        'open_shift_assignments',
+        'payroll',
+        'salary_statistics',
+        'schedules'
+      ];
+      
+      for (const table of employeeRelatedTables) {
+        try {
+          const { error } = await supabaseAdmin
+            .from(table)
+            .delete()
+            .eq('employee_id', employeeRecord.id);
+            
+          if (error && !error.message.includes('does not exist') && !error.message.includes('column "employee_id" does not exist')) {
+            console.warn(`Warning when deleting from ${table}:`, error);
+          } else if (!error) {
+            console.log(`Successfully deleted ${table} records for employee ${employeeRecord.id}`);
+          }
+        } catch (err) {
+          console.warn(`Error deleting from ${table}:`, err);
+          // Continue with other tables even if one fails
+        }
+      }
+      
+      // Now delete the employee record itself (user_id will be set to NULL due to constraint)
+      try {
+        const { error } = await supabaseAdmin
+          .from('employees')
+          .delete()
+          .eq('id', employeeRecord.id);
+        if (error) {
+          console.warn("Error deleting employee record:", error);
+        } else {
+          console.log("Successfully deleted employee record");
+        }
+      } catch (err) {
+        console.warn("Error deleting employee record:", err);
+      }
+    }
+    
+    // Delete direct user-related data (these should CASCADE automatically now)
+    const userTables = [
+      'workflow_requests',
+      'notification_settings', 
       'notifications',
       'user_roles',
-      'profiles',
-      'attendance',
-      'availability_requests',
-      'calendar_preferences',
-      'documents',
-      'employees',
-      'leave_calendar',
-      'notification_settings',
-      'open_shift_assignments',
-      'payroll',
-      'salary_statistics',
-      'schedules',
-      'shift_swaps',
-      'workflow_notifications',
-      'workflow_requests'
+      'profiles'
     ];
     
-    // Delete data from all tables where user_id matches
-    for (const table of tables) {
+    for (const table of userTables) {
       try {
         const { error } = await supabaseAdmin
           .from(table)
@@ -80,21 +130,13 @@ serve(async (req) => {
           
         if (error && !error.message.includes('does not exist')) {
           console.warn(`Warning when deleting from ${table}:`, error);
+        } else if (!error) {
+          console.log(`Successfully deleted ${table} records for user ${user.id}`);
         }
       } catch (err) {
         console.warn(`Error deleting from ${table}:`, err);
         // Continue with other tables even if one fails
       }
-    }
-    
-    // Special case for employees table which might use user_id as a foreign key
-    try {
-      await supabaseAdmin
-        .from('employees')
-        .delete()
-        .eq('user_id', user.id);
-    } catch (err) {
-      console.warn("Error deleting employee record:", err);
     }
     
     // Delete the user from auth.users using admin API
