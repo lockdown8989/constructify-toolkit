@@ -48,7 +48,10 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
                     placeholder="15.00" 
                     step="0.01"
                     {...field} 
-                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    onChange={(e) => {
+                      const value = e.target.valueAsNumber;
+                      field.onChange(isNaN(value) ? 0 : Math.max(0, value));
+                    }}
                   />
                 </FormControl>
                 <FormDescription className="text-xs">
@@ -70,7 +73,10 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
                     type="number" 
                     placeholder="65000" 
                     {...field} 
-                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    onChange={(e) => {
+                      const value = e.target.valueAsNumber;
+                      field.onChange(isNaN(value) ? 0 : Math.max(0, value));
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -91,7 +97,10 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
                     type="number" 
                     placeholder="65000" 
                     {...field} 
-                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    onChange={(e) => {
+                      const value = e.target.valueAsNumber;
+                      field.onChange(isNaN(value) ? 0 : Math.max(0, value));
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -111,7 +120,10 @@ const CompensationFields: React.FC<CompensationFieldsProps> = ({ form }) => {
                     placeholder="15.00"
                     step="0.01"
                     {...field} 
-                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    onChange={(e) => {
+                      const value = e.target.valueAsNumber;
+                      field.onChange(isNaN(value) ? undefined : Math.max(0, value));
+                    }}
                   />
                 </FormControl>
                 <FormMessage />

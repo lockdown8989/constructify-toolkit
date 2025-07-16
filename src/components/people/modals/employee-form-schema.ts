@@ -13,7 +13,7 @@ export const employeeFormSchema = z.object({
   lifecycle: z.enum(['Active', 'Inactive', 'Terminated']),
   status: z.enum(['Active', 'Inactive', 'On Leave']),
   location: z.enum(['Office', 'Remote', 'Hybrid']),
-  employment_type: z.enum(['Full-Time', 'Part-Time', 'Agency']),
+  employment_type: z.enum(['Full-Time', 'Part-Time', 'Agency']).optional(),
   job_description: z.string().optional(),
   probation_end_date: z.string().optional(),
   annual_leave_days: z.number().min(0).max(365),
