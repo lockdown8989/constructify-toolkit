@@ -7,8 +7,8 @@ export const useSecureSession = () => {
   const [lastActivity, setLastActivity] = useState(Date.now());
   const [isSessionActive, setIsSessionActive] = useState(false);
   
-  const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-  const WARNING_TIME = 5 * 60 * 1000; // 5 minutes before timeout
+  const SESSION_TIMEOUT = 4 * 60 * 60 * 1000; // 4 hours - much longer timeout
+  const WARNING_TIME = 10 * 60 * 1000; // 10 minutes before timeout
 
   // Monitor auth state to only start timer when user is authenticated
   useEffect(() => {

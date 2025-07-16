@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/hooks/use-auth';
 import MobileNavContent from './MobileNavContent';
 
 interface MobileNavProps {

@@ -1,6 +1,6 @@
 
 import { Outlet } from "react-router-dom";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Navbar from "./Navbar";
 import DesktopSidebar from "./navigation/DesktopSidebar";
