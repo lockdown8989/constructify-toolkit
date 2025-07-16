@@ -39,7 +39,8 @@ export const useClockOut = (
           employee_id,
           shift_pattern_id,
           scheduled_start_time,
-          scheduled_end_time
+          scheduled_end_time,
+          notes
         `)
         .eq('id', currentRecord)
         .single();
@@ -139,23 +140,69 @@ export const useClockOut = (
       setCurrentRecord(null);
       setStatus('clocked-out');
       
-      // Show appropriate message based on early departure or overtime with rota compliance
-      if (isEarlyDeparture) {
-        toast({
-          title: "Early Departure",
-          description: `You clocked out ${earlyDepartureMinutes} minutes early at ${format(now, 'h:mm a')}. This has been recorded against your rota schedule.`,
-          variant: "destructive",
+      // Check rota compliance for clock-out
+      const { data: rotaComplianceData } = await supabase
+        .rpc('validate_rota_compliance', {
+          p_employee_id: checkInData.employee_id,
+          p_action_type: 'clock_out',
+          p_action_time: now.toISOString()
         });
-      } else if (overtimeMinutes > 0) {
-        toast({
-          title: "Overtime Recorded - Approval Required",
-          description: `You worked ${overtimeMinutes} minutes of overtime. This has been submitted for manager approval. Clocked out at ${format(now, 'h:mm a')}`,
-        });
+
+      const compliance = rotaComplianceData?.[0];
+      let complianceMessage = '';
+      
+      if (compliance) {
+        console.log('Clock-out rota compliance check:', compliance);
+        complianceMessage = ` | Rota Compliance: ${compliance.message}`;
+        
+        // Update attendance record with rota compliance info
+        await supabase
+          .from('attendance')
+          .update({ 
+            notes: `${checkInData.notes || ''} | Clock-out: ${compliance.message}`.trim()
+          })
+          .eq('id', currentRecord);
+
+        // Show appropriate message based on compliance
+        if (!compliance.is_compliant) {
+          toast({
+            title: "Early Departure Recorded",
+            description: `${compliance.message}. This has been recorded against your rota schedule.`,
+            variant: "destructive",
+          });
+        } else if (compliance.minutes_difference > 30) {
+          toast({
+            title: "Overtime Recorded - Approval Required",
+            description: `${compliance.message}. This has been submitted for manager approval.`,
+          });
+        } else {
+          const timeInfo = compliance.scheduled_time 
+            ? ` (Scheduled end: ${compliance.scheduled_time})`
+            : '';
+          toast({
+            title: "Clocked Out Successfully",
+            description: `${compliance.message}${timeInfo}`,
+          });
+        }
       } else {
-        toast({
-          title: "Clocked Out Successfully",
-          description: `You clocked out at ${format(now, 'h:mm a')} as per your rota schedule.`,
-        });
+        // Fallback to original logic if rota compliance check fails
+        if (isEarlyDeparture) {
+          toast({
+            title: "Early Departure",
+            description: `You clocked out ${earlyDepartureMinutes} minutes early at ${format(now, 'h:mm a')}. Note: This is not a rota shift.`,
+            variant: "destructive",
+          });
+        } else if (overtimeMinutes > 0) {
+          toast({
+            title: "Overtime Recorded - Approval Required", 
+            description: `You worked ${overtimeMinutes} minutes of overtime. This has been submitted for manager approval.`,
+          });
+        } else {
+          toast({
+            title: "Clocked Out Successfully",
+            description: `You clocked out at ${format(now, 'h:mm a')}. Note: This is not a rota shift - standard attendance tracking applied.`,
+          });
+        }
       }
     } catch (error) {
       console.error('Error in handleClockOut:', error);

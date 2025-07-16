@@ -10,6 +10,7 @@ import { usePatternEmployees } from '../shift-patterns/hooks/usePatternEmployees
 import { useShiftPatternForm } from '../shift-patterns/hooks/useShiftPatternForm';
 import { useAssignEmployeesToPattern } from '@/hooks/use-shift-pattern-assignments';
 import { createAndConfirmRecurringRotas, batchApproveAllPendingRotas } from '@/services/rota-management/rota-auto-confirm';
+import { supabase } from '@/integrations/supabase/client';
 import { ShiftTemplate } from '@/types/schedule';
 import { RotaPatternCard } from './components/RotaPatternCard';
 import { RotaPatternDialog } from './components/RotaPatternDialog';
@@ -279,10 +280,20 @@ const RotaEmployeeManager = () => {
             shiftPatternId: editingPattern.id,
             employeeIds: selectedEmployees,
           });
+
+          // Send notifications to assigned employees about the updated rota
+          try {
+            await supabase.rpc('notify_employees_rota_published', {
+              p_shift_template_id: editingPattern.id
+            });
+            console.log('Rota update notifications sent successfully');
+          } catch (notificationError) {
+            console.warn('Failed to send rota update notifications:', notificationError);
+          }
           
           toast({
             title: "✅ Rota Updated Successfully",
-            description: `Rota pattern updated and ${selectedEmployees.length} employee(s) assigned. All changes have been saved.`,
+            description: `Rota pattern updated and ${selectedEmployees.length} employee(s) assigned. 🔔 Notifications sent to assigned employees.`,
           });
         } else {
           toast({
@@ -310,10 +321,20 @@ const RotaEmployeeManager = () => {
             shiftPatternId: newPattern.id,
             employeeIds: selectedEmployees,
           });
+
+          // Send notifications to assigned employees about the new rota
+          try {
+            await supabase.rpc('notify_employees_rota_published', {
+              p_shift_template_id: newPattern.id
+            });
+            console.log('Rota creation notifications sent successfully');
+          } catch (notificationError) {
+            console.warn('Failed to send rota creation notifications:', notificationError);
+          }
           
           toast({
             title: "✅ Rota Created Successfully",
-            description: `Rota pattern created and ${selectedEmployees.length} employee(s) assigned. Use "Sync to Calendar" to create confirmed shifts.`,
+            description: `Rota pattern created and ${selectedEmployees.length} employee(s) assigned. 🔔 Notifications sent to employees. Use "Sync to Calendar" to create confirmed shifts.`,
           });
         } else {
           toast({

@@ -118,52 +118,47 @@ export const useClockIn = (
       setCurrentRecord(data.id);
       setStatus('clocked-in');
       
-      // Show specific message if employee is late
-      const { data: employeeData } = await supabase
-        .from('employees')
-        .select('shift_pattern_id, monday_shift_id, tuesday_shift_id, wednesday_shift_id, thursday_shift_id, friday_shift_id, saturday_shift_id, sunday_shift_id')
-        .eq('id', employeeId)
-        .single();
+      // Check rota compliance for clock-in
+      const { data: rotaComplianceData } = await supabase
+        .rpc('validate_rota_compliance', {
+          p_employee_id: employeeId,
+          p_action_type: 'clock_in',
+          p_action_time: now.toISOString()
+        });
 
-      if (employeeData) {
-        const dayOfWeek = now.getDay(); // 0=Sunday, 1=Monday, etc.
-        const shiftPatternId = getDayShiftPattern(employeeData, dayOfWeek) || employeeData.shift_pattern_id;
+      const compliance = rotaComplianceData?.[0];
+      if (compliance) {
+        console.log('Rota compliance check:', compliance);
         
-        if (shiftPatternId) {
-          const { data: shiftPattern } = await supabase
-            .from('shift_patterns')
-            .select('*')
-            .eq('id', shiftPatternId)
-            .single();
+        // Update attendance record with rota information
+        await supabase
+          .from('attendance')
+          .update({ 
+            notes: `${data.notes || ''} | Rota Compliance: ${compliance.message}`.trim()
+          })
+          .eq('id', data.id);
 
-          if (shiftPattern) {
-            const scheduledStart = new Date(`${today}T${shiftPattern.start_time}`);
-            const graceEnd = new Date(scheduledStart.getTime() + shiftPattern.grace_period_minutes * 60000);
-            
-            if (now > graceEnd) {
-              const lateMinutes = Math.round((now.getTime() - scheduledStart.getTime()) / 60000);
-              toast({
-                title: "Late Clock-In Recorded",
-                description: `You are ${lateMinutes} minutes late for your ${shiftPattern.name}. This has been recorded against your rota schedule.`,
-                variant: "destructive",
-              });
-            } else {
-              toast({
-                title: "Clocked In Successfully",
-                description: `You clocked in at ${format(now, 'h:mm a')} for your ${shiftPattern.name} as per your rota schedule.`,
-              });
-            }
-          }
-        } else {
+        // Show appropriate toast based on compliance
+        if (!compliance.is_compliant) {
           toast({
-            title: "Clocked In Successfully", 
-            description: `You clocked in at ${format(now, 'h:mm a')} as per your rota schedule.`,
+            title: "Late Clock-In Recorded",
+            description: `${compliance.message}. This has been recorded against your rota schedule.`,
+            variant: "destructive",
+          });
+        } else {
+          const timeInfo = compliance.scheduled_time 
+            ? ` (Scheduled: ${compliance.scheduled_time})`
+            : '';
+          toast({
+            title: "Clocked In Successfully",
+            description: `${compliance.message}${timeInfo}`,
           });
         }
       } else {
+        // Fallback message if rota compliance check fails
         toast({
           title: "Clocked In Successfully",
-          description: `You clocked in at ${format(now, 'h:mm a')} as per your rota schedule.`,
+          description: `You clocked in at ${format(now, 'h:mm a')}. Note: This is not a rota shift - standard attendance tracking applied.`,
         });
       }
     } catch (error) {

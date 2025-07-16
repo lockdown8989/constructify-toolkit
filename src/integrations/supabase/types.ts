@@ -2224,6 +2224,18 @@ export type Database = {
           break_start_time: string
         }[]
       }
+      get_employee_rota_shift_times: {
+        Args: { p_employee_id: string; p_date?: string }
+        Returns: {
+          shift_template_id: string
+          template_name: string
+          start_time: string
+          end_time: string
+          break_duration: number
+          grace_period_minutes: number
+          overtime_threshold_minutes: number
+        }[]
+      }
       get_employee_shift_assignments: {
         Args: { p_employee_id: string }
         Returns: Json
@@ -2246,6 +2258,10 @@ export type Database = {
       mark_expired_open_shifts: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      notify_employees_rota_published: {
+        Args: { p_shift_template_id: string }
+        Returns: undefined
       }
       process_shift_expiration: {
         Args: Record<PropertyKey, never>
@@ -2292,6 +2308,20 @@ export type Database = {
           p_sunday_shift_id?: string
         }
         Returns: Json
+      }
+      validate_rota_compliance: {
+        Args: {
+          p_employee_id: string
+          p_action_type: string
+          p_action_time?: string
+        }
+        Returns: {
+          is_compliant: boolean
+          message: string
+          scheduled_time: string
+          actual_time: string
+          minutes_difference: number
+        }[]
       }
     }
     Enums: {
