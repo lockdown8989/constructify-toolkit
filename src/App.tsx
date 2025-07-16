@@ -8,15 +8,12 @@ import Auth from "./pages/Auth";
 import Privacy from "./pages/Privacy";
 import Dashboard from "./pages/Dashboard";
 import People from "./pages/People";
-import Schedules from "./pages/Schedules";
-import Availability from "./pages/Availability";
 import Settings from "./pages/Settings";
 import ProfileSettings from "./pages/ProfileSettings";
 import Payroll from "./pages/Payroll";
 import PayrollSettings from "./pages/PayrollSettings";
 import Attendance from "./pages/Attendance";
 import Hiring from "./pages/Hiring";
-import Projects from "./pages/Projects";
 import { useAuth } from "@/hooks/auth";
 
 const queryClient = new QueryClient();
@@ -47,22 +44,6 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <People />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/schedules"
-                element={
-                  <ProtectedRoute>
-                    <Schedules />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/availability"
-                element={
-                  <ProtectedRoute>
-                    <Availability />
                   </ProtectedRoute>
                 }
               />
@@ -111,14 +92,6 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Hiring />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/projects"
-                element={
-                  <ProtectedRoute>
-                    <Projects />
                   </ProtectedRoute>
                 }
               />

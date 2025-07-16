@@ -30,7 +30,7 @@ const LandingPage: React.FC = () => {
       </div>
 
       {/* Top Navigation */}
-      <TopNavigation isAuthenticated={isAuthenticated} />
+      <TopNavigation />
 
       {/* Main content */}
       <div className="relative z-10">
