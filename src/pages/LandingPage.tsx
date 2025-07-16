@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
+import { TopNavigation } from '@/components/landing/TopNavigation';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { FeaturesSection } from '@/components/landing/FeaturesSection';
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
@@ -26,6 +27,9 @@ const LandingPage: React.FC = () => {
             <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
           </div>
         </div>
+
+        {/* Top Navigation */}
+        <TopNavigation isAuthenticated={isAuthenticated} />
 
         {/* Main content */}
         <div className="relative z-10">
