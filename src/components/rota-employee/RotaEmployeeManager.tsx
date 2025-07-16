@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -68,15 +67,19 @@ const RotaEmployeeManager = () => {
     return employee?.name || 'Unknown Employee';
   };
 
-  // Enhanced handleAddEmployee with better error handling
+  // Enhanced handleAddEmployee with better error handling and validation
   const handleAddEmployee = () => {
-    console.log('handleAddEmployee called:', {
+    console.log('RotaEmployeeManager handleAddEmployee called:', {
       selectedEmployeeId,
       selectedEmployees,
-      availableEmployees: employees.filter(emp => !selectedEmployees.includes(emp.id))
+      employeesCount: employees.length,
+      availableEmployees: employees.filter(emp => 
+        emp && emp.id && !selectedEmployees.includes(emp.id)
+      ).length
     });
 
     if (!selectedEmployeeId) {
+      console.error('No employee selected');
       toast({
         title: "No employee selected",
         description: "Please select an employee to add to the rota.",
@@ -85,7 +88,18 @@ const RotaEmployeeManager = () => {
       return;
     }
 
+    if (selectedEmployeeId === 'no-employees') {
+      console.error('Invalid employee selection');
+      toast({
+        title: "Invalid selection",
+        description: "Please select a valid employee.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (selectedEmployees.includes(selectedEmployeeId)) {
+      console.error('Employee already selected');
       toast({
         title: "Employee already added",
         description: "This employee is already assigned to this rota.",
@@ -97,6 +111,7 @@ const RotaEmployeeManager = () => {
     // Check if employee exists
     const employee = employees.find(emp => emp.id === selectedEmployeeId);
     if (!employee) {
+      console.error('Employee not found');
       toast({
         title: "Employee not found",
         description: "The selected employee could not be found.",
@@ -106,8 +121,17 @@ const RotaEmployeeManager = () => {
     }
 
     try {
+      console.log('Adding employee:', employee.name);
       formHandleAddEmployee();
+      
+      // Clear the selection after adding
+      setSelectedEmployeeId('');
+      
       console.log('Employee added successfully:', employee.name);
+      toast({
+        title: "Employee added",
+        description: `${employee.name} has been added to the rota.`,
+      });
     } catch (error) {
       console.error('Error adding employee:', error);
       toast({

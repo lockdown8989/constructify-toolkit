@@ -64,34 +64,51 @@ export const RotaPatternDialog: React.FC<RotaPatternDialogProps> = ({
     employees: employees?.length || 0,
     selectedEmployees,
     selectedEmployeeId,
-    availableEmployees: availableEmployees?.length || 0
+    availableEmployees: availableEmployees?.length || 0,
+    canAddEmployee: selectedEmployeeId && selectedEmployeeId.trim() !== '' && selectedEmployeeId !== 'no-employees'
   });
 
   const handleAddEmployee = () => {
     console.log('RotaPatternDialog handleAddEmployee called:', {
       selectedEmployeeId,
-      canAdd: selectedEmployeeId && selectedEmployeeId.trim() !== '' && selectedEmployeeId !== 'no-employees'
+      isValidId: selectedEmployeeId && selectedEmployeeId.trim() !== '' && selectedEmployeeId !== 'no-employees',
+      employeeExists: availableEmployees.some(emp => emp.id === selectedEmployeeId)
     });
     
-    if (selectedEmployeeId && selectedEmployeeId.trim() !== '' && selectedEmployeeId !== 'no-employees') {
-      // Validate that the selected employee exists in available employees
-      const employeeExists = availableEmployees.some(emp => emp.id === selectedEmployeeId);
-      if (!employeeExists) {
-        console.error('Selected employee not found in available employees');
-        return;
-      }
-      
-      console.log('Calling onAddEmployee');
-      onAddEmployee();
+    // Validate the selected employee ID
+    if (!selectedEmployeeId || selectedEmployeeId.trim() === '' || selectedEmployeeId === 'no-employees') {
+      console.error('Invalid employee ID selected');
+      return;
     }
+
+    // Check if the employee exists in available employees
+    const employeeExists = availableEmployees.some(emp => emp.id === selectedEmployeeId);
+    if (!employeeExists) {
+      console.error('Selected employee not found in available employees');
+      return;
+    }
+    
+    console.log('Calling onAddEmployee from dialog');
+    onAddEmployee();
   };
 
   const handleEmployeeChange = (value: string) => {
-    console.log('Employee selection changed:', { value, isValidSelection: value !== 'no-employees' });
+    console.log('Employee selection changed:', { 
+      value, 
+      isValidSelection: value !== 'no-employees',
+      previousValue: selectedEmployeeId 
+    });
+    
     if (value !== 'no-employees') {
       onEmployeeIdChange(value);
     }
   };
+
+  // Check if the Add button should be enabled
+  const canAddEmployee = selectedEmployeeId && 
+                         selectedEmployeeId.trim() !== '' && 
+                         selectedEmployeeId !== 'no-employees' && 
+                         availableEmployees.some(emp => emp.id === selectedEmployeeId);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -210,7 +227,7 @@ export const RotaPatternDialog: React.FC<RotaPatternDialogProps> = ({
               <Button
                 type="button"
                 onClick={handleAddEmployee}
-                disabled={!selectedEmployeeId || selectedEmployeeId.trim() === '' || selectedEmployeeId === 'no-employees' || availableEmployees.length === 0}
+                disabled={!canAddEmployee || isLoading}
                 size="sm"
                 className="sm:w-auto w-full"
               >
