@@ -22,7 +22,7 @@ import { useLocation } from 'react-router-dom';
 const ShiftSwapForm = () => {
   const { user } = useAuth();
   const { data: schedules = [] } = useSchedules();
-  const { data: allEmployees = [] } = useEmployees(); // Fetch ALL employees
+  const { data: allEmployees = [] } = useEmployees();
   const { mutate: createShiftSwap, isPending } = useCreateShiftSwap();
   const { toast } = useToast();
   const location = useLocation();
@@ -40,15 +40,28 @@ const ShiftSwapForm = () => {
     }
   }, [location.state]);
 
-  // Filter employee's schedules (excluding the current user)
-  const userSchedules = user 
-    ? schedules.filter(schedule => schedule.employee_id === user.id)
+  // Get current user's employee record
+  const currentUserEmployee = user 
+    ? allEmployees.find(employee => employee.user_id === user.id)
+    : null;
+
+  // Filter employee's schedules
+  const userSchedules = currentUserEmployee 
+    ? schedules.filter(schedule => schedule.employee_id === currentUserEmployee.id)
     : [];
   
-  // Filter potential recipients (excluding the current user)
-  const potentialRecipients = user 
-    ? allEmployees.filter(employee => employee.id !== user.id && employee.status === 'Active')
+  // Filter potential recipients - exclude current user and only show active employees
+  const potentialRecipients = currentUserEmployee 
+    ? allEmployees.filter(employee => 
+        employee.id !== currentUserEmployee.id && 
+        employee.status === 'Active' &&
+        employee.user_id // Only include employees with user accounts
+      )
     : [];
+  
+  console.log('Current user employee:', currentUserEmployee);
+  console.log('All employees:', allEmployees);
+  console.log('Potential recipients:', potentialRecipients);
   
   // Filter schedules for selected recipient
   useEffect(() => {
@@ -72,10 +85,10 @@ const ShiftSwapForm = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) {
+    if (!user || !currentUserEmployee) {
       toast({
         title: "Error",
-        description: "You must be signed in to request a shift swap",
+        description: "You must be signed in with an employee account to request a shift swap",
         variant: "destructive",
       });
       return;
@@ -91,7 +104,7 @@ const ShiftSwapForm = () => {
     }
     
     createShiftSwap({
-      requester_id: user.id,
+      requester_id: currentUserEmployee.id,
       recipient_id: selectedEmployee,
       requester_schedule_id: selectedSchedule,
       recipient_schedule_id: selectedRecipientSchedule || undefined,
@@ -112,6 +125,18 @@ const ShiftSwapForm = () => {
         <CardContent className="p-6">
           <div className="text-center">
             Please sign in to request a shift swap
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!currentUserEmployee) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center">
+            No employee record found for your account. Please contact your manager.
           </div>
         </CardContent>
       </Card>
@@ -174,6 +199,11 @@ const ShiftSwapForm = () => {
                 )}
               </SelectContent>
             </Select>
+            {potentialRecipients.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                No other active employees found with user accounts
+              </p>
+            )}
           </div>
           
           {selectedEmployee && (
