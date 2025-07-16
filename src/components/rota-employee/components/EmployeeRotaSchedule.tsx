@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar, Users } from 'lucide-react';
 import { addMonths, subMonths } from 'date-fns';
 import CalendarHeader from '@/components/leave/calendar/CalendarHeader';
+import WeeklyScheduleView from './WeeklyScheduleView';
 
 const EmployeeRotaSchedule = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -73,22 +74,10 @@ const EmployeeRotaSchedule = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {finalEmployees.map((employee) => (
-                <div key={employee.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">{employee.name}</h4>
-                      <p className="text-sm text-gray-600">{employee.job_title} - {employee.department}</p>
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {/* Future: Show assigned rota patterns */}
-                      No active rota patterns
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <WeeklyScheduleView 
+              currentDate={currentDate}
+              onDateChange={setCurrentDate}
+            />
           )}
         </CardContent>
       </Card>
