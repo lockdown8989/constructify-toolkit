@@ -1,14 +1,13 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/auth";
 import LandingPage from "./pages/LandingPage";
-import AuthPage from "./pages/AuthPage";
+import Auth from "./pages/Auth";
 import Privacy from "./pages/Privacy";
 import Dashboard from "./pages/Dashboard";
-import Employees from "./pages/Employees";
 import People from "./pages/People";
-import Documents from "./pages/Documents";
 import Schedules from "./pages/Schedules";
 import Availability from "./pages/Availability";
 import Settings from "./pages/Settings";
@@ -31,7 +30,7 @@ function App() {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<LandingPage />} />
-              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/auth" element={<Auth />} />
               <Route path="/privacy" element={<Privacy />} />
               
               {/* Protected Routes */}
@@ -44,26 +43,10 @@ function App() {
                 }
               />
               <Route
-                path="/employees"
-                element={
-                  <ProtectedRoute>
-                    <Employees />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/people"
                 element={
                   <ProtectedRoute>
                     <People />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/documents"
-                element={
-                  <ProtectedRoute>
-                    <Documents />
                   </ProtectedRoute>
                 }
               />

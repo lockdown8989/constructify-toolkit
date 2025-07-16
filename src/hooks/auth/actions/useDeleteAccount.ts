@@ -1,15 +1,18 @@
 
+import { useState } from 'react';
 import { useAuthActions } from '../useAuthActions';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
 export const useDeleteAccount = () => {
+  const [isDeleting, setIsDeleting] = useState(false);
   const { deleteAccount: deleteAccountAction } = useAuthActions();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const deleteAccount = async () => {
     try {
+      setIsDeleting(true);
       const result = await deleteAccountAction();
       
       if (result.success) {
@@ -33,8 +36,10 @@ export const useDeleteAccount = () => {
     } catch (error: any) {
       console.error('Delete account error:', error);
       return { success: false, error: error.message || 'Failed to delete account' };
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  return { deleteAccount };
+  return { deleteAccount, isDeleting };
 };

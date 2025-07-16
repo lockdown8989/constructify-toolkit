@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { TopNavigation } from '@/components/landing/TopNavigation';
+import TopNavigation from '@/components/landing/TopNavigation';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { FeaturesSection } from '@/components/landing/FeaturesSection';
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
