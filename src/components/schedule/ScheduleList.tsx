@@ -3,7 +3,9 @@ import React, { useState } from 'react';
 import { format, parseISO, isWithinInterval } from 'date-fns';
 import { Schedule } from '@/hooks/use-schedules';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Clock, Filter, X, RefreshCw } from 'lucide-react';
+import { PlusCircle, Clock, Filter, X, RefreshCw, Check, X as XIcon } from 'lucide-react';
+import { useShiftResponse } from '@/hooks/use-shift-response';
+import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
   Select,
@@ -37,6 +39,7 @@ const ScheduleList = ({
   const [selectedEmployee, setSelectedEmployee] = useState<string>('all');
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
+  const { respondToShift } = useShiftResponse();
   
   // Create a list of unique employee IDs from the schedules
   const uniqueEmployees = Array.from(
@@ -76,6 +79,23 @@ const ScheduleList = ({
   };
   
   const hasActiveFilters = selectedEmployee !== 'all' || dateRange !== undefined;
+
+  const handleShiftResponse = async (scheduleId: string, response: 'accepted' | 'rejected') => {
+    try {
+      await respondToShift.mutateAsync({ scheduleId, response });
+      toast({
+        title: response === 'accepted' ? "Shift Confirmed" : "Shift Rejected",
+        description: `Your shift has been ${response === 'accepted' ? 'confirmed' : 'rejected'} successfully.`,
+      });
+      onRefresh();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to ${response === 'accepted' ? 'confirm' : 'reject'} shift. Please try again.`,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className={cn("bg-white rounded-3xl p-6 card-shadow", className)}>
@@ -202,18 +222,60 @@ const ScheduleList = ({
                 <Clock className="h-5 w-5 text-amber-500" />
               </div>
               <div className="flex-1">
-                <h3 className="font-medium">{schedule.title}</h3>
-                <p className="text-sm text-gray-500">
-                  {format(parseISO(schedule.start_time), 'h:mm a')} - {format(parseISO(schedule.end_time), 'h:mm a')}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {format(parseISO(schedule.start_time), 'EEE, MMM d, yyyy')}
-                </p>
-                {employeeNames[schedule.employee_id] && (
-                  <p className="text-sm text-gray-500">
-                    Assigned to: {employeeNames[schedule.employee_id]}
-                  </p>
-                )}
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="font-medium">{schedule.title}</h3>
+                    <p className="text-sm text-gray-500">
+                      {format(parseISO(schedule.start_time), 'h:mm a')} - {format(parseISO(schedule.end_time), 'h:mm a')}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {format(parseISO(schedule.start_time), 'EEE, MMM d, yyyy')}
+                    </p>
+                    {employeeNames[schedule.employee_id] && (
+                      <p className="text-sm text-gray-500">
+                        Assigned to: {employeeNames[schedule.employee_id]}
+                      </p>
+                    )}
+                    {schedule.status && (
+                      <span className={cn(
+                        "inline-block px-2 py-1 rounded-full text-xs font-medium mt-2",
+                        schedule.status === 'pending' && "bg-orange-100 text-orange-700",
+                        schedule.status === 'employee_accepted' && "bg-green-100 text-green-700",
+                        schedule.status === 'employee_rejected' && "bg-red-100 text-red-700"
+                      )}>
+                        {schedule.status === 'pending' && 'Awaiting Response'}
+                        {schedule.status === 'employee_accepted' && 'Confirmed'}
+                        {schedule.status === 'employee_rejected' && 'Rejected'}
+                        {!['pending', 'employee_accepted', 'employee_rejected'].includes(schedule.status) && schedule.status}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {schedule.status === 'pending' && (
+                    <div className="flex gap-2 ml-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleShiftResponse(schedule.id, 'accepted')}
+                        disabled={respondToShift.isPending}
+                        className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700 hover:text-green-800"
+                      >
+                        <Check className="h-4 w-4 mr-1" />
+                        Confirm
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleShiftResponse(schedule.id, 'rejected')}
+                        disabled={respondToShift.isPending}
+                        className="bg-red-50 hover:bg-red-100 border-red-200 text-red-700 hover:text-red-800"
+                      >
+                        <XIcon className="h-4 w-4 mr-1" />
+                        Reject
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))
