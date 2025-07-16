@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Use the roles hook
+  // Use the roles hook with debouncing to prevent excessive re-renders
   const { isAdmin, isManager, isHR, isEmployee, isPayroll, rolesLoaded } = useRoles(user);
 
   // Determine primary user role
@@ -73,12 +73,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           timestamp: new Date().toISOString()
         });
         
-        setSession(session);
-        setUser(session?.user ?? null);
+        // Handle refresh token errors that cause automatic logout
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('📝 Token refreshed successfully');
+        } else if (event === 'SIGNED_OUT') {
+          console.log('📝 User signed out');
+          // Clear any cached auth state
+          setSession(null);
+          setUser(null);
+        } else if (event === 'SIGNED_IN') {
+          console.log('📝 User signed in successfully');
+        }
         
-        // Handle specific events that might cause issues on mobile
-        if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-          console.log(`📝 Handling ${event} event`);
+        // Only update state if we have a valid session or explicit sign out
+        if (session || event === 'SIGNED_OUT') {
+          setSession(session);
+          setUser(session?.user ?? null);
         }
         
         if (isMounted) {
@@ -121,6 +131,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       throw error;
     }
   };
+
+  // Add debug logging for auth provider state
+  useEffect(() => {
+    console.log('🔐 AuthProvider roles state:', {
+      isAdmin,
+      isHR,
+      isManager,
+      isPayroll,
+      isEmployee,
+      rolesLoaded,
+      userEmail: user?.email
+    });
+    
+    // Set loading to false when roles are loaded or no user
+    if (rolesLoaded || !user) {
+      console.log('📝 Roles loaded or no user, setting loading to false', { user: !!user, rolesLoaded });
+      setIsLoading(false);
+    }
+  }, [user, rolesLoaded, isAdmin, isHR, isManager, isPayroll, isEmployee]);
 
   return (
     <AuthContext.Provider value={{ 

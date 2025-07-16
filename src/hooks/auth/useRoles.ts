@@ -14,8 +14,10 @@ export const useRoles = (user: User | null) => {
   // Automatically fetch roles when user changes
   useEffect(() => {
     if (user) {
+      console.log("🔄 useRoles: User found, fetching roles for:", user.id);
       fetchUserRoles(user.id);
     } else {
+      console.log("🔄 useRoles: No user, resetting roles");
       resetRoles();
     }
   }, [user?.id]);
@@ -32,6 +34,7 @@ export const useRoles = (user: User | null) => {
 
       if (rolesError) {
         console.error('❌ Error fetching user roles:', rolesError);
+        // Don't throw here, continue with fallback logic
       }
 
       // Also check employee record for role backup
@@ -43,6 +46,7 @@ export const useRoles = (user: User | null) => {
 
       if (employeeError) {
         console.error('❌ Error fetching employee data:', employeeError);
+        // Don't throw here, continue with fallback logic
       }
 
       console.log("📊 Role data:", { roles, employeeData });
@@ -75,8 +79,7 @@ export const useRoles = (user: User | null) => {
           payroll: hasPayrollRole,
           employee: hasEmployeeRole,
           jobTitle: employeeData?.job_title,
-          allRoles: userRoles,
-          userEmail: user?.email
+          allRoles: userRoles
         });
         
         setIsAdmin(hasAdminRole);
@@ -97,7 +100,7 @@ export const useRoles = (user: User | null) => {
       setRolesLoaded(true);
     } catch (error) {
       console.error('💥 Error in fetchUserRoles:', error);
-      // Set defaults on error
+      // Set defaults on error to prevent app crash
       setIsAdmin(false);
       setIsHR(false);
       setIsManager(false);
