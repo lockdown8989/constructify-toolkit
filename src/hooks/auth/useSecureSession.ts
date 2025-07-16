@@ -5,11 +5,28 @@ import { Session } from '@supabase/supabase-js';
 
 export const useSecureSession = () => {
   const [lastActivity, setLastActivity] = useState(Date.now());
+  const [isSessionActive, setIsSessionActive] = useState(false);
   
   const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
   const WARNING_TIME = 5 * 60 * 1000; // 5 minutes before timeout
 
+  // Monitor auth state to only start timer when user is authenticated
   useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsSessionActive(!!session?.user);
+      if (session?.user) {
+        setLastActivity(Date.now());
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // Only start the inactivity timer if there's an active session
+    if (!isSessionActive) return;
+    
+    console.log('🕒 Starting inactivity timer for authenticated user');
     let timeoutId: NodeJS.Timeout;
     let warningId: NodeJS.Timeout;
 
@@ -49,13 +66,14 @@ export const useSecureSession = () => {
 
     // Cleanup
     return () => {
+      console.log('🕒 Cleaning up inactivity timer');
       events.forEach(event => {
         document.removeEventListener(event, handleActivity, true);
       });
       if (timeoutId) clearTimeout(timeoutId);
       if (warningId) clearTimeout(warningId);
     };
-  }, []);
+  }, [isSessionActive]);
 
   const extendSession = () => {
     setLastActivity(Date.now());

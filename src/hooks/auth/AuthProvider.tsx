@@ -55,45 +55,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           sessionExpires: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : null
         });
         
-        // Handle token refresh
-        if (event === 'TOKEN_REFRESHED') {
-          console.log('🔄 Token refreshed successfully');
-          if (session) {
-            setSession(session);
-            setUser(session.user);
-            setIsLoading(false);
-          }
-          return;
-        }
-        
-        // Handle explicit sign out
+        // Update state for all events, but preserve existing session if new session is null
+        // unless it's an explicit SIGNED_OUT event
         if (event === 'SIGNED_OUT') {
-          console.log('🔄 User signed out, clearing state');
+          console.log('🔄 Explicit sign out - clearing session');
           setSession(null);
           setUser(null);
           setIsLoading(false);
           return;
         }
         
-        // Handle other auth events (but don't clear session unnecessarily)
-        if (event === 'PASSWORD_RECOVERY' || event === 'USER_UPDATED') {
-          console.log('🔄 Password recovery or user update event - maintaining session');
-          return;
-        }
-        
-        // For INITIAL_SESSION and SIGNED_IN events
-        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-          console.log(`🔄 ${event} event - updating session state`);
+        // Handle token refresh - always update if we get a new session
+        if (event === 'TOKEN_REFRESHED' && session) {
+          console.log('🔄 Token refreshed successfully');
           setSession(session);
-          setUser(session?.user ?? null);
+          setUser(session.user);
           setIsLoading(false);
           return;
         }
         
-        // For any other events, update state but maintain session if valid
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (!session?.user) {
+        // Handle other events that shouldn't clear session
+        if (event === 'PASSWORD_RECOVERY' || event === 'USER_UPDATED') {
+          console.log('🔄 Password recovery or user update event - maintaining existing session');
+          return;
+        }
+        
+        // For INITIAL_SESSION and SIGNED_IN events - only update if we have a session
+        if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
+          console.log(`🔄 ${event} event - updating session state`);
+          setSession(session);
+          setUser(session.user);
+          setIsLoading(false);
+          return;
+        }
+        
+        // For INITIAL_SESSION with no session, only clear if we don't already have a session
+        if (event === 'INITIAL_SESSION' && !session) {
+          console.log('🔄 Initial session check - no session found');
+          setSession(null);
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+        
+        // For any other events with valid session, update state
+        if (session?.user) {
+          setSession(session);
+          setUser(session.user);
           setIsLoading(false);
         }
       }
