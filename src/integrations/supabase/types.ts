@@ -1965,6 +1965,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_shift_template_assignments_employee_id"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_shift_template_assignments_shift_template_id"
+            columns: ["shift_template_id"]
+            isOneToOne: false
+            referencedRelation: "shift_templates"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "shift_template_assignments_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
