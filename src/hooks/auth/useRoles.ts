@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -32,6 +31,7 @@ export const useRoles = (user: User | null) => {
 
       if (rolesError) {
         console.error('❌ Error fetching user roles:', rolesError);
+        // Continue with defaults if roles fetch fails
       }
 
       // Also check employee record for role backup
@@ -59,14 +59,12 @@ export const useRoles = (user: User | null) => {
       console.log("🎭 Combined user roles:", userRoles);
       
       if (userRoles.length > 0) {
-        // Check each role with explicit logging - FIXED PRIORITY ORDER
+        // Check each role with explicit logging
         const hasAdminRole = userRoles.includes('admin');
         const hasHRRole = userRoles.includes('hr');
-        // FIXED: Check for 'employer' role specifically for managers
-        const hasManagerRole = userRoles.includes('employer');
+        const hasManagerRole = userRoles.includes('employer') || userRoles.includes('manager');
         const hasPayrollRole = userRoles.includes('payroll');
-        // Only set as employee if no other management roles
-        const hasEmployeeRole = userRoles.includes('employee') && !hasAdminRole && !hasHRRole && !hasManagerRole && !hasPayrollRole;
+        const hasEmployeeRole = userRoles.includes('employee');
         
         console.log("✅ Role checks:", {
           admin: hasAdminRole,
@@ -81,10 +79,9 @@ export const useRoles = (user: User | null) => {
         
         setIsAdmin(hasAdminRole);
         setIsHR(hasHRRole);
-        setIsManager(hasManagerRole); // This should be true for 'employer' role
+        setIsManager(hasManagerRole);
         setIsPayroll(hasPayrollRole);
-        // Set employee to false if user has management roles
-        setIsEmployee(!hasAdminRole && !hasHRRole && !hasManagerRole && !hasPayrollRole);
+        setIsEmployee(hasEmployeeRole || (!hasAdminRole && !hasHRRole && !hasManagerRole && !hasPayrollRole));
       } else {
         console.log("⚠️ No roles found for user, defaulting to employee");
         setIsAdmin(false);
