@@ -17,12 +17,13 @@ export const usePatternEmployees = (shiftPatterns: ShiftTemplate[]) => {
     
     for (const pattern of shiftPatterns) {
       try {
-        // Get employees assigned to this pattern via the new assignments table
+        // Get employees assigned to this pattern via the assignments table
+        // Using the correct foreign key relationship hint
         const { data: assignments, error } = await supabase
           .from('shift_template_assignments')
           .select(`
             employee_id,
-            employees!inner(id, name, job_title)
+            employees!shift_template_assignments_employee_id_fkey(id, name, job_title)
           `)
           .eq('shift_template_id', pattern.id)
           .eq('is_active', true);

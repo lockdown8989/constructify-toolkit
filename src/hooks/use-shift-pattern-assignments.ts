@@ -90,7 +90,7 @@ export const useAssignEmployeesToPattern = () => {
             employee_id,
             is_active,
             created_at,
-            employees!inner(id, name, job_title)
+            employees!shift_template_assignments_employee_id_fkey(id, name, job_title)
           `);
 
         if (insertError) {
