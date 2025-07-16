@@ -59,7 +59,6 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
     setIsDragOver(false);
   };
 
-  // Mobile-friendly touch handlers
   const handleTouchStart = () => {
     if (!disabled && !isUploading) {
       setIsTouched(true);
@@ -70,7 +69,6 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
     setIsTouched(false);
   };
 
-  // Handle single tap/click for mobile and desktop
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -82,6 +80,9 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
       }
     }
   };
+
+  // Check if current avatar is a gradient
+  const isGradientAvatar = currentAvatarUrl && currentAvatarUrl.startsWith('linear-gradient');
 
   return (
     <div
@@ -100,12 +101,21 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
       onClick={handleClick}
     >
       <Avatar className={`${sizeClasses[size]} transition-transform duration-200 ${isTouched ? 'scale-95' : ''}`}>
-        <AvatarImage 
-          src={currentAvatarUrl || undefined} 
-          alt="Profile" 
-          className="object-cover"
-        />
-        <AvatarFallback className="text-lg font-semibold bg-primary text-primary-foreground">
+        {!isGradientAvatar && (
+          <AvatarImage 
+            src={currentAvatarUrl || undefined} 
+            alt="Profile" 
+            className="object-cover"
+          />
+        )}
+        <AvatarFallback 
+          className={`text-lg font-semibold ${
+            isGradientAvatar 
+              ? 'text-white' 
+              : 'bg-primary text-primary-foreground'
+          }`}
+          style={isGradientAvatar ? { background: currentAvatarUrl } : undefined}
+        >
           {userInitials}
         </AvatarFallback>
       </Avatar>

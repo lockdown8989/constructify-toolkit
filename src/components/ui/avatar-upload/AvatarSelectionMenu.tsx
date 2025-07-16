@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { predefinedAvatars, getAvatarVariant } from '@/data/predefined-avatars';
-import { Camera, Upload } from 'lucide-react';
+import { Upload } from 'lucide-react';
 
 interface AvatarSelectionMenuProps {
   isOpen: boolean;
@@ -76,11 +77,12 @@ export const AvatarSelectionMenu: React.FC<AvatarSelectionMenuProps> = ({
               >
                 <div 
                   className={`w-12 h-12 rounded-full ${getAvatarVariant(index, predefinedAvatars.length)} p-1 transition-transform group-hover:scale-110 group-active:scale-95`}
+                  style={{ background: avatar }}
                 >
                   <div className="w-full h-full rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <div className="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center">
-                      <Camera className="h-3 w-3 text-white" />
-                    </div>
+                    <span className="text-white font-medium text-xs">
+                      {userInitials}
+                    </span>
                   </div>
                 </div>
                 {currentAvatarUrl === avatar && (

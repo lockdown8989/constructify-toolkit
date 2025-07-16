@@ -1,87 +1,67 @@
+
+// Predefined avatar data with gradient backgrounds
 export const predefinedAvatars = [
-  // Row 1
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png", // Using the uploaded image as source for all avatars
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  
-  // Row 2
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  
-  // Row 3
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  
-  // Row 4
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  
-  // Row 5
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  
-  // Row 6
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  
-  // Row 7
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  
-  // Row 8
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  
-  // Row 9
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  
-  // Row 10
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
-  "/lovable-uploads/1e168dde-ea14-4929-8331-53ef51ff0cf5.png",
+  // Gradient-based avatars
+  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+  'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+  'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+  'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+  'linear-gradient(135deg, #ff8a80 0%, #ea4c89 100%)',
+  'linear-gradient(135deg, #8fd3f4 0%, #84fab0 100%)',
+  'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
+  'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)',
+  'linear-gradient(135deg, #fdbb2d 0%, #22c1c3 100%)',
+  'linear-gradient(135deg, #ee9ca7 0%, #ffdde1 100%)',
+  'linear-gradient(135deg, #2196f3 0%, #21cbf3 100%)',
+  'linear-gradient(135deg, #4568dc 0%, #b06ab3 100%)',
+  'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)',
+  'linear-gradient(135deg, #3b41c5 0%, #a981bb 100%)',
+  'linear-gradient(135deg, #ffc3a0 0%, #ffafbd 100%)',
+  'linear-gradient(135deg, #c3cfe2 0%, #c3cfe2 100%)',
+  'linear-gradient(135deg, #667db6 0%, #0082c8 100%)',
+  'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+  'linear-gradient(135deg, #96fbc4 0%, #f9f586 100%)',
+  'linear-gradient(135deg, #12c2e9 0%, #c471ed 100%)',
+  'linear-gradient(135deg, #c2e59c 0%, #64b3f4 100%)',
+  'linear-gradient(135deg, #ff9a8b 0%, #a4508b 100%)',
+  'linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%)',
+  'linear-gradient(135deg, #74b9ff 0%, #0984e3 100%)',
+  'linear-gradient(135deg, #fd79a8 0%, #fdcb6e 100%)',
+  'linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%)',
+  'linear-gradient(135deg, #00b894 0%, #00cec9 100%)',
+  'linear-gradient(135deg, #e17055 0%, #f39c12 100%)',
+  'linear-gradient(135deg, #fd7f6f 0%, #7eb77f 100%)',
+  'linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)',
+  'linear-gradient(135deg, #06beb6 0%, #48b1bf 100%)',
+  'linear-gradient(135deg, #ff6b6b 0%, #feca57 100%)',
+  'linear-gradient(135deg, #5f27cd 0%, #00d2d3 100%)',
+  'linear-gradient(135deg, #ff9ff3 0%, #f368e0 100%)',
+  'linear-gradient(135deg, #54a0ff 0%, #2e86de 100%)',
+  'linear-gradient(135deg, #ff6348 0%, #ff9ff3 100%)',
+  'linear-gradient(135deg, #7bed9f 0%, #70a1ff 100%)',
+  'linear-gradient(135deg, #ff7675 0%, #fd79a8 100%)',
+  'linear-gradient(135deg, #2d3436 0%, #636e72 100%)',
+  'linear-gradient(135deg, #00b894 0%, #55efc4 100%)',
+  'linear-gradient(135deg, #6c5ce7 0%, #fd79a8 100%)',
+  'linear-gradient(135deg, #fdcb6e 0%, #e17055 100%)',
+  'linear-gradient(135deg, #74b9ff 0%, #81ecec 100%)',
+  'linear-gradient(135deg, #a29bfe 0%, #ffeaa7 100%)',
 ];
 
-export const getAvatarVariant = (index: number, totalAvatars: number) => {
+export const getAvatarVariant = (index: number, total: number) => {
   const variants = [
-    'bg-gradient-to-br from-green-400 to-green-600',
-    'bg-gradient-to-br from-blue-400 to-blue-600',
-    'bg-gradient-to-br from-purple-400 to-purple-600',
-    'bg-gradient-to-br from-orange-400 to-orange-600',
-    'bg-gradient-to-br from-pink-400 to-pink-600',
-    'bg-gradient-to-br from-indigo-400 to-indigo-600',
-    'bg-gradient-to-br from-teal-400 to-teal-600',
-    'bg-gradient-to-br from-red-400 to-red-600',
+    'bg-gradient-to-br from-blue-400 to-purple-600',
+    'bg-gradient-to-br from-pink-400 to-red-600',
+    'bg-gradient-to-br from-green-400 to-blue-600',
+    'bg-gradient-to-br from-yellow-400 to-orange-600',
+    'bg-gradient-to-br from-purple-400 to-pink-600',
+    'bg-gradient-to-br from-indigo-400 to-blue-600',
+    'bg-gradient-to-br from-emerald-400 to-teal-600',
+    'bg-gradient-to-br from-rose-400 to-pink-600',
   ];
-  
   return variants[index % variants.length];
 };
