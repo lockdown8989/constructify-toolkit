@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, Calendar } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Users, Calendar, Clock } from 'lucide-react';
 import { useShiftPatterns, useCreateShiftPattern, useUpdateShiftPattern, useDeleteShiftPattern } from '@/hooks/use-shift-patterns';
 import { useEmployees } from '@/hooks/use-employees';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +15,7 @@ import { ShiftTemplate } from '@/types/schedule';
 import { RotaPatternCard } from './components/RotaPatternCard';
 import { RotaPatternDialog } from './components/RotaPatternDialog';
 import { RotaCalendarSync } from './components/RotaCalendarSync';
+import EmployeeRotaSchedule from './components/EmployeeRotaSchedule';
 
 const RotaEmployeeManager = () => {
   const { data: shiftPatterns = [], isLoading, refetch: refetchPatterns } = useShiftPatterns();
@@ -29,6 +30,7 @@ const RotaEmployeeManager = () => {
   const [editingPattern, setEditingPattern] = useState<ShiftTemplate | null>(null);
   const [syncingRotas, setSyncingRotas] = useState<string[]>([]);
   const [autoApprovingRotas, setAutoApprovingRotas] = useState(false);
+  const [currentTab, setCurrentTab] = useState<'patterns' | 'schedule'>('patterns');
   
   const { patternEmployees, refreshPatternEmployees } = usePatternEmployees(shiftPatterns as any);
   const {
@@ -417,82 +419,101 @@ const RotaEmployeeManager = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="w-full">
-        <CardHeader className="pb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-              <Users className="h-5 w-5" />
-              Employee Rota Patterns
-            </CardTitle>
-            <div className="flex gap-2">
-              <Button onClick={handleCreate} size="sm" className="self-start sm:self-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Rota
-              </Button>
-            </div>
-          </div>
-          <p className="text-sm text-gray-600 mt-2">
-            Create rota patterns and sync them to employee calendars. All rota shifts are automatically confirmed - no employee response needed.
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4">
-            {shiftPatterns.map((pattern) => (
-              <RotaPatternCard
-                key={pattern.id}
-                pattern={pattern as any}
-                assignedEmployees={patternEmployees[pattern.id] || []}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onSyncToCalendar={handleSyncToCalendar}
-                isSyncing={syncingRotas.includes(pattern.id)}
-              />
-            ))}
-            {shiftPatterns.length === 0 && (
-              <div className="text-center py-12">
-                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No rota patterns yet</h3>
-                <p className="text-gray-500 mb-4">
-                  Create your first rota pattern to assign automatic schedules to employees.
-                </p>
-                <Button onClick={handleCreate}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create First Rota
-                </Button>
+      <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as 'patterns' | 'schedule')}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="patterns" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Rota Patterns
+          </TabsTrigger>
+          <TabsTrigger value="schedule" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Employee Schedule
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="patterns" className="space-y-6 mt-6">
+          <Card className="w-full">
+            <CardHeader className="pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <Users className="h-5 w-5" />
+                  Employee Rota Patterns
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Button onClick={handleCreate} size="sm" className="self-start sm:self-auto">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Rota
+                  </Button>
+                </div>
               </div>
-            )}
-          </div>
+              <p className="text-sm text-gray-600 mt-2">
+                Create rota patterns and sync them to employee calendars. All rota shifts are automatically confirmed - no employee response needed.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4">
+                {shiftPatterns.map((pattern) => (
+                  <RotaPatternCard
+                    key={pattern.id}
+                    pattern={pattern as any}
+                    assignedEmployees={patternEmployees[pattern.id] || []}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onSyncToCalendar={handleSyncToCalendar}
+                    isSyncing={syncingRotas.includes(pattern.id)}
+                  />
+                ))}
+                {shiftPatterns.length === 0 && (
+                  <div className="text-center py-12">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No rota patterns yet</h3>
+                    <p className="text-gray-500 mb-4">
+                      Create your first rota pattern to assign automatic schedules to employees.
+                    </p>
+                    <Button onClick={handleCreate}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create First Rota
+                    </Button>
+                  </div>
+                )}
+              </div>
 
-          <RotaPatternDialog
-            isOpen={isCreateModalOpen}
-            onClose={() => setIsCreateModalOpen(false)}
-            editingPattern={editingPattern}
-            formData={formData}
-            onFormDataChange={(data) => setFormData(data as any)}
-            employees={employees}
-            selectedEmployees={selectedEmployees}
-            selectedEmployeeId={selectedEmployeeId}
-            onEmployeeIdChange={setSelectedEmployeeId}
-            onAddEmployee={handleAddEmployee}
-            onRemoveEmployee={handleRemoveEmployee}
-            getEmployeeName={getEmployeeName}
-            onSubmit={handleSubmit}
-            isLoading={isDialogLoading}
+              <RotaPatternDialog
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                editingPattern={editingPattern}
+                formData={formData}
+                onFormDataChange={(data) => setFormData(data as any)}
+                employees={employees}
+                selectedEmployees={selectedEmployees}
+                selectedEmployeeId={selectedEmployeeId}
+                onEmployeeIdChange={setSelectedEmployeeId}
+                onAddEmployee={handleAddEmployee}
+                onRemoveEmployee={handleRemoveEmployee}
+                getEmployeeName={getEmployeeName}
+                onSubmit={handleSubmit}
+                isLoading={isDialogLoading}
+              />
+            </CardContent>
+          </Card>
+
+          <RotaCalendarSync 
+            shiftPatterns={shiftPatterns as any}
+            patternEmployees={patternEmployees}
+            onSyncAll={async () => {
+              for (const pattern of shiftPatterns) {
+                if (patternEmployees[pattern.id]?.length > 0) {
+                  await handleSyncToCalendar(pattern.id);
+                }
+              }
+            }}
           />
-        </CardContent>
-      </Card>
+        </TabsContent>
 
-      <RotaCalendarSync 
-        shiftPatterns={shiftPatterns as any}
-        patternEmployees={patternEmployees}
-        onSyncAll={async () => {
-          for (const pattern of shiftPatterns) {
-            if (patternEmployees[pattern.id]?.length > 0) {
-              await handleSyncToCalendar(pattern.id);
-            }
-          }
-        }}
-      />
+        <TabsContent value="schedule" className="mt-6">
+          <EmployeeRotaSchedule />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
