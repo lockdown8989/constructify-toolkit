@@ -26,7 +26,10 @@ export const useRoles = (user: User | null) => {
     try {
       console.log("🔄 Fetching roles for user:", userId);
       
-      // First check user_roles table
+      // Set loading state immediately
+      setRolesLoaded(false);
+      
+      // First check user_roles table with better error handling
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
         .select('role')
@@ -34,7 +37,7 @@ export const useRoles = (user: User | null) => {
 
       if (rolesError) {
         console.error('❌ Error fetching user roles:', rolesError);
-        // Don't throw here, continue with fallback logic
+        // Continue with fallback - don't return here
       }
 
       // Also check employee record for role backup
@@ -46,7 +49,7 @@ export const useRoles = (user: User | null) => {
 
       if (employeeError) {
         console.error('❌ Error fetching employee data:', employeeError);
-        // Don't throw here, continue with fallback logic
+        // Continue with fallback - don't return here
       }
 
       console.log("📊 Role data:", { roles, employeeData });
