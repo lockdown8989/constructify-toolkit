@@ -92,6 +92,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(session?.user ?? null);
         }
         
+        // FIXED: Always set loading to false after auth events to prevent hanging
         if (isMounted) {
           setIsLoading(false);
         }

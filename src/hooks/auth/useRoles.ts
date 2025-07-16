@@ -93,6 +93,7 @@ export const useRoles = (user: User | null) => {
         setIsEmployee(!hasAdminRole && !hasHRRole && !hasManagerRole && !hasPayrollRole);
       } else {
         console.log("⚠️ No roles found for user, defaulting to employee");
+        // FIXED: Don't fail auth if roles aren't found - just default to employee
         setIsAdmin(false);
         setIsHR(false);
         setIsManager(false);
@@ -100,16 +101,17 @@ export const useRoles = (user: User | null) => {
         setIsEmployee(true);
       }
       
+      // Always set roles as loaded to prevent infinite loading
       setRolesLoaded(true);
     } catch (error) {
       console.error('💥 Error in fetchUserRoles:', error);
-      // Set defaults on error to prevent app crash
+      // FIXED: Set defaults on error and mark as loaded to prevent auth failure
       setIsAdmin(false);
       setIsHR(false);
       setIsManager(false);
       setIsPayroll(false);
       setIsEmployee(true);
-      setRolesLoaded(true);
+      setRolesLoaded(true); // Critical: mark as loaded even on error
     }
   };
 
