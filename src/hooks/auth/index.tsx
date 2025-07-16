@@ -58,14 +58,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     let isMounted = true;
 
+    console.log('🔄 AuthProvider: Setting up auth state listener');
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!isMounted) return;
         
-        console.log('Auth state changed:', event, session?.user?.email);
+        console.log('🔐 Auth state change event:', { 
+          event, 
+          hasSession: !!session, 
+          hasUser: !!session?.user,
+          userId: session?.user?.id,
+          timestamp: new Date().toISOString()
+        });
+        
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Handle specific events that might cause issues on mobile
+        if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+          console.log(`📝 Handling ${event} event`);
+        }
         
         if (isMounted) {
           setIsLoading(false);
@@ -74,8 +88,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     // Get initial session
+    console.log('🔄 AuthProvider: Checking for existing session');
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!isMounted) return;
+      
+      console.log('📋 Initial session check:', {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        userId: session?.user?.id,
+        timestamp: new Date().toISOString()
+      });
       
       setSession(session);
       setUser(session?.user ?? null);
@@ -86,6 +108,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => {
+      console.log('🔄 AuthProvider: Cleaning up auth subscription');
       isMounted = false;
       subscription.unsubscribe();
     };
