@@ -14,13 +14,21 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 import AccountTypeDisplay from "./AccountTypeDisplay";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserAvatar = async () => {
@@ -67,6 +75,14 @@ const UserMenu = () => {
     navigate("/settings");
   };
 
+  const handleAvatarClick = () => {
+    setIsAvatarDialogOpen(true);
+  };
+
+  const handleAvatarChange = (url: string | null) => {
+    setAvatarUrl(url);
+  };
+
   const getUserInitials = () => {
     const firstName = user?.user_metadata?.first_name || "";
     const lastName = user?.user_metadata?.last_name || "";
@@ -79,42 +95,76 @@ const UserMenu = () => {
     return `${firstName} ${lastName}`.trim() || user?.email || "User";
   };
 
+  // Check if current avatar is a gradient
+  const isGradientAvatar = avatarUrl && avatarUrl.startsWith('linear-gradient');
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center space-x-2 rounded-full p-1 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={avatarUrl || undefined} alt="Profile" />
-            <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-              {getUserInitials()}
-            </AvatarFallback>
-          </Avatar>
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64" align="end">
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-2">
-            <p className="text-sm font-medium leading-none">
-              {getUserDisplayName()}
-            </p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {user?.email}
-            </p>
-            <AccountTypeDisplay />
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button 
+            className="flex items-center space-x-2 rounded-full p-1 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
+            onClick={handleAvatarClick}
+          >
+            <Avatar className="h-8 w-8">
+              {!isGradientAvatar && (
+                <AvatarImage src={avatarUrl || undefined} alt="Profile" />
+              )}
+              <AvatarFallback 
+                className={`text-sm font-medium ${
+                  isGradientAvatar 
+                    ? 'text-white' 
+                    : 'bg-primary text-primary-foreground'
+                }`}
+                style={isGradientAvatar ? { background: avatarUrl } : undefined}
+              >
+                {getUserInitials()}
+              </AvatarFallback>
+            </Avatar>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-64" align="end">
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-2">
+              <p className="text-sm font-medium leading-none">
+                {getUserDisplayName()}
+              </p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {user?.email}
+              </p>
+              <AccountTypeDisplay />
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleSettingsClick} className="cursor-pointer">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Sign out</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Avatar</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <AvatarUpload
+              currentAvatarUrl={avatarUrl}
+              onAvatarChange={handleAvatarChange}
+              userInitials={getUserInitials()}
+              size="lg"
+              onUploadComplete={() => setIsAvatarDialogOpen(false)}
+            />
           </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSettingsClick} className="cursor-pointer">
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Settings</span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Sign out</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

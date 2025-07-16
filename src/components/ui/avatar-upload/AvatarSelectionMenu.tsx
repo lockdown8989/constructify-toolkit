@@ -60,8 +60,19 @@ export const AvatarSelectionMenu: React.FC<AvatarSelectionMenuProps> = ({
           {currentAvatarUrl && (
             <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={currentAvatarUrl} alt="Current" />
-                <AvatarFallback>{userInitials}</AvatarFallback>
+                {currentAvatarUrl.startsWith('linear-gradient') ? (
+                  <AvatarFallback 
+                    className="text-white"
+                    style={{ background: currentAvatarUrl }}
+                  >
+                    {userInitials}
+                  </AvatarFallback>
+                ) : (
+                  <>
+                    <AvatarImage src={currentAvatarUrl} alt="Current" />
+                    <AvatarFallback>{userInitials}</AvatarFallback>
+                  </>
+                )}
               </Avatar>
               <span className="text-sm text-muted-foreground">Current avatar</span>
             </div>
@@ -76,7 +87,7 @@ export const AvatarSelectionMenu: React.FC<AvatarSelectionMenuProps> = ({
                 className="relative group focus:outline-none focus:ring-2 focus:ring-primary rounded-full"
               >
                 <div 
-                  className={`w-12 h-12 rounded-full ${getAvatarVariant(index, predefinedAvatars.length)} p-1 transition-transform group-hover:scale-110 group-active:scale-95`}
+                  className="w-12 h-12 rounded-full p-1 transition-transform group-hover:scale-110 group-active:scale-95"
                   style={{ background: avatar }}
                 >
                   <div className="w-full h-full rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">

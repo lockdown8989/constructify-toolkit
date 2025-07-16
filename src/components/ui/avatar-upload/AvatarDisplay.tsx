@@ -86,13 +86,13 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
 
   return (
     <div
-      className={`relative ${sizeClasses[size]} rounded-full border-2 border-dashed transition-all duration-200 touch-target ${
+      className={`relative ${sizeClasses[size]} rounded-full border-2 border-dashed transition-all duration-200 cursor-pointer ${
         isDragOver 
           ? 'border-primary bg-primary/5 scale-105' 
           : isTouched 
           ? 'border-primary/50 bg-primary/5 scale-98' 
           : 'border-gray-300'
-      } ${disabled || isUploading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-primary/50 hover:bg-primary/5'}`}
+      } ${disabled || isUploading ? 'opacity-60 cursor-not-allowed' : 'hover:border-primary/50 hover:bg-primary/5'}`}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -127,15 +127,13 @@ export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
       )}
       
       {!disabled && !isUploading && (
-        <div className={`absolute inset-0 bg-black/0 hover:bg-black/20 rounded-full flex items-center justify-center transition-all duration-200 group ${
-          window.innerWidth <= 768 ? 'md:hidden' : ''
-        }`}>
+        <div className="absolute inset-0 bg-black/0 hover:bg-black/20 rounded-full flex items-center justify-center transition-all duration-200 group">
           <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
         </div>
       )}
 
       {/* Mobile upload indicator */}
-      {!disabled && !isUploading && window.innerWidth <= 768 && (
+      {!disabled && !isUploading && (
         <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-1.5 shadow-lg md:hidden">
           <Camera className="h-3 w-3 text-primary-foreground" />
         </div>
