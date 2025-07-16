@@ -9,11 +9,14 @@ import {
   Clock, 
   Settings, 
   Eye, 
-  Send
+  Send,
+  CheckCircle
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { startOfWeek, endOfWeek, formatISO } from 'date-fns';
+import { batchApproveAllPendingRotas } from '@/services/rota-management/rota-auto-confirm';
+import { useToast } from '@/hooks/use-toast';
 
 interface ManagerScheduleControlsProps {
   onCreateShift: () => void;
@@ -112,8 +115,38 @@ const ManagerScheduleControls: React.FC<ManagerScheduleControlsProps> = ({
 }) => {
   const { isAdmin, isManager, isHR } = useAuth();
   const hasManagerAccess = isAdmin || isManager || isHR;
+  const { toast } = useToast();
+  const [isApproving, setIsApproving] = useState(false);
 
   const { stats, loading, error } = useScheduleStats();
+
+  const handleBatchApproveRotas = async () => {
+    setIsApproving(true);
+    try {
+      const result = await batchApproveAllPendingRotas();
+      
+      if (result.success) {
+        toast({
+          title: "✅ Rota Shifts Approved",
+          description: `Successfully auto-confirmed ${result.count} pending rota shifts. Employees have been notified.`,
+        });
+      } else {
+        toast({
+          title: "❌ Approval Failed",
+          description: "There was an error approving the rota shifts. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "❌ Approval Failed",
+        description: "There was an error approving the rota shifts. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsApproving(false);
+    }
+  };
 
   if (!hasManagerAccess) return null;
 
@@ -155,6 +188,16 @@ const ManagerScheduleControls: React.FC<ManagerScheduleControlsProps> = ({
               )}
             </Button>
           </div>
+          
+          {/* Batch Approve Rota Button */}
+          <Button 
+            onClick={handleBatchApproveRotas}
+            disabled={isApproving}
+            className="w-full bg-blue-600 hover:bg-blue-700"
+          >
+            <CheckCircle className="h-4 w-4 mr-2" />
+            {isApproving ? 'Approving...' : 'Auto-Approve All Rotas'}
+          </Button>
         </CardContent>
       </Card>
 
