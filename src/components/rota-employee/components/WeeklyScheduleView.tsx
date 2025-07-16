@@ -1,9 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay } from 'date-fns';
-import { ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
 import { useSchedules } from '@/hooks/use-schedules';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,6 +84,14 @@ const WeeklyScheduleView: React.FC<WeeklyScheduleViewProps> = ({
     }
   };
 
+  const handleEditShift = (schedule: any) => {
+    // For now, just show a toast - you can implement edit functionality later
+    toast({
+      title: "Edit Shift",
+      description: `Edit functionality for "${schedule.title}" will be implemented soon.`,
+    });
+  };
+
   const formatTimeRange = (startTime: string, endTime: string) => {
     const start = new Date(startTime);
     const end = new Date(endTime);
@@ -126,27 +140,36 @@ const WeeklyScheduleView: React.FC<WeeklyScheduleViewProps> = ({
                 {/* Shifts for the day */}
                 <div className="space-y-3">
                   {daySchedules.map((schedule) => (
-                    <div key={schedule.id} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center mb-1">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                            <span className="text-sm font-medium text-blue-700">
-                              {formatTimeRange(schedule.start_time, schedule.end_time)}
-                            </span>
+                    <ContextMenu key={schedule.id}>
+                      <ContextMenuTrigger>
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 cursor-pointer hover:bg-blue-100 transition-colors">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center mb-1">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                                <span className="text-sm font-medium text-blue-700">
+                                  {formatTimeRange(schedule.start_time, schedule.end_time)}
+                                </span>
+                              </div>
+                              <p className="text-sm font-medium">{schedule.title}</p>
+                            </div>
                           </div>
-                          <p className="text-sm font-medium">{schedule.title}</p>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                      </ContextMenuTrigger>
+                      <ContextMenuContent>
+                        <ContextMenuItem onClick={() => handleEditShift(schedule)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Shift
+                        </ContextMenuItem>
+                        <ContextMenuItem 
                           onClick={() => handleDeleteShift(schedule.id, schedule.title)}
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-600 focus:text-red-600"
                         >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Shift
+                        </ContextMenuItem>
+                      </ContextMenuContent>
+                    </ContextMenu>
                   ))}
 
                   {/* Add button */}
