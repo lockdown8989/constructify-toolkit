@@ -77,10 +77,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (event === 'TOKEN_REFRESHED') {
           console.log('📝 Token refreshed successfully');
         } else if (event === 'SIGNED_OUT') {
-          console.log('📝 User signed out');
+          console.log('📝 User signed out, clearing auth state');
           // Clear any cached auth state
           setSession(null);
           setUser(null);
+          setIsLoading(false); // FIXED: Don't leave loading state stuck
         } else if (event === 'SIGNED_IN') {
           console.log('📝 User signed in successfully');
         }
@@ -150,10 +151,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       userEmail: user?.email
     });
     
-    // Set loading to false when roles are loaded or no user
-    if (rolesLoaded || !user) {
-      console.log('📝 Roles loaded or no user, setting loading to false', { user: !!user, rolesLoaded });
+    // FIXED: Only set loading to false after roles are actually loaded for authenticated users
+    // or immediately for unauthenticated users
+    if (!user) {
+      console.log('📝 No user, setting loading to false immediately');
       setIsLoading(false);
+    } else if (user && rolesLoaded) {
+      console.log('📝 User exists and roles loaded, setting loading to false', { user: !!user, rolesLoaded });
+      setIsLoading(false);
+    } else if (user && !rolesLoaded) {
+      console.log('📝 User exists but roles not loaded yet, keeping loading true');
+      // Keep loading true until roles are loaded
     }
   }, [user, rolesLoaded, isAdmin, isHR, isManager, isPayroll, isEmployee]);
 
