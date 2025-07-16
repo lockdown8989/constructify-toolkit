@@ -67,7 +67,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <form onSubmit={onSubmit} className="flex-1 flex flex-col overflow-hidden">
           <div className="px-6 py-4 border-b flex-shrink-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-3">
@@ -75,47 +75,45 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 <TabsTrigger value="organization">Organization</TabsTrigger>
                 <TabsTrigger value="employment">Employment</TabsTrigger>
               </TabsList>
+
+              <div className="flex-1 overflow-y-auto px-0 mt-4">
+                <EmployeeFormFields 
+                  form={form}
+                  departments={departments}
+                  sites={sites}
+                  activeTab={activeTab}
+                  isMobile={isMobile}
+                />
+              </div>
             </Tabs>
           </div>
 
-          <form onSubmit={onSubmit} className="flex-1 flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto px-6">
-              <EmployeeFormFields 
-                form={form}
-                departments={departments}
-                sites={sites}
-                activeTab={activeTab}
-                isMobile={isMobile}
-              />
+          {error && (
+            <div className="px-6 py-2 border-t bg-red-50">
+              <p className="text-sm text-red-600">{error}</p>
             </div>
+          )}
 
-            {error && (
-              <div className="px-6 py-2 border-t bg-red-50">
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
-            )}
-
-            <div className="px-6 py-4 border-t flex-shrink-0 bg-gray-50">
-              <div className="flex justify-end gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  {isSubmitting ? 'Saving...' : (employeeToEdit ? 'Update Employee' : 'Add Employee')}
-                </Button>
-              </div>
+          <div className="px-6 py-4 border-t flex-shrink-0 bg-gray-50">
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {isSubmitting ? 'Saving...' : (employeeToEdit ? 'Update Employee' : 'Add Employee')}
+              </Button>
             </div>
-          </form>
-        </div>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
