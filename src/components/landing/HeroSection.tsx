@@ -33,13 +33,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ isAuthenticated, isMan
 
           {/* Main content */}
           <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-fade-up">
-            {/* TeamPulse Logo */}
-            <div className="flex justify-center mb-6 md:mb-8">
-              <img 
-                src="/lovable-uploads/6498c422-3293-40e4-99c1-a94a137934f6.png" 
-                alt="TeamPulse Logo" 
-                className="h-16 w-16 md:h-20 md:w-20 lg:h-24 lg:w-24"
-              />
+            {/* Animated TeamPulse Logo */}
+            <div className="flex justify-center mb-8 md:mb-12">
+              <div className="relative">
+                <img 
+                  src="/lovable-uploads/47194533-9203-42e4-87f9-f999f02d909a.png" 
+                  alt="TeamPulse Logo" 
+                  className="h-32 w-auto md:h-40 lg:h-48 animate-pulse-glow hover:scale-105 transition-transform duration-500"
+                />
+                {/* Pulse effect overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-lg animate-pulse"></div>
+              </div>
             </div>
 
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 md:px-6 py-2 md:py-3 text-xs md:text-sm text-blue-200 border border-white/20">
