@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!isMounted) return;
         
         console.log('🔐 Auth state change event:', { 
@@ -112,6 +112,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    }).catch((error) => {
+      console.error('📋 Error getting initial session:', error);
+      // Even if there's an error, set loading to false so the app doesn't hang
       if (isMounted) {
         setIsLoading(false);
       }
