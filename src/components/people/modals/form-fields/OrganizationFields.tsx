@@ -227,7 +227,7 @@ const OrganizationFields: React.FC<OrganizationFieldsProps> = ({
         render={({ field }) => (
           <FormItem>
             <FormLabel>Department</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value || ''}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select department" />
@@ -252,7 +252,7 @@ const OrganizationFields: React.FC<OrganizationFieldsProps> = ({
         render={({ field }) => (
           <FormItem>
             <FormLabel>Site/Office</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value || ''}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select site" />
@@ -277,7 +277,7 @@ const OrganizationFields: React.FC<OrganizationFieldsProps> = ({
         render={({ field }) => (
           <FormItem className="md:col-span-2">
             <FormLabel>Schedule Location</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value || ''}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select schedule location" />

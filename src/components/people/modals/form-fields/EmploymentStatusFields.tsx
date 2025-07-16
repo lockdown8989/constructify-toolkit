@@ -34,7 +34,7 @@ const EmploymentStatusFields: React.FC<EmploymentStatusFieldsProps> = ({ form })
           render={({ field }) => (
             <FormItem>
               <FormLabel>Employment Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || ''}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select employment type" />
@@ -113,7 +113,7 @@ const EmploymentStatusFields: React.FC<EmploymentStatusFieldsProps> = ({ form })
           render={({ field }) => (
             <FormItem>
               <FormLabel>Employment Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || ''}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
@@ -137,7 +137,7 @@ const EmploymentStatusFields: React.FC<EmploymentStatusFieldsProps> = ({ form })
           render={({ field }) => (
             <FormItem>
               <FormLabel>Current Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || ''}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select current status" />
@@ -150,6 +150,56 @@ const EmploymentStatusFields: React.FC<EmploymentStatusFieldsProps> = ({ form })
                   <SelectItem value="On Leave">On Leave</SelectItem>
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="annual_leave_days"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Annual Leave Days</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  placeholder="20" 
+                  min="0" 
+                  max="365"
+                  {...field} 
+                  onChange={(e) => {
+                    const value = e.target.valueAsNumber;
+                    field.onChange(isNaN(value) ? 20 : Math.max(0, Math.min(365, value)));
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="sick_leave_days"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Sick Leave Days</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  placeholder="10" 
+                  min="0" 
+                  max="365"
+                  {...field} 
+                  onChange={(e) => {
+                    const value = e.target.valueAsNumber;
+                    field.onChange(isNaN(value) ? 10 : Math.max(0, Math.min(365, value)));
+                  }}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

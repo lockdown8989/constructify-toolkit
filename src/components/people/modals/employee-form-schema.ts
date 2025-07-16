@@ -11,14 +11,14 @@ export const employeeFormSchema = z.object({
   hourly_rate: z.number().min(0, 'Hourly rate must be positive').optional(),
   start_date: z.string().min(1, 'Start date is required'),
   lifecycle: z.enum(['Active', 'Inactive', 'Terminated']),
-  status: z.enum(['Active', 'Inactive', 'On Leave']),
-  location: z.enum(['Office', 'Remote', 'Hybrid']),
+  status: z.enum(['Active', 'Inactive', 'On Leave', 'Pending']),
+  location: z.string().optional(),
   employment_type: z.enum(['Full-Time', 'Part-Time', 'Agency']).optional(),
   job_description: z.string().optional(),
   probation_end_date: z.string().optional(),
-  annual_leave_days: z.number().min(0).max(365),
-  sick_leave_days: z.number().min(0).max(365),
-  role: z.enum(['employee', 'manager', 'admin', 'hr']),
+  annual_leave_days: z.number().min(0).max(365).default(20),
+  sick_leave_days: z.number().min(0).max(365).default(10),
+  role: z.enum(['employee', 'manager', 'admin', 'hr']).default('employee'),
 });
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
