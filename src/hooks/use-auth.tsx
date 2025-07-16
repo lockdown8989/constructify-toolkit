@@ -1,8 +1,7 @@
-// This file now just re-exports from the auth folder
-// to maintain backward compatibility with existing imports
+// Backward compatibility export for existing imports
 export { 
   AuthProvider, 
   useAuth, 
-  isAuthenticated,
-  type UserRole 
-} from './auth';
+  isAuthenticated 
+} from './auth/AuthContext';
+export type { UserRole } from '@/lib/auth/types';
