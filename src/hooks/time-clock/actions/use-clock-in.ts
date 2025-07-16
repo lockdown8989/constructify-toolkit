@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useAttendanceMetadata } from '../use-attendance-metadata';
 import { getDeviceIdentifier } from '../utils/device-utils';
+import { checkRotaCompliance } from '@/services/attendance/rota-compliance';
 import { debugTimeInfo } from '@/utils/timezone-utils';
 
 export const useClockIn = (
@@ -142,27 +143,27 @@ export const useClockIn = (
             if (now > graceEnd) {
               const lateMinutes = Math.round((now.getTime() - scheduledStart.getTime()) / 60000);
               toast({
-                title: "Late Clock-In",
-                description: `You are ${lateMinutes} minutes late for your ${shiftPattern.name}`,
+                title: "Late Clock-In Recorded",
+                description: `You are ${lateMinutes} minutes late for your ${shiftPattern.name}. This has been recorded against your rota schedule.`,
                 variant: "destructive",
               });
             } else {
               toast({
-                title: "Clocked In",
-                description: `You clocked in at ${format(now, 'h:mm a')} for your ${shiftPattern.name}`,
+                title: "Clocked In Successfully",
+                description: `You clocked in at ${format(now, 'h:mm a')} for your ${shiftPattern.name} as per your rota schedule.`,
               });
             }
           }
         } else {
           toast({
-            title: "Clocked In",
-            description: `You clocked in at ${format(now, 'h:mm a')}`,
+            title: "Clocked In Successfully", 
+            description: `You clocked in at ${format(now, 'h:mm a')} as per your rota schedule.`,
           });
         }
       } else {
         toast({
-          title: "Clocked In",
-          description: `You clocked in at ${format(now, 'h:mm a')}`,
+          title: "Clocked In Successfully",
+          description: `You clocked in at ${format(now, 'h:mm a')} as per your rota schedule.`,
         });
       }
     } catch (error) {

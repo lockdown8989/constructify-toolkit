@@ -12,7 +12,8 @@ export interface RotaShift {
 }
 
 /**
- * Automatically confirms rota shifts created by managers
+ * Automatically confirms rota shifts when employees receive them
+ * This ensures shifts are confirmed on their calendar immediately
  */
 export const autoConfirmRotaShift = async (scheduleId: string) => {
   try {
@@ -31,12 +32,12 @@ export const autoConfirmRotaShift = async (scheduleId: string) => {
 
     if (error) throw error;
 
-    // Notify employee about the confirmed shift
+    // Notify employee about the confirmed shift with clock-in/out instructions
     if (data.employees?.user_id) {
       await sendNotification({
         user_id: data.employees.user_id,
-        title: '📅 New Shift Assigned',
-        message: `You have been assigned to "${data.title}" on ${new Date(data.start_time).toLocaleDateString()} from ${new Date(data.start_time).toLocaleTimeString()} to ${new Date(data.end_time).toLocaleTimeString()}. Please make sure to clock in and out on time.`,
+        title: '✅ Rota Confirmed - Clock In Required',
+        message: `Your shift "${data.title}" on ${new Date(data.start_time).toLocaleDateString()} (${new Date(data.start_time).toLocaleTimeString()} - ${new Date(data.end_time).toLocaleTimeString()}) is now confirmed on your calendar. You must still clock in/out on time. Attendance will be tracked for late arrivals and overtime will require manager approval.`,
         type: 'info',
         related_entity: 'schedules',
         related_id: scheduleId
@@ -117,8 +118,8 @@ export const createAndConfirmRecurringRotas = async (params: {
       if (employee?.user_id) {
         await sendNotification({
           user_id: employee.user_id,
-          title: '📅 Rota Schedule Created',
-          message: `Your rota schedule "${patternName}" has been created for the next ${weeksToGenerate} weeks. All shifts are automatically confirmed. Please clock in and out on time for each shift.`,
+          title: '📅 Rota Schedule Auto-Confirmed',
+          message: `Your rota schedule "${patternName}" has been created for the next ${weeksToGenerate} weeks. All shifts are automatically confirmed on your calendar. Important: You must still clock in/out on time for each shift. Attendance will be tracked and any overtime requires manager approval.`,
           type: 'info',
           related_entity: 'schedules',
           related_id: 'rota_batch'

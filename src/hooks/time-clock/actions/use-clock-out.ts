@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useAttendanceMetadata } from '../use-attendance-metadata';
 import { debugTimeInfo } from '@/utils/timezone-utils';
+import { checkRotaCompliance } from '@/services/attendance/rota-compliance';
 
 export const useClockOut = (
   setStatus: (status: 'clocked-in' | 'clocked-out' | 'on-break') => void,
@@ -138,22 +139,22 @@ export const useClockOut = (
       setCurrentRecord(null);
       setStatus('clocked-out');
       
-      // Show appropriate message based on early departure or overtime
+      // Show appropriate message based on early departure or overtime with rota compliance
       if (isEarlyDeparture) {
         toast({
           title: "Early Departure",
-          description: `You clocked out ${earlyDepartureMinutes} minutes early at ${format(now, 'h:mm a')}`,
+          description: `You clocked out ${earlyDepartureMinutes} minutes early at ${format(now, 'h:mm a')}. This has been recorded against your rota schedule.`,
           variant: "destructive",
         });
       } else if (overtimeMinutes > 0) {
         toast({
-          title: "Overtime Recorded",
-          description: `You worked ${overtimeMinutes} minutes of overtime. Clocked out at ${format(now, 'h:mm a')}`,
+          title: "Overtime Recorded - Approval Required",
+          description: `You worked ${overtimeMinutes} minutes of overtime. This has been submitted for manager approval. Clocked out at ${format(now, 'h:mm a')}`,
         });
       } else {
         toast({
-          title: "Clocked Out",
-          description: `You clocked out at ${format(now, 'h:mm a')}`,
+          title: "Clocked Out Successfully",
+          description: `You clocked out at ${format(now, 'h:mm a')} as per your rota schedule.`,
         });
       }
     } catch (error) {
