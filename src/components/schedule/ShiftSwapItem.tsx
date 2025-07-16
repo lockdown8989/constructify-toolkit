@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/hooks/use-auth';
 import { ShiftSwap } from '@/hooks/use-shift-swaps';
 import { useEmployees } from '@/hooks/use-employees';
 import { useSchedules } from '@/hooks/use-schedules';

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/hooks/use-auth';
 import { useEmployees } from '@/hooks/use-employees';
 import { useSchedules } from '@/hooks/use-schedules';
 import { useIsMobile } from '@/hooks/use-mobile';

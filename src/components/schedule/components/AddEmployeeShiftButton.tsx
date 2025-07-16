@@ -2,7 +2,7 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/hooks/use-auth';
 
 interface AddEmployeeShiftButtonProps {
   onClick: () => void;
