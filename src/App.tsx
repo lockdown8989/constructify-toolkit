@@ -12,6 +12,7 @@ import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
+import Index from './pages/Index';
 import BackgroundNotificationService from './services/shift-notifications/background-notification-service';
 import LoadingSpinner from './components/ui/loading-spinner';
 import { useAttendanceMonitoring } from './hooks/use-attendance-monitoring';
@@ -72,6 +73,7 @@ const AppContent = () => {
     <div className="min-h-screen bg-background">
       <Routes>
         {/* Public routes without layout */}
+        <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
         
         {/* Protected routes with layout */}
@@ -80,7 +82,6 @@ const AppContent = () => {
             <AppLayout />
           </ProtectedRoute>
         }>
-          <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="profile" element={
             <Suspense fallback={<LoadingSpinner />}>
