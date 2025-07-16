@@ -53,25 +53,24 @@ export const autoConfirmRotaShift = async (scheduleId: string) => {
 };
 
 /**
- * Batch approve all pending rota shifts automatically
- * This will confirm all pending shifts that are rota-type shifts
+ * Batch approve all pending shifts automatically
+ * This will confirm ALL pending shifts (removes title pattern matching)
  */
 export const batchApproveAllPendingRotas = async () => {
   try {
-    // Get all pending rota shifts
+    // Get all pending shifts
     const { data: pendingShifts, error: fetchError } = await supabase
       .from('schedules')
       .select('id, employee_id, title, start_time, end_time, employees!inner(user_id, name)')
-      .eq('status', 'pending')
-      .ilike('title', '%rota%');
+      .eq('status', 'pending');
 
     if (fetchError) throw fetchError;
 
     if (!pendingShifts || pendingShifts.length === 0) {
-      return { success: true, message: 'No pending rota shifts found', count: 0 };
+      return { success: true, message: 'No pending shifts found', count: 0 };
     }
 
-    // Batch update all pending rota shifts to confirmed
+    // Batch update all pending shifts to confirmed
     const { data: updatedShifts, error: updateError } = await supabase
       .from('schedules')
       .update({
@@ -82,7 +81,6 @@ export const batchApproveAllPendingRotas = async () => {
         can_be_edited: false
       })
       .eq('status', 'pending')
-      .ilike('title', '%rota%')
       .select('id, employee_id, title, start_time, end_time');
 
     if (updateError) throw updateError;
@@ -93,8 +91,8 @@ export const batchApproveAllPendingRotas = async () => {
       if (employee?.user_id) {
         return sendNotification({
           user_id: employee.user_id,
-          title: '✅ Rota Auto-Confirmed - Clock In Required',
-          message: `Your rota shift "${shift.title}" on ${new Date(shift.start_time).toLocaleDateString()} (${new Date(shift.start_time).toLocaleTimeString()} - ${new Date(shift.end_time).toLocaleTimeString()}) has been automatically confirmed. Remember: You must still clock in/out on time. Attendance will be tracked for late arrivals and overtime requires manager approval.`,
+          title: '✅ Shift Auto-Confirmed - Clock In Required',
+          message: `Your shift "${shift.title}" on ${new Date(shift.start_time).toLocaleDateString()} (${new Date(shift.start_time).toLocaleTimeString()} - ${new Date(shift.end_time).toLocaleTimeString()}) has been automatically confirmed. Remember: You must still clock in/out on time. Attendance will be tracked for late arrivals and overtime requires manager approval.`,
           type: 'info',
           related_entity: 'schedules',
           related_id: shift.id
@@ -104,10 +102,10 @@ export const batchApproveAllPendingRotas = async () => {
 
     await Promise.all(notificationPromises);
 
-    console.log(`Batch approved ${updatedShifts?.length || 0} rota shifts`);
+    console.log(`Batch approved ${updatedShifts?.length || 0} shifts`);
     return { 
       success: true, 
-      message: `Successfully auto-confirmed ${updatedShifts?.length || 0} rota shifts`,
+      message: `Successfully auto-confirmed ${updatedShifts?.length || 0} shifts`,
       count: updatedShifts?.length || 0 
     };
   } catch (error) {

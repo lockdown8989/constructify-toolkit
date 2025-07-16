@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { startOfWeek, endOfWeek, formatISO } from 'date-fns';
 import { batchApproveAllPendingRotas } from '@/services/rota-management/rota-auto-confirm';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ManagerScheduleControlsProps {
   onCreateShift: () => void;
@@ -116,6 +117,7 @@ const ManagerScheduleControls: React.FC<ManagerScheduleControlsProps> = ({
   const { isAdmin, isManager, isHR } = useAuth();
   const hasManagerAccess = isAdmin || isManager || isHR;
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isApproving, setIsApproving] = useState(false);
 
   const { stats, loading, error } = useScheduleStats();
@@ -126,21 +128,24 @@ const ManagerScheduleControls: React.FC<ManagerScheduleControlsProps> = ({
       const result = await batchApproveAllPendingRotas();
       
       if (result.success) {
+        // Invalidate schedule queries to refresh UI
+        await queryClient.invalidateQueries({ queryKey: ['schedules'] });
+        
         toast({
-          title: "✅ Rota Shifts Approved",
-          description: `Successfully auto-confirmed ${result.count} pending rota shifts. Employees have been notified.`,
+          title: "✅ All Shifts Confirmed",
+          description: `Successfully auto-confirmed ${result.count} pending shifts. Employees have been notified and calendars updated.`,
         });
       } else {
         toast({
           title: "❌ Approval Failed",
-          description: "There was an error approving the rota shifts. Please try again.",
+          description: "There was an error approving the shifts. Please try again.",
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
         title: "❌ Approval Failed",
-        description: "There was an error approving the rota shifts. Please try again.",
+        description: "There was an error approving the shifts. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -189,14 +194,14 @@ const ManagerScheduleControls: React.FC<ManagerScheduleControlsProps> = ({
             </Button>
           </div>
           
-          {/* Batch Approve Rota Button */}
+          {/* Release Rota & Auto-Confirm All Button */}
           <Button 
             onClick={handleBatchApproveRotas}
             disabled={isApproving}
             className="w-full bg-blue-600 hover:bg-blue-700"
           >
             <CheckCircle className="h-4 w-4 mr-2" />
-            {isApproving ? 'Approving...' : 'Auto-Approve All Rotas'}
+            {isApproving ? 'Confirming All Shifts...' : 'Release Rota & Auto-Confirm All'}
           </Button>
         </CardContent>
       </Card>
