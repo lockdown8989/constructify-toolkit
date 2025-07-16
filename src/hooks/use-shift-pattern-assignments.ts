@@ -18,9 +18,9 @@ export const useAssignEmployeesToPattern = () => {
 
       // First, remove existing assignments for this pattern
       const { error: deleteError } = await supabase
-        .from('shift_pattern_assignments')
+        .from('shift_template_assignments')
         .delete()
-        .eq('shift_pattern_id', shiftPatternId);
+        .eq('shift_template_id', shiftPatternId);
 
       if (deleteError) {
         console.error('Error removing existing assignments:', deleteError);
@@ -30,14 +30,14 @@ export const useAssignEmployeesToPattern = () => {
       // Insert new assignments
       if (employeeIds.length > 0) {
         const assignments = employeeIds.map(employeeId => ({
-          shift_pattern_id: shiftPatternId,
+          shift_template_id: shiftPatternId,
           employee_id: employeeId,
           assigned_by: null, // Will be set by RLS/auth context if needed
           is_active: true
         }));
 
         const { data, error: insertError } = await supabase
-          .from('shift_pattern_assignments')
+          .from('shift_template_assignments')
           .insert(assignments)
           .select();
 
@@ -54,7 +54,7 @@ export const useAssignEmployeesToPattern = () => {
     },
     onSuccess: (data, variables) => {
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['shift_pattern_assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['shift_template_assignments'] });
       queryClient.invalidateQueries({ queryKey: ['shift-patterns'] });
       queryClient.invalidateQueries({ queryKey: ['schedules'] });
       
@@ -67,7 +67,7 @@ export const useAssignEmployeesToPattern = () => {
 
       // Force a refetch after a short delay to ensure data consistency
       setTimeout(() => {
-        queryClient.refetchQueries({ queryKey: ['shift_pattern_assignments'] });
+        queryClient.refetchQueries({ queryKey: ['shift_template_assignments'] });
       }, 500);
     },
     onError: (error) => {
@@ -88,9 +88,9 @@ export const useRemoveEmployeeFromPattern = () => {
   return useMutation({
     mutationFn: async ({ shiftPatternId, employeeId }: { shiftPatternId: string; employeeId: string }) => {
       const { error } = await supabase
-        .from('shift_pattern_assignments')
+        .from('shift_template_assignments')
         .delete()
-        .eq('shift_pattern_id', shiftPatternId)
+        .eq('shift_template_id', shiftPatternId)
         .eq('employee_id', employeeId);
 
       if (error) {
@@ -101,7 +101,7 @@ export const useRemoveEmployeeFromPattern = () => {
       return { shiftPatternId, employeeId };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['shift_pattern_assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['shift_template_assignments'] });
       queryClient.invalidateQueries({ queryKey: ['shift-patterns'] });
       
       toast({

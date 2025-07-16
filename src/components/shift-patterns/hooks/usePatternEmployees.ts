@@ -19,12 +19,12 @@ export const usePatternEmployees = (shiftPatterns: ShiftTemplate[]) => {
       try {
         // Get employees assigned to this pattern via the new assignments table
         const { data: assignments, error } = await supabase
-          .from('shift_pattern_assignments')
+          .from('shift_template_assignments')
           .select(`
             employee_id,
             employees!inner(id, name, job_title)
           `)
-          .eq('shift_pattern_id', pattern.id)
+          .eq('shift_template_id', pattern.id)
           .eq('is_active', true);
 
         if (error) {
@@ -63,7 +63,7 @@ export const usePatternEmployees = (shiftPatterns: ShiftTemplate[]) => {
 
     // Listen for query invalidation
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      if (event.query.queryKey[0] === 'shift_pattern_assignments' || event.query.queryKey[0] === 'schedules') {
+      if (event.query.queryKey[0] === 'shift_template_assignments' || event.query.queryKey[0] === 'schedules') {
         invalidateAndRefetch();
       }
     });
@@ -74,13 +74,13 @@ export const usePatternEmployees = (shiftPatterns: ShiftTemplate[]) => {
   // Set up real-time subscription for shift pattern assignments
   useEffect(() => {
     const channel = supabase
-      .channel('shift_pattern_assignments_changes')
+      .channel('shift_template_assignments_changes')
       .on(
         'postgres_changes',
         {
           event: '*',  // Listen to all events (INSERT, UPDATE, DELETE)
           schema: 'public',
-          table: 'shift_pattern_assignments'
+          table: 'shift_template_assignments'
         },
         (payload) => {
           console.log('Real-time shift pattern assignment change:', payload);
