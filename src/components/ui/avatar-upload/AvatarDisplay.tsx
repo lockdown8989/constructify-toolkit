@@ -12,7 +12,7 @@ interface AvatarDisplayProps {
   className?: string;
 }
 
-const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
+export const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   avatarUrl,
   firstName,
   lastName,

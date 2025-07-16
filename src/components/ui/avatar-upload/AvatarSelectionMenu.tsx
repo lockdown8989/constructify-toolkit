@@ -12,7 +12,7 @@ interface AvatarSelectionMenuProps {
   onRemove: () => void;
 }
 
-const AvatarSelectionMenu: React.FC<AvatarSelectionMenuProps> = ({
+export const AvatarSelectionMenu: React.FC<AvatarSelectionMenuProps> = ({
   currentAvatar,
   onSelect,
   onUpload,

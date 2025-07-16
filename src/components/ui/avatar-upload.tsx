@@ -1,9 +1,9 @@
 
 import React, { useRef, useState } from 'react';
 import { useAvatarUpload } from './avatar-upload/useAvatarUpload';
-import { AvatarDisplay } from './avatar-upload/AvatarDisplay';
+import AvatarDisplay from './avatar-upload/AvatarDisplay';
 import { AvatarContextMenu } from './avatar-upload/AvatarContextMenu';
-import { AvatarSelectionMenu } from './avatar-upload/AvatarSelectionMenu';
+import AvatarSelectionMenu from './avatar-upload/AvatarSelectionMenu';
 
 interface AvatarUploadProps {
   currentAvatarUrl?: string | null;
@@ -51,6 +51,12 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
 
   const handleSelectPredefinedAvatar = (avatarUrl: string) => {
     selectPredefinedAvatar(avatarUrl);
+    setIsSelectionMenuOpen(false);
+  };
+
+  const handleRemoveAvatar = () => {
+    removeAvatar();
+    setIsSelectionMenuOpen(false);
   };
 
   return (
@@ -60,31 +66,26 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
         disabled={disabled}
         isUploading={isUploading}
         onUploadClick={handleUploadClick}
-        onRemoveClick={removeAvatar}
+        onRemoveClick={handleRemoveAvatar}
         onAvatarSelectClick={handleAvatarClick}
       >
         <AvatarDisplay
-          currentAvatarUrl={currentAvatarUrl}
-          userInitials={userInitials}
+          avatarUrl={currentAvatarUrl || undefined}
           size={size}
-          disabled={disabled}
-          isUploading={isUploading}
-          onFileSelect={handleFileSelect}
-          onUploadClick={handleUploadClick}
-          onAvatarClick={handleAvatarClick}
-        >
-          <div />
-        </AvatarDisplay>
+          onClick={handleAvatarClick}
+        />
       </AvatarContextMenu>
 
-      <AvatarSelectionMenu
-        isOpen={isSelectionMenuOpen}
-        onClose={() => setIsSelectionMenuOpen(false)}
-        onSelectAvatar={handleSelectPredefinedAvatar}
-        onUploadClick={handleUploadClick}
-        currentAvatarUrl={currentAvatarUrl}
-        userInitials={userInitials}
-      />
+      {isSelectionMenuOpen && (
+        <div className="absolute z-50 bg-background border rounded-lg shadow-lg">
+          <AvatarSelectionMenu
+            currentAvatar={currentAvatarUrl || undefined}
+            onSelect={handleSelectPredefinedAvatar}
+            onUpload={handleUploadClick}
+            onRemove={handleRemoveAvatar}
+          />
+        </div>
+      )}
 
       <input
         ref={fileInputRef}
