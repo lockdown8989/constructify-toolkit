@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { EmployeeMobileCard } from './EmployeeMobileCard';
+import EmployeeMobileCard from './EmployeeMobileCard';
 import { Employee } from '../types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronDown } from 'lucide-react';
@@ -28,42 +28,6 @@ const MobileTable: React.FC<MobileTableProps> = ({
   // Reference to the scroll container
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  // Convert Employee from people/types to types/employee format
-  const convertEmployee = (emp: Employee) => ({
-    id: emp.id,
-    name: emp.name,
-    job_title: emp.jobTitle,
-    department: emp.department,
-    site: emp.site,
-    salary: typeof emp.salary === 'string' ? parseInt(emp.salary.replace(/[^0-9]/g, '')) : emp.salary || 0,
-    status: emp.status,
-    employment_type: emp.employment_type,
-    start_date: emp.startDate,
-    lifecycle: emp.lifecycle,
-    user_id: emp.userId,
-    manager_id: emp.managerId,
-    email: emp.email,
-    hourly_rate: emp.hourly_rate,
-    role: emp.role,
-    annual_leave_days: emp.annual_leave_days,
-    sick_leave_days: emp.sick_leave_days,
-    avatar: emp.avatar
-  });
-
-  const handleStatusChange = (employee: any, newStatus: string) => {
-    if (onStatusChange) {
-      onStatusChange(employee.id, newStatus);
-    }
-  };
-
-  const handleEmployeeClick = (convertedEmployee: any) => {
-    // Find the original employee and call onEmployeeClick with it
-    const originalEmployee = employees.find(emp => emp.id === convertedEmployee.id);
-    if (originalEmployee && onEmployeeClick) {
-      onEmployeeClick(originalEmployee);
-    }
-  };
   
   // Function to scroll to the top smoothly
   const scrollToTop = () => {
@@ -127,10 +91,11 @@ const MobileTable: React.FC<MobileTableProps> = ({
               {employees.map(employee => (
                 <EmployeeMobileCard
                   key={employee.id}
-                  employee={convertEmployee(employee)}
-                  onEmployeeClick={handleEmployeeClick}
-                  onStatusChange={handleStatusChange}
-                  isUpdating={false}
+                  employee={employee}
+                  isSelected={selectedEmployees.includes(employee.id)}
+                  onSelect={onSelectEmployee}
+                  onRowClick={onEmployeeClick}
+                  onStatusChange={onStatusChange}
                 />
               ))}
             </div>

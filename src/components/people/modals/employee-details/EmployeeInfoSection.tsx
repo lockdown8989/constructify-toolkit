@@ -43,19 +43,13 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
     }
   };
 
-  const parseNumericSalary = (salaryInput: string | number | undefined): number => {
-    if (!salaryInput) return 0;
-    
-    // Convert to string if it's a number
-    const salaryString = typeof salaryInput === 'string' ? salaryInput : String(salaryInput);
-    
-    // Remove currency symbols and commas, then parse
+  const parseNumericSalary = (salaryString: string): number => {
     const cleaned = salaryString.replace(/[£$,]/g, '');
     return parseFloat(cleaned) || 0;
   };
 
-  const formatMonthlySalary = (salaryInput: string | number | undefined): string => {
-    const annual = parseNumericSalary(salaryInput);
+  const formatMonthlySalary = (annualSalary: string): string => {
+    const annual = parseNumericSalary(annualSalary);
     if (annual > 0) {
       const monthly = (annual / 12).toFixed(2);
       return `£${parseFloat(monthly).toLocaleString()}`;

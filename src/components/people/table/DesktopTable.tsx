@@ -2,7 +2,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import EmployeeTableHeader from './EmployeeTableHeader';
-import { EmployeeTableRow } from './EmployeeTableRow';
+import EmployeeTableRow from './EmployeeTableRow';
 import { Employee } from '../types';
 
 interface DesktopTableProps {
@@ -22,42 +22,6 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
   onEmployeeClick,
   onStatusChange,
 }) => {
-  // Convert Employee from people/types to types/employee format
-  const convertEmployee = (emp: Employee) => ({
-    id: emp.id,
-    name: emp.name,
-    job_title: emp.jobTitle,
-    department: emp.department,
-    site: emp.site,
-    salary: typeof emp.salary === 'string' ? parseInt(emp.salary.replace(/[^0-9]/g, '')) : emp.salary || 0,
-    status: emp.status,
-    employment_type: emp.employment_type,
-    start_date: emp.startDate,
-    lifecycle: emp.lifecycle,
-    user_id: emp.userId,
-    manager_id: emp.managerId,
-    email: emp.email,
-    hourly_rate: emp.hourly_rate,
-    role: emp.role,
-    annual_leave_days: emp.annual_leave_days,
-    sick_leave_days: emp.sick_leave_days,
-    avatar: emp.avatar
-  });
-
-  const handleStatusChange = (employee: any, newStatus: string) => {
-    if (onStatusChange) {
-      onStatusChange(employee.id, newStatus);
-    }
-  };
-
-  const handleEmployeeClick = (convertedEmployee: any) => {
-    // Find the original employee and call onEmployeeClick with it
-    const originalEmployee = employees.find(emp => emp.id === convertedEmployee.id);
-    if (originalEmployee && onEmployeeClick) {
-      onEmployeeClick(originalEmployee);
-    }
-  };
-
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200 table-fixed">
@@ -78,12 +42,11 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
             employees.map(employee => (
               <EmployeeTableRow
                 key={employee.id}
-                employee={convertEmployee(employee)}
+                employee={employee}
                 isSelected={selectedEmployees.includes(employee.id)}
                 onSelect={onSelectEmployee}
-                onEmployeeClick={handleEmployeeClick}
-                onStatusChange={handleStatusChange}
-                isUpdating={false}
+                onRowClick={onEmployeeClick}
+                onStatusChange={onStatusChange}
               />
             ))
           )}

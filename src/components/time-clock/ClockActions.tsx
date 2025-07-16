@@ -4,9 +4,7 @@ import { Button } from '@/components/ui/button';
 import PinCodeVerification from './PinCodeVerification';
 import ConfirmationDialog from './ConfirmationDialog';
 import ShiftCompletionDialog from './ShiftCompletionDialog';
-import FacialRecognition from './FacialRecognition';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Hash } from 'lucide-react';
 import type { EmployeeStatus } from './useClockActions.tsx';
 
 interface ClockActionsProps {
@@ -31,13 +29,14 @@ const ClockActions = ({
   isProcessing
 }: ClockActionsProps) => {
   const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
-  const [isFacialRecognitionOpen, setIsFacialRecognitionOpen] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isShiftCompletionOpen, setIsShiftCompletionOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'in' | 'out' | 'break' | 'end_break' | null>(null);
-  const [verificationMethod, setVerificationMethod] = useState<'pin' | 'face' | null>(null);
   const [localProcessing, setLocalProcessing] = useState(false);
   const { toast } = useToast();
+
+  // Remove localStorage use for tracking status (source of truth is now DB)
+  // UI uses employeeStatus directly
 
   const handleActionClick = (clickAction: 'in' | 'out') => {
     if (!selectedEmployee) {
@@ -73,19 +72,9 @@ const ClockActions = ({
       return;
     }
     
-    // For clock in or if employee is not clocked in, show verification method selection
+    // For clock in or if employee is not clocked in
     setPendingAction(clickAction);
-    // Reset verification method to show selection again
-    setVerificationMethod(null);
-  };
-
-  const handleVerificationMethodSelect = (method: 'pin' | 'face') => {
-    setVerificationMethod(method);
-    if (method === 'pin') {
-      setIsPinDialogOpen(true);
-    } else if (method === 'face') {
-      setIsFacialRecognitionOpen(true);
-    }
+    setIsPinDialogOpen(true);
   };
 
   const handleBreakClick = () => {
@@ -104,7 +93,7 @@ const ClockActions = ({
     } else if (employeeStatus?.isClockedIn) {
       // Start break
       setPendingAction('break');
-      setVerificationMethod(null);
+      setIsPinDialogOpen(true);
     }
   };
 
@@ -121,19 +110,12 @@ const ClockActions = ({
       }
     }
     setIsShiftCompletionOpen(false);
-    setVerificationMethod(null);
+    setIsPinDialogOpen(true);
   };
 
   const handlePinSuccess = () => {
     if (pendingAction) {
       setIsPinDialogOpen(false);
-      setIsConfirmationOpen(true);
-    }
-  };
-
-  const handleFacialRecognitionSuccess = () => {
-    if (pendingAction) {
-      setIsFacialRecognitionOpen(false);
       setIsConfirmationOpen(true);
     }
   };
@@ -172,8 +154,6 @@ const ClockActions = ({
       }
       
       setIsConfirmationOpen(false);
-      setPendingAction(null);
-      setVerificationMethod(null);
     } catch (error) {
       console.error('Error in clock action:', error);
     } finally {
@@ -223,31 +203,6 @@ const ClockActions = ({
                 Last action: {employeeStatus?.isClockedIn ? "IN" : "OUT"}
               </div>
             </div>
-
-            {/* Verification method selection */}
-            {pendingAction && verificationMethod === null && (
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
-                <h4 className="text-sm font-medium mb-3 text-gray-700">Choose Verification Method:</h4>
-                <div className="flex gap-3 justify-center">
-                  <Button
-                    onClick={() => handleVerificationMethodSelect('pin')}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    <Hash className="h-4 w-4" />
-                    PIN Code
-                  </Button>
-                  <Button
-                    onClick={() => handleVerificationMethodSelect('face')}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    <Camera className="h-4 w-4" />
-                    Facial Recognition
-                  </Button>
-                </div>
-              </div>
-            )}
             
             {/* Mobile-friendly button layout */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
@@ -322,33 +277,10 @@ const ClockActions = ({
         isOnBreak={employeeStatus?.onBreak}
       />
 
-      {/* Facial Recognition Dialog */}
-      {isFacialRecognitionOpen && pendingAction && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <FacialRecognition
-            selectedEmployee={selectedEmployee}
-            selectedEmployeeName={selectedEmployeeName}
-            selectedEmployeeAvatar={selectedEmployeeAvatar}
-            action={pendingAction as 'in' | 'out'}
-            onSuccess={handleFacialRecognitionSuccess}
-            onCancel={() => {
-              setIsFacialRecognitionOpen(false);
-              setPendingAction(null);
-              setVerificationMethod(null);
-            }}
-            isProcessing={localProcessing}
-          />
-        </div>
-      )}
-
       {/* PIN Verification Dialog */}
       <PinCodeVerification
         isOpen={isPinDialogOpen}
-        onClose={() => {
-          setIsPinDialogOpen(false);
-          setPendingAction(null);
-          setVerificationMethod(null);
-        }}
+        onClose={() => setIsPinDialogOpen(false)}
         onSuccess={handlePinSuccess}
         employeeName={selectedEmployeeName}
         action={pendingAction === 'in' ? 'in' : 'out'}
@@ -358,11 +290,7 @@ const ClockActions = ({
       {/* Confirmation Dialog */}
       <ConfirmationDialog
         isOpen={isConfirmationOpen}
-        onClose={() => {
-          setIsConfirmationOpen(false);
-          setPendingAction(null);
-          setVerificationMethod(null);
-        }}
+        onClose={() => setIsConfirmationOpen(false)}
         onConfirm={handleConfirmAction}
         action={pendingAction === 'in' ? 'in' : 'out'}
         employeeName={selectedEmployeeName}

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Shift } from '@/types/restaurant-schedule';
 import {
@@ -20,36 +21,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Trash2 } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
 interface ShiftEditDialogProps {
   isOpen: boolean;
   onClose: () => void;
   shift?: Shift | null;
-  onSave: (shift: Shift) => void;
-  onDelete?: (shift: Shift) => void;
-  mode?: 'add' | 'edit';
+  onSave: (shift: Shift) => void; // This is the prop that will receive form data
+  mode?: 'add' | 'edit'; // Added mode prop
 }
 
-const ShiftEditDialog = ({ 
-  isOpen, 
-  onClose, 
-  shift, 
-  onSave, 
-  onDelete,
-  mode = 'edit' 
-}: ShiftEditDialogProps) => {
+const ShiftEditDialog = ({ isOpen, onClose, shift, onSave, mode = 'edit' }: ShiftEditDialogProps) => {
   const [editedShift, setEditedShift] = useState<Shift | null>(null);
   
   // Set the form data when a shift is provided
@@ -89,13 +70,6 @@ const ShiftEditDialog = ({
       if (!prev) return null;
       return { ...prev, [field]: value };
     });
-  };
-
-  const handleDelete = () => {
-    if (editedShift && onDelete) {
-      onDelete(editedShift);
-      onClose();
-    }
   };
   
   return (
@@ -208,43 +182,11 @@ const ShiftEditDialog = ({
             )}
           </div>
           
-          <DialogFooter className="flex justify-between">
-            <div className="flex space-x-2">
-              {mode === 'edit' && onDelete && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button type="button" variant="destructive" size="sm">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Shift</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete this shift? This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={handleDelete}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Delete Shift
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-            </div>
-            
-            <div className="flex space-x-2">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit">Save</Button>
-            </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit">Save</Button>
           </DialogFooter>
         </form>
       </DialogContent>

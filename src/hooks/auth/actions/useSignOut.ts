@@ -59,9 +59,9 @@ export const useSignOut = () => {
         });
       }
       
-      // Always navigate to landing page (root) after sign out
-      // This will show the landing page to unauthenticated users
-      navigate('/');
+      // Always navigate to auth page with signout parameter to force re-rendering
+      // This helps ensure the UI updates correctly
+      navigate('/auth?signout=true');
     } catch (error) {
       console.error('Sign out error:', error);
       
@@ -70,7 +70,7 @@ export const useSignOut = () => {
         title: "Session ended",
         description: "Your session has been ended."
       });
-      navigate('/');
+      navigate('/auth?signout=true');
     }
   };
 

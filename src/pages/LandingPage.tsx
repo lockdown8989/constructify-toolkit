@@ -3,44 +3,99 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { TopNavigation } from '@/components/landing/TopNavigation';
-import { HeroSection } from '@/components/landing/HeroSection';
-import { FeaturesSection } from '@/components/landing/FeaturesSection';
-import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
-import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
-import { FooterSection } from '@/components/landing/FooterSection';
-import { FloatingChatbot } from '@/components/landing/FloatingChatbot';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Clock, CalendarDays, UserCheck, DollarSign, FileText } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
   const { user, isManager } = useAuth();
   const isAuthenticated = !!user;
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden relative">
-      {/* Background animated particles */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -inset-10 opacity-30">
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
-          <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
+    <div className="container mx-auto py-12 px-4 max-w-6xl">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4">Synchronized Employee Management System</h1>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          A comprehensive platform for managing shifts, attendance, leave, payroll, and payslips - all seamlessly synchronized.
+        </p>
+        
+        <div className="mt-8 flex justify-center space-x-4">
+          {!isAuthenticated ? (
+            <>
+              <Button asChild size="lg">
+                <Link to="/auth">Get Started</Link>
+              </Button>
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/auth">Sign In</Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild size="lg">
+                <Link to="/schedule">{isManager ? 'Manage Schedule' : 'View My Schedule'}</Link>
+              </Button>
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/dashboard">Go to Dashboard</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
-
-      {/* Top Navigation */}
-      <TopNavigation isAuthenticated={isAuthenticated} />
-
-      {/* Main content */}
-      <div className="relative z-10">
-        <HeroSection isAuthenticated={isAuthenticated} isManager={isManager} />
-        <FeaturesSection />
-        <HowItWorksSection />
-        <TestimonialsSection />
-        <FooterSection />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-16">
+        <FeatureCard 
+          icon={<Clock className="h-8 w-8" />}
+          title="Time & Attendance"
+          description="Track employee time, automate attendance, and manage clock-in/clock-out with ease."
+        />
+        <FeatureCard 
+          icon={<CalendarDays className="h-8 w-8" />}
+          title="Shift Management"
+          description="Create, assign and manage employee shifts with notifications and conflict detection."
+        />
+        <FeatureCard 
+          icon={<UserCheck className="h-8 w-8" />}
+          title="Leave Management"
+          description="Streamlined leave requests, approvals and balance tracking integrated with shifts."
+        />
+        <FeatureCard 
+          icon={<DollarSign className="h-8 w-8" />}
+          title="Payroll Processing"
+          description="Automatically calculate salaries based on attendance, overtime and leave data."
+        />
+        <FeatureCard 
+          icon={<FileText className="h-8 w-8" />}
+          title="Payslip Generation"
+          description="Generate and distribute digital payslips with detailed breakdowns and tax calculations."
+        />
+        <FeatureCard 
+          icon={<Clock className="h-8 w-8" />}
+          title="Synchronized Data"
+          description="All employee information stays in sync across modules for consistent, accurate records."
+        />
       </div>
-
-      {/* Floating chatbot */}
-      <FloatingChatbot />
     </div>
+  );
+};
+
+interface FeatureCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description }) => {
+  return (
+    <Card className="transition-transform duration-300 hover:-translate-y-1">
+      <CardHeader>
+        <div className="bg-primary/10 p-3 rounded-lg w-fit mb-4">
+          {icon}
+        </div>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <CardDescription>{description}</CardDescription>
+      </CardContent>
+    </Card>
   );
 };
 

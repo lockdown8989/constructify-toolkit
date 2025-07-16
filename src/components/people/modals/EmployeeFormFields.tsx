@@ -31,7 +31,7 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
   console.log('EmployeeFormFields activeTab:', activeTab);
 
   return (
-    <>
+    <div className="py-4">
       <TabsContent value="personal" className="mt-0 space-y-6">
         <Card className={cardClasses}>
           <CardContent className={cardContentClasses}>
@@ -69,7 +69,7 @@ const EmployeeFormFields: React.FC<EmployeeFormFieldsProps> = ({
           </CardContent>
         </Card>
       </TabsContent>
-    </>
+    </div>
   );
 };
 

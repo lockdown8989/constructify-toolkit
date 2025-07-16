@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -11,8 +10,6 @@ import { PeopleTableProps, Employee as EmployeeType } from './types';
 import AddEmployeeModal from './modals/AddEmployeeModal';
 import { Employee as DbEmployee } from '@/hooks/use-employees';
 import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import { useUpdateEmployee } from '@/hooks/use-employees';
 
 const PeopleTable: React.FC<PeopleTableProps> = ({
   employees,
@@ -22,8 +19,6 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
   isLoading = false
 }) => {
   const { isManager } = useAuth();
-  const { toast } = useToast();
-  const updateEmployee = useUpdateEmployee();
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [expandedEmployee, setExpandedEmployee] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -86,33 +81,9 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
     setSelectedEmployeeDetails(null);
   };
 
-  const handleStatusChange = async (id: string, status: string) => {
-    try {
-      console.log('PeopleTable handleStatusChange:', id, status);
-      
-      // Update the employee status using the mutation
-      await updateEmployee.mutateAsync({ 
-        id, 
-        status,
-        lifecycle: status === 'Active' ? 'Active' : status === 'Inactive' ? 'Inactive' : 'Active'
-      });
-      
-      toast({
-        title: "Status Updated",
-        description: `Employee status has been updated to ${status}.`,
-      });
-
-      // Call the parent component's onUpdateStatus if provided
-      if (onUpdateStatus) {
-        onUpdateStatus(id, status);
-      }
-    } catch (error) {
-      console.error("Error updating employee status:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update employee status. Please try again.",
-        variant: "destructive",
-      });
+  const handleStatusChange = (id: string, status: string) => {
+    if (onUpdateStatus) {
+      onUpdateStatus(id, status);
     }
   };
 
