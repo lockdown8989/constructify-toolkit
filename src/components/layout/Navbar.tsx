@@ -1,5 +1,5 @@
 
-import { useAuth } from "@/hooks/auth"
+import { useAuth } from "@/hooks/use-auth"
 import { useIsMobile } from "@/hooks/use-mobile"
 import NotificationBell from '@/components/notifications/NotificationBell'
 import MobileNav from "./navigation/MobileNav"

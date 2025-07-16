@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { LayoutDashboard, FileText, UserCheck } from "lucide-react";
-import MobileNavLink from "./MobileNavLink";
+import { useNavigate } from 'react-router-dom';
+import { Home, Calendar, FileText, Clock } from 'lucide-react';
 
 interface CommonSectionProps {
   isAuthenticated: boolean;
@@ -11,68 +11,44 @@ interface CommonSectionProps {
   onClose: () => void;
 }
 
-const CommonSection = ({ 
-  isAuthenticated, 
-  isEmployee, 
-  hasManagerialAccess, 
-  isPayroll, 
-  onClose 
-}: CommonSectionProps) => {
-  if (!isAuthenticated) return null;
+const CommonSection: React.FC<CommonSectionProps> = ({
+  isAuthenticated,
+  onClose
+}) => {
+  const navigate = useNavigate();
+
+  const commonItems = [
+    { name: 'Dashboard', href: '/dashboard', icon: Home },
+    { name: 'Time Clock', href: '/time-clock', icon: Clock },
+    { name: 'Calendar', href: '/calendar', icon: Calendar },
+    { name: 'Documents', href: '/documents', icon: FileText },
+  ];
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  const handleNavigate = (href: string) => {
+    navigate(href);
+    onClose();
+  };
 
   return (
-    <>
-      <MobileNavLink
-        to="/dashboard"
-        icon={LayoutDashboard}
-        label="🏠 Dashboard"
-        onClick={onClose}
-      />
-
-      {/* Schedule for non-managers and non-payroll users */}
-      {!hasManagerialAccess && !isPayroll && (
-        <MobileNavLink
-          to="/schedule"
-          icon={LayoutDashboard}
-          label="📅 My Schedule"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Attendance for all authenticated users */}
-      <MobileNavLink
-        to="/attendance"
-        icon={UserCheck}
-        label="📊 Attendance"
-        onClick={onClose}
-      />
-
-      {/* Leave Management for all users */}
-      <MobileNavLink
-        to="/leave-management"
-        icon={FileText}
-        label="📋 Leave Management"
-        onClick={onClose}
-      />
-
-      {/* Payroll sections - only for payroll users */}
-      {isPayroll && (
-        <>
-          <MobileNavLink
-            to="/payroll-dashboard"
-            icon={LayoutDashboard}
-            label="💰 Payroll Dashboard"
-            onClick={onClose}
-          />
-          <MobileNavLink
-            to="/payslips"
-            icon={FileText}
-            label="📄 Payslips"
-            onClick={onClose}
-          />
-        </>
-      )}
-    </>
+    <div className="space-y-1">
+      {commonItems.map((item) => {
+        const Icon = item.icon;
+        return (
+          <button
+            key={item.name}
+            onClick={() => handleNavigate(item.href)}
+            className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+          >
+            <Icon className="mr-3 h-5 w-5" />
+            {item.name}
+          </button>
+        );
+      })}
+    </div>
   );
 };
 

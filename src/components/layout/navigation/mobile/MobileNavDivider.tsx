@@ -1,6 +1,8 @@
 
-const MobileNavDivider = () => {
-  return <div className="h-[1px] bg-neutral-200 my-3 mx-6" />;
+import React from 'react';
+
+const MobileNavDivider: React.FC = () => {
+  return <div className="border-t border-gray-200 my-2" />;
 };
 
 export default MobileNavDivider;
