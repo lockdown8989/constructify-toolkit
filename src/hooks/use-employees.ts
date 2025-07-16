@@ -170,7 +170,6 @@ export const useEmployeeFilters = () => {
 
 export const useUpdateEmployee = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (employee: Partial<Employee> & { id: string }) => {
@@ -184,20 +183,13 @@ export const useUpdateEmployee = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      toast({
-        title: "Employee updated",
-        description: `${data.name} has been updated successfully.`,
-      });
+      queryClient.invalidateQueries({ queryKey: ['employee'] });
     },
     onError: (error) => {
       console.error('Error updating employee:', error);
-      toast({
-        title: "Error updating employee",
-        description: error instanceof Error ? error.message : "Failed to update employee",
-        variant: "destructive",
-      });
+      throw error;
     },
   });
 };
