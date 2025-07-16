@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Clock, AlertCircle } from 'lucide-react';
+import { Plus, X, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import { ShiftTemplate } from '@/types/schedule';
 
 interface Employee {
@@ -48,6 +48,9 @@ export const RotaPatternDialog: React.FC<RotaPatternDialogProps> = ({
   onSubmit,
   isLoading
 }) => {
+  const [addingEmployee, setAddingEmployee] = React.useState(false);
+  const [lastAddedEmployee, setLastAddedEmployee] = React.useState<string>('');
+
   // Filter out employees that are already selected
   const availableEmployees = employees.filter(emp => 
     emp && 
@@ -68,7 +71,7 @@ export const RotaPatternDialog: React.FC<RotaPatternDialogProps> = ({
     canAddEmployee: selectedEmployeeId && selectedEmployeeId.trim() !== '' && selectedEmployeeId !== 'no-employees'
   });
 
-  const handleAddEmployee = () => {
+  const handleAddEmployee = async () => {
     console.log('RotaPatternDialog handleAddEmployee called:', {
       selectedEmployeeId,
       isValidId: selectedEmployeeId && selectedEmployeeId.trim() !== '' && selectedEmployeeId !== 'no-employees',
@@ -88,8 +91,28 @@ export const RotaPatternDialog: React.FC<RotaPatternDialogProps> = ({
       return;
     }
     
-    console.log('Calling onAddEmployee from dialog');
-    onAddEmployee();
+    // Get employee name for confirmation
+    const employeeName = getEmployeeName(selectedEmployeeId);
+    
+    console.log('Adding employee:', employeeName);
+    setAddingEmployee(true);
+    setLastAddedEmployee(employeeName);
+    
+    try {
+      await onAddEmployee();
+      console.log('Employee added successfully:', employeeName);
+      
+      // Clear the adding state after a brief delay to show confirmation
+      setTimeout(() => {
+        setAddingEmployee(false);
+        setLastAddedEmployee('');
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Error adding employee:', error);
+      setAddingEmployee(false);
+      setLastAddedEmployee('');
+    }
   };
 
   const handleEmployeeChange = (value: string) => {
@@ -108,7 +131,8 @@ export const RotaPatternDialog: React.FC<RotaPatternDialogProps> = ({
   const canAddEmployee = selectedEmployeeId && 
                          selectedEmployeeId.trim() !== '' && 
                          selectedEmployeeId !== 'no-employees' && 
-                         availableEmployees.some(emp => emp.id === selectedEmployeeId);
+                         availableEmployees.some(emp => emp.id === selectedEmployeeId) &&
+                         !addingEmployee;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -205,7 +229,11 @@ export const RotaPatternDialog: React.FC<RotaPatternDialogProps> = ({
             
             <div className="flex flex-col sm:flex-row gap-2">
               <div className="flex-1">
-                <Select value={selectedEmployeeId || ''} onValueChange={handleEmployeeChange}>
+                <Select 
+                  value={selectedEmployeeId || ''} 
+                  onValueChange={handleEmployeeChange}
+                  disabled={addingEmployee}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Choose an employee..." />
                   </SelectTrigger>
@@ -231,10 +259,29 @@ export const RotaPatternDialog: React.FC<RotaPatternDialogProps> = ({
                 size="sm"
                 className="sm:w-auto w-full"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add
+                {addingEmployee ? (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add
+                  </>
+                )}
               </Button>
             </div>
+
+            {/* Confirmation message for last added employee */}
+            {lastAddedEmployee && addingEmployee && (
+              <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <p className="text-sm text-green-700">
+                  Successfully added {lastAddedEmployee} to the rota!
+                </p>
+              </div>
+            )}
 
             {selectedEmployees.length > 0 && (
               <div className="space-y-2">

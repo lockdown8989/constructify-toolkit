@@ -67,8 +67,8 @@ const RotaEmployeeManager = () => {
     return employee?.name || 'Unknown Employee';
   };
 
-  // Enhanced handleAddEmployee with better error handling and validation
-  const handleAddEmployee = () => {
+  // Enhanced handleAddEmployee with better confirmation and validation
+  const handleAddEmployee = async () => {
     console.log('RotaEmployeeManager handleAddEmployee called:', {
       selectedEmployeeId,
       selectedEmployees,
@@ -122,16 +122,21 @@ const RotaEmployeeManager = () => {
 
     try {
       console.log('Adding employee:', employee.name);
+      
+      // Add employee to the local state
       formHandleAddEmployee();
       
       // Clear the selection after adding
       setSelectedEmployeeId('');
       
-      console.log('Employee added successfully:', employee.name);
+      console.log('Employee added successfully to local state:', employee.name);
+      
+      // Show immediate confirmation
       toast({
-        title: "Employee added",
-        description: `${employee.name} has been added to the rota.`,
+        title: "✅ Employee Added",
+        description: `${employee.name} has been added to the rota. Save the rota to confirm the assignment.`,
       });
+      
     } catch (error) {
       console.error('Error adding employee:', error);
       toast({
@@ -255,12 +260,17 @@ const RotaEmployeeManager = () => {
             shiftPatternId: editingPattern.id,
             employeeIds: selectedEmployees,
           });
+          
+          toast({
+            title: "✅ Rota Updated Successfully",
+            description: `Rota pattern updated and ${selectedEmployees.length} employee(s) assigned. All changes have been saved.`,
+          });
+        } else {
+          toast({
+            title: "✅ Rota Updated",
+            description: "Rota pattern updated successfully.",
+          });
         }
-        
-        toast({
-          title: "Success",
-          description: `Rota pattern updated and assigned to ${selectedEmployees.length} employee(s).`,
-        });
         
       } else {
         console.log('Creating new pattern with data:', formData);
@@ -283,12 +293,12 @@ const RotaEmployeeManager = () => {
           });
           
           toast({
-            title: "Success",
-            description: `Rota pattern created and assigned to ${selectedEmployees.length} employee(s). Use "Sync to Calendar" to create confirmed shifts for employees.`,
+            title: "✅ Rota Created Successfully",
+            description: `Rota pattern created and ${selectedEmployees.length} employee(s) assigned. Use "Sync to Calendar" to create confirmed shifts.`,
           });
         } else {
           toast({
-            title: "Success",
+            title: "✅ Rota Created",
             description: "Rota pattern created successfully. Assign employees and sync to calendar to create confirmed shifts.",
           });
         }
@@ -313,7 +323,7 @@ const RotaEmployeeManager = () => {
       console.error('Error saving rota pattern:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
-        title: "Error",
+        title: "❌ Save Failed",
         description: `Failed to ${editingPattern ? 'update' : 'create'} rota pattern: ${errorMessage}`,
         variant: "destructive",
       });
