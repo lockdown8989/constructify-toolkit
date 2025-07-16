@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { AuthProvider, useAuth } from './hooks/auth';
+import { AuthProvider, useAuth } from './hooks/use-auth';
 import { LanguageProvider } from './hooks/use-language';
 import { ThemeProvider } from './hooks/use-theme';
 import AppLayout from './components/layout/AppLayout';

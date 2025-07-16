@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { AuthContextType } from './types';
+import { AuthContextType, UserRole } from './types';
 import { useAuthActions } from './useAuthActions';
 import { useRoles } from './useRoles';
 import { useAuthDebugger } from './useAuthDebugger';
@@ -152,3 +152,10 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export const isAuthenticated = () => {
+  const { user } = useAuth();
+  return !!user;
+};
+
+export type { UserRole };

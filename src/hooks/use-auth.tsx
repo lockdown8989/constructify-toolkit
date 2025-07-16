@@ -5,4 +5,4 @@ export {
   useAuth, 
   isAuthenticated,
   type UserRole 
-} from './auth';
+} from './auth/AuthProvider';
