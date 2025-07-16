@@ -1,134 +1,98 @@
-// Main authentication page
-import React, { useEffect, useState } from 'react';
-import { Navigate, useSearchParams, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/auth/AuthContext';
-import { AuthHeader } from '@/components/auth/AuthHeader';
-import { AuthTabs } from '@/components/auth/AuthTabs';
-import { UpdatePasswordForm } from '@/components/auth/forms/UpdatePasswordForm';
-import { parseUrlParams } from '@/lib/auth/utils';
-import { AuthMode } from '@/lib/auth/types';
 
-const Auth: React.FC = () => {
-  const { isAuthenticated, isLoading, signIn, signUp } = useAuth();
+import React, { useEffect } from "react";
+import { Navigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
+import { useAuthPage } from "@/hooks/auth/useAuthPage";
+import { AuthHeader } from "@/components/auth/AuthHeader";
+import { AuthTabs } from "@/components/auth/AuthTabs";
+import { ResetPasswordMode } from "@/components/auth/ResetPasswordMode";
+
+const Auth = () => {
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const location = useLocation();
+  const {
+    from,
+    activeTab,
+    setActiveTab,
+    isResetMode,
+    isRecoveryMode,
+    handleShowResetPassword,
+    handleBackToSignIn,
+    signIn,
+    signUp
+  } = useAuthPage();
+
+  // Check for recovery token in URL
+  const hasRecoveryToken = searchParams.has("token") || window.location.hash.includes("access_token=");
   
-  // Parse URL parameters
-  const urlParams = parseUrlParams(searchParams);
-  const [activeTab, setActiveTab] = useState<AuthMode>(
-    urlParams.tab === 'signup' ? 'signup' : 'signin'
-  );
-  const [authLoading, setAuthLoading] = useState(false);
-
-  // Determine if we should show password recovery form
-  const isRecoveryMode = urlParams.type === 'recovery' || 
-                        urlParams.reset || 
-                        window.location.hash.includes('access_token=') ||
-                        searchParams.has('token');
-
-  // Get redirect destination
-  const from = location.state?.from?.pathname || urlParams.from;
-
-  // Update tab when URL changes
+  // Check if this is a sign-out redirect
+  const isSignOut = searchParams.has("signout") || searchParams.get("action") === "signout";
+  
+  // Check for specific mode parameter
+  const mode = searchParams.get("mode");
+  
   useEffect(() => {
-    if (urlParams.tab === 'signup') {
-      setActiveTab('signup');
-    } else if (urlParams.tab === 'signin') {
-      setActiveTab('signin');
-    }
-  }, [urlParams.tab]);
-
-  // Log auth state for debugging
-  useEffect(() => {
-    console.group('🔐 Auth Page State');
-    console.log('Authentication state:', {
-      isAuthenticated,
-      isLoading,
-      isRecoveryMode,
-      activeTab,
+    // Enhanced logging for auth page state
+    console.group('🔐 Auth Page State Check');
+    console.log('Auth page state:', { 
+      isAuthenticated: !!user,
+      isResetMode, 
+      isRecoveryMode, 
+      hasRecoveryToken,
+      isSignOut,
+      mode,
       from,
-      urlParams,
-      currentUrl: window.location.href,
+      url: window.location.href,
+      searchParams: Object.fromEntries(searchParams.entries())
     });
-    console.groupEnd();
-  }, [isAuthenticated, isLoading, isRecoveryMode, activeTab, from, urlParams]);
-
-  // Handle sign in
-  const handleSignIn = async (email: string, password: string) => {
-    setAuthLoading(true);
-    try {
-      const result = await signIn(email, password);
-      return result;
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  // Handle sign up
-  const handleSignUp = async (
-    email: string, 
-    password: string, 
-    firstName: string, 
-    lastName: string
-  ) => {
-    setAuthLoading(true);
-    try {
-      const result = await signUp(email, password, {
-        firstName,
-        lastName,
+    
+    // Log detailed user state
+    if (user) {
+      console.log('User details:', {
+        id: user.id,
+        email: user.email,
+        emailConfirmed: user.email_confirmed_at,
+        lastSignIn: user.last_sign_in_at
       });
-      return result;
-    } finally {
-      setAuthLoading(false);
     }
-  };
+    
+    // If this is a sign-out redirect, force a check of auth state
+    if (isSignOut) {
+      console.log('🚨 Sign-out detected on auth page, force-checking auth state');
+    }
+    
+    console.groupEnd();
+  }, [user, isResetMode, isRecoveryMode, hasRecoveryToken, isSignOut, mode, from, searchParams]);
 
-  // Redirect authenticated users (unless in recovery mode or just signed out)
-  if (isAuthenticated && !isRecoveryMode && !urlParams.signout) {
-    console.log('✅ Authenticated user, redirecting to:', from);
-    return <Navigate to={from} replace />;
+  // If we have a token in the URL or mode is recovery, force reset mode
+  const shouldShowReset = isResetMode || isRecoveryMode || hasRecoveryToken || mode === 'recovery';
+
+  // Redirect authenticated users to dashboard unless they're in reset mode
+  // or just signed out (in which case we'll show the sign in form)
+  if (user && !shouldShowReset && !isSignOut) {
+    console.log('✅ Authenticated user, redirecting to:', from || "/dashboard");
+    return <Navigate to={from || "/dashboard"} replace />;
   }
 
-  // Show password recovery form if in recovery mode
-  if (isRecoveryMode) {
-    console.log('🔑 Showing password recovery form');
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
-        <div className="w-full max-w-md">
-          <AuthHeader />
-          <div className="bg-card rounded-lg border p-6 shadow-sm">
-            <UpdatePasswordForm />
-          </div>
-        </div>
-      </div>
-    );
+  // Show password reset form if in reset or recovery mode
+  if (shouldShowReset) {
+    console.log('🔑 Showing password reset mode');
+    return <ResetPasswordMode />;
   }
 
-  // Show main auth interface
-  console.log('📝 Showing auth interface');
+  console.log('📝 Showing auth tabs');
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
       <div className="w-full max-w-md">
         <AuthHeader />
-        
-        <div className="bg-card rounded-lg border p-6 shadow-sm">
-          <AuthTabs
-            activeTab={activeTab}
-            setActiveTab={setActiveTab as (value: string) => void}
-            onSignIn={handleSignIn}
-            onSignUp={handleSignUp}
-            isLoading={authLoading || isLoading}
-          />
-        </div>
-        
-        {/* Test account info */}
-        <div className="mt-4 p-4 bg-muted/50 rounded-lg border">
-          <p className="text-sm text-muted-foreground text-center">
-            <strong>Test Account:</strong><br />
-            Email: test@admin.com<br />
-            Password: password123
-          </p>
-        </div>
+        <AuthTabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onForgotPassword={handleShowResetPassword}
+          onBackToSignIn={handleBackToSignIn}
+          onSignIn={signIn}
+          onSignUp={signUp}
+        />
       </div>
     </div>
   );
