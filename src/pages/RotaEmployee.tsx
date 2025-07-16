@@ -21,8 +21,8 @@ const RotaEmployee = () => {
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Rota Employee Management</h1>
-        <p className="text-gray-600 mt-2">Create and manage employee rotas that automatically sync to their calendars</p>
+        <h1 className="text-3xl font-bold text-gray-900">Employee Rotas & Shift Management</h1>
+        <p className="text-gray-600 mt-2">Manage recurring rota patterns, employee schedules, and single shifts all in one place</p>
       </div>
       <RotaEmployeeManager />
     </div>

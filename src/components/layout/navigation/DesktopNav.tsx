@@ -74,8 +74,8 @@ const DesktopNav = () => {
           <NavLink to="/people" icon={Users}>
             Team Members
           </NavLink>
-          <NavLink to="/restaurant-schedule" icon={Clock}>
-            Single Shifts
+          <NavLink to="/rota-employee" icon={Clock}>
+            Employee Rotas
           </NavLink>
           <NavLink to="/shift-calendar" icon={CalendarDays}>
             Shift Calendar

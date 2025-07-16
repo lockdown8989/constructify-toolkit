@@ -26,7 +26,7 @@ const Payslips = lazy(() => import('./pages/Payslips'));
 const Schedule = lazy(() => import('./pages/Schedule'));
 const ShiftPatterns = lazy(() => import('./pages/ShiftPatterns'));
 const RotaEmployee = lazy(() => import('./pages/RotaEmployee'));
-const RestaurantSchedule = lazy(() => import('./pages/RestaurantSchedule'));
+
 const ShiftCalendar = lazy(() => import('./pages/ShiftCalendar'));
 const EmployeeWorkflow = lazy(() => import('./pages/EmployeeWorkflow'));
 const TimeClock = lazy(() => import('./pages/TimeClock'));
@@ -151,13 +151,6 @@ const AppContent = () => {
             <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
               <Suspense fallback={<LoadingSpinner />}>
                 <RotaEmployee />
-              </Suspense>
-            </ProtectedRoute>
-          } />
-          <Route path="restaurant-schedule" element={
-            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-              <Suspense fallback={<LoadingSpinner />}>
-                <RestaurantSchedule />
               </Suspense>
             </ProtectedRoute>
           } />

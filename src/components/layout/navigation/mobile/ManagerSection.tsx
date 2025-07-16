@@ -9,7 +9,7 @@ export const ManagerSection = () => {
       <MobileNavLink to="/people" icon={Users} label="People" />
       <MobileNavLink to="/shift-calendar" icon={CalendarDays} label="Shift Calendar" />
       <MobileNavLink to="/rota-employee" icon={Timer} label="Employee Rotas" />
-      <MobileNavLink to="/restaurant-schedule" icon={Building2} label="Single Shifts" />
+      
       <MobileNavLink to="/manager-time-clock" icon={Clock} label="Manager Time Clock" />
     </>
   );
