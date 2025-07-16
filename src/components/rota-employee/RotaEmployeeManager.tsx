@@ -38,7 +38,7 @@ const RotaEmployeeManager = () => {
     setSelectedEmployeeId,
     resetForm,
     loadPatternData,
-    handleAddEmployee,
+    handleAddEmployee: formHandleAddEmployee,
     handleRemoveEmployee,
     loadExistingEmployeeAssignments,
   } = useShiftPatternForm();
@@ -66,6 +66,56 @@ const RotaEmployeeManager = () => {
   const getEmployeeName = (employeeId: string) => {
     const employee = employees.find(e => e.id === employeeId);
     return employee?.name || 'Unknown Employee';
+  };
+
+  // Enhanced handleAddEmployee with better error handling
+  const handleAddEmployee = () => {
+    console.log('handleAddEmployee called:', {
+      selectedEmployeeId,
+      selectedEmployees,
+      availableEmployees: employees.filter(emp => !selectedEmployees.includes(emp.id))
+    });
+
+    if (!selectedEmployeeId) {
+      toast({
+        title: "No employee selected",
+        description: "Please select an employee to add to the rota.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedEmployees.includes(selectedEmployeeId)) {
+      toast({
+        title: "Employee already added",
+        description: "This employee is already assigned to this rota.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if employee exists
+    const employee = employees.find(emp => emp.id === selectedEmployeeId);
+    if (!employee) {
+      toast({
+        title: "Employee not found",
+        description: "The selected employee could not be found.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      formHandleAddEmployee();
+      console.log('Employee added successfully:', employee.name);
+    } catch (error) {
+      console.error('Error adding employee:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add employee. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAutoApproveAllRotas = async () => {
@@ -175,11 +225,13 @@ const RotaEmployeeManager = () => {
         
         console.log('Pattern updated, now assigning employees:', selectedEmployees);
         
-        // Assign employees to the pattern
-        await assignEmployeesToPattern.mutateAsync({
-          shiftPatternId: editingPattern.id,
-          employeeIds: selectedEmployees,
-        });
+        // Assign employees to the pattern if any are selected
+        if (selectedEmployees.length > 0) {
+          await assignEmployeesToPattern.mutateAsync({
+            shiftPatternId: editingPattern.id,
+            employeeIds: selectedEmployees,
+          });
+        }
         
         toast({
           title: "Success",

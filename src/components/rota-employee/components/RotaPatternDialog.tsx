@@ -6,12 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Clock } from 'lucide-react';
+import { Plus, X, Clock, AlertCircle } from 'lucide-react';
 import { ShiftTemplate } from '@/types/schedule';
 
 interface Employee {
   id: string;
   name: string;
+  job_title?: string;
 }
 
 interface RotaPatternDialogProps {
@@ -47,6 +48,51 @@ export const RotaPatternDialog: React.FC<RotaPatternDialogProps> = ({
   onSubmit,
   isLoading
 }) => {
+  // Filter out employees that are already selected
+  const availableEmployees = employees.filter(emp => 
+    emp && 
+    emp.id && 
+    typeof emp.id === 'string' && 
+    emp.id.trim() !== '' &&
+    emp.name && 
+    typeof emp.name === 'string' &&
+    emp.name.trim() !== '' &&
+    !selectedEmployees.includes(emp.id)
+  );
+
+  console.log('RotaPatternDialog render:', {
+    employees: employees?.length || 0,
+    selectedEmployees,
+    selectedEmployeeId,
+    availableEmployees: availableEmployees?.length || 0
+  });
+
+  const handleAddEmployee = () => {
+    console.log('RotaPatternDialog handleAddEmployee called:', {
+      selectedEmployeeId,
+      canAdd: selectedEmployeeId && selectedEmployeeId.trim() !== '' && selectedEmployeeId !== 'no-employees'
+    });
+    
+    if (selectedEmployeeId && selectedEmployeeId.trim() !== '' && selectedEmployeeId !== 'no-employees') {
+      // Validate that the selected employee exists in available employees
+      const employeeExists = availableEmployees.some(emp => emp.id === selectedEmployeeId);
+      if (!employeeExists) {
+        console.error('Selected employee not found in available employees');
+        return;
+      }
+      
+      console.log('Calling onAddEmployee');
+      onAddEmployee();
+    }
+  };
+
+  const handleEmployeeChange = (value: string) => {
+    console.log('Employee selection changed:', { value, isValidSelection: value !== 'no-employees' });
+    if (value !== 'no-employees') {
+      onEmployeeIdChange(value);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -128,36 +174,54 @@ export const RotaPatternDialog: React.FC<RotaPatternDialogProps> = ({
             </div>
           </div>
 
-          <div className="space-y-4">
-            <Label>Assign Employees to Rota</Label>
-            <div className="flex gap-2">
-              <Select value={selectedEmployeeId} onValueChange={onEmployeeIdChange}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Select an employee" />
-                </SelectTrigger>
-                <SelectContent>
-                  {employees
-                    .filter(emp => !selectedEmployees.includes(emp.id))
-                    .map((employee) => (
-                      <SelectItem key={employee.id} value={employee.id}>
-                        {employee.name}
+          <div className="space-y-4 border-t pt-4">
+            <Label className="text-base font-medium">Assign Employees to Rota</Label>
+            
+            {employees.length === 0 && (
+              <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-md">
+                <AlertCircle className="h-4 w-4 text-orange-600" />
+                <p className="text-sm text-orange-700">
+                  No employees found. Please ensure employees are properly configured.
+                </p>
+              </div>
+            )}
+            
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex-1">
+                <Select value={selectedEmployeeId || ''} onValueChange={handleEmployeeChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose an employee..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white z-50">
+                    {availableEmployees.length === 0 ? (
+                      <SelectItem value="no-employees" disabled>
+                        {employees.length === 0 ? 'No employees available' : 'All employees already assigned'}
                       </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+                    ) : (
+                      availableEmployees.map((employee) => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          {employee.name} - {employee.job_title || 'No Title'}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
               <Button
                 type="button"
-                onClick={onAddEmployee}
-                disabled={!selectedEmployeeId || selectedEmployees.includes(selectedEmployeeId)}
+                onClick={handleAddEmployee}
+                disabled={!selectedEmployeeId || selectedEmployeeId.trim() === '' || selectedEmployeeId === 'no-employees' || availableEmployees.length === 0}
                 size="sm"
+                className="sm:w-auto w-full"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4 mr-2" />
+                Add
               </Button>
             </div>
 
             {selectedEmployees.length > 0 && (
               <div className="space-y-2">
-                <p className="text-sm font-medium">Assigned Employees ({selectedEmployees.length})</p>
+                <Label className="text-sm font-medium">Assigned Employees ({selectedEmployees.length})</Label>
                 <div className="flex flex-wrap gap-2">
                   {selectedEmployees.map((employeeId) => (
                     <Badge key={employeeId} variant="secondary" className="flex items-center gap-1">
@@ -166,12 +230,16 @@ export const RotaPatternDialog: React.FC<RotaPatternDialogProps> = ({
                         type="button"
                         onClick={() => onRemoveEmployee(employeeId)}
                         className="ml-1 hover:text-red-600"
+                        aria-label={`Remove ${getEmployeeName(employeeId)}`}
                       >
                         <X className="h-3 w-3" />
                       </button>
                     </Badge>
                   ))}
                 </div>
+                <p className="text-xs text-gray-600">
+                  This pattern will be applied weekly to the selected employees for the next 12 weeks.
+                </p>
               </div>
             )}
           </div>
