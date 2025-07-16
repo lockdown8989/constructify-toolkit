@@ -29,6 +29,34 @@ const MobileTable: React.FC<MobileTableProps> = ({
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
+  // Convert Employee from people/types to types/employee format
+  const convertEmployee = (emp: Employee) => ({
+    id: emp.id,
+    name: emp.name,
+    job_title: emp.jobTitle,
+    department: emp.department,
+    site: emp.site,
+    salary: parseInt(emp.salary.replace(/[^0-9]/g, '')),
+    status: emp.status,
+    employment_type: emp.employment_type,
+    start_date: emp.startDate,
+    lifecycle: emp.lifecycle,
+    user_id: emp.userId,
+    manager_id: emp.managerId,
+    email: emp.email,
+    hourly_rate: emp.hourly_rate,
+    role: emp.role,
+    annual_leave_days: emp.annual_leave_days,
+    sick_leave_days: emp.sick_leave_days,
+    avatar: emp.avatar
+  });
+
+  const handleStatusChange = (employee: any, newStatus: string) => {
+    if (onStatusChange) {
+      onStatusChange(employee.id, newStatus);
+    }
+  };
+  
   // Function to scroll to the top smoothly
   const scrollToTop = () => {
     if (scrollAreaRef.current) {
@@ -91,11 +119,10 @@ const MobileTable: React.FC<MobileTableProps> = ({
               {employees.map(employee => (
                 <EmployeeMobileCard
                   key={employee.id}
-                  employee={employee}
-                  isSelected={selectedEmployees.includes(employee.id)}
-                  onSelect={onSelectEmployee}
-                  onRowClick={onEmployeeClick}
-                  onStatusChange={onStatusChange}
+                  employee={convertEmployee(employee)}
+                  onEmployeeClick={onEmployeeClick}
+                  onStatusChange={handleStatusChange}
+                  isUpdating={false}
                 />
               ))}
             </div>
