@@ -54,7 +54,6 @@ export type Database = {
           restriction_id: string | null
           scheduled_end_time: string | null
           scheduled_start_time: string | null
-          shift_pattern_id: string | null
           status: string | null
           updated_at: string | null
           working_minutes: number | null
@@ -98,7 +97,6 @@ export type Database = {
           restriction_id?: string | null
           scheduled_end_time?: string | null
           scheduled_start_time?: string | null
-          shift_pattern_id?: string | null
           status?: string | null
           updated_at?: string | null
           working_minutes?: number | null
@@ -142,7 +140,6 @@ export type Database = {
           restriction_id?: string | null
           scheduled_end_time?: string | null
           scheduled_start_time?: string | null
-          shift_pattern_id?: string | null
           status?: string | null
           updated_at?: string | null
           working_minutes?: number | null
@@ -160,20 +157,6 @@ export type Database = {
             columns: ["restriction_id"]
             isOneToOne: false
             referencedRelation: "gps_clocking_restrictions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "attendance_shift_pattern_id_fkey"
-            columns: ["shift_pattern_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_attendance_shift_pattern"
-            columns: ["shift_pattern_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
             referencedColumns: ["id"]
           },
         ]
@@ -600,7 +583,6 @@ export type Database = {
           employment_type: string | null
           friday_available: boolean | null
           friday_end_time: string | null
-          friday_shift_id: string | null
           friday_start_time: string | null
           hourly_rate: number | null
           id: string
@@ -611,7 +593,6 @@ export type Database = {
           manager_id: string | null
           monday_available: boolean | null
           monday_end_time: string | null
-          monday_shift_id: string | null
           monday_start_time: string | null
           name: string
           pin_code: string | null
@@ -620,29 +601,23 @@ export type Database = {
           salary: number
           saturday_available: boolean | null
           saturday_end_time: string | null
-          saturday_shift_id: string | null
           saturday_start_time: string | null
-          shift_pattern_id: string | null
           sick_leave_days: number | null
           site: string
           start_date: string
           status: string
           sunday_available: boolean | null
           sunday_end_time: string | null
-          sunday_shift_id: string | null
           sunday_start_time: string | null
           thursday_available: boolean | null
           thursday_end_time: string | null
-          thursday_shift_id: string | null
           thursday_start_time: string | null
           tuesday_available: boolean | null
           tuesday_end_time: string | null
-          tuesday_shift_id: string | null
           tuesday_start_time: string | null
           user_id: string | null
           wednesday_available: boolean | null
           wednesday_end_time: string | null
-          wednesday_shift_id: string | null
           wednesday_start_time: string | null
         }
         Insert: {
@@ -654,7 +629,6 @@ export type Database = {
           employment_type?: string | null
           friday_available?: boolean | null
           friday_end_time?: string | null
-          friday_shift_id?: string | null
           friday_start_time?: string | null
           hourly_rate?: number | null
           id?: string
@@ -665,7 +639,6 @@ export type Database = {
           manager_id?: string | null
           monday_available?: boolean | null
           monday_end_time?: string | null
-          monday_shift_id?: string | null
           monday_start_time?: string | null
           name: string
           pin_code?: string | null
@@ -674,29 +647,23 @@ export type Database = {
           salary: number
           saturday_available?: boolean | null
           saturday_end_time?: string | null
-          saturday_shift_id?: string | null
           saturday_start_time?: string | null
-          shift_pattern_id?: string | null
           sick_leave_days?: number | null
           site: string
           start_date?: string
           status?: string
           sunday_available?: boolean | null
           sunday_end_time?: string | null
-          sunday_shift_id?: string | null
           sunday_start_time?: string | null
           thursday_available?: boolean | null
           thursday_end_time?: string | null
-          thursday_shift_id?: string | null
           thursday_start_time?: string | null
           tuesday_available?: boolean | null
           tuesday_end_time?: string | null
-          tuesday_shift_id?: string | null
           tuesday_start_time?: string | null
           user_id?: string | null
           wednesday_available?: boolean | null
           wednesday_end_time?: string | null
-          wednesday_shift_id?: string | null
           wednesday_start_time?: string | null
         }
         Update: {
@@ -708,7 +675,6 @@ export type Database = {
           employment_type?: string | null
           friday_available?: boolean | null
           friday_end_time?: string | null
-          friday_shift_id?: string | null
           friday_start_time?: string | null
           hourly_rate?: number | null
           id?: string
@@ -719,7 +685,6 @@ export type Database = {
           manager_id?: string | null
           monday_available?: boolean | null
           monday_end_time?: string | null
-          monday_shift_id?: string | null
           monday_start_time?: string | null
           name?: string
           pin_code?: string | null
@@ -728,145 +693,26 @@ export type Database = {
           salary?: number
           saturday_available?: boolean | null
           saturday_end_time?: string | null
-          saturday_shift_id?: string | null
           saturday_start_time?: string | null
-          shift_pattern_id?: string | null
           sick_leave_days?: number | null
           site?: string
           start_date?: string
           status?: string
           sunday_available?: boolean | null
           sunday_end_time?: string | null
-          sunday_shift_id?: string | null
           sunday_start_time?: string | null
           thursday_available?: boolean | null
           thursday_end_time?: string | null
-          thursday_shift_id?: string | null
           thursday_start_time?: string | null
           tuesday_available?: boolean | null
           tuesday_end_time?: string | null
-          tuesday_shift_id?: string | null
           tuesday_start_time?: string | null
           user_id?: string | null
           wednesday_available?: boolean | null
           wednesday_end_time?: string | null
-          wednesday_shift_id?: string | null
           wednesday_start_time?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "employees_friday_shift_id_fkey"
-            columns: ["friday_shift_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employees_monday_shift_id_fkey"
-            columns: ["monday_shift_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employees_saturday_shift_id_fkey"
-            columns: ["saturday_shift_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employees_shift_pattern_id_fkey"
-            columns: ["shift_pattern_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employees_sunday_shift_id_fkey"
-            columns: ["sunday_shift_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employees_thursday_shift_id_fkey"
-            columns: ["thursday_shift_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employees_tuesday_shift_id_fkey"
-            columns: ["tuesday_shift_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employees_wednesday_shift_id_fkey"
-            columns: ["wednesday_shift_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_employees_friday_shift"
-            columns: ["friday_shift_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_employees_monday_shift"
-            columns: ["monday_shift_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_employees_saturday_shift"
-            columns: ["saturday_shift_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_employees_shift_pattern"
-            columns: ["shift_pattern_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_employees_sunday_shift"
-            columns: ["sunday_shift_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_employees_thursday_shift"
-            columns: ["thursday_shift_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_employees_tuesday_shift"
-            columns: ["tuesday_shift_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_employees_wednesday_shift"
-            columns: ["wednesday_shift_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       gps_clocking_restrictions: {
         Row: {
@@ -1985,90 +1831,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      shift_pattern_assignments: {
-        Row: {
-          assigned_at: string | null
-          assigned_by: string | null
-          created_at: string | null
-          employee_id: string
-          id: string
-          is_active: boolean | null
-          shift_pattern_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          assigned_at?: string | null
-          assigned_by?: string | null
-          created_at?: string | null
-          employee_id: string
-          id?: string
-          is_active?: boolean | null
-          shift_pattern_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          assigned_at?: string | null
-          assigned_by?: string | null
-          created_at?: string | null
-          employee_id?: string
-          id?: string
-          is_active?: boolean | null
-          shift_pattern_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "shift_pattern_assignments_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "shift_pattern_assignments_shift_pattern_id_fkey"
-            columns: ["shift_pattern_id"]
-            isOneToOne: false
-            referencedRelation: "shift_patterns"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      shift_patterns: {
-        Row: {
-          break_duration: number
-          created_at: string
-          end_time: string
-          grace_period_minutes: number
-          id: string
-          name: string
-          overtime_threshold_minutes: number
-          start_time: string
-          updated_at: string
-        }
-        Insert: {
-          break_duration?: number
-          created_at?: string
-          end_time: string
-          grace_period_minutes?: number
-          id?: string
-          name: string
-          overtime_threshold_minutes?: number
-          start_time: string
-          updated_at?: string
-        }
-        Update: {
-          break_duration?: number
-          created_at?: string
-          end_time?: string
-          grace_period_minutes?: number
-          id?: string
-          name?: string
-          overtime_threshold_minutes?: number
-          start_time?: string
-          updated_at?: string
-        }
-        Relationships: []
       }
       shift_requirements: {
         Row: {
