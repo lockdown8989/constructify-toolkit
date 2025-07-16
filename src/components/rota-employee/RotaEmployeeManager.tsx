@@ -10,7 +10,7 @@ import { usePatternEmployees } from '../shift-patterns/hooks/usePatternEmployees
 import { useShiftPatternForm } from '../shift-patterns/hooks/useShiftPatternForm';
 import { useAssignEmployeesToPattern } from '@/hooks/use-shift-pattern-assignments';
 import { createAndConfirmRecurringRotas, batchApproveAllPendingRotas } from '@/services/rota-management/rota-auto-confirm';
-import { ShiftPattern } from '@/types/shift-patterns';
+import { ShiftTemplate } from '@/types/schedule';
 import { RotaPatternCard } from './components/RotaPatternCard';
 import { RotaPatternDialog } from './components/RotaPatternDialog';
 import { RotaCalendarSync } from './components/RotaCalendarSync';
@@ -25,11 +25,11 @@ const RotaEmployeeManager = () => {
   const { toast } = useToast();
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [editingPattern, setEditingPattern] = useState<ShiftPattern | null>(null);
+  const [editingPattern, setEditingPattern] = useState<ShiftTemplate | null>(null);
   const [syncingRotas, setSyncingRotas] = useState<string[]>([]);
   const [autoApprovingRotas, setAutoApprovingRotas] = useState(false);
   
-  const { patternEmployees, refreshPatternEmployees } = usePatternEmployees(shiftPatterns);
+  const { patternEmployees, refreshPatternEmployees } = usePatternEmployees(shiftPatterns as any);
   const {
     formData,
     setFormData,
@@ -57,7 +57,7 @@ const RotaEmployeeManager = () => {
     setIsCreateModalOpen(true);
   };
 
-  const handleEdit = (pattern: ShiftPattern) => {
+  const handleEdit = (pattern: ShiftTemplate) => {
     setEditingPattern(pattern);
     loadPatternData(pattern);
     setIsCreateModalOpen(true);
@@ -275,7 +275,7 @@ const RotaEmployeeManager = () => {
             {shiftPatterns.map((pattern) => (
               <RotaPatternCard
                 key={pattern.id}
-                pattern={pattern}
+                pattern={pattern as any}
                 assignedEmployees={patternEmployees[pattern.id] || []}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
@@ -303,7 +303,7 @@ const RotaEmployeeManager = () => {
             onClose={() => setIsCreateModalOpen(false)}
             editingPattern={editingPattern}
             formData={formData}
-            onFormDataChange={setFormData}
+            onFormDataChange={(data) => setFormData(data as any)}
             employees={employees}
             selectedEmployees={selectedEmployees}
             selectedEmployeeId={selectedEmployeeId}
@@ -318,7 +318,7 @@ const RotaEmployeeManager = () => {
       </Card>
 
       <RotaCalendarSync 
-        shiftPatterns={shiftPatterns}
+        shiftPatterns={shiftPatterns as any}
         patternEmployees={patternEmployees}
         onSyncAll={async () => {
           for (const pattern of shiftPatterns) {

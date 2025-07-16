@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Plus, X, Clock } from 'lucide-react';
-import { ShiftPattern } from '@/types/shift-patterns';
+import { ShiftTemplate } from '@/types/schedule';
 
 interface Employee {
   id: string;
@@ -17,9 +17,9 @@ interface Employee {
 interface RotaPatternDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  editingPattern: ShiftPattern | null;
-  formData: Omit<ShiftPattern, 'id' | 'created_at' | 'updated_at'>;
-  onFormDataChange: (data: Omit<ShiftPattern, 'id' | 'created_at' | 'updated_at'>) => void;
+  editingPattern: ShiftTemplate | null;
+  formData: Omit<ShiftTemplate, 'id' | 'created_at' | 'updated_at'>;
+  onFormDataChange: (data: Omit<ShiftTemplate, 'id' | 'created_at' | 'updated_at'>) => void;
   employees: Employee[];
   selectedEmployees: string[];
   selectedEmployeeId: string;
@@ -106,25 +106,23 @@ export const RotaPatternDialog: React.FC<RotaPatternDialogProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="grace_period">Grace Period (minutes)</Label>
+                <Label htmlFor="role">Role (optional)</Label>
                 <Input
-                  id="grace_period"
-                  type="number"
-                  value={formData.grace_period_minutes}
-                  onChange={(e) => onFormDataChange({ ...formData, grace_period_minutes: parseInt(e.target.value) || 15 })}
-                  min="0"
-                  max="60"
+                  id="role"
+                  type="text"
+                  value={formData.role || ''}
+                  onChange={(e) => onFormDataChange({ ...formData, role: e.target.value })}
+                  placeholder="e.g. Nurse, Cashier, Manager"
                 />
               </div>
               <div>
-                <Label htmlFor="overtime_threshold">Overtime Threshold (minutes)</Label>
+                <Label htmlFor="location">Location (optional)</Label>
                 <Input
-                  id="overtime_threshold"
-                  type="number"
-                  value={formData.overtime_threshold_minutes}
-                  onChange={(e) => onFormDataChange({ ...formData, overtime_threshold_minutes: parseInt(e.target.value) || 15 })}
-                  min="0"
-                  max="120"
+                  id="location"
+                  type="text"
+                  value={formData.location || ''}
+                  onChange={(e) => onFormDataChange({ ...formData, location: e.target.value })}
+                  placeholder="e.g. Store 1, Building A"
                 />
               </div>
             </div>

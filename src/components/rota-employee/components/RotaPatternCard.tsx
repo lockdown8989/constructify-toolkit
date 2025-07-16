@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, Clock, Users, Calendar, CalendarCheck } from 'lucide-react';
-import { ShiftPattern } from '@/types/shift-patterns';
+import { ShiftTemplate } from '@/types/schedule';
 
 interface Employee {
   id: string;
@@ -12,9 +12,9 @@ interface Employee {
 }
 
 interface RotaPatternCardProps {
-  pattern: ShiftPattern;
+  pattern: ShiftTemplate;
   assignedEmployees: Employee[];
-  onEdit: (pattern: ShiftPattern) => void;
+  onEdit: (pattern: ShiftTemplate) => void;
   onDelete: (id: string) => void;
   onSyncToCalendar: (patternId: string) => void;
   isSyncing: boolean;
@@ -48,18 +48,22 @@ export const RotaPatternCard: React.FC<RotaPatternCardProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-gray-400" />
-                <span>Break: {pattern.break_duration}min</span>
+                <span>Break: {pattern.break_duration || 30}min</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-xs">
-                  Grace: {pattern.grace_period_minutes}min
-                </Badge>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-xs">
-                  OT: {pattern.overtime_threshold_minutes}min
-                </Badge>
-              </div>
+              {pattern.role && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">
+                    Role: {pattern.role}
+                  </Badge>
+                </div>
+              )}
+              {pattern.location && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">
+                    Location: {pattern.location}
+                  </Badge>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2">

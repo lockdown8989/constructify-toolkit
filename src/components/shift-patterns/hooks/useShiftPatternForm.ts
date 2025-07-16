@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { ShiftPattern } from '@/types/shift-patterns';
+import { ShiftTemplate } from '@/types/schedule';
 
 export const useShiftPatternForm = () => {
   const [formData, setFormData] = useState({
@@ -8,8 +8,10 @@ export const useShiftPatternForm = () => {
     start_time: '09:00',
     end_time: '17:00',
     break_duration: 30,
-    grace_period_minutes: 15,
-    overtime_threshold_minutes: 15,
+    days_of_week: [1, 2, 3, 4, 5] as number[], // Monday to Friday by default
+    requirements: {},
+    role: undefined,
+    location: undefined,
   });
   
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
@@ -21,21 +23,25 @@ export const useShiftPatternForm = () => {
       start_time: '09:00',
       end_time: '17:00',
       break_duration: 30,
-      grace_period_minutes: 15,
-      overtime_threshold_minutes: 15,
+      days_of_week: [1, 2, 3, 4, 5],
+      requirements: {},
+      role: undefined,
+      location: undefined,
     });
     setSelectedEmployees([]);
     setSelectedEmployeeId('');
   };
 
-  const loadPatternData = (pattern: ShiftPattern) => {
+  const loadPatternData = (pattern: ShiftTemplate) => {
     setFormData({
       name: pattern.name,
       start_time: pattern.start_time,
       end_time: pattern.end_time,
-      break_duration: pattern.break_duration,
-      grace_period_minutes: pattern.grace_period_minutes,
-      overtime_threshold_minutes: pattern.overtime_threshold_minutes,
+      break_duration: pattern.break_duration || 30,
+      days_of_week: pattern.days_of_week || [1, 2, 3, 4, 5],
+      requirements: pattern.requirements || {},
+      role: pattern.role,
+      location: pattern.location,
     });
   };
 
