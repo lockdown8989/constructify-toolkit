@@ -2423,6 +2423,10 @@ export type Database = {
         }
         Returns: Json
       }
+      safe_delete_user_data: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
       safe_user_signout: {
         Args: Record<PropertyKey, never>
         Returns: Json

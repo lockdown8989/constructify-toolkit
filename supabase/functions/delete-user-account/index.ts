@@ -48,95 +48,23 @@ serve(async (req) => {
     
     console.log("Deleting user:", user.id);
     
-    // Get employee record first (if exists) to handle cascade deletions properly
-    const { data: employeeRecord } = await supabaseAdmin
-      .from('employees')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-    
-    if (employeeRecord) {
-      console.log("Found employee record:", employeeRecord.id);
+    // Use the database function for safe user data deletion
+    try {
+      const { data: deletionResult, error: deletionError } = await supabaseAdmin
+        .rpc('safe_delete_user_data', { target_user_id: user.id });
       
-      // Delete employee-related data first (in correct order to avoid FK violations)
-      const employeeRelatedTables = [
-        'shift_notifications',
-        'shift_applications', 
-        'clock_notifications',
-        'employee_location_logs',
-        'shift_pattern_assignments',
-        'attendance',
-        'availability_patterns',
-        'availability_requests', 
-        'calendar_preferences',
-        'document_assignments',
-        'documents',
-        'leave_calendar',
-        'open_shift_assignments',
-        'payroll',
-        'salary_statistics',
-        'schedules'
-      ];
-      
-      for (const table of employeeRelatedTables) {
-        try {
-          const { error } = await supabaseAdmin
-            .from(table)
-            .delete()
-            .eq('employee_id', employeeRecord.id);
-            
-          if (error && !error.message.includes('does not exist') && !error.message.includes('column "employee_id" does not exist')) {
-            console.warn(`Warning when deleting from ${table}:`, error);
-          } else if (!error) {
-            console.log(`Successfully deleted ${table} records for employee ${employeeRecord.id}`);
-          }
-        } catch (err) {
-          console.warn(`Error deleting from ${table}:`, err);
-          // Continue with other tables even if one fails
-        }
+      if (deletionError) {
+        console.error("Error in safe_delete_user_data:", deletionError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to delete user data', details: deletionError.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
       
-      // Now delete the employee record itself (user_id will be set to NULL due to constraint)
-      try {
-        const { error } = await supabaseAdmin
-          .from('employees')
-          .delete()
-          .eq('id', employeeRecord.id);
-        if (error) {
-          console.warn("Error deleting employee record:", error);
-        } else {
-          console.log("Successfully deleted employee record");
-        }
-      } catch (err) {
-        console.warn("Error deleting employee record:", err);
-      }
-    }
-    
-    // Delete direct user-related data (these should CASCADE automatically now)
-    const userTables = [
-      'workflow_requests',
-      'notification_settings', 
-      'notifications',
-      'user_roles',
-      'profiles'
-    ];
-    
-    for (const table of userTables) {
-      try {
-        const { error } = await supabaseAdmin
-          .from(table)
-          .delete()
-          .eq('user_id', user.id);
-          
-        if (error && !error.message.includes('does not exist')) {
-          console.warn(`Warning when deleting from ${table}:`, error);
-        } else if (!error) {
-          console.log(`Successfully deleted ${table} records for user ${user.id}`);
-        }
-      } catch (err) {
-        console.warn(`Error deleting from ${table}:`, err);
-        // Continue with other tables even if one fails
-      }
+      console.log("User data deletion result:", deletionResult);
+    } catch (error) {
+      console.error("Exception during user data deletion:", error);
+      // Continue with auth deletion even if data deletion fails partially
     }
     
     // Delete the user from auth.users using admin API
