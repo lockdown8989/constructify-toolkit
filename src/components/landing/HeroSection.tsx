@@ -33,6 +33,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ isAuthenticated, isMan
 
           {/* Main content */}
           <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-fade-up">
+            {/* TeamPulse Logo */}
+            <div className="flex justify-center mb-6 md:mb-8">
+              <img 
+                src="/lovable-uploads/6498c422-3293-40e4-99c1-a94a137934f6.png" 
+                alt="TeamPulse Logo" 
+                className="h-16 w-16 md:h-20 md:w-20 lg:h-24 lg:w-24"
+              />
+            </div>
+
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 md:px-6 py-2 md:py-3 text-xs md:text-sm text-blue-200 border border-white/20">
               <Sparkles className="w-3 h-3 md:w-4 md:h-4" />
               <span>The Future of Employee Management</span>
