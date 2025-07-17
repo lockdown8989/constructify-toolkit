@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, UserX, Clock } from 'lucide-react';
@@ -17,6 +18,7 @@ const EmployeeInfoCard = () => {
       if (error) throw error;
       return data || [];
     },
+    refetchInterval: 10000, // More frequent updates
   });
 
   const { data: todayAttendance = [] } = useQuery({
@@ -30,11 +32,14 @@ const EmployeeInfoCard = () => {
           employees(id, name)
         `)
         .eq('date', today)
-        .eq('active_session', true);
+        .eq('active_session', true)
+        .eq('current_status', 'clocked-in');
 
       if (error) throw error;
+      console.log('Today attendance data:', data);
       return data || [];
     },
+    refetchInterval: 5000, // Even more frequent for attendance
   });
 
   if (isLoading) {
@@ -106,7 +111,7 @@ const EmployeeInfoCard = () => {
               {todayAttendance.slice(0, 4).map((attendance: any) => (
                 <div key={attendance.id} className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded-lg">
                   <div>
-                    <p className="font-medium text-sm">{attendance.employees.name}</p>
+                    <p className="font-medium text-sm">{attendance.employees?.name || 'Unknown Employee'}</p>
                     <p className="text-xs text-muted-foreground">
                       Clocked in: {new Date(attendance.check_in).toLocaleTimeString('en-US', { 
                         hour: '2-digit', 

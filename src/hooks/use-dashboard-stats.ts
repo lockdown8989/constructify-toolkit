@@ -34,6 +34,7 @@ export const useDashboardStats = () => {
           .from('attendance')
           .select('employee_id')
           .eq('date', today)
+          .eq('active_session', true)
           .eq('current_status', 'clocked-in');
 
         // Get today's total hours
@@ -65,6 +66,8 @@ export const useDashboardStats = () => {
         const overtimeHours = overtimeData?.reduce((sum, record) => sum + (record.overtime_minutes || 0), 0) / 60 || 0;
         const alerts = alertsData?.length || 0;
 
+        console.log('Dashboard stats updated:', { activeEmployees, todaysHours, overtimeHours, alerts });
+
         return {
           activeEmployees,
           todaysHours: Math.round(todaysHours * 10) / 10,
@@ -82,7 +85,7 @@ export const useDashboardStats = () => {
       }
     },
     enabled: !!user,
-    refetchInterval: 30000, // Refresh every 30 seconds for live data
+    refetchInterval: 10000, // Refresh every 10 seconds for more real-time updates
     retry: 2,
     throwOnError: false,
   });
@@ -100,8 +103,8 @@ export const useDashboardStats = () => {
           schema: 'public',
           table: 'attendance'
         },
-        () => {
-          console.log('Attendance data changed, refreshing stats');
+        (payload) => {
+          console.log('Attendance data changed, refreshing stats:', payload);
           refetch();
         }
       )

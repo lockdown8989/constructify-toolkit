@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useAttendanceMetadata } from '../use-attendance-metadata';
 import { getDeviceIdentifier } from '../utils/device-utils';
+import { notifyManagersOfClockIn } from '@/services/notifications/role-utils';
 
 import { debugTimeInfo } from '@/utils/timezone-utils';
 
@@ -117,6 +118,19 @@ export const useClockIn = (
 
       setCurrentRecord(data.id);
       setStatus('clocked-in');
+      
+      // Get employee name for notifications
+      const { data: employeeData } = await supabase
+        .from('employees')
+        .select('name')
+        .eq('id', employeeId)
+        .single();
+      
+      // Notify managers about the clock-in
+      if (employeeData?.name) {
+        console.log('Notifying managers about clock-in for:', employeeData.name);
+        await notifyManagersOfClockIn(employeeData.name, employeeId);
+      }
       
       // Check rota compliance for clock-in
       const { data: rotaComplianceData } = await supabase

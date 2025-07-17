@@ -1,5 +1,7 @@
 
 import { toast as toastFunction } from "@/hooks/use-toast";
+import { sendNotification } from '@/services/notifications/notification-sender';
+import { getManagerUserIds } from '@/services/notifications/role-utils';
 
 // Define ToastAPI type based on the actual structure of the toast function
 type ToastAPI = typeof toastFunction;
@@ -9,8 +11,22 @@ export const useManagerNotifier = () => {
     if (!managerInfo || !managerInfo.user_id) return;
     
     try {
-      // Create notification in the future when notification system is implemented
-      console.log(`Should notify manager ${managerInfo.user_id} about new employee registration`);
+      // Get all manager user IDs
+      const managerIds = await getManagerUserIds();
+      
+      // Send notifications to all managers
+      for (const managerId of managerIds) {
+        await sendNotification({
+          user_id: managerId,
+          title: "🔔 Employee Clocked In",
+          message: `${managerInfo.name} has clocked in and started their shift.`,
+          type: "info",
+          related_entity: "attendance",
+          related_id: managerInfo.user_id
+        });
+      }
+      
+      console.log(`Notified ${managerIds.length} managers about ${managerInfo.name} clocking in`);
       
       toast({
         title: "Connected to manager",

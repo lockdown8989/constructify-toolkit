@@ -1,67 +1,50 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Retrieves user IDs of all users with manager role
- */
 export const getManagerUserIds = async (): Promise<string[]> => {
   try {
-    // Query user_roles table for users with management roles
-    // Using the correct enum values that match the database
-    const { data, error } = await supabase
+    const { data: managers, error } = await supabase
       .from('user_roles')
       .select('user_id')
-      .in('role', ['employer', 'admin', 'hr']);
-    
+      .in('role', ['employer', 'admin', 'hr', 'manager']);
+
     if (error) {
       console.error('Error fetching manager user IDs:', error);
       return [];
     }
-    
-    return data.map(item => item.user_id);
+
+    return managers?.map(m => m.user_id) || [];
   } catch (error) {
-    console.error('Exception in getManagerUserIds:', error);
+    console.error('Error in getManagerUserIds:', error);
     return [];
   }
 };
 
-/**
- * Checks if a user has a manager role
- */
-export const userHasManagerRole = async (userId: string): Promise<boolean> => {
-  if (!userId) return false;
-  
+export const notifyManagersOfClockIn = async (employeeName: string, employeeId: string) => {
   try {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .in('role', ['employer', 'admin', 'hr'])
-      .maybeSingle();
+    const managerIds = await getManagerUserIds();
     
-    if (error) {
-      console.error('Error checking user role:', error);
-      return false;
+    if (managerIds.length === 0) {
+      console.log('No managers found to notify about clock-in');
+      return { success: true, message: 'No managers to notify' };
     }
-    
-    return !!data;
-  } catch (error) {
-    console.error('Exception in userHasManagerRole:', error);
-    return false;
-  }
-};
 
-/**
- * Check if current authenticated user has manager access
- */
-export const currentUserHasManagerAccess = async (): Promise<boolean> => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
+    // Import the notification sender
+    const { sendBulkNotifications } = await import('./notification-sender');
     
-    return await userHasManagerRole(user.id);
+    // Create notifications for all managers
+    const notifications = managerIds.map(managerId => ({
+      user_id: managerId,
+      title: '🔔 Employee Clocked In',
+      message: `${employeeName} has clocked in and started their shift.`,
+      type: 'info' as const,
+      related_entity: 'attendance',
+      related_id: employeeId
+    }));
+
+    return await sendBulkNotifications(notifications);
   } catch (error) {
-    console.error('Error checking current user manager access:', error);
-    return false;
+    console.error('Error notifying managers of clock-in:', error);
+    return { success: false, error };
   }
 };
