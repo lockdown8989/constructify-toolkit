@@ -1,3 +1,4 @@
+
 import { useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -10,11 +11,13 @@ import { ThemeProvider } from './hooks/use-theme';
 import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { ErrorBoundary } from './components/auth/ErrorBoundary';
+import { MobileAuthErrorBoundary } from './components/auth/MobileAuthErrorBoundary';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import BackgroundNotificationService from './services/shift-notifications/background-notification-service';
 import LoadingSpinner from './components/ui/loading-spinner';
 import { useAttendanceMonitoring } from './hooks/use-attendance-monitoring';
+import { useIsMobile } from './hooks/use-mobile';
 import './App.css';
 
 // Lazy load pages for better performance
@@ -52,6 +55,7 @@ const queryClient = new QueryClient({
 // Create a separate component that uses useAuth
 const AppContent = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   
   // Initialize attendance monitoring
   useAttendanceMonitoring();
@@ -59,17 +63,28 @@ const AppContent = () => {
   // Start background notification service when user is authenticated
   useEffect(() => {
     if (user) {
+      console.log('🔔 Starting background notification service for user:', user.email);
       const notificationService = BackgroundNotificationService.getInstance();
       notificationService.start();
 
       return () => {
+        console.log('🔔 Stopping background notification service');
         notificationService.stop();
       };
     }
   }, [user]);
+
+  console.log('🚀 App rendering:', {
+    hasUser: !!user,
+    isMobile,
+    userAgent: navigator.userAgent,
+    timestamp: new Date().toISOString()
+  });
+  
+  const ErrorBoundaryComponent = isMobile ? MobileAuthErrorBoundary : ErrorBoundary;
   
   return (
-    <ErrorBoundary>
+    <ErrorBoundaryComponent>
       <div className="min-h-screen bg-background">
         <Routes>
           {/* Public routes without layout */}
@@ -191,11 +206,13 @@ const AppContent = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
-    </ErrorBoundary>
+    </ErrorBoundaryComponent>
   );
 };
 
 function App() {
+  console.log('🚀 App component mounted');
+  
   return (
     <ErrorBoundary>
       <HelmetProvider>

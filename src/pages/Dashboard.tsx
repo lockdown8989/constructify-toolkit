@@ -9,14 +9,20 @@ import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard';
 import ManagerDashboard from '@/components/dashboard/ManagerDashboard';
 import PayrollDashboard from '@/components/dashboard/PayrollDashboard';
 import { Loader2 } from 'lucide-react';
+import { useMobileDebugger } from '@/hooks/useMobileDebugger';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Dashboard = () => {
   const { isManager, isAdmin, isHR, isPayroll, isEmployee, isLoading: authLoading, user, rolesLoaded } = useAuth();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
+  const isMobile = useIsMobile();
   
   // Enable real-time sync at the dashboard level
   useAttendanceSync();
+  
+  // Enable mobile debugging
+  useMobileDebugger();
 
   // Get user's first name for greeting
   const firstName = user?.user_metadata?.first_name || 
@@ -32,7 +38,8 @@ const Dashboard = () => {
       isPayroll, 
       isEmployee,
       userEmail: user?.email,
-      rolesLoaded 
+      rolesLoaded,
+      isMobile
     });
     
     // Priority order: admin/hr/manager > payroll > employee
@@ -44,7 +51,7 @@ const Dashboard = () => {
   const dashboardType = getDashboardType();
                    
   useEffect(() => {
-    console.log("Dashboard role state:", { 
+    console.log("📊 Dashboard role state:", { 
       isManager, 
       isAdmin, 
       isHR, 
@@ -53,13 +60,15 @@ const Dashboard = () => {
       rolesLoaded,
       dashboardType,
       userId: user?.id,
-      userEmail: user?.email
+      userEmail: user?.email,
+      isMobile,
+      screenSize: isMobile ? `${window.innerWidth}x${window.innerHeight}` : 'desktop'
     });
     
     if (user && rolesLoaded) {
-      console.log("🎯 Dashboard will show:", dashboardType, "dashboard for user:", user.email);
+      console.log("🎯 Dashboard will show:", dashboardType, "dashboard for user:", user.email, isMobile ? '(mobile)' : '(desktop)');
     }
-  }, [user, isManager, isAdmin, isHR, isPayroll, isEmployee, rolesLoaded, dashboardType]);
+  }, [user, isManager, isAdmin, isHR, isPayroll, isEmployee, rolesLoaded, dashboardType, isMobile]);
   
   // Show loading state while auth is loading or roles are loading
   if (authLoading || !rolesLoaded) {
@@ -68,6 +77,9 @@ const Dashboard = () => {
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
           <p className="text-gray-600">Loading your dashboard...</p>
+          {isMobile && (
+            <p className="text-xs text-gray-400 mt-2">Mobile view</p>
+          )}
         </div>
       </div>
     );
@@ -93,30 +105,35 @@ const Dashboard = () => {
     output: 0
   };
 
-  console.log("🎯 Final dashboard type decision:", dashboardType);
+  console.log("🎯 Final dashboard type decision:", dashboardType, isMobile ? '(mobile)' : '(desktop)');
 
-  return (
-    <Tabs defaultValue="dashboard">
-      <TabsContent value="dashboard" className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
-        {dashboardType === 'payroll' ? (
-          <PayrollDashboard 
-            firstName={firstName}
-            employeeCount={employeeCount}
-            hiredCount={interviews.filter(i => i.stage === 'Hired').length}
-          />
-        ) : dashboardType === 'manager' ? (
-          <ManagerDashboard 
-            firstName={firstName}
-            employeeCount={employeeCount}
-            hiredCount={interviews.filter(i => i.stage === 'Hired').length}
-            interviewStats={interviewStats}
-          />
-        ) : (
-          <EmployeeDashboard firstName={firstName} />
-        )}
-      </TabsContent>
-    </Tabs>
-  );
+  try {
+    return (
+      <Tabs defaultValue="dashboard">
+        <TabsContent value="dashboard" className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
+          {dashboardType === 'payroll' ? (
+            <PayrollDashboard 
+              firstName={firstName}
+              employeeCount={employeeCount}
+              hiredCount={interviews.filter(i => i.stage === 'Hired').length}
+            />
+          ) : dashboardType === 'manager' ? (
+            <ManagerDashboard 
+              firstName={firstName}
+              employeeCount={employeeCount}
+              hiredCount={interviews.filter(i => i.stage === 'Hired').length}
+              interviewStats={interviewStats}
+            />
+          ) : (
+            <EmployeeDashboard firstName={firstName} />
+          )}
+        </TabsContent>
+      </Tabs>
+    );
+  } catch (error) {
+    console.error('🚨 Dashboard render error:', error);
+    throw error; // Let the error boundary handle it
+  }
 };
 
 export default Dashboard;
