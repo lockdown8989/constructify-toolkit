@@ -16,9 +16,10 @@ const EmployeeInfoCard = () => {
         .order('name', { ascending: true });
 
       if (error) throw error;
+      console.log('Employee data fetched:', data);
       return data || [];
     },
-    refetchInterval: 10000, // More frequent updates
+    refetchInterval: 10000,
   });
 
   const { data: todayAttendance = [] } = useQuery({
@@ -32,14 +33,13 @@ const EmployeeInfoCard = () => {
           employees(id, name)
         `)
         .eq('date', today)
-        .eq('active_session', true)
-        .eq('current_status', 'clocked-in');
+        .eq('active_session', true);
 
       if (error) throw error;
       console.log('Today attendance data:', data);
       return data || [];
     },
-    refetchInterval: 5000, // Even more frequent for attendance
+    refetchInterval: 5000,
   });
 
   if (isLoading) {
@@ -61,8 +61,21 @@ const EmployeeInfoCard = () => {
   }
 
   const activeEmployees = employees.filter(emp => emp.status === 'Active');
-  const currentlyWorking = todayAttendance.length;
-  const onBreak = todayAttendance.filter(att => att.on_break).length;
+  const currentlyWorking = todayAttendance.filter(att => 
+    att.current_status === 'clocked-in' || 
+    (att.active_session && !att.check_out && att.check_in)
+  );
+  const onBreak = todayAttendance.filter(att => 
+    att.on_break === true || att.current_status === 'on-break'
+  );
+
+  console.log('Dashboard stats:', {
+    totalEmployees: employees.length,
+    activeEmployees: activeEmployees.length,
+    currentlyWorking: currentlyWorking.length,
+    onBreak: onBreak.length,
+    todayAttendanceCount: todayAttendance.length
+  });
 
   return (
     <Card>
@@ -86,58 +99,69 @@ const EmployeeInfoCard = () => {
           <div className="text-center p-3 bg-green-50 rounded-lg">
             <div className="flex items-center justify-center gap-2 mb-1">
               <UserCheck className="h-4 w-4 text-green-600" />
-              <span className="text-2xl font-bold text-green-600">{currentlyWorking}</span>
+              <span className="text-2xl font-bold text-green-600">{currentlyWorking.length}</span>
             </div>
             <p className="text-xs text-muted-foreground">Currently Working</p>
           </div>
         </div>
 
         {/* Break Status */}
-        {onBreak > 0 && (
+        {onBreak.length > 0 && (
           <div className="text-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <div className="flex items-center justify-center gap-2 mb-1">
               <Clock className="h-4 w-4 text-yellow-600" />
-              <span className="text-lg font-semibold text-yellow-600">{onBreak}</span>
+              <span className="text-lg font-semibold text-yellow-600">{onBreak.length}</span>
             </div>
             <p className="text-xs text-muted-foreground">On Break</p>
           </div>
         )}
 
         {/* Currently Working List */}
-        {currentlyWorking > 0 && (
+        {currentlyWorking.length > 0 && (
           <div>
             <h4 className="font-medium text-sm text-muted-foreground mb-2">Currently Clocked In</h4>
             <div className="space-y-2 max-h-32 overflow-y-auto">
-              {todayAttendance.slice(0, 4).map((attendance: any) => (
-                <div key={attendance.id} className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded-lg">
-                  <div>
-                    <p className="font-medium text-sm">{attendance.employees?.name || 'Unknown Employee'}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Clocked in: {new Date(attendance.check_in).toLocaleTimeString('en-US', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
-                    </p>
+              {currentlyWorking.slice(0, 4).map((attendance: any) => {
+                const isOnBreak = attendance.on_break === true || attendance.current_status === 'on-break';
+                return (
+                  <div key={attendance.id} className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded-lg">
+                    <div>
+                      <p className="font-medium text-sm">{attendance.employees?.name || 'Unknown Employee'}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Clocked in: {new Date(attendance.check_in).toLocaleTimeString('en-US', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex gap-1">
+                      {isOnBreak ? (
+                        <Badge variant="outline" className="text-xs border-yellow-300 text-yellow-700">
+                          On Break
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-xs border-green-300 text-green-700">
+                          Working
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex gap-1">
-                    {attendance.on_break ? (
-                      <Badge variant="outline" className="text-xs border-yellow-300 text-yellow-700">
-                        On Break
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-xs border-green-300 text-green-700">
-                        Working
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {currentlyWorking > 4 && (
+                );
+              })}
+              {currentlyWorking.length > 4 && (
                 <p className="text-xs text-muted-foreground text-center">
-                  +{currentlyWorking - 4} more employees working
+                  +{currentlyWorking.length - 4} more employees working
                 </p>
               )}
             </div>
+          </div>
+        )}
+
+        {/* No one working message */}
+        {currentlyWorking.length === 0 && (
+          <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <UserX className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-600">No employees currently working</p>
           </div>
         )}
 
