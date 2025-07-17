@@ -22,11 +22,11 @@ interface MobileCalendarViewProps {
 }
 
 const MobileCalendarView: React.FC<MobileCalendarViewProps> = ({ shiftState, handleSubmitters }) => {
-  const { visibleDays, allEmployeeSchedules, handleNextPeriod, handlePreviousPeriod, handleAddShift } = shiftState;
+  const { visibleDays = [], allEmployeeSchedules = [], handleNextPeriod, handlePreviousPeriod, handleAddShift } = shiftState;
   
   console.log('MobileCalendarView rendered', { 
-    visibleDaysCount: visibleDays?.length,
-    employeesCount: allEmployeeSchedules?.length,
+    visibleDaysCount: visibleDays?.length || 0,
+    employeesCount: allEmployeeSchedules?.length || 0,
     handlersAvailable: !!handleSubmitters,
     handleEmployeeAddShift: !!handleSubmitters.handleEmployeeAddShift
   });
@@ -38,7 +38,9 @@ const MobileCalendarView: React.FC<MobileCalendarViewProps> = ({ shiftState, han
         <button onClick={handlePreviousPeriod} className="p-2">
           &lt; Prev
         </button>
-        <h2 className="font-bold">{visibleDays.length > 0 && format(visibleDays[0], 'MMMM yyyy')}</h2>
+        <h2 className="font-bold">
+          {visibleDays.length > 0 ? format(visibleDays[0], 'MMMM yyyy') : 'Calendar'}
+        </h2>
         <button onClick={handleNextPeriod} className="p-2">
           Next &gt;
         </button>
@@ -46,14 +48,14 @@ const MobileCalendarView: React.FC<MobileCalendarViewProps> = ({ shiftState, han
       
       {/* Mobile calendar days */}
       <div className="grid grid-cols-7 gap-1 mb-4">
-        {visibleDays.map((day, i) => (
+        {(visibleDays || []).map((day, i) => (
           <div 
             key={i} 
             className={cn(
               "flex flex-col items-center p-1 text-sm",
               isToday(day) && "bg-blue-100 rounded-full"
             )}
-            onClick={() => handleAddShift(day)}
+            onClick={() => handleAddShift?.(day)}
           >
             <span>{format(day, 'EEE')}</span>
             <span className="font-bold">{format(day, 'd')}</span>
@@ -70,16 +72,16 @@ const MobileCalendarView: React.FC<MobileCalendarViewProps> = ({ shiftState, han
         
         <TabsContent value="shifts">
           <div className="space-y-2 mt-2">
-            {allEmployeeSchedules.length > 0 ? (
-              allEmployeeSchedules.map((empSchedule: any, i: number) => (
+            {(allEmployeeSchedules || []).length > 0 ? (
+              (allEmployeeSchedules || []).map((empSchedule: any, i: number) => (
                 <div key={i} className="p-3 border rounded-lg">
-                  <h3 className="font-medium">{empSchedule.employeeName || 'Unknown Employee'}</h3>
+                  <h3 className="font-medium">{empSchedule.employeeName || empSchedule.employee?.name || 'Unknown Employee'}</h3>
                   <div className="mt-1 space-y-1">
-                    {empSchedule.shifts.map((shift: any, j: number) => (
+                    {(empSchedule.shifts || empSchedule.schedules || []).map((shift: any, j: number) => (
                       <div 
                         key={j} 
                         className="bg-gray-50 p-2 rounded text-sm"
-                        onClick={() => handleSubmitters.handleEmployeeAddShift(empSchedule.employeeId, new Date(shift.start_time))}
+                        onClick={() => handleSubmitters?.handleEmployeeAddShift?.(empSchedule.employeeId || empSchedule.employee?.id, new Date(shift.start_time))}
                       >
                         {format(new Date(shift.start_time), 'h:mm a')} - {format(new Date(shift.end_time), 'h:mm a')}
                       </div>
@@ -95,9 +97,9 @@ const MobileCalendarView: React.FC<MobileCalendarViewProps> = ({ shiftState, han
         
         <TabsContent value="employees">
           <div className="space-y-2 mt-2">
-            {allEmployeeSchedules.map((empSchedule: any, i: number) => (
+            {(allEmployeeSchedules || []).map((empSchedule: any, i: number) => (
               <div key={i} className="p-3 border rounded-lg">
-                <h3 className="font-medium">{empSchedule.employeeName || 'Unknown Employee'}</h3>
+                <h3 className="font-medium">{empSchedule.employeeName || empSchedule.employee?.name || 'Unknown Employee'}</h3>
               </div>
             ))}
           </div>
