@@ -139,16 +139,7 @@ export const useTimeClock = () => {
   const handleClockOut = async () => {
     console.log('handleClockOut called, current status:', status, 'currentRecord:', currentRecord);
     
-    // Check if currently on break
-    if (status === 'on-break') {
-      toast({
-        title: "End Break First",
-        description: "Please end your current break before clocking out",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+    // Validate current state
     if (!currentRecord) {
       console.error('No current record found for clock out');
       toast({
@@ -159,8 +150,20 @@ export const useTimeClock = () => {
       return;
     }
 
+    // Check if currently on break
+    if (status === 'on-break') {
+      toast({
+        title: "End Break First",
+        description: "Please end your current break before clocking out",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       console.log('Calling originalHandleClockOut with record:', currentRecord);
+      console.log('Employee data:', employeeData?.id, employeeData?.name);
+      
       await originalHandleClockOut(currentRecord);
       setLastAction('out');
       

@@ -5,7 +5,6 @@ import { format } from 'date-fns';
 import { useAttendanceMetadata } from '../use-attendance-metadata';
 import { debugTimeInfo } from '@/utils/timezone-utils';
 
-
 export const useClockOut = (
   setStatus: (status: 'clocked-in' | 'clocked-out' | 'on-break') => void,
   setCurrentRecord: (record: string | null) => void
@@ -37,7 +36,6 @@ export const useClockOut = (
           check_in, 
           break_minutes, 
           employee_id,
-          shift_pattern_id,
           scheduled_start_time,
           scheduled_end_time,
           notes
@@ -60,38 +58,28 @@ export const useClockOut = (
       const breakMinutes = checkInData.break_minutes || 0;
       const workingMinutes = Math.max(0, totalMinutes - breakMinutes);
       
-      // Calculate overtime based on shift pattern if available
+      // Calculate overtime based on scheduled times or default to 8 hours
       let overtimeMinutes = 0;
       let isEarlyDeparture = false;
       let earlyDepartureMinutes = 0;
 
-      if (checkInData.shift_pattern_id) {
-        const { data: shiftPattern } = await supabase
-          .from('shift_patterns')
-          .select('*')
-          .eq('id', checkInData.shift_pattern_id)
-          .single();
-
-        if (shiftPattern) {
-          const today = now.toISOString().split('T')[0];
-          const scheduledEnd = new Date(`${today}T${shiftPattern.end_time}`);
-          
-          // Handle night shifts that cross midnight
-          if (shiftPattern.end_time < shiftPattern.start_time) {
-            scheduledEnd.setDate(scheduledEnd.getDate() + 1);
-          }
-          
-          const overtimeThreshold = new Date(scheduledEnd.getTime() + shiftPattern.overtime_threshold_minutes * 60000);
-          
+      // Use scheduled end time if available, otherwise default to 8 hours
+      if (checkInData.scheduled_end_time) {
+        const today = now.toISOString().split('T')[0];
+        const scheduledEnd = new Date(`${today}T${checkInData.scheduled_end_time}`);
+        
+        if (now < scheduledEnd) {
+          isEarlyDeparture = true;
+          earlyDepartureMinutes = Math.round((scheduledEnd.getTime() - now.getTime()) / (1000 * 60));
+        } else if (now > scheduledEnd) {
+          // Allow 30 minutes grace period before considering it overtime
+          const overtimeThreshold = new Date(scheduledEnd.getTime() + 30 * 60000);
           if (now > overtimeThreshold) {
             overtimeMinutes = Math.round((now.getTime() - scheduledEnd.getTime()) / (1000 * 60));
-          } else if (now < scheduledEnd) {
-            isEarlyDeparture = true;
-            earlyDepartureMinutes = Math.round((scheduledEnd.getTime() - now.getTime()) / (1000 * 60));
           }
         }
       } else {
-        // Fallback calculation: overtime after 8 hours
+        // Fallback: overtime after 8 hours (480 minutes)
         overtimeMinutes = Math.max(0, workingMinutes - 480);
       }
       
@@ -189,7 +177,7 @@ export const useClockOut = (
         if (isEarlyDeparture) {
           toast({
             title: "Early Departure",
-            description: `You clocked out ${earlyDepartureMinutes} minutes early at ${format(now, 'h:mm a')}. Note: This is not a rota shift.`,
+            description: `You clocked out ${earlyDepartureMinutes} minutes early at ${format(now, 'h:mm a')}.`,
             variant: "destructive",
           });
         } else if (overtimeMinutes > 0) {
@@ -200,7 +188,7 @@ export const useClockOut = (
         } else {
           toast({
             title: "Clocked Out Successfully",
-            description: `You clocked out at ${format(now, 'h:mm a')}. Note: This is not a rota shift - standard attendance tracking applied.`,
+            description: `You clocked out at ${format(now, 'h:mm a')}.`,
           });
         }
       }
