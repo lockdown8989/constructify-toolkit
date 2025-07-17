@@ -26,3 +26,24 @@ export const isAuthenticated = () => {
   // This function should be used within a component that has access to useAuth
   throw new Error('isAuthenticated should be called within an auth context');
 };
+
+/**
+ * Maps UI role names to database role names
+ * @param uiRole The role name used in the UI
+ * @returns The corresponding database role name
+ */
+export const mapUIRoleToDBRole = (uiRole: UserRole): string => {
+  switch (uiRole) {
+    case "manager":
+      return "employer"; // "employer" is the database representation of "manager"
+    case "admin":
+      return "admin";
+    case "hr":
+      return "hr";
+    case "payroll":
+      return "payroll";
+    case "employee":
+    default:
+      return "employee";
+  }
+};
