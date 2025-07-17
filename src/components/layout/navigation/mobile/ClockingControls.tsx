@@ -27,9 +27,13 @@ const ClockingControls = ({
   const handleClockOutClick = async () => {
     console.log('Clock out button clicked, current status:', status);
     try {
-      await handleClockOut();
-      console.log('Clock out completed successfully');
-      onClose();
+      // Call the handleClockOut function directly without awaiting since it handles its own async operations
+      handleClockOut();
+      console.log('Clock out function called successfully');
+      // Don't close immediately, let the handleClockOut function handle success/error states
+      setTimeout(() => {
+        onClose();
+      }, 1000); // Give time for the operation to complete
     } catch (error) {
       console.error('Error during clock out:', error);
     }
@@ -38,9 +42,11 @@ const ClockingControls = ({
   const handleBreakStartClick = async () => {
     console.log('Break start button clicked');
     try {
-      await handleBreakStart();
+      handleBreakStart();
       console.log('Break started successfully');
-      onClose();
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     } catch (error) {
       console.error('Error during break start:', error);
     }
@@ -49,9 +55,11 @@ const ClockingControls = ({
   const handleBreakEndClick = async () => {
     console.log('Break end button clicked');
     try {
-      await handleBreakEnd();
+      handleBreakEnd();
       console.log('Break ended successfully');
-      onClose();
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     } catch (error) {
       console.error('Error during break end:', error);
     }
@@ -62,8 +70,11 @@ const ClockingControls = ({
       {status === 'clocked-out' ? (
         <Button 
           onClick={() => {
+            console.log('Clock in button clicked');
             handleClockIn();
-            onClose();
+            setTimeout(() => {
+              onClose();
+            }, 1000);
           }}
           className="w-full bg-green-600 hover:bg-green-700"
         >

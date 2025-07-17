@@ -160,6 +160,7 @@ export const useTimeClock = () => {
     }
 
     try {
+      console.log('Calling originalHandleClockOut with record:', currentRecord);
       await originalHandleClockOut(currentRecord);
       setLastAction('out');
       
@@ -168,6 +169,8 @@ export const useTimeClock = () => {
         const storageKey = `timeClockAction_${employeeData.id}`;
         localStorage.removeItem(storageKey);
       }
+      
+      console.log('Clock out completed successfully');
     } catch (error) {
       console.error('Error in handleClockOut:', error);
       toast({
