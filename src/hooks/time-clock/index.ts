@@ -111,22 +111,34 @@ export const useTimeClock = () => {
   // Handle real-time sync of attendance data
   useAttendanceSync(refreshAttendanceData);
 
-  // Wrap actions to persist state
+  // Wrap actions to persist state and add logging
   const handleClockIn = async () => {
-    await originalHandleClockIn(employeeData?.id);
-    setLastAction('in');
-    
-    // Show break reminder after successful clock in
-    setTimeout(() => {
+    console.log('handleClockIn called for employee:', employeeData?.id);
+    try {
+      await originalHandleClockIn(employeeData?.id);
+      setLastAction('in');
+      
+      // Show break reminder after successful clock in
+      setTimeout(() => {
+        toast({
+          title: "Reminder",
+          description: "Remember to take breaks during your shift and end them when finished",
+          variant: "default",
+        });
+      }, 3000);
+    } catch (error) {
+      console.error('Error in handleClockIn:', error);
       toast({
-        title: "Reminder",
-        description: "Remember to take breaks during your shift and end them when finished",
-        variant: "default",
+        title: "Clock In Error",
+        description: "There was an error clocking in. Please try again.",
+        variant: "destructive",
       });
-    }, 3000);
+    }
   };
 
   const handleClockOut = async () => {
+    console.log('handleClockOut called, current status:', status, 'currentRecord:', currentRecord);
+    
     // Check if currently on break
     if (status === 'on-break') {
       toast({
@@ -137,35 +149,92 @@ export const useTimeClock = () => {
       return;
     }
     
-    await originalHandleClockOut(currentRecord);
-    setLastAction('out');
-    
-    // Clear the stored action on clock out
-    if (employeeData?.id) {
-      const storageKey = `timeClockAction_${employeeData.id}`;
-      localStorage.removeItem(storageKey);
+    if (!currentRecord) {
+      console.error('No current record found for clock out');
+      toast({
+        title: "Clock Out Error",
+        description: "No active session found to clock out from",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await originalHandleClockOut(currentRecord);
+      setLastAction('out');
+      
+      // Clear the stored action on clock out
+      if (employeeData?.id) {
+        const storageKey = `timeClockAction_${employeeData.id}`;
+        localStorage.removeItem(storageKey);
+      }
+    } catch (error) {
+      console.error('Error in handleClockOut:', error);
+      toast({
+        title: "Clock Out Error",
+        description: "There was an error clocking out. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleBreakStart = async () => {
-    await originalHandleBreakStart(currentRecord);
-    
-    // Set reminder to end break
-    toast({
-      title: "Break Started",
-      description: "Remember to end your break when you're ready to continue working",
-      variant: "default",
-    });
+    console.log('handleBreakStart called, currentRecord:', currentRecord);
+    if (!currentRecord) {
+      toast({
+        title: "Break Error",
+        description: "No active session found to start break",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await originalHandleBreakStart(currentRecord);
+      
+      // Set reminder to end break
+      toast({
+        title: "Break Started",
+        description: "Remember to end your break when you're ready to continue working",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error in handleBreakStart:', error);
+      toast({
+        title: "Break Error",
+        description: "There was an error starting your break. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleBreakEnd = async () => {
-    await originalHandleBreakEnd(currentRecord);
-    
-    toast({
-      title: "Break Ended",
-      description: "Welcome back! Continue with your shift",
-      variant: "default",
-    });
+    console.log('handleBreakEnd called, currentRecord:', currentRecord);
+    if (!currentRecord) {
+      toast({
+        title: "Break Error",
+        description: "No active session found to end break",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await originalHandleBreakEnd(currentRecord);
+      
+      toast({
+        title: "Break Ended",
+        description: "Welcome back! Continue with your shift",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error in handleBreakEnd:', error);
+      toast({
+        title: "Break Error",
+        description: "There was an error ending your break. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Update elapsed time based on current status

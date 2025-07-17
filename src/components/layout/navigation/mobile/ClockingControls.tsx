@@ -23,6 +23,39 @@ const ClockingControls = ({
   onClose
 }: ClockingControlsProps) => {
   if (!isClockingEnabled) return null;
+
+  const handleClockOutClick = async () => {
+    console.log('Clock out button clicked, current status:', status);
+    try {
+      await handleClockOut();
+      console.log('Clock out completed successfully');
+      onClose();
+    } catch (error) {
+      console.error('Error during clock out:', error);
+    }
+  };
+
+  const handleBreakStartClick = async () => {
+    console.log('Break start button clicked');
+    try {
+      await handleBreakStart();
+      console.log('Break started successfully');
+      onClose();
+    } catch (error) {
+      console.error('Error during break start:', error);
+    }
+  };
+
+  const handleBreakEndClick = async () => {
+    console.log('Break end button clicked');
+    try {
+      await handleBreakEnd();
+      console.log('Break ended successfully');
+      onClose();
+    } catch (error) {
+      console.error('Error during break end:', error);
+    }
+  };
   
   return (
     <div className="px-4 mb-4">
@@ -40,10 +73,7 @@ const ClockingControls = ({
       ) : status === 'clocked-in' ? (
         <div className="grid grid-cols-2 gap-2">
           <Button 
-            onClick={() => {
-              handleBreakStart();
-              onClose();
-            }}
+            onClick={handleBreakStartClick}
             variant="outline"
             className="border-blue-300"
           >
@@ -51,10 +81,7 @@ const ClockingControls = ({
             Break
           </Button>
           <Button 
-            onClick={() => {
-              handleClockOut();
-              onClose();
-            }}
+            onClick={handleClockOutClick}
             className="bg-red-600 hover:bg-red-700"
           >
             <Clock className="h-4 w-4 mr-2" />
@@ -63,10 +90,7 @@ const ClockingControls = ({
         </div>
       ) : (
         <Button 
-          onClick={() => {
-            handleBreakEnd();
-            onClose();
-          }}
+          onClick={handleBreakEndClick}
           className="w-full bg-blue-600 hover:bg-blue-700"
         >
           <Clock className="h-4 w-4 mr-2" />
