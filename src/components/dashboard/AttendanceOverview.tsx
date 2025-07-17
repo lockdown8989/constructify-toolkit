@@ -1,14 +1,14 @@
 
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { useAttendance } from '@/hooks/use-attendance';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useLeaveCalendar } from '@/hooks/use-leave-calendar';
 import { useEmployees } from '@/hooks/use-employees';
 import { Plane, Clock, LogOut } from 'lucide-react';
 import AttendanceDetailModal from './AttendanceDetailModal';
 
 const AttendanceOverview = () => {
-  const { data: attendanceData } = useAttendance();
   const { data: leaves = [] } = useLeaveCalendar();
   const { data: employees = [] } = useEmployees();
   const [selectedCardType, setSelectedCardType] = useState<'holiday' | 'clocked-in' | 'clocked-out' | null>(null);
@@ -16,6 +16,29 @@ const AttendanceOverview = () => {
   // Get today's date
   const today = new Date().toISOString().split('T')[0];
   
+  // Fetch real attendance data for today
+  const { data: attendanceData = [] } = useQuery({
+    queryKey: ['attendance-overview', today],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('attendance')
+        .select(`
+          *,
+          employees!inner(id, name, avatar_url)
+        `)
+        .eq('date', today);
+
+      if (error) {
+        console.error('Error fetching attendance data:', error);
+        return [];
+      }
+
+      console.log('Attendance data fetched for overview:', data);
+      return data || [];
+    },
+    refetchInterval: 10000, // Refresh every 10 seconds for live updates
+  });
+
   // Calculate holiday count (approved leaves for today)
   const holidayCount = leaves.filter(leave => {
     const startDate = new Date(leave.start_date).toISOString().split('T')[0];
@@ -37,13 +60,41 @@ const AttendanceOverview = () => {
     });
   });
 
-  // Calculate clocked in/out numbers from attendance data
-  const clockedInCount = attendanceData?.present || 0;
-  const clockedOutCount = attendanceData?.total ? (attendanceData.total - attendanceData.present) : 0;
+  // Calculate actual clocked in/out numbers from real attendance data
+  const clockedInCount = attendanceData.filter(record => 
+    record.active_session && 
+    (record.current_status === 'clocked-in' || record.current_status === 'on-break')
+  ).length;
 
-  // Get employees who are currently clocked in (mock data - would come from real attendance records)
-  const clockedInEmployees = employees.slice(0, clockedInCount);
-  const clockedOutEmployees = employees.slice(clockedInCount, clockedInCount + clockedOutCount);
+  // Count employees who have attendance records but are not currently active
+  const totalEmployeesWithRecords = new Set(attendanceData.map(record => record.employee_id)).size;
+  const clockedOutCount = Math.max(0, employees.length - clockedInCount - holidayCount);
+
+  // Get actual employees who are clocked in
+  const clockedInEmployees = attendanceData
+    .filter(record => 
+      record.active_session && 
+      (record.current_status === 'clocked-in' || record.current_status === 'on-break')
+    )
+    .map(record => record.employees)
+    .filter(Boolean);
+
+  // Get employees who are clocked out (have records today but not active, or no records)
+  const clockedInEmployeeIds = new Set(clockedInEmployees.map(emp => emp.id));
+  const holidayEmployeeIds = new Set(employeesOnHoliday.map(emp => emp.id));
+  const clockedOutEmployees = employees.filter(emp => 
+    !clockedInEmployeeIds.has(emp.id) && !holidayEmployeeIds.has(emp.id)
+  );
+
+  console.log('AttendanceOverview calculations:', {
+    holidayCount,
+    clockedInCount,
+    clockedOutCount,
+    totalEmployees: employees.length,
+    attendanceRecords: attendanceData.length,
+    clockedInEmployees: clockedInEmployees.length,
+    clockedOutEmployees: clockedOutEmployees.length
+  });
 
   const handleCardClick = (cardType: 'holiday' | 'clocked-in' | 'clocked-out') => {
     setSelectedCardType(cardType);
@@ -210,7 +261,12 @@ const AttendanceOverview = () => {
         onClose={() => setSelectedCardType(null)}
         type={selectedCardType || 'holiday'}
         employees={getEmployeesForModal()}
-        attendanceData={attendanceData}
+        attendanceData={{
+          present: clockedInCount,
+          total: employees.length,
+          holiday: holidayCount,
+          absent: clockedOutCount
+        }}
       />
     </>
   );
