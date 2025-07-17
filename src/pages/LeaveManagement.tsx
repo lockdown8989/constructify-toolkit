@@ -1,13 +1,5 @@
 
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown, Calendar, Users, RefreshCw, Clock, History } from "lucide-react";
 import LeaveRealtimeUpdates from "@/components/leave/LeaveRealtimeUpdates";
 import EmployeeTab from "@/components/leave/tabs/EmployeeTab";
 import ManagerTab from "@/components/leave/tabs/ManagerTab";
@@ -19,12 +11,6 @@ import { useLocation } from "react-router-dom";
 
 // Define the view types
 type ViewType = "employee" | "manager" | "calendar" | "schedule-requests" | "shift-history";
-
-// Define the view option type
-type ViewOption = {
-  label: string;
-  icon: React.ReactNode;
-};
 
 const LeaveManagement = () => {
   const { hasManagerAccess } = useAccessControl();
@@ -49,108 +35,9 @@ const LeaveManagement = () => {
     }
   }, [location.state, hasManagerAccess]);
 
-  // Define view options based on user access
-  const getViewOptions = (): Record<string, ViewOption> => {
-    const baseOptions: Record<string, ViewOption> = {
-      "shift-history": { label: "Shift History", icon: <History className="h-4 w-4 mr-2" /> },
-      calendar: { label: "Calendar View", icon: <Calendar className="h-4 w-4 mr-2" /> },
-      "schedule-requests": { label: "Schedule Requests", icon: <Clock className="h-4 w-4 mr-2" /> }
-    };
-
-    // Only add employee view for non-managers
-    if (!hasManagerAccess) {
-      baseOptions.employee = { label: "Employee View", icon: <Users className="h-4 w-4 mr-2" /> };
-    }
-
-    // Only add manager view for managers
-    if (hasManagerAccess) {
-      return {
-        "shift-history": baseOptions["shift-history"],
-        manager: { label: "Manager View", icon: <Users className="h-4 w-4 mr-2" /> },
-        calendar: baseOptions.calendar,
-        "schedule-requests": baseOptions["schedule-requests"]
-      };
-    }
-
-    return baseOptions;
-  };
-
-  const viewOptions = getViewOptions();
-
   return (
     <div className="container py-6">
-      <h1 className="text-2xl font-bold mb-6">Leave Management System</h1>
-      
       <LeaveRealtimeUpdates />
-      
-      <div className="mb-6">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="w-full md:w-auto flex justify-between items-center">
-              {viewOptions[currentView]?.icon}
-              {viewOptions[currentView]?.label}
-              <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-full min-w-[200px]">
-            {hasManagerAccess && (
-              <DropdownMenuItem 
-                onClick={() => setCurrentView("shift-history")}
-                className="cursor-pointer flex items-center"
-              >
-                <History className="h-4 w-4 mr-2" />
-                Shift History
-              </DropdownMenuItem>
-            )}
-
-            {!hasManagerAccess && (
-              <DropdownMenuItem 
-                onClick={() => setCurrentView("employee")}
-                className="cursor-pointer flex items-center"
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Employee View
-              </DropdownMenuItem>
-            )}
-
-            {!hasManagerAccess && (
-              <DropdownMenuItem 
-                onClick={() => setCurrentView("shift-history")}
-                className="cursor-pointer flex items-center"
-              >
-                <History className="h-4 w-4 mr-2" />
-                Shift History
-              </DropdownMenuItem>
-            )}
-            
-            <DropdownMenuItem 
-              onClick={() => setCurrentView("calendar")}
-              className="cursor-pointer flex items-center"
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              Calendar View
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem 
-              onClick={() => setCurrentView("schedule-requests")}
-              className="cursor-pointer flex items-center"
-            >
-              <Clock className="h-4 w-4 mr-2" />
-              Schedule Requests
-            </DropdownMenuItem>
-
-            {hasManagerAccess && (
-              <DropdownMenuItem 
-                onClick={() => setCurrentView("manager")}
-                className="cursor-pointer flex items-center"
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Manager View
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
       
       <div className="space-y-4">
         {currentView === "employee" && <EmployeeTab />}

@@ -11,6 +11,7 @@ interface MobileNavLinkProps {
   isActive?: boolean;
   onClick?: () => void;
   className?: string;
+  state?: any;
 }
 
 const MobileNavLink: React.FC<MobileNavLinkProps> = ({
@@ -19,13 +20,14 @@ const MobileNavLink: React.FC<MobileNavLinkProps> = ({
   label,
   isActive = false,
   onClick,
-  className
+  className,
+  state
 }) => {
   const navigate = useNavigate();
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigate(to);
+    navigate(to, { state });
     if (onClick) {
       onClick();
     }

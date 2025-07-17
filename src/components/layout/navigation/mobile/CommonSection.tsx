@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, FileText, UserCheck } from "lucide-react";
+import { LayoutDashboard, FileText, UserCheck, Users, History, Calendar, Clock } from "lucide-react";
 import MobileNavLink from "./MobileNavLink";
 
 interface CommonSectionProps {
@@ -47,13 +47,49 @@ const CommonSection = ({
         onClick={onClose}
       />
 
-      {/* Leave Management for all users */}
-      <MobileNavLink
-        to="/leave-management"
-        icon={FileText}
-        label="📋 Leave Management"
-        onClick={onClose}
-      />
+      {/* Leave Management options for employees */}
+      {!hasManagerialAccess && !isPayroll && (
+        <>
+          <MobileNavLink
+            to="/leave-management"
+            state={{ initialView: "employee" }}
+            icon={Users}
+            label="📋 Employee View"
+            onClick={onClose}
+          />
+          <MobileNavLink
+            to="/leave-management"
+            state={{ initialView: "shift-history" }}
+            icon={History}
+            label="📊 Shift History"
+            onClick={onClose}
+          />
+          <MobileNavLink
+            to="/leave-management"
+            state={{ initialView: "calendar" }}
+            icon={Calendar}
+            label="📅 Calendar View"
+            onClick={onClose}
+          />
+          <MobileNavLink
+            to="/leave-management"
+            state={{ initialView: "schedule-requests" }}
+            icon={Clock}
+            label="⏰ Schedule Requests"
+            onClick={onClose}
+          />
+        </>
+      )}
+
+      {/* Leave Management for managers */}
+      {hasManagerialAccess && (
+        <MobileNavLink
+          to="/leave-management"
+          icon={FileText}
+          label="📋 Leave Management"
+          onClick={onClose}
+        />
+      )}
 
       {/* Payroll sections - only for payroll users */}
       {isPayroll && (
