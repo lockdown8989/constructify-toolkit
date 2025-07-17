@@ -1,42 +1,44 @@
 
-import { useMemo } from 'react';
-
 export const useInputSanitization = () => {
-  return useMemo(() => ({
-    sanitizeEmail: (email: string): string => {
-      return email.trim().toLowerCase().replace(/[^\w@.-]/g, '');
-    },
+  const sanitizeText = (input: string): string => {
+    if (typeof input !== 'string') return '';
+    
+    // Basic XSS prevention - remove script tags and dangerous patterns
+    const cleaned = input
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/javascript:/gi, '')
+      .replace(/on\w+\s*=/gi, '')
+      .trim();
+    
+    return cleaned;
+  };
 
-    sanitizeText: (text: string): string => {
-      // Remove potentially dangerous characters while preserving normal text
-      return text.trim().replace(/[<>\"'&]/g, '');
-    },
+  const sanitizeEmail = (email: string): string => {
+    if (typeof email !== 'string') return '';
+    
+    // Basic email sanitization - remove dangerous characters
+    const cleaned = email
+      .toLowerCase()
+      .trim()
+      .replace(/[<>"/';\\]/g, '');
+    
+    return cleaned;
+  };
 
-    sanitizeName: (name: string): string => {
-      // Allow letters, spaces, hyphens, apostrophes
-      return name.trim().replace(/[^a-zA-Z\s\-']/g, '');
-    },
+  const sanitizeName = (name: string): string => {
+    if (typeof name !== 'string') return '';
+    
+    // Allow letters, spaces, hyphens, and periods for names
+    const cleaned = name
+      .trim()
+      .replace(/[^a-zA-Z\s\-\.]/g, '');
+    
+    return cleaned;
+  };
 
-    validateEmail: (email: string): boolean => {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return emailRegex.test(email) && email.length <= 254;
-    },
-
-    validatePassword: (password: string): boolean => {
-      return password.length >= 8 && 
-             /[A-Z]/.test(password) && 
-             /[a-z]/.test(password) && 
-             /\d/.test(password) && 
-             /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-    },
-
-    escapeHtml: (unsafe: string): string => {
-      return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-  }), []);
+  return {
+    sanitizeText,
+    sanitizeEmail,
+    sanitizeName
+  };
 };

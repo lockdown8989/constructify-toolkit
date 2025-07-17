@@ -7,6 +7,7 @@ import { useAuthActions } from './useAuthActions';
 import { useRoles } from './useRoles';
 import { useAuthDebugger } from './useAuthDebugger';
 import { SessionTimeoutWarning } from '@/components/auth/SessionTimeoutWarning';
+import { ErrorBoundary } from '@/components/auth/ErrorBoundary';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -135,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       })
       .catch((error) => {
         if (!mounted) return;
-        console.error('Exception in getSession:', error);
+        console.error('💥 Exception in getSession:', error);
         setSession(null);
         setUser(null);
         setIsLoading(false);
@@ -175,10 +176,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={value}>
-      {children}
-      {session?.user && <SessionTimeoutWarning />}
-    </AuthContext.Provider>
+    <ErrorBoundary>
+      <AuthContext.Provider value={value}>
+        {children}
+        {session?.user && <SessionTimeoutWarning />}
+      </AuthContext.Provider>
+    </ErrorBoundary>
   );
 };
 

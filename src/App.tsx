@@ -1,4 +1,3 @@
-
 import { useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -10,6 +9,7 @@ import { LanguageProvider } from './hooks/use-language';
 import { ThemeProvider } from './hooks/use-theme';
 import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import { ErrorBoundary } from './components/auth/ErrorBoundary';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import BackgroundNotificationService from './services/shift-notifications/background-notification-service';
@@ -69,146 +69,150 @@ const AppContent = () => {
   }, [user]);
   
   return (
-    <div className="min-h-screen bg-background">
-      <Routes>
-        {/* Public routes without layout */}
-        <Route path="/auth" element={<Auth />} />
-        
-        {/* Protected routes with layout */}
-        <Route path="/*" element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }>
-          <Route index element={<Dashboard />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="profile" element={
-            <Suspense fallback={<LoadingSpinner />}>
-              <Profile />
-            </Suspense>
-          } />
-          <Route path="settings" element={
-            <Suspense fallback={<LoadingSpinner />}>
-              <ProfileSettings />
-            </Suspense>
-          } />
-          <Route path="people" element={
-            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-              <Suspense fallback={<LoadingSpinner />}>
-                <People />
-              </Suspense>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-background">
+        <Routes>
+          {/* Public routes without layout */}
+          <Route path="/auth" element={<Auth />} />
+          
+          {/* Protected routes with layout */}
+          <Route path="/*" element={
+            <ProtectedRoute>
+              <AppLayout />
             </ProtectedRoute>
-          } />
-          <Route path="attendance" element={
-            <Suspense fallback={<LoadingSpinner />}>
-              <Attendance />
-            </Suspense>
-          } />
-          <Route path="leave-management" element={
-            <Suspense fallback={<LoadingSpinner />}>
-              <LeaveManagement />
-            </Suspense>
-          } />
-          <Route path="schedule-requests" element={
-            <Suspense fallback={<LoadingSpinner />}>
-              <ScheduleRequests />
-            </Suspense>
-          } />
-          <Route path="payroll" element={
-            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager', 'payroll']}>
+          }>
+            <Route index element={<Dashboard />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="profile" element={
               <Suspense fallback={<LoadingSpinner />}>
-                <Payroll />
+                <Profile />
               </Suspense>
-            </ProtectedRoute>
-          } />
-          <Route path="payroll-dashboard" element={
-            <ProtectedRoute requiredRole="payroll">
+            } />
+            <Route path="settings" element={
               <Suspense fallback={<LoadingSpinner />}>
-                <PayrollDashboard />
+                <ProfileSettings />
               </Suspense>
-            </ProtectedRoute>
-          } />
-          <Route path="payslips" element={
-            <ProtectedRoute requiredRole="payroll">
+            } />
+            <Route path="people" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <People />
+                </Suspense>
+              </ProtectedRoute>
+            } />
+            <Route path="attendance" element={
               <Suspense fallback={<LoadingSpinner />}>
-                <Payslips />
+                <Attendance />
               </Suspense>
-            </ProtectedRoute>
-          } />
-          <Route path="schedule" element={
-            <Suspense fallback={<LoadingSpinner />}>
-              <Schedule />
-            </Suspense>
-          } />
-          <Route path="shift-patterns" element={
-            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+            } />
+            <Route path="leave-management" element={
               <Suspense fallback={<LoadingSpinner />}>
-                <ShiftPatterns />
+                <LeaveManagement />
               </Suspense>
-            </ProtectedRoute>
-          } />
-          <Route path="rota-employee" element={
-            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+            } />
+            <Route path="schedule-requests" element={
               <Suspense fallback={<LoadingSpinner />}>
-                <RotaEmployee />
+                <ScheduleRequests />
               </Suspense>
-            </ProtectedRoute>
-          } />
-          <Route path="shift-calendar" element={
-            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+            } />
+            <Route path="payroll" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager', 'payroll']}>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Payroll />
+                </Suspense>
+              </ProtectedRoute>
+            } />
+            <Route path="payroll-dashboard" element={
+              <ProtectedRoute requiredRole="payroll">
+                <Suspense fallback={<LoadingSpinner />}>
+                  <PayrollDashboard />
+                </Suspense>
+              </ProtectedRoute>
+            } />
+            <Route path="payslips" element={
+              <ProtectedRoute requiredRole="payroll">
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Payslips />
+                </Suspense>
+              </ProtectedRoute>
+            } />
+            <Route path="schedule" element={
               <Suspense fallback={<LoadingSpinner />}>
-                <ShiftCalendar />
+                <Schedule />
               </Suspense>
-            </ProtectedRoute>
-          } />
-          <Route path="employee-workflow" element={
-            <Suspense fallback={<LoadingSpinner />}>
-              <EmployeeWorkflow />
-            </Suspense>
-          } />
-          <Route path="time-clock" element={
-            <Suspense fallback={<LoadingSpinner />}>
-              <TimeClock />
-            </Suspense>
-          } />
-          <Route path="manager-time-clock" element={
-            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+            } />
+            <Route path="shift-patterns" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <ShiftPatterns />
+                </Suspense>
+              </ProtectedRoute>
+            } />
+            <Route path="rota-employee" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <RotaEmployee />
+                </Suspense>
+              </ProtectedRoute>
+            } />
+            <Route path="shift-calendar" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <ShiftCalendar />
+                </Suspense>
+              </ProtectedRoute>
+            } />
+            <Route path="employee-workflow" element={
               <Suspense fallback={<LoadingSpinner />}>
-                <ManagerTimeClock />
+                <EmployeeWorkflow />
               </Suspense>
-            </ProtectedRoute>
-          } />
-          <Route path="overtime-management" element={
-            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+            } />
+            <Route path="time-clock" element={
               <Suspense fallback={<LoadingSpinner />}>
-                <OvertimeManagement />
+                <TimeClock />
               </Suspense>
-            </ProtectedRoute>
-          } />
-        </Route>
-        
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </div>
+            } />
+            <Route path="manager-time-clock" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <ManagerTimeClock />
+                </Suspense>
+              </ProtectedRoute>
+            } />
+            <Route path="overtime-management" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <OvertimeManagement />
+                </Suspense>
+              </ProtectedRoute>
+            } />
+          </Route>
+          
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+    </ErrorBoundary>
   );
 };
 
 function App() {
   return (
-    <HelmetProvider>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-          <AuthProvider>
-            <LanguageProvider>
-              <TooltipProvider>
-                <AppContent />
-                <Toaster />
-              </TooltipProvider>
-            </LanguageProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </HelmetProvider>
+    <ErrorBoundary>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="light" storageKey="ui-theme">
+            <AuthProvider>
+              <LanguageProvider>
+                <TooltipProvider>
+                  <AppContent />
+                  <Toaster />
+                </TooltipProvider>
+              </LanguageProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </HelmetProvider>
+    </ErrorBoundary>
   );
 }
 
