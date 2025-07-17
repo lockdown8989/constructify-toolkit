@@ -6,10 +6,12 @@ import AttendanceControls from "@/components/attendance/AttendanceControls";
 import AttendanceList from "@/components/attendance/AttendanceList";
 import { useEmployeeDataManagement } from "@/hooks/use-employee-data-management";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Attendance = () => {
   const { user, isManager, isAdmin, isHR, isPayroll } = useAuth();
   const { employeeData, isLoading } = useEmployeeDataManagement();
+  const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
   
@@ -70,27 +72,35 @@ const Attendance = () => {
   }
   
   return (
-    <div className="container max-w-[1200px] mx-auto px-4 py-8">
-      <AttendanceHeader />
+    <div className={`${isMobile ? 'px-0 py-2' : 'container max-w-[1200px] mx-auto px-4 py-8'}`}>
+      <div className={isMobile ? 'px-4' : ''}>
+        <AttendanceHeader />
+      </div>
       
       {/* Always show stats - even if effectiveEmployeeId is undefined, the component will handle it */}
-      <AttendanceStats employeeId={effectiveEmployeeId} />
+      <div className={isMobile ? 'px-4' : ''}>
+        <AttendanceStats employeeId={effectiveEmployeeId} />
+      </div>
       
       {/* Only show controls for managers/admins who can view all employees */}
       {canViewAllEmployees && (
-        <AttendanceControls 
-          onSearchChange={setSearchQuery}
-          onEmployeeSelect={setSelectedEmployeeId}
-          onDateChange={setSelectedDate}
-        />
+        <div className={isMobile ? 'px-4' : ''}>
+          <AttendanceControls 
+            onSearchChange={setSearchQuery}
+            onEmployeeSelect={setSelectedEmployeeId}
+            onDateChange={setSelectedDate}
+          />
+        </div>
       )}
       
       {/* Always show attendance list */}
-      <AttendanceList 
-        employeeId={effectiveEmployeeId} 
-        searchQuery={searchQuery}
-        selectedDate={selectedDate}
-      />
+      <div className={isMobile ? 'px-4' : ''}>
+        <AttendanceList 
+          employeeId={effectiveEmployeeId} 
+          searchQuery={searchQuery}
+          selectedDate={selectedDate}
+        />
+      </div>
     </div>
   );
 };

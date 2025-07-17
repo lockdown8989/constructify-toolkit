@@ -8,12 +8,14 @@ import ScheduleRequestsTab from "@/components/leave/tabs/ScheduleRequestsTab";
 import ShiftHistoryTab from "@/components/leave/tabs/ShiftHistoryTab";
 import { useAccessControl } from "@/hooks/leave/useAccessControl";
 import { useLocation } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Define the view types
 type ViewType = "employee" | "manager" | "calendar" | "schedule-requests" | "shift-history";
 
 const LeaveManagement = () => {
   const { hasManagerAccess } = useAccessControl();
+  const isMobile = useIsMobile();
   const [currentView, setCurrentView] = useState<ViewType>("employee");
   const location = useLocation();
 
@@ -36,10 +38,10 @@ const LeaveManagement = () => {
   }, [location.state, hasManagerAccess]);
 
   return (
-    <div className="container py-6">
+    <div className={`${isMobile ? 'px-0 py-2' : 'container py-6'}`}>
       <LeaveRealtimeUpdates />
       
-      <div className="space-y-4">
+      <div className={`${isMobile ? 'space-y-2' : 'space-y-4'}`}>
         {currentView === "employee" && <EmployeeTab />}
         {currentView === "shift-history" && <ShiftHistoryTab />}
         {currentView === "manager" && hasManagerAccess && <ManagerTab />}

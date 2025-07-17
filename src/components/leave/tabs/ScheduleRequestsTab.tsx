@@ -80,13 +80,15 @@ const ScheduleRequestsTab: React.FC = () => {
   };
 
   return (
-    <>
-      <ScheduleHeader 
-        pendingCount={pendingCount}
-        lastRefreshed={lastRefreshed}
-        isManager={isManager}
-        onRefresh={handleRefreshData}
-      />
+    <div className={isMobile ? '' : ''}>
+      <div className={isMobile ? 'px-4' : ''}>
+        <ScheduleHeader 
+          pendingCount={pendingCount}
+          lastRefreshed={lastRefreshed}
+          isManager={isManager}
+          onRefresh={handleRefreshData}
+        />
+      </div>
       
       <CardContent className="p-0">
         <MobileNavigation 
@@ -95,23 +97,25 @@ const ScheduleRequestsTab: React.FC = () => {
           isMobile={isMobile}
         />
         
-        <div className="px-4 sm:px-6">
-          <Tabs defaultValue="shift-swaps" className="mt-2">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="shift-swaps" className="text-xs sm:text-sm flex items-center justify-center px-3 py-2.5">
-                <ArrowLeftRight className="h-3.5 w-3.5 mr-1.5" />
-                Shift Swaps
+        <div className={`${isMobile ? 'px-4' : 'px-4 sm:px-6'}`}>
+          <Tabs defaultValue="shift-swaps" className={`${isMobile ? 'mt-1' : 'mt-2'}`}>
+            <TabsList className={`grid w-full grid-cols-2 ${isMobile ? 'mb-4 h-11' : 'mb-6'}`}>
+              <TabsTrigger value="shift-swaps" className={`${isMobile ? 'text-xs px-2 py-2' : 'text-xs sm:text-sm px-3 py-2.5'} flex items-center justify-center`}>
+                <ArrowLeftRight className={`${isMobile ? 'h-3 w-3 mr-1' : 'h-3.5 w-3.5 mr-1.5'}`} />
+                <span className={isMobile ? 'hidden xs:inline' : ''}>Shift Swaps</span>
+                <span className={isMobile ? 'inline xs:hidden' : 'hidden'}>Swaps</span>
                 {pendingCount.shifts > 0 && (
-                  <Badge className="ml-1.5 bg-amber-100 text-amber-800 border border-amber-300">
+                  <Badge className={`${isMobile ? 'ml-1 text-xs' : 'ml-1.5'} bg-amber-100 text-amber-800 border border-amber-300`}>
                     {pendingCount.shifts}
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="availability" className="text-xs sm:text-sm flex items-center justify-center px-3 py-2.5">
-                <Clock className="h-3.5 w-3.5 mr-1.5" />
-                Availability
+              <TabsTrigger value="availability" className={`${isMobile ? 'text-xs px-2 py-2' : 'text-xs sm:text-sm px-3 py-2.5'} flex items-center justify-center`}>
+                <Clock className={`${isMobile ? 'h-3 w-3 mr-1' : 'h-3.5 w-3.5 mr-1.5'}`} />
+                <span className={isMobile ? 'hidden xs:inline' : ''}>Availability</span>
+                <span className={isMobile ? 'inline xs:hidden' : 'hidden'}>Available</span>
                 {pendingCount.availability > 0 && (
-                  <Badge className="ml-1.5 bg-amber-100 text-amber-800 border border-amber-300">
+                  <Badge className={`${isMobile ? 'ml-1 text-xs' : 'ml-1.5'} bg-amber-100 text-amber-800 border border-amber-300`}>
                     {pendingCount.availability}
                   </Badge>
                 )}
@@ -259,7 +263,7 @@ const ScheduleRequestsTab: React.FC = () => {
           </Tabs>
         </div>
       </CardContent>
-    </>
+    </div>
   );
 };
 
