@@ -1,33 +1,31 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Check, X, Loader2, Mail } from 'lucide-react';
 import { useShiftResponse } from '@/hooks/use-shift-response';
 import { Schedule } from '@/hooks/use-schedules';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface ShiftResponseActionsProps {
   schedule: Schedule;
   onResponseComplete?: () => void;
   size?: 'sm' | 'default';
-  variant?: 'outline' | 'default';
   className?: string;
 }
 
-const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({ 
-  schedule, 
+const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
+  schedule,
   onResponseComplete,
-  size = 'sm',
-  variant = 'outline', 
+  size = 'default',
   className = ''
 }) => {
   const { respondToShift } = useShiftResponse();
+  const { toast } = useToast();
   const [loading, setLoading] = useState<'accepted' | 'rejected' | null>(null);
-  
+
   const handleResponse = async (response: 'accepted' | 'rejected') => {
     try {
       setLoading(response);
-      console.log(`Responding to shift ${schedule.id} with: ${response}`);
       
       await respondToShift.mutateAsync({
         scheduleId: schedule.id,
@@ -35,21 +33,19 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
       });
       
       toast({
-        title: response === 'accepted' ? 'Shift Accepted' : 'Shift Declined',
-        description: response === 'accepted' 
-          ? 'You have successfully accepted this shift.' 
-          : 'You have successfully declined this shift.',
+        title: response === 'accepted' ? 'Shift Accepted' : 'Shift Rejected',
+        description: `You have ${response} the shift successfully.`,
         variant: response === 'accepted' ? 'default' : 'destructive',
       });
       
-      // Call the callback after successful response
       if (onResponseComplete) {
         onResponseComplete();
       }
     } catch (error) {
-      console.error(`Error ${response === 'accepted' ? 'accepting' : 'declining'} shift:`, error);
+      console.error(`Error ${response === 'accepted' ? 'accepting' : 'rejecting'} shift:`, error);
+      
       toast({
-        title: `Failed to ${response === 'accepted' ? 'accept' : 'decline'} shift`,
+        title: `Failed to ${response === 'accepted' ? 'accept' : 'reject'} shift`,
         description: "Please try again later.",
         variant: "destructive",
       });
@@ -58,40 +54,44 @@ const ShiftResponseActions: React.FC<ShiftResponseActionsProps> = ({
     }
   };
 
-  // Don't show buttons if the shift is not pending
-  if (schedule.status !== 'pending') {
-    return null;
-  }
-
   return (
     <div className={`flex space-x-2 ${className}`}>
-      <Button 
-        variant={variant}
-        size={size}
-        className="flex items-center text-green-600 border-green-200 hover:bg-green-50 bg-white"
+      <Button
         onClick={() => handleResponse('accepted')}
-        disabled={respondToShift.isPending || loading !== null}
+        variant="default"
+        size={size}
+        className="flex items-center bg-green-500 hover:bg-green-600 text-white"
+        disabled={loading !== null}
       >
         {loading === 'accepted' ? (
-          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
         ) : (
-          <CheckCircle className="h-4 w-4 mr-1" />
+          <Check className="w-4 h-4 mr-1" />
         )}
-        Accept
+        accept
       </Button>
-      <Button 
-        variant={variant}
-        size={size}
-        className="flex items-center text-red-600 border-red-200 hover:bg-red-50 bg-white"
+      
+      <Button
         onClick={() => handleResponse('rejected')}
-        disabled={respondToShift.isPending || loading !== null}
+        variant="outline"
+        size={size}
+        className="flex items-center border-red-200 text-red-600 hover:bg-red-50"
+        disabled={loading !== null}
       >
         {loading === 'rejected' ? (
-          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
         ) : (
-          <XCircle className="h-4 w-4 mr-1" />
+          <X className="w-4 h-4 mr-1" />
         )}
-        Decline
+        reject
+      </Button>
+      
+      <Button
+        variant="outline"
+        size={size}
+        className="flex items-center"
+      >
+        <Mail className="w-4 h-4" />
       </Button>
     </div>
   );
