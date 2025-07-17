@@ -60,58 +60,65 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
   const isCompleted = schedule.status === 'completed';
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-3">
+    <div className="bg-card rounded-xl shadow-sm border p-4 mb-3 transition-all duration-200 hover:shadow-md active-touch-state">
       {isCompleted && (
         <div className="text-green-600 text-sm font-medium mb-2 uppercase">
           COMPLETED
         </div>
       )}
       
-      <div className="flex items-start">
+      <div className="flex items-start gap-4">
         {/* Date box */}
         <div className={cn(
-          "text-white p-3 rounded-lg text-center w-16 mr-4 flex-shrink-0",
+          "text-white p-3 rounded-lg text-center w-16 flex-shrink-0 shadow-sm",
           getStatusColor(schedule.status)
         )}>
-          <div className="text-xs font-medium">{dayAbbr}</div>
+          <div className="text-xs font-medium opacity-90">{dayAbbr}</div>
           <div className="text-lg font-bold">{dayNum}</div>
-          <div className="text-xs">{monthAbbr}</div>
+          <div className="text-xs opacity-90">{monthAbbr}</div>
         </div>
         
         {/* Shift details */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start mb-2">
-            <div className="text-xl font-bold">
+            <div className="text-lg font-semibold text-foreground">
               {format(startTime, 'HH:mm')} → {format(endTime, 'HH:mm')}
             </div>
             {!isPending && !isCompleted && (
-              <Info className="h-5 w-5 text-gray-400" />
+              <Info className="h-5 w-5 text-muted-foreground" />
             )}
           </div>
           
-          <div className="space-y-1 text-sm text-gray-600 mb-3">
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 mr-2" />
-              <span>{duration} hours</span>
+          <div className="space-y-1.5 text-sm text-muted-foreground mb-3">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 flex-shrink-0" />
+              <span>{duration} hour{duration !== 1 ? 's' : ''}</span>
             </div>
-            <div className="flex items-center">
-              <User className="h-4 w-4 mr-2" />
-              <span>{schedule.title || 'Driver'}</span>
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{schedule.title || 'Driver'}</span>
             </div>
-            <div className="flex items-center">
-              <MapPin className="h-4 w-4 mr-2" />
-              <span>{schedule.location || 'Dishoom, Kings Cross'}</span>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{schedule.location || 'Location TBD'}</span>
             </div>
           </div>
+
+          {/* Notes */}
+          {schedule.notes && (
+            <div className="text-sm text-muted-foreground mb-3 p-2 bg-muted rounded-md">
+              {schedule.notes}
+            </div>
+          )}
 
           {/* Status badge for non-pending shifts */}
           {!isPending && (
             <div className="mb-3">
               <span className={cn(
-                "px-3 py-1 rounded-full text-xs font-medium",
-                schedule.status === 'completed' ? 'bg-green-100 text-green-800' :
-                schedule.status === 'employee_rejected' ? 'bg-red-100 text-red-800' :
-                'bg-blue-100 text-blue-800'
+                "px-3 py-1 rounded-full text-xs font-medium border",
+                schedule.status === 'completed' ? 'bg-green-100 text-green-800 border-green-200' :
+                schedule.status === 'employee_rejected' ? 'bg-red-100 text-red-800 border-red-200' :
+                'bg-blue-100 text-blue-800 border-blue-200'
               )}>
                 {getStatusLabel(schedule.status)}
               </span>
@@ -124,7 +131,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
               schedule={schedule}
               onResponseComplete={onResponseComplete}
               size="sm"
-              className="justify-start"
+              className="w-full"
             />
           )}
         </div>
