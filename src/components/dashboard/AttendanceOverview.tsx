@@ -3,19 +3,39 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useLeaveCalendar } from '@/hooks/use-leave-calendar';
 import { useEmployees } from '@/hooks/use-employees';
 import { Plane, Clock, LogOut } from 'lucide-react';
 import AttendanceDetailModal from './AttendanceDetailModal';
 
 const AttendanceOverview = () => {
-  const { data: leaves = [] } = useLeaveCalendar();
   const { data: employees = [] } = useEmployees();
   const [selectedCardType, setSelectedCardType] = useState<'holiday' | 'clocked-in' | 'clocked-out' | null>(null);
 
   // Get today's date
   const today = new Date().toISOString().split('T')[0];
   
+  // Fetch leave requests (holidays) for today
+  const { data: leaves = [] } = useQuery({
+    queryKey: ['leaves-today', today],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('leave_calendar')
+        .select('*')
+        .eq('status', 'Approved')
+        .lte('start_date', today)
+        .gte('end_date', today);
+
+      if (error) {
+        console.error('Error fetching leaves:', error);
+        return [];
+      }
+
+      console.log('Leaves data for today:', data);
+      return data || [];
+    },
+    refetchInterval: 10000,
+  });
+
   // Fetch real attendance data for today
   const { data: attendanceData = [] } = useQuery({
     queryKey: ['attendance-overview', today],
@@ -24,7 +44,7 @@ const AttendanceOverview = () => {
         .from('attendance')
         .select(`
           *,
-          employees!inner(id, name, avatar_url)
+          employees!inner(id, name, avatar_url, job_title, department)
         `)
         .eq('date', today);
 
@@ -33,65 +53,49 @@ const AttendanceOverview = () => {
         return [];
       }
 
-      console.log('Attendance data fetched for overview:', data);
+      console.log('All attendance data for today:', data);
       return data || [];
     },
-    refetchInterval: 10000, // Refresh every 10 seconds for live updates
+    refetchInterval: 5000, // More frequent updates
   });
 
-  // Calculate holiday count (approved leaves for today)
-  const holidayCount = leaves.filter(leave => {
-    const startDate = new Date(leave.start_date).toISOString().split('T')[0];
-    const endDate = new Date(leave.end_date).toISOString().split('T')[0];
-    return leave.status === 'Approved' && 
-           startDate <= today && 
-           endDate >= today;
-  }).length;
-
-  // Get employees on holiday today
+  // Calculate holiday count (employees on approved leave today)
   const employeesOnHoliday = employees.filter(employee => {
-    return leaves.some(leave => {
-      const startDate = new Date(leave.start_date).toISOString().split('T')[0];
-      const endDate = new Date(leave.end_date).toISOString().split('T')[0];
-      return leave.employee_id === employee.id &&
-             leave.status === 'Approved' && 
-             startDate <= today && 
-             endDate >= today;
-    });
+    return leaves.some(leave => leave.employee_id === employee.id);
   });
+  const holidayCount = employeesOnHoliday.length;
 
-  // Calculate actual clocked in/out numbers from real attendance data
-  const clockedInCount = attendanceData.filter(record => 
-    record.active_session && 
-    (record.current_status === 'clocked-in' || record.current_status === 'on-break')
-  ).length;
-
-  // Count employees who have attendance records but are not currently active
-  const totalEmployeesWithRecords = new Set(attendanceData.map(record => record.employee_id)).size;
-  const clockedOutCount = Math.max(0, employees.length - clockedInCount - holidayCount);
-
-  // Get actual employees who are clocked in
+  // Calculate clocked in count (employees with active sessions)
   const clockedInEmployees = attendanceData
     .filter(record => 
-      record.active_session && 
-      (record.current_status === 'clocked-in' || record.current_status === 'on-break')
+      record.active_session === true && 
+      record.check_in && 
+      !record.check_out
     )
     .map(record => record.employees)
     .filter(Boolean);
+  const clockedInCount = clockedInEmployees.length;
 
-  // Get employees who are clocked out (have records today but not active, or no records)
+  // Calculate clocked out count (total employees - clocked in - on holiday)
+  const totalActiveEmployees = employees.filter(emp => emp.status === 'Active').length;
+  const clockedOutCount = Math.max(0, totalActiveEmployees - clockedInCount - holidayCount);
+
+  // Get employees who are clocked out
   const clockedInEmployeeIds = new Set(clockedInEmployees.map(emp => emp.id));
   const holidayEmployeeIds = new Set(employeesOnHoliday.map(emp => emp.id));
   const clockedOutEmployees = employees.filter(emp => 
-    !clockedInEmployeeIds.has(emp.id) && !holidayEmployeeIds.has(emp.id)
+    emp.status === 'Active' &&
+    !clockedInEmployeeIds.has(emp.id) && 
+    !holidayEmployeeIds.has(emp.id)
   );
 
   console.log('AttendanceOverview calculations:', {
+    totalActiveEmployees,
     holidayCount,
     clockedInCount,
     clockedOutCount,
-    totalEmployees: employees.length,
     attendanceRecords: attendanceData.length,
+    leaves: leaves.length,
     clockedInEmployees: clockedInEmployees.length,
     clockedOutEmployees: clockedOutEmployees.length
   });
@@ -263,7 +267,7 @@ const AttendanceOverview = () => {
         employees={getEmployeesForModal()}
         attendanceData={{
           present: clockedInCount,
-          total: employees.length,
+          total: totalActiveEmployees,
           holiday: holidayCount,
           absent: clockedOutCount
         }}
