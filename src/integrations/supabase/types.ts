@@ -2274,6 +2274,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_update_user_password: {
+        Args: { user_email: string; new_password: string }
+        Returns: Json
+      }
       anonymize_user_data: {
         Args: { target_user_id: string }
         Returns: Json
