@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, AlertCircle, CheckCircle } from "lucide-react";
+import { Shield, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 export const UpdatePasswordForm = () => {
   const [email, setEmail] = useState("");
@@ -18,18 +19,47 @@ export const UpdatePasswordForm = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<"email" | "password">("email");
+  const [hasValidSession, setHasValidSession] = useState<boolean | null>(null);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { updatePassword } = useAuth();
   const { toast } = useToast();
 
   const isResetMode = searchParams.get("reset") === "true";
+  const isRecoveryMode = searchParams.get("type") === "recovery";
 
   useEffect(() => {
-    // Ensure the user has a valid session recovery token in the URL
-    // This is set automatically by Supabase when they click the reset link
-    console.log("Update password form initialized, reset mode:", isResetMode);
-  }, [isResetMode]);
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Session check error:", error);
+          setHasValidSession(false);
+          return;
+        }
+        
+        // Check if we have a valid session or recovery tokens in the URL
+        const hasAccessToken = window.location.hash.includes("access_token=");
+        const hasRecoveryToken = searchParams.has("token") || hasAccessToken;
+        
+        if (session || hasRecoveryToken || isRecoveryMode) {
+          setHasValidSession(true);
+          // Skip email step if we have a valid session/token
+          if (session || hasRecoveryToken) {
+            setStep("password");
+          }
+        } else {
+          setHasValidSession(false);
+        }
+      } catch (err) {
+        console.error("Error checking session:", err);
+        setHasValidSession(false);
+      }
+    };
+
+    checkSession();
+  }, [isResetMode, isRecoveryMode, searchParams]);
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,6 +138,56 @@ export const UpdatePasswordForm = () => {
       setIsLoading(false);
     }
   };
+
+  // Show loading while checking session
+  if (hasValidSession === null) {
+    return (
+      <Card className="w-full max-w-md mx-auto shadow-md">
+        <CardContent className="space-y-4 text-center py-6">
+          <div className="mx-auto bg-primary/10 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-2">
+            <Shield className="h-8 w-8 text-primary animate-pulse" />
+          </div>
+          <p className="text-gray-600">Verifying reset session...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show error if no valid session
+  if (hasValidSession === false) {
+    return (
+      <Card className="w-full max-w-md mx-auto shadow-md">
+        <CardHeader className="space-y-1">
+          <div className="mx-auto bg-red-100 p-2 rounded-full w-12 h-12 flex items-center justify-center mb-2">
+            <AlertCircle className="h-6 w-6 text-red-600" />
+          </div>
+          <CardTitle className="text-center text-2xl">Auth session missing!</CardTitle>
+          <CardDescription className="text-center">
+            No valid password reset session found. Please request a new password reset link.
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              This page can only be accessed through a valid password reset link sent to your email.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+        
+        <CardFooter className="flex flex-col space-y-2">
+          <Button 
+            onClick={() => navigate("/auth")} 
+            className="w-full"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Sign In
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md mx-auto shadow-md">
