@@ -49,10 +49,10 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onCli
           // Check if user has manager access to determine the correct tab
           const hasManagerAccess = isManager || isAdmin || isHR;
           
-          // For "New Leave Request" notifications, managers should go to manager tab to approve
+          // For "New Leave Request" notifications, managers should go to approval dashboard to approve
           // For leave status updates, employees should go to employee tab to see their status
           if (hasManagerAccess && notification.title === 'New Leave Request') {
-            navigate('/leave-management', { state: { initialView: 'manager' } });
+            navigate('/leave-management', { state: { initialView: 'approval-dashboard' } });
           } else {
             navigate('/leave-management', { state: { initialView: 'employee' } });
           }
