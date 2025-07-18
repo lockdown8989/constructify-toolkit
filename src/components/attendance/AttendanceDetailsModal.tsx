@@ -22,6 +22,7 @@ import {
   Eye,
 } from "lucide-react";
 import { useAttendance } from "@/hooks/use-attendance";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { format } from "date-fns";
 
 interface AttendanceDetailsModalProps {
@@ -39,6 +40,7 @@ const AttendanceDetailsModal = ({
 }: AttendanceDetailsModalProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const { data: attendanceData, isLoading } = useAttendance(employeeId, selectedDate);
+  const isMobile = useIsMobile();
 
   // Mock detailed attendance data - in real app, this would come from API
   const attendanceRecords = [
@@ -117,40 +119,40 @@ const AttendanceDetailsModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto sm:max-w-[95vw] sm:h-[90vh] sm:p-4">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Eye className="h-5 w-5" />
+      <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[95vh] p-3' : 'max-w-6xl max-h-[90vh]'} overflow-y-auto`}>
+        <DialogHeader className={isMobile ? 'pb-3' : ''}>
+          <DialogTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
+            <Eye className={isMobile ? 'h-4 w-4' : 'h-5 w-5'} />
             Attendance Details - {employeeName}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className={isMobile ? 'text-sm' : ''}>
             Comprehensive attendance overview and detailed records
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="overview" className="w-full">
-          <div className="flex justify-between items-center mb-4">
-            <TabsList className="grid w-fit grid-cols-3">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="records">Daily Records</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'justify-between items-center'} mb-4`}>
+            <TabsList className={`grid w-full grid-cols-3 ${isMobile ? 'h-9' : ''}`}>
+              <TabsTrigger value="overview" className={isMobile ? 'text-xs px-2' : ''}>Overview</TabsTrigger>
+              <TabsTrigger value="records" className={isMobile ? 'text-xs px-2' : ''}>Daily Records</TabsTrigger>
+              <TabsTrigger value="analytics" className={isMobile ? 'text-xs px-2' : ''}>Analytics</TabsTrigger>
             </TabsList>
-            <Button onClick={exportDetailedData} variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export Details
+            <Button onClick={exportDetailedData} variant="outline" size={isMobile ? 'sm' : 'sm'} className={isMobile ? 'w-full' : ''}>
+              <Download className={`${isMobile ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'}`} />
+              {isMobile ? 'Export' : 'Export Details'}
             </Button>
           </div>
 
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className={isMobile ? 'space-y-4' : 'space-y-6'}>
             {/* Summary Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 md:grid-cols-4 gap-4'}`}>
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-gray-600">This Month</CardTitle>
+                <CardHeader className={isMobile ? 'pb-1 px-3 pt-3' : 'pb-2'}>
+                  <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>This Month</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{attendanceData?.present || 1}</div>
-                  <div className="text-xs text-green-600 flex items-center">
+                <CardContent className={isMobile ? 'px-3 pb-3' : ''}>
+                  <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>{attendanceData?.present || 4}</div>
+                  <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-green-600 flex items-center`}>
                     <TrendingUp className="h-3 w-3 mr-1" />
                     +1 vs last month
                   </div>
@@ -158,12 +160,12 @@ const AttendanceDetailsModal = ({
               </Card>
               
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-gray-600">Total Hours</CardTitle>
+                <CardHeader className={isMobile ? 'pb-1 px-3 pt-3' : 'pb-2'}>
+                  <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Total Hours</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">42.5h</div>
-                  <div className="text-xs text-green-600 flex items-center">
+                <CardContent className={isMobile ? 'px-3 pb-3' : ''}>
+                  <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>42.5h</div>
+                  <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-green-600 flex items-center`}>
                     <TrendingUp className="h-3 w-3 mr-1" />
                     +5.2h vs last month
                   </div>
@@ -171,12 +173,12 @@ const AttendanceDetailsModal = ({
               </Card>
               
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-gray-600">Overtime</CardTitle>
+                <CardHeader className={isMobile ? 'pb-1 px-3 pt-3' : 'pb-2'}>
+                  <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Overtime</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">2.5h</div>
-                  <div className="text-xs text-red-600 flex items-center">
+                <CardContent className={isMobile ? 'px-3 pb-3' : ''}>
+                  <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>2.5h</div>
+                  <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-red-600 flex items-center`}>
                     <TrendingDown className="h-3 w-3 mr-1" />
                     -1.2h vs last month
                   </div>
@@ -184,12 +186,12 @@ const AttendanceDetailsModal = ({
               </Card>
               
               <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-gray-600">Attendance Rate</CardTitle>
+                <CardHeader className={isMobile ? 'pb-1 px-3 pt-3' : 'pb-2'}>
+                  <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Attendance Rate</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">95%</div>
-                  <div className="text-xs text-gray-600 flex items-center">
+                <CardContent className={isMobile ? 'px-3 pb-3' : ''}>
+                  <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>95%</div>
+                  <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-600 flex items-center`}>
                     <Minus className="h-3 w-3 mr-1" />
                     Same as last month
                   </div>
@@ -199,29 +201,31 @@ const AttendanceDetailsModal = ({
 
             {/* Recent Activity */}
             <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Last 7 days attendance summary</CardDescription>
+              <CardHeader className={isMobile ? 'px-3 py-3' : ''}>
+                <CardTitle className={isMobile ? 'text-base' : ''}>Recent Activity</CardTitle>
+                <CardDescription className={isMobile ? 'text-sm' : ''}>Last 7 days attendance summary</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+              <CardContent className={isMobile ? 'px-3 pb-3' : ''}>
+                <div className={isMobile ? 'space-y-2' : 'space-y-3'}>
                   {attendanceRecords.slice(0, 4).map((record, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
+                    <div key={index} className={`${isMobile ? 'flex flex-col gap-2 p-2' : 'flex items-center justify-between p-3'} bg-gray-50 rounded-lg`}>
+                      <div className={`flex items-center ${isMobile ? 'justify-between' : 'gap-3'}`}>
                         <div className="flex items-center gap-2">
                           <CalendarIcon className="h-4 w-4 text-gray-500" />
-                          <span className="font-medium">{record.date}</span>
+                          <span className={`font-medium ${isMobile ? 'text-sm' : ''}`}>{record.date}</span>
                         </div>
-                        <Badge className={getStatusColor(record.status)}>
-                          {record.status}
-                        </Badge>
-                        {record.isLate && (
-                          <Badge variant="outline" className="text-yellow-600 border-yellow-300">
-                            Late
+                        <div className="flex gap-1">
+                          <Badge className={`${getStatusColor(record.status)} ${isMobile ? 'text-xs px-2 py-0.5' : ''}`}>
+                            {record.status}
                           </Badge>
-                        )}
+                          {record.isLate && (
+                            <Badge variant="outline" className={`text-yellow-600 border-yellow-300 ${isMobile ? 'text-xs px-2 py-0.5' : ''}`}>
+                              Late
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <div className={`flex items-center ${isMobile ? 'justify-between text-xs' : 'gap-4 text-sm'} text-gray-600`}>
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {record.checkIn} - {record.checkOut}
@@ -238,40 +242,40 @@ const AttendanceDetailsModal = ({
             </Card>
           </TabsContent>
 
-          <TabsContent value="records" className="space-y-4">
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="md:col-span-1">
+          <TabsContent value="records" className={isMobile ? 'space-y-3' : 'space-y-4'}>
+            <div className={`${isMobile ? 'flex flex-col gap-4' : 'grid md:grid-cols-3 gap-6'}`}>
+              <div className={isMobile ? 'order-2' : 'md:col-span-1'}>
                 <Calendar
                   mode="single"
                   selected={selectedDate}
                   onSelect={(date) => date && setSelectedDate(date)}
-                  className="rounded-md border"
+                  className={`rounded-md border ${isMobile ? 'w-full' : ''}`}
                 />
               </div>
               
-              <div className="md:col-span-2">
+              <div className={`${isMobile ? 'order-1' : 'md:col-span-2'}`}>
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Daily Records</CardTitle>
-                    <CardDescription>Detailed attendance records with timestamps</CardDescription>
+                  <CardHeader className={isMobile ? 'px-3 py-3' : ''}>
+                    <CardTitle className={isMobile ? 'text-base' : ''}>Daily Records</CardTitle>
+                    <CardDescription className={isMobile ? 'text-sm' : ''}>Detailed attendance records with timestamps</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
+                  <CardContent className={isMobile ? 'px-3 pb-3' : ''}>
+                    <div className={isMobile ? 'space-y-2' : 'space-y-3'}>
                       {attendanceRecords.map((record, index) => (
-                        <div key={index} className="border rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-3">
+                        <div key={index} className={`border rounded-lg ${isMobile ? 'p-3' : 'p-4'}`}>
+                          <div className={`flex justify-between items-start ${isMobile ? 'mb-2' : 'mb-3'}`}>
                             <div className="flex items-center gap-2">
-                              <h4 className="font-medium">{record.date}</h4>
-                              <Badge className={getStatusColor(record.status)}>
+                              <h4 className={`font-medium ${isMobile ? 'text-sm' : ''}`}>{record.date}</h4>
+                              <Badge className={`${getStatusColor(record.status)} ${isMobile ? 'text-xs px-2 py-0.5' : ''}`}>
                                 {record.status}
                               </Badge>
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500`}>
                               {record.hoursWorked}
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className={`grid grid-cols-2 ${isMobile ? 'gap-2 text-xs' : 'gap-4 text-sm'}`}>
                             <div>
                               <span className="text-gray-500">Check In:</span>
                               <span className="ml-2 font-medium">{record.checkIn}</span>
@@ -298,24 +302,24 @@ const AttendanceDetailsModal = ({
             </div>
           </TabsContent>
 
-          <TabsContent value="analytics" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
+          <TabsContent value="analytics" className={isMobile ? 'space-y-3' : 'space-y-6'}>
+            <div className={`${isMobile ? 'flex flex-col gap-4' : 'grid md:grid-cols-2 gap-6'}`}>
               <Card>
-                <CardHeader>
-                  <CardTitle>Monthly Trends</CardTitle>
-                  <CardDescription>Attendance patterns over the last 6 months</CardDescription>
+                <CardHeader className={isMobile ? 'px-3 py-3' : ''}>
+                  <CardTitle className={isMobile ? 'text-base' : ''}>Monthly Trends</CardTitle>
+                  <CardDescription className={isMobile ? 'text-sm' : ''}>Attendance patterns over the last 6 months</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+                <CardContent className={isMobile ? 'px-3 pb-3' : ''}>
+                  <div className={isMobile ? 'space-y-2' : 'space-y-4'}>
                     {[
                       { month: "July 2025", attendance: 95, hours: 168 },
                       { month: "June 2025", attendance: 98, hours: 175 },
                       { month: "May 2025", attendance: 92, hours: 162 },
                       { month: "April 2025", attendance: 96, hours: 170 },
                     ].map((data, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="font-medium">{data.month}</span>
-                        <div className="flex gap-4 text-sm">
+                      <div key={index} className={`flex justify-between items-center ${isMobile ? 'p-2' : 'p-3'} bg-gray-50 rounded-lg`}>
+                        <span className={`font-medium ${isMobile ? 'text-sm' : ''}`}>{data.month}</span>
+                        <div className={`flex ${isMobile ? 'gap-2 text-xs' : 'gap-4 text-sm'}`}>
                           <span>{data.attendance}% attendance</span>
                           <span>{data.hours}h total</span>
                         </div>
@@ -326,25 +330,25 @@ const AttendanceDetailsModal = ({
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle>Performance Insights</CardTitle>
-                  <CardDescription>Key attendance metrics and recommendations</CardDescription>
+                <CardHeader className={isMobile ? 'px-3 py-3' : ''}>
+                  <CardTitle className={isMobile ? 'text-base' : ''}>Performance Insights</CardTitle>
+                  <CardDescription className={isMobile ? 'text-sm' : ''}>Key attendance metrics and recommendations</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <h4 className="font-medium text-green-800 mb-1">Excellent Attendance</h4>
-                      <p className="text-sm text-green-600">Consistently above 90% attendance rate</p>
+                <CardContent className={isMobile ? 'px-3 pb-3' : ''}>
+                  <div className={isMobile ? 'space-y-2' : 'space-y-4'}>
+                    <div className={`${isMobile ? 'p-2' : 'p-3'} bg-green-50 border border-green-200 rounded-lg`}>
+                      <h4 className={`font-medium text-green-800 mb-1 ${isMobile ? 'text-sm' : ''}`}>Excellent Attendance</h4>
+                      <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-green-600`}>Consistently above 90% attendance rate</p>
                     </div>
                     
-                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <h4 className="font-medium text-blue-800 mb-1">Punctuality</h4>
-                      <p className="text-sm text-blue-600">Average check-in time: 8:58 AM</p>
+                    <div className={`${isMobile ? 'p-2' : 'p-3'} bg-blue-50 border border-blue-200 rounded-lg`}>
+                      <h4 className={`font-medium text-blue-800 mb-1 ${isMobile ? 'text-sm' : ''}`}>Punctuality</h4>
+                      <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-blue-600`}>Average check-in time: 8:58 AM</p>
                     </div>
                     
-                    <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                      <h4 className="font-medium text-orange-800 mb-1">Overtime Trend</h4>
-                      <p className="text-sm text-orange-600">2.5 hours this month (within limits)</p>
+                    <div className={`${isMobile ? 'p-2' : 'p-3'} bg-orange-50 border border-orange-200 rounded-lg`}>
+                      <h4 className={`font-medium text-orange-800 mb-1 ${isMobile ? 'text-sm' : ''}`}>Overtime Trend</h4>
+                      <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-orange-600`}>2.5 hours this month (within limits)</p>
                     </div>
                   </div>
                 </CardContent>
@@ -353,8 +357,8 @@ const AttendanceDetailsModal = ({
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>
+        <div className={`flex justify-end gap-2 pt-4 border-t ${isMobile ? 'px-3' : ''}`}>
+          <Button variant="outline" onClick={onClose} className={isMobile ? 'w-full' : ''}>
             Close
           </Button>
         </div>
