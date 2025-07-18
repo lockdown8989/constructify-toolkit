@@ -85,10 +85,7 @@ export default function ModernLeaveCalendar() {
 
   const handleDateClick = (date: Date) => {
     setSelectedDate(date);
-    const dateLeavess = getLeavesForDate(date);
-    if (dateLeavess.length > 0) {
-      setShowDetailsModal(true);
-    }
+    setShowDetailsModal(true);
   };
 
   const filteredLeaves = leaves.filter(leave => {
