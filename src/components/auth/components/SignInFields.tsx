@@ -1,9 +1,9 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useInputSanitization } from "@/hooks/auth/useInputSanitization";
 
 interface SignInFieldsProps {
@@ -22,10 +22,15 @@ export const SignInFields: React.FC<SignInFieldsProps> = ({
   onForgotPassword
 }) => {
   const { sanitizeEmail } = useInputSanitization();
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = sanitizeEmail(e.target.value);
     onEmailChange({ ...e, target: { ...e.target, value: sanitized } });
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -54,15 +59,28 @@ export const SignInFields: React.FC<SignInFieldsProps> = ({
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
           <Input
             id="password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder="Enter your password"
             value={password}
             onChange={onPasswordChange}
-            className="pl-10"
+            className="pl-10 pr-10"
             required
             autoComplete="current-password"
             maxLength={128}
           />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-transparent"
+            onClick={togglePasswordVisibility}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4 text-gray-500" />
+            ) : (
+              <Eye className="h-4 w-4 text-gray-500" />
+            )}
+          </Button>
         </div>
       </div>
       
