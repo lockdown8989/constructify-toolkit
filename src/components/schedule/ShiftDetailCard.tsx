@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { format, isToday, isTomorrow, isYesterday, isAfter, isBefore } from 'date-fns';
-import { MapPin, Clock, User, Building, MessageCircle, CheckCircle, X, Edit, FileText } from 'lucide-react';
+import { MapPin, Clock, User, Building, MessageCircle, CheckCircle, X, Edit, FileText, Mail, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import ShiftResponseActions from './ShiftResponseActions';
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateSchedule, useCanEditShift } from '@/hooks/use-schedules';
 import DraftShiftIndicator from './components/DraftShiftIndicator';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ShiftDetailCardProps {
   schedule: Schedule;
@@ -31,6 +32,7 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
   const { updateSchedule, isUpdating } = useUpdateSchedule();
   const { mutate: checkCanEdit } = useCanEditShift();
   const [isEditing, setIsEditing] = useState(false);
+  const isMobile = useIsMobile();
   
   const startTime = new Date(schedule.start_time);
   const endTime = new Date(schedule.end_time);
@@ -111,13 +113,14 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
 
   return (
     <Card className={cn(
-      "p-4 border-l-4 bg-white shadow-sm hover:shadow-md transition-shadow",
+      "border-l-4 bg-white shadow-sm hover:shadow-md transition-shadow",
+      isMobile ? "p-3" : "p-4",
       schedule.is_draft ? "border-l-orange-500 bg-orange-50" : "border-l-green-500"
     )}>
       {/* Header with date and status */}
-      <div className="flex items-center justify-between mb-3">
+      <div className={`flex items-center justify-between ${isMobile ? 'mb-2' : 'mb-3'}`}>
         <div className="flex items-center gap-2">
-          <div className="text-lg font-semibold">
+          <div className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>
             {formatDateLabel(startTime)}
           </div>
           <DraftShiftIndicator 
@@ -129,7 +132,7 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
           {schedule.can_be_edited && (
             <Button
               variant="ghost"
-              size="sm"
+              size={isMobile ? "sm" : "sm"}
               onClick={handleEdit}
               disabled={isUpdating}
             >
@@ -139,63 +142,69 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
           {schedule.is_draft && (
             <Button
               variant="outline"
-              size="sm"
+              size={isMobile ? "sm" : "sm"}
               onClick={handlePublish}
               disabled={isUpdating}
               className="text-green-600 border-green-200 hover:bg-green-50"
             >
-              <FileText className="h-4 w-4 mr-1" />
-              Publish
+              <FileText className={`h-4 w-4 ${isMobile ? '' : 'mr-1'}`} />
+              {!isMobile && "Publish"}
             </Button>
           )}
-          <Badge className={cn("text-white", getStatusColor(schedule.status))}>
+          <Badge className={cn("text-white text-xs", getStatusColor(schedule.status))}>
             {schedule.status || 'confirmed'}
           </Badge>
         </div>
       </div>
 
       {/* Time and Hours */}
-      <div className="grid grid-cols-3 gap-4 mb-3">
+      <div className={`grid grid-cols-3 gap-3 ${isMobile ? 'mb-2' : 'mb-3'}`}>
         <div>
-          <div className="text-sm text-gray-500">Start</div>
-          <div className="text-lg font-semibold">
-            {format(startTime, 'hh:mm a')}
+          <div className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'}`}>Start</div>
+          <div className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>
+            {format(startTime, isMobile ? 'h:mm' : 'hh:mm')}
+          </div>
+          <div className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+            {format(startTime, 'a')}
           </div>
         </div>
         <div>
-          <div className="text-sm text-gray-500">End</div>
-          <div className="text-lg font-semibold">
-            {format(endTime, 'hh:mm a')}
+          <div className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'}`}>End</div>
+          <div className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>
+            {format(endTime, isMobile ? 'h:mm' : 'hh:mm')}
+          </div>
+          <div className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+            {format(endTime, 'a')}
           </div>
         </div>
         <div>
-          <div className="text-sm text-gray-500">Hours</div>
-          <div className="text-lg font-semibold">{hours}</div>
+          <div className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-sm'}`}>Hours</div>
+          <div className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>{hours}</div>
         </div>
       </div>
 
       {/* Shift Details */}
-      <div className="space-y-2 mb-3">
-        <div className="text-lg font-medium">{schedule.title}</div>
+      <div className={`space-y-2 ${isMobile ? 'mb-2' : 'mb-3'}`}>
+        <div className={`font-medium ${isMobile ? 'text-base' : 'text-lg'}`}>{schedule.title}</div>
         
         {schedule.location && (
           <div className="flex items-center gap-2 text-gray-600">
             <MapPin className="h-4 w-4" />
-            <span className="text-sm">{schedule.location}</span>
+            <span className={isMobile ? 'text-xs' : 'text-sm'}>{schedule.location}</span>
           </div>
         )}
 
         {schedule.notes && (
           <div className="flex items-start gap-2 text-gray-600">
             <MessageCircle className="h-4 w-4 mt-0.5" />
-            <span className="text-sm">{schedule.notes}</span>
+            <span className={isMobile ? 'text-xs' : 'text-sm'}>{schedule.notes}</span>
           </div>
         )}
 
         {schedule.draft_notes && schedule.is_draft && (
           <div className="flex items-start gap-2 text-orange-600">
             <FileText className="h-4 w-4 mt-0.5" />
-            <span className="text-sm italic">Draft notes: {schedule.draft_notes}</span>
+            <span className={`italic ${isMobile ? 'text-xs' : 'text-sm'}`}>Draft notes: {schedule.draft_notes}</span>
           </div>
         )}
       </div>
@@ -209,27 +218,29 @@ const ShiftDetailCard: React.FC<ShiftDetailCardProps> = ({
       )}
 
       {/* Info and Actions */}
-      <div className="flex gap-2 mt-3">
+      <div className={`flex gap-2 ${isMobile ? 'mt-2' : 'mt-3'}`}>
         <Button 
           variant="outline" 
-          size="sm" 
+          size={isMobile ? "sm" : "sm"}
           onClick={onInfoClick}
-          className="flex-1"
+          className={`flex-1 ${isMobile ? 'px-2 text-xs' : ''}`}
         >
-          View Details
+          <Info className="h-4 w-4 mr-1" />
+          {isMobile ? "Details" : "View Details"}
         </Button>
         <Button 
           variant="outline" 
-          size="sm" 
+          size={isMobile ? "sm" : "sm"}
           onClick={onEmailClick}
-          className="flex-1"
+          className={`flex-1 ${isMobile ? 'px-2 text-xs' : ''}`}
         >
-          Contact Manager
+          <Mail className="h-4 w-4 mr-1" />
+          {isMobile ? "Contact" : "Contact Manager"}
         </Button>
         {(schedule.status === 'pending' || schedule.is_draft) && (
           <Button 
             variant="outline" 
-            size="sm" 
+            size={isMobile ? "sm" : "sm"}
             onClick={onCancelClick}
             className="text-red-600 hover:text-red-700 hover:bg-red-50"
           >
