@@ -2,6 +2,7 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/use-auth';
 import type { Notification } from '@/hooks/use-notifications';
 
 interface NotificationItemProps {
@@ -11,6 +12,7 @@ interface NotificationItemProps {
 
 const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onClick }) => {
   const navigate = useNavigate();
+  const { isManager, isAdmin, isHR } = useAuth();
 
   const getNotificationTimeAgo = (createdAt: string) => {
     try {
@@ -44,8 +46,16 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onCli
     if (notification.related_entity) {
       switch (notification.related_entity) {
         case 'leave_calendar':
-          // Navigate to the leave management page with employee tab focus
-          navigate('/leave-management', { state: { initialView: 'employee' } });
+          // Check if user has manager access to determine the correct tab
+          const hasManagerAccess = isManager || isAdmin || isHR;
+          
+          // For "New Leave Request" notifications, managers should go to manager tab to approve
+          // For leave status updates, employees should go to employee tab to see their status
+          if (hasManagerAccess && notification.title === 'New Leave Request') {
+            navigate('/leave-management', { state: { initialView: 'manager' } });
+          } else {
+            navigate('/leave-management', { state: { initialView: 'employee' } });
+          }
           break;
         case 'schedules':
           navigate('/schedule');
