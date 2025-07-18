@@ -26,10 +26,19 @@ export const useAuthActions = () => {
   };
 
   const resetPassword = async (email: string) => {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth?type=recovery`,
-    });
-    return { data, error };
+    try {
+      const { data, error } = await supabase.functions.invoke('send-password-reset', {
+        body: { email }
+      });
+      
+      if (error) {
+        return { data: null, error };
+      }
+      
+      return { data, error: null };
+    } catch (error: any) {
+      return { data: null, error: { message: error.message || 'Failed to send reset email' } };
+    }
   };
 
   const updatePassword = async (password: string) => {
