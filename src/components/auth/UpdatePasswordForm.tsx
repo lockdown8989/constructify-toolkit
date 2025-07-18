@@ -178,7 +178,11 @@ export const UpdatePasswordForm = () => {
         
         <CardFooter className="flex flex-col space-y-2">
           <Button 
-            onClick={() => navigate("/auth")} 
+            onClick={() => {
+              // Clear URL parameters to return to normal sign-in
+              navigate("/auth", { replace: true });
+              window.location.reload();
+            }} 
             className="w-full"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
