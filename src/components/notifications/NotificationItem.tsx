@@ -78,16 +78,27 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onCli
 
   return (
     <div 
-      className={`p-4 border-b hover:bg-muted/50 cursor-pointer ${getNotificationBgColor(notification.type, notification.read)}`}
+      className={`p-3 sm:p-4 border-b hover:bg-muted/50 cursor-pointer transition-colors ${getNotificationBgColor(notification.type, notification.read)}`}
       onClick={handleNotificationClick}
     >
-      <div className="flex justify-between items-start">
-        <p className="font-medium">{notification.title}</p>
-        <span className="text-xs text-muted-foreground">
-          {getNotificationTimeAgo(notification.created_at)}
-        </span>
+      <div className="flex justify-between items-start gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm sm:text-base leading-tight mb-1 break-words">
+            {notification.title}
+          </p>
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed break-words">
+            {notification.message}
+          </p>
+        </div>
+        <div className="flex-shrink-0 flex flex-col items-end gap-1">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            {getNotificationTimeAgo(notification.created_at)}
+          </span>
+          {!notification.read && (
+            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+          )}
+        </div>
       </div>
-      <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
     </div>
   );
 };

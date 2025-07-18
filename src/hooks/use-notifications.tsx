@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { notificationSoundService } from '@/services/notification-sound';
 
 export interface Notification {
   id: string;
@@ -47,13 +48,19 @@ export const useNotifications = () => {
         },
         (payload) => {
           console.log('useNotifications: New notification received:', payload);
-          setNotifications(prevNotifications => [payload.new as Notification, ...prevNotifications]);
+          const newNotification = payload.new as Notification;
+          
+          setNotifications(prevNotifications => [newNotification, ...prevNotifications]);
           setUnreadCount(prevCount => prevCount + 1);
           
-          // Show a toast for the new notification
+          // Play notification sound
+          notificationSoundService.playNotificationSound();
+          
+          // Show a toast for the new notification with better mobile styling
           toast({
-            title: (payload.new as Notification).title,
-            description: (payload.new as Notification).message,
+            title: newNotification.title,
+            description: newNotification.message,
+            duration: 5000,
           });
         }
       )
