@@ -11,11 +11,13 @@ import { Shield, AlertCircle, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const UpdatePasswordForm = () => {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState<"email" | "password">("email");
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { updatePassword } = useAuth();
@@ -29,7 +31,26 @@ export const UpdatePasswordForm = () => {
     console.log("Update password form initialized, reset mode:", isResetMode);
   }, [isResetMode]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    
+    if (!email.trim()) {
+      setError("Please enter your email address");
+      return;
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+    
+    setStep("password");
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     
@@ -94,59 +115,110 @@ export const UpdatePasswordForm = () => {
         <div className="mx-auto bg-primary/10 p-2 rounded-full w-12 h-12 flex items-center justify-center mb-2">
           <Shield className="h-6 w-6 text-primary" />
         </div>
-        <CardTitle className="text-center text-2xl">Create New Password</CardTitle>
+        <CardTitle className="text-center text-2xl">
+          {step === "email" ? "Confirm Email Address" : "Create New Password"}
+        </CardTitle>
         <CardDescription className="text-center">
-          Please enter a new secure password for your account
+          {step === "email" 
+            ? "Please confirm the email address for this password reset"
+            : "Please enter a new secure password for your account"
+          }
         </CardDescription>
-        <p className="text-xs text-center text-gray-500">
-          This reset was initiated from TeamPulse &lt;tampulseagent@gmail.com&gt;
-        </p>
+        {step === "password" && (
+          <p className="text-xs text-center text-gray-500">
+            Password reset for: <strong>{email}</strong>
+          </p>
+        )}
       </CardHeader>
       
       {!success ? (
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="new-password">New Password</Label>
-              <Input
-                id="new-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter new password"
-                required
-                minLength={6}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm Password</Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
-                required
-                minLength={6}
-              />
-              <p className="text-xs text-gray-500">Password must be at least 6 characters</p>
-            </div>
-          </CardContent>
-          
-          <CardFooter className="flex flex-col space-y-2">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Updating..." : "Update Password"}
-            </Button>
-          </CardFooter>
-        </form>
+        <>
+          {step === "email" ? (
+            <form onSubmit={handleEmailSubmit}>
+              <CardContent className="space-y-4">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email address"
+                    required
+                  />
+                  <p className="text-xs text-gray-500">
+                    Confirm the email address associated with your account
+                  </p>
+                </div>
+              </CardContent>
+              
+              <CardFooter className="flex flex-col space-y-2">
+                <Button type="submit" className="w-full">
+                  Continue
+                </Button>
+              </CardFooter>
+            </form>
+          ) : (
+            <form onSubmit={handlePasswordSubmit}>
+              <CardContent className="space-y-4">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <Input
+                    id="new-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    required
+                    minLength={6}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirm Password</Label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    required
+                    minLength={6}
+                  />
+                  <p className="text-xs text-gray-500">Password must be at least 6 characters</p>
+                </div>
+              </CardContent>
+              
+              <CardFooter className="flex flex-col space-y-2">
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Updating..." : "Update Password"}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  className="w-full" 
+                  onClick={() => setStep("email")}
+                >
+                  Back to Email
+                </Button>
+              </CardFooter>
+            </form>
+          )}
+        </>
       ) : (
         <CardContent className="space-y-4 text-center py-6">
           <div className="mx-auto bg-green-100 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-2">
