@@ -139,9 +139,15 @@ const MobileCalendarView: React.FC<MobileCalendarViewProps> = ({ shiftState, han
     });
 
     const totalShifts = periodSchedules.length;
-    const rotaShifts = periodSchedules.filter(s => s.shift_type === 'rota' || s.recurring).length;
+    // Check multiple ways to identify rota shifts: recurring flag, rota shift_type, or template_id
+    const rotaShifts = periodSchedules.filter(s => 
+      s.recurring === true || 
+      s.shift_type === 'rota' || 
+      s.shift_type === 'recurring' ||
+      s.template_id !== null
+    ).length;
     const singleShifts = totalShifts - rotaShifts;
-    const totalEmployees = new Set(periodSchedules.map(s => s.employee_id)).size;
+    const totalEmployees = new Set(periodSchedules.map(s => s.employee_id).filter(Boolean)).size;
     const totalOpenShifts = openShifts.filter(shift => {
       const shiftDate = new Date(shift.start_time);
       return currentPeriodDays.some(day => isSameDay(shiftDate, day));
