@@ -175,7 +175,7 @@ export default function ModernLeaveCalendar() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className={`min-h-screen bg-gradient-to-br from-background via-background to-muted/20 ${isMobile ? 'pb-16' : ''}`}>
       {/* Header */}
       <div className={cn(
         "sticky top-0 z-50 backdrop-blur-xl border-b transition-all duration-300",
@@ -183,21 +183,23 @@ export default function ModernLeaveCalendar() {
           ? "bg-background/80 border-border/40" 
           : "bg-white/80 border-gray-200/40"
       )}>
-        <div className="px-4 py-6">
+        <div className={cn("px-4 py-4", isMobile ? "px-3 py-3" : "px-4 py-6")}>
           {/* Top Bar */}
-          <div className="flex items-center justify-between mb-6">
+          <div className={cn("flex items-center justify-between", isMobile ? "mb-3" : "mb-6")}>
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Menu className="h-5 w-5" />
-              </Button>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Leave Calendar</h1>
-                <p className="text-sm text-muted-foreground">Manage team leave requests</p>
+                <h1 className={cn("font-bold text-foreground", isMobile ? "text-xl" : "text-2xl")}>
+                  Leave Calendar
+                </h1>
+                <p className={cn("text-muted-foreground", isMobile ? "text-xs" : "text-sm")}>
+                  {isMobile ? "Team leave" : "Manage team leave requests"}
+                </p>
               </div>
             </div>
             
             <Button
               variant="outline"
+              size={isMobile ? "sm" : "default"}
               onClick={() => setShowFilters(!showFilters)}
               className={cn(
                 "rounded-full border-border/40 backdrop-blur-sm transition-all duration-300",
@@ -205,38 +207,38 @@ export default function ModernLeaveCalendar() {
                 resolvedTheme === 'dark' ? "bg-card/60" : "bg-white/60"
               )}
             >
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
+              <Filter className={cn("mr-2", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+              {!isMobile && "Filters"}
             </Button>
           </div>
 
           {/* Month Navigation */}
-          <div className="flex items-center justify-between mb-6">
+          <div className={cn("flex items-center justify-between", isMobile ? "mb-3" : "mb-6")}>
             <Button
               variant="ghost"
-              size="icon"
+              size={isMobile ? "sm" : "icon"}
               onClick={() => setCurrentDate(subMonths(currentDate, 1))}
               className="rounded-full hover:shadow-md transition-all duration-300 hover:scale-110 transform-gpu"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className={cn(isMobile ? "h-4 w-4" : "h-5 w-5")} />
             </Button>
             
-            <h2 className="text-xl font-bold text-foreground">
-              {format(currentDate, 'MMMM yyyy')}
+            <h2 className={cn("font-bold text-foreground", isMobile ? "text-lg" : "text-xl")}>
+              {format(currentDate, isMobile ? 'MMM yyyy' : 'MMMM yyyy')}
             </h2>
             
             <Button
               variant="ghost"
-              size="icon"
+              size={isMobile ? "sm" : "icon"}
               onClick={() => setCurrentDate(addMonths(currentDate, 1))}
               className="rounded-full hover:shadow-md transition-all duration-300 hover:scale-110 transform-gpu"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className={cn(isMobile ? "h-4 w-4" : "h-5 w-5")} />
             </Button>
           </div>
 
           {/* View Toggle */}
-          <div className="flex justify-center mb-6">
+          <div className={cn("flex justify-center", isMobile ? "mb-3" : "mb-6")}>
             <div className={cn(
               "flex rounded-2xl p-1 transition-all duration-300",
               "backdrop-blur-sm border border-border/40",
@@ -244,20 +246,20 @@ export default function ModernLeaveCalendar() {
             )}>
               <Button
                 variant={viewType === 'month' ? 'default' : 'ghost'}
-                size="sm"
+                size={isMobile ? "sm" : "sm"}
                 onClick={() => setViewType('month')}
                 className="rounded-xl transition-all duration-300 hover:scale-105 transform-gpu"
               >
-                <Calendar className="h-4 w-4 mr-2" />
+                <Calendar className={cn("mr-2", isMobile ? "h-3 w-3" : "h-4 w-4")} />
                 Month
               </Button>
               <Button
                 variant={viewType === 'list' ? 'default' : 'ghost'}
-                size="sm"
+                size={isMobile ? "sm" : "sm"}
                 onClick={() => setViewType('list')}
                 className="rounded-xl transition-all duration-300 hover:scale-105 transform-gpu"
               >
-                <List className="h-4 w-4 mr-2" />
+                <List className={cn("mr-2", isMobile ? "h-3 w-3" : "h-4 w-4")} />
                 List
               </Button>
             </div>
@@ -266,17 +268,23 @@ export default function ModernLeaveCalendar() {
           {/* Leave Type Legend */}
           {showFilters && (
             <div className={cn(
-              "rounded-2xl p-4 mb-4 backdrop-blur-sm border transition-all duration-500",
+              "rounded-2xl p-3 mb-3 backdrop-blur-sm border transition-all duration-500",
               "animate-in slide-in-from-top-2",
               resolvedTheme === 'dark' 
                 ? "bg-card/60 border-border/40" 
-                : "bg-white/60 border-gray-200/40"
+                : "bg-white/60 border-gray-200/40",
+              isMobile ? "p-2" : "p-4"
             )}>
-              <div className="flex flex-wrap gap-3">
+              <div className={cn(
+                "flex flex-wrap gap-2",
+                isMobile ? "gap-2" : "gap-3"
+              )}>
                 {Object.entries(LEAVE_TYPE_COLORS).map(([type, color]) => (
                   <div key={type} className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform duration-200">
-                    <div className={cn("w-3 h-3 rounded-full shadow-sm", color)} />
-                    <span className="text-sm text-foreground">{type}</span>
+                    <div className={cn("rounded-full shadow-sm", color, isMobile ? "w-2 h-2" : "w-3 h-3")} />
+                    <span className={cn("text-foreground", isMobile ? "text-xs" : "text-sm")}>
+                      {type}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -289,16 +297,132 @@ export default function ModernLeaveCalendar() {
       <div className="flex-1">
         {viewType === 'month' ? (
           <Card className={cn(
-            "m-4 shadow-xl border-0 rounded-3xl overflow-hidden transition-all duration-500",
+            "shadow-xl border-0 rounded-3xl overflow-hidden transition-all duration-500",
             "backdrop-blur-sm border border-border/40",
-            resolvedTheme === 'dark' ? "bg-card/60" : "bg-white/60"
+            resolvedTheme === 'dark' ? "bg-card/60" : "bg-white/60",
+            isMobile ? "m-2 rounded-2xl" : "m-4 rounded-3xl"
           )}>
             <CardContent className="p-0">
-              {renderCalendarGrid()}
+              <div className={cn("grid grid-cols-7", isMobile ? "gap-1 p-3" : "gap-3 p-6")}>
+                {/* Day headers */}
+                {(isMobile ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']).map((dayName, index) => (
+                  <div key={dayName} className="text-center text-sm font-bold text-muted-foreground pb-2">
+                    {dayName}
+                  </div>
+                ))}
+                
+                {/* Calendar days */}
+                {(() => {
+                  const days = [];
+                  let day = startDate;
+
+                  while (day <= endDate) {
+                    const dayLeaves = getLeavesForDate(day);
+                    const isCurrentMonth = isSameMonth(day, currentDate);
+                    const isCurrentDay = isToday(day);
+                    const isSelected = selectedDate && isSameDay(day, selectedDate);
+                    
+                    days.push(
+                      <div
+                        key={day.toString()}
+                        className={cn(
+                          "relative cursor-pointer transition-all duration-300 rounded-xl border backdrop-blur-sm",
+                          "hover:scale-[1.02] hover:shadow-lg transform-gpu",
+                          isCurrentMonth 
+                            ? resolvedTheme === 'dark' 
+                              ? "bg-card/60 border-border/40 text-card-foreground hover:bg-card/80" 
+                              : "bg-white/60 border-gray-200/40 hover:bg-white/80"
+                            : resolvedTheme === 'dark'
+                              ? "bg-muted/20 border-border/20 text-muted-foreground"
+                              : "bg-gray-50/40 border-gray-100/40 text-gray-400",
+                          isCurrentDay && "ring-2 ring-primary/50 bg-primary/10 shadow-md",
+                          isSelected && "ring-2 ring-primary shadow-xl scale-[1.02]",
+                          isMobile ? "h-10 p-1" : "h-16 md:h-20 p-2"
+                        )}
+                        onClick={() => {
+                          setSelectedDate(day);
+                        }}
+                      >
+                        <div className={cn(
+                          "font-semibold transition-colors duration-200",
+                          isCurrentDay && "text-primary font-bold",
+                          isMobile ? "text-xs mb-0" : "text-sm mb-1"
+                        )}>
+                          {format(day, 'd')}
+                        </div>
+                        
+                        {dayLeaves.length > 0 && (
+                          <div className={cn(
+                            "absolute flex flex-wrap gap-1",
+                            isMobile ? "bottom-0 left-0 right-0 justify-center" : "bottom-2 left-2 right-2"
+                          )}>
+                            {dayLeaves.slice(0, isMobile ? 2 : 3).map((leave, index) => (
+                              <div
+                                key={`${leave.id}-${index}`}
+                                className={cn(
+                                  "rounded-full shadow-sm transition-transform duration-200 hover:scale-125",
+                                  LEAVE_TYPE_COLORS[leave.type] || LEAVE_TYPE_COLORS['Other'],
+                                  isMobile ? "w-1 h-1" : "w-2 h-2"
+                                )}
+                              />
+                            ))}
+                            {dayLeaves.length > (isMobile ? 2 : 3) && (
+                              <div className={cn(
+                                "text-muted-foreground font-medium bg-background/80 rounded",
+                                isMobile ? "text-[10px] px-0.5" : "text-xs px-1"
+                              )}>
+                                +{dayLeaves.length - (isMobile ? 2 : 3)}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                    
+                    day = addDays(day, 1);
+                  }
+
+                  return days;
+                })()}
+              </div>
             </CardContent>
           </Card>
         ) : (
-          renderListView()
+          <div className={cn(isMobile ? "p-3 space-y-3" : "p-6 space-y-4")}>
+            {filteredLeaves.map((leave) => (
+              <Card key={leave.id} className={cn(
+                "transition-all duration-300 hover:shadow-lg hover:scale-[1.01] transform-gpu",
+                "backdrop-blur-sm border-border/40",
+                resolvedTheme === 'dark' ? "bg-card/60" : "bg-white/60"
+              )}>
+                <CardContent className={cn(isMobile ? "p-3" : "p-4")}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "rounded-full shadow-sm",
+                        LEAVE_TYPE_COLORS[leave.type] || LEAVE_TYPE_COLORS['Other'],
+                        isMobile ? "w-3 h-3" : "w-4 h-4"
+                      )} />
+                      <div>
+                        <div className={cn("font-semibold text-foreground", isMobile ? "text-sm" : "text-base")}>
+                          {getEmployeeName(leave.employee_id)}
+                        </div>
+                        <div className={cn("text-muted-foreground", isMobile ? "text-xs" : "text-sm")}>
+                          {leave.type} • {format(new Date(leave.start_date), 'MMM d')} - {format(new Date(leave.end_date), 'MMM d')}
+                        </div>
+                      </div>
+                    </div>
+                    <Badge 
+                      variant={leave.status === 'Approved' ? 'default' : 'secondary'} 
+                      className={cn("rounded-full", isMobile ? "text-xs" : "")}
+                    >
+                      {leave.status}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
 
@@ -309,20 +433,21 @@ export default function ModernLeaveCalendar() {
           ? "bg-background/80 border-border/40" 
           : "bg-white/80 border-gray-200/40"
       )}>
-        <div className="p-4">
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-muted-foreground">
+        <div className={cn(isMobile ? "p-3" : "p-4")}>
+          <div className={cn(
+            "flex items-center",
+            isMobile ? "flex-col space-y-2 text-center" : "justify-between"
+          )}>
+            <div className={cn("text-muted-foreground", isMobile ? "text-xs" : "text-sm")}>
               {filteredLeaves.length} leave request{filteredLeaves.length !== 1 ? 's' : ''} this month
             </div>
-            <div className="flex gap-4 text-sm">
-              <span className="font-medium text-foreground">
-                Total Days: {filteredLeaves.reduce((acc, leave) => {
-                  const start = new Date(leave.start_date);
-                  const end = new Date(leave.end_date);
-                  const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                  return acc + days;
-                }, 0)}
-              </span>
+            <div className={cn("text-foreground font-medium", isMobile ? "text-xs" : "text-sm")}>
+              Total Days: {filteredLeaves.reduce((acc, leave) => {
+                const start = new Date(leave.start_date);
+                const end = new Date(leave.end_date);
+                const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                return acc + days;
+              }, 0)}
             </div>
           </div>
         </div>
