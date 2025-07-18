@@ -25,6 +25,7 @@ const People = lazy(() => import('./pages/People'));
 const Attendance = lazy(() => import('./pages/Attendance'));
 const Payroll = lazy(() => import('./pages/Payroll'));
 const PayrollDashboard = lazy(() => import('./pages/PayrollDashboard'));
+const PayrollReports = lazy(() => import('./pages/PayrollReports'));
 const Payslips = lazy(() => import('./pages/Payslips'));
 const Schedule = lazy(() => import('./pages/Schedule'));
 const ShiftPatterns = lazy(() => import('./pages/ShiftPatterns'));
@@ -141,6 +142,13 @@ const AppContent = () => {
               <ProtectedRoute requiredRole="payroll">
                 <Suspense fallback={<LoadingSpinner />}>
                   <PayrollDashboard />
+                </Suspense>
+              </ProtectedRoute>
+            } />
+            <Route path="payroll-reports" element={
+              <ProtectedRoute requiredRole="payroll">
+                <Suspense fallback={<LoadingSpinner />}>
+                  <PayrollReports />
                 </Suspense>
               </ProtectedRoute>
             } />
