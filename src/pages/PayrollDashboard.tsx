@@ -17,9 +17,12 @@ import { PayrollReportsTab } from '@/components/payroll/tabs/PayrollReportsTab';
 import { PayrollCalendarTab } from '@/components/payroll/tabs/PayrollCalendarTab';
 import { PayrollApprovalsTab } from '@/components/payroll/tabs/PayrollApprovalsTab';
 import { formatCurrency } from '@/utils/format';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 const PayrollDashboard = () => {
   const { user, isPayroll } = useAuth();
+  const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [timeRange, setTimeRange] = useState<'day' | 'week' | 'month'>('month');
@@ -128,50 +131,91 @@ const PayrollDashboard = () => {
   };
 
   return (
-    <div className="container py-6 animate-fade-in">
+    <div className={cn(
+      "animate-fade-in pb-safe-area-inset-bottom",
+      isMobile ? "px-4 py-4" : "container py-6"
+    )}>
       <PayrollHeader
         lastUpdated={payrollMetrics.lastUpdated}
         isProcessing={isProcessing}
         onManualSync={manualSync}
       />
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="processing">Processing</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
-          <TabsTrigger value="approvals">Approvals</TabsTrigger>
+      <Tabs defaultValue="overview" className={cn("space-y-6", isMobile && "space-y-4")}>
+        <TabsList className={cn(
+          "grid w-full",
+          isMobile 
+            ? "grid-cols-3 gap-1 h-auto p-1" 
+            : "grid-cols-5"
+        )}>
+          <TabsTrigger 
+            value="overview" 
+            className={cn(
+              isMobile && "text-xs px-2 py-3 touch-target"
+            )}
+          >
+            {isMobile ? "Home" : "Overview"}
+          </TabsTrigger>
+          <TabsTrigger 
+            value="processing"
+            className={cn(
+              isMobile && "text-xs px-2 py-3 touch-target"
+            )}
+          >
+            {isMobile ? "Process" : "Processing"}
+          </TabsTrigger>
+          <TabsTrigger 
+            value="reports"
+            className={cn(
+              isMobile && "text-xs px-2 py-3 touch-target"
+            )}
+          >
+            Reports
+          </TabsTrigger>
+          {!isMobile && (
+            <>
+              <TabsTrigger value="calendar">Calendar</TabsTrigger>
+              <TabsTrigger value="approvals">Approvals</TabsTrigger>
+            </>
+          )}
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          <PayrollStatsCards
-            totalEmployees={actualEmployeeCount}
-            pendingEmployees={payrollMetrics.pendingEmployees}
-            overtimeHours={overtimeHours}
-            onCardClick={handleCardClick}
-          />
+        <TabsContent value="overview" className={cn("space-y-6", isMobile && "space-y-4")}>
+          <div className={cn(isMobile && "mobile-scroll-container")}>
+            <PayrollStatsCards
+              totalEmployees={actualEmployeeCount}
+              pendingEmployees={payrollMetrics.pendingEmployees}
+              overtimeHours={overtimeHours}
+              onCardClick={handleCardClick}
+            />
 
-          <PayrollOverviewChart
-            data={payrollMetrics.chartData}
-            timeRange={timeRange}
-            onTimeRangeChange={handleTimeRangeChange}
-            isLoading={isLoading}
-            onRefresh={refetch}
-            lastUpdated={payrollMetrics.lastUpdated}
-          />
+            <div className={cn(isMobile && "mt-4")}>
+              <PayrollOverviewChart
+                data={payrollMetrics.chartData}
+                timeRange={timeRange}
+                onTimeRangeChange={handleTimeRangeChange}
+                isLoading={isLoading}
+                onRefresh={refetch}
+                lastUpdated={payrollMetrics.lastUpdated}
+              />
+            </div>
 
-          <PayrollInsights analysis={payrollMetrics.analysis} />
+            <div className={cn(isMobile && "mt-4")}>
+              <PayrollInsights analysis={payrollMetrics.analysis} />
+            </div>
 
-          <PayrollEmployeeTable
-            employees={employees}
-            actualEmployeeCount={actualEmployeeCount}
-            searchQuery={searchQuery}
-            viewMode={viewMode}
-            isLoading={isLoading || employeeLoading}
-            onSearchChange={setSearchQuery}
-            onViewModeChange={setViewMode}
-          />
+            <div className={cn(isMobile && "mt-4")}>
+              <PayrollEmployeeTable
+                employees={employees}
+                actualEmployeeCount={actualEmployeeCount}
+                searchQuery={searchQuery}
+                viewMode={viewMode}
+                isLoading={isLoading || employeeLoading}
+                onSearchChange={setSearchQuery}
+                onViewModeChange={setViewMode}
+              />
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="processing">
