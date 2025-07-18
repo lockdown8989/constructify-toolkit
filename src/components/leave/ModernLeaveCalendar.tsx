@@ -364,7 +364,7 @@ export default function ModernLeaveCalendar() {
                         key={day.toString()}
                         className={cn(
                           "relative cursor-pointer transition-all duration-300 rounded-xl border backdrop-blur-sm",
-                          "hover:scale-[1.02] hover:shadow-lg transform-gpu",
+                          "hover:scale-[1.02] hover:shadow-lg transform-gpu active:scale-95",
                           isCurrentMonth 
                             ? resolvedTheme === 'dark' 
                               ? "bg-card/60 border-border/40 text-card-foreground hover:bg-card/80" 
@@ -374,6 +374,7 @@ export default function ModernLeaveCalendar() {
                               : "bg-gray-50/40 border-gray-100/40 text-gray-400",
                           isCurrentDay && "ring-2 ring-primary/50 bg-primary/10 shadow-md",
                           isSelected && "ring-2 ring-primary shadow-xl scale-[1.02]",
+                          dayLeaves.length > 0 && "ring-1 ring-blue-200 bg-blue-50/30",
                           isMobile ? "h-10 p-1" : "h-16 md:h-20 p-2"
                         )}
                         onClick={() => handleDateClick(day)}
@@ -496,79 +497,149 @@ export default function ModernLeaveCalendar() {
       {/* Date Details Modal */}
       <Dialog open={showDetailsModal} onOpenChange={setShowDetailsModal}>
         <DialogContent className={cn(
-          "max-w-4xl max-h-[90vh] overflow-hidden",
-          isMobile ? "w-[95vw] h-[90vh] rounded-2xl" : ""
+          "max-w-4xl max-h-[90vh] overflow-hidden animate-scale-in",
+          isMobile ? "w-[95vw] h-[85vh] rounded-2xl p-4" : "rounded-3xl"
         )}>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              {selectedDate && format(selectedDate, 'EEEE, MMMM d, yyyy')}
+          <DialogHeader className={cn(isMobile ? "pb-2" : "pb-4")}>
+            <DialogTitle className={cn(
+              "flex items-center gap-2",
+              isMobile ? "text-lg" : "text-xl"
+            )}>
+              <Calendar className={cn(isMobile ? "h-4 w-4" : "h-5 w-5")} />
+              {selectedDate && format(selectedDate, isMobile ? 'MMM d, yyyy' : 'EEEE, MMMM d, yyyy')}
             </DialogTitle>
           </DialogHeader>
           
           {selectedDate && (
             <Tabs defaultValue="today" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="today">Today's Leaves</TabsTrigger>
-                <TabsTrigger value="employees">Employee History</TabsTrigger>
+              <TabsList className={cn(
+                "grid w-full grid-cols-2 mb-4",
+                isMobile ? "h-9" : "h-10"
+              )}>
+                <TabsTrigger value="today" className={cn(
+                  "transition-all duration-200",
+                  isMobile ? "text-xs" : "text-sm"
+                )}>
+                  {isMobile ? "Today" : "Today's Leaves"}
+                </TabsTrigger>
+                <TabsTrigger value="employees" className={cn(
+                  "transition-all duration-200",
+                  isMobile ? "text-xs" : "text-sm"
+                )}>
+                  {isMobile ? "History" : "Employee History"}
+                </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="today" className="mt-4 max-h-[60vh] overflow-y-auto">
-                <div className="space-y-4">
+              <TabsContent value="today" className={cn(
+                "mt-0 animate-fade-in",
+                isMobile ? "max-h-[55vh]" : "max-h-[60vh]",
+                "overflow-y-auto"
+              )}>
+                <div className={cn("space-y-3", isMobile ? "space-y-2" : "space-y-4")}>
                   {getLeavesForDate(selectedDate).length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>No leave requests for this date</p>
+                    <div className="text-center py-8 text-muted-foreground animate-fade-in">
+                      <Calendar className={cn(
+                        "mx-auto mb-4 opacity-50",
+                        isMobile ? "h-8 w-8" : "h-12 w-12"
+                      )} />
+                      <p className={cn(isMobile ? "text-sm" : "text-base")}>
+                        No leave requests for this date
+                      </p>
+                      <p className={cn(
+                        "text-xs text-muted-foreground mt-2",
+                        isMobile ? "text-xs" : "text-sm"
+                      )}>
+                        All employees are available
+                      </p>
                     </div>
                   ) : (
-                    getLeavesForDate(selectedDate).map((leave) => {
+                    getLeavesForDate(selectedDate).map((leave, index) => {
                       const employee = employees.find(emp => emp.id === leave.employee_id);
                       return (
-                        <Card key={leave.id} className="p-4">
-                          <div className="flex items-start gap-4">
+                        <Card key={leave.id} className={cn(
+                          "p-3 transition-all duration-300 hover:shadow-lg hover:scale-[1.01] animate-fade-in border-l-4",
+                          LEAVE_TYPE_COLORS[leave.type] ? `border-l-${LEAVE_TYPE_COLORS[leave.type].split('-')[1]}-500` : "border-l-gray-500",
+                          isMobile ? "p-3" : "p-4"
+                        )} style={{
+                          animationDelay: `${index * 100}ms`,
+                          borderLeftColor: leave.type === 'Holiday' ? '#3b82f6' : 
+                                         leave.type === 'Sickness' ? '#ef4444' :
+                                         leave.type === 'Personal' ? '#a855f7' :
+                                         leave.type === 'Parental' ? '#22c55e' : '#6b7280'
+                        }}>
+                          <div className="flex items-start gap-3">
                             <div className={cn(
-                              "w-4 h-4 rounded-full mt-1 flex-shrink-0",
-                              LEAVE_TYPE_COLORS[leave.type] || LEAVE_TYPE_COLORS['Other']
+                              "rounded-full mt-1 flex-shrink-0 shadow-sm",
+                              LEAVE_TYPE_COLORS[leave.type] || LEAVE_TYPE_COLORS['Other'],
+                              isMobile ? "w-3 h-3" : "w-4 h-4"
                             )} />
                             
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-2">
-                                <User className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-semibold">
-                                  {getEmployeeName(leave.employee_id)}
-                                </span>
-                                <Badge variant={leave.status === 'Approved' ? 'default' : 'secondary'}>
+                              <div className={cn(
+                                "flex items-center gap-2 mb-2",
+                                isMobile ? "flex-col items-start gap-1" : "flex-row"
+                              )}>
+                                <div className="flex items-center gap-2">
+                                  <User className={cn(
+                                    "text-muted-foreground",
+                                    isMobile ? "h-3 w-3" : "h-4 w-4"
+                                  )} />
+                                  <span className={cn(
+                                    "font-semibold",
+                                    isMobile ? "text-sm" : "text-base"
+                                  )}>
+                                    {getEmployeeName(leave.employee_id)}
+                                  </span>
+                                </div>
+                                <Badge variant={leave.status === 'Approved' ? 'default' : 
+                                              leave.status === 'Pending' ? 'secondary' : 'destructive'} 
+                                       className={cn(
+                                         "text-xs",
+                                         isMobile ? "px-2 py-0.5" : "px-2 py-1"
+                                       )}>
                                   {leave.status}
                                 </Badge>
                               </div>
                               
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground mb-3">
+                              <div className={cn(
+                                "grid gap-2 text-sm text-muted-foreground mb-3",
+                                isMobile ? "grid-cols-1 gap-1.5" : "grid-cols-1 md:grid-cols-2 gap-2"
+                              )}>
                                 <div className="flex items-center gap-2">
-                                  <Clock className="h-3 w-3" />
-                                  <span>{leave.type} Leave</span>
+                                  <Clock className={cn(isMobile ? "h-3 w-3" : "h-3 w-3")} />
+                                  <span className={cn(isMobile ? "text-xs" : "text-sm")}>
+                                    {leave.type} Leave
+                                  </span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <Calendar className="h-3 w-3" />
-                                  <span>
+                                  <Calendar className={cn(isMobile ? "h-3 w-3" : "h-3 w-3")} />
+                                  <span className={cn(isMobile ? "text-xs" : "text-sm")}>
                                     {format(new Date(leave.start_date), 'MMM d')} - {format(new Date(leave.end_date), 'MMM d')}
                                   </span>
                                 </div>
                                 {employee && (
                                   <>
                                     <div className="flex items-center gap-2">
-                                      <Briefcase className="h-3 w-3" />
-                                      <span>{employee.job_title}</span>
+                                      <Briefcase className={cn(isMobile ? "h-3 w-3" : "h-3 w-3")} />
+                                      <span className={cn(isMobile ? "text-xs" : "text-sm")}>
+                                        {employee.job_title}
+                                      </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      <MapPin className="h-3 w-3" />
-                                      <span>{employee.department}</span>
+                                      <MapPin className={cn(isMobile ? "h-3 w-3" : "h-3 w-3")} />
+                                      <span className={cn(isMobile ? "text-xs" : "text-sm")}>
+                                        {employee.department}
+                                      </span>
                                     </div>
                                   </>
                                 )}
                               </div>
                               
                               {leave.notes && (
-                                <div className="bg-muted/50 rounded-lg p-3 text-sm">
+                                <div className={cn(
+                                  "bg-muted/50 rounded-lg p-2.5 text-sm animate-fade-in",
+                                  isMobile ? "text-xs p-2" : "text-sm p-3"
+                                )}>
                                   <strong>Notes:</strong> {leave.notes}
                                 </div>
                               )}
@@ -581,100 +652,208 @@ export default function ModernLeaveCalendar() {
                 </div>
               </TabsContent>
               
-              <TabsContent value="employees" className="mt-4 max-h-[60vh] overflow-y-auto">
-                <div className="space-y-4">
-                  {employees.filter(emp => getEmployeeLeaveHistory(emp.id).length > 0).map((employee) => {
+              <TabsContent value="employees" className={cn(
+                "mt-0 animate-fade-in",
+                isMobile ? "max-h-[55vh]" : "max-h-[60vh]",
+                "overflow-y-auto"
+              )}>
+                <div className={cn("space-y-3", isMobile ? "space-y-2" : "space-y-4")}>
+                  {employees.filter(emp => getEmployeeLeaveHistory(emp.id).length > 0).length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground animate-fade-in">
+                      <User className={cn(
+                        "mx-auto mb-4 opacity-50",
+                        isMobile ? "h-8 w-8" : "h-12 w-12"
+                      )} />
+                      <p className={cn(isMobile ? "text-sm" : "text-base")}>
+                        No employee leave history found
+                      </p>
+                      <p className={cn(
+                        "text-xs text-muted-foreground mt-2",
+                        isMobile ? "text-xs" : "text-sm"
+                      )}>
+                        Employee leave data will appear here
+                      </p>
+                    </div>
+                  ) : (
+                    employees.filter(emp => getEmployeeLeaveHistory(emp.id).length > 0).map((employee, index) => {
                     const employeeLeaves = getEmployeeLeaveHistory(employee.id);
                     const totalDaysUsed = getEmployeeDaysUsed(employee.id);
                     const sickDaysUsed = getEmployeeDaysUsed(employee.id, 'Sickness');
                     const holidayDaysUsed = getEmployeeDaysUsed(employee.id, 'Holiday');
                     
-                    return (
-                      <Card key={employee.id} className="p-4">
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <h3 className="font-semibold text-lg">{employee.name}</h3>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <Briefcase className="h-3 w-3" />
-                                {employee.job_title}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3" />
-                                {employee.department}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-primary">{totalDaysUsed}</div>
-                            <div className="text-xs text-muted-foreground">Total Days Used</div>
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                          <div className="text-center p-2 bg-blue-50 rounded-lg">
-                            <div className="text-lg font-semibold text-blue-600">{holidayDaysUsed}</div>
-                            <div className="text-xs text-blue-600">Holiday Days</div>
-                            <div className="text-xs text-muted-foreground">
-                              of {employee.annual_leave_days || 25} available
-                            </div>
-                          </div>
-                          
-                          <div className="text-center p-2 bg-red-50 rounded-lg">
-                            <div className="text-lg font-semibold text-red-600">{sickDaysUsed}</div>
-                            <div className="text-xs text-red-600">Sick Days</div>
-                            <div className="text-xs text-muted-foreground">
-                              of {employee.sick_leave_days || 10} available
-                            </div>
-                          </div>
-                          
-                          <div className="text-center p-2 bg-green-50 rounded-lg">
-                            <div className="text-lg font-semibold text-green-600">
-                              {employeeLeaves.filter(l => l.status === 'Approved').length}
-                            </div>
-                            <div className="text-xs text-green-600">Approved</div>
-                          </div>
-                          
-                          <div className="text-center p-2 bg-yellow-50 rounded-lg">
-                            <div className="text-lg font-semibold text-yellow-600">
-                              {employeeLeaves.filter(l => l.status === 'Pending').length}
-                            </div>
-                            <div className="text-xs text-yellow-600">Pending</div>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
-                            <TrendingUp className="h-4 w-4" />
-                            Recent Leave History (This Year)
-                          </h4>
-                          {employeeLeaves.slice(0, 3).map((leave) => (
-                            <div key={leave.id} className="flex items-center gap-3 p-2 bg-muted/30 rounded-lg">
+                      return (
+                        <Card key={employee.id} className={cn(
+                          "p-3 transition-all duration-300 hover:shadow-lg animate-fade-in",
+                          isMobile ? "p-3" : "p-4"
+                        )} style={{
+                          animationDelay: `${index * 150}ms`
+                        }}>
+                          <div className={cn(
+                            "flex items-start justify-between mb-4",
+                            isMobile ? "flex-col gap-2" : "flex-row"
+                          )}>
+                            <div className="flex-1">
+                              <h3 className={cn(
+                                "font-semibold text-foreground",
+                                isMobile ? "text-base" : "text-lg"
+                              )}>
+                                {employee.name}
+                              </h3>
                               <div className={cn(
-                                "w-3 h-3 rounded-full",
-                                LEAVE_TYPE_COLORS[leave.type] || LEAVE_TYPE_COLORS['Other']
-                              )} />
-                              <div className="flex-1 flex items-center justify-between text-sm">
-                                <span>{leave.type}</span>
-                                <span className="text-muted-foreground">
-                                  {format(new Date(leave.start_date), 'MMM d')} - {format(new Date(leave.end_date), 'MMM d')}
+                                "flex items-center gap-4 text-muted-foreground mt-1",
+                                isMobile ? "flex-col items-start gap-1 text-xs" : "text-sm"
+                              )}>
+                                <span className="flex items-center gap-1">
+                                  <Briefcase className={cn(isMobile ? "h-3 w-3" : "h-3 w-3")} />
+                                  {employee.job_title}
                                 </span>
-                                <Badge variant={leave.status === 'Approved' ? 'default' : 'secondary'} className="text-xs">
-                                  {leave.status}
-                                </Badge>
+                                <span className="flex items-center gap-1">
+                                  <MapPin className={cn(isMobile ? "h-3 w-3" : "h-3 w-3")} />
+                                  {employee.department}
+                                </span>
                               </div>
                             </div>
-                          ))}
-                          {employeeLeaves.length > 3 && (
-                            <div className="text-center text-sm text-muted-foreground">
-                              +{employeeLeaves.length - 3} more leave requests this year
+                            
+                            <div className={cn(
+                              "text-center",
+                              isMobile ? "self-end" : "text-right"
+                            )}>
+                              <div className={cn(
+                                "font-bold text-primary",
+                                isMobile ? "text-xl" : "text-2xl"
+                              )}>
+                                {totalDaysUsed}
+                              </div>
+                              <div className={cn(
+                                "text-muted-foreground",
+                                isMobile ? "text-xs" : "text-xs"
+                              )}>
+                                Total Days Used
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      </Card>
-                    );
-                  })}
+                          </div>
+                          
+                          <div className={cn(
+                            "grid gap-3 mb-4",
+                            isMobile ? "grid-cols-2 gap-2" : "grid-cols-2 md:grid-cols-4 gap-4"
+                          )}>
+                            <div className={cn(
+                              "text-center p-2 bg-blue-50 rounded-lg transition-all duration-200 hover:scale-105",
+                              isMobile ? "p-2" : "p-2"
+                            )}>
+                              <div className={cn(
+                                "font-semibold text-blue-600",
+                                isMobile ? "text-base" : "text-lg"
+                              )}>
+                                {holidayDaysUsed}
+                              </div>
+                              <div className={cn(
+                                "text-blue-600",
+                                isMobile ? "text-xs" : "text-xs"
+                              )}>
+                                Holiday Days
+                              </div>
+                              <div className={cn(
+                                "text-muted-foreground",
+                                isMobile ? "text-[10px]" : "text-xs"
+                              )}>
+                                of {employee.annual_leave_days || 25} available
+                              </div>
+                            </div>
+                            
+                            <div className={cn(
+                              "text-center p-2 bg-red-50 rounded-lg transition-all duration-200 hover:scale-105",
+                              isMobile ? "p-2" : "p-2"
+                            )}>
+                              <div className={cn(
+                                "font-semibold text-red-600",
+                                isMobile ? "text-base" : "text-lg"
+                              )}>
+                                {sickDaysUsed}
+                              </div>
+                              <div className={cn(
+                                "text-red-600",
+                                isMobile ? "text-xs" : "text-xs"
+                              )}>
+                                Sick Days
+                              </div>
+                              <div className={cn(
+                                "text-muted-foreground",
+                                isMobile ? "text-[10px]" : "text-xs"
+                              )}>
+                                of {employee.sick_leave_days || 10} available
+                              </div>
+                            </div>
+                            
+                            {!isMobile && (
+                              <>
+                                <div className="text-center p-2 bg-green-50 rounded-lg transition-all duration-200 hover:scale-105">
+                                  <div className="text-lg font-semibold text-green-600">
+                                    {employeeLeaves.filter(l => l.status === 'Approved').length}
+                                  </div>
+                                  <div className="text-xs text-green-600">Approved</div>
+                                </div>
+                                
+                                <div className="text-center p-2 bg-yellow-50 rounded-lg transition-all duration-200 hover:scale-105">
+                                  <div className="text-lg font-semibold text-yellow-600">
+                                    {employeeLeaves.filter(l => l.status === 'Pending').length}
+                                  </div>
+                                  <div className="text-xs text-yellow-600">Pending</div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <h4 className={cn(
+                              "font-medium flex items-center gap-2 mb-2",
+                              isMobile ? "text-sm" : "text-sm"
+                            )}>
+                              <TrendingUp className={cn(isMobile ? "h-3 w-3" : "h-4 w-4")} />
+                              Recent Leave History ({new Date().getFullYear()})
+                            </h4>
+                            {employeeLeaves.slice(0, isMobile ? 2 : 3).map((leave, leaveIndex) => (
+                              <div key={leave.id} className={cn(
+                                "flex items-center gap-3 p-2 bg-muted/30 rounded-lg transition-all duration-200 hover:bg-muted/50 animate-fade-in",
+                                isMobile ? "p-2" : "p-2"
+                              )} style={{
+                                animationDelay: `${(index * 150) + (leaveIndex * 50)}ms`
+                              }}>
+                                <div className={cn(
+                                  "rounded-full",
+                                  LEAVE_TYPE_COLORS[leave.type] || LEAVE_TYPE_COLORS['Other'],
+                                  isMobile ? "w-2.5 h-2.5" : "w-3 h-3"
+                                )} />
+                                <div className={cn(
+                                  "flex-1 flex items-center justify-between",
+                                  isMobile ? "text-xs flex-col items-start gap-1" : "text-sm"
+                                )}>
+                                  <span className="font-medium">{leave.type}</span>
+                                  <span className="text-muted-foreground">
+                                    {format(new Date(leave.start_date), 'MMM d')} - {format(new Date(leave.end_date), 'MMM d')}
+                                  </span>
+                                  <Badge variant={leave.status === 'Approved' ? 'default' : 'secondary'} 
+                                         className={cn(
+                                           isMobile ? "text-[10px] px-1.5 py-0.5" : "text-xs"
+                                         )}>
+                                    {leave.status}
+                                  </Badge>
+                                </div>
+                              </div>
+                            ))}
+                            {employeeLeaves.length > (isMobile ? 2 : 3) && (
+                              <div className={cn(
+                                "text-center text-muted-foreground",
+                                isMobile ? "text-xs" : "text-sm"
+                              )}>
+                                +{employeeLeaves.length - (isMobile ? 2 : 3)} more leave requests this year
+                              </div>
+                            )}
+                          </div>
+                        </Card>
+                      );
+                    })
+                  )}
                 </div>
               </TabsContent>
             </Tabs>
