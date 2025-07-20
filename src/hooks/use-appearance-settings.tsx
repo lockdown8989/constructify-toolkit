@@ -163,6 +163,13 @@ export const AppearanceProvider = ({ children }: { children: React.ReactNode }) 
       }
     }
 
+    // Apply color scheme
+    if (settings.color_scheme && settings.color_scheme !== 'default') {
+      root.setAttribute('data-color-scheme', settings.color_scheme);
+    } else {
+      root.removeAttribute('data-color-scheme');
+    }
+
     // Apply font size
     root.style.setProperty('--app-font-size', 
       settings.font_size === 'small' ? '14px' : 
@@ -189,12 +196,25 @@ export const AppearanceProvider = ({ children }: { children: React.ReactNode }) 
     }
   };
 
-  // Apply settings on load
+  // Apply settings on load and when they change
   useEffect(() => {
     if (!isLoading) {
       applyThemeToDocument(settings);
     }
   }, [settings, isLoading]);
+
+  // Listen for system theme changes
+  useEffect(() => {
+    if (settings.theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = () => {
+        applyThemeToDocument(settings);
+      };
+      
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+  }, [settings.theme, settings]);
 
   return (
     <AppearanceContext.Provider value={{ settings, updateSettings, isLoading }}>

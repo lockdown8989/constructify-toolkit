@@ -98,4 +98,93 @@
   --apple-yellow: #FFCC00;
   --apple-teal: #64D2FF;
   --apple-pink: #FF2D55;
+
+  /* Font size variable */
+  --app-font-size: 16px;
+}
+
+/* Color Scheme Variations */
+[data-color-scheme="blue"] {
+  --primary: 221 83% 53%;
+  --primary-foreground: 0 0% 98%;
+  --accent: 221 83% 53%;
+  --accent-foreground: 0 0% 98%;
+}
+
+[data-color-scheme="green"] {
+  --primary: 142 71% 45%;
+  --primary-foreground: 0 0% 98%;
+  --accent: 142 71% 45%;
+  --accent-foreground: 0 0% 98%;
+}
+
+[data-color-scheme="purple"] {
+  --primary: 262 83% 58%;
+  --primary-foreground: 0 0% 98%;
+  --accent: 262 83% 58%;
+  --accent-foreground: 0 0% 98%;
+}
+
+[data-color-scheme="orange"] {
+  --primary: 25 95% 53%;
+  --primary-foreground: 0 0% 98%;
+  --accent: 25 95% 53%;
+  --accent-foreground: 0 0% 98%;
+}
+
+/* High Contrast Mode */
+.high-contrast {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 0%;
+  --border: 0 0% 20%;
+  --primary: 0 0% 0%;
+  --primary-foreground: 0 0% 100%;
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 20%;
+}
+
+.dark.high-contrast {
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --border: 0 0% 80%;
+  --primary: 0 0% 100%;
+  --primary-foreground: 0 0% 0%;
+  --muted: 0 0% 10%;
+  --muted-foreground: 0 0% 80%;
+}
+
+/* Reduced Motion */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Compact Mode */
+.compact-mode {
+  --app-spacing: 0.75rem;
+}
+
+.compact-mode .space-y-4 > * + * {
+  margin-top: 0.5rem;
+}
+
+.compact-mode .space-y-6 > * + * {
+  margin-top: 1rem;
+}
+
+.compact-mode .p-4 {
+  padding: 0.75rem;
+}
+
+.compact-mode .p-6 {
+  padding: 1rem;
+}
+
+/* Font Size Application */
+html {
+  font-size: var(--app-font-size);
 }
