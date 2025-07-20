@@ -42,6 +42,8 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       }
 
       try {
+        console.log('Fetching notification settings for user:', user.id);
+        
         const { data, error } = await supabase
           .from('notification_settings')
           .select('*')
@@ -50,6 +52,19 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
         if (error) {
           console.error('Error fetching notification settings:', error);
+          // Create default settings if error (likely doesn't exist)
+          const { error: insertError } = await supabase
+            .from('notification_settings')
+            .insert({
+              user_id: user.id,
+              ...defaultSettings,
+            });
+
+          if (insertError) {
+            console.error('Error creating default notification settings:', insertError);
+          } else {
+            setSettings(defaultSettings);
+          }
         } else if (data) {
           setSettings({
             email_notifications: data.email_notifications ?? true,
@@ -67,6 +82,8 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
           if (insertError) {
             console.error('Error creating default notification settings:', insertError);
+          } else {
+            setSettings(defaultSettings);
           }
         }
       } catch (error) {

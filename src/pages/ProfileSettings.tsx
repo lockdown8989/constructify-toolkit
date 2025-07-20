@@ -8,10 +8,13 @@ import { Loader2, ArrowLeft, User, Bell, Palette, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
+import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { PersonalInfoForm } from "@/components/profile-settings/PersonalInfoForm";
 import RegionalPreferencesForm from "@/components/profile-settings/RegionalPreferencesForm";
 import { DeleteAccountSection } from "@/components/profile-settings/DeleteAccountSection";
 import WeeklyAvailabilitySection from "@/components/profile/WeeklyAvailabilitySection";
+import { NotificationProvider } from "@/hooks/use-notification-settings";
+import { AppearanceProvider } from "@/hooks/use-appearance-settings";
 
 const ProfileSettings = () => {
   const { user, isLoading } = useAuth();
@@ -67,7 +70,9 @@ const ProfileSettings = () => {
               </CardTitle>
               <CardDescription>{t('manageNotifications')}</CardDescription>
             </CardHeader>
-            <NotificationSettings />
+            <NotificationProvider>
+              <NotificationSettings />
+            </NotificationProvider>
           </Card>
         );
       case 'appearance':
@@ -80,11 +85,9 @@ const ProfileSettings = () => {
               </CardTitle>
               <CardDescription>{t('customizeAppearance')}</CardDescription>
             </CardHeader>
-            <div className="p-6">
-              <p className="text-muted-foreground text-sm">
-                Additional appearance customization options will be available here in the future.
-              </p>
-            </div>
+            <AppearanceProvider>
+              <AppearanceSettings />
+            </AppearanceProvider>
           </Card>
         );
       case 'regional':

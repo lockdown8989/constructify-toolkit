@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      appearance_settings: {
+        Row: {
+          color_scheme: string
+          compact_mode: boolean
+          created_at: string
+          font_size: string
+          high_contrast: boolean
+          id: string
+          reduced_motion: boolean
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color_scheme?: string
+          compact_mode?: boolean
+          created_at?: string
+          font_size?: string
+          high_contrast?: boolean
+          id?: string
+          reduced_motion?: boolean
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color_scheme?: string
+          compact_mode?: boolean
+          created_at?: string
+          font_size?: string
+          high_contrast?: boolean
+          id?: string
+          reduced_motion?: boolean
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       attendance: {
         Row: {
           active_session: boolean | null
