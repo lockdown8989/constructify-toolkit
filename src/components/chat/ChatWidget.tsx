@@ -238,49 +238,59 @@ export const ChatWidget = () => {
   };
 
   const renderChatModeSelection = () => (
-    <div className="p-4 md:p-6 space-y-3 md:space-y-4">
-      <h3 className="font-semibold text-center mb-4 md:mb-6 text-base md:text-lg">Choose Chat Type</h3>
+    <div className="p-6 md:p-6 space-y-4 md:space-y-4 safe-area-inset">
+      <div className="flex items-center justify-between mb-6 md:mb-6">
+        <h3 className="font-semibold text-lg md:text-lg">Choose Chat Type</h3>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsOpen(false)}
+          className="p-2 h-auto touch-manipulation md:hidden"
+        >
+          <X className="w-5 h-5" />
+        </Button>
+      </div>
       
       <Button
         onClick={() => {
           setChatMode('ai');
           setMessages([]);
         }}
-        className="w-full h-14 md:h-16 bg-blue-50 hover:bg-blue-100 text-blue-700 border-2 border-blue-200 rounded-lg flex items-center gap-3 text-left touch-manipulation"
+        className="w-full h-16 md:h-16 bg-blue-50 hover:bg-blue-100 text-blue-700 border-2 border-blue-200 rounded-xl flex items-center gap-4 text-left touch-manipulation active:scale-[0.98] transition-transform"
         variant="outline"
       >
-        <Bot className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" />
+        <Bot className="w-7 h-7 md:w-6 md:h-6 flex-shrink-0" />
         <div className="text-left">
-          <div className="font-medium text-sm md:text-base">AI Assistant</div>
-          <div className="text-xs md:text-sm opacity-70">Get help with HR questions</div>
+          <div className="font-semibold text-base md:text-base">AI Assistant</div>
+          <div className="text-sm md:text-sm opacity-70">Get help with HR questions</div>
         </div>
       </Button>
 
       <Button
         onClick={() => setChatMode('human')}
-        className="w-full h-14 md:h-16 bg-green-50 hover:bg-green-100 text-green-700 border-2 border-green-200 rounded-lg flex items-center gap-3 text-left touch-manipulation"
+        className="w-full h-16 md:h-16 bg-green-50 hover:bg-green-100 text-green-700 border-2 border-green-200 rounded-xl flex items-center gap-4 text-left touch-manipulation active:scale-[0.98] transition-transform"
         variant="outline"
       >
-        <Users className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" />
+        <Users className="w-7 h-7 md:w-6 md:h-6 flex-shrink-0" />
         <div className="text-left">
-          <div className="font-medium text-sm md:text-base">Chat with Users</div>
-          <div className="text-xs md:text-sm opacity-70">Connect with colleagues</div>
+          <div className="font-semibold text-base md:text-base">Chat with Users</div>
+          <div className="text-sm md:text-sm opacity-70">Connect with colleagues</div>
         </div>
       </Button>
     </div>
   );
 
   const renderUserSelection = () => (
-    <div className="p-3 md:p-4 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-3 md:mb-4">
-        <h3 className="font-semibold text-sm md:text-base">Select User to Chat</h3>
+    <div className="p-4 md:p-4 h-full flex flex-col safe-area-inset">
+      <div className="flex items-center justify-between mb-4 md:mb-4">
+        <h3 className="font-semibold text-lg md:text-base">Select User to Chat</h3>
         <Button
           variant="ghost"
           size="sm"
           onClick={resetChat}
-          className="p-2 h-auto touch-manipulation"
+          className="p-3 h-auto touch-manipulation"
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </Button>
       </div>
       
@@ -297,7 +307,7 @@ export const ChatWidget = () => {
                 setSelectedUser(connectedUser);
                 setMessages([]);
               }}
-              className="w-full p-3 md:p-4 h-auto justify-start bg-muted/50 hover:bg-muted text-left touch-manipulation min-h-[56px]"
+              className="w-full p-4 md:p-4 h-auto justify-start bg-muted/50 hover:bg-muted text-left touch-manipulation min-h-[64px] rounded-xl active:scale-[0.98] transition-transform"
               variant="ghost"
             >
               <div className="flex items-center gap-3 w-full">
@@ -325,24 +335,24 @@ export const ChatWidget = () => {
 
   const renderChatInterface = () => (
     <>
-      <div className="p-3 md:p-4 bg-muted/50 border-b">
+      <div className="p-4 md:p-4 bg-muted/50 border-b safe-area-inset-top">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="sm"
               onClick={resetChat}
               className="p-2 h-auto touch-manipulation"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </Button>
-            <h3 className="font-semibold text-sm md:text-base truncate">
+            <h3 className="font-semibold text-lg md:text-base truncate">
               {chatMode === 'ai' ? 'AI Assistant' : selectedUser?.name || 'Chat'}
             </h3>
             {chatMode === 'human' && selectedUser && (
               <Circle 
                 className={cn(
-                  "w-2 h-2 md:w-3 md:h-3 ml-1 flex-shrink-0",
+                  "w-3 h-3 md:w-3 md:h-3 ml-1 flex-shrink-0",
                   selectedUser.isOnline ? "text-green-500 fill-current" : "text-gray-400"
                 )} 
               />
@@ -352,14 +362,14 @@ export const ChatWidget = () => {
             variant="ghost"
             size="sm"
             onClick={() => setIsOpen(false)}
-            className="p-2 h-auto touch-manipulation"
+            className="p-2 h-auto touch-manipulation md:hidden"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </Button>
         </div>
       </div>
       
-      <div className="flex-1 p-3 md:p-4 overflow-y-auto">
+      <div className="flex-1 p-4 md:p-4 overflow-y-auto">
         {messages.length === 0 ? (
           <p className="text-xs md:text-sm text-muted-foreground">
             {chatMode === 'ai' 
@@ -368,16 +378,16 @@ export const ChatWidget = () => {
             }
           </p>
         ) : (
-          <div className="space-y-3 md:space-y-4">
+          <div className="space-y-4 md:space-y-4">
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.isAi || msg.sender === 'AI Assistant' ? 'justify-start' : 'justify-end'}`}>
-                <div className={`max-w-[75%] md:max-w-xs rounded-lg p-3 md:p-4 ${
+                <div className={`max-w-[80%] md:max-w-xs rounded-2xl p-4 md:p-4 ${
                   msg.isAi || msg.sender === 'AI Assistant'
                     ? 'bg-muted text-foreground' 
                     : 'bg-primary text-primary-foreground'
                 }`}>
-                  <p className="text-xs md:text-sm leading-relaxed">{msg.content}</p>
-                  <p className="text-xs opacity-70 mt-1 md:mt-2">{msg.timestamp}</p>
+                  <p className="text-sm md:text-sm leading-relaxed">{msg.content}</p>
+                  <p className="text-xs opacity-70 mt-2 md:mt-2">{msg.timestamp}</p>
                 </div>
               </div>
             ))}
@@ -396,24 +406,24 @@ export const ChatWidget = () => {
         )}
       </div>
       
-      <div className="p-3 md:p-4 border-t bg-background">
-        <div className="flex gap-2">
+      <div className="p-4 md:p-4 border-t bg-background safe-area-inset-bottom">
+        <div className="flex gap-3">
           <input 
             type="text" 
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && (chatMode === 'ai' ? sendAiMessage() : sendHumanMessage())}
             placeholder="Type your message..."
-            className="flex-1 px-3 py-3 md:py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 touch-manipulation"
+            className="flex-1 px-4 py-4 md:py-3 text-base md:text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 touch-manipulation"
             disabled={isLoading}
           />
           <Button 
             size="sm" 
             onClick={chatMode === 'ai' ? sendAiMessage : sendHumanMessage}
             disabled={!message.trim() || isLoading || (chatMode === 'human' && !selectedUser)}
-            className="px-3 py-3 md:py-2 touch-manipulation"
+            className="px-4 py-4 md:py-3 touch-manipulation rounded-xl min-w-[56px]"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-5 h-5 md:w-4 md:h-4" />
           </Button>
         </div>
       </div>
@@ -425,11 +435,11 @@ export const ChatWidget = () => {
       {/* Chat Window */}
       {isOpen && (
         <div className={cn(
-          "fixed bg-background border border-border rounded-lg shadow-lg z-50 flex flex-col",
-          "bottom-20 right-4 w-96 h-[600px]", // Desktop
-          "md:bottom-20 md:right-4 md:w-96 md:h-[600px]", // Medium screens
-          "sm:bottom-16 sm:right-2 sm:left-2 sm:w-auto sm:h-[70vh] sm:max-h-[500px]", // Small screens - full width with margins
-          "xs:bottom-14 xs:right-1 xs:left-1 xs:w-auto xs:h-[75vh] xs:max-h-[450px]" // Extra small - almost full screen
+          "fixed bg-background border shadow-lg z-50 flex flex-col",
+          // Desktop
+          "md:bottom-20 md:right-4 md:w-96 md:h-[600px] md:rounded-lg md:border-border",
+          // Mobile - full screen experience
+          "max-md:inset-0 max-md:w-full max-md:h-full max-md:rounded-none max-md:border-0"
         )}>
           {chatMode === 'select' && renderChatModeSelection()}
           {chatMode === 'human' && !selectedUser && renderUserSelection()}
@@ -449,18 +459,18 @@ export const ChatWidget = () => {
         className={cn(
           "fixed shadow-lg z-40 p-0 touch-manipulation",
           "bg-primary hover:bg-primary/90 text-primary-foreground",
-          "transition-all duration-200 ease-in-out",
-          "bottom-4 right-4 w-14 h-14 rounded-full", // Desktop
-          "md:bottom-4 md:right-4 md:w-14 md:h-14", // Medium screens
-          "sm:bottom-6 sm:right-3 sm:w-12 sm:h-12", // Small screens - better positioning
-          "xs:bottom-8 xs:right-2 xs:w-11 xs:h-11" // Extra small - avoid mobile UI conflicts
+          "transition-all duration-200 ease-in-out rounded-full",
+          // Desktop
+          "md:bottom-4 md:right-4 md:w-14 md:h-14",
+          // Mobile - larger touch target, better positioning
+          "max-md:bottom-6 max-md:right-4 max-md:w-16 max-md:h-16"
         )}
         aria-label={isOpen ? "Close chat" : "Open chat"}
       >
         {isOpen ? (
-          <X className="w-5 h-5 md:w-6 md:h-6" />
+          <X className="w-6 h-6 md:w-6 md:h-6" />
         ) : (
-          <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
+          <MessageCircle className="w-6 h-6 md:w-6 md:h-6" />
         )}
       </Button>
     </>
