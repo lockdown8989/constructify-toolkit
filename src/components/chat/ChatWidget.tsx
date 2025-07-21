@@ -120,36 +120,34 @@ export const ChatWidget = () => {
       }
     });
 
-    // For admins, also get offline users from database
-    if (['admin', 'employer', 'hr'].includes(currentUserRole)) {
-      const { data: allEmployees } = await supabase
-        .from('employees')
-        .select(`
-          user_id,
-          name
-        `)
-        .neq('user_id', user.id);
+    // Get all employees from database so everyone can chat with each other
+    const { data: allEmployees } = await supabase
+      .from('employees')
+      .select(`
+        user_id,
+        name
+      `)
+      .neq('user_id', user.id);
 
-      if (allEmployees) {
-        // Get roles for all employees
-        const userIds = allEmployees.map(emp => emp.user_id);
-        const { data: userRoles } = await supabase
-          .from('user_roles')
-          .select('user_id, role')
-          .in('user_id', userIds);
+    if (allEmployees) {
+      // Get roles for all employees
+      const userIds = allEmployees.map(emp => emp.user_id);
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', userIds);
 
-        allEmployees.forEach(emp => {
-          if (!users.find(u => u.id === emp.user_id)) {
-            const userRole = userRoles?.find(r => r.user_id === emp.user_id);
-            users.push({
-              id: emp.user_id,
-              name: emp.name,
-              role: userRole?.role || 'employee',
-              isOnline: false,
-            });
-          }
-        });
-      }
+      allEmployees.forEach(emp => {
+        if (!users.find(u => u.id === emp.user_id)) {
+          const userRole = userRoles?.find(r => r.user_id === emp.user_id);
+          users.push({
+            id: emp.user_id,
+            name: emp.name,
+            role: userRole?.role || 'employee',
+            isOnline: false,
+          });
+        }
+      });
     }
 
     setConnectedUsers(users);
