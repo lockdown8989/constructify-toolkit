@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, X, Send, Bot, Users, Circle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useChat } from '@/hooks/use-chat';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
@@ -15,13 +16,26 @@ interface ConnectedUser {
 
 export const ChatWidget = () => {
   const { user } = useAuth();
+  const {
+    currentChat,
+    messages: chatMessages,
+    isLoading: chatLoading,
+    isTyping,
+    isAiMode,
+    setCurrentChat,
+    setIsAiMode,
+    createOrGetChat,
+    sendMessage: sendChatMessage,
+    sendAiMessage,
+    clearMessages,
+    messagesEndRef
+  } = useChat();
+  
   const [isOpen, setIsOpen] = useState(false);
   const [chatMode, setChatMode] = useState<'select' | 'ai' | 'human'>('select');
   const [selectedUser, setSelectedUser] = useState<ConnectedUser | null>(null);
   const [connectedUsers, setConnectedUsers] = useState<ConnectedUser[]>([]);
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<Array<{id: string, content: string, isAi: boolean, timestamp: string, sender?: string}>>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [currentUserRole, setCurrentUserRole] = useState<string>('');
 
   console.log('ChatWidget: Rendering, user:', user, 'isOpen:', isOpen, 'chatMode:', chatMode);
@@ -153,86 +167,27 @@ export const ChatWidget = () => {
     setConnectedUsers(users);
   };
 
-  const sendAiMessage = async () => {
-    if (!message.trim() || isLoading) return;
-
-    const userMessage = {
-      id: crypto.randomUUID(),
-      content: message.trim(),
-      isAi: false,
-      timestamp: new Date().toLocaleTimeString(),
-      sender: 'You'
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    const currentMessage = message;
+  const handleSendAiMessage = async () => {
+    if (!message.trim()) return;
+    
+    await sendAiMessage(message.trim());
     setMessage('');
-    setIsLoading(true);
-
-    try {
-      console.log('Sending message to AI:', currentMessage);
-      
-      const { data, error } = await supabase.functions.invoke('chat-ai-assistant', {
-        body: {
-          message: currentMessage,
-          conversationHistory: messages.slice(-5) // Last 5 messages for context
-        }
-      });
-
-      console.log('AI Response data:', data);
-      console.log('AI Response error:', error);
-
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw error;
-      }
-
-      const aiMessage = {
-        id: crypto.randomUUID(),
-        content: data.response || "I'm sorry, I couldn't process your request.",
-        isAi: true,
-        timestamp: new Date().toLocaleTimeString(),
-        sender: 'AI Assistant'
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
-      console.error('AI Error:', error);
-      const errorMessage = {
-        id: crypto.randomUUID(),
-        content: "Sorry, I'm having trouble responding right now. Please try again.",
-        isAi: true,
-        timestamp: new Date().toLocaleTimeString(),
-        sender: 'AI Assistant'
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
-  const sendHumanMessage = async () => {
-    if (!message.trim() || !selectedUser) return;
+  const handleSendHumanMessage = async () => {
+    if (!message.trim() || !currentChat) return;
 
-    // This would integrate with the existing chat system for human-to-human messaging
-    // For now, just add to local messages as a placeholder
-    const userMessage = {
-      id: crypto.randomUUID(),
-      content: message.trim(),
-      isAi: false,
-      timestamp: new Date().toLocaleTimeString(),
-      sender: 'You'
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+    await sendChatMessage(message.trim());
     setMessage('');
   };
 
   const resetChat = () => {
     setChatMode('select');
     setSelectedUser(null);
-    setMessages([]);
+    setCurrentChat(null);
+    clearMessages();
     setMessage('');
+    setIsAiMode(false);
   };
 
   const renderChatModeSelection = () => (
@@ -252,7 +207,8 @@ export const ChatWidget = () => {
       <Button
         onClick={() => {
           setChatMode('ai');
-          setMessages([]);
+          setIsAiMode(true);
+          clearMessages();
         }}
         className="w-full h-16 md:h-16 bg-blue-50 hover:bg-blue-100 text-blue-700 border-2 border-blue-200 rounded-xl flex items-center gap-4 text-left touch-manipulation active:scale-[0.98] transition-transform"
         variant="outline"
@@ -301,9 +257,19 @@ export const ChatWidget = () => {
           connectedUsers.map((connectedUser) => (
             <Button
               key={connectedUser.id}
-              onClick={() => {
+              onClick={async () => {
                 setSelectedUser(connectedUser);
-                setMessages([]);
+                setChatMode('human');
+                // Get employee ID for the selected user
+                const { data: employee } = await supabase
+                  .from('employees')
+                  .select('id')
+                  .eq('user_id', connectedUser.id)
+                  .single();
+                  
+                if (employee) {
+                  await createOrGetChat(employee.id);
+                }
               }}
               className="w-full p-4 md:p-4 h-auto justify-start bg-muted/50 hover:bg-muted text-left touch-manipulation min-h-[64px] rounded-xl active:scale-[0.98] transition-transform"
               variant="ghost"
@@ -368,7 +334,7 @@ export const ChatWidget = () => {
       </div>
       
       <div className="flex-1 p-4 md:p-4 overflow-y-auto">
-        {messages.length === 0 ? (
+        {chatMessages.length === 0 ? (
           <p className="text-xs md:text-sm text-muted-foreground">
             {chatMode === 'ai' 
               ? "Hi! I'm your AI assistant. How can I help you today?"
@@ -377,19 +343,34 @@ export const ChatWidget = () => {
           </p>
         ) : (
           <div className="space-y-4 md:space-y-4">
-            {messages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.isAi || msg.sender === 'AI Assistant' ? 'justify-start' : 'justify-end'}`}>
-                <div className={`max-w-[80%] md:max-w-xs rounded-2xl p-4 md:p-4 ${
-                  msg.isAi || msg.sender === 'AI Assistant'
-                    ? 'bg-muted text-foreground' 
-                    : 'bg-primary text-primary-foreground'
-                }`}>
-                  <p className="text-sm md:text-sm leading-relaxed">{msg.content}</p>
-                  <p className="text-xs opacity-70 mt-2 md:mt-2">{msg.timestamp}</p>
+            {chatMessages.map((msg) => {
+              // Get current user's employee ID for comparison
+              const isCurrentUser = msg.sender?.name && user && 
+                (msg.sender_type === 'human_admin' || msg.sender_type === 'human_employee');
+              
+              return (
+                <div key={msg.id} className={`flex ${msg.sender_type === 'ai_bot' ? 'justify-start' : isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] md:max-w-xs rounded-2xl p-4 md:p-4 ${
+                    msg.sender_type === 'ai_bot'
+                      ? 'bg-muted text-foreground' 
+                      : isCurrentUser
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-secondary-foreground'
+                  }`}>
+                    <p className="text-sm md:text-sm leading-relaxed">{msg.content}</p>
+                    <p className="text-xs opacity-70 mt-2 md:mt-2">
+                      {new Date(msg.created_at).toLocaleTimeString()}
+                    </p>
+                    {msg.sender && msg.sender_type !== 'ai_bot' && (
+                      <p className="text-xs opacity-60 mt-1">
+                        {msg.sender.name}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {isLoading && chatMode === 'ai' && (
+              );
+            })}
+            {(chatLoading || isTyping) && (
               <div className="flex justify-start">
                 <div className="bg-muted rounded-lg p-3 md:p-4">
                   <div className="flex gap-1">
@@ -402,6 +383,7 @@ export const ChatWidget = () => {
             )}
           </div>
         )}
+        <div ref={messagesEndRef} />
       </div>
       
       <div className="p-4 md:p-4 border-t bg-background safe-area-inset-bottom">
@@ -410,15 +392,15 @@ export const ChatWidget = () => {
             type="text" 
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && (chatMode === 'ai' ? sendAiMessage() : sendHumanMessage())}
+            onKeyPress={(e) => e.key === 'Enter' && (chatMode === 'ai' ? handleSendAiMessage() : handleSendHumanMessage())}
             placeholder="Type your message..."
             className="flex-1 px-4 py-4 md:py-3 text-base md:text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 touch-manipulation"
-            disabled={isLoading}
+            disabled={chatLoading || isTyping}
           />
           <Button 
             size="sm" 
-            onClick={chatMode === 'ai' ? sendAiMessage : sendHumanMessage}
-            disabled={!message.trim() || isLoading || (chatMode === 'human' && !selectedUser)}
+            onClick={chatMode === 'ai' ? handleSendAiMessage : handleSendHumanMessage}
+            disabled={!message.trim() || chatLoading || isTyping || (chatMode === 'human' && !currentChat)}
             className="px-4 py-4 md:py-3 touch-manipulation rounded-xl min-w-[56px]"
           >
             <Send className="w-5 h-5 md:w-4 md:h-4" />
@@ -441,7 +423,8 @@ export const ChatWidget = () => {
         )}>
           {chatMode === 'select' && renderChatModeSelection()}
           {chatMode === 'human' && !selectedUser && renderUserSelection()}
-          {((chatMode === 'ai') || (chatMode === 'human' && selectedUser)) && renderChatInterface()}
+          {chatMode === 'ai' && renderChatInterface()}
+          {chatMode === 'human' && selectedUser && renderChatInterface()}
         </div>
       )}
 
