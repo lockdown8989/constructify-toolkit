@@ -57,26 +57,43 @@ export const useChat = () => {
   // Fetch current employee and role
   useEffect(() => {
     const fetchCurrentEmployee = async () => {
-      if (!user) return;
+      if (!user) {
+        console.log('Chat: No user found');
+        return;
+      }
 
       try {
-        const { data: employee } = await supabase
+        console.log('Chat: Fetching employee for user:', user.id);
+        const { data: employee, error: employeeError } = await supabase
           .from('employees')
           .select('*')
           .eq('user_id', user.id)
           .single();
 
+        if (employeeError) {
+          console.error('Chat: Error fetching employee:', employeeError);
+          return;
+        }
+
+        console.log('Chat: Employee fetched:', employee);
         setCurrentEmployee(employee);
 
-        const { data: role } = await supabase
+        const { data: role, error: roleError } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id)
           .single();
 
+        if (roleError) {
+          console.error('Chat: Error fetching role:', roleError);
+          setUserRole('employee'); // Default fallback
+          return;
+        }
+
+        console.log('Chat: User role:', role?.role);
         setUserRole(role?.role || 'employee');
       } catch (error) {
-        console.error('Error fetching employee data:', error);
+        console.error('Chat: Error in fetchCurrentEmployee:', error);
       }
     };
 
@@ -237,12 +254,12 @@ export const useChat = () => {
 
   // Send AI message
   const sendAiMessage = async (content: string) => {
-    if (!currentChat || !currentEmployee || !content.trim()) return;
+    if (!currentEmployee || !content.trim()) return;
 
     try {
       setIsTyping(true);
 
-      // Get conversation history for context
+      // Get conversation history for context (use current messages or empty array)
       const conversationHistory = messages.slice(-10); // Last 10 messages for context
 
       const { data, error } = await supabase.functions.invoke('chat-ai-assistant', {
@@ -252,33 +269,50 @@ export const useChat = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('AI function error:', error);
+        throw error;
+      }
 
-      // Save user message
-      await sendMessage(content, 'text');
+      if (!data?.response) {
+        throw new Error('No response from AI');
+      }
 
-      // Save AI response
-      const aiMessageData = {
-        chat_id: currentChat.id,
-        sender_id: currentEmployee.id, // Use current employee as sender for storage
+      // For standalone AI chat, create temporary message objects
+      const userMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        chat_id: 'ai-standalone',
+        sender_id: currentEmployee.id,
+        content: content.trim(),
+        message_type: 'text',
+        sender_type: ['admin', 'employer', 'hr'].includes(userRole) ? 'human_admin' : 'human_employee',
+        is_read: true,
+        created_at: new Date().toISOString(),
+        sender: {
+          id: currentEmployee.id,
+          name: currentEmployee.name,
+          avatar_url: currentEmployee.avatar_url
+        }
+      };
+
+      const aiMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        chat_id: 'ai-standalone',
+        sender_id: 'ai-bot',
         content: data.response,
         message_type: 'ai_response',
         sender_type: 'ai_bot',
+        is_read: true,
+        created_at: new Date().toISOString(),
+        sender: {
+          id: 'ai-bot',
+          name: 'AI Assistant',
+          avatar_url: undefined
+        }
       };
 
-      const { data: aiMessage, error: aiError } = await supabase
-        .from('messages')
-        .insert(aiMessageData)
-        .select(`
-          *,
-          sender:employees(id, name, avatar_url)
-        `)
-        .single();
-
-      if (aiError) throw aiError;
-
-      // Add AI response to local state
-      setMessages(prev => [...prev, aiMessage]);
+      // Add both messages to local state
+      setMessages(prev => [...prev, userMessage, aiMessage]);
 
     } catch (error) {
       console.error('Error sending AI message:', error);
@@ -403,6 +437,7 @@ export const useChat = () => {
       }
     },
     setIsAiMode,
+    clearMessages: () => setMessages([]),
     createOrGetChat,
     sendMessage,
     sendAiMessage,

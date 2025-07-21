@@ -23,15 +23,24 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     isTyping,
     isAiMode,
     userRole,
+    currentEmployee,
     setCurrentChat,
     setIsAiMode,
     createOrGetChat,
     sendMessage,
     sendAiMessage,
     uploadFile,
+    clearMessages,
   } = useChat();
 
-  const [view, setView] = useState<'chats' | 'chat' | 'search'>('chats');
+  console.log('ChatWindow: Hook values:', { 
+    currentEmployee, 
+    userRole, 
+    isLoading,
+    isAiMode
+  });
+
+  const [view, setView] = useState<'chats' | 'chat' | 'search' | 'ai'>('chats');
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleStartChat = async (employeeId: string) => {
@@ -47,6 +56,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     setIsAiMode(false);
   };
 
+  const handleStartAiChat = () => {
+    clearMessages(); // Clear any existing messages
+    setView('ai');
+    setIsAiMode(true);
+  };
+
   const isAdmin = ['admin', 'employer', 'hr'].includes(userRole);
 
   return (
@@ -54,7 +69,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border bg-muted/50">
         <div className="flex items-center gap-2">
-          {view === 'chat' && (
+          {(view === 'chat' || view === 'search' || view === 'ai') && (
             <Button
               variant="ghost"
               size="sm"
@@ -71,20 +86,35 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
               currentChat?.employee?.name || currentChat?.admin?.name || 'Chat'
             )}
             {view === 'search' && 'Start New Chat'}
+            {view === 'ai' && 'AI Assistant'}
           </h3>
         </div>
         
         <div className="flex items-center gap-1">
-          {view === 'chats' && isAdmin && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setView('search')}
-              className="p-1 h-auto"
-              title="Start new chat"
-            >
-              <Search className="w-4 h-4" />
-            </Button>
+          {view === 'chats' && (
+            <>
+              {isAdmin && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setView('search')}
+                  className="p-1 h-auto"
+                  title="Start new chat"
+                >
+                  <Search className="w-4 h-4" />
+                </Button>
+              )}
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleStartAiChat}
+                className="p-1 h-auto"
+                title="Start AI assistant chat"
+              >
+                <Bot className="w-4 h-4" />
+              </Button>
+            </>
           )}
           
           {view === 'chat' && (
@@ -149,6 +179,27 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
                 onSendMessage={isAiMode ? sendAiMessage : sendMessage}
                 onUploadFile={uploadFile}
                 isAiMode={isAiMode}
+                disabled={isTyping}
+              />
+            </div>
+          </div>
+        )}
+
+        {view === 'ai' && (
+          <div className="flex flex-col h-full">
+            <div className="flex-1 overflow-hidden">
+              <ChatMessages
+                messages={messages}
+                isTyping={isTyping}
+                isAiMode={true}
+                currentUserId={currentEmployee?.id || ''}
+              />
+            </div>
+            
+            <div className="p-3 border-t border-border">
+              <ChatInput
+                onSendMessage={sendAiMessage}
+                isAiMode={true}
                 disabled={isTyping}
               />
             </div>
