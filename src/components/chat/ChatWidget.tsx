@@ -37,6 +37,8 @@ export const ChatWidget = () => {
     setIsLoading(true);
 
     try {
+      console.log('Sending message to AI:', currentMessage);
+      
       const { data, error } = await supabase.functions.invoke('chat-ai-assistant', {
         body: {
           message: currentMessage,
@@ -44,7 +46,13 @@ export const ChatWidget = () => {
         }
       });
 
-      if (error) throw error;
+      console.log('AI Response data:', data);
+      console.log('AI Response error:', error);
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
       const aiMessage = {
         id: crypto.randomUUID(),
