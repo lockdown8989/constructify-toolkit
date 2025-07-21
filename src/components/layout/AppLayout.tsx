@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Navbar from "./Navbar";
 import DesktopSidebar from "./navigation/DesktopSidebar";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 
 const AppLayout = () => {
   const { user } = useAuth();
@@ -27,6 +28,9 @@ const AppLayout = () => {
           </div>
         </main>
       </div>
+      
+      {/* Chat Widget - Available on all pages */}
+      <ChatWidget />
     </div>
   );
 };

@@ -383,6 +383,99 @@ export type Database = {
           },
         ]
       }
+      chat_participants: {
+        Row: {
+          chat_id: string
+          created_at: string
+          id: string
+          is_online: boolean
+          is_typing: boolean
+          last_seen: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string
+          id?: string
+          is_online?: boolean
+          is_typing?: boolean
+          last_seen?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          id?: string
+          is_online?: boolean
+          is_typing?: boolean
+          last_seen?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_participants_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chats: {
+        Row: {
+          admin_id: string
+          created_at: string
+          employee_id: string
+          id: string
+          is_active: boolean
+          last_message_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          employee_id: string
+          id?: string
+          is_active?: boolean
+          last_message_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          employee_id?: string
+          id?: string
+          is_active?: boolean
+          last_message_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chats_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clock_notifications: {
         Row: {
           action_type: string
@@ -1039,6 +1132,66 @@ export type Database = {
           {
             foreignKeyName: "leave_calendar_employee_id_fkey"
             columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          attachment_name: string | null
+          attachment_size: number | null
+          attachment_url: string | null
+          chat_id: string
+          content: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          message_type: string
+          sender_id: string
+          sender_type: string
+          updated_at: string
+        }
+        Insert: {
+          attachment_name?: string | null
+          attachment_size?: number | null
+          attachment_url?: string | null
+          chat_id: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message_type?: string
+          sender_id: string
+          sender_type: string
+          updated_at?: string
+        }
+        Update: {
+          attachment_name?: string | null
+          attachment_size?: number | null
+          attachment_url?: string | null
+          chat_id?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message_type?: string
+          sender_id?: string
+          sender_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
