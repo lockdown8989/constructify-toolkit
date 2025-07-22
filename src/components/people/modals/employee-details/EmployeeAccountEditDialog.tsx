@@ -228,23 +228,23 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
 
   const MobileContent = () => (
     <div className="flex flex-col h-full max-h-[90vh] bg-gray-50">
-      {/* iOS-style Header */}
-      <div className="flex-shrink-0 bg-white/95 backdrop-blur-sm z-10 px-6 pt-6 pb-4 border-b border-gray-200/50">
+      {/* Material Design Android-style Header */}
+      <div className="flex-shrink-0 bg-white material-elevation-2 z-10 px-4 pt-4 pb-3 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-              <Settings className="h-6 w-6 text-white" />
+            <div className="w-10 h-10 rounded bg-blue-600 flex items-center justify-center material-elevation-1">
+              <Settings className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 tracking-tight">Edit Account</h2>
-              <p className="text-sm text-gray-600 font-medium">{employee.name}</p>
+              <h2 className="text-lg font-medium text-gray-900">Edit Account</h2>
+              <p className="text-sm text-gray-600">{employee.name}</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="h-10 w-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors touch-target"
+            className="h-10 w-10 rounded android-touch-feedback touch-target"
           >
             <X className="h-5 w-5 text-gray-600" />
           </Button>
@@ -255,11 +255,11 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         <form onSubmit={handleSubmit} className="px-6 py-6 space-y-8 min-h-full">
           {/* Personal Information Section */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded bg-blue-100 flex items-center justify-center">
                 <User className="h-4 w-4 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
+              <h3 className="text-lg font-medium text-gray-900">Personal Information</h3>
             </div>
             
             <div className="space-y-4">
@@ -271,7 +271,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                      value={formData.firstName}
                      onChange={(e) => handleInputChange('firstName', e.target.value)}
                      placeholder="First name"
-                     className="ios-input ios-focus-ring"
+                     className="android-input android-focus-ring"
                      autoComplete="given-name"
                      autoCapitalize="words"
                      autoCorrect="off"
@@ -285,7 +285,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                      value={formData.lastName}
                      onChange={(e) => handleInputChange('lastName', e.target.value)}
                      placeholder="Last name"
-                     className="ios-input ios-focus-ring"
+                     className="android-input android-focus-ring"
                      autoComplete="family-name"
                      autoCapitalize="words"
                      autoCorrect="off"
@@ -302,7 +302,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                    value={formData.email}
                    onChange={(e) => handleInputChange('email', e.target.value)}
                    placeholder="employee@company.com"
-                   className="ios-input ios-focus-ring"
+                   className="android-input android-focus-ring"
                    autoComplete="email"
                    autoCapitalize="none"
                    autoCorrect="off"
@@ -315,7 +315,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
               <div className="space-y-2">
                 <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
                 <Select value={formData.location} onValueChange={(value) => handleInputChange('location', value)}>
-                  <SelectTrigger className="ios-select">
+                  <SelectTrigger className="android-select">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -332,11 +332,11 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
 
           {/* Login Information Section */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded bg-blue-100 flex items-center justify-center">
                 <Shield className="h-4 w-4 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Login Information</h3>
+              <h3 className="text-lg font-medium text-gray-900">Login Information</h3>
             </div>
             
             <div className="space-y-4">
@@ -348,7 +348,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                    value={formData.loginEmail}
                    onChange={(e) => handleInputChange('loginEmail', e.target.value)}
                    placeholder="employee@company.com"
-                   className="ios-input ios-focus-ring"
+                   className="android-input android-focus-ring"
                    autoComplete="email"
                    autoCapitalize="none"
                    autoCorrect="off"
@@ -357,7 +357,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                  />
                </div>
               
-              <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+              <div className="p-3 bg-blue-50 rounded border border-blue-200 material-elevation-1">
                 <div className="flex items-center gap-2 mb-1">
                   <Key className="h-4 w-4 text-blue-600" />
                   <span className="text-sm font-medium text-blue-900">Sync Status</span>
@@ -376,11 +376,11 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
 
           {/* Employment Details Section */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded bg-green-100 flex items-center justify-center">
                 <Building className="h-4 w-4 text-green-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Employment Details</h3>
+              <h3 className="text-lg font-medium text-gray-900">Employment Details</h3>
             </div>
             
             <div className="space-y-4">
@@ -391,7 +391,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                    value={formData.position}
                    onChange={(e) => handleInputChange('position', e.target.value)}
                    placeholder="Job title"
-                   className="ios-input ios-focus-ring"
+                   className="android-input android-focus-ring"
                    autoComplete="organization-title"
                    autoCapitalize="words"
                    autoCorrect="off"
@@ -405,7 +405,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                    value={formData.department}
                    onChange={(e) => handleInputChange('department', e.target.value)}
                    placeholder="Department"
-                   className="ios-input ios-focus-ring"
+                   className="android-input android-focus-ring"
                    autoComplete="organization"
                    autoCapitalize="words"
                    autoCorrect="off"
@@ -419,7 +419,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                    value={formData.managerId}
                    onChange={(e) => handleInputChange('managerId', e.target.value)}
                    placeholder="e.g., MGR-94226"
-                   className="ios-input ios-focus-ring"
+                   className="android-input android-focus-ring"
                    autoComplete="off"
                    autoCapitalize="none"
                    autoCorrect="off"
@@ -436,14 +436,14 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                     type="date"
                     value={formData.start_date}
                     onChange={(e) => handleInputChange('start_date', e.target.value)}
-                    className="ios-input"
+                    className="android-input"
                   />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="status" className="text-sm font-medium text-gray-700">Status</Label>
                   <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
-                    <SelectTrigger className="ios-select">
+                    <SelectTrigger className="android-select">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -462,11 +462,11 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
 
           {/* Salary Section */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded bg-green-100 flex items-center justify-center">
                 <DollarSign className="h-4 w-4 text-green-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Salary Information</h3>
+              <h3 className="text-lg font-medium text-gray-900">Salary Information</h3>
             </div>
             
             <div className="space-y-4">
@@ -478,7 +478,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                    min="0"
                    value={formData.salary}
                    onChange={(e) => handleInputChange('salary', e.target.value)}
-                   className="ios-input ios-focus-ring"
+                   className="android-input android-focus-ring"
                    placeholder="35000"
                    inputMode="decimal"
                    pattern="[0-9]*"
@@ -487,7 +487,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                </div>
               
               {formData.salary > 0 && (
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded p-4 border border-green-200 material-elevation-1">
                   <div className="grid grid-cols-2 gap-4 mb-3">
                     <div className="text-center">
                       <div className="text-xs text-gray-600 mb-1">Annual</div>
@@ -522,11 +522,11 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
 
           {/* Leave Entitlements */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded bg-orange-100 flex items-center justify-center">
                 <Clock className="h-4 w-4 text-orange-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Leave Entitlements</h3>
+              <h3 className="text-lg font-medium text-gray-900">Leave Entitlements</h3>
             </div>
             
             <div className="grid grid-cols-2 gap-3">
@@ -539,7 +539,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                    max="365"
                    value={formData.annual_leave_days}
                    onChange={(e) => handleInputChange('annual_leave_days', parseInt(e.target.value) || 0)}
-                   className="ios-input ios-focus-ring"
+                   className="android-input android-focus-ring"
                    placeholder="25"
                    inputMode="numeric"
                    pattern="[0-9]*"
@@ -555,7 +555,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                    max="365"
                    value={formData.sick_leave_days}
                    onChange={(e) => handleInputChange('sick_leave_days', parseInt(e.target.value) || 0)}
-                   className="ios-input ios-focus-ring"
+                   className="android-input android-focus-ring"
                    placeholder="10"
                    inputMode="numeric"
                    pattern="[0-9]*"
@@ -570,21 +570,21 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         </form>
         
         {/* Fixed Action Buttons */}
-        <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/50 px-6 py-4 pb-safe-area-inset-bottom">
+        <div className="absolute bottom-0 left-0 right-0 bg-white android-blur-bg border-t border-gray-300 px-4 py-3 pb-safe-area-inset-bottom material-elevation-2">
           <div className="flex gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               disabled={isSubmitting || isSyncing}
-              className="flex-1 ios-button-outline ios-touch-feedback touch-target"
+              className="flex-1 android-button-outline android-touch-feedback touch-target"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={isSubmitting || isSyncing}
-              className="flex-1 ios-button-primary ios-touch-feedback touch-target"
+              className="flex-1 android-button-primary android-touch-feedback android-ripple touch-target"
               onClick={handleSubmit}
             >
               {isSubmitting || isSyncing ? (
@@ -936,7 +936,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl ios-sheet flex flex-col">
+        <SheetContent side="bottom" className="h-[90vh] rounded-t-lg android-sheet flex flex-col">
           <MobileContent />
         </SheetContent>
       </Sheet>

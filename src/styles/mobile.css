@@ -177,49 +177,60 @@
   @apply transition-all duration-300 ease-in-out;
 }
 
-/* iOS-style sheet components */
-.ios-sheet {
-  @apply bg-white border-0 shadow-2xl;
+/* Material Design Android-style sheet components */
+.android-sheet {
+  @apply bg-white border-0;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
 
-.ios-sheet-content {
-  @apply relative;
-  background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
+.android-sheet-content {
+  @apply relative bg-white;
   min-height: 100%;
 }
 
-.ios-input {
-  @apply h-12 rounded-xl border-gray-200 bg-white text-base font-medium;
-  border: 1px solid #E5E7EB;
-  transition: all 0.2s ease-in-out;
+.android-input {
+  @apply h-14 rounded border border-gray-300 bg-white text-base font-normal px-4;
+  transition: all 0.15s ease-in-out;
+  outline: none;
 }
 
-.ios-input:focus {
-  @apply ring-2 ring-blue-500/20 border-blue-500;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+.android-input:focus {
+  @apply border-blue-500;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
 }
 
-.ios-select {
-  @apply h-12 rounded-xl border-gray-200 bg-white text-base font-medium;
+.android-input:hover {
+  @apply border-gray-400;
 }
 
-.ios-button-primary {
-  @apply h-12 rounded-xl font-semibold text-white transition-all duration-200;
-  background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+.android-select {
+  @apply h-14 rounded border border-gray-300 bg-white text-base font-normal;
 }
 
-.ios-button-primary:hover {
-  @apply transform scale-[1.02];
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+.android-button-primary {
+  @apply h-12 rounded font-semibold text-white transition-all duration-200 bg-blue-600 hover:bg-blue-700;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.ios-button-outline {
-  @apply h-12 rounded-xl font-semibold border-2 border-gray-300 bg-white text-gray-700 transition-all duration-200;
+.android-button-primary:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
 }
 
-.ios-button-outline:hover {
-  @apply bg-gray-50 border-gray-400;
+.android-button-primary:active {
+  @apply transform scale-[0.98];
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.android-button-outline {
+  @apply h-12 rounded font-semibold border border-gray-400 bg-white text-gray-700 transition-all duration-200;
+}
+
+.android-button-outline:hover {
+  @apply bg-gray-50 border-gray-500;
+}
+
+.android-button-outline:active {
+  @apply transform scale-[0.98];
 }
 
 /* Safe area handling for iOS */
@@ -243,18 +254,43 @@
   @apply h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent;
 }
 
-/* Apple-style focus ring */
-.ios-focus-ring:focus {
-  @apply outline-none ring-2 ring-blue-500/50 ring-offset-2 ring-offset-white;
+/* Material Design focus ring */
+.android-focus-ring:focus {
+  @apply outline-none;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
 }
 
-/* Enhanced touch feedback */
-.ios-touch-feedback {
-  @apply transition-all duration-150 ease-out;
+/* Material Design touch feedback - ripple effect */
+.android-touch-feedback {
+  @apply transition-all duration-100 ease-out relative overflow-hidden;
 }
 
-.ios-touch-feedback:active {
-  @apply transform scale-[0.98] opacity-80;
+.android-touch-feedback:active {
+  @apply transform scale-[0.98];
+}
+
+/* Android-style ripple effect */
+.android-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.android-ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.android-ripple:active::after {
+  width: 300px;
+  height: 300px;
 }
 
 .calendar-day-cell:hover {
@@ -306,10 +342,23 @@
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
 }
 
-/* iOS-style blur effects */
-.calendar-blur-bg {
-  backdrop-filter: blur(10px);
-  background-color: rgba(255, 255, 255, 0.8);
+/* Material Design elevation shadows */
+.material-elevation-1 {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.material-elevation-2 {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+}
+
+.material-elevation-3 {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+}
+
+/* Android-style blur effects */
+.android-blur-bg {
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 /* Enhanced spacing and typography */
