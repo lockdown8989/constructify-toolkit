@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { MessageCircle, X, Send, Bot, Users, Circle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useChat } from '@/hooks/use-chat';
@@ -12,6 +13,7 @@ interface ConnectedUser {
   role: string;
   isOnline: boolean;
   lastSeen?: string;
+  avatar_url?: string;
 }
 
 export const ChatWidget = () => {
@@ -139,7 +141,8 @@ export const ChatWidget = () => {
       .from('employees')
       .select(`
         user_id,
-        name
+        name,
+        avatar_url
       `)
       .neq('user_id', user.id);
 
@@ -159,6 +162,7 @@ export const ChatWidget = () => {
             name: emp.name,
             role: userRole?.role || 'employee',
             isOnline: false,
+            avatar_url: emp.avatar_url,
           });
         }
       });
@@ -191,16 +195,16 @@ export const ChatWidget = () => {
   };
 
   const renderChatModeSelection = () => (
-    <div className="p-6 md:p-6 space-y-4 md:space-y-4 safe-area-inset">
-      <div className="flex items-center justify-between mb-6 md:mb-6">
-        <h3 className="font-semibold text-lg md:text-lg">Choose Chat Type</h3>
+    <div className="p-6 md:p-6 space-y-6 md:space-y-4 safe-area-inset">
+      <div className="flex items-center justify-between mb-8 md:mb-6">
+        <h2 className="font-bold text-xl md:text-lg text-foreground">Choose Chat Type</h2>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setIsOpen(false)}
-          className="p-2 h-auto touch-manipulation md:hidden"
+          className="p-3 h-auto touch-manipulation md:hidden rounded-full hover:bg-muted/50"
         >
-          <X className="w-5 h-5" />
+          <X className="w-6 h-6" />
         </Button>
       </div>
       
@@ -210,41 +214,45 @@ export const ChatWidget = () => {
           setIsAiMode(true);
           clearMessages();
         }}
-        className="w-full h-16 md:h-16 bg-blue-50 hover:bg-blue-100 text-blue-700 border-2 border-blue-200 rounded-xl flex items-center gap-4 text-left touch-manipulation active:scale-[0.98] transition-transform"
+        className="w-full h-20 md:h-16 bg-blue-50 hover:bg-blue-100 text-blue-700 border-2 border-blue-200 rounded-2xl flex items-center gap-5 text-left touch-manipulation active:scale-[0.97] transition-all duration-150 shadow-sm hover:shadow-md"
         variant="outline"
       >
-        <Bot className="w-7 h-7 md:w-6 md:h-6 flex-shrink-0" />
-        <div className="text-left">
-          <div className="font-semibold text-base md:text-base">AI Assistant</div>
-          <div className="text-sm md:text-sm opacity-70">Get help with HR questions</div>
+        <div className="w-12 h-12 md:w-10 md:h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+          <Bot className="w-7 h-7 md:w-6 md:h-6 text-blue-600" />
+        </div>
+        <div className="text-left flex-1">
+          <div className="font-bold text-lg md:text-base text-blue-800">AI Assistant</div>
+          <div className="text-sm md:text-sm text-blue-600 mt-1">Get help with HR questions</div>
         </div>
       </Button>
 
       <Button
         onClick={() => setChatMode('human')}
-        className="w-full h-16 md:h-16 bg-green-50 hover:bg-green-100 text-green-700 border-2 border-green-200 rounded-xl flex items-center gap-4 text-left touch-manipulation active:scale-[0.98] transition-transform"
+        className="w-full h-20 md:h-16 bg-green-50 hover:bg-green-100 text-green-700 border-2 border-green-200 rounded-2xl flex items-center gap-5 text-left touch-manipulation active:scale-[0.97] transition-all duration-150 shadow-sm hover:shadow-md"
         variant="outline"
       >
-        <Users className="w-7 h-7 md:w-6 md:h-6 flex-shrink-0" />
-        <div className="text-left">
-          <div className="font-semibold text-base md:text-base">Chat with Users</div>
-          <div className="text-sm md:text-sm opacity-70">Connect with colleagues</div>
+        <div className="w-12 h-12 md:w-10 md:h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+          <Users className="w-7 h-7 md:w-6 md:h-6 text-green-600" />
+        </div>
+        <div className="text-left flex-1">
+          <div className="font-bold text-lg md:text-base text-green-800">Chat with Users</div>
+          <div className="text-sm md:text-sm text-green-600 mt-1">Connect with colleagues</div>
         </div>
       </Button>
     </div>
   );
 
   const renderUserSelection = () => (
-    <div className="p-4 md:p-4 h-full flex flex-col safe-area-inset">
-      <div className="flex items-center justify-between mb-4 md:mb-4">
-        <h3 className="font-semibold text-lg md:text-base">Select User to Chat</h3>
+    <div className="p-6 md:p-4 h-full flex flex-col safe-area-inset">
+      <div className="flex items-center justify-between mb-6 md:mb-4">
+        <h2 className="font-bold text-xl md:text-base text-foreground">Select User to Chat</h2>
         <Button
           variant="ghost"
           size="sm"
           onClick={resetChat}
-          className="p-3 h-auto touch-manipulation"
+          className="p-3 h-auto touch-manipulation rounded-full hover:bg-muted/50"
         >
-          <X className="w-5 h-5" />
+          <X className="w-6 h-6 md:w-5 md:h-5" />
         </Button>
       </div>
       
@@ -271,21 +279,30 @@ export const ChatWidget = () => {
                   await createOrGetChat(employee.id);
                 }
               }}
-              className="w-full p-4 md:p-4 h-auto justify-start bg-muted/50 hover:bg-muted text-left touch-manipulation min-h-[64px] rounded-xl active:scale-[0.98] transition-transform"
+              className="w-full p-4 md:p-4 h-auto justify-start bg-muted/50 hover:bg-muted text-left touch-manipulation min-h-[72px] rounded-xl active:scale-[0.98] transition-transform"
               variant="ghost"
             >
-              <div className="flex items-center gap-3 w-full">
+              <div className="flex items-center gap-4 w-full">
                 <div className="relative">
+                  <Avatar className="w-12 h-12 md:w-10 md:h-10">
+                    <AvatarImage 
+                      src={connectedUser.avatar_url || ''} 
+                      alt={connectedUser.name} 
+                    />
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                      {connectedUser.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
                   <Circle 
                     className={cn(
-                      "w-3 h-3 md:w-4 md:h-4",
-                      connectedUser.isOnline ? "text-green-500 fill-current" : "text-gray-400"
+                      "absolute -bottom-1 -right-1 w-4 h-4 md:w-3 md:h-3 bg-background rounded-full border-2 border-background",
+                      connectedUser.isOnline ? "text-green-500 fill-current" : "text-gray-400 fill-current"
                     )} 
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate text-sm md:text-base">{connectedUser.name}</div>
-                  <div className="text-xs md:text-sm text-muted-foreground">
+                  <div className="font-semibold truncate text-base md:text-sm">{connectedUser.name}</div>
+                  <div className="text-sm md:text-xs text-muted-foreground capitalize">
                     {connectedUser.role} • {connectedUser.isOnline ? 'Online' : 'Offline'}
                   </div>
                 </div>
