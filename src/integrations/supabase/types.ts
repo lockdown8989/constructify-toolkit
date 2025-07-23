@@ -2659,6 +2659,18 @@ export type Database = {
         }
         Returns: Json
       }
+      upsert_appearance_settings: {
+        Args: {
+          p_user_id: string
+          p_theme?: string
+          p_color_scheme?: string
+          p_font_size?: string
+          p_high_contrast?: boolean
+          p_reduced_motion?: boolean
+          p_compact_mode?: boolean
+        }
+        Returns: undefined
+      }
       validate_rota_compliance: {
         Args: {
           p_employee_id: string

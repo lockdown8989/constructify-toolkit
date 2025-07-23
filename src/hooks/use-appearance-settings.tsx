@@ -57,16 +57,19 @@ export const AppearanceProvider = ({ children }: { children: React.ReactNode }) 
 
         if (error) {
           console.error('Error fetching appearance settings:', error);
-          // Create default settings if error (likely doesn't exist)
-          const { error: insertError } = await supabase
-            .from('appearance_settings')
-            .insert({
-              user_id: user.id,
-              ...defaultSettings,
-            });
+          // Create default settings using the database function
+          const { error: createError } = await supabase.rpc('upsert_appearance_settings', {
+            p_user_id: user.id,
+            p_theme: defaultSettings.theme,
+            p_color_scheme: defaultSettings.color_scheme,
+            p_font_size: defaultSettings.font_size,
+            p_high_contrast: defaultSettings.high_contrast,
+            p_reduced_motion: defaultSettings.reduced_motion,
+            p_compact_mode: defaultSettings.compact_mode,
+          });
 
-          if (insertError) {
-            console.error('Error creating default appearance settings:', insertError);
+          if (createError) {
+            console.error('Error creating default appearance settings:', createError);
           } else {
             setSettings(defaultSettings);
           }
@@ -80,16 +83,19 @@ export const AppearanceProvider = ({ children }: { children: React.ReactNode }) 
             compact_mode: data.compact_mode ?? false,
           });
         } else {
-          // Create default settings if none exist
-          const { error: insertError } = await supabase
-            .from('appearance_settings')
-            .insert({
-              user_id: user.id,
-              ...defaultSettings,
-            });
+          // Create default settings using the database function
+          const { error: createError } = await supabase.rpc('upsert_appearance_settings', {
+            p_user_id: user.id,
+            p_theme: defaultSettings.theme,
+            p_color_scheme: defaultSettings.color_scheme,
+            p_font_size: defaultSettings.font_size,
+            p_high_contrast: defaultSettings.high_contrast,
+            p_reduced_motion: defaultSettings.reduced_motion,
+            p_compact_mode: defaultSettings.compact_mode,
+          });
 
-          if (insertError) {
-            console.error('Error creating default appearance settings:', insertError);
+          if (createError) {
+            console.error('Error creating default appearance settings:', createError);
           } else {
             setSettings(defaultSettings);
           }
@@ -110,55 +116,36 @@ export const AppearanceProvider = ({ children }: { children: React.ReactNode }) 
     try {
       const updatedSettings = { ...settings, ...newSettings };
       
-      // First try to find existing record
-      const { data: existingSettings } = await supabase
-        .from('appearance_settings')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      let error = null;
-
-      if (existingSettings) {
-        // Update existing record
-        const { error: updateError } = await supabase
-          .from('appearance_settings')
-          .update({
-            ...updatedSettings,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('user_id', user.id);
-        error = updateError;
-      } else {
-        // Insert new record
-        const { error: insertError } = await supabase
-          .from('appearance_settings')
-          .insert({
-            user_id: user.id,
-            ...updatedSettings,
-          });
-        error = insertError;
-      }
+      // Use the database function for safe upsert
+      const { error } = await supabase.rpc('upsert_appearance_settings', {
+        p_user_id: user.id,
+        p_theme: updatedSettings.theme,
+        p_color_scheme: updatedSettings.color_scheme,
+        p_font_size: updatedSettings.font_size,
+        p_high_contrast: updatedSettings.high_contrast,
+        p_reduced_motion: updatedSettings.reduced_motion,
+        p_compact_mode: updatedSettings.compact_mode,
+      });
 
       if (error) {
+        console.error('Error updating appearance settings:', error);
         toast({
           title: 'Error updating appearance settings',
           description: error.message,
           variant: 'destructive',
         });
-        console.error('Error updating appearance settings:', error);
         return;
-      } else {
-        // Update local state only after successful save
-        setSettings(updatedSettings);
-        toast({
-          title: 'Appearance settings updated',
-          description: 'Your appearance preferences have been saved.',
-        });
-        
-        // Apply theme changes to document
-        applyThemeToDocument(updatedSettings);
       }
+
+      // Update local state only after successful save
+      setSettings(updatedSettings);
+      toast({
+        title: 'Appearance settings updated',
+        description: 'Your appearance preferences have been saved.',
+      });
+      
+      // Apply theme changes to document
+      applyThemeToDocument(updatedSettings);
     } catch (error) {
       console.error('Error:', error);
       toast({
