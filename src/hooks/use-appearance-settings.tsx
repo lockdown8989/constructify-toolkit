@@ -109,15 +109,36 @@ export const AppearanceProvider = ({ children }: { children: React.ReactNode }) 
 
     try {
       const updatedSettings = { ...settings, ...newSettings };
-      setSettings(updatedSettings);
-
-      const { error } = await supabase
+      
+      // First try to find existing record
+      const { data: existingSettings } = await supabase
         .from('appearance_settings')
-        .upsert({
-          user_id: user.id,
-          ...updatedSettings,
-          updated_at: new Date().toISOString(),
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      let error = null;
+
+      if (existingSettings) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('appearance_settings')
+          .update({
+            ...updatedSettings,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id);
+        error = updateError;
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from('appearance_settings')
+          .insert({
+            user_id: user.id,
+            ...updatedSettings,
+          });
+        error = insertError;
+      }
 
       if (error) {
         toast({
@@ -126,9 +147,10 @@ export const AppearanceProvider = ({ children }: { children: React.ReactNode }) 
           variant: 'destructive',
         });
         console.error('Error updating appearance settings:', error);
-        // Revert settings on error
-        setSettings(settings);
+        return;
       } else {
+        // Update local state only after successful save
+        setSettings(updatedSettings);
         toast({
           title: 'Appearance settings updated',
           description: 'Your appearance preferences have been saved.',
@@ -139,8 +161,11 @@ export const AppearanceProvider = ({ children }: { children: React.ReactNode }) 
       }
     } catch (error) {
       console.error('Error:', error);
-      // Revert settings on error
-      setSettings(settings);
+      toast({
+        title: 'Error updating appearance settings',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 

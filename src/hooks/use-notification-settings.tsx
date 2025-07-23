@@ -101,15 +101,36 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
     try {
       const updatedSettings = { ...settings, ...newSettings };
-      setSettings(updatedSettings);
-
-      const { error } = await supabase
+      
+      // First try to update existing record
+      const { data: existingSettings } = await supabase
         .from('notification_settings')
-        .upsert({
-          user_id: user.id,
-          ...updatedSettings,
-          updated_at: new Date().toISOString(),
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      let error = null;
+
+      if (existingSettings) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('notification_settings')
+          .update({
+            ...updatedSettings,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id);
+        error = updateError;
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from('notification_settings')
+          .insert({
+            user_id: user.id,
+            ...updatedSettings,
+          });
+        error = insertError;
+      }
 
       if (error) {
         toast({
@@ -118,7 +139,11 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
           variant: 'destructive',
         });
         console.error('Error updating notification settings:', error);
+        // Revert settings on error
+        return;
       } else {
+        // Update local state only after successful save
+        setSettings(updatedSettings);
         toast({
           title: 'Notification settings updated',
           description: 'Your notification preferences have been saved.',
@@ -126,6 +151,11 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       }
     } catch (error) {
       console.error('Error:', error);
+      toast({
+        title: 'Error updating notification settings',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
