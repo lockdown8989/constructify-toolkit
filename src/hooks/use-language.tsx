@@ -39,26 +39,18 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   useEffect(() => {
     const fetchLanguagePreference = async () => {
       try {
-        console.log('Fetching language preference for user:', user?.id);
-        
         // First check localStorage for immediate language setting
         const savedLanguage = localStorage.getItem('preferred_language') as LanguageCode;
-        console.log('Language from localStorage:', savedLanguage);
-        
         if (savedLanguage && languageOptions.find(opt => opt.value === savedLanguage)) {
-          console.log('Setting language from localStorage:', savedLanguage);
           setLanguageState(savedLanguage);
-          document.documentElement.lang = savedLanguage;
         }
 
         if (!user) {
-          console.log('No user found, using default/localStorage language');
           setIsLoading(false);
           return;
         }
 
         // Then fetch from database for authenticated users
-        console.log('Fetching from Supabase for user:', user.id);
         const { data, error } = await supabase
           .from('profiles')
           .select('preferred_language')
@@ -66,18 +58,14 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
           .maybeSingle();
 
         if (error) {
-          console.error('Error fetching language preference from Supabase:', error);
+          console.error('Error fetching language preference:', error);
         } else if (data?.preferred_language) {
           const langCode = data.preferred_language as LanguageCode;
-          console.log('Language from Supabase:', langCode);
           setLanguageState(langCode);
           localStorage.setItem('preferred_language', langCode);
-          document.documentElement.lang = langCode;
-        } else {
-          console.log('No preferred_language found in Supabase profile');
         }
       } catch (error) {
-        console.error('Error in fetchLanguagePreference:', error);
+        console.error('Error:', error);
       } finally {
         setIsLoading(false);
       }
@@ -95,40 +83,43 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
       
       // Save to localStorage for persistence
       localStorage.setItem('preferred_language', newLanguage);
-      document.documentElement.lang = newLanguage;
 
       if (user) {
-        console.log('Updating language in Supabase for user:', user.id);
         const { error } = await supabase
           .from('profiles')
           .update({ preferred_language: newLanguage })
           .eq('id', user.id);
 
         if (error) {
-          console.error('Error updating language preference in Supabase:', error);
-          toast({
-            title: "Error",
-            description: "Failed to save language preference to database: " + error.message,
-            variant: "destructive"
-          });
+          console.error('Error updating language preference:', error);
           throw error;
         }
-        
-        console.log('Language successfully updated in Supabase');
       }
 
       console.log('Language successfully updated to:', newLanguage);
       
-      // Force a complete re-render by dispatching a custom event
-      window.dispatchEvent(new CustomEvent('languageChanged', { detail: newLanguage }));
+      // Force a re-render of the entire app by updating the document language
+      document.documentElement.lang = newLanguage;
+      
+      // Trigger a small delay then force re-render
+      setTimeout(() => {
+        window.dispatchEvent(new Event('languagechange'));
+      }, 100);
       
     } catch (error: any) {
       console.error('Error in setLanguage:', error);
-      
       // Revert local state on error
-      const previousLanguage = localStorage.getItem('preferred_language') as LanguageCode || 'en';
-      setLanguageState(previousLanguage);
-      document.documentElement.lang = previousLanguage;
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('preferred_language')
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        if (data?.preferred_language) {
+          setLanguageState(data.preferred_language as LanguageCode);
+        }
+      }
       
       throw error;
     }
@@ -136,9 +127,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
 
   const t = (key: TranslationKey): string => {
     const currentTranslations = translations[language] || translations.en;
-    const translation = currentTranslations[key] || translations.en[key] || key;
-    console.log(`Translation for key "${key}" in language "${language}":`, translation);
-    return translation;
+    return currentTranslations[key] || translations.en[key] || key;
   };
 
   return (
