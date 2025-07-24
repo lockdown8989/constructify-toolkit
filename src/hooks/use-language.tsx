@@ -38,17 +38,19 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
 
   useEffect(() => {
     const fetchLanguagePreference = async () => {
-      if (!user) {
-        // Try to get language from localStorage for non-authenticated users
+      try {
+        // First check localStorage for immediate language setting
         const savedLanguage = localStorage.getItem('preferred_language') as LanguageCode;
         if (savedLanguage && languageOptions.find(opt => opt.value === savedLanguage)) {
           setLanguageState(savedLanguage);
         }
-        setIsLoading(false);
-        return;
-      }
 
-      try {
+        if (!user) {
+          setIsLoading(false);
+          return;
+        }
+
+        // Then fetch from database for authenticated users
         const { data, error } = await supabase
           .from('profiles')
           .select('preferred_language')
@@ -60,7 +62,6 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
         } else if (data?.preferred_language) {
           const langCode = data.preferred_language as LanguageCode;
           setLanguageState(langCode);
-          // Also save to localStorage for consistency
           localStorage.setItem('preferred_language', langCode);
         }
       } catch (error) {
@@ -96,17 +97,28 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
       }
 
       console.log('Language successfully updated to:', newLanguage);
+      
+      // Force a re-render of the entire app by updating the document language
+      document.documentElement.lang = newLanguage;
+      
+      // Trigger a small delay then force re-render
+      setTimeout(() => {
+        window.dispatchEvent(new Event('languagechange'));
+      }, 100);
+      
     } catch (error: any) {
       console.error('Error in setLanguage:', error);
       // Revert local state on error
-      const { data } = await supabase
-        .from('profiles')
-        .select('preferred_language')
-        .eq('id', user?.id)
-        .maybeSingle();
-      
-      if (data?.preferred_language) {
-        setLanguageState(data.preferred_language as LanguageCode);
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('preferred_language')
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        if (data?.preferred_language) {
+          setLanguageState(data.preferred_language as LanguageCode);
+        }
       }
       
       throw error;
