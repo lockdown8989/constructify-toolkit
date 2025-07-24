@@ -31,12 +31,14 @@ export const RegionSettings = () => {
   // Auto-detect location on component mount
   useEffect(() => {
     if (!regionData.country) {
+      console.log('RegionSettings: Auto-detecting location...');
       autoDetectLocation();
     }
   }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('RegionSettings: Submitting form with data:', regionData);
     
     try {
       toast({
@@ -44,20 +46,26 @@ export const RegionSettings = () => {
         description: "Updating your region and language settings...",
       });
       
-      // Save region settings
+      // Save region settings first
       await handleSubmit(e);
       
-      // Also update the language context immediately for app-wide changes
+      // Update the language context immediately for app-wide changes
       if (regionData.preferred_language) {
+        console.log('RegionSettings: Updating language context to:', regionData.preferred_language);
         await setLanguage(regionData.preferred_language as any);
       }
       
       toast({
         title: "Settings saved successfully",
-        description: "Your preferences have been updated and the app language has been changed.",
+        description: "Your preferences have been updated. The page will refresh to apply language changes.",
       });
+      
+      // Refresh the page to ensure all components re-render with new language
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error) {
-      console.error('Error saving settings:', error);
+      console.error('RegionSettings: Error saving settings:', error);
       toast({
         title: "Error saving settings",
         description: "Failed to save your preferences. Please try again.",
@@ -75,7 +83,7 @@ export const RegionSettings = () => {
               <MapPin className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1 space-y-1">
-              <div className="text-base font-medium pb-2">Location</div>
+              <div className="text-base font-medium pb-2">{t('location')}</div>
               <CountryInput
                 country={regionData.country}
                 isLocating={isLocating}
@@ -97,7 +105,7 @@ export const RegionSettings = () => {
               <Languages className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1 space-y-1">
-              <div className="text-base font-medium pb-2">Preferred Language</div>
+              <div className="text-base font-medium pb-2">{t('preferredLanguage')}</div>
               <LanguageSelector
                 language={regionData.preferred_language}
                 onChange={handleLanguageChange}
