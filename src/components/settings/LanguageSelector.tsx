@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface LanguageSelectorProps {
   language?: string;
@@ -19,52 +19,47 @@ interface LanguageSelectorProps {
 export const LanguageSelector = ({ language: externalLanguage, onChange }: LanguageSelectorProps) => {
   const { language: contextLanguage, setLanguage, isLoading, t } = useLanguage();
   const { toast } = useToast();
-  const [isSaving, setIsSaving] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState(externalLanguage || contextLanguage);
   
-  // Use external language if provided, otherwise use context language
-  const currentLanguage = externalLanguage || contextLanguage;
+  useEffect(() => {
+    if (externalLanguage) {
+      setSelectedLanguage(externalLanguage);
+    } else if (contextLanguage) {
+      setSelectedLanguage(contextLanguage);
+    }
+  }, [externalLanguage, contextLanguage]);
   
   const handleLanguageChange = async (value: string) => {
-    console.log('LanguageSelector: Language change requested:', value);
-    setIsSaving(true);
+    console.log('Language change requested:', value);
+    setSelectedLanguage(value);
     
-    try {
-      if (onChange) {
-        // For form usage - just update the form state
-        onChange(value);
-        console.log('LanguageSelector: Updated form state');
-      } else {
-        // For direct language change - update the context immediately
-        console.log('LanguageSelector: Updating language context');
+    if (onChange) {
+      // For form usage - just update the form state
+      onChange(value);
+    } else {
+      // For direct language change - update the context immediately
+      try {
         await setLanguage(value as any);
-        
         toast({
           title: "Language Updated",
           description: `Language changed to ${languageOptions.find(opt => opt.value === value)?.label}`,
         });
-        
-        // Force page refresh to ensure all components re-render with new language
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+      } catch (error: any) {
+        console.error("Error updating language:", error);
+        toast({
+          title: "Error updating language",
+          description: error.message || "Failed to update language settings",
+          variant: "destructive",
+        });
       }
-    } catch (error: any) {
-      console.error("LanguageSelector: Error updating language:", error);
-      toast({
-        title: "Error updating language",
-        description: error.message || "Failed to update language settings",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
     }
   };
   
   if (isLoading) {
     return (
-      <div className="flex items-center space-x-2 p-3 border rounded-xl">
+      <div className="flex items-center space-x-2">
         <Globe className="h-5 w-5 animate-spin text-muted-foreground" />
-        <span className="text-sm">{t('loading')}</span>
+        <span>{t('loading')}</span>
       </div>
     );
   }
@@ -72,37 +67,26 @@ export const LanguageSelector = ({ language: externalLanguage, onChange }: Langu
   return (
     <div className="space-y-2">
       <Select 
-        value={currentLanguage} 
+        value={selectedLanguage} 
         onValueChange={handleLanguageChange}
-        disabled={isLoading || isSaving}
+        disabled={isLoading}
       >
         <SelectTrigger className="w-full rounded-xl border-input bg-background h-12">
           <SelectValue placeholder={t('chooseLanguage')} />
         </SelectTrigger>
-        <SelectContent className="rounded-xl border shadow-lg bg-popover z-50 max-h-80">
+        <SelectContent className="rounded-xl border shadow-lg bg-popover z-50">
           {languageOptions.map((option) => (
-            <SelectItem 
-              key={option.value} 
-              value={option.value} 
-              className="cursor-pointer py-3 px-3 hover:bg-accent"
-            >
-              <div className="flex items-center w-full">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 mr-3">
+            <SelectItem key={option.value} value={option.value} className="cursor-pointer py-2.5">
+              <div className="flex items-center">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 mr-2">
                   <Globe className="w-4 h-4 text-primary" />
                 </div>
-                <span className="text-sm font-medium">{option.label}</span>
+                <span>{option.label}</span>
               </div>
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      
-      {isSaving && (
-        <div className="text-xs text-muted-foreground flex items-center">
-          <Globe className="w-3 h-3 animate-spin mr-1" />
-          Updating language...
-        </div>
-      )}
     </div>
   );
 };
