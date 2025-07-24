@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { Globe } from "lucide-react";
+import { Globe, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 
@@ -44,17 +44,19 @@ export const LanguageSelector = ({ language: externalLanguage, onChange }: Langu
       try {
         await setLanguage(value as any);
         
-        // Show success message in the new language
+        // Show success message
         const selectedOption = languageOptions.find(opt => opt.value === value);
         toast({
           title: "Language Updated",
           description: `Language changed to ${selectedOption?.label}`,
         });
         
+        console.log('Language change completed, triggering page reload in 1 second...');
+        
         // Force a page refresh to ensure all components re-render with new language
         setTimeout(() => {
           window.location.reload();
-        }, 500);
+        }, 1000);
         
       } catch (error: any) {
         console.error("Error updating language:", error);
@@ -74,7 +76,7 @@ export const LanguageSelector = ({ language: externalLanguage, onChange }: Langu
   if (isLoading) {
     return (
       <div className="flex items-center space-x-2">
-        <Globe className="h-5 w-5 animate-spin text-muted-foreground" />
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         <span>{t('loading')}</span>
       </div>
     );
@@ -98,6 +100,11 @@ export const LanguageSelector = ({ language: externalLanguage, onChange }: Langu
                   <Globe className="w-4 h-4 text-primary" />
                 </div>
                 <span className="text-sm font-medium">{option.label}</span>
+                {selectedLanguage === option.value && (
+                  <div className="ml-auto">
+                    <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  </div>
+                )}
               </div>
             </SelectItem>
           ))}
@@ -105,7 +112,7 @@ export const LanguageSelector = ({ language: externalLanguage, onChange }: Langu
       </Select>
       {isUpdating && (
         <div className="text-xs text-muted-foreground flex items-center">
-          <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2"></div>
+          <Loader2 className="w-3 h-3 animate-spin mr-2" />
           Updating language...
         </div>
       )}

@@ -1,243 +1,124 @@
 
-import { useEffect, lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { HelmetProvider } from 'react-helmet-async';
-import { Toaster } from '@/components/ui/sonner';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { AuthProvider, useAuth } from './hooks/use-auth';
-import { LanguageProvider } from './hooks/use-language';
-import { ThemeProvider } from './hooks/use-theme';
-import AppLayout from './components/layout/AppLayout';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import { ErrorBoundary } from './components/auth/ErrorBoundary';
-import { MobileAuthErrorBoundary } from './components/auth/MobileAuthErrorBoundary';
-import Auth from './pages/Auth';
-import Dashboard from './pages/Dashboard';
-import BackgroundNotificationService from './services/shift-notifications/background-notification-service';
-import LoadingSpinner from './components/ui/loading-spinner';
-import { useAttendanceMonitoring } from './hooks/use-attendance-monitoring';
-import { useIsMobile } from './hooks/use-mobile';
-import './App.css';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/hooks/use-auth";
+import { LanguageProvider } from "@/hooks/use-language";
+import { ThemeProvider } from "next-themes";
+import Dashboard from "@/pages/Dashboard";
+import Attendance from "@/pages/Attendance";
+import Schedule from "@/pages/Schedule";
+import People from "@/pages/People";
+import Payroll from "@/pages/Payroll";
+import Reports from "@/pages/Reports";
+import Settings from "@/pages/Settings";
+import Profile from "@/pages/Profile";
+import TimeClock from "@/pages/TimeClock";
+import LeaveManagement from "@/pages/LeaveManagement";
+import ShiftPatterns from "@/pages/ShiftPatterns";
+import AppLayout from "@/components/AppLayout";
+import PrivateRoute from "@/components/PrivateRoute";
 
-// Lazy load pages for better performance
-const People = lazy(() => import('./pages/People'));
-const Attendance = lazy(() => import('./pages/Attendance'));
-const Payroll = lazy(() => import('./pages/Payroll'));
-const PayrollDashboard = lazy(() => import('./pages/PayrollDashboard'));
-const PayrollReports = lazy(() => import('./pages/PayrollReports'));
-const Payslips = lazy(() => import('./pages/Payslips'));
-const Schedule = lazy(() => import('./pages/Schedule'));
-const ShiftPatterns = lazy(() => import('./pages/ShiftPatterns'));
-const RotaEmployee = lazy(() => import('./pages/RotaEmployee'));
-
-const ShiftCalendar = lazy(() => import('./pages/ShiftCalendar'));
-const EmployeeWorkflow = lazy(() => import('./pages/EmployeeWorkflow'));
-const TimeClock = lazy(() => import('./pages/TimeClock'));
-const ManagerTimeClock = lazy(() => import('./pages/ManagerTimeClock'));
-const LeaveManagement = lazy(() => import('./pages/LeaveManagement'));
-const ScheduleRequests = lazy(() => import('./pages/ScheduleRequests'));
-const Profile = lazy(() => import('./pages/Profile'));
-const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
-const OvertimeManagement = lazy(() => import('./pages/OvertimeManagement'));
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      refetchOnReconnect: 'always',
-    },
-  },
-});
-
-// Create a separate component that uses useAuth
-const AppContent = () => {
-  const { user } = useAuth();
-  const isMobile = useIsMobile();
-  
-  // Initialize attendance monitoring
-  useAttendanceMonitoring();
-
-  // Start background notification service when user is authenticated
-  useEffect(() => {
-    if (user) {
-      console.log('🔔 Starting background notification service for user:', user.email);
-      const notificationService = BackgroundNotificationService.getInstance();
-      notificationService.start();
-
-      return () => {
-        console.log('🔔 Stopping background notification service');
-        notificationService.stop();
-      };
-    }
-  }, [user]);
-
-  console.log('🚀 App rendering:', {
-    hasUser: !!user,
-    isMobile,
-    userAgent: navigator.userAgent,
-    timestamp: new Date().toISOString()
-  });
-  
-  const ErrorBoundaryComponent = isMobile ? MobileAuthErrorBoundary : ErrorBoundary;
-  
-  return (
-    <ErrorBoundaryComponent>
-      <div className="min-h-screen bg-background">
-        <Routes>
-          {/* Public routes without layout */}
-          <Route path="/auth" element={<Auth />} />
-          
-          {/* Protected routes with layout */}
-          <Route path="/*" element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<Dashboard />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="profile" element={
-              <Suspense fallback={<LoadingSpinner />}>
-                <Profile />
-              </Suspense>
-            } />
-            <Route path="settings" element={
-              <Suspense fallback={<LoadingSpinner />}>
-                <ProfileSettings />
-              </Suspense>
-            } />
-            <Route path="people" element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <People />
-                </Suspense>
-              </ProtectedRoute>
-            } />
-            <Route path="attendance" element={
-              <Suspense fallback={<LoadingSpinner />}>
-                <Attendance />
-              </Suspense>
-            } />
-            <Route path="leave-management" element={
-              <Suspense fallback={<LoadingSpinner />}>
-                <LeaveManagement />
-              </Suspense>
-            } />
-            <Route path="schedule-requests" element={
-              <Suspense fallback={<LoadingSpinner />}>
-                <ScheduleRequests />
-              </Suspense>
-            } />
-            <Route path="payroll" element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager', 'payroll']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <Payroll />
-                </Suspense>
-              </ProtectedRoute>
-            } />
-            <Route path="payroll-dashboard" element={
-              <ProtectedRoute requiredRole="payroll">
-                <Suspense fallback={<LoadingSpinner />}>
-                  <PayrollDashboard />
-                </Suspense>
-              </ProtectedRoute>
-            } />
-            <Route path="payroll-reports" element={
-              <ProtectedRoute requiredRole="payroll">
-                <Suspense fallback={<LoadingSpinner />}>
-                  <PayrollReports />
-                </Suspense>
-              </ProtectedRoute>
-            } />
-            <Route path="payslips" element={
-              <ProtectedRoute requiredRole="payroll">
-                <Suspense fallback={<LoadingSpinner />}>
-                  <Payslips />
-                </Suspense>
-              </ProtectedRoute>
-            } />
-            <Route path="schedule" element={
-              <Suspense fallback={<LoadingSpinner />}>
-                <Schedule />
-              </Suspense>
-            } />
-            <Route path="shift-patterns" element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <ShiftPatterns />
-                </Suspense>
-              </ProtectedRoute>
-            } />
-            <Route path="rota-employee" element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <RotaEmployee />
-                </Suspense>
-              </ProtectedRoute>
-            } />
-            <Route path="shift-calendar" element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <ShiftCalendar />
-                </Suspense>
-              </ProtectedRoute>
-            } />
-            <Route path="employee-workflow" element={
-              <Suspense fallback={<LoadingSpinner />}>
-                <EmployeeWorkflow />
-              </Suspense>
-            } />
-            <Route path="time-clock" element={
-              <Suspense fallback={<LoadingSpinner />}>
-                <TimeClock />
-              </Suspense>
-            } />
-            <Route path="manager-time-clock" element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <ManagerTimeClock />
-                </Suspense>
-              </ProtectedRoute>
-            } />
-            <Route path="overtime-management" element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <OvertimeManagement />
-                </Suspense>
-              </ProtectedRoute>
-            } />
-          </Route>
-          
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
-    </ErrorBoundaryComponent>
-  );
-};
+const queryClient = new QueryClient();
 
 function App() {
-  console.log('🚀 App component mounted');
-  
   return (
-    <ErrorBoundary>
-      <HelmetProvider>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-            <AuthProvider>
-              <LanguageProvider>
-                <TooltipProvider>
-                  <AppContent />
-                  <Toaster />
-                </TooltipProvider>
-              </LanguageProvider>
-            </AuthProvider>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </HelmetProvider>
-    </ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <AuthProvider>
+          <LanguageProvider>
+            <TooltipProvider>
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/dashboard" element={
+                    <PrivateRoute>
+                      <AppLayout>
+                        <Dashboard />
+                      </AppLayout>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/attendance" element={
+                    <PrivateRoute>
+                      <AppLayout>
+                        <Attendance />
+                      </AppLayout>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/schedule" element={
+                    <PrivateRoute>
+                      <AppLayout>
+                        <Schedule />
+                      </AppLayout>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/people" element={
+                    <PrivateRoute>
+                      <AppLayout>
+                        <People />
+                      </AppLayout>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/payroll" element={
+                    <PrivateRoute>
+                      <AppLayout>
+                        <Payroll />
+                      </AppLayout>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/reports" element={
+                    <PrivateRoute>
+                      <AppLayout>
+                        <Reports />
+                      </AppLayout>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/settings" element={
+                    <PrivateRoute>
+                      <AppLayout>
+                        <Settings />
+                      </AppLayout>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/profile" element={
+                    <PrivateRoute>
+                      <AppLayout>
+                        <Profile />
+                      </AppLayout>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/time-clock" element={
+                    <PrivateRoute>
+                      <AppLayout>
+                        <TimeClock />
+                      </AppLayout>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/leave-management" element={
+                    <PrivateRoute>
+                      <AppLayout>
+                        <LeaveManagement />
+                      </AppLayout>
+                    </PrivateRoute>
+                  } />
+                  <Route path="/shift-patterns" element={
+                    <PrivateRoute>
+                      <AppLayout>
+                        <ShiftPatterns />
+                      </AppLayout>
+                    </PrivateRoute>
+                  } />
+                </Routes>
+                <Toaster />
+                <Sonner />
+              </BrowserRouter>
+            </TooltipProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 
