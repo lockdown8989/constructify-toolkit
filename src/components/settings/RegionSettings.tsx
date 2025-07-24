@@ -38,28 +38,37 @@ export const RegionSettings = () => {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🌐 Form submission started with data:', regionData);
+    
     try {
       toast({
         title: "Saving changes",
         description: "Updating your region and language settings...",
       });
       
-      // Save region settings
+      // Save region settings to database first
       await handleSubmit(e);
       
-      // Also update the language context immediately for app-wide changes
+      // Then update the language context immediately for app-wide changes
       if (regionData.preferred_language) {
+        console.log('🌐 Updating language context to:', regionData.preferred_language);
         await setLanguage(regionData.preferred_language as any);
+        
+        // Force page reload to ensure all components use the new language
+        setTimeout(() => {
+          console.log('🌐 Reloading page to apply language changes...');
+          window.location.reload();
+        }, 1000);
       }
       
       toast({
-        title: "Settings saved successfully",
+        title: "✅ Settings saved successfully",
         description: "Your preferences have been updated and the app language has been changed.",
       });
     } catch (error) {
-      console.error('Error saving settings:', error);
+      console.error('❌ Error saving settings:', error);
       toast({
-        title: "Error saving settings",
+        title: "❌ Error saving settings",
         description: "Failed to save your preferences. Please try again.",
         variant: "destructive"
       });

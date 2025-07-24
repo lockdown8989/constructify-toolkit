@@ -1,7 +1,7 @@
 
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from '@/hooks/use-auth';
 import { detectUserLocation } from '@/services/geolocation';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -18,14 +18,27 @@ export const useRegionSettings = (user: any | null) => {
   const isEmployee = user && !isAdmin && !isManager && !isHR;
   
   const [regionData, setRegionData] = useState<RegionData>({
-    country: user?.country || '',
-    timezone: user?.timezone || '',
-    timezone_offset: user?.timezone_offset || 0,
-    preferred_language: user?.preferred_language || 'en'
+    country: '',
+    timezone: '',
+    timezone_offset: 0,
+    preferred_language: 'en'
   });
   
   const [isLocating, setIsLocating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Initialize region data from user profile when user is available
+  useEffect(() => {
+    if (user) {
+      console.log('🌐 Initializing region data from user:', user);
+      setRegionData({
+        country: user.country || '',
+        timezone: user.timezone || '',
+        timezone_offset: user.timezone_offset || 0,
+        preferred_language: user.preferred_language || 'en'
+      });
+    }
+  }, [user]);
   
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setRegionData(prev => ({
@@ -79,42 +92,30 @@ export const useRegionSettings = (user: any | null) => {
         throw new Error('User not authenticated');
       }
 
-      console.log('Saving region settings:', regionData);
+      console.log('🌐 Saving region settings:', regionData);
       
-      // Update the user's profile with region and language settings
-      const { error: profileError } = await supabase
+      // Update the user's profile with region and language settings (only columns that exist)
+      const { data, error: profileError } = await supabase
         .from('profiles')
         .update({
           country: regionData.country,
-          timezone: regionData.timezone,
-          timezone_offset: regionData.timezone_offset,
-          preferred_language: regionData.preferred_language,
-          updated_at: new Date().toISOString()
+          preferred_language: regionData.preferred_language
         })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select();
 
       if (profileError) {
-        console.error('Profile update error:', profileError);
+        console.error('❌ Profile update error:', profileError);
         throw profileError;
       }
 
-      // Also update the employees table if the user is an employee
-      const { error: employeeError } = await supabase
-        .from('employees')
-        .update({
-          country: regionData.country,
-          timezone: regionData.timezone,
-          preferred_language: regionData.preferred_language
-        })
-        .eq('user_id', user.id);
-
-      // Don't throw error if employee record doesn't exist
-      if (employeeError && !employeeError.message.includes('No rows found')) {
-        console.warn('Employee update warning:', employeeError);
-      }
+      console.log('✅ Profile updated successfully:', data);
+      
+      // Save to localStorage for immediate access
+      localStorage.setItem('preferred_language', regionData.preferred_language);
 
       toast({
-        title: "Settings saved",
+        title: "✅ Settings saved",
         description: "Your region and language settings have been updated successfully.",
       });
     } catch (error: any) {
