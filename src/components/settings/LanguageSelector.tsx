@@ -31,7 +31,7 @@ export const LanguageSelector = ({ language: externalLanguage, onChange }: Langu
   }, [externalLanguage, contextLanguage]);
   
   const handleLanguageChange = async (value: string) => {
-    console.log('Language change requested:', value);
+    console.log('🌐 Language change requested:', value);
     setSelectedLanguage(value);
     setIsUpdating(true);
     
@@ -42,6 +42,7 @@ export const LanguageSelector = ({ language: externalLanguage, onChange }: Langu
     } else {
       // For direct language change - update the context immediately
       try {
+        console.log('🌐 Calling setLanguage with:', value);
         await setLanguage(value as any);
         
         // Show success message in the new language
@@ -51,13 +52,14 @@ export const LanguageSelector = ({ language: externalLanguage, onChange }: Langu
           description: `Language changed to ${selectedOption?.label}`,
         });
         
+        console.log('🌐 Language updated successfully, forcing page reload...');
         // Force a page refresh to ensure all components re-render with new language
         setTimeout(() => {
           window.location.reload();
-        }, 500);
+        }, 1000);
         
       } catch (error: any) {
-        console.error("Error updating language:", error);
+        console.error("❌ Error updating language:", error);
         toast({
           title: "Error updating language",
           description: error.message || "Failed to update language settings",
