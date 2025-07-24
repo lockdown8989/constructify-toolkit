@@ -10,6 +10,7 @@ import { MapPin, Languages } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { formatTimezoneOffset } from "@/utils/timezone-utils";
+import { useEffect } from "react";
 
 export const RegionSettings = () => {
   const { user } = useAuth();
@@ -24,18 +25,45 @@ export const RegionSettings = () => {
     autoDetectLocation
   } = useRegionSettings(user);
 
-  const { t } = useLanguage();
+  const { t, setLanguage } = useLanguage();
   const { toast } = useToast();
+
+  // Auto-detect location on component mount
+  useEffect(() => {
+    if (!regionData.country) {
+      autoDetectLocation();
+    }
+  }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    toast({
-      title: "Saving changes",
-      description: "Updating your region and language settings...",
-    });
-    
-    await handleSubmit(e);
+    try {
+      toast({
+        title: "Saving changes",
+        description: "Updating your region and language settings...",
+      });
+      
+      // Save region settings
+      await handleSubmit(e);
+      
+      // Also update the language context immediately for app-wide changes
+      if (regionData.preferred_language) {
+        await setLanguage(regionData.preferred_language as any);
+      }
+      
+      toast({
+        title: "Settings saved successfully",
+        description: "Your preferences have been updated and the app language has been changed.",
+      });
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast({
+        title: "Error saving settings",
+        description: "Failed to save your preferences. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

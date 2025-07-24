@@ -3,6 +3,7 @@ import { useState, ChangeEvent, FormEvent } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/auth';
 import { detectUserLocation } from '@/services/geolocation';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RegionData {
   country: string;
@@ -34,6 +35,7 @@ export const useRegionSettings = (user: any | null) => {
   };
   
   const handleLanguageChange = (language: string) => {
+    console.log('Language change in hook:', language);
     setRegionData(prev => ({
       ...prev,
       preferred_language: language
@@ -73,21 +75,53 @@ export const useRegionSettings = (user: any | null) => {
     setIsSaving(true);
     
     try {
-      // Simulated API call - in a real app this would call an API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      console.log('Saving region settings:', regionData);
       
-      // Update the user's region settings
-      console.log("Saving region settings:", regionData);
-      
+      // Update the user's profile with region and language settings
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          country: regionData.country,
+          timezone: regionData.timezone,
+          timezone_offset: regionData.timezone_offset,
+          preferred_language: regionData.preferred_language,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        throw profileError;
+      }
+
+      // Also update the employees table if the user is an employee
+      const { error: employeeError } = await supabase
+        .from('employees')
+        .update({
+          country: regionData.country,
+          timezone: regionData.timezone,
+          preferred_language: regionData.preferred_language
+        })
+        .eq('user_id', user.id);
+
+      // Don't throw error if employee record doesn't exist
+      if (employeeError && !employeeError.message.includes('No rows found')) {
+        console.warn('Employee update warning:', employeeError);
+      }
+
       toast({
         title: "Settings saved",
-        description: "Your region settings have been updated.",
+        description: "Your region and language settings have been updated successfully.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving region settings:", error);
       toast({
         title: "Error",
-        description: "Failed to save region settings. Please try again.",
+        description: error.message || "Failed to save region settings. Please try again.",
         variant: "destructive"
       });
     } finally {

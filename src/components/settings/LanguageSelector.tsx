@@ -30,22 +30,28 @@ export const LanguageSelector = ({ language: externalLanguage, onChange }: Langu
   }, [externalLanguage, contextLanguage]);
   
   const handleLanguageChange = async (value: string) => {
+    console.log('Language change requested:', value);
     setSelectedLanguage(value);
     
     if (onChange) {
+      // For form usage - just update the form state
       onChange(value);
-      return;
-    }
-    
-    try {
-      await setLanguage(value as any);
-    } catch (error: any) {
-      console.error("Error updating language:", error);
-      toast({
-        title: "Error updating language",
-        description: error.message || "Failed to update language settings",
-        variant: "destructive",
-      });
+    } else {
+      // For direct language change - update the context immediately
+      try {
+        await setLanguage(value as any);
+        toast({
+          title: "Language Updated",
+          description: `Language changed to ${languageOptions.find(opt => opt.value === value)?.label}`,
+        });
+      } catch (error: any) {
+        console.error("Error updating language:", error);
+        toast({
+          title: "Error updating language",
+          description: error.message || "Failed to update language settings",
+          variant: "destructive",
+        });
+      }
     }
   };
   
@@ -68,7 +74,7 @@ export const LanguageSelector = ({ language: externalLanguage, onChange }: Langu
         <SelectTrigger className="w-full rounded-xl border-input bg-background h-12">
           <SelectValue placeholder={t('chooseLanguage')} />
         </SelectTrigger>
-        <SelectContent className="rounded-xl border shadow-lg">
+        <SelectContent className="rounded-xl border shadow-lg bg-popover z-50">
           {languageOptions.map((option) => (
             <SelectItem key={option.value} value={option.value} className="cursor-pointer py-2.5">
               <div className="flex items-center">

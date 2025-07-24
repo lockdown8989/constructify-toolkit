@@ -39,6 +39,11 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   useEffect(() => {
     const fetchLanguagePreference = async () => {
       if (!user) {
+        // Try to get language from localStorage for non-authenticated users
+        const savedLanguage = localStorage.getItem('preferred_language') as LanguageCode;
+        if (savedLanguage && languageOptions.find(opt => opt.value === savedLanguage)) {
+          setLanguageState(savedLanguage);
+        }
         setIsLoading(false);
         return;
       }
@@ -52,13 +57,11 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
 
         if (error) {
           console.error('Error fetching language preference:', error);
-          toast({
-            title: "Error loading language preferences",
-            description: error.message,
-            variant: "destructive",
-          });
         } else if (data?.preferred_language) {
-          setLanguageState(data.preferred_language as LanguageCode);
+          const langCode = data.preferred_language as LanguageCode;
+          setLanguageState(langCode);
+          // Also save to localStorage for consistency
+          localStorage.setItem('preferred_language', langCode);
         }
       } catch (error) {
         console.error('Error:', error);
@@ -68,38 +71,45 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     fetchLanguagePreference();
-  }, [user, toast]);
+  }, [user]);
 
   const setLanguage = async (newLanguage: LanguageCode) => {
-    if (!user) return;
-
+    console.log('Setting language to:', newLanguage);
+    
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ preferred_language: newLanguage })
-        .eq('id', user.id);
+      // Update local state immediately for responsive UI
+      setLanguageState(newLanguage);
+      
+      // Save to localStorage for persistence
+      localStorage.setItem('preferred_language', newLanguage);
 
-      if (error) {
-        console.error('Error updating language preference:', error);
-        toast({
-          title: "Error updating language",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        setLanguageState(newLanguage);
-        toast({
-          title: "Language Updated",
-          description: `Language has been changed to ${languageOptions.find(opt => opt.value === newLanguage)?.label}`,
-        });
+      if (user) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ preferred_language: newLanguage })
+          .eq('id', user.id);
+
+        if (error) {
+          console.error('Error updating language preference:', error);
+          throw error;
+        }
       }
+
+      console.log('Language successfully updated to:', newLanguage);
     } catch (error: any) {
-      console.error('Error:', error);
-      toast({
-        title: "Error updating language",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error('Error in setLanguage:', error);
+      // Revert local state on error
+      const { data } = await supabase
+        .from('profiles')
+        .select('preferred_language')
+        .eq('id', user?.id)
+        .maybeSingle();
+      
+      if (data?.preferred_language) {
+        setLanguageState(data.preferred_language as LanguageCode);
+      }
+      
+      throw error;
     }
   };
 
