@@ -18,8 +18,8 @@ import Profile from "@/pages/Profile";
 import TimeClock from "@/pages/TimeClock";
 import LeaveManagement from "@/pages/LeaveManagement";
 import ShiftPatterns from "@/pages/ShiftPatterns";
-import AppLayout from "@/components/AppLayout";
-import PrivateRoute from "@/components/PrivateRoute";
+import AppLayout from "@/components/layout/AppLayout";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -34,81 +34,81 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   <Route path="/dashboard" element={
-                    <PrivateRoute>
+                    <ProtectedRoute>
                       <AppLayout>
                         <Dashboard />
                       </AppLayout>
-                    </PrivateRoute>
+                    </ProtectedRoute>
                   } />
                   <Route path="/attendance" element={
-                    <PrivateRoute>
+                    <ProtectedRoute>
                       <AppLayout>
                         <Attendance />
                       </AppLayout>
-                    </PrivateRoute>
+                    </ProtectedRoute>
                   } />
                   <Route path="/schedule" element={
-                    <PrivateRoute>
+                    <ProtectedRoute>
                       <AppLayout>
                         <Schedule />
                       </AppLayout>
-                    </PrivateRoute>
+                    </ProtectedRoute>
                   } />
                   <Route path="/people" element={
-                    <PrivateRoute>
+                    <ProtectedRoute>
                       <AppLayout>
                         <People />
                       </AppLayout>
-                    </PrivateRoute>
+                    </ProtectedRoute>
                   } />
                   <Route path="/payroll" element={
-                    <PrivateRoute>
+                    <ProtectedRoute>
                       <AppLayout>
                         <Payroll />
                       </AppLayout>
-                    </PrivateRoute>
+                    </ProtectedRoute>
                   } />
                   <Route path="/reports" element={
-                    <PrivateRoute>
+                    <ProtectedRoute>
                       <AppLayout>
                         <Reports />
                       </AppLayout>
-                    </PrivateRoute>
+                    </ProtectedRoute>
                   } />
                   <Route path="/settings" element={
-                    <PrivateRoute>
+                    <ProtectedRoute>
                       <AppLayout>
                         <Settings />
                       </AppLayout>
-                    </PrivateRoute>
+                    </ProtectedRoute>
                   } />
                   <Route path="/profile" element={
-                    <PrivateRoute>
+                    <ProtectedRoute>
                       <AppLayout>
                         <Profile />
                       </AppLayout>
-                    </PrivateRoute>
+                    </ProtectedRoute>
                   } />
                   <Route path="/time-clock" element={
-                    <PrivateRoute>
+                    <ProtectedRoute>
                       <AppLayout>
                         <TimeClock />
                       </AppLayout>
-                    </PrivateRoute>
+                    </ProtectedRoute>
                   } />
                   <Route path="/leave-management" element={
-                    <PrivateRoute>
+                    <ProtectedRoute>
                       <AppLayout>
                         <LeaveManagement />
                       </AppLayout>
-                    </PrivateRoute>
+                    </ProtectedRoute>
                   } />
                   <Route path="/shift-patterns" element={
-                    <PrivateRoute>
+                    <ProtectedRoute>
                       <AppLayout>
                         <ShiftPatterns />
                       </AppLayout>
-                    </PrivateRoute>
+                    </ProtectedRoute>
                   } />
                 </Routes>
                 <Toaster />
