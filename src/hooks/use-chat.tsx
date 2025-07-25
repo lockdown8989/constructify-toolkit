@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -106,6 +107,8 @@ export const useChat = () => {
 
     try {
       setIsLoading(true);
+      console.log('Chat: Fetching chats for employee:', currentEmployee.id);
+      
       const { data, error } = await supabase
         .from('chats')
         .select(`
@@ -117,7 +120,12 @@ export const useChat = () => {
         .eq('is_active', true)
         .order('last_message_at', { ascending: false, nullsFirst: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Chat: Error fetching chats:', error);
+        throw error;
+      }
+      
+      console.log('Chat: Chats fetched:', data);
       setChats(data || []);
     } catch (error) {
       console.error('Error fetching chats:', error);
@@ -130,6 +138,8 @@ export const useChat = () => {
   // Fetch messages for current chat
   const fetchMessages = async (chatId: string) => {
     try {
+      console.log('Chat: Fetching messages for chat:', chatId);
+      
       const { data, error } = await supabase
         .from('messages')
         .select(`
@@ -139,15 +149,28 @@ export const useChat = () => {
         .eq('chat_id', chatId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Chat: Error fetching messages:', error);
+        throw error;
+      }
+      
+      console.log('Chat: Messages fetched:', data);
       setMessages(data || []);
 
-      // Mark messages as read
-      await supabase
-        .from('messages')
-        .update({ is_read: true })
-        .eq('chat_id', chatId)
-        .neq('sender_id', currentEmployee?.id);
+      // Mark messages as read for current user
+      if (currentEmployee) {
+        const { error: updateError } = await supabase
+          .from('messages')
+          .update({ is_read: true })
+          .eq('chat_id', chatId)
+          .neq('sender_id', currentEmployee.id);
+
+        if (updateError) {
+          console.error('Chat: Error marking messages as read:', updateError);
+        } else {
+          console.log('Chat: Messages marked as read');
+        }
+      }
 
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -157,16 +180,23 @@ export const useChat = () => {
 
   // Create or get chat with admin/employee
   const createOrGetChat = async (targetEmployeeId: string) => {
-    if (!currentEmployee) return null;
+    if (!currentEmployee) {
+      console.error('Chat: No current employee found');
+      return null;
+    }
 
     try {
+      console.log('Chat: Creating or getting chat between:', currentEmployee.id, 'and', targetEmployeeId);
+      
       // Determine admin and employee IDs based on current user role
       const isAdmin = ['admin', 'employer', 'hr'].includes(userRole);
       const adminId = isAdmin ? currentEmployee.id : targetEmployeeId;
       const employeeId = isAdmin ? targetEmployeeId : currentEmployee.id;
 
+      console.log('Chat: Admin ID:', adminId, 'Employee ID:', employeeId, 'Is current user admin:', isAdmin);
+
       // Check if chat already exists
-      const { data: existingChat } = await supabase
+      const { data: existingChat, error: existingError } = await supabase
         .from('chats')
         .select(`
           *,
@@ -178,14 +208,21 @@ export const useChat = () => {
         .eq('is_active', true)
         .single();
 
+      if (existingError && existingError.code !== 'PGRST116') {
+        console.error('Chat: Error checking existing chat:', existingError);
+        throw existingError;
+      }
+
       if (existingChat) {
+        console.log('Chat: Found existing chat:', existingChat);
         setCurrentChat(existingChat);
         await fetchMessages(existingChat.id);
         return existingChat;
       }
 
       // Create new chat
-      const { data: newChat, error } = await supabase
+      console.log('Chat: Creating new chat');
+      const { data: newChat, error: createError } = await supabase
         .from('chats')
         .insert({
           employee_id: employeeId,
@@ -198,8 +235,12 @@ export const useChat = () => {
         `)
         .single();
 
-      if (error) throw error;
+      if (createError) {
+        console.error('Chat: Error creating chat:', createError);
+        throw createError;
+      }
 
+      console.log('Chat: New chat created:', newChat);
       setCurrentChat(newChat);
       setMessages([]);
       await fetchChats(); // Refresh chats list
@@ -214,9 +255,18 @@ export const useChat = () => {
 
   // Send message
   const sendMessage = async (content: string, messageType: 'text' | 'image' = 'text', attachmentData?: any) => {
-    if (!currentChat || !currentEmployee || !content.trim()) return;
+    if (!currentChat || !currentEmployee || !content.trim()) {
+      console.error('Chat: Cannot send message - missing requirements:', {
+        currentChat: !!currentChat,
+        currentEmployee: !!currentEmployee,
+        content: content.trim()
+      });
+      return;
+    }
 
     try {
+      console.log('Chat: Sending message from employee:', currentEmployee.id, 'in chat:', currentChat.id);
+      
       const senderType = ['admin', 'employer', 'hr'].includes(userRole) ? 'human_admin' : 'human_employee';
 
       const messageData = {
@@ -232,6 +282,8 @@ export const useChat = () => {
         }),
       };
 
+      console.log('Chat: Message data to send:', messageData);
+
       const { data, error } = await supabase
         .from('messages')
         .insert(messageData)
@@ -241,10 +293,24 @@ export const useChat = () => {
         `)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Chat: Error sending message:', error);
+        throw error;
+      }
 
-      // Add message to local state immediately
+      console.log('Chat: Message sent successfully:', data);
+
+      // Add message to local state immediately for better UX
       setMessages(prev => [...prev, data]);
+
+      // Update chat's last_message_at
+      await supabase
+        .from('chats')
+        .update({ 
+          last_message_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentChat.id);
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -354,7 +420,12 @@ export const useChat = () => {
 
   // Set up real-time subscriptions
   useEffect(() => {
-    if (!currentEmployee) return;
+    if (!currentEmployee) {
+      console.log('Chat: No current employee, skipping real-time setup');
+      return;
+    }
+
+    console.log('Chat: Setting up real-time subscriptions for employee:', currentEmployee.id);
 
     const messagesChannel = supabase
       .channel('messages-changes')
@@ -366,20 +437,31 @@ export const useChat = () => {
           table: 'messages'
         },
         (payload) => {
+          console.log('Chat: Received new message via real-time:', payload);
           const newMessage = payload.new as ChatMessage;
           
           // Only add message if it's for current chat and not from current user
-          if (newMessage.chat_id === currentChat?.id && newMessage.sender_id !== currentEmployee.id) {
+          if (currentChat && newMessage.chat_id === currentChat.id && newMessage.sender_id !== currentEmployee.id) {
+            console.log('Chat: Adding message to current chat');
             setMessages(prev => {
               // Check if message already exists
               if (prev.some(msg => msg.id === newMessage.id)) {
+                console.log('Chat: Message already exists, skipping');
                 return prev;
               }
+              console.log('Chat: Adding new message to state');
               return [...prev, newMessage];
+            });
+          } else {
+            console.log('Chat: Message not for current chat or from current user:', {
+              currentChatId: currentChat?.id,
+              messageChatId: newMessage.chat_id,
+              senderId: newMessage.sender_id,
+              currentEmployeeId: currentEmployee.id
             });
           }
 
-          // Update chats list
+          // Update chats list to reflect new message
           fetchChats();
         }
       )
@@ -394,13 +476,15 @@ export const useChat = () => {
           schema: 'public',
           table: 'chats'
         },
-        () => {
+        (payload) => {
+          console.log('Chat: Received chat update via real-time:', payload);
           fetchChats();
         }
       )
       .subscribe();
 
     return () => {
+      console.log('Chat: Cleaning up real-time subscriptions');
       supabase.removeChannel(messagesChannel);
       supabase.removeChannel(chatsChannel);
     };
@@ -429,6 +513,7 @@ export const useChat = () => {
     currentEmployee,
     messagesEndRef,
     setCurrentChat: (chat: Chat | null) => {
+      console.log('Chat: Setting current chat:', chat);
       setCurrentChat(chat);
       if (chat) {
         fetchMessages(chat.id);

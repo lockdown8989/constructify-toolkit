@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -103,8 +104,18 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       )}
 
       {messages.map((message) => {
+        // Check if this message is from the current user (using sender_id comparison)
         const isOwnMessage = message.sender_id === currentUserId && message.sender_type !== 'ai_bot';
         const isAiMessage = message.sender_type === 'ai_bot';
+
+        console.log('ChatMessages: Rendering message', {
+          messageId: message.id,
+          senderId: message.sender_id,
+          currentUserId,
+          isOwnMessage,
+          isAiMessage,
+          senderType: message.sender_type
+        });
 
         return (
           <div
@@ -123,7 +134,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
                 <>
                   <AvatarImage src={message.sender?.avatar_url} />
                   <AvatarFallback className="text-xs">
-                    {message.sender?.name?.charAt(0)?.toUpperCase()}
+                    {message.sender?.name?.charAt(0)?.toUpperCase() || '?'}
                   </AvatarFallback>
                 </>
               )}
@@ -135,7 +146,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             )}>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-medium">
-                  {isAiMessage ? 'AI Assistant' : message.sender?.name}
+                  {isAiMessage ? 'AI Assistant' : message.sender?.name || 'Unknown User'}
                 </span>
                 {isAiMessage && (
                   <Badge variant="secondary" className="text-xs px-1 py-0">

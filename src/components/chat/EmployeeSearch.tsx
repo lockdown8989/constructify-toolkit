@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,10 +11,10 @@ import { toast } from 'sonner';
 interface Employee {
   id: string;
   name: string;
-  job_title: string;
-  department: string;
   avatar_url?: string;
-  user_id: string;
+  department?: string;
+  job_title?: string;
+  user_id?: string;
 }
 
 interface EmployeeSearchProps {
@@ -30,49 +31,64 @@ export const EmployeeSearch: React.FC<EmployeeSearchProps> = ({
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Fetch all employees
   useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        setIsLoading(true);
+        console.log('EmployeeSearch: Fetching employees');
+        
+        const { data, error } = await supabase
+          .from('employees')
+          .select('id, name, avatar_url, department, job_title, user_id')
+          .eq('status', 'Active')
+          .order('name');
+
+        if (error) {
+          console.error('EmployeeSearch: Error fetching employees:', error);
+          throw error;
+        }
+
+        console.log('EmployeeSearch: Employees fetched:', data);
+        setEmployees(data || []);
+        setFilteredEmployees(data || []);
+      } catch (error) {
+        console.error('Error fetching employees:', error);
+        toast.error('Failed to load employees');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     fetchEmployees();
   }, []);
 
+  // Filter employees based on search query
   useEffect(() => {
-    if (searchQuery.trim()) {
-      const filtered = employees.filter(employee =>
-        employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        employee.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        employee.job_title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredEmployees(filtered);
-    } else {
+    if (!searchQuery.trim()) {
       setFilteredEmployees(employees);
+      return;
     }
+
+    const filtered = employees.filter(employee =>
+      employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      employee.department?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      employee.job_title?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    setFilteredEmployees(filtered);
   }, [searchQuery, employees]);
 
-  const fetchEmployees = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('employees')
-        .select('id, name, job_title, department, avatar_url, user_id')
-        .eq('status', 'Active')
-        .not('user_id', 'is', null)
-        .order('name');
-
-      if (error) throw error;
-      setEmployees(data || []);
-      setFilteredEmployees(data || []);
-    } catch (error) {
-      console.error('Error fetching employees:', error);
-      toast.error('Failed to load employees');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleEmployeeSelect = (employee: Employee) => {
+    console.log('EmployeeSearch: Employee selected:', employee);
+    onEmployeeSelect(employee.id);
   };
 
   return (
     <div className="flex flex-col h-full">
-      {/* Search Header */}
-      <div className="p-4 border-b border-border space-y-3">
-        <div className="flex items-center gap-2">
+      {/* Header */}
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center gap-2 mb-3">
           <Button
             variant="ghost"
             size="sm"
@@ -81,73 +97,58 @@ export const EmployeeSearch: React.FC<EmployeeSearchProps> = ({
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h3 className="font-semibold text-sm">Start New Chat</h3>
+          <h3 className="font-semibold">Select Employee</h3>
         </div>
         
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
+            placeholder="Search employees..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search employees..."
             className="pl-10"
           />
         </div>
       </div>
 
       {/* Employee List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto p-4">
         {isLoading ? (
-          <div className="p-4 space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center gap-3 animate-pulse">
-                <div className="w-10 h-10 bg-muted rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-muted rounded w-3/4" />
-                  <div className="h-3 bg-muted rounded w-1/2" />
-                </div>
-              </div>
-            ))}
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Loading employees...</p>
           </div>
         ) : filteredEmployees.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">
-            <p className="text-sm">
-              {searchQuery ? 'No employees found' : 'No employees available'}
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">
+              {searchQuery ? 'No employees found matching your search' : 'No employees available'}
             </p>
           </div>
         ) : (
-          <div className="space-y-1">
+          <div className="space-y-2">
             {filteredEmployees.map((employee) => (
-              <div
+              <Button
                 key={employee.id}
-                onClick={() => onEmployeeSelect(employee.id)}
-                className="flex items-center gap-3 p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                onClick={() => handleEmployeeSelect(employee)}
+                className="w-full p-4 h-auto justify-start bg-muted/50 hover:bg-muted text-left"
+                variant="ghost"
               >
-                <Avatar className="w-10 h-10">
-                  <AvatarImage src={employee.avatar_url} />
-                  <AvatarFallback className="text-sm">
-                    {employee.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-medium text-sm truncate">
-                      {employee.name}
-                    </h4>
-                    <div className="w-2 h-2 bg-green-500 rounded-full" title="Online" />
-                  </div>
+                <div className="flex items-center gap-3 w-full">
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage src={employee.avatar_url} alt={employee.name} />
+                    <AvatarFallback className="text-sm">
+                      {employee.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
                   
-                  <div className="flex items-center gap-2 mt-1">
-                    <p className="text-xs text-muted-foreground truncate">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{employee.name}</div>
+                    <div className="text-sm text-muted-foreground truncate">
                       {employee.job_title}
-                    </p>
-                    <Badge variant="secondary" className="text-xs px-1 py-0">
-                      {employee.department}
-                    </Badge>
+                      {employee.department && ` • ${employee.department}`}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Button>
             ))}
           </div>
         )}
