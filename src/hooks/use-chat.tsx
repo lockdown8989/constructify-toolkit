@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -221,7 +220,7 @@ export const useChat = () => {
       }
 
       // Create new chat
-      console.log('Chat: Creating new chat');
+      console.log('Chat: Creating new chat with employee_id:', employeeId, 'admin_id:', adminId);
       const { data: newChat, error: createError } = await supabase
         .from('chats')
         .insert({
@@ -248,7 +247,7 @@ export const useChat = () => {
 
     } catch (error) {
       console.error('Error creating/getting chat:', error);
-      toast.error('Failed to start chat');
+      toast.error('Failed to start chat. Please try again.');
       return null;
     }
   };
