@@ -139,27 +139,8 @@ export const ChatWidget = () => {
 
   const updateConnectedUsers = async (presenceState: any) => {
     console.log('ChatWidget: Updating connected users from presence state:', presenceState);
-    const users: ConnectedUser[] = [];
     
-    // Get all users from presence state
-    Object.keys(presenceState).forEach(userId => {
-      const presences = presenceState[userId];
-      if (presences.length > 0) {
-        const presence = presences[0];
-        if (userId !== user.id) { // Don't include current user
-          users.push({
-            id: userId,
-            name: presence.name,
-            role: presence.role,
-            isOnline: true,
-            lastSeen: presence.online_at,
-            avatar_url: presence.avatar_url,
-          });
-        }
-      }
-    });
-
-    // Get all employees from database so everyone can chat with each other
+    // Get all employees from database first
     const { data: allEmployees } = await supabase
       .from('employees')
       .select(`
@@ -169,28 +150,34 @@ export const ChatWidget = () => {
       `)
       .neq('user_id', user.id);
 
-    if (allEmployees) {
-      // Get roles for all employees
-      const userIds = allEmployees.map(emp => emp.user_id);
-      const { data: userRoles } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .in('user_id', userIds);
-
-      allEmployees.forEach(emp => {
-        const existingUser = users.find(u => u.id === emp.user_id);
-        if (!existingUser) {
-          const userRole = userRoles?.find(r => r.user_id === emp.user_id);
-          users.push({
-            id: emp.user_id,
-            name: emp.name,
-            role: userRole?.role || 'employee',
-            isOnline: false,
-            avatar_url: emp.avatar_url,
-          });
-        }
-      });
+    if (!allEmployees) {
+      console.log('ChatWidget: No employees found');
+      setConnectedUsers([]);
+      return;
     }
+
+    // Get roles for all employees
+    const userIds = allEmployees.map(emp => emp.user_id);
+    const { data: userRoles } = await supabase
+      .from('user_roles')
+      .select('user_id, role')
+      .in('user_id', userIds);
+
+    // Create users list with correct online status
+    const users: ConnectedUser[] = allEmployees.map(emp => {
+      const userRole = userRoles?.find(r => r.user_id === emp.user_id);
+      const presenceData = presenceState[emp.user_id];
+      const isOnline = presenceData && presenceData.length > 0;
+      
+      return {
+        id: emp.user_id,
+        name: emp.name,
+        role: userRole?.role || 'employee',
+        isOnline: isOnline,
+        lastSeen: isOnline ? presenceData[0].online_at : undefined,
+        avatar_url: emp.avatar_url,
+      };
+    });
 
     console.log('ChatWidget: Final connected users list:', users);
     setConnectedUsers(users);
