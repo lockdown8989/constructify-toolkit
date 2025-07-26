@@ -167,7 +167,7 @@ export const useChat = () => {
         if (updateError) {
           console.error('Chat: Error marking messages as read:', updateError);
         } else {
-          console.log('Chat: Messages marked as read');
+          console.log('Chat: Messages marked as read for current employee:', currentEmployee.id);
         }
       }
 
@@ -441,16 +441,33 @@ export const useChat = () => {
           
           // Only add message if it's for current chat and not from current user
           if (currentChat && newMessage.chat_id === currentChat.id && newMessage.sender_id !== currentEmployee.id) {
-            console.log('Chat: Adding message to current chat');
-            setMessages(prev => {
-              // Check if message already exists
-              if (prev.some(msg => msg.id === newMessage.id)) {
-                console.log('Chat: Message already exists, skipping');
-                return prev;
-              }
-              console.log('Chat: Adding new message to state');
-              return [...prev, newMessage];
-            });
+            console.log('Chat: Adding message to current chat from sender:', newMessage.sender_id);
+            
+            // Fetch sender info for the new message
+            const fetchSenderInfo = async () => {
+              const { data: sender } = await supabase
+                .from('employees')
+                .select('id, name, avatar_url')
+                .eq('id', newMessage.sender_id)
+                .single();
+              
+              const messageWithSender = {
+                ...newMessage,
+                sender: sender || { id: newMessage.sender_id, name: 'Unknown User', avatar_url: null }
+              };
+              
+              setMessages(prev => {
+                // Check if message already exists
+                if (prev.some(msg => msg.id === newMessage.id)) {
+                  console.log('Chat: Message already exists, skipping');
+                  return prev;
+                }
+                console.log('Chat: Adding new message to state');
+                return [...prev, messageWithSender];
+              });
+            };
+            
+            fetchSenderInfo();
           } else {
             console.log('Chat: Message not for current chat or from current user:', {
               currentChatId: currentChat?.id,

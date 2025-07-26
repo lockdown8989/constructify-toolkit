@@ -11,14 +11,14 @@ interface ChatMessagesProps {
   messages: ChatMessage[];
   isTyping: boolean;
   isAiMode: boolean;
-  currentUserId: string;
+  currentEmployeeId: string; // Changed from currentUserId to currentEmployeeId for clarity
 }
 
 export const ChatMessages: React.FC<ChatMessagesProps> = ({
   messages,
   isTyping,
   isAiMode,
-  currentUserId,
+  currentEmployeeId,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -104,17 +104,18 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       )}
 
       {messages.map((message) => {
-        // Check if this message is from the current user (using sender_id comparison)
-        const isOwnMessage = message.sender_id === currentUserId && message.sender_type !== 'ai_bot';
+        // Check if this message is from the current employee (using sender_id comparison)
+        const isOwnMessage = message.sender_id === currentEmployeeId && message.sender_type !== 'ai_bot';
         const isAiMessage = message.sender_type === 'ai_bot';
 
         console.log('ChatMessages: Rendering message', {
           messageId: message.id,
           senderId: message.sender_id,
-          currentUserId,
+          currentEmployeeId,
           isOwnMessage,
           isAiMessage,
-          senderType: message.sender_type
+          senderType: message.sender_type,
+          messageContent: message.content.substring(0, 50) + '...'
         });
 
         return (

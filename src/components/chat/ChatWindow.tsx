@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,7 +38,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
     currentEmployee, 
     userRole, 
     isLoading,
-    isAiMode
+    isAiMode,
+    currentChatId: currentChat?.id
   });
 
   const [view, setView] = useState<'chats' | 'chat' | 'search' | 'ai'>('chats');
@@ -170,7 +172,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
                 messages={messages}
                 isTyping={isTyping}
                 isAiMode={isAiMode}
-                currentUserId={currentChat.employee_id}
+                currentEmployeeId={currentEmployee?.id || ''}
               />
             </div>
             
@@ -192,7 +194,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
                 messages={messages}
                 isTyping={isTyping}
                 isAiMode={true}
-                currentUserId={currentEmployee?.id || ''}
+                currentEmployeeId={currentEmployee?.id || ''}
               />
             </div>
             
