@@ -435,9 +435,9 @@ export const useChat = () => {
           console.log('Chat: Received new message via real-time:', payload);
           const newMessage = payload.new as ChatMessage;
           
-          // Only add message if it's not from current user
-          if (newMessage.sender_id !== currentEmployee.id) {
-            console.log('Chat: Adding message from sender:', newMessage.sender_id);
+          // Only add message if it's for the current chat
+          if (currentChat && newMessage.chat_id === currentChat.id) {
+            console.log('Chat: Processing message for current chat:', newMessage.chat_id);
             
             // Fetch sender info for the new message
             const fetchSenderInfo = async () => {
@@ -459,19 +459,18 @@ export const useChat = () => {
                   return prev;
                 }
                 
-                // Only add if it's for the current chat or we're in standalone mode
-                if (currentChat && newMessage.chat_id === currentChat.id) {
-                  console.log('Chat: Adding new message to current chat');
+                // Add the message if it's not from current user (to avoid duplicate from local state)
+                if (newMessage.sender_id !== currentEmployee.id) {
+                  console.log('Chat: Adding new message from other user');
                   return [...prev, messageWithSender];
                 }
                 
+                console.log('Chat: Message from current user already in local state');
                 return prev;
               });
             };
             
             fetchSenderInfo();
-          } else {
-            console.log('Chat: Message from current user, skipping real-time update');
           }
 
           // Always update chats list to reflect new message
