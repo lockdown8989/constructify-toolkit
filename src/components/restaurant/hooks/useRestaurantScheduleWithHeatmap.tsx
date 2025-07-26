@@ -49,9 +49,9 @@ export const useRestaurantScheduleWithHeatmap = () => {
     await refetchHeatmap();
   };
 
-  // Enhanced updateShift that triggers heatmap refresh
-  const enhancedUpdateShift = async (id: string, updates: any) => {
-    await updateShift(id, updates);
+  // Enhanced updateShift that triggers heatmap refresh - fix the function signature
+  const enhancedUpdateShift = async (updatedShift: any) => {
+    await updateShift(updatedShift);
     await refetchHeatmap();
   };
 
