@@ -54,7 +54,6 @@ export const useChat = () => {
   const [userRole, setUserRole] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Fetch current employee and role
   useEffect(() => {
     const fetchCurrentEmployee = async () => {
       if (!user) {
@@ -100,7 +99,6 @@ export const useChat = () => {
     fetchCurrentEmployee();
   }, [user]);
 
-  // Fetch chats
   const fetchChats = async () => {
     if (!currentEmployee) return;
 
@@ -134,7 +132,6 @@ export const useChat = () => {
     }
   };
 
-  // Fetch messages for current chat
   const fetchMessages = async (chatId: string) => {
     try {
       console.log('Chat: Fetching messages for chat:', chatId);
@@ -177,7 +174,6 @@ export const useChat = () => {
     }
   };
 
-  // Create or get chat with admin/employee
   const createOrGetChat = async (targetEmployeeId: string) => {
     if (!currentEmployee) {
       console.error('Chat: No current employee found');
@@ -252,7 +248,6 @@ export const useChat = () => {
     }
   };
 
-  // Send message
   const sendMessage = async (content: string, messageType: 'text' | 'image' = 'text', attachmentData?: any) => {
     if (!currentChat || !currentEmployee || !content.trim()) {
       console.error('Chat: Cannot send message - missing requirements:', {
@@ -303,7 +298,7 @@ export const useChat = () => {
       setMessages(prev => [...prev, data]);
 
       // Update chat's last_message_at
-      await supabase
+      const { error: updateError } = await supabase
         .from('chats')
         .update({ 
           last_message_at: new Date().toISOString(),
@@ -311,13 +306,16 @@ export const useChat = () => {
         })
         .eq('id', currentChat.id);
 
+      if (updateError) {
+        console.error('Chat: Error updating chat timestamp:', updateError);
+      }
+
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');
     }
   };
 
-  // Send AI message
   const sendAiMessage = async (content: string) => {
     if (!currentEmployee || !content.trim()) return;
 
@@ -387,7 +385,6 @@ export const useChat = () => {
     }
   };
 
-  // Upload file
   const uploadFile = async (file: File) => {
     if (!currentEmployee || !user) return null;
 
@@ -417,7 +414,6 @@ export const useChat = () => {
     }
   };
 
-  // Set up real-time subscriptions
   useEffect(() => {
     if (!currentEmployee) {
       console.log('Chat: No current employee, skipping real-time setup');
@@ -439,9 +435,9 @@ export const useChat = () => {
           console.log('Chat: Received new message via real-time:', payload);
           const newMessage = payload.new as ChatMessage;
           
-          // Only add message if it's for current chat and not from current user
-          if (currentChat && newMessage.chat_id === currentChat.id && newMessage.sender_id !== currentEmployee.id) {
-            console.log('Chat: Adding message to current chat from sender:', newMessage.sender_id);
+          // Only add message if it's not from current user
+          if (newMessage.sender_id !== currentEmployee.id) {
+            console.log('Chat: Adding message from sender:', newMessage.sender_id);
             
             // Fetch sender info for the new message
             const fetchSenderInfo = async () => {
@@ -462,22 +458,23 @@ export const useChat = () => {
                   console.log('Chat: Message already exists, skipping');
                   return prev;
                 }
-                console.log('Chat: Adding new message to state');
-                return [...prev, messageWithSender];
+                
+                // Only add if it's for the current chat or we're in standalone mode
+                if (currentChat && newMessage.chat_id === currentChat.id) {
+                  console.log('Chat: Adding new message to current chat');
+                  return [...prev, messageWithSender];
+                }
+                
+                return prev;
               });
             };
             
             fetchSenderInfo();
           } else {
-            console.log('Chat: Message not for current chat or from current user:', {
-              currentChatId: currentChat?.id,
-              messageChatId: newMessage.chat_id,
-              senderId: newMessage.sender_id,
-              currentEmployeeId: currentEmployee.id
-            });
+            console.log('Chat: Message from current user, skipping real-time update');
           }
 
-          // Update chats list to reflect new message
+          // Always update chats list to reflect new message
           fetchChats();
         }
       )
@@ -506,12 +503,10 @@ export const useChat = () => {
     };
   }, [currentEmployee, currentChat?.id]);
 
-  // Scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Initial fetch
   useEffect(() => {
     if (currentEmployee) {
       fetchChats();

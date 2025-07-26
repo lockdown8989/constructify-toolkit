@@ -39,6 +39,7 @@ export const ChatWidget = () => {
   const [connectedUsers, setConnectedUsers] = useState<ConnectedUser[]>([]);
   const [message, setMessage] = useState('');
   const [currentUserRole, setCurrentUserRole] = useState<string>('');
+  const [presenceChannel, setPresenceChannel] = useState<any>(null);
 
   console.log('ChatWidget: Rendering, user:', user, 'isOpen:', isOpen, 'chatMode:', chatMode);
 
@@ -67,7 +68,9 @@ export const ChatWidget = () => {
 
   // Track user presence and get connected users
   useEffect(() => {
-    if (!isOpen || chatMode !== 'select') return;
+    if (!user || !currentUserRole) return;
+
+    console.log('ChatWidget: Setting up presence for user:', user.id, 'with role:', currentUserRole);
 
     const channel = supabase.channel('online-users', {
       config: {
@@ -80,43 +83,62 @@ export const ChatWidget = () => {
     // Track current user presence
     channel.on('presence', { event: 'sync' }, () => {
       const newState = channel.presenceState();
-      console.log('Presence sync:', newState);
+      console.log('ChatWidget: Presence sync:', newState);
       updateConnectedUsers(newState);
     });
 
     channel.on('presence', { event: 'join' }, ({ key, newPresences }) => {
-      console.log('User joined:', key, newPresences);
+      console.log('ChatWidget: User joined:', key, newPresences);
+      // Refresh connected users when someone joins
+      const currentState = channel.presenceState();
+      updateConnectedUsers(currentState);
     });
 
     channel.on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-      console.log('User left:', key, leftPresences);
+      console.log('ChatWidget: User left:', key, leftPresences);
+      // Refresh connected users when someone leaves
+      const currentState = channel.presenceState();
+      updateConnectedUsers(currentState);
     });
 
     channel.subscribe(async (status) => {
+      console.log('ChatWidget: Channel subscription status:', status);
       if (status !== 'SUBSCRIBED') return;
 
       // Get current user info
       const { data: employee } = await supabase
         .from('employees')
-        .select('id, name')
+        .select('id, name, avatar_url')
         .eq('user_id', user.id)
         .single();
 
+      console.log('ChatWidget: Tracking presence for employee:', employee);
+
       // Track presence
-      await channel.track({
+      const trackResult = await channel.track({
         user_id: user.id,
+        employee_id: employee?.id,
         name: employee?.name || 'Unknown User',
         role: currentUserRole,
         online_at: new Date().toISOString(),
+        avatar_url: employee?.avatar_url,
       });
+
+      console.log('ChatWidget: Presence track result:', trackResult);
     });
 
+    setPresenceChannel(channel);
+
     return () => {
-      supabase.removeChannel(channel);
+      console.log('ChatWidget: Cleaning up presence channel');
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
-  }, [isOpen, chatMode, user.id, currentUserRole]);
+  }, [user.id, currentUserRole]);
 
   const updateConnectedUsers = async (presenceState: any) => {
+    console.log('ChatWidget: Updating connected users from presence state:', presenceState);
     const users: ConnectedUser[] = [];
     
     // Get all users from presence state
@@ -131,6 +153,7 @@ export const ChatWidget = () => {
             role: presence.role,
             isOnline: true,
             lastSeen: presence.online_at,
+            avatar_url: presence.avatar_url,
           });
         }
       }
@@ -155,7 +178,8 @@ export const ChatWidget = () => {
         .in('user_id', userIds);
 
       allEmployees.forEach(emp => {
-        if (!users.find(u => u.id === emp.user_id)) {
+        const existingUser = users.find(u => u.id === emp.user_id);
+        if (!existingUser) {
           const userRole = userRoles?.find(r => r.user_id === emp.user_id);
           users.push({
             id: emp.user_id,
@@ -168,8 +192,16 @@ export const ChatWidget = () => {
       });
     }
 
+    console.log('ChatWidget: Final connected users list:', users);
     setConnectedUsers(users);
   };
+
+  // Initial load of all users when widget opens
+  useEffect(() => {
+    if (isOpen && chatMode === 'select') {
+      updateConnectedUsers(presenceChannel?.presenceState() || {});
+    }
+  }, [isOpen, chatMode, presenceChannel]);
 
   const handleSendAiMessage = async () => {
     if (!message.trim()) return;
@@ -181,6 +213,7 @@ export const ChatWidget = () => {
   const handleSendHumanMessage = async () => {
     if (!message.trim() || !currentChat) return;
 
+    console.log('ChatWidget: Sending human message:', message, 'to chat:', currentChat.id);
     await sendChatMessage(message.trim());
     setMessage('');
   };
@@ -266,6 +299,7 @@ export const ChatWidget = () => {
             <Button
               key={connectedUser.id}
               onClick={async () => {
+                console.log('ChatWidget: Starting chat with user:', connectedUser);
                 setSelectedUser(connectedUser);
                 setChatMode('human');
                 // Get employee ID for the selected user
@@ -275,8 +309,10 @@ export const ChatWidget = () => {
                   .eq('user_id', connectedUser.id)
                   .single();
                   
+                console.log('ChatWidget: Found employee for user:', employee);
                 if (employee) {
-                  await createOrGetChat(employee.id);
+                  const chat = await createOrGetChat(employee.id);
+                  console.log('ChatWidget: Created/got chat:', chat);
                 }
               }}
               className="w-full p-4 md:p-4 h-auto justify-start bg-muted/50 hover:bg-muted text-left touch-manipulation min-h-[72px] rounded-xl active:scale-[0.98] transition-transform"
