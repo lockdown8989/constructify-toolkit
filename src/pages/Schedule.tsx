@@ -2,7 +2,7 @@
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useIsMobile } from '@/hooks/use-mobile';
-import ManagerScheduleView from '@/components/schedule/ManagerScheduleView';
+import ManagerScheduleViewWithHeatmap from '@/components/schedule/ManagerScheduleViewWithHeatmap';
 import EmployeeScheduleView from '@/components/schedule/EmployeeScheduleView';
 
 const Schedule: React.FC = () => {
@@ -13,7 +13,7 @@ const Schedule: React.FC = () => {
   return (
     <div className={`${isMobile ? 'px-0 py-2' : 'container py-6'}`}>
       {hasManagerAccess ? (
-        <ManagerScheduleView />
+        <ManagerScheduleViewWithHeatmap />
       ) : (
         <EmployeeScheduleView />
       )}
