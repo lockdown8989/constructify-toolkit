@@ -172,13 +172,15 @@ export const ChatWidget = () => {
       const userRole = userRoles?.find(r => r.user_id === emp.user_id);
       const presenceData = presenceState[emp.user_id];
       const isPresent = presenceData && presenceData.length > 0;
-      const userOnlineStatus = isPresent ? presenceData[0].is_online : false;
+      
+      // Only consider user online if they are present AND have explicitly set is_online to true
+      const userOnlineStatus = isPresent && presenceData[0].is_online === true;
       
       return {
         id: emp.user_id,
         name: emp.name,
         role: userRole?.role || 'employee',
-        isOnline: isPresent && userOnlineStatus,
+        isOnline: userOnlineStatus,
         lastSeen: isPresent ? presenceData[0].online_at : undefined,
         avatar_url: emp.avatar_url,
       };
