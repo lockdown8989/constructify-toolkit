@@ -270,18 +270,27 @@ export const ChatWidget = () => {
     <div className="p-6 md:p-6 space-y-6 md:space-y-4 safe-area-inset">
       <div className="flex items-center justify-between mb-8 md:mb-6">
         <h2 className="font-bold text-xl md:text-lg text-foreground">Choose Chat Type</h2>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsOnline(!isOnline)}
-            className={cn(
-              "p-2 h-auto touch-manipulation rounded-full transition-colors",
-              isOnline ? "text-green-600 hover:bg-green-100" : "text-gray-400 hover:bg-gray-100"
-            )}
-          >
-            <Power className="w-5 h-5" />
-          </Button>
+        <div className="flex items-center gap-3">
+          {/* Online/Offline Toggle Switch */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsOnline(!isOnline)}
+              className={cn(
+                "relative inline-flex items-center px-4 py-2 rounded-full transition-all duration-300 ease-in-out touch-manipulation min-w-[100px] h-10",
+                isOnline 
+                  ? "bg-green-500 text-white" 
+                  : "bg-red-500 text-white"
+              )}
+            >
+              <span className={cn(
+                "absolute w-6 h-6 bg-white rounded-full transition-transform duration-300 ease-in-out shadow-sm",
+                isOnline ? "transform translate-x-0" : "transform translate-x-8"
+              )} />
+              <span className="text-sm font-medium relative z-10 mx-auto">
+                {isOnline ? "Online" : "Offline"}
+              </span>
+            </button>
+          </div>
           <Button
             variant="ghost"
             size="sm"
