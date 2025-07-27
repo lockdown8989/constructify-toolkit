@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { MessageCircle, X, Send, Bot, Users, Circle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { MessageCircle, X, Send, Bot, Users, Circle, Bell, Power } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useChat } from '@/hooks/use-chat';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,6 +41,8 @@ export const ChatWidget = () => {
   const [message, setMessage] = useState('');
   const [currentUserRole, setCurrentUserRole] = useState<string>('');
   const [presenceChannel, setPresenceChannel] = useState<any>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isOnline, setIsOnline] = useState(true);
 
   console.log('ChatWidget: Rendering, user:', user, 'isOpen:', isOpen, 'chatMode:', chatMode);
 
@@ -122,6 +125,7 @@ export const ChatWidget = () => {
         role: currentUserRole,
         online_at: new Date().toISOString(),
         avatar_url: employee?.avatar_url,
+        is_online: isOnline,
       });
 
       console.log('ChatWidget: Presence track result:', trackResult);
@@ -167,14 +171,15 @@ export const ChatWidget = () => {
     const users: ConnectedUser[] = allEmployees.map(emp => {
       const userRole = userRoles?.find(r => r.user_id === emp.user_id);
       const presenceData = presenceState[emp.user_id];
-      const isOnline = presenceData && presenceData.length > 0;
+      const isPresent = presenceData && presenceData.length > 0;
+      const userOnlineStatus = isPresent ? presenceData[0].is_online : false;
       
       return {
         id: emp.user_id,
         name: emp.name,
         role: userRole?.role || 'employee',
-        isOnline: isOnline,
-        lastSeen: isOnline ? presenceData[0].online_at : undefined,
+        isOnline: isPresent && userOnlineStatus,
+        lastSeen: isPresent ? presenceData[0].online_at : undefined,
         avatar_url: emp.avatar_url,
       };
     });
@@ -189,6 +194,53 @@ export const ChatWidget = () => {
       updateConnectedUsers(presenceChannel?.presenceState() || {});
     }
   }, [isOpen, chatMode, presenceChannel]);
+
+  // Listen for new messages to update unread count
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('chat-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+        },
+        (payload) => {
+          // Only count messages from other users
+          if (payload.new.sender_employee_id !== currentChat?.employee_id && !isOpen) {
+            setUnreadCount(prev => prev + 1);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, currentChat, isOpen]);
+
+  // Reset unread count when chat is opened
+  useEffect(() => {
+    if (isOpen) {
+      setUnreadCount(0);
+    }
+  }, [isOpen]);
+
+  // Update presence when online status changes
+  useEffect(() => {
+    if (presenceChannel && user) {
+      presenceChannel.track({
+        user_id: user.id,
+        name: user.user_metadata?.full_name || 'Unknown User',
+        role: currentUserRole,
+        online_at: new Date().toISOString(),
+        is_online: isOnline,
+      });
+    }
+  }, [isOnline, presenceChannel, user, currentUserRole]);
 
   const handleSendAiMessage = async () => {
     if (!message.trim()) return;
@@ -218,14 +270,27 @@ export const ChatWidget = () => {
     <div className="p-6 md:p-6 space-y-6 md:space-y-4 safe-area-inset">
       <div className="flex items-center justify-between mb-8 md:mb-6">
         <h2 className="font-bold text-xl md:text-lg text-foreground">Choose Chat Type</h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsOpen(false)}
-          className="p-3 h-auto touch-manipulation md:hidden rounded-full hover:bg-muted/50"
-        >
-          <X className="w-6 h-6" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsOnline(!isOnline)}
+            className={cn(
+              "p-2 h-auto touch-manipulation rounded-full transition-colors",
+              isOnline ? "text-green-600 hover:bg-green-100" : "text-gray-400 hover:bg-gray-100"
+            )}
+          >
+            <Power className="w-5 h-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsOpen(false)}
+            className="p-3 h-auto touch-manipulation md:hidden rounded-full hover:bg-muted/50"
+          >
+            <X className="w-6 h-6" />
+          </Button>
+        </div>
       </div>
       
       <Button
@@ -478,7 +543,7 @@ export const ChatWidget = () => {
           }
         }}
         className={cn(
-          "fixed shadow-lg z-40 p-0 touch-manipulation",
+          "fixed shadow-lg z-40 p-0 touch-manipulation relative",
           "bg-primary hover:bg-primary/90 text-primary-foreground",
           "transition-all duration-200 ease-in-out rounded-full",
           // Desktop
@@ -491,7 +556,17 @@ export const ChatWidget = () => {
         {isOpen ? (
           <X className="w-6 h-6 md:w-6 md:h-6" />
         ) : (
-          <MessageCircle className="w-6 h-6 md:w-6 md:h-6" />
+          <>
+            <MessageCircle className="w-6 h-6 md:w-6 md:h-6" />
+            {unreadCount > 0 && (
+              <Badge
+                variant="destructive"
+                className="absolute -top-2 -right-2 w-6 h-6 rounded-full p-0 flex items-center justify-center text-xs font-bold"
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Badge>
+            )}
+          </>
         )}
       </Button>
     </>
