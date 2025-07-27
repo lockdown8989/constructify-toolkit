@@ -543,13 +543,13 @@ export const ChatWidget = () => {
           }
         }}
         className={cn(
-          "fixed shadow-lg z-40 p-0 touch-manipulation relative",
+          "fixed shadow-lg z-40 p-0 touch-manipulation",
           "bg-primary hover:bg-primary/90 text-primary-foreground",
           "transition-all duration-200 ease-in-out rounded-full",
           // Desktop
           "md:bottom-4 md:right-4 md:w-14 md:h-14",
           // Mobile - larger touch target, better positioning
-          "max-md:bottom-6 max-md:right-4 max-md:w-16 max-md:h-16"
+          "max-md:bottom-6 max-md:right-6 max-md:w-16 max-md:h-16"
         )}
         aria-label={isOpen ? "Close chat" : "Open chat"}
       >
