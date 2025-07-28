@@ -75,113 +75,101 @@ export const ChatWidget = () => {
 
     console.log('ChatWidget: Setting up presence for user:', user.id, 'with role:', currentUserRole);
 
-    const channel = supabase.channel('online-users', {
-      config: {
-        presence: {
-          key: user.id,
-        },
-      },
-    });
-
-    // Track current user presence
-    channel.on('presence', { event: 'sync' }, () => {
-      const newState = channel.presenceState();
-      console.log('ChatWidget: Presence sync:', newState);
-      updateConnectedUsers(newState);
-    });
-
-    channel.on('presence', { event: 'join' }, ({ key, newPresences }) => {
-      console.log('ChatWidget: User joined:', key, newPresences);
-      // Refresh connected users when someone joins
-      const currentState = channel.presenceState();
-      updateConnectedUsers(currentState);
-    });
-
-    channel.on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-      console.log('ChatWidget: User left:', key, leftPresences);
-      // Refresh connected users when someone leaves
-      const currentState = channel.presenceState();
-      updateConnectedUsers(currentState);
-    });
-
-    channel.subscribe(async (status) => {
-      console.log('ChatWidget: Channel subscription status:', status);
-      if (status !== 'SUBSCRIBED') return;
-
-      // Get current user info
+    const setupPresence = async () => {
+      // Get current user info first
       const { data: employee } = await supabase
         .from('employees')
         .select('id, name, avatar_url')
         .eq('user_id', user.id)
         .single();
 
-      console.log('ChatWidget: Tracking presence for employee:', employee);
+      if (!employee) {
+        console.log('ChatWidget: No employee found for user');
+        return;
+      }
 
-      // Track presence
-      const trackResult = await channel.track({
-        user_id: user.id,
-        employee_id: employee?.id,
-        name: employee?.name || 'Unknown User',
-        role: currentUserRole,
-        online_at: new Date().toISOString(),
-        avatar_url: employee?.avatar_url,
-        is_online: isOnline,
+      // Update user presence in database
+      const { error: presenceError } = await supabase.rpc('upsert_user_presence', {
+        p_user_id: user.id,
+        p_employee_id: employee.id,
+        p_is_online: isOnline,
+        p_socket_id: null
       });
 
-      console.log('ChatWidget: Presence track result:', trackResult);
-    });
+      if (presenceError) {
+        console.error('ChatWidget: Error updating presence:', presenceError);
+      } else {
+        console.log('ChatWidget: Presence updated successfully');
+      }
+    };
 
-    setPresenceChannel(channel);
+    setupPresence();
+
+    // Set up real-time subscription for user presence updates
+    const presenceChannel = supabase
+      .channel('user-presence-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_presence'
+        },
+        (payload) => {
+          console.log('ChatWidget: Presence change detected:', payload);
+          updateConnectedUsers();
+        }
+      )
+      .subscribe();
+
+    setPresenceChannel(presenceChannel);
 
     return () => {
       console.log('ChatWidget: Cleaning up presence channel');
-      if (channel) {
-        supabase.removeChannel(channel);
+      if (presenceChannel) {
+        supabase.removeChannel(presenceChannel);
       }
     };
-  }, [user.id, currentUserRole]);
+  }, [user.id, currentUserRole, isOnline]);
 
-  const updateConnectedUsers = async (presenceState: any) => {
-    console.log('ChatWidget: Updating connected users from presence state:', presenceState);
+  const updateConnectedUsers = async () => {
+    console.log('ChatWidget: Updating connected users from database');
     
-    // Get all employees from database first
-    const { data: allEmployees } = await supabase
+    // Get all employees with their presence status
+    const { data: employeesWithPresence } = await supabase
       .from('employees')
       .select(`
         user_id,
         name,
-        avatar_url
+        avatar_url,
+        user_presence!inner(is_online, last_seen)
       `)
       .neq('user_id', user.id);
 
-    if (!allEmployees) {
+    if (!employeesWithPresence) {
       console.log('ChatWidget: No employees found');
       setConnectedUsers([]);
       return;
     }
 
     // Get roles for all employees
-    const userIds = allEmployees.map(emp => emp.user_id);
+    const userIds = employeesWithPresence.map(emp => emp.user_id);
     const { data: userRoles } = await supabase
       .from('user_roles')
       .select('user_id, role')
       .in('user_id', userIds);
 
-    // Create users list with correct online status
-    const users: ConnectedUser[] = allEmployees.map(emp => {
+    // Create users list with correct online status from database
+    const users: ConnectedUser[] = employeesWithPresence.map(emp => {
       const userRole = userRoles?.find(r => r.user_id === emp.user_id);
-      const presenceData = presenceState[emp.user_id];
-      const isPresent = presenceData && presenceData.length > 0;
-      
-      // Only consider user online if they are present AND have explicitly set is_online to true
-      const userOnlineStatus = isPresent && presenceData[0].is_online === true;
+      const presenceData = emp.user_presence?.[0];
       
       return {
         id: emp.user_id,
         name: emp.name,
         role: userRole?.role || 'employee',
-        isOnline: userOnlineStatus,
-        lastSeen: isPresent ? presenceData[0].online_at : undefined,
+        isOnline: presenceData?.is_online || false,
+        lastSeen: presenceData?.last_seen,
         avatar_url: emp.avatar_url,
       };
     });
@@ -193,26 +181,26 @@ export const ChatWidget = () => {
   // Initial load of all users when widget opens
   useEffect(() => {
     if (isOpen && chatMode === 'select') {
-      updateConnectedUsers(presenceChannel?.presenceState() || {});
+      updateConnectedUsers();
     }
-  }, [isOpen, chatMode, presenceChannel]);
+  }, [isOpen, chatMode]);
 
   // Listen for new messages to update unread count
   useEffect(() => {
     if (!user) return;
 
     const channel = supabase
-      .channel('chat-messages')
+      .channel('chat-messages-notifications')
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'chat_messages',
+          table: 'messages',
         },
         (payload) => {
           // Only count messages from other users
-          if (payload.new.sender_employee_id !== currentChat?.employee_id && !isOpen) {
+          if (payload.new.sender_id !== currentChat?.employee_id && !isOpen) {
             setUnreadCount(prev => prev + 1);
           }
         }
@@ -233,8 +221,7 @@ export const ChatWidget = () => {
 
   // Update presence when online status changes
   useEffect(() => {
-    if (presenceChannel && user) {
-      // Get employee data to send proper information
+    if (user && currentUserRole) {
       const updatePresence = async () => {
         const { data: employee } = await supabase
           .from('employees')
@@ -242,22 +229,25 @@ export const ChatWidget = () => {
           .eq('user_id', user.id)
           .single();
 
-        await presenceChannel.track({
-          user_id: user.id,
-          employee_id: employee?.id,
-          name: employee?.name || user.user_metadata?.full_name || 'Unknown User',
-          role: currentUserRole,
-          online_at: new Date().toISOString(),
-          avatar_url: employee?.avatar_url,
-          is_online: isOnline,
-        });
-        
-        console.log('ChatWidget: Updated presence status to:', isOnline);
+        if (employee) {
+          const { error } = await supabase.rpc('upsert_user_presence', {
+            p_user_id: user.id,
+            p_employee_id: employee.id,
+            p_is_online: isOnline,
+            p_socket_id: null
+          });
+
+          if (error) {
+            console.error('ChatWidget: Error updating presence status:', error);
+          } else {
+            console.log('ChatWidget: Updated presence status to:', isOnline);
+          }
+        }
       };
       
       updatePresence();
     }
-  }, [isOnline, presenceChannel, user, currentUserRole]);
+  }, [isOnline, user, currentUserRole]);
 
   const handleSendAiMessage = async () => {
     if (!message.trim()) return;

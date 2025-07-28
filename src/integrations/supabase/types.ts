@@ -2428,6 +2428,47 @@ export type Database = {
         }
         Relationships: []
       }
+      user_presence: {
+        Row: {
+          created_at: string | null
+          employee_id: string | null
+          id: string
+          is_online: boolean | null
+          last_seen: string | null
+          socket_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id?: string | null
+          id?: string
+          is_online?: boolean | null
+          last_seen?: string | null
+          socket_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string | null
+          id?: string
+          is_online?: boolean | null
+          last_seen?: string | null
+          socket_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_user_presence_employee"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -2721,6 +2762,15 @@ export type Database = {
           p_compact_mode?: boolean
         }
         Returns: undefined
+      }
+      upsert_user_presence: {
+        Args: {
+          p_user_id: string
+          p_employee_id: string
+          p_is_online: boolean
+          p_socket_id?: string
+        }
+        Returns: string
       }
       validate_rota_compliance: {
         Args: {
