@@ -234,13 +234,28 @@ export const ChatWidget = () => {
   // Update presence when online status changes
   useEffect(() => {
     if (presenceChannel && user) {
-      presenceChannel.track({
-        user_id: user.id,
-        name: user.user_metadata?.full_name || 'Unknown User',
-        role: currentUserRole,
-        online_at: new Date().toISOString(),
-        is_online: isOnline,
-      });
+      // Get employee data to send proper information
+      const updatePresence = async () => {
+        const { data: employee } = await supabase
+          .from('employees')
+          .select('id, name, avatar_url')
+          .eq('user_id', user.id)
+          .single();
+
+        await presenceChannel.track({
+          user_id: user.id,
+          employee_id: employee?.id,
+          name: employee?.name || user.user_metadata?.full_name || 'Unknown User',
+          role: currentUserRole,
+          online_at: new Date().toISOString(),
+          avatar_url: employee?.avatar_url,
+          is_online: isOnline,
+        });
+        
+        console.log('ChatWidget: Updated presence status to:', isOnline);
+      };
+      
+      updatePresence();
     }
   }, [isOnline, presenceChannel, user, currentUserRole]);
 
