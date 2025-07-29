@@ -902,7 +902,7 @@ export type Database = {
           pin_code?: string | null
           probation_end_date?: string | null
           role?: string | null
-          salary: number
+          salary?: number
           saturday_available?: boolean | null
           saturday_end_time?: string | null
           saturday_start_time?: string | null
