@@ -92,6 +92,34 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     }
   }, [employee]);
 
+  // Additional effect to ensure real-time synchronization when dialog opens
+  React.useEffect(() => {
+    if (isOpen && employee) {
+      console.log('Account edit dialog opened, ensuring data is synchronized');
+      // Reset form data to ensure it reflects the current employee state
+      setFormData({
+        name: employee.name || '',
+        email: employee.email || '',
+        location: employee.site || 'Office',
+        loginEmail: employee.email || '',
+        password: '123Qwe@×',
+        firstName: employee.name?.split(' ')[0] || '',
+        lastName: employee.name?.split(' ')[1] || '',
+        position: employee.jobTitle || '',
+        department: employee.department || '',
+        managerId: employee.managerId || '',
+        job_title: employee.jobTitle || '',
+        salary: Number(employee.salary?.replace(/[£,]/g, '') || 0),
+        start_date: employee.startDate ? new Date(employee.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        status: employee.status || 'Active',
+        lifecycle: employee.lifecycle || 'Active',
+        role: employee.role || 'employee',
+        annual_leave_days: employee.annual_leave_days || 25,
+        sick_leave_days: employee.sick_leave_days || 10,
+      });
+    }
+  }, [isOpen, employee]);
+
   if (!employee) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -606,7 +634,13 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
   );
 
   const DesktopContent = () => (
-    <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto p-0">
+    <DialogContent 
+      className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto p-0"
+      aria-describedby="account-edit-description"
+    >
+      <div id="account-edit-description" className="sr-only">
+        Edit account information for {employee.name}, including personal details, employment information, and leave entitlements.
+      </div>
       <div className="p-6">
         <DialogHeader className="flex flex-row items-center justify-between mb-6">
           <DialogTitle className="flex items-center gap-2">

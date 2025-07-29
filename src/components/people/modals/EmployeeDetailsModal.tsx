@@ -99,7 +99,13 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className={`p-0 overflow-hidden ${isMobile ? 'w-[95vw] max-w-[95vw] max-h-[95vh]' : 'sm:max-w-[600px] max-h-[90vh]'} flex flex-col border-0 shadow-2xl`}>
+        <DialogContent 
+          className={`p-0 overflow-hidden ${isMobile ? 'w-[95vw] max-w-[95vw] max-h-[95vh]' : 'sm:max-w-[600px] max-h-[90vh]'} flex flex-col border-0 shadow-2xl`}
+          aria-describedby="employee-details-description"
+        >
+          <div id="employee-details-description" className="sr-only">
+            View and manage {employee.name}'s employee details, including personal information, employment status, and account settings.
+          </div>
           <EmployeeHeader 
             employee={employee}
             onDelete={() => setIsDeleteDialogOpen(true)}
