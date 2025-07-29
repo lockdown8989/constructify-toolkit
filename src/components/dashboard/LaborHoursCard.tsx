@@ -26,32 +26,44 @@ const LaborHoursCard: React.FC = () => {
         const weekStart = formatISO(startOfWeek(now), { representation: 'date' });
         const weekEnd = formatISO(endOfWeek(now), { representation: 'date' });
 
-        // Fetch scheduled hours for this week
+        console.log('Fetching labor stats for week:', weekStart, 'to', weekEnd);
+
+        // Fetch all schedules for this week (both published and unpublished for accurate calculation)
         const { data: schedules, error: schedulesError } = await supabase
           .from('schedules')
-          .select('start_time, end_time, hourly_rate, break_duration, estimated_cost')
+          .select('start_time, end_time, hourly_rate, break_duration, estimated_cost, employee_id, employees(hourly_rate)')
           .gte('start_time', weekStart)
-          .lte('end_time', weekEnd)
-          .eq('published', true);
+          .lte('start_time', weekEnd);
 
-        if (schedulesError) throw schedulesError;
+        if (schedulesError) {
+          console.error('Error fetching schedules:', schedulesError);
+          throw schedulesError;
+        }
+
+        console.log('Found schedules:', schedules?.length || 0);
 
         // Calculate total hours and costs
         let totalScheduledHours = 0;
         let totalCost = 0;
 
-        schedules.forEach(schedule => {
-          const startTime = new Date(schedule.start_time);
-          const endTime = new Date(schedule.end_time);
-          const hours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
-          const breakHours = (schedule.break_duration || 0) / 60;
-          const workingHours = Math.max(0, hours - breakHours);
-          
-          totalScheduledHours += workingHours;
-          totalCost += schedule.estimated_cost || 0;
-        });
+        if (schedules && schedules.length > 0) {
+          schedules.forEach(schedule => {
+            const startTime = new Date(schedule.start_time);
+            const endTime = new Date(schedule.end_time);
+            const hours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+            const breakHours = (schedule.break_duration || 30) / 60; // Default 30 min break
+            const workingHours = Math.max(0, hours - breakHours);
+            
+            totalScheduledHours += workingHours;
+            
+            // Calculate cost using hourly rate from schedule or employee  
+            const hourlyRate = schedule.hourly_rate || 15; // Default £15/hour
+            const shiftCost = workingHours * hourlyRate;
+            totalCost += schedule.estimated_cost || shiftCost;
+          });
+        }
 
-        // Fetch overtime data
+        // Fetch overtime data for the week
         const { data: attendance, error: attendanceError } = await supabase
           .from('attendance')
           .select('overtime_minutes')
@@ -59,11 +71,19 @@ const LaborHoursCard: React.FC = () => {
           .lte('date', weekEnd)
           .not('overtime_minutes', 'is', null);
 
-        if (attendanceError) throw attendanceError;
+        if (attendanceError) {
+          console.error('Error fetching attendance:', attendanceError);
+        }
 
-        const totalOvertimeHours = attendance.reduce((sum, record) => {
+        const totalOvertimeHours = attendance?.reduce((sum, record) => {
           return sum + ((record.overtime_minutes || 0) / 60);
-        }, 0);
+        }, 0) || 0;
+
+        console.log('Labor stats calculated:', {
+          scheduledHours: totalScheduledHours,
+          overtimeHours: totalOvertimeHours,
+          laborCost: totalCost
+        });
 
         setStats({
           scheduledHours: Math.round(totalScheduledHours),
@@ -72,11 +92,11 @@ const LaborHoursCard: React.FC = () => {
         });
       } catch (error) {
         console.error('Error fetching labor stats:', error);
-        // Default values matching the image
+        // Show actual zero values instead of placeholder data
         setStats({
-          scheduledHours: 192,
-          overtimeHours: 8,
-          laborCost: 4800
+          scheduledHours: 0,
+          overtimeHours: 0,
+          laborCost: 0
         });
       } finally {
         setLoading(false);
@@ -84,6 +104,11 @@ const LaborHoursCard: React.FC = () => {
     };
 
     fetchLaborStats();
+    
+    // Set up interval to refresh data every 30 seconds
+    const interval = setInterval(fetchLaborStats, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   return (

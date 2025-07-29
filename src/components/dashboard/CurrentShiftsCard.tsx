@@ -9,9 +9,11 @@ import { format } from 'date-fns';
 const CurrentShiftsCard = () => {
   const today = new Date().toISOString().split('T')[0];
 
-  const { data: publishedShifts = [], isLoading } = useQuery({
+  const { data: publishedShifts = [], isLoading: publishedLoading, error: publishedError } = useQuery({
     queryKey: ['published-shifts', today],
     queryFn: async () => {
+      console.log('Fetching published shifts for:', today);
+      
       const { data, error } = await supabase
         .from('schedules')
         .select(`
@@ -23,26 +25,52 @@ const CurrentShiftsCard = () => {
         .lt('start_time', `${today}T23:59:59`)
         .order('start_time', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching published shifts:', error);
+        throw error;
+      }
+      
+      console.log('Found published shifts:', data?.length || 0);
       return data || [];
     },
+    refetchInterval: 30000 // Refresh every 30 seconds
   });
 
-  const { data: openShifts = [] } = useQuery({
+  const { data: openShifts = [], isLoading: openLoading, error: openError } = useQuery({
     queryKey: ['open-shifts', today],
     queryFn: async () => {
+      console.log('Fetching open shifts for:', today);
+      
       const { data, error } = await supabase
         .from('open_shifts')
         .select('*')
-        .eq('status', 'open')
+        .in('status', ['available', 'pending', 'open'])
         .gte('start_time', `${today}T00:00:00`)
         .lt('start_time', `${today}T23:59:59`)
         .order('start_time', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching open shifts:', error);
+        throw error;
+      }
+      
+      console.log('Found open shifts:', data?.length || 0);
       return data || [];
     },
+    refetchInterval: 30000 // Refresh every 30 seconds
   });
+
+  // Log any errors
+  React.useEffect(() => {
+    if (publishedError) {
+      console.error('Published shifts error:', publishedError);
+    }
+    if (openError) {
+      console.error('Open shifts error:', openError);
+    }
+  }, [publishedError, openError]);
+
+  const isLoading = publishedLoading || openLoading;
 
   if (isLoading) {
     return (
