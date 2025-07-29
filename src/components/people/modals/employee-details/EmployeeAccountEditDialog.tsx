@@ -102,40 +102,43 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
       // Combine first and last name
       const fullName = `${formData.firstName} ${formData.lastName}`.trim();
       
-      // Prepare update data for the standard update hook
+      // Ensure salary is never null/undefined and is a valid number
+      const validSalary = Math.max(0, Number(formData.salary) || 0);
+      
+      // Prepare update data with all required fields and proper validation
       const updateData = {
         id: employee.id,
-        name: fullName || formData.name,
-        email: formData.loginEmail || formData.email,
-        job_title: formData.job_title || formData.position,
-        department: formData.department,
-        salary: formData.salary,
-        site: formData.location,
-        start_date: formData.start_date,
-        status: formData.status,
-        lifecycle: formData.lifecycle,
-        role: formData.role,
-        annual_leave_days: formData.annual_leave_days,
-        sick_leave_days: formData.sick_leave_days,
+        name: fullName || formData.name || employee.name,
+        email: formData.loginEmail || formData.email || employee.email,
+        job_title: formData.job_title || formData.position || employee.jobTitle,
+        department: formData.department || employee.department,
+        salary: validSalary, // Ensure salary is always a valid number
+        site: formData.location || employee.site,
+        start_date: formData.start_date || employee.startDate,
+        status: formData.status || employee.status,
+        lifecycle: formData.lifecycle || employee.lifecycle,
+        role: formData.role || employee.role,
+        annual_leave_days: Math.max(0, Number(formData.annual_leave_days) || 25),
+        sick_leave_days: Math.max(0, Number(formData.sick_leave_days) || 10),
         manager_id: formData.managerId || null,
       };
 
       // Prepare sync data for the sync hook with correct field mappings
       const syncData = {
         id: employee.id,
-        name: fullName || formData.name,
-        email: formData.loginEmail || formData.email,
-        jobTitle: formData.job_title || formData.position,
-        department: formData.department,
-        salary: formData.salary,
-        site: formData.location,
-        startDate: formData.start_date,
-        status: formData.status,
-        lifecycle: formData.lifecycle,
-        role: formData.role,
-        annual_leave_days: formData.annual_leave_days,
-        sick_leave_days: formData.sick_leave_days,
-        managerId: formData.managerId || undefined,
+        name: updateData.name,
+        email: updateData.email,
+        jobTitle: updateData.job_title,
+        department: updateData.department,
+        salary: updateData.salary,
+        site: updateData.site,
+        startDate: updateData.start_date,
+        status: updateData.status,
+        lifecycle: updateData.lifecycle,
+        role: updateData.role,
+        annual_leave_days: updateData.annual_leave_days,
+        sick_leave_days: updateData.sick_leave_days,
+        managerId: updateData.manager_id || undefined,
       };
 
       console.log('Updating employee with data:', updateData);
@@ -151,7 +154,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
 
       toast({
         title: "Account updated & synchronized",
-        description: `${employee.name}'s account updated successfully. Manager ID: ${formData.managerId || 'None'}, Email: ${formData.loginEmail}, Location: ${formData.location} - all synchronized with manager team.`,
+        description: `${updateData.name}'s account updated successfully. All changes have been synchronized with the manager team.`,
         variant: "default"
       });
 

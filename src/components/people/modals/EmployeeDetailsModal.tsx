@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useDeleteEmployee, Employee as DbEmployee } from '@/hooks/use-employees';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Employee, mapDbEmployeeToUiEmployee } from '../types';
@@ -30,6 +30,7 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   const deleteEmployee = useDeleteEmployee();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
 
   // Fetch latest employee data when modal is open
   const { data: latestEmployeeData } = useQuery({
@@ -85,10 +86,14 @@ const EmployeeDetailsModal: React.FC<EmployeeDetailsModalProps> = ({
   };
 
   const handleAccountEditDialogClose = () => {
-    console.log('Account edit dialog closing');
+    console.log('Account edit dialog closing, refreshing employee data');
     setIsAccountEditDialogOpen(false);
-    // Refetch employee data after edit
-    // The query will automatically refetch due to query invalidation in the update hook
+    // Force refetch employee data to ensure preview shows updated information
+    // This ensures synchronization between edit form and preview
+    if (latestEmployeeData) {
+      queryClient.invalidateQueries({ queryKey: ['employee-details', initialEmployee?.id] });
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+    }
   };
 
   return (
