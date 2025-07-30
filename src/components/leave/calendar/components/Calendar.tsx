@@ -48,23 +48,21 @@ const Calendar: React.FC = () => {
           <DayNames />
           
           {/* Calendar Days */}
-          {calendarWeeks.map((week, weekIndex) => (
-            <React.Fragment key={weekIndex}>
-              {week.map((day, dayIndex) => {
-                const dayLeaves = day ? getLeavesForDay(day, leaves) : [];
-                
-                return (
-                  <DayCell 
-                    key={day ? format(day, "yyyy-MM-dd") : `empty-${weekIndex}-${dayIndex}`}
-                    day={day}
-                    currentDate={currentDate}
-                    leaves={dayLeaves}
-                    getEmployeeName={getEmployeeName}
-                  />
-                );
-              })}
-            </React.Fragment>
-          ))}
+          {calendarWeeks.flatMap((week, weekIndex) => 
+            week.map((day, dayIndex) => {
+              const dayLeaves = day ? getLeavesForDay(day, leaves) : [];
+              
+              return (
+                <DayCell 
+                  key={day ? format(day, "yyyy-MM-dd") : `empty-${weekIndex}-${dayIndex}`}
+                  day={day}
+                  currentDate={currentDate}
+                  leaves={dayLeaves}
+                  getEmployeeName={getEmployeeName}
+                />
+              );
+            })
+          )}
         </div>
       </CardContent>
     </Card>

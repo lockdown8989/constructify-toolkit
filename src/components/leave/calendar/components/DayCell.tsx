@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { format, isSameMonth, isToday } from "date-fns";
 import type { LeaveCalendar } from "@/hooks/leave/leave-types";
 import { getTypeColor } from "../utils";
@@ -9,6 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import LeaveDetailsDrawer from "../LeaveDetailsDrawer";
 
 interface DayCellProps {
   day: Date | null;
@@ -25,21 +26,32 @@ const DayCell: React.FC<DayCellProps> = ({
   getEmployeeName,
   meetings = []
 }) => {
+  const [showDetails, setShowDetails] = useState(false);
+
   if (!day) {
     return <div className="aspect-square p-1 bg-gray-50"></div>;
   }
   
   const isCurrentMonth = isSameMonth(day, currentDate);
   const isCurrentDay = isToday(day);
+
+  const handleDayClick = () => {
+    if (leaves.length > 0) {
+      setShowDetails(true);
+    }
+  };
   
   return (
-    <div 
-      className={`
-        aspect-square p-1 relative border
-        ${isCurrentMonth ? "bg-white" : "bg-gray-50 text-gray-400"}
-        ${isCurrentDay ? "border-blue-500 border-2" : "border-gray-100"}
-      `}
-    >
+    <>
+      <div 
+        className={`
+          aspect-square p-1 relative border cursor-pointer transition-colors
+          ${isCurrentMonth ? "bg-white hover:bg-gray-50" : "bg-gray-50 text-gray-400"}
+          ${isCurrentDay ? "border-blue-500 border-2" : "border-gray-100"}
+          ${leaves.length > 0 ? "hover:bg-blue-50" : ""}
+        `}
+        onClick={handleDayClick}
+      >
       <div className="text-right text-xs p-1">
         {format(day, "d")}
       </div>
@@ -84,7 +96,17 @@ const DayCell: React.FC<DayCellProps> = ({
           </TooltipProvider>
         </div>
       )}
-    </div>
+      </div>
+      
+      {showDetails && (
+        <LeaveDetailsDrawer
+          date={day}
+          leaves={leaves}
+          onClose={() => setShowDetails(false)}
+          getEmployeeName={getEmployeeName}
+        />
+      )}
+    </>
   );
 };
 
