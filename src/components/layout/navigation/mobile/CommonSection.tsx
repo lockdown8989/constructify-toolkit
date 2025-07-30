@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, FileText, UserCheck, Users, History, Calendar, Clock } from "lucide-react";
+import { LayoutDashboard, FileText, UserCheck, Users, History, Calendar, Clock, ClipboardList, Bell } from "lucide-react";
 import MobileNavLink from "./MobileNavLink";
 
 interface CommonSectionProps {
@@ -79,6 +79,26 @@ const CommonSection = ({
             onClick={onClose}
           />
         </>
+      )}
+
+      {/* Schedule Requests for managers/admins */}
+      {hasManagerialAccess && (
+        <MobileNavLink
+          to="/schedule-requests"
+          icon={Bell}
+          label="📅 Schedule Requests"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Employee Workflow for managers/admins */}
+      {hasManagerialAccess && (
+        <MobileNavLink
+          to="/employee-workflow"
+          icon={ClipboardList}
+          label="👥 Employee Workflow"
+          onClick={onClose}
+        />
       )}
 
       {/* Leave Management for managers */}
