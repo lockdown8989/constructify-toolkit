@@ -52,49 +52,56 @@ export default function LeaveDetailsDrawer({
         </Button>
       </CardHeader>
       <CardContent className="space-y-4 max-h-96 overflow-y-auto">
-        {leaves.map((leave) => (
-          <div
-            key={leave.id}
-            className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl"
-          >
-            <div className={cn(
-              "w-4 h-4 rounded-full mt-1 flex-shrink-0",
-              LEAVE_TYPE_COLORS[leave.type] || LEAVE_TYPE_COLORS['Other']
-            )} />
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <User className="h-4 w-4 text-gray-500" />
-                <span className="font-medium text-gray-900">
-                  {getEmployeeName(leave.employee_id)}
-                </span>
-                <Badge variant={leave.status === 'Approved' ? 'default' : 'secondary'}>
-                  {leave.status}
-                </Badge>
-              </div>
+        {leaves.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            <p>No leave requests for this date</p>
+          </div>
+        ) : (
+          leaves.map((leave) => (
+            <div
+              key={leave.id}
+              className="flex items-start gap-3 p-4 bg-muted/30 rounded-xl border"
+            >
+              <div className={cn(
+                "w-4 h-4 rounded-full mt-1 flex-shrink-0",
+                LEAVE_TYPE_COLORS[leave.type] || LEAVE_TYPE_COLORS['Other']
+              )} />
               
-              <div className="space-y-1 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-3 w-3" />
-                  <span>{leave.type} Leave</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium text-foreground">
+                    {getEmployeeName(leave.employee_id)}
+                  </span>
+                  <Badge variant={leave.status === 'Approved' ? 'default' : 'secondary'}>
+                    {leave.status}
+                  </Badge>
                 </div>
                 
-                <div className="flex items-center gap-2">
-                  <Clock className="h-3 w-3" />
-                  <span>
-                    {format(new Date(leave.start_date), 'MMM d')} - {format(new Date(leave.end_date), 'MMM d')}
-                  </span>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-3 w-3" />
+                    <span className="font-medium">{leave.type} Leave</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3 w-3" />
+                    <span>
+                      {format(new Date(leave.start_date), 'MMM d')} - {format(new Date(leave.end_date), 'MMM d')}
+                    </span>
+                  </div>
                 </div>
+                
+                {leave.notes && (
+                  <div className="mt-3 text-sm text-muted-foreground bg-background rounded-lg p-3 border">
+                    <strong className="text-foreground">Notes:</strong> {leave.notes}
+                  </div>
+                )}
               </div>
-              
-              {leave.notes && (
-                <div className="mt-2 text-sm text-gray-600 bg-white rounded-lg p-2">
-                  {leave.notes}
-                </div>
-              )}
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </CardContent>
     </Card>
   );
