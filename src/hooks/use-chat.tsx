@@ -190,7 +190,7 @@ export const useChat = () => {
 
       console.log('Chat: Admin ID:', adminId, 'Employee ID:', employeeId, 'Is current user admin:', isAdmin);
 
-      // Check if chat already exists
+      // Check if chat already exists (check both directions to prevent duplicates)
       const { data: existingChat, error: existingError } = await supabase
         .from('chats')
         .select(`
@@ -198,8 +198,7 @@ export const useChat = () => {
           employee:employees!chats_employee_id_fkey(id, name, avatar_url),
           admin:employees!chats_admin_id_fkey(id, name, avatar_url)
         `)
-        .eq('employee_id', employeeId)
-        .eq('admin_id', adminId)
+        .or(`and(employee_id.eq.${employeeId},admin_id.eq.${adminId}),and(employee_id.eq.${adminId},admin_id.eq.${employeeId})`)
         .eq('is_active', true)
         .single();
 
