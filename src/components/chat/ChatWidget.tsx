@@ -142,9 +142,10 @@ export const ChatWidget = () => {
         user_id,
         name,
         avatar_url,
-        user_presence!inner(is_online, last_seen)
+        user_presence(is_online, last_seen)
       `)
-      .neq('user_id', user.id);
+      .neq('user_id', user.id)
+      .not('user_id', 'is', null);
 
     if (!employeesWithPresence) {
       console.log('ChatWidget: No employees found');
