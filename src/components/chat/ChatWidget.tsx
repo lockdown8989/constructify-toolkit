@@ -43,8 +43,6 @@ export const ChatWidget = () => {
   const [presenceChannel, setPresenceChannel] = useState<any>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOnline, setIsOnline] = useState(true);
-  const [hideOnlineStatus, setHideOnlineStatus] = useState(false);
-  const [totalUnreadCount, setTotalUnreadCount] = useState(0);
 
   console.log('ChatWidget: Rendering, user:', user, 'isOpen:', isOpen, 'chatMode:', chatMode);
 
@@ -88,17 +86,6 @@ export const ChatWidget = () => {
       if (!employee) {
         console.log('ChatWidget: No employee found for user');
         return;
-      }
-
-      // Get current hide status preference
-      const { data: currentPresence } = await supabase
-        .from('user_presence')
-        .select('hide_online_status')
-        .eq('user_id', user.id)
-        .single();
-
-      if (currentPresence) {
-        setHideOnlineStatus(currentPresence.hide_online_status || false);
       }
 
       // Update user presence in database
@@ -148,14 +135,14 @@ export const ChatWidget = () => {
   const updateConnectedUsers = async () => {
     console.log('ChatWidget: Updating connected users from database');
     
-    // Get all employees with their presence status (excluding those who hide their status)
+    // Get all employees with their presence status
     const { data: employeesWithPresence } = await supabase
       .from('employees')
       .select(`
         user_id,
         name,
         avatar_url,
-        user_presence(is_online, last_seen, hide_online_status)
+        user_presence(is_online, last_seen)
       `)
       .neq('user_id', user.id)
       .not('user_id', 'is', null);
@@ -173,19 +160,16 @@ export const ChatWidget = () => {
       .select('user_id, role')
       .in('user_id', userIds);
 
-    // Create users list with correct online status from database (respecting privacy)
+    // Create users list with correct online status from database
     const users: ConnectedUser[] = employeesWithPresence.map(emp => {
       const userRole = userRoles?.find(r => r.user_id === emp.user_id);
       const presenceData = emp.user_presence?.[0];
-      
-      // If user hides their online status, show them as offline
-      const shouldHideStatus = presenceData?.hide_online_status || false;
       
       return {
         id: emp.user_id,
         name: emp.name,
         role: userRole?.role || 'employee',
-        isOnline: shouldHideStatus ? false : (presenceData?.is_online || false),
+        isOnline: presenceData?.is_online || false,
         lastSeen: presenceData?.last_seen,
         avatar_url: emp.avatar_url,
       };
@@ -202,36 +186,24 @@ export const ChatWidget = () => {
     }
   }, [isOpen, chatMode]);
 
-  // Listen for new messages and update total unread count
+  // Listen for new messages to update unread count
   useEffect(() => {
     if (!user) return;
 
-    const fetchUnreadCount = async () => {
-      const { data: unreadChats } = await supabase
-        .from('user_chat_notifications')
-        .select('unread_count')
-        .eq('user_id', user.id);
-
-      if (unreadChats) {
-        const total = unreadChats.reduce((sum, chat) => sum + chat.unread_count, 0);
-        setTotalUnreadCount(total);
-      }
-    };
-
-    fetchUnreadCount();
-
     const channel = supabase
-      .channel('chat-notifications')
+      .channel('chat-messages-notifications')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
-          table: 'user_chat_notifications',
-          filter: `user_id=eq.${user.id}`
+          table: 'messages',
         },
-        () => {
-          fetchUnreadCount();
+        (payload) => {
+          // Only count messages from other users
+          if (payload.new.sender_id !== currentChat?.employee_id && !isOpen) {
+            setUnreadCount(prev => prev + 1);
+          }
         }
       )
       .subscribe();
@@ -239,22 +211,14 @@ export const ChatWidget = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, isOpen]);
+  }, [user, currentChat, isOpen]);
 
   // Reset unread count when chat is opened
   useEffect(() => {
-    if (isOpen && user) {
-      setTotalUnreadCount(0);
-      // Reset all unread counts for this user
-      supabase
-        .from('user_chat_notifications')
-        .update({ unread_count: 0, last_read_at: new Date().toISOString() })
-        .eq('user_id', user.id)
-        .then(() => {
-          console.log('Chat: Unread counts reset for user:', user.id);
-        });
+    if (isOpen) {
+      setUnreadCount(0);
     }
-  }, [isOpen, user]);
+  }, [isOpen]);
 
   // Update presence when online status changes
   useEffect(() => {
@@ -267,27 +231,24 @@ export const ChatWidget = () => {
           .single();
 
         if (employee) {
-          // Also update hide status when toggling presence
-          const { error } = await supabase
-            .from('user_presence')
-            .update({ 
-              is_online: isOnline,
-              hide_online_status: hideOnlineStatus,
-              updated_at: new Date().toISOString()
-            })
-            .eq('user_id', user.id);
+          const { error } = await supabase.rpc('upsert_user_presence', {
+            p_user_id: user.id,
+            p_employee_id: employee.id,
+            p_is_online: isOnline,
+            p_socket_id: null
+          });
 
           if (error) {
-            console.error('ChatWidget: Error updating presence and privacy:', error);
+            console.error('ChatWidget: Error updating presence status:', error);
           } else {
-            console.log('ChatWidget: Updated presence and privacy successfully');
+            console.log('ChatWidget: Updated presence status to:', isOnline);
           }
         }
       };
       
       updatePresence();
     }
-  }, [isOnline, hideOnlineStatus, user, currentUserRole]);
+  }, [isOnline, user, currentUserRole]);
 
   const handleSendAiMessage = async () => {
     if (!message.trim()) return;
@@ -315,70 +276,34 @@ export const ChatWidget = () => {
 
   const renderChatModeSelection = () => (
     <div className="p-6 md:p-6 space-y-6 md:space-y-4 safe-area-inset">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 md:mb-6 gap-4">
+      <div className="flex items-center justify-between mb-8 md:mb-6">
         <h2 className="font-bold text-xl md:text-lg text-foreground">Choose Chat Type</h2>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
-          {/* Privacy and Online Status Controls */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
-            {/* Online/Offline Toggle Switch */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
-                onClick={() => setIsOnline(!isOnline)}
-                className={cn(
-                  "relative inline-flex items-center px-4 py-2 rounded-full transition-all duration-300 ease-in-out touch-manipulation min-w-[100px] h-10 flex-1 sm:flex-none",
-                  isOnline 
-                    ? "bg-green-500 text-white" 
-                    : "bg-red-500 text-white"
-                )}
-              >
-                <span className={cn(
-                  "absolute w-6 h-6 bg-white rounded-full transition-transform duration-300 ease-in-out shadow-sm",
-                  isOnline ? "transform translate-x-0" : "transform translate-x-8"
-                )} />
-                <span className="text-sm font-medium relative z-10 mx-auto">
-                  {isOnline ? "Online" : "Offline"}
-                </span>
-              </button>
-            </div>
-
-            {/* Privacy Toggle */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
-                onClick={async () => {
-                  const newHideStatus = !hideOnlineStatus;
-                  setHideOnlineStatus(newHideStatus);
-                  
-                  const { error } = await supabase
-                    .from('user_presence')
-                    .update({ hide_online_status: newHideStatus })
-                    .eq('user_id', user.id);
-                    
-                  if (error) {
-                    console.error('Error updating privacy setting:', error);
-                  }
-                }}
-                className={cn(
-                  "relative inline-flex items-center px-3 py-2 rounded-full transition-all duration-300 ease-in-out touch-manipulation min-w-[80px] h-10 flex-1 sm:flex-none",
-                  hideOnlineStatus 
-                    ? "bg-gray-500 text-white" 
-                    : "bg-blue-500 text-white"
-                )}
-              >
-                <span className={cn(
-                  "absolute w-6 h-6 bg-white rounded-full transition-transform duration-300 ease-in-out shadow-sm",
-                  hideOnlineStatus ? "transform translate-x-0" : "transform translate-x-6"
-                )} />
-                <span className="text-xs font-medium relative z-10 mx-auto">
-                  {hideOnlineStatus ? "Private" : "Visible"}
-                </span>
-              </button>
-            </div>
+        <div className="flex items-center gap-3">
+          {/* Online/Offline Toggle Switch */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsOnline(!isOnline)}
+              className={cn(
+                "relative inline-flex items-center px-4 py-2 rounded-full transition-all duration-300 ease-in-out touch-manipulation min-w-[100px] h-10",
+                isOnline 
+                  ? "bg-green-500 text-white" 
+                  : "bg-red-500 text-white"
+              )}
+            >
+              <span className={cn(
+                "absolute w-6 h-6 bg-white rounded-full transition-transform duration-300 ease-in-out shadow-sm",
+                isOnline ? "transform translate-x-0" : "transform translate-x-8"
+              )} />
+              <span className="text-sm font-medium relative z-10 mx-auto">
+                {isOnline ? "Online" : "Offline"}
+              </span>
+            </button>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsOpen(false)}
-            className="p-3 h-auto touch-manipulation md:hidden rounded-full hover:bg-muted/50 self-end sm:self-auto"
+            className="p-3 h-auto touch-manipulation md:hidden rounded-full hover:bg-muted/50"
           >
             <X className="w-6 h-6" />
           </Button>
@@ -608,32 +533,59 @@ export const ChatWidget = () => {
   );
 
   return (
-    <div className="fixed bottom-6 md:bottom-4 right-6 md:right-4 z-50 safe-area-inset-bottom">
-      {/* Chat Button */}
-      <Button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-16 h-16 md:w-14 md:h-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out active:scale-95 touch-manipulation relative"
-        size="icon"
-      >
-        <MessageCircle className="w-7 h-7 md:w-6 md:h-6" />
-        {totalUnreadCount > 0 && (
-          <div className="absolute -top-2 -right-2 flex items-center gap-1">
-            <Bell className="w-4 h-4 text-red-500 animate-bounce" />
-            <Badge className="min-w-6 h-6 text-xs bg-red-500 text-white px-2 animate-pulse">
-              {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
-            </Badge>
-          </div>
-        )}
-      </Button>
-
-      {/* Chat Window - Enhanced Mobile Experience */}
+    <>
+      {/* Chat Window */}
       {isOpen && (
-        <div className="absolute bottom-20 md:bottom-16 right-0 w-screen h-screen md:w-96 md:h-[500px] bg-background border border-border rounded-none md:rounded-2xl shadow-2xl flex flex-col overflow-hidden touch-manipulation animate-in slide-in-from-bottom-2 md:slide-in-from-right-2 duration-300">
+        <div className={cn(
+          "fixed bg-background border shadow-lg z-50 flex flex-col",
+          // Desktop
+          "md:bottom-20 md:right-4 md:w-96 md:h-[600px] md:rounded-lg md:border-border",
+          // Mobile - full screen experience
+          "max-md:inset-0 max-md:w-full max-md:h-full max-md:rounded-none max-md:border-0"
+        )}>
           {chatMode === 'select' && renderChatModeSelection()}
-          {chatMode === 'human' && !currentChat && renderUserSelection()}
-          {currentChat && renderChatInterface()}
+          {chatMode === 'human' && !selectedUser && renderUserSelection()}
+          {chatMode === 'ai' && renderChatInterface()}
+          {chatMode === 'human' && selectedUser && renderChatInterface()}
         </div>
       )}
-    </div>
+
+      {/* Chat Toggle Button */}
+      <Button
+        onClick={() => {
+          console.log('ChatWidget: Button clicked, current isOpen:', isOpen);
+          setIsOpen(!isOpen);
+          if (!isOpen) {
+            resetChat();
+          }
+        }}
+        className={cn(
+          "fixed shadow-lg z-40 p-0 touch-manipulation",
+          "bg-primary hover:bg-primary/90 text-primary-foreground",
+          "transition-all duration-200 ease-in-out rounded-full",
+          // Desktop
+          "md:bottom-4 md:right-4 md:w-14 md:h-14",
+          // Mobile - larger touch target, better positioning
+          "max-md:bottom-6 max-md:right-6 max-md:w-16 max-md:h-16"
+        )}
+        aria-label={isOpen ? "Close chat" : "Open chat"}
+      >
+        {isOpen ? (
+          <X className="w-6 h-6 md:w-6 md:h-6" />
+        ) : (
+          <>
+            <MessageCircle className="w-6 h-6 md:w-6 md:h-6" />
+            {unreadCount > 0 && (
+              <Badge
+                variant="destructive"
+                className="absolute -top-2 -right-2 w-6 h-6 rounded-full p-0 flex items-center justify-center text-xs font-bold"
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Badge>
+            )}
+          </>
+        )}
+      </Button>
+    </>
   );
 };

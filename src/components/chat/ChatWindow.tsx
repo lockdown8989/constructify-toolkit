@@ -67,21 +67,21 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
   const isAdmin = ['admin', 'employer', 'hr'].includes(userRole);
 
   return (
-    <div className="flex flex-col h-full bg-background rounded-2xl md:rounded-lg overflow-hidden safe-area-inset">
-      {/* Header - Mobile optimized */}
-      <div className="flex items-center justify-between p-4 md:p-3 border-b border-border bg-muted/50 min-h-[60px] md:min-h-[50px]">
-        <div className="flex items-center gap-3 md:gap-2">
+    <div className="flex flex-col h-full bg-background rounded-lg overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-border bg-muted/50">
+        <div className="flex items-center gap-2">
           {(view === 'chat' || view === 'search' || view === 'ai') && (
             <Button
               variant="ghost"
               size="sm"
               onClick={handleBackToChats}
-              className="p-3 md:p-1 h-auto touch-manipulation rounded-full hover:bg-muted/50"
+              className="p-1 h-auto"
             >
-              <span className="text-lg md:text-base">←</span>
+              ←
             </Button>
           )}
-          <h3 className="font-semibold text-base md:text-sm">
+          <h3 className="font-semibold text-sm">
             {view === 'chats' && 'Messages'}
             {view === 'chat' && (
               isAiMode ? 'AI Assistant' : 
@@ -92,7 +92,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
           </h3>
         </div>
         
-        <div className="flex items-center gap-2 md:gap-1">
+        <div className="flex items-center gap-1">
           {view === 'chats' && (
             <>
               {isAdmin && (
@@ -100,10 +100,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
                   variant="ghost"
                   size="sm"
                   onClick={() => setView('search')}
-                  className="p-3 md:p-1 h-auto touch-manipulation rounded-full hover:bg-muted/50"
+                  className="p-1 h-auto"
                   title="Start new chat"
                 >
-                  <Search className="w-5 h-5 md:w-4 md:h-4" />
+                  <Search className="w-4 h-4" />
                 </Button>
               )}
               
@@ -111,10 +111,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
                 variant="ghost"
                 size="sm"
                 onClick={handleStartAiChat}
-                className="p-3 md:p-1 h-auto touch-manipulation rounded-full hover:bg-muted/50"
+                className="p-1 h-auto"
                 title="Start AI assistant chat"
               >
-                <Bot className="w-5 h-5 md:w-4 md:h-4" />
+                <Bot className="w-4 h-4" />
               </Button>
             </>
           )}
@@ -125,12 +125,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
               size="sm"
               onClick={() => setIsAiMode(!isAiMode)}
               className={cn(
-                "p-3 md:p-1 h-auto touch-manipulation rounded-full hover:bg-muted/50",
+                "p-1 h-auto",
                 isAiMode && "bg-primary/10 text-primary"
               )}
               title={isAiMode ? "Switch to human chat" : "Switch to AI assistant"}
             >
-              {isAiMode ? <Users className="w-5 h-5 md:w-4 md:h-4" /> : <Bot className="w-5 h-5 md:w-4 md:h-4" />}
+              {isAiMode ? <Users className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
             </Button>
           )}
           
@@ -138,9 +138,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="p-3 md:p-1 h-auto touch-manipulation rounded-full hover:bg-muted/50"
+            className="p-1 h-auto"
           >
-            <X className="w-5 h-5 md:w-4 md:h-4" />
+            <X className="w-4 h-4" />
           </Button>
         </div>
       </div>
@@ -176,7 +176,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
               />
             </div>
             
-            <div className="p-4 md:p-3 border-t border-border bg-background/95 backdrop-blur-sm">
+            <div className="p-3 border-t border-border">
               <ChatInput
                 onSendMessage={isAiMode ? sendAiMessage : sendMessage}
                 onUploadFile={uploadFile}
@@ -198,7 +198,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
               />
             </div>
             
-            <div className="p-4 md:p-3 border-t border-border bg-background/95 backdrop-blur-sm">
+            <div className="p-3 border-t border-border">
               <ChatInput
                 onSendMessage={sendAiMessage}
                 isAiMode={true}
