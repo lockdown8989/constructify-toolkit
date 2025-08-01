@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +10,7 @@ interface ChatMessagesProps {
   messages: ChatMessage[];
   isTyping: boolean;
   isAiMode: boolean;
-  currentEmployeeId: string; // Changed from currentUserId to currentEmployeeId for clarity
+  currentEmployeeId: string;
 }
 
 export const ChatMessages: React.FC<ChatMessagesProps> = ({
@@ -35,7 +34,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       return (
         <div className="space-y-2">
           {message.content && (
-            <p className="text-sm">{message.content}</p>
+            <p className="text-base md:text-sm mobile-chat-message">{message.content}</p>
           )}
           <div className="relative max-w-xs">
             <img
@@ -62,10 +61,10 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       return (
         <div className="space-y-2">
           {message.content && (
-            <p className="text-sm">{message.content}</p>
+            <p className="text-base md:text-sm mobile-chat-message">{message.content}</p>
           )}
-          <div className="flex items-center gap-2 p-2 border border-border rounded-lg bg-muted/50">
-            <Download className="w-4 h-4 text-muted-foreground" />
+          <div className="flex items-center gap-2 p-3 md:p-2 border border-border rounded-lg bg-muted/50">
+            <Download className="w-5 h-5 md:w-4 md:h-4 text-muted-foreground" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{message.attachment_name}</p>
               {message.attachment_size && (
@@ -78,7 +77,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               href={message.attachment_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-primary hover:underline"
+              className="text-sm md:text-xs text-primary hover:underline touch-manipulation"
             >
               Download
             </a>
@@ -87,14 +86,14 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       );
     }
 
-    return <p className="text-sm">{message.content}</p>;
+    return <p className="text-base md:text-sm mobile-chat-message leading-relaxed">{message.content}</p>;
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="flex-1 overflow-y-auto p-4 md:p-3 space-y-4 md:space-y-3 momentum-scroll mobile-chat-container">
       {messages.length === 0 && !isTyping && (
-        <div className="text-center text-muted-foreground py-8">
-          <p className="text-sm">
+        <div className="text-center text-muted-foreground py-8 md:py-6">
+          <p className="text-base md:text-sm mobile-chat-message">
             {isAiMode 
               ? "Ask me anything! I'm here to help with HR questions and workplace guidance."
               : "Start a conversation..."
@@ -119,75 +118,62 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         });
 
         return (
-          <div
-            key={message.id}
-            className={cn(
-              "flex gap-3",
-              isOwnMessage && !isAiMessage && "flex-row-reverse"
-            )}
-          >
-            <Avatar className="w-8 h-8 flex-shrink-0">
-              {isAiMessage ? (
-                <div className="w-full h-full rounded-full bg-primary/10 flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-primary" />
-                </div>
-              ) : (
-                <>
-                  <AvatarImage src={message.sender?.avatar_url} />
-                  <AvatarFallback className="text-xs">
-                    {message.sender?.name?.charAt(0)?.toUpperCase() || '?'}
+          <div key={message.id} className={`flex ${isAiMessage ? 'justify-start' : isOwnMessage ? 'justify-end' : 'justify-start'} mb-3 md:mb-2`}>
+            <div className="flex items-start gap-3 md:gap-2 max-w-[85%] md:max-w-[75%]">
+              {!isOwnMessage && !isAiMessage && (
+                <Avatar className="w-10 h-10 md:w-8 md:h-8 mt-1 flex-shrink-0">
+                  <AvatarImage src={message.sender?.avatar_url} alt={message.sender?.name} />
+                  <AvatarFallback className="text-sm md:text-xs">
+                    {message.sender?.name?.split(' ')?.map(n => n[0])?.join('') || '?'}
                   </AvatarFallback>
-                </>
+                </Avatar>
               )}
-            </Avatar>
-
-            <div className={cn(
-              "flex-1 space-y-1",
-              isOwnMessage && !isAiMessage && "flex flex-col items-end"
-            )}>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium">
-                  {isAiMessage ? 'AI Assistant' : message.sender?.name || 'Unknown User'}
-                </span>
-                {isAiMessage && (
-                  <Badge variant="secondary" className="text-xs px-1 py-0">
-                    AI
-                  </Badge>
+              
+              {isAiMessage && (
+                <div className="w-10 h-10 md:w-8 md:h-8 bg-blue-100 rounded-full flex items-center justify-center mt-1 flex-shrink-0">
+                  <Bot className="w-6 h-6 md:w-4 md:h-4 text-blue-600" />
+                </div>
+              )}
+              
+              <div className={`mobile-chat-bubble rounded-2xl px-4 py-3 md:px-3 md:py-2 shadow-sm ${
+                isAiMessage 
+                  ? 'bg-blue-50 text-blue-900 border border-blue-100' 
+                  : isOwnMessage 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-muted'
+              }`}>
+                {!isOwnMessage && !isAiMessage && message.sender && (
+                  <p className="text-xs font-medium text-muted-foreground mb-2 md:mb-1">
+                    {message.sender.name}
+                  </p>
                 )}
+                
+                <div className="space-y-2 mobile-chat-message">
+                  {renderMessageContent(message)}
+                </div>
+                
+                <p className="text-xs opacity-70 mt-2 md:mt-1">
+                  {new Date(message.created_at).toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}
+                </p>
               </div>
-
-              <div className={cn(
-                "max-w-[70%] rounded-lg p-3",
-                isOwnMessage && !isAiMessage
-                  ? "bg-primary text-primary-foreground"
-                  : isAiMessage
-                  ? "bg-blue-50 border border-blue-200 dark:bg-blue-950 dark:border-blue-800"
-                  : "bg-muted"
-              )}>
-                {renderMessageContent(message)}
-              </div>
-
-              <p className={cn(
-                "text-xs text-muted-foreground",
-                isOwnMessage && !isAiMessage && "text-right"
-              )}>
-                {formatMessageTime(message.created_at)}
-              </p>
             </div>
           </div>
         );
       })}
 
       {isTyping && (
-        <div className="flex gap-3">
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-            <Bot className="w-4 h-4 text-primary" />
-          </div>
-          <div className="bg-muted rounded-lg p-3">
-            <div className="flex gap-1">
-              <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+        <div className="flex justify-start mb-3 md:mb-2">
+          <div className="flex items-start gap-3 md:gap-2">
+            <div className="w-10 h-10 md:w-8 md:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <Bot className="w-6 h-6 md:w-4 md:h-4 text-blue-600" />
+            </div>
+            <div className="mobile-typing-indicator bg-muted rounded-2xl px-4 py-3 md:px-3 md:py-2 shadow-sm">
+              <div className="mobile-typing-dot"></div>
+              <div className="mobile-typing-dot"></div>
+              <div className="mobile-typing-dot"></div>
             </div>
           </div>
         </div>

@@ -69,7 +69,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3 md:gap-2">
       <Input
         value={message}
         onChange={(e) => setMessage(e.target.value)}
@@ -80,7 +80,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             : "Type your message..."
         }
         disabled={disabled}
-        className="flex-1"
+        className="flex-1 h-12 md:h-10 text-base md:text-sm rounded-xl md:rounded-md border-2 md:border touch-manipulation"
       />
       
       {!isAiMode && onUploadFile && (
@@ -97,13 +97,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             size="sm"
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled || isUploading}
-            className="p-2 h-auto"
+            className="h-12 w-12 md:h-10 md:w-10 rounded-xl md:rounded-md touch-manipulation active:scale-95 transition-transform flex-shrink-0"
             title="Attach file"
           >
             {isUploading ? (
-              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <div className="w-5 h-5 md:w-4 md:h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             ) : (
-              <Paperclip className="w-4 h-4" />
+              <Paperclip className="w-5 h-5 md:w-4 md:h-4" />
             )}
           </Button>
         </>
@@ -113,9 +113,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         onClick={handleSendMessage}
         disabled={!message.trim() || disabled}
         size="sm"
-        className="p-2 h-auto"
+        className="h-12 w-12 md:h-10 md:w-10 rounded-xl md:rounded-md touch-manipulation active:scale-95 transition-transform flex-shrink-0"
       >
-        <Send className="w-4 h-4" />
+        <Send className="w-5 h-5 md:w-4 md:h-4" />
       </Button>
     </div>
   );
