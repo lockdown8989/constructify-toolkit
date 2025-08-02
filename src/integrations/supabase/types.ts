@@ -2386,6 +2386,44 @@ export type Database = {
           },
         ]
       }
+      user_chat_notifications: {
+        Row: {
+          chat_id: string
+          created_at: string | null
+          id: string
+          last_read_at: string | null
+          unread_count: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string | null
+          id?: string
+          last_read_at?: string | null
+          unread_count?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string | null
+          id?: string
+          last_read_at?: string | null
+          unread_count?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_chat_notifications_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_consent: {
         Row: {
           consent_date: string | null
@@ -2432,6 +2470,7 @@ export type Database = {
         Row: {
           created_at: string | null
           employee_id: string | null
+          hide_online_status: boolean | null
           id: string
           is_online: boolean | null
           last_seen: string | null
@@ -2442,6 +2481,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           employee_id?: string | null
+          hide_online_status?: boolean | null
           id?: string
           is_online?: boolean | null
           last_seen?: string | null
@@ -2452,6 +2492,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           employee_id?: string | null
+          hide_online_status?: boolean | null
           id?: string
           is_online?: boolean | null
           last_seen?: string | null
