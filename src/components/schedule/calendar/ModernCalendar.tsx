@@ -86,7 +86,9 @@ const ModernCalendar: React.FC<ModernCalendarProps> = ({
                 key={schedule.id}
                 className={cn(
                   "text-xs px-2 py-1 rounded-md cursor-pointer transition-all duration-150 truncate border",
-                  schedule.status === 'pending' 
+                  schedule.status === 'incomplete'
+                    ? "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                    : schedule.status === 'pending' 
                     ? "bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100" 
                     : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
                 )}
@@ -96,7 +98,11 @@ const ModernCalendar: React.FC<ModernCalendarProps> = ({
                 }}
               >
                 <div className="flex items-center gap-1 mb-0.5">
-                  <Clock className="h-2.5 w-2.5 flex-shrink-0" />
+                  {schedule.status === 'incomplete' ? (
+                    <span className="text-red-600 font-bold text-xs">✗</span>
+                  ) : (
+                    <Clock className="h-2.5 w-2.5 flex-shrink-0" />
+                  )}
                   <span className="font-medium text-xs">
                     {format(new Date(schedule.start_time), 'HH:mm')}
                   </span>
@@ -138,6 +144,7 @@ const ModernCalendar: React.FC<ModernCalendarProps> = ({
   };
 
   const pendingCount = schedules.filter(s => s.status === 'pending').length;
+  const incompleteCount = schedules.filter(s => s.status === 'incomplete').length;
 
   return (
     <div className="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
@@ -153,12 +160,20 @@ const ModernCalendar: React.FC<ModernCalendarProps> = ({
               <p className="text-sm text-slate-600">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
             </div>
           </div>
-          {pendingCount > 0 && (
-            <Badge className="bg-orange-100 text-orange-700 border border-orange-200 px-3 py-1 hover:bg-orange-200">
-              <AlertCircle className="h-3 w-3 mr-1" />
-              {pendingCount} pending
-            </Badge>
-          )}
+          <div className="flex gap-2">
+            {incompleteCount > 0 && (
+              <Badge className="bg-red-100 text-red-700 border border-red-200 px-3 py-1 hover:bg-red-200">
+                <span className="mr-1">✗</span>
+                {incompleteCount} incomplete
+              </Badge>
+            )}
+            {pendingCount > 0 && (
+              <Badge className="bg-orange-100 text-orange-700 border border-orange-200 px-3 py-1 hover:bg-orange-200">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                {pendingCount} pending
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
 

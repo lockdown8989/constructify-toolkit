@@ -112,7 +112,8 @@ export type ScheduleStatus =
   | 'completed' 
   | 'rejected'
   | 'employee_accepted'
-  | 'employee_rejected';
+  | 'employee_rejected'
+  | 'incomplete';
 
 export interface Schedule {
   id: string;

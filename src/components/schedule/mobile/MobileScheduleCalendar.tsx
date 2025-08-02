@@ -39,10 +39,12 @@ const MobileScheduleCalendar: React.FC<MobileScheduleCalendarProps> = ({
     const daySchedules = getSchedulesForDate(date);
     if (daySchedules.length === 0) return 'empty';
     
+    const hasIncomplete = daySchedules.some(s => s.status === 'incomplete');
     const hasPending = daySchedules.some(s => s.status === 'pending');
     const hasConfirmed = daySchedules.some(s => s.status === 'confirmed' || s.status === 'employee_accepted');
     const hasCompleted = daySchedules.some(s => s.status === 'completed');
     
+    if (hasIncomplete) return 'incomplete';
     if (hasPending) return 'pending';
     if (hasCompleted) return 'completed';
     if (hasConfirmed) return 'confirmed';
@@ -51,6 +53,7 @@ const MobileScheduleCalendar: React.FC<MobileScheduleCalendarProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'incomplete': return 'bg-gradient-to-br from-red-500 to-red-600';
       case 'pending': return 'bg-gradient-to-br from-orange-400 to-orange-500';
       case 'confirmed': return 'bg-gradient-to-br from-blue-400 to-blue-500';
       case 'completed': return 'bg-gradient-to-br from-green-400 to-green-500';
@@ -60,6 +63,7 @@ const MobileScheduleCalendar: React.FC<MobileScheduleCalendarProps> = ({
 
   const getStatusIndicator = (status: string) => {
     switch (status) {
+      case 'incomplete': return '✗';
       case 'pending': return '!';
       case 'confirmed': return '✓';
       case 'completed': return '✓';
@@ -225,6 +229,10 @@ const MobileScheduleCalendar: React.FC<MobileScheduleCalendarProps> = ({
       {/* Legend */}
       <div className="p-4 pt-0">
         <div className="flex flex-wrap gap-3 text-xs">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-red-500 to-red-600"></div>
+            <span className="text-muted-foreground">Incomplete</span>
+          </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-full bg-gradient-to-br from-orange-400 to-orange-500"></div>
             <span className="text-muted-foreground">Pending</span>

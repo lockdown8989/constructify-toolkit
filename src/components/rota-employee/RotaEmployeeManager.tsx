@@ -17,6 +17,7 @@ import { RotaPatternDialog } from './components/RotaPatternDialog';
 import { RotaCalendarSync } from './components/RotaCalendarSync';
 import EmployeeRotaSchedule from './components/EmployeeRotaSchedule';
 import SingleShiftSchedule from '@/components/restaurant/SingleShiftSchedule';
+import RotaComplianceDashboard from './RotaComplianceDashboard';
 
 const RotaEmployeeManager = () => {
   const { data: shiftPatterns = [], isLoading, refetch: refetchPatterns } = useShiftPatterns();
@@ -31,7 +32,7 @@ const RotaEmployeeManager = () => {
   const [editingPattern, setEditingPattern] = useState<ShiftTemplate | null>(null);
   const [syncingRotas, setSyncingRotas] = useState<string[]>([]);
   const [autoApprovingRotas, setAutoApprovingRotas] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'patterns' | 'single-shifts'>('patterns');
+  const [currentTab, setCurrentTab] = useState<'patterns' | 'single-shifts' | 'compliance'>('patterns');
   
   const { patternEmployees, refreshPatternEmployees } = usePatternEmployees(shiftPatterns as any);
   const {
@@ -420,8 +421,8 @@ const RotaEmployeeManager = () => {
 
   return (
     <div className="space-y-6">
-      <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as 'patterns' | 'single-shifts')}>
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as 'patterns' | 'single-shifts' | 'compliance')}>
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="patterns" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Rota Patterns
@@ -429,6 +430,10 @@ const RotaEmployeeManager = () => {
           <TabsTrigger value="single-shifts" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
             Single Shifts
+          </TabsTrigger>
+          <TabsTrigger value="compliance" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Compliance
           </TabsTrigger>
         </TabsList>
 
@@ -513,6 +518,10 @@ const RotaEmployeeManager = () => {
 
         <TabsContent value="single-shifts" className="mt-6">
           <SingleShiftSchedule />
+        </TabsContent>
+
+        <TabsContent value="compliance" className="mt-6">
+          <RotaComplianceDashboard />
         </TabsContent>
       </Tabs>
     </div>

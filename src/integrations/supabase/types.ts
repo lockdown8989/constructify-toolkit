@@ -2666,6 +2666,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_rota_pattern_compliance: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_expired_data: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -2837,6 +2841,7 @@ export type Database = {
         | "Late"
         | "Present"
         | "Absent"
+        | "incomplete"
       shift_status:
         | "confirmed"
         | "pending"
@@ -2980,6 +2985,7 @@ export const Constants = {
         "Late",
         "Present",
         "Absent",
+        "incomplete",
       ],
       shift_status: [
         "confirmed",

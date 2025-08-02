@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { useAttendanceMetadata } from '../use-attendance-metadata';
 import { getDeviceIdentifier } from '../utils/device-utils';
 import { notifyManagersOfClockIn } from '@/services/notifications/role-utils';
+import { validateClockInCompliance } from '@/services/rota-compliance/rota-enforcement';
 
 import { debugTimeInfo } from '@/utils/timezone-utils';
 
@@ -28,6 +29,26 @@ export const useClockIn = (
 
     try {
       console.log('Starting clock in process for employee:', employeeId);
+      
+      // Validate rota pattern compliance before allowing clock-in
+      const complianceCheck = await validateClockInCompliance(employeeId);
+      
+      if (!complianceCheck.canClockIn) {
+        toast({
+          title: "Cannot Clock In",
+          description: complianceCheck.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Show compliance message if applicable
+      if (complianceCheck.rotaShift) {
+        toast({
+          title: "Rota Pattern Active",
+          description: complianceCheck.message,
+        });
+      }
       
       const now = new Date();
       const today = now.toISOString().split('T')[0];
