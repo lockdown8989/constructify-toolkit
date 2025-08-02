@@ -14,10 +14,11 @@ import { sendNotification } from '@/services/notifications/notification-sender';
 interface ShiftDialogManagerProps {
   addShift: (shift: Omit<Shift, 'id'>) => Promise<void>;
   updateShift: (shift: Shift) => Promise<void>;
+  deleteShift?: (shift: Shift) => Promise<void>;
   onResponseComplete?: () => void;
 }
 
-const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: ShiftDialogManagerProps) => {
+const ShiftDialogManager = ({ addShift, updateShift, deleteShift, onResponseComplete }: ShiftDialogManagerProps) => {
   const { user } = useAuth();
   const { createSchedule, isCreating } = useCreateSchedule();
   const { assignShift } = useShiftAssignment();
@@ -80,11 +81,35 @@ const ShiftDialogManager = ({ addShift, updateShift, onResponseComplete }: Shift
     }
   };
 
+  const handleDelete = async (shift: Shift) => {
+    if (!deleteShift) return;
+    
+    try {
+      console.log('Deleting shift:', shift.id);
+      await deleteShift(shift);
+      
+      sonnerToast.success('Shift deleted successfully');
+      
+      // Call the response complete callback to refresh data
+      if (onResponseComplete) {
+        onResponseComplete();
+      }
+      
+      shiftDialog.closeDialog();
+    } catch (error) {
+      console.error('Error deleting shift:', error);
+      sonnerToast.error('Failed to delete shift', {
+        description: error instanceof Error ? error.message : 'Unknown error occurred'
+      });
+    }
+  };
+
   const ShiftDialogComponent = (
     <ShiftEditDialog
       isOpen={shiftDialog.isOpen}
       onClose={shiftDialog.closeDialog}
       onSave={handleSave}
+      onDelete={deleteShift ? handleDelete : undefined}
       shift={shiftDialog.editingShift}
       mode={shiftDialog.mode}
     />

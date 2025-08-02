@@ -25,10 +25,16 @@ const RestaurantScheduleRoles = ({
   addShift,
   updateShift
 }: RestaurantScheduleRolesProps) => {
+  // Create wrapper for delete function to match expected signature
+  const handleDeleteShift = async (shift: any) => {
+    await removeShift(shift.id);
+  };
+
   // Get the shift dialog manager with all its functions and component
   const shiftDialog = ShiftDialogManager({ 
     addShift, 
-    updateShift
+    updateShift,
+    deleteShift: handleDeleteShift
   });
 
   return (

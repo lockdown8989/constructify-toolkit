@@ -22,16 +22,22 @@ const EmployeeScheduleRow: React.FC<EmployeeScheduleRowProps> = ({
   onAssignOpenShift,
   isMobile
 }) => {
-  const { shifts, addShift, updateShift } = useRestaurantSchedule();
+  const { shifts, addShift, updateShift, removeShift } = useRestaurantSchedule();
   const [isExpanded, setIsExpanded] = useState(false);
   
   // Get shifts for this employee
   const employeeShifts = shifts.filter(shift => shift.employeeId === employee.id);
   
+  // Create wrapper for delete function to match expected signature
+  const handleDeleteShift = async (shift: any) => {
+    await removeShift(shift.id);
+  };
+
   // Create shift dialog manager for this employee
   const shiftDialog = ShiftDialogManager({ 
     addShift, 
     updateShift,
+    deleteShift: handleDeleteShift,
     onResponseComplete: () => {
       // Force a refresh of the schedule data
       window.location.reload();

@@ -27,10 +27,11 @@ interface ShiftEditDialogProps {
   onClose: () => void;
   shift?: Shift | null;
   onSave: (shift: Shift) => void; // This is the prop that will receive form data
+  onDelete?: (shift: Shift) => void; // Added delete prop
   mode?: 'add' | 'edit'; // Added mode prop
 }
 
-const ShiftEditDialog = ({ isOpen, onClose, shift, onSave, mode = 'edit' }: ShiftEditDialogProps) => {
+const ShiftEditDialog = ({ isOpen, onClose, shift, onSave, onDelete, mode = 'edit' }: ShiftEditDialogProps) => {
   const [editedShift, setEditedShift] = useState<Shift | null>(null);
   
   // Set the form data when a shift is provided
@@ -70,6 +71,13 @@ const ShiftEditDialog = ({ isOpen, onClose, shift, onSave, mode = 'edit' }: Shif
       if (!prev) return null;
       return { ...prev, [field]: value };
     });
+  };
+
+  const handleDelete = () => {
+    if (editedShift && onDelete) {
+      onDelete(editedShift);
+      onClose();
+    }
   };
   
   return (
@@ -182,11 +190,35 @@ const ShiftEditDialog = ({ isOpen, onClose, shift, onSave, mode = 'edit' }: Shif
             )}
           </div>
           
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit">Save</Button>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+            {mode === 'edit' && onDelete && (
+              <div className="w-full sm:w-auto sm:mr-auto">
+                <Button 
+                  type="button" 
+                  variant="destructive" 
+                  onClick={handleDelete}
+                  className="w-full sm:w-auto"
+                >
+                  Delete Shift
+                </Button>
+              </div>
+            )}
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onClose}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                className="w-full sm:w-auto"
+              >
+                Save
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
