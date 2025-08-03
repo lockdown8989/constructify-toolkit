@@ -93,15 +93,11 @@ const MobileNavContent: React.FC<MobileNavContentProps> = ({
                     </p>
                   </div>
                   <ManagerSection />
-                  <WorkflowSection 
-                    hasManagerialAccess={actualManagerialAccess}
-                    onClose={onClose} 
-                  />
                 </>
               )}
               
-              {/* Employee workflow - only for non-manager, non-payroll employees */}
-              {isEmployee && !actualManagerialAccess && !isPayroll && (
+              {/* Employee workflow - for all authenticated users */}
+              {isAuthenticated && (
                 <>
                   <MobileNavDivider />
                   <div className="px-2 py-1">

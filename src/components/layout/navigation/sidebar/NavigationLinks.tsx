@@ -33,7 +33,7 @@ export const NavigationLinks = () => {
       <SidebarNavLink to="/attendance" icon={UserCheck} label="Attendance" isActive={isActive('/attendance')} isCollapsed={false} />
       <SidebarNavLink to="/leave-management" icon={FileText} label="Leave Management" isActive={isActive('/leave-management')} isCollapsed={false} />
       <SidebarNavLink to="/schedule-requests" icon={Bell} label="Schedule Requests" isActive={isActive('/schedule-requests')} isCollapsed={false} />
-      <SidebarNavLink to="/employee-workflow" icon={ClipboardList} label="Employee Workflow" isActive={isActive('/employee-workflow')} isCollapsed={false} />
+      
 
       {/* Manager/Admin Only Items */}
       {hasManagerAccess && (
@@ -41,7 +41,7 @@ export const NavigationLinks = () => {
           <SidebarNavLink to="/people" icon={Users} label="People" isActive={isActive('/people')} isCollapsed={false} />
           <SidebarNavLink to="/shift-calendar" icon={CalendarDays} label="Shift Calendar" isActive={isActive('/shift-calendar')} isCollapsed={false} />
           <SidebarNavLink to="/rota-employee" icon={Timer} label="Employee Rotas" isActive={isActive('/rota-employee')} isCollapsed={false} />
-          
+          <SidebarNavLink to="/employee-workflow" icon={ClipboardList} label="Employee Workflow" isActive={isActive('/employee-workflow')} isCollapsed={false} />
           <SidebarNavLink to="/manager-time-clock" icon={Clock} label="Manager Time Clock" isActive={isActive('/manager-time-clock')} isCollapsed={false} />
         </>
       )}

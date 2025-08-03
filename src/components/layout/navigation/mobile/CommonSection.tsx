@@ -91,15 +91,6 @@ const CommonSection = ({
         />
       )}
 
-      {/* Employee Workflow for managers/admins */}
-      {hasManagerialAccess && (
-        <MobileNavLink
-          to="/employee-workflow"
-          icon={ClipboardList}
-          label="👥 Employee Workflow"
-          onClick={onClose}
-        />
-      )}
 
       {/* Leave Management for managers */}
       {hasManagerialAccess && (
