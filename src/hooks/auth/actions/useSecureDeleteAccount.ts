@@ -10,21 +10,41 @@ export const useSecureDeleteAccount = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const deleteAccount = async () => {
+const deleteAccount = async () => {
     try {
       setIsDeleting(true);
       
       await secureDeleteAccount();
+      
+      // Clear all application state before showing success message
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (clearError) {
+        console.warn('Storage clear error:', clearError);
+      }
       
       toast({
         title: "Account Deleted",
         description: "Your account and all associated data have been permanently deleted.",
       });
       
-      // Redirect to landing page after successful deletion
-      navigate('/', { replace: true });
+      // Force complete page reload to clear all app state
+      window.location.replace('/auth');
+      
     } catch (error) {
       console.error('Delete account error:', error);
+      
+      // If error suggests user was already deleted, still redirect
+      if (error instanceof Error && 
+          (error.message.includes('User not found') || 
+           error.message.includes('No authenticated user'))) {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.replace('/auth');
+        return;
+      }
+      
       toast({
         title: "Deletion Failed",
         description: error instanceof Error ? error.message : "Failed to delete account. Please try again or contact support.",

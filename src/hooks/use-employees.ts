@@ -200,24 +200,81 @@ export const useDeleteEmployee = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase
+      // First, get employee details for cleanup
+      const { data: employeeData, error: fetchError } = await supabase
         .from('employees')
-        .delete()
+        .select('user_id, name, manager_id')
         .eq('id', id)
-        .select()
         .single();
 
-      if (error) throw error;
-      return data;
+      if (fetchError) {
+        console.error('Error fetching employee before deletion:', fetchError);
+        throw fetchError;
+      }
+
+      // If employee has a user_id, use the safe deletion function
+      if (employeeData?.user_id) {
+        console.log('Deleting employee with user account using safe deletion');
+        const { data: deleteResult, error: deleteError } = await supabase.functions.invoke('delete-user-account');
+        
+        if (deleteError) {
+          throw new Error(`Failed to delete user account: ${deleteError.message}`);
+        }
+        
+        return { ...employeeData, deleted_with_user: true };
+      } else {
+        // For employees without user accounts, clean up references first
+        console.log('Deleting employee without user account');
+        
+        // Clean up any manager references first
+        if (employeeData?.manager_id) {
+          await supabase
+            .from('employees')
+            .update({ manager_id: null })
+            .eq('manager_id', id);
+        }
+        
+        // Delete the employee record
+        const { data, error } = await supabase
+          .from('employees')
+          .delete()
+          .eq('id', id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Invalidate all related queries to prevent stale data
       queryClient.invalidateQueries({ queryKey: ['employees'] });
+      queryClient.invalidateQueries({ queryKey: ['employee'] });
+      queryClient.invalidateQueries({ queryKey: ['attendance'] });
+      queryClient.invalidateQueries({ queryKey: ['schedules'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      
+      // Clear any cached employee-specific data
+      queryClient.removeQueries({ queryKey: ['employee', data.id] });
     },
     onError: (error) => {
       console.error('Error deleting employee:', error);
+      
+      // Provide specific error messages for common deletion issues
+      let errorMessage = "Failed to delete employee";
+      if (error instanceof Error) {
+        if (error.message.includes('foreign key')) {
+          errorMessage = "Cannot delete employee: they have associated records that must be removed first";
+        } else if (error.message.includes('not found')) {
+          errorMessage = "Employee not found or already deleted";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Error deleting employee",
-        description: error instanceof Error ? error.message : "Failed to delete employee",
+        description: errorMessage,
         variant: "destructive",
       });
     },

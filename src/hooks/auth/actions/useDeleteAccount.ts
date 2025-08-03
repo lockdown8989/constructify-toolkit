@@ -8,7 +8,7 @@ export const useDeleteAccount = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const deleteAccount = async () => {
+const deleteAccount = async () => {
     try {
       const result = await deleteAccountAction();
       
@@ -18,13 +18,22 @@ export const useDeleteAccount = () => {
           description: "Your account has been successfully deleted.",
         });
         
-        // Immediate redirect to auth page
-        navigate('/auth', { replace: true });
+        // Clear all local storage and session data
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+          // Clear any React Query cache
+          if (window.location?.pathname) {
+            // Force a complete page reload to clear all app state
+            window.location.replace('/auth');
+            return { success: true };
+          }
+        } catch (clearError) {
+          console.warn('Error clearing storage:', clearError);
+        }
         
-        // Additional cleanup - clear any remaining data
-        setTimeout(() => {
-          window.location.href = '/auth';
-        }, 100);
+        // Fallback navigation
+        navigate('/auth', { replace: true });
         
         return { success: true };
       } else {
@@ -32,6 +41,10 @@ export const useDeleteAccount = () => {
       }
     } catch (error: any) {
       console.error('Delete account error:', error);
+      // Even on error, try to redirect to prevent broken state
+      if (error.message?.includes('User not found') || error.message?.includes('session')) {
+        navigate('/auth', { replace: true });
+      }
       return { success: false, error: error.message || 'Failed to delete account' };
     }
   };
