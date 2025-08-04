@@ -1146,13 +1146,6 @@ export type Database = {
             referencedRelation: "schedules"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "labor_costs_schedule_id_fkey"
-            columns: ["schedule_id"]
-            isOneToOne: false
-            referencedRelation: "schedules_with_employee_details"
-            referencedColumns: ["id"]
-          },
         ]
       }
       leave_calendar: {
@@ -1786,13 +1779,6 @@ export type Database = {
             referencedRelation: "schedules"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "schedule_conflicts_schedule_id_fkey"
-            columns: ["schedule_id"]
-            isOneToOne: false
-            referencedRelation: "schedules_with_employee_details"
-            referencedColumns: ["id"]
-          },
         ]
       }
       schedule_conflicts_log: {
@@ -2218,13 +2204,6 @@ export type Database = {
             referencedRelation: "schedules"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "shift_requirements_schedule_id_fkey"
-            columns: ["schedule_id"]
-            isOneToOne: false
-            referencedRelation: "schedules_with_employee_details"
-            referencedColumns: ["id"]
-          },
         ]
       }
       shift_swaps: {
@@ -2277,13 +2256,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "shift_swaps_recipient_schedule_id_fkey"
-            columns: ["recipient_schedule_id"]
-            isOneToOne: false
-            referencedRelation: "schedules_with_employee_details"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "shift_swaps_requester_id_fkey"
             columns: ["requester_id"]
             isOneToOne: false
@@ -2295,13 +2267,6 @@ export type Database = {
             columns: ["requester_schedule_id"]
             isOneToOne: false
             referencedRelation: "schedules"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "shift_swaps_requester_schedule_id_fkey"
-            columns: ["requester_schedule_id"]
-            isOneToOne: false
-            referencedRelation: "schedules_with_employee_details"
             referencedColumns: ["id"]
           },
         ]
@@ -2631,64 +2596,7 @@ export type Database = {
       }
     }
     Views: {
-      schedules_with_employee_details: {
-        Row: {
-          approved_by: string | null
-          break_duration: number | null
-          can_be_edited: boolean | null
-          color: string | null
-          created_at: string | null
-          employee_department: string | null
-          employee_email: string | null
-          employee_hourly_rate: number | null
-          employee_id: string | null
-          employee_job_title: string | null
-          employee_name: string | null
-          end_time: string | null
-          estimated_cost: number | null
-          hourly_rate: number | null
-          id: string | null
-          is_draft: boolean | null
-          last_dragged_by: string | null
-          location: string | null
-          manager_email: string | null
-          manager_id: string | null
-          manager_name: string | null
-          notes: string | null
-          published: boolean | null
-          published_at: string | null
-          published_by: string | null
-          shift_type: string | null
-          start_time: string | null
-          status: Database["public"]["Enums"]["shift_status"] | null
-          template_id: string | null
-          title: string | null
-          updated_at: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "schedules_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "schedules_manager_id_fkey"
-            columns: ["manager_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "schedules_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "schedule_templates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       admin_reset_user_password: {

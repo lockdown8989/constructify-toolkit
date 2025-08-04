@@ -8,6 +8,7 @@ import { Tabs, TabsContent } from '@/components/ui/tabs';
 import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard';
 import ManagerDashboard from '@/components/dashboard/ManagerDashboard';
 import PayrollDashboard from '@/components/dashboard/PayrollDashboard';
+import DashboardErrorBoundary from '@/components/dashboard/ErrorBoundary';
 import { Loader2 } from 'lucide-react';
 import { useMobileDebugger } from '@/hooks/useMobileDebugger';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -107,33 +108,32 @@ const Dashboard = () => {
 
   console.log("🎯 Final dashboard type decision:", dashboardType, isMobile ? '(mobile)' : '(desktop)');
 
-  try {
-    return (
+  return (
+    <DashboardErrorBoundary>
       <Tabs defaultValue="dashboard">
         <TabsContent value="dashboard" className="pt-20 md:pt-24 px-4 sm:px-6 pb-10 animate-fade-in">
-          {dashboardType === 'payroll' ? (
-            <PayrollDashboard 
-              firstName={firstName}
-              employeeCount={employeeCount}
-              hiredCount={interviews.filter(i => i.stage === 'Hired').length}
-            />
-          ) : dashboardType === 'manager' ? (
-            <ManagerDashboard 
-              firstName={firstName}
-              employeeCount={employeeCount}
-              hiredCount={interviews.filter(i => i.stage === 'Hired').length}
-              interviewStats={interviewStats}
-            />
-          ) : (
-            <EmployeeDashboard firstName={firstName} />
-          )}
+          <DashboardErrorBoundary>
+            {dashboardType === 'payroll' ? (
+              <PayrollDashboard 
+                firstName={firstName}
+                employeeCount={employeeCount}
+                hiredCount={interviews.filter(i => i.stage === 'Hired').length}
+              />
+            ) : dashboardType === 'manager' ? (
+              <ManagerDashboard 
+                firstName={firstName}
+                employeeCount={employeeCount}
+                hiredCount={interviews.filter(i => i.stage === 'Hired').length}
+                interviewStats={interviewStats}
+              />
+            ) : (
+              <EmployeeDashboard firstName={firstName} />
+            )}
+          </DashboardErrorBoundary>
         </TabsContent>
       </Tabs>
-    );
-  } catch (error) {
-    console.error('🚨 Dashboard render error:', error);
-    throw error; // Let the error boundary handle it
-  }
+    </DashboardErrorBoundary>
+  );
 };
 
 export default Dashboard;

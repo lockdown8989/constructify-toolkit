@@ -27,7 +27,7 @@ export const autoConfirmRotaShift = async (scheduleId: string) => {
         can_be_edited: false
       })
       .eq('id', scheduleId)
-      .select('*, employees!inner(*)')
+      .select('*, employees!schedules_employee_id_fkey(*)')
       .single();
 
     if (error) throw error;
@@ -61,7 +61,7 @@ export const batchApproveAllPendingRotas = async () => {
     // Get all pending shifts
     const { data: pendingShifts, error: fetchError } = await supabase
       .from('schedules')
-      .select('id, employee_id, title, start_time, end_time, employees!inner(user_id, name)')
+      .select('id, employee_id, title, start_time, end_time, employees!schedules_employee_id_fkey(user_id, name)')
       .eq('status', 'pending');
 
     if (fetchError) throw fetchError;

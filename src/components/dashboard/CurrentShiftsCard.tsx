@@ -11,6 +11,8 @@ const CurrentShiftsCard = () => {
 
   const { data: publishedShifts = [], isLoading: publishedLoading, error: publishedError } = useQuery({
     queryKey: ['published-shifts', today],
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     queryFn: async () => {
       console.log('Fetching published shifts for:', today);
       
@@ -18,7 +20,7 @@ const CurrentShiftsCard = () => {
         .from('schedules')
         .select(`
           *,
-          employees!inner(id, name, email)
+          employees!schedules_employee_id_fkey(id, name, email)
         `)
         .eq('published', true)
         .gte('start_time', `${today}T00:00:00`)
@@ -38,6 +40,8 @@ const CurrentShiftsCard = () => {
 
   const { data: openShifts = [], isLoading: openLoading, error: openError } = useQuery({
     queryKey: ['open-shifts', today],
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     queryFn: async () => {
       console.log('Fetching open shifts for:', today);
       

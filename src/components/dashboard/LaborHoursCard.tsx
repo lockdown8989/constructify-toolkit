@@ -19,7 +19,7 @@ const LaborHoursCard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchLaborStats = async () => {
+    const fetchLaborStats = async (retryCount = 0) => {
       setLoading(true);
       try {
         const now = new Date();
@@ -29,9 +29,18 @@ const LaborHoursCard: React.FC = () => {
         console.log('Fetching labor stats for week:', weekStart, 'to', weekEnd);
 
         // Fetch all schedules for this week (both published and unpublished for accurate calculation)
+        // Use explicit foreign key reference to avoid ambiguous relationship errors
         const { data: schedules, error: schedulesError } = await supabase
           .from('schedules')
-          .select('start_time, end_time, hourly_rate, break_duration, estimated_cost, employee_id, employees(hourly_rate)')
+          .select(`
+            start_time, 
+            end_time, 
+            hourly_rate, 
+            break_duration, 
+            estimated_cost, 
+            employee_id,
+            employees!schedules_employee_id_fkey(hourly_rate)
+          `)
           .gte('start_time', weekStart)
           .lte('start_time', weekEnd);
 
@@ -92,6 +101,14 @@ const LaborHoursCard: React.FC = () => {
         });
       } catch (error) {
         console.error('Error fetching labor stats:', error);
+        
+        // Retry logic for network errors
+        if (retryCount < 2 && error instanceof Error) {
+          console.log(`Retrying labor stats fetch (attempt ${retryCount + 1})`);
+          setTimeout(() => fetchLaborStats(retryCount + 1), 1000 * (retryCount + 1));
+          return;
+        }
+        
         // Show actual zero values instead of placeholder data
         setStats({
           scheduledHours: 0,
