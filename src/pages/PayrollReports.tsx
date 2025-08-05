@@ -25,27 +25,33 @@ export default function PayrollReports() {
   const [reportType, setReportType] = useState<string>('overview');
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch live payroll data
+  // Fetch live payroll data with proper relationship references
   const { data: payrollData, isLoading, refetch } = useQuery({
-    queryKey: ['payroll-reports', selectedPeriod],
+    queryKey: ['payroll-reports-page', selectedPeriod], // Different key to avoid conflicts
     queryFn: async () => {
       const { data, error } = await supabase
         .from('payroll')
         .select(`
           *,
-          employees (
+          employees!payroll_employee_id_fkey (
             name,
             job_title,
             department,
             site
           )
         `)
-        .order('payment_date', { ascending: false });
+        .order('payment_date', { ascending: false })
+        .limit(200); // Reasonable limit
       
-      if (error) throw error;
+      if (error) {
+        console.error('PayrollReports page error:', error);
+        throw error;
+      }
+      console.log('PayrollReports data fetched:', data?.length || 0, 'records');
       return data || [];
     },
-    refetchInterval: 30000, // Refresh every 30 seconds for live data
+    staleTime: 2 * 60 * 1000, // 2 minutes cache
+    refetchInterval: 45000, // Refresh every 45 seconds
   });
 
   // Fetch employee stats

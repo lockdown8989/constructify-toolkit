@@ -15,7 +15,7 @@ export const PayrollReportsTab: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<string>('current-month');
   const [reportType, setReportType] = useState<string>('summary');
 
-  // Fetch payroll data for reports
+  // Fetch payroll data for reports with period filtering
   const { data: payrollData, isLoading } = useQuery({
     queryKey: ['payroll-reports', selectedPeriod],
     queryFn: async () => {
@@ -23,17 +23,24 @@ export const PayrollReportsTab: React.FC = () => {
         .from('payroll')
         .select(`
           *,
-          employees (
+          employees!payroll_employee_id_fkey (
             name,
             job_title,
-            department
+            department,
+            site
           )
         `)
-        .order('payment_date', { ascending: false });
+        .order('payment_date', { ascending: false })
+        .limit(100); // Limit to prevent large data loads
       
-      if (error) throw error;
+      if (error) {
+        console.error('Payroll reports error:', error);
+        throw error;
+      }
       return data || [];
-    }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    refetchInterval: 60000, // Refresh every minute
   });
 
   // Sample chart data

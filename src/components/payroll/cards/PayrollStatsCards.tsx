@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 interface PayrollStatsCardsProps {
   totalEmployees: number;
   pendingEmployees: number;
+  presentEmployees?: number;
+  absentEmployees?: number;
   overtimeHours: number;
   onCardClick: (statType: 'total' | 'employees' | 'paid' | 'pending' | 'absent', value: number) => void;
 }
@@ -16,6 +18,8 @@ interface PayrollStatsCardsProps {
 export const PayrollStatsCards: React.FC<PayrollStatsCardsProps> = ({
   totalEmployees,
   pendingEmployees,
+  presentEmployees = 0,
+  absentEmployees = 0,
   overtimeHours,
   onCardClick
 }) => {

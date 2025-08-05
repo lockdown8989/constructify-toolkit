@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { usePayrollSync } from '@/hooks/use-payroll-sync';
+import { useAttendanceReporting } from '@/hooks/use-attendance-reporting';
 import { PayrollOverviewChart } from '@/components/payroll/charts/PayrollOverviewChart';
 import { PayrollStatsModal } from '@/components/payroll/stats/PayrollStatsModal';
 import { PayrollHeader } from '@/components/payroll/header/PayrollHeader';
@@ -45,20 +46,8 @@ const PayrollDashboard = () => {
     refetch 
   } = usePayrollSync(timeRange);
 
-  // Fetch live overtime data for accurate display
-  const { data: overtimeData } = useQuery({
-    queryKey: ['overtime-hours'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('attendance')
-        .select('overtime_minutes')
-        .gte('date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
-      
-      if (error) throw error;
-      return data?.reduce((sum, record) => sum + (record.overtime_minutes || 0), 0) || 0;
-    },
-    refetchInterval: 30000
-  });
+  // Use dedicated attendance reporting hook for accurate data
+  const { data: attendanceReport, isLoading: attendanceLoading } = useAttendanceReporting(timeRange);
 
   // Direct employee data query with better filtering
   const { data: employeeDataDirect, isLoading: employeeLoading } = useQuery({
@@ -97,7 +86,9 @@ const PayrollDashboard = () => {
 
   // Use direct employee data for accurate count
   const actualEmployeeCount = employeeDataDirect?.length || 0;
-  const overtimeHours = Math.round((overtimeData || 0) / 60);
+  const overtimeHours = Math.round((attendanceReport?.overtimeMinutes || 0) / 60);
+  const presentEmployees = attendanceReport?.presentCount || 0;
+  const absentEmployees = attendanceReport?.absentCount || 0;
 
   // Convert employee data to the format expected by the table with GBP formatting
   const employees = employeeDataDirect?.map(emp => ({
@@ -185,6 +176,8 @@ const PayrollDashboard = () => {
             <PayrollStatsCards
               totalEmployees={actualEmployeeCount}
               pendingEmployees={payrollMetrics.pendingEmployees}
+              presentEmployees={presentEmployees}
+              absentEmployees={absentEmployees}
               overtimeHours={overtimeHours}
               onCardClick={handleCardClick}
             />
@@ -210,7 +203,7 @@ const PayrollDashboard = () => {
                 actualEmployeeCount={actualEmployeeCount}
                 searchQuery={searchQuery}
                 viewMode={viewMode}
-                isLoading={isLoading || employeeLoading}
+                isLoading={isLoading || employeeLoading || attendanceLoading}
                 onSearchChange={setSearchQuery}
                 onViewModeChange={setViewMode}
               />

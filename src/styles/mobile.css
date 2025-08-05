@@ -395,3 +395,34 @@
 .calendar-badge-confirmed {
   @apply bg-blue-500 text-white border-0;
 }
+
+/* Enhanced dark mode support for mobile */
+@media (max-width: 768px) {
+  /* Better dark mode support for mobile */
+  .dark .mobile-scroll-container {
+    scrollbar-color: hsl(var(--muted)) hsl(var(--background));
+  }
+  
+  .dark .touch-target {
+    color: hsl(var(--foreground));
+  }
+  
+  .dark .touch-target:hover {
+    background-color: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+  }
+  
+  /* Enhanced mobile accessibility in dark mode */
+  .dark .android-sheet {
+    @apply bg-card border-border;
+  }
+  
+  .dark .android-input {
+    @apply bg-card text-card-foreground border-border;
+  }
+  
+  .dark .android-input:focus {
+    @apply border-ring;
+    box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+  }
+}
