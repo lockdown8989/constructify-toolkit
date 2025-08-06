@@ -20,14 +20,14 @@ const DaySpecificAssignments = ({ shiftPatterns, assignments, onAssignmentChange
             <Label className="w-20">{label}</Label>
             <div className="flex-1 ml-4">
               <Select 
-                value={assignments[key] || 'default'} 
-                onValueChange={(value) => onAssignmentChange(key, value === 'default' ? '' : value)}
+                value={assignments[key] || ''} 
+                onValueChange={(value) => onAssignmentChange(key, value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Use default or select..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="default">Use default pattern</SelectItem>
+                  <SelectItem value="">Use default pattern</SelectItem>
                   {shiftPatterns.map((pattern) => {
                     if (!pattern || !pattern.id || !pattern.name) {
                       return null;

@@ -14,12 +14,12 @@ const DefaultPatternSelector = ({ shiftPatterns, selectedPatternId, onPatternCha
   return (
     <div>
       <Label htmlFor="default-pattern">Default Shift Pattern</Label>
-      <Select value={selectedPatternId || 'none'} onValueChange={(value) => onPatternChange(value === 'none' ? '' : value)}>
+      <Select value={selectedPatternId} onValueChange={onPatternChange}>
         <SelectTrigger>
           <SelectValue placeholder="Select default pattern..." />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="none">No default pattern</SelectItem>
+          <SelectItem value="">No default pattern</SelectItem>
           {shiftPatterns.map((pattern) => {
             if (!pattern || !pattern.id || !pattern.name) {
               console.warn('Invalid shift pattern data:', pattern);
