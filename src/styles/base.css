@@ -76,6 +76,7 @@
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
     font-feature-settings: "kern", "liga", "calt";
+    color: hsl(var(--foreground));
   }
 
   /* Custom styling for borders */
