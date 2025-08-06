@@ -217,13 +217,22 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
   }, [formData.salary]);
 
   const handleInputChange = (field: string, value: any) => {
-    // Store current scroll position and active element to prevent jumping
-    const scrollContainer = document.querySelector('[data-scroll-container="true"]') || 
-                           document.querySelector('.overflow-y-scroll') ||
-                           document.querySelector('[style*="overflow-y: scroll"]');
-    const currentScrollTop = scrollContainer?.scrollTop || 0;
-    const activeElement = document.activeElement as HTMLElement;
+    // Prevent viewport jumping by storing current scroll position
+    const scrollContainer = document.querySelector('[data-scroll-container="true"]') as HTMLElement;
+    const activeElement = document.activeElement as HTMLInputElement;
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    const isKeyboardOpen = viewportHeight < window.innerHeight * 0.75;
     
+    // Store scroll position before state update
+    let scrollTop = 0;
+    let elementTop = 0;
+    if (scrollContainer && activeElement) {
+      scrollTop = scrollContainer.scrollTop;
+      const rect = activeElement.getBoundingClientRect();
+      elementTop = rect.top + scrollTop;
+    }
+    
+    // Update state
     setFormData(prev => {
       const updated = { ...prev };
       
@@ -245,22 +254,41 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
       return updated;
     });
 
-    // Restore scroll position and focus after state update to prevent jumping
-    setTimeout(() => {
-      if (scrollContainer && scrollContainer.scrollTop !== currentScrollTop) {
-        scrollContainer.scrollTop = currentScrollTop;
+    // Restore position after React updates DOM - use requestAnimationFrame for better timing
+    requestAnimationFrame(() => {
+      if (scrollContainer && activeElement) {
+        // If keyboard is open, ensure the active input stays visible
+        if (isKeyboardOpen) {
+          const inputRect = activeElement.getBoundingClientRect();
+          const containerRect = scrollContainer.getBoundingClientRect();
+          const keyboardHeight = window.innerHeight - viewportHeight;
+          const visibleHeight = containerRect.height - keyboardHeight;
+          
+          // Check if input is hidden behind keyboard
+          if (inputRect.bottom > visibleHeight) {
+            const scrollOffset = inputRect.bottom - visibleHeight + 50; // 50px padding
+            scrollContainer.scrollTop = scrollTop + scrollOffset;
+          } else {
+            // Maintain current scroll position
+            scrollContainer.scrollTop = scrollTop;
+          }
+        } else {
+          // No keyboard, maintain scroll position
+          scrollContainer.scrollTop = scrollTop;
+        }
+        
+        // Ensure focus remains on the input
+        if (document.activeElement !== activeElement) {
+          activeElement.focus();
+        }
       }
-      // Maintain focus if the active element lost focus
-      if (activeElement && document.activeElement !== activeElement) {
-        activeElement.focus();
-      }
-    }, 0);
+    });
   };
 
   const MobileContent = () => (
-    <div className="flex flex-col h-full max-h-[90vh] bg-gray-50">
+    <div className="flex flex-col h-full max-h-[90vh] bg-gray-50 relative">
       {/* Material Design Android-style Header */}
-      <div className="flex-shrink-0 bg-white material-elevation-2 z-10 px-4 pt-4 pb-3 border-b border-gray-200">
+      <div className="flex-shrink-0 bg-white material-elevation-2 z-20 px-4 pt-4 pb-3 border-b border-gray-200 sticky top-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded bg-blue-600 flex items-center justify-center material-elevation-1">
@@ -282,8 +310,16 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-scroll overscroll-behavior-contain" style={{ WebkitOverflowScrolling: 'touch' }} data-scroll-container="true">
-        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-8 min-h-full">
+      <div 
+        className="flex-1 overflow-y-auto overscroll-behavior-contain relative" 
+        style={{ 
+          WebkitOverflowScrolling: 'touch',
+          height: 'calc(100% - 80px)', // Account for header height
+          scrollBehavior: 'smooth'
+        }} 
+        data-scroll-container="true"
+      >
+        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-8 min-h-full pb-safe-area-inset-bottom">
           {/* Personal Information Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
@@ -302,25 +338,27 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                      value={formData.firstName}
                      onChange={(e) => handleInputChange('firstName', e.target.value)}
                      placeholder="First name"
-                     className="android-input android-focus-ring"
+                     className="android-input android-focus-ring touch-target"
                      autoComplete="given-name"
                      autoCapitalize="words"
                      autoCorrect="off"
                      spellCheck="false"
+                     enterKeyHint="next"
                    />
                  </div>
                  <div className="space-y-2">
                    <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Last Name</Label>
-                   <Input
+                    <Input
                      id="lastName"
                      value={formData.lastName}
                      onChange={(e) => handleInputChange('lastName', e.target.value)}
                      placeholder="Last name"
-                     className="android-input android-focus-ring"
+                     className="android-input android-focus-ring touch-target"
                      autoComplete="family-name"
                      autoCapitalize="words"
                      autoCorrect="off"
                      spellCheck="false"
+                     enterKeyHint="next"
                    />
                  </div>
                </div>
