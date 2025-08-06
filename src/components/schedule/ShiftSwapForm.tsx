@@ -212,14 +212,14 @@ const ShiftSwapForm = () => {
                 Their Shift (Optional)
               </Label>
               <Select 
-                value={selectedRecipientSchedule} 
-                onValueChange={setSelectedRecipientSchedule}
+                value={selectedRecipientSchedule || 'none'} 
+                onValueChange={(value) => setSelectedRecipientSchedule(value === 'none' ? '' : value)}
               >
                 <SelectTrigger id="recipientSchedule">
                   <SelectValue placeholder="Select their shift (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No specific shift</SelectItem>
+                  <SelectItem value="none">No specific shift</SelectItem>
                   {recipientSchedules.length > 0 ? (
                     recipientSchedules.map(schedule => (
                       <SelectItem key={schedule.id} value={schedule.id}>

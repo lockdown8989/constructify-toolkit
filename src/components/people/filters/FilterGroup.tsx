@@ -42,7 +42,7 @@ const FilterGroup: React.FC<FilterGroupProps> = ({
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent className="rounded-xl border-apple-gray-200">
-          <SelectItem value="" className="text-apple-gray-600">{placeholder}</SelectItem>
+          <SelectItem value="all" className="text-muted-foreground">{placeholder}</SelectItem>
           {options.map(option => (
             <SelectItem key={option} value={option}>{option}</SelectItem>
           ))}
