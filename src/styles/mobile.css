@@ -396,43 +396,6 @@
   @apply bg-blue-500 text-white border-0;
 }
 
-/* Prevent layout shift and viewport jumping on mobile */
-.mobile-input-container {
-  position: relative;
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-.mobile-input-field {
-  transform: translateZ(0);
-  will-change: transform;
-  -webkit-transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-}
-
-/* Smooth scrolling optimizations */
-.scroll-optimized {
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  scroll-behavior: smooth;
-  transform: translateZ(0);
-  will-change: scroll-position;
-}
-
-/* Performance optimizations for mobile forms */
-.form-performance-optimized {
-  contain: layout style paint;
-  transform: translateZ(0);
-}
-
-.form-performance-optimized input,
-.form-performance-optimized select,
-.form-performance-optimized textarea {
-  will-change: transform;
-  backface-visibility: hidden;
-}
-
 /* Enhanced dark mode support for mobile */
 @media (max-width: 768px) {
   /* Better dark mode support for mobile */
@@ -462,62 +425,4 @@
     @apply border-ring;
     box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
   }
-  
-  /* Improved dropdown visibility in dark mode */
-  .dark .android-select {
-    @apply bg-card text-card-foreground border-border;
-  }
-  
-  .dark .android-button-primary {
-    @apply bg-primary text-primary-foreground;
-  }
-  
-  .dark .android-button-outline {
-    @apply bg-card text-card-foreground border-border;
-  }
-  
-  /* Enhanced blur effects for dark mode */
-  .dark .android-blur-bg {
-    backdrop-filter: blur(8px);
-    background-color: rgba(0, 0, 0, 0.8);
-  }
-}
-
-/* GPU acceleration and performance optimizations */
-.gpu-accelerated {
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  will-change: transform;
-  backface-visibility: hidden;
-  perspective: 1000px;
-}
-
-/* Prevent viewport jumping on input focus */
-.prevent-viewport-jump {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-.prevent-viewport-jump input,
-.prevent-viewport-jump select,
-.prevent-viewport-jump textarea {
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-  user-select: text;
-}
-
-/* Enhanced input field stability */
-.stable-input-field {
-  position: relative;
-  z-index: 1;
-  contain: layout style;
-}
-
-.stable-input-field input {
-  position: relative;
-  transform: translateZ(0);
-  will-change: transform;
 }
