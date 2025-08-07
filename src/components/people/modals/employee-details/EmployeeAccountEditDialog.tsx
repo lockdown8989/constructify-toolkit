@@ -298,11 +298,13 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         style={{ 
           WebkitOverflowScrolling: 'touch',
           scrollBehavior: 'auto',
-          position: 'relative'
+          position: 'relative',
+          transform: 'translateZ(0)', // Forces GPU acceleration
+          willChange: 'scroll-position' // Optimize for scrolling
         }} 
         data-scroll-container="true"
       >
-        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-8 min-h-full">
+        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-8 min-h-full" style={{ transform: 'translateZ(0)' }}>
           {/* Personal Information Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
@@ -326,6 +328,8 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
                      autoCapitalize="words"
                      autoCorrect="off"
                      spellCheck="false"
+                     inputMode="text"
+                     enterKeyHint="next"
                    />
                  </div>
                  <div className="space-y-2">
