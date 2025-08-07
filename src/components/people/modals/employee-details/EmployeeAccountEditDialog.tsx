@@ -217,13 +217,17 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
   }, [formData.salary]);
 
   const handleInputChange = (field: string, value: any) => {
-    // Store current scroll position and active element to prevent jumping
+    // Prevent layout shift by storing viewport state
+    const viewport = window.visualViewport;
     const scrollContainer = document.querySelector('[data-scroll-container="true"]') || 
                            document.querySelector('.overflow-y-scroll') ||
-                           document.querySelector('[style*="overflow-y: scroll"]');
+                           document.body;
+    
     const currentScrollTop = scrollContainer?.scrollTop || 0;
     const activeElement = document.activeElement as HTMLElement;
+    const currentViewportHeight = viewport?.height || window.innerHeight;
     
+    // Update form data without triggering layout shifts
     setFormData(prev => {
       const updated = { ...prev };
       
@@ -245,16 +249,23 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
       return updated;
     });
 
-    // Restore scroll position and focus after state update to prevent jumping
-    setTimeout(() => {
-      if (scrollContainer && scrollContainer.scrollTop !== currentScrollTop) {
+    // Use requestAnimationFrame for smooth restoration without jumping
+    requestAnimationFrame(() => {
+      // Restore scroll position if it changed unexpectedly
+      if (scrollContainer && Math.abs((scrollContainer.scrollTop || 0) - currentScrollTop) > 5) {
         scrollContainer.scrollTop = currentScrollTop;
       }
-      // Maintain focus if the active element lost focus
-      if (activeElement && document.activeElement !== activeElement) {
-        activeElement.focus();
+      
+      // Maintain focus and prevent keyboard from causing viewport jumps
+      if (activeElement && document.activeElement !== activeElement && activeElement.tagName !== 'BODY') {
+        activeElement.focus({ preventScroll: true });
       }
-    }, 0);
+      
+      // Ensure viewport stays stable on mobile keyboards
+      if (viewport && Math.abs((viewport.height || 0) - currentViewportHeight) > 100) {
+        scrollContainer?.scrollTo({ top: currentScrollTop, behavior: 'auto' });
+      }
+    });
   };
 
   const MobileContent = () => (
@@ -282,7 +293,15 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-scroll overscroll-behavior-contain" style={{ WebkitOverflowScrolling: 'touch' }} data-scroll-container="true">
+      <div 
+        className="flex-1 overflow-y-scroll overscroll-behavior-contain" 
+        style={{ 
+          WebkitOverflowScrolling: 'touch',
+          scrollBehavior: 'auto',
+          position: 'relative'
+        }} 
+        data-scroll-container="true"
+      >
         <form onSubmit={handleSubmit} className="px-6 py-6 space-y-8 min-h-full">
           {/* Personal Information Section */}
           <div className="space-y-4">
