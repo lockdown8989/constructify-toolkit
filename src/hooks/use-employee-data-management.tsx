@@ -11,7 +11,6 @@ export function useEmployeeDataManagement() {
 
   useEffect(() => {
     if (error && user) {
-      console.log('Employee data error:', error);
       // Only show error toast if user has been logged in for more than 3 seconds
       // This prevents showing error right after login before employee record is created
       const timer = setTimeout(() => {

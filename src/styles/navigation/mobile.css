@@ -84,18 +84,43 @@
   color: rgb(15, 118, 110);
   font-weight: 600;
   letter-spacing: -0.01em;
+  transform: translateZ(0); /* GPU acceleration */
+  will-change: background-color, transform;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .time-clock-nav-button:hover {
   background-color: rgba(20, 184, 166, 0.2);
+  transform: translateZ(0) scale(1.02);
+}
+
+.time-clock-nav-button:active {
+  transform: translateZ(0) scale(0.98);
 }
 
 /* Salary and financial related nav items */
 .salary-nav-button {
   color: rgb(15, 118, 110);
+  transform: translateZ(0);
+  transition: all 0.2s ease;
 }
 
 /* Fix spacing for longer menu list */
 .mobile-nav-content {
   padding-bottom: 24px;
+  transform: translateZ(0);
+  contain: layout style paint;
+}
+
+/* Performance optimizations for mobile navigation */
+.mobile-nav-optimized {
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.mobile-nav-item-optimized {
+  transform: translateZ(0);
+  contain: layout style;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }

@@ -95,7 +95,6 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
   // Additional effect to ensure real-time synchronization when dialog opens
   React.useEffect(() => {
     if (isOpen && employee) {
-      console.log('Account edit dialog opened, ensuring data is synchronized');
       // Reset form data to ensure it reflects the current employee state
       setFormData({
         name: employee.name || '',
@@ -169,16 +168,11 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         managerId: updateData.manager_id || undefined,
       };
 
-      console.log('Updating employee with data:', updateData);
-      console.log('Syncing employee data:', syncData);
-
       // First update the employee record
       await updateEmployee.mutateAsync(updateData);
-      console.log('✅ Employee database update completed');
 
       // Then sync with manager team - this ensures Manager ID, Email, and Location are synchronized
       await syncEmployee(syncData);
-      console.log('✅ Manager team synchronization completed');
 
       toast({
         title: "Account updated & synchronized",
@@ -188,7 +182,6 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
 
       onClose();
     } catch (error) {
-      console.error("Error updating employee account:", error);
       toast({
         title: "Update failed",
         description: error instanceof Error ? error.message : "Failed to update account",
@@ -216,46 +209,49 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     };
   }, [formData.salary]);
 
-  const handleInputChange = (field: string, value: any) => {
-    // Store current scroll position and active element to prevent jumping
+  const handleInputChange = React.useCallback((field: string, value: any) => {
+    // Improved viewport handling for mobile
     const scrollContainer = document.querySelector('[data-scroll-container="true"]') || 
                            document.querySelector('.overflow-y-scroll') ||
                            document.querySelector('[style*="overflow-y: scroll"]');
     const currentScrollTop = scrollContainer?.scrollTop || 0;
     const activeElement = document.activeElement as HTMLElement;
     
-    setFormData(prev => {
-      const updated = { ...prev };
-      
-      // Handle salary field specifically to ensure proper number conversion
-      if (field === 'salary') {
-        const numValue = typeof value === 'string' ? parseFloat(value) : value;
-        updated[field] = isNaN(numValue) || numValue < 0 ? 0 : numValue;
-      } else {
-        updated[field] = value;
-      }
-      
-      // Sync email fields to ensure both are updated
-      if (field === 'email') {
-        updated.loginEmail = value;
-      } else if (field === 'loginEmail') {
-        updated.email = value;
-      }
-      
-      return updated;
-    });
+    // Use requestAnimationFrame for smoother updates
+    requestAnimationFrame(() => {
+      setFormData(prev => {
+        const updated = { ...prev };
+        
+        // Handle salary field specifically to ensure proper number conversion
+        if (field === 'salary') {
+          const numValue = typeof value === 'string' ? parseFloat(value) : value;
+          updated[field] = isNaN(numValue) || numValue < 0 ? 0 : numValue;
+        } else {
+          updated[field] = value;
+        }
+        
+        // Sync email fields to ensure both are updated
+        if (field === 'email') {
+          updated.loginEmail = value;
+        } else if (field === 'loginEmail') {
+          updated.email = value;
+        }
+        
+        return updated;
+      });
 
-    // Restore scroll position and focus after state update to prevent jumping
-    setTimeout(() => {
-      if (scrollContainer && scrollContainer.scrollTop !== currentScrollTop) {
-        scrollContainer.scrollTop = currentScrollTop;
-      }
-      // Maintain focus if the active element lost focus
-      if (activeElement && document.activeElement !== activeElement) {
-        activeElement.focus();
-      }
-    }, 0);
-  };
+      // Restore scroll position and focus using RAF for better performance
+      requestAnimationFrame(() => {
+        if (scrollContainer && scrollContainer.scrollTop !== currentScrollTop) {
+          scrollContainer.scrollTo({ top: currentScrollTop, behavior: 'instant' });
+        }
+        // Maintain focus if the active element lost focus
+        if (activeElement && document.activeElement !== activeElement && activeElement.focus) {
+          activeElement.focus({ preventScroll: true });
+        }
+      });
+    });
+  }, []);
 
   const MobileContent = () => (
     <div className="flex flex-col h-full max-h-[90vh] bg-gray-50">
@@ -282,8 +278,16 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-scroll overscroll-behavior-contain" style={{ WebkitOverflowScrolling: 'touch' }} data-scroll-container="true">
-        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-8 min-h-full">
+      <div 
+        className="flex-1 overflow-y-scroll overscroll-behavior-contain ios-scroll-container" 
+        style={{ 
+          WebkitOverflowScrolling: 'touch',
+          contain: 'layout style paint',
+          willChange: 'scroll-position'
+        }} 
+        data-scroll-container="true"
+      >
+        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-8 min-h-full ios-form-container">
           {/* Personal Information Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">

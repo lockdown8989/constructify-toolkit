@@ -1,0 +1,129 @@
+/* iOS-style mobile enhancements */
+
+.ios-scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  transform: translateZ(0); /* Force GPU acceleration */
+  will-change: scroll-position;
+}
+
+.ios-form-container {
+  contain: layout style paint;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.android-input {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 16px; /* Prevents zoom on iOS */
+  min-height: 44px; /* iOS touch target */
+}
+
+.android-input:focus {
+  outline: none;
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+}
+
+.android-focus-ring:focus {
+  outline: none;
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+}
+
+.android-select {
+  font-size: 16px; /* Prevents zoom on iOS */
+  min-height: 44px;
+  border-radius: 8px;
+}
+
+.android-touch-feedback {
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.android-touch-feedback:active {
+  transform: scale(0.95);
+  background-color: hsl(var(--muted) / 0.5);
+}
+
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  position: relative;
+}
+
+.touch-target::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  z-index: -1;
+}
+
+.material-elevation-1 {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.material-elevation-2 {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+}
+
+/* Viewport management for mobile keyboards */
+@supports (height: 100dvh) {
+  .mobile-viewport {
+    height: 100dvh;
+  }
+}
+
+/* Smooth scrolling behavior */
+@media (prefers-reduced-motion: no-preference) {
+  .ios-scroll-container {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .android-input {
+    background: hsl(var(--background));
+    border-color: hsl(var(--border));
+    color: hsl(var(--foreground));
+  }
+  
+  .material-elevation-1 {
+    box-shadow: 0 1px 3px rgba(255, 255, 255, 0.12), 0 1px 2px rgba(255, 255, 255, 0.24);
+  }
+  
+  .material-elevation-2 {
+    box-shadow: 0 3px 6px rgba(255, 255, 255, 0.16), 0 3px 6px rgba(255, 255, 255, 0.23);
+  }
+}
+
+/* Performance optimizations */
+.mobile-optimized {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Virtual scrolling container */
+.virtual-scroll-container {
+  height: 100%;
+  overflow-y: auto;
+  contain: strict;
+  transform: translateZ(0);
+}
+
+/* Active touch states */
+.active-touch-state:active {
+  background-color: hsl(var(--muted) / 0.3);
+  transform: scale(0.98);
+}
