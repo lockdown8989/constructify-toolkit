@@ -104,4 +104,43 @@ class ErrorBoundary extends Component<Props, State> {
   }
 }
 
+// Lightweight error boundary for forms
+export const FormErrorBoundary: React.FC<{ 
+  children: React.ReactNode; 
+  onError?: (error: Error) => void;
+}> = ({ children, onError }) => (
+  <ErrorBoundary
+    onError={onError}
+    fallback={
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+        <p className="text-red-800 text-sm">
+          Form error occurred. Please refresh the page and try again.
+        </p>
+      </div>
+    }
+  >
+    {children}
+  </ErrorBoundary>
+);
+
+// Async operation error boundary
+export const AsyncErrorBoundary: React.FC<{ 
+  children: React.ReactNode; 
+  fallback?: React.ReactNode;
+}> = ({ children, fallback }) => (
+  <ErrorBoundary
+    fallback={fallback || (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <p className="text-sm text-gray-600">
+            Unable to load content. Please try again.
+          </p>
+        </div>
+      </div>
+    )}
+  >
+    {children}
+  </ErrorBoundary>
+);
+
 export default ErrorBoundary;

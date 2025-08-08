@@ -1,7 +1,6 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,8 +13,22 @@ import { Employee } from '@/components/people/types';
 import { useToast } from '@/hooks/use-toast';
 import { useUpdateEmployee } from '@/hooks/use-employees';
 import { useEmployeeSync } from '@/hooks/use-employee-sync';
-import { useIsMobile, useIsSmallScreen } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { formatCurrency } from '@/utils/format';
+import ErrorBoundary, { FormErrorBoundary } from '@/components/common/ErrorBoundary';
+import { LoadingState } from '@/components/common/LoadingStates';
+import { 
+  PersonalInfoSection, 
+  LoginInfoSection, 
+  EmploymentDetailsSection, 
+  SalarySection 
+} from './sections/EmployeeFormSections';
+import { 
+  MobileHeader, 
+  LoadingOverlay, 
+  FormActions, 
+  ErrorMessage 
+} from './sections/MobileDialogComponents';
 
 interface EmployeeAccountEditDialogProps {
   employee: Employee | null;
@@ -32,7 +45,8 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
   const updateEmployee = useUpdateEmployee();
   const { syncEmployee, isSyncing } = useEmployeeSync();
   const isMobile = useIsMobile();
-  const isSmallScreen = useIsSmallScreen();
+  
+  const [formError, setFormError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     // Personal Information
@@ -121,79 +135,8 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
 
   if (!employee) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      // Combine first and last name
-      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
-      
-      // Ensure salary is never null/undefined and is a valid number
-      const validSalary = Math.max(0, Number(formData.salary) || 0);
-      
-      // Prepare update data with all required fields and proper validation
-      const updateData = {
-        id: employee.id,
-        name: fullName || formData.name || employee.name,
-        email: formData.loginEmail || formData.email || employee.email,
-        job_title: formData.job_title || formData.position || employee.jobTitle,
-        department: formData.department || employee.department,
-        salary: validSalary, // Ensure salary is always a valid number
-        site: formData.location || employee.site,
-        start_date: formData.start_date || employee.startDate,
-        status: formData.status || employee.status,
-        lifecycle: formData.lifecycle || employee.lifecycle,
-        role: formData.role || employee.role,
-        annual_leave_days: Math.max(0, Number(formData.annual_leave_days) || 25),
-        sick_leave_days: Math.max(0, Number(formData.sick_leave_days) || 10),
-        manager_id: formData.managerId || null,
-      };
-
-      // Prepare sync data for the sync hook with correct field mappings
-      const syncData = {
-        id: employee.id,
-        name: updateData.name,
-        email: updateData.email,
-        jobTitle: updateData.job_title,
-        department: updateData.department,
-        salary: updateData.salary,
-        site: updateData.site,
-        startDate: updateData.start_date,
-        status: updateData.status,
-        lifecycle: updateData.lifecycle,
-        role: updateData.role,
-        annual_leave_days: updateData.annual_leave_days,
-        sick_leave_days: updateData.sick_leave_days,
-        managerId: updateData.manager_id || undefined,
-      };
-
-      // First update the employee record
-      await updateEmployee.mutateAsync(updateData);
-
-      // Then sync with manager team - this ensures Manager ID, Email, and Location are synchronized
-      await syncEmployee(syncData);
-
-      toast({
-        title: "Account updated & synchronized",
-        description: `${updateData.name}'s account updated successfully. All changes have been synchronized with the manager team.`,
-        variant: "default"
-      });
-
-      onClose();
-    } catch (error) {
-      toast({
-        title: "Update failed",
-        description: error instanceof Error ? error.message : "Failed to update account",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Calculate salary breakdown
-  const salaryBreakdown = React.useMemo(() => {
+  // Calculate salary breakdown with memoization for performance
+  const salaryBreakdown = useMemo(() => {
     const annualSalary = formData.salary || 0;
     const monthlySalary = annualSalary / 12;
     const weeklySalary = annualSalary / 52;
@@ -209,7 +152,9 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     };
   }, [formData.salary]);
 
-  const handleInputChange = React.useCallback((field: string, value: any) => {
+  const handleInputChange = useCallback((field: string, value: any) => {
+    setFormError(null); // Clear form errors on input change
+    
     // Improved viewport handling for mobile
     const scrollContainer = document.querySelector('[data-scroll-container="true"]') || 
                            document.querySelector('.overflow-y-scroll') ||
@@ -253,741 +198,257 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     });
   }, []);
 
-  const MobileContent = () => (
-    <div className="flex flex-col h-full max-h-[90vh] bg-gray-50">
-      {/* Material Design Android-style Header */}
-      <div className="flex-shrink-0 bg-white material-elevation-2 z-10 px-4 pt-4 pb-3 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded bg-blue-600 flex items-center justify-center material-elevation-1">
-              <Settings className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-lg font-medium text-gray-900">Edit Account</h2>
-              <p className="text-sm text-gray-600">{employee.name}</p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-10 w-10 rounded android-touch-feedback touch-target"
-          >
-            <X className="h-5 w-5 text-gray-600" />
-          </Button>
-        </div>
-      </div>
+  const handleFormSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setFormError(null);
+
+    try {
+      // Form validation
+      if (!formData.firstName.trim() || !formData.lastName.trim()) {
+        throw new Error('First name and last name are required');
+      }
+      if (!formData.loginEmail.trim()) {
+        throw new Error('Email address is required');
+      }
+      if (!formData.position.trim()) {
+        throw new Error('Job title is required');
+      }
+      if (!formData.salary || formData.salary <= 0) {
+        throw new Error('Valid salary is required');
+      }
+
+      // Combine first and last name
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
       
-      <div 
-        className="flex-1 overflow-y-scroll overscroll-behavior-contain ios-scroll-container" 
-        style={{ 
-          WebkitOverflowScrolling: 'touch',
-          contain: 'layout style paint',
-          willChange: 'scroll-position'
-        }} 
-        data-scroll-container="true"
-      >
-        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-8 min-h-full ios-form-container">
-          {/* Personal Information Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded bg-blue-100 flex items-center justify-center">
-                <User className="h-4 w-4 text-blue-600" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900">Personal Information</h3>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">First Name</Label>
-                   <Input
-                     id="firstName"
-                     value={formData.firstName}
-                     onChange={(e) => handleInputChange('firstName', e.target.value)}
-                     placeholder="First name"
-                     className="android-input android-focus-ring"
-                     autoComplete="given-name"
-                     autoCapitalize="words"
-                     autoCorrect="off"
-                     spellCheck="false"
-                   />
-                 </div>
-                 <div className="space-y-2">
-                   <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Last Name</Label>
-                   <Input
-                     id="lastName"
-                     value={formData.lastName}
-                     onChange={(e) => handleInputChange('lastName', e.target.value)}
-                     placeholder="Last name"
-                     className="android-input android-focus-ring"
-                     autoComplete="family-name"
-                     autoCapitalize="words"
-                     autoCorrect="off"
-                     spellCheck="false"
-                   />
-                 </div>
-               </div>
-               
-               <div className="space-y-2">
-                 <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</Label>
-                 <Input
-                   id="email"
-                   type="email"
-                   value={formData.email}
-                   onChange={(e) => handleInputChange('email', e.target.value)}
-                   placeholder="employee@company.com"
-                   className="android-input android-focus-ring"
-                   autoComplete="email"
-                   autoCapitalize="none"
-                   autoCorrect="off"
-                   spellCheck="false"
-                   inputMode="email"
-                 />
-                 <p className="text-xs text-gray-500">Synchronized with manager's team view</p>
-               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
-                <Select value={formData.location} onValueChange={(value) => handleInputChange('location', value)}>
-                  <SelectTrigger className="android-select">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Office">Office</SelectItem>
-                    <SelectItem value="Remote">Remote</SelectItem>
-                    <SelectItem value="Hybrid">Hybrid</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
+      // Ensure salary is never null/undefined and is a valid number
+      const validSalary = Math.max(0, Number(formData.salary) || 0);
+      
+      // Prepare update data with all required fields and proper validation
+      const updateData = {
+        id: employee.id,
+        name: fullName || formData.name || employee.name,
+        email: formData.loginEmail || formData.email || employee.email,
+        job_title: formData.job_title || formData.position || employee.jobTitle,
+        department: formData.department || employee.department,
+        salary: validSalary,
+        site: formData.location || employee.site,
+        start_date: formData.start_date || employee.startDate,
+        status: formData.status || employee.status,
+        lifecycle: formData.lifecycle || employee.lifecycle,
+        role: formData.role || employee.role,
+        annual_leave_days: Math.max(0, Number(formData.annual_leave_days) || 25),
+        sick_leave_days: Math.max(0, Number(formData.sick_leave_days) || 10),
+        manager_id: formData.managerId || null,
+      };
 
-          <div className="h-px bg-gray-200"></div>
+      // Prepare sync data for the sync hook with correct field mappings
+      const syncData = {
+        id: employee.id,
+        name: updateData.name,
+        email: updateData.email,
+        jobTitle: updateData.job_title,
+        department: updateData.department,
+        salary: updateData.salary,
+        site: updateData.site,
+        startDate: updateData.start_date,
+        status: updateData.status,
+        lifecycle: updateData.lifecycle,
+        role: updateData.role,
+        annual_leave_days: updateData.annual_leave_days,
+        sick_leave_days: updateData.sick_leave_days,
+        managerId: updateData.manager_id || undefined,
+      };
 
-          {/* Login Information Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded bg-blue-100 flex items-center justify-center">
-                <Shield className="h-4 w-4 text-blue-600" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900">Login Information</h3>
-            </div>
-            
-            <div className="space-y-4">
-               <div className="space-y-2">
-                 <Label htmlFor="loginEmail" className="text-sm font-medium text-gray-700">Login Email</Label>
-                 <Input
-                   id="loginEmail"
-                   type="email"
-                   value={formData.loginEmail}
-                   onChange={(e) => handleInputChange('loginEmail', e.target.value)}
-                   placeholder="employee@company.com"
-                   className="android-input android-focus-ring"
-                   autoComplete="email"
-                   autoCapitalize="none"
-                   autoCorrect="off"
-                   spellCheck="false"
-                   inputMode="email"
-                 />
-               </div>
-              
-              <div className="p-3 bg-blue-50 rounded border border-blue-200 material-elevation-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <Key className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-900">Sync Status</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-blue-700">Manager Team:</span>
-                  <Badge variant={formData.loginEmail ? 'default' : 'secondary'} className="text-xs">
-                    {formData.loginEmail ? 'Active' : 'Setup Required'}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          </div>
+      // First update the employee record
+      await updateEmployee.mutateAsync(updateData);
 
-          <div className="h-px bg-gray-200"></div>
+      // Then sync with manager team
+      await syncEmployee(syncData);
 
-          {/* Employment Details Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded bg-green-100 flex items-center justify-center">
-                <Building className="h-4 w-4 text-green-600" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900">Employment Details</h3>
-            </div>
-            
-            <div className="space-y-4">
-               <div className="space-y-2">
-                 <Label htmlFor="position" className="text-sm font-medium text-gray-700">Job Title</Label>
-                 <Input
-                   id="position"
-                   value={formData.position}
-                   onChange={(e) => handleInputChange('position', e.target.value)}
-                   placeholder="Job title"
-                   className="android-input android-focus-ring"
-                   autoComplete="organization-title"
-                   autoCapitalize="words"
-                   autoCorrect="off"
-                 />
-               </div>
-               
-               <div className="space-y-2">
-                 <Label htmlFor="department" className="text-sm font-medium text-gray-700">Department</Label>
-                 <Input
-                   id="department"
-                   value={formData.department}
-                   onChange={(e) => handleInputChange('department', e.target.value)}
-                   placeholder="Department"
-                   className="android-input android-focus-ring"
-                   autoComplete="organization"
-                   autoCapitalize="words"
-                   autoCorrect="off"
-                 />
-               </div>
-               
-               <div className="space-y-2">
-                 <Label htmlFor="managerId" className="text-sm font-medium text-gray-700">Manager ID</Label>
-                 <Input
-                   id="managerId"
-                   value={formData.managerId}
-                   onChange={(e) => handleInputChange('managerId', e.target.value)}
-                   placeholder="e.g., MGR-94226"
-                   className="android-input android-focus-ring"
-                   autoComplete="off"
-                   autoCapitalize="none"
-                   autoCorrect="off"
-                   spellCheck="false"
-                 />
-                 <p className="text-xs text-gray-500">Sync with manager's team view</p>
-               </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="start_date" className="text-sm font-medium text-gray-700">Start Date</Label>
-                  <Input
-                    id="start_date"
-                    type="date"
-                    value={formData.start_date}
-                    onChange={(e) => handleInputChange('start_date', e.target.value)}
-                    className="android-input"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="status" className="text-sm font-medium text-gray-700">Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
-                    <SelectTrigger className="android-select">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Present">Present</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
-                      <SelectItem value="On Leave">On Leave</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          </div>
+      toast({
+        title: "Account updated & synchronized",
+        description: `${updateData.name}'s account updated successfully. All changes have been synchronized with the manager team.`,
+        variant: "default"
+      });
 
-          <div className="h-px bg-gray-200"></div>
+      onClose();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to update account";
+      setFormError(errorMessage);
+      toast({
+        title: "Update failed",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [formData, employee, updateEmployee, syncEmployee, toast, onClose]);
 
-          {/* Salary Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded bg-green-100 flex items-center justify-center">
-                <DollarSign className="h-4 w-4 text-green-600" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900">Salary Information</h3>
-            </div>
-            
-            <div className="space-y-4">
-               <div className="space-y-2">
-                 <Label htmlFor="salary" className="text-sm font-medium text-gray-700">Annual Salary (£)</Label>
-                 <Input
-                   id="salary"
-                   type="number"
-                   min="0"
-                   value={formData.salary}
-                   onChange={(e) => handleInputChange('salary', e.target.value)}
-                   className="android-input android-focus-ring"
-                   placeholder="35000"
-                   inputMode="decimal"
-                   pattern="[0-9]*"
-                   autoComplete="off"
-                 />
-               </div>
-              
-              {formData.salary > 0 && (
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded p-4 border border-green-200 material-elevation-1">
-                  <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div className="text-center">
-                      <div className="text-xs text-gray-600 mb-1">Annual</div>
-                      <div className="text-lg font-bold text-green-700">
-                        {formatCurrency(salaryBreakdown.annual, 'GBP')}
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xs text-gray-600 mb-1">Monthly</div>
-                      <div className="text-lg font-bold text-blue-700">
-                        {formatCurrency(salaryBreakdown.monthly, 'GBP')}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs text-gray-600 mb-1">Per Hour</div>
-                    <div className="text-md font-semibold text-purple-700">
-                      {formatCurrency(salaryBreakdown.hourly, 'GBP')}
-                    </div>
-                  </div>
-                  <div className="mt-3 pt-3 border-t border-green-200">
-                    <div className="text-xs text-gray-600 text-center">
-                      Based on 40 hrs/week, 52 weeks/year
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="h-px bg-gray-200"></div>
-
-          {/* Leave Entitlements */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded bg-orange-100 flex items-center justify-center">
-                <Clock className="h-4 w-4 text-orange-600" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900">Leave Entitlements</h3>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-               <div className="space-y-2">
-                 <Label htmlFor="annual_leave" className="text-sm font-medium text-gray-700">Annual Leave</Label>
-                 <Input
-                   id="annual_leave"
-                   type="number"
-                   min="0"
-                   max="365"
-                   value={formData.annual_leave_days}
-                   onChange={(e) => handleInputChange('annual_leave_days', parseInt(e.target.value) || 0)}
-                   className="android-input android-focus-ring"
-                   placeholder="25"
-                   inputMode="numeric"
-                   pattern="[0-9]*"
-                   autoComplete="off"
-                 />
-               </div>
-               <div className="space-y-2">
-                 <Label htmlFor="sick_leave" className="text-sm font-medium text-gray-700">Sick Leave</Label>
-                 <Input
-                   id="sick_leave"
-                   type="number"
-                   min="0"
-                   max="365"
-                   value={formData.sick_leave_days}
-                   onChange={(e) => handleInputChange('sick_leave_days', parseInt(e.target.value) || 0)}
-                   className="android-input android-focus-ring"
-                   placeholder="10"
-                   inputMode="numeric"
-                   pattern="[0-9]*"
-                   autoComplete="off"
-                 />
-               </div>
-            </div>
-          </div>
-
-          {/* Safe area bottom padding */}
-          <div className="h-20 flex-shrink-0"></div>
-        </form>
+  const MobileContent = () => (
+    <FormErrorBoundary onError={(error) => setFormError(error.message)}>
+      <div className="flex flex-col h-full max-h-[90vh] bg-gray-50 relative mobile-viewport">
+        <LoadingOverlay isVisible={isSubmitting} message="Updating account..." />
         
-        {/* Fixed Action Buttons */}
-        <div className="absolute bottom-0 left-0 right-0 bg-white android-blur-bg border-t border-gray-300 px-4 py-3 pb-safe-area-inset-bottom material-elevation-2">
-          <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting || isSyncing}
-              className="flex-1 android-button-outline android-touch-feedback touch-target"
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting || isSyncing}
-              className="flex-1 android-button-primary android-touch-feedback android-ripple touch-target"
-              onClick={handleSubmit}
-            >
-              {isSubmitting || isSyncing ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Saving...
-                </div>
-              ) : (
-                'Save Changes'
-              )}
-            </Button>
-          </div>
+        <MobileHeader 
+          employeeName={employee.name} 
+          onClose={onClose}
+          isLoading={isSubmitting}
+        />
+        
+        <div 
+          className="flex-1 overflow-y-scroll overscroll-behavior-contain ios-scroll-container" 
+          style={{ 
+            WebkitOverflowScrolling: 'touch',
+            contain: 'layout style paint',
+            willChange: 'scroll-position'
+          }} 
+          data-scroll-container="true"
+        >
+          <form onSubmit={handleFormSubmit} className="px-6 py-6 space-y-8 min-h-full ios-form-container">
+            <ErrorMessage error={formError} onDismiss={() => setFormError(null)} />
+            
+            <PersonalInfoSection 
+              formData={formData}
+              handleInputChange={handleInputChange}
+              isLoading={isSubmitting}
+            />
+
+            <div className="h-px bg-gray-200" role="separator" aria-hidden="true"></div>
+
+            <LoginInfoSection 
+              formData={formData}
+              handleInputChange={handleInputChange}
+              isLoading={isSubmitting}
+            />
+
+            <div className="h-px bg-gray-200" role="separator" aria-hidden="true"></div>
+
+            <EmploymentDetailsSection 
+              formData={formData}
+              handleInputChange={handleInputChange}
+              isLoading={isSubmitting}
+            />
+
+            <div className="h-px bg-gray-200" role="separator" aria-hidden="true"></div>
+
+            <SalarySection 
+              formData={formData}
+              handleInputChange={handleInputChange}
+              salaryBreakdown={salaryBreakdown}
+              isLoading={isSubmitting}
+            />
+
+            {/* Spacer for fixed bottom buttons */}
+            <div className="h-20" aria-hidden="true"></div>
+          </form>
         </div>
+        
+        <FormActions
+          onCancel={onClose}
+          onSubmit={handleFormSubmit}
+          isLoading={isSubmitting}
+          disabled={!formData.firstName.trim() || !formData.lastName.trim() || !formData.loginEmail.trim()}
+        />
       </div>
-    </div>
+    </FormErrorBoundary>
   );
 
   const DesktopContent = () => (
-    <DialogContent 
-      className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto p-0"
-      aria-describedby="account-edit-description"
-    >
-      <div id="account-edit-description" className="sr-only">
-        Edit account information for {employee.name}, including personal details, employment information, and leave entitlements.
-      </div>
-      <div className="p-6">
-        <DialogHeader className="flex flex-row items-center justify-between mb-6">
+    <FormErrorBoundary onError={(error) => setFormError(error.message)}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+        <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-blue-600" />
-            <span className="text-xl">Edit Account - {employee.name}</span>
+            <Settings className="h-5 w-5" />
+            Edit Employee Account
+            <LoadingState 
+              state={isSubmitting ? 'loading' : 'idle'} 
+              loadingText="Updating..."
+              size="sm"
+            />
           </DialogTitle>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Same content as mobile but with desktop styling */}
-          {/* Personal Information Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-blue-600" />
-              <h3 className="text-lg font-semibold">Personal Information</h3>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => handleInputChange('firstName', e.target.value)}
-                  placeholder="First name"
+        
+        <div className="overflow-y-auto px-6 py-4">
+          <ErrorMessage error={formError} onDismiss={() => setFormError(null)} />
+          
+          <form onSubmit={handleFormSubmit} className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <PersonalInfoSection 
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  isLoading={isSubmitting}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => handleInputChange('lastName', e.target.value)}
-                  placeholder="Last name"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="employee@company.com"
-              />
-              <p className="text-xs text-gray-500">
-                This email will be synchronized with your manager's team view
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Select 
-                value={formData.location} 
-                onValueChange={(value) => handleInputChange('location', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Office">Office</SelectItem>
-                  <SelectItem value="Remote">Remote</SelectItem>
-                  <SelectItem value="Hybrid">Hybrid</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Login Information Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-blue-600" />
-              <h3 className="text-lg font-semibold">Login Information</h3>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="loginEmail">Login Email</Label>
-                <Input
-                  id="loginEmail"
-                  type="email"
-                  value={formData.loginEmail}
-                  onChange={(e) => handleInputChange('loginEmail', e.target.value)}
-                  placeholder="employee@company.com"
-                />
-                <p className="text-xs text-gray-500">
-                  This email will be used for login and system notifications
-                </p>
-              </div>
-
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Key className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium">Synchronization Status</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Manager Team Sync:</span>
-                  <Badge variant={formData.loginEmail ? 'default' : 'secondary'}>
-                    {formData.loginEmail ? 'Active' : 'Setup Required'}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Employment Details Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Building className="h-4 w-4 text-blue-600" />
-              <h3 className="text-lg font-semibold">Employment Details</h3>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="position">Position/Job Title</Label>
-                <Input
-                  id="position"
-                  value={formData.position}
-                  onChange={(e) => handleInputChange('position', e.target.value)}
-                  placeholder="Job title"
-                />
-                <p className="text-xs text-gray-500">
-                  Will be synchronized with manager's team view
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="department">Department</Label>
-                <Input
-                  id="department"
-                  value={formData.department}
-                  onChange={(e) => handleInputChange('department', e.target.value)}
-                  placeholder="Department"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="start_date">Start Date</Label>
-                <Input
-                  id="start_date"
-                  type="date"
-                  value={formData.start_date}
-                  onChange={(e) => handleInputChange('start_date', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="salary">Annual Salary (£)</Label>
-                <Input
-                  id="salary"
-                  type="number"
-                  min="0"
-                  value={formData.salary}
-                  onChange={(e) => handleInputChange('salary', e.target.value)}
-                />
-                <p className="text-xs text-gray-500">
-                  Salary information will be synchronized with manager
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="managerId">Manager's ID</Label>
-              <Input
-                id="managerId"
-                value={formData.managerId}
-                onChange={(e) => handleInputChange('managerId', e.target.value)}
-                placeholder="Enter manager's ID (e.g., MGR-94226)"
-              />
-              <p className="text-xs text-gray-500">
-                Enter your manager's ID to sync with their team view
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="status">Employment Status</Label>
-                <Select 
-                  value={formData.status} 
-                  onValueChange={(value) => handleInputChange('status', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Present">Present</SelectItem>
-                    <SelectItem value="Inactive">Inactive</SelectItem>
-                    <SelectItem value="On Leave">On Leave</SelectItem>
-                    <SelectItem value="Terminated">Terminated</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="role">User Role</Label>
-                <Select 
-                  value={formData.role} 
-                  onValueChange={(value) => handleInputChange('role', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="employee">Employee</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="hr">HR</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Salary Breakdown Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Calculator className="h-4 w-4 text-blue-600" />
-              <h3 className="text-lg font-semibold">Salary Breakdown</h3>
-            </div>
-            
-            <Card className="bg-gradient-to-br from-green-50 to-blue-50 border-green-200">
-              <CardContent className="p-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-3 bg-white/60 rounded-lg">
-                    <div className="text-xs text-gray-600 mb-1">Annual Salary</div>
-                    <div className="text-lg font-bold text-green-700">
-                      {formatCurrency(salaryBreakdown.annual, 'GBP')}
-                    </div>
-                  </div>
-                  
-                  <div className="text-center p-3 bg-white/60 rounded-lg">
-                    <div className="text-xs text-gray-600 mb-1">Monthly Salary</div>
-                    <div className="text-lg font-bold text-blue-700">
-                      {formatCurrency(salaryBreakdown.monthly, 'GBP')}
-                    </div>
-                  </div>
-                  
-                  <div className="text-center p-3 bg-white/60 rounded-lg">
-                    <div className="text-xs text-gray-600 mb-1">Per Hour</div>
-                    <div className="text-lg font-bold text-purple-700">
-                      {formatCurrency(salaryBreakdown.hourly, 'GBP')}
-                    </div>
-                  </div>
-                </div>
                 
-                {salaryBreakdown.annual > 0 && (
-                  <div className="mt-4 pt-3 border-t border-white/40">
-                    <div className="text-xs text-gray-600 text-center">
-                      Calculations based on 40 hours/week, 52 weeks/year, 260 working days/year
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <Separator />
-
-          {/* Leave Entitlements Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-blue-600" />
-              <h3 className="text-lg font-semibold">Leave Entitlements</h3>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="annual_leave">Annual Leave Days</Label>
-                <Input
-                  id="annual_leave"
-                  type="number"
-                  min="0"
-                  max="365"
-                  value={formData.annual_leave_days}
-                  onChange={(e) => handleInputChange('annual_leave_days', parseInt(e.target.value) || 0)}
+                <LoginInfoSection 
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  isLoading={isSubmitting}
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="sick_leave">Sick Leave Days</Label>
-                <Input
-                  id="sick_leave"
-                  type="number"
-                  min="0"
-                  max="365"
-                  value={formData.sick_leave_days}
-                  onChange={(e) => handleInputChange('sick_leave_days', parseInt(e.target.value) || 0)}
+              
+              <div className="space-y-6">
+                <EmploymentDetailsSection 
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  isLoading={isSubmitting}
+                />
+                
+                <SalarySection 
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  salaryBreakdown={salaryBreakdown}
+                  isLoading={isSubmitting}
                 />
               </div>
             </div>
-          </div>
+          </form>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting || isSyncing}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting || isSyncing}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {isSubmitting || isSyncing ? 'Saving Changes...' : 'Save & Sync Changes'}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </DialogContent>
+        <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            onClick={handleFormSubmit}
+            disabled={isSubmitting || !formData.firstName.trim() || !formData.lastName.trim() || !formData.loginEmail.trim()}
+            className="flex items-center gap-2"
+          >
+            <LoadingState 
+              state={isSubmitting ? 'loading' : 'idle'} 
+              loadingText="Updating..."
+              size="sm"
+              showIcon={isSubmitting}
+            />
+            {isSubmitting ? 'Updating Account...' : 'Update Account'}
+          </Button>
+        </div>
+      </DialogContent>
+    </FormErrorBoundary>
   );
 
-  if (isMobile) {
-    return (
-      <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent side="bottom" className="h-[90vh] rounded-t-lg android-sheet flex flex-col">
-          <MobileContent />
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DesktopContent />
-    </Dialog>
+    <ErrorBoundary>
+      {isMobile ? (
+        <Sheet open={isOpen} onOpenChange={onClose}>
+          <SheetContent side="bottom" className="h-[90vh] rounded-t-lg p-0">
+            <MobileContent />
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+          <DesktopContent />
+        </Dialog>
+      )}
+    </ErrorBoundary>
   );
 };
 
