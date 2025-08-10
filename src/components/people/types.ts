@@ -12,7 +12,7 @@ export interface Employee {
   startDate: string;
   lifecycle: string;
   status: string;
-  statusColor: 'green' | 'gray';
+  statusColor: 'green' | 'gray' | 'blue' | 'amber' | 'yellow';
   avatar?: string;
   managerId?: string;
   userId?: string;
@@ -38,7 +38,17 @@ export interface PeopleTableProps {
 
 export const mapDbEmployeeToUiEmployee = (dbEmployee: any): Employee => {
   const siteIcon = dbEmployee.location === 'Remote' ? '🌐' : '🏢';
-  const statusColor = dbEmployee.status === 'Active' ? 'green' : 'gray';
+  const statusColor = dbEmployee.status === 'Active'
+    ? 'green'
+    : dbEmployee.status === 'Inactive'
+    ? 'gray'
+    : dbEmployee.status === 'Invited'
+    ? 'blue'
+    : dbEmployee.status === 'Absent'
+    ? 'amber'
+    : dbEmployee.status === 'On Leave'
+    ? 'yellow'
+    : 'gray';
   
   // Format salary with British pound symbol
   const formattedSalary = new Intl.NumberFormat('en-GB', {

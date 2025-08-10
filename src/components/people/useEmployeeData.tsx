@@ -70,7 +70,17 @@ export const useEmployeeData = (
       }),
       lifecycle: employee.lifecycle,
       status: employee.status,
-      statusColor: employee.status === 'Active' ? 'green' as const : 'gray' as const,
+      statusColor: employee.status === 'Active'
+        ? 'green' as const
+        : employee.status === 'Inactive'
+        ? 'gray' as const
+        : employee.status === 'Invited'
+        ? 'blue' as const
+        : employee.status === 'Absent'
+        ? 'amber' as const
+        : employee.status === 'On Leave'
+        ? 'yellow' as const
+        : 'gray' as const,
     }));
   }, [employees, searchQuery, sortField, sortDirection]);
 

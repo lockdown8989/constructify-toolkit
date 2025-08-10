@@ -11,7 +11,7 @@ export const employeeFormSchema = z.object({
   hourly_rate: z.number().min(0, 'Hourly rate must be positive').optional(),
   start_date: z.string().min(1, 'Start date is required'),
   lifecycle: z.enum(['Active', 'Inactive', 'Terminated']),
-  status: z.enum(['Active', 'Inactive', 'On Leave', 'Pending']),
+  status: z.enum(['Active', 'Inactive', 'On Leave', 'Pending', 'Invited', 'Absent']),
   location: z.string().optional(),
   employment_type: z.enum(['Full-Time', 'Part-Time', 'Agency']).optional(),
   job_description: z.string().optional(),
