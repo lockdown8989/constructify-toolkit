@@ -98,9 +98,9 @@ const AppContent = () => {
     <ErrorBoundaryComponent>
       <div className="min-h-screen bg-background">
         <Routes>
-          {/* Public routes without layout */}
-          <Route path="/auth" element={<Auth />} />
+          {/* Public routes - These should always be accessible first */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/privacy" element={
             <Suspense fallback={<LoadingSpinner />}>
               <Privacy />
@@ -122,133 +122,244 @@ const AppContent = () => {
             </Suspense>
           } />
           
-          {/* Protected routes with layout */}
-          <Route path="/*" element={
+          {/* Protected app routes - Explicit paths only */}
+          <Route path="/dashboard" element={
             <ProtectedRoute>
               <AppLayout />
             </ProtectedRoute>
           }>
             <Route index element={<Dashboard />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="profile" element={
+          </Route>
+          
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
               <Suspense fallback={<LoadingSpinner />}>
                 <Profile />
               </Suspense>
             } />
-            <Route path="settings" element={
+          </Route>
+          
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
               <Suspense fallback={<LoadingSpinner />}>
                 <ProfileSettings />
               </Suspense>
             } />
-            <Route path="people" element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <People />
-                </Suspense>
-              </ProtectedRoute>
+          </Route>
+          
+          <Route path="/people" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <People />
+              </Suspense>
             } />
-            <Route path="attendance" element={
+          </Route>
+          
+          <Route path="/attendance" element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
               <Suspense fallback={<LoadingSpinner />}>
                 <Attendance />
               </Suspense>
             } />
-            <Route path="leave-management" element={
+          </Route>
+          
+          <Route path="/leave-management" element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
               <Suspense fallback={<LoadingSpinner />}>
                 <LeaveManagement />
               </Suspense>
             } />
-            <Route path="schedule-requests" element={
+          </Route>
+          
+          <Route path="/schedule-requests" element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
               <Suspense fallback={<LoadingSpinner />}>
                 <ScheduleRequests />
               </Suspense>
             } />
-            <Route path="payroll" element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager', 'payroll']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <Payroll />
-                </Suspense>
-              </ProtectedRoute>
+          </Route>
+          
+          <Route path="/payroll" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager', 'payroll']}>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <Payroll />
+              </Suspense>
             } />
-            <Route path="payroll-dashboard" element={
-              <ProtectedRoute requiredRole="payroll">
-                <Suspense fallback={<LoadingSpinner />}>
-                  <PayrollDashboard />
-                </Suspense>
-              </ProtectedRoute>
+          </Route>
+          
+          <Route path="/payroll-dashboard" element={
+            <ProtectedRoute requiredRole="payroll">
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <PayrollDashboard />
+              </Suspense>
             } />
-            <Route path="payroll-settings" element={
-              <ProtectedRoute requiredRole="payroll">
-                <Suspense fallback={<LoadingSpinner />}>
-                  <PayrollSettings />
-                </Suspense>
-              </ProtectedRoute>
+          </Route>
+          
+          <Route path="/payroll-settings" element={
+            <ProtectedRoute requiredRole="payroll">
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <PayrollSettings />
+              </Suspense>
             } />
-            <Route path="payroll-reports" element={
-              <ProtectedRoute requiredRole="payroll">
-                <Suspense fallback={<LoadingSpinner />}>
-                  <PayrollReports />
-                </Suspense>
-              </ProtectedRoute>
+          </Route>
+          
+          <Route path="/payroll-reports" element={
+            <ProtectedRoute requiredRole="payroll">
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <PayrollReports />
+              </Suspense>
             } />
-            <Route path="payslips" element={
-              <ProtectedRoute requiredRole="payroll">
-                <Suspense fallback={<LoadingSpinner />}>
-                  <Payslips />
-                </Suspense>
-              </ProtectedRoute>
+          </Route>
+          
+          <Route path="/payslips" element={
+            <ProtectedRoute requiredRole="payroll">
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <Payslips />
+              </Suspense>
             } />
-            <Route path="schedule" element={
+          </Route>
+          
+          <Route path="/schedule" element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
               <Suspense fallback={<LoadingSpinner />}>
                 <Schedule />
               </Suspense>
             } />
-            <Route path="shift-patterns" element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <ShiftPatterns />
-                </Suspense>
-              </ProtectedRoute>
+          </Route>
+          
+          <Route path="/shift-patterns" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <ShiftPatterns />
+              </Suspense>
             } />
-            <Route path="rota-employee" element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <RotaEmployee />
-                </Suspense>
-              </ProtectedRoute>
+          </Route>
+          
+          <Route path="/rota-employee" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <RotaEmployee />
+              </Suspense>
             } />
-            <Route path="shift-calendar" element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <ShiftCalendar />
-                </Suspense>
-              </ProtectedRoute>
+          </Route>
+          
+          <Route path="/shift-calendar" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <ShiftCalendar />
+              </Suspense>
             } />
-            <Route path="employee-workflow" element={
+          </Route>
+          
+          <Route path="/employee-workflow" element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
               <Suspense fallback={<LoadingSpinner />}>
                 <EmployeeWorkflow />
               </Suspense>
             } />
-            <Route path="time-clock" element={
+          </Route>
+          
+          <Route path="/time-clock" element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
               <Suspense fallback={<LoadingSpinner />}>
                 <TimeClock />
               </Suspense>
             } />
-            <Route path="manager-time-clock" element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <ManagerTimeClock />
-                </Suspense>
-              </ProtectedRoute>
-            } />
-            <Route path="overtime-management" element={
-              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <OvertimeManagement />
-                </Suspense>
-              </ProtectedRoute>
+          </Route>
+          
+          <Route path="/manager-time-clock" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <ManagerTimeClock />
+              </Suspense>
             } />
           </Route>
           
+          <Route path="/overtime-management" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <OvertimeManagement />
+              </Suspense>
+            } />
+          </Route>
+          
+          {/* Catch-all route - redirect unknown paths to landing page */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
