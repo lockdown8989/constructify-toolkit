@@ -15,15 +15,26 @@ const LandingPage: React.FC = () => {
   const isMobile = useIsMobile();
   const [yearly, setYearly] = React.useState(false);
 
-  // Provide your published Google Play URL here (e.g., https://play.google.com/store/apps/details?id=com.company.app)
-  const PLAY_STORE_URL = '';
+  // Direct APK download from your website
+  const APK_DOWNLOAD_URL = '/downloads/teampulse.apk'; // Place your APK file in public/downloads/
 
   const handleStripe = () => {
     toast.info('Stripe checkout coming soon. This button will start Stripe.', { duration: 3500 });
   };
 
   const handleAppDownload = (platform: 'ios' | 'android') => {
-    toast.info(`${platform === 'ios' ? 'App Store' : 'Google Play'} download coming soon!`);
+    if (platform === 'android') {
+      // Create download link for APK
+      const link = document.createElement('a');
+      link.href = APK_DOWNLOAD_URL;
+      link.download = 'TeamPulse.apk';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('TeamPulse APK download started!');
+    } else {
+      toast.info('iOS app coming soon!');
+    }
   };
 
   const faqs = [
@@ -60,9 +71,11 @@ const LandingPage: React.FC = () => {
       <header className="relative backdrop-blur-sm bg-background/80 border-b border-border/50 sticky top-0 z-50">
         <nav className="responsive-container py-4 md:py-6 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 hover-scale" aria-label="TeamPulse Home">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-              <span className="text-white font-bold text-lg">T</span>
-            </div>
+            <img 
+              src="/lovable-uploads/6498c422-3293-40e4-99c1-a94a137934f6.png" 
+              alt="TeamPulse Logo" 
+              className="h-10 w-auto animate-bounce hover:animate-spin hover:scale-110 transition-all duration-500 cursor-pointer"
+            />
             <span className="font-bold text-xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">TeamPulse</span>
           </Link>
           <div className="hidden md:flex items-center gap-8">
@@ -632,13 +645,7 @@ const LandingPage: React.FC = () => {
               size="lg" 
               variant="outline" 
               className="flex items-center gap-3 px-8 py-6 text-base bg-black text-white hover:bg-black/90 border-black rounded-xl"
-              onClick={() => {
-                if (PLAY_STORE_URL) {
-                  window.open(PLAY_STORE_URL, '_blank', 'noopener,noreferrer');
-                } else {
-                  toast.info('Google Play link coming soon');
-                }
-              }}
+              onClick={() => handleAppDownload('android')}
             >
               <div className="w-8 h-8 bg-gradient-to-br from-green-400 via-blue-500 to-red-500 rounded-lg flex items-center justify-center">
                 <Download className="w-5 h-5 text-white" />
