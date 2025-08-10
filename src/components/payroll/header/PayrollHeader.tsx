@@ -1,9 +1,12 @@
 
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PoundSterling, Download, Settings, Loader2, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { exportPayrollData } from '@/hooks/use-payroll-export';
+import { getPayrollPeriods } from '@/utils/payroll/periods';
+import { toast } from '@/hooks/use-toast';
 
 interface PayrollHeaderProps {
   lastUpdated?: string;
@@ -18,8 +21,32 @@ export const PayrollHeader: React.FC<PayrollHeaderProps> = ({
 }) => {
   const navigate = useNavigate();
 
+  // Payroll period (26th — 25th) selector
+  const periods = useMemo(() => getPayrollPeriods(6, new Date()), []);
+  const [selectedPeriodKey, setSelectedPeriodKey] = useState<string>(periods[0]?.key);
+  const selectedPeriod = useMemo(
+    () => periods.find((p) => p.key === selectedPeriodKey) || periods[0],
+    [periods, selectedPeriodKey]
+  );
+
+  const [exporting, setExporting] = useState(false);
+
   const handlePayrollSettings = () => {
     navigate('/payroll-settings');
+  };
+
+  const handleExport = async () => {
+    if (!selectedPeriod) return;
+    try {
+      setExporting(true);
+      await exportPayrollData('GBP', selectedPeriod.start, selectedPeriod.end);
+      toast({ title: 'Export complete', description: `CSV for ${selectedPeriod.label} downloaded.` });
+    } catch (error) {
+      console.error('Export error', error);
+      toast({ title: 'Export failed', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -61,18 +88,24 @@ export const PayrollHeader: React.FC<PayrollHeaderProps> = ({
           <Settings className="h-4 w-4 mr-2" />
           Payroll Settings
         </Button>
-        <Select defaultValue="26 Jan 2024 — 25 Feb 2024">
-          <SelectTrigger className="w-48">
-            <SelectValue />
+        <Select value={selectedPeriodKey} onValueChange={setSelectedPeriodKey}>
+          <SelectTrigger className="w-56">
+            <SelectValue placeholder={selectedPeriod?.label} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="26 Jan 2024 — 25 Feb 2024">26 Jan 2024 — 25 Feb 2024</SelectItem>
-            <SelectItem value="26 Dec 2023 — 25 Jan 2024">26 Dec 2023 — 25 Jan 2024</SelectItem>
-            <SelectItem value="26 Nov 2023 — 25 Dec 2023">26 Nov 2023 — 25 Dec 2023</SelectItem>
+            {periods.map((p) => (
+              <SelectItem key={p.key} value={p.key}>
+                {p.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Download className="h-4 w-4 mr-2" />
+        <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleExport} disabled={exporting}>
+          {exporting ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4 mr-2" />
+          )}
           Export CSV
         </Button>
       </div>

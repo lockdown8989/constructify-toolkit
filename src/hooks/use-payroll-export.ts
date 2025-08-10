@@ -1,14 +1,19 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { exportToCSV } from '@/utils/exports';
-import { toast } from '@/hooks/use-toast';
+import { exportToCSV } from '@/utils/exports/csv-exporter';
 import { format } from 'date-fns';
 
-export const exportPayrollData = async (currency: string = 'GBP') => {
+export const exportPayrollData = async (
+  currency: string = 'GBP',
+  startDate?: Date,
+  endDate?: Date
+) => {
   try {
-    // Get payroll data for the current month
+    // Determine date filtering
     const currentMonth = format(new Date(), 'yyyy-MM');
-    const { data, error } = await supabase
+
+    // Base select with all required fields and relation
+    let query = supabase
       .from('payroll')
       .select(`
         id,
@@ -35,9 +40,19 @@ export const exportPayrollData = async (currency: string = 'GBP') => {
           department,
           site
         )
-      `)
-      .like('payment_date', `${currentMonth}%`);
-      
+      `);
+
+    if (startDate && endDate) {
+      const start = format(startDate, 'yyyy-MM-dd');
+      const end = format(endDate, 'yyyy-MM-dd');
+      query = query.gte('payment_date', start).lte('payment_date', end);
+    } else {
+      // Fallback to current month
+      query = query.like('payment_date', `${currentMonth}%`);
+    }
+
+    const { data, error } = await query;
+
     if (error) throw error;
     if (!data || data.length === 0) {
       throw new Error('No payroll data available to export');
@@ -45,8 +60,7 @@ export const exportPayrollData = async (currency: string = 'GBP') => {
     
     // Format data for CSV export
     const formattedData = data.map(record => {
-      // Safely access the nested employee data with proper type assertions
-      const employeeData = record.employees as {
+      const employeeData = (record as any).employees as {
         name?: string;
         job_title?: string;
         department?: string;
@@ -68,20 +82,19 @@ export const exportPayrollData = async (currency: string = 'GBP') => {
         'Overtime Hours': record.overtime_hours?.toFixed(2) || '0.00',
         'Overtime Pay': `${currency} ${record.overtime_pay?.toFixed(2) || '0.00'}`,
         'Net Salary': `${currency} ${record.salary_paid?.toFixed(2) || '0.00'}`,
-        'Pay Period': record.pay_period || 'Current Month',
+        'Pay Period': record.pay_period || 'Current Period',
         'Payment Method': record.payment_method || 'Bank Transfer',
         'Status': record.payment_status || 'Unknown',
         'Payment Date': record.payment_date ? format(new Date(record.payment_date), 'dd/MM/yyyy') : 'Pending',
         'Delivery Status': record.delivery_status || 'pending',
         'Delivered At': record.delivered_at ? format(new Date(record.delivered_at), 'dd/MM/yyyy HH:mm') : 'Not delivered'
-      };
+      } as Record<string, any>;
     });
     
-    // Generate CSV filename with current date
+    // Generate CSV filename with current date (extension added by exporter)
     const currentDate = format(new Date(), 'yyyy-MM-dd');
-    const filename = `payroll_export_${currentDate}.csv`;
+    const filename = `payroll_export_${currentDate}`;
     
-    // Export to CSV
     await exportToCSV(formattedData, filename);
     
     return { success: true };
