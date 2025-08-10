@@ -107,7 +107,7 @@ const AttendanceHeader = ({
         </div>
       </div>
       
-      {isMobile ? <div className="flex justify-end gap-2">
+      {isMobile ? <div className="flex justify-end gap-2 bg-slate-50 text-slate-950">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
