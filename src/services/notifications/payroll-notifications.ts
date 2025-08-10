@@ -36,14 +36,31 @@ export const notifyEmployeeAboutPayslip = async (
 
 // Send email notification about payslip (would require an edge function in real implementation)
 export const emailPayslipNotification = async (
-  userId: string,
+  userEmail: string,
+  employeeName: string,
   amount: number,
   currency: string,
   paymentDate: string
 ) => {
   try {
-    // In a real implementation, this would call a Supabase Edge Function that sends emails
-    console.log(`Email notification would be sent to user ${userId} about their payslip.`);
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    const { error } = await supabase.functions.invoke('send-notification-email', {
+      body: {
+        to: userEmail,
+        subject: 'Your Payslip is Ready',
+        type: 'payslip',
+        data: {
+          employeeName,
+          amount: `${currency} ${amount.toFixed(2)}`,
+          paymentDate: format(new Date(paymentDate), 'dd MMMM yyyy'),
+          period: format(new Date(paymentDate), 'MMMM yyyy'),
+          loginUrl: `${window.location.origin}/payroll`
+        }
+      }
+    });
+
+    if (error) throw error;
     return { success: true };
   } catch (error) {
     console.error('Error sending payslip email notification:', error);

@@ -26,4 +26,20 @@ verify_jwt = false
 
 [[functions]]
 name = "face-verify"
+verify_jwt = false
+
+[[functions]]
+name = "create-payment"
+verify_jwt = true
+
+[[functions]]
+name = "send-notification-email"
+verify_jwt = false
+
+[[functions]]
+name = "send-sms"
+verify_jwt = false
+
+[[functions]]
+name = "calendar-sync"
 verify_jwt = true
