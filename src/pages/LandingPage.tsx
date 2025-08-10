@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,48 +7,66 @@ import { Clock, CalendarDays, UserCheck, DollarSign, FileText, ChevronDown, User
 import { Helmet } from 'react-helmet-async';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
-
 const LandingPage: React.FC = () => {
-  const { user, isManager } = useAuth();
+  const {
+    user,
+    isManager
+  } = useAuth();
   const isAuthenticated = !!user;
   const isMobile = useIsMobile();
   const [yearly, setYearly] = React.useState(false);
-
   const handleStripe = () => {
-    toast.info('Stripe checkout coming soon. This button will start Stripe.', { duration: 3500 });
+    toast.info('Stripe checkout coming soon. This button will start Stripe.', {
+      duration: 3500
+    });
   };
-
   const handleAppDownload = (platform: 'ios' | 'android') => {
     if (platform === 'android') {
-      toast.info('To get the TeamPulse APK, please follow the setup instructions below.', { duration: 4000 });
+      toast.info('To get the TeamPulse APK, please follow the setup instructions below.', {
+        duration: 4000
+      });
     } else {
       toast.info('iOS app coming soon!');
     }
   };
-
-  const faqs = [
-    { q: 'What is TeamPulse?', a: 'TeamPulse is a comprehensive employee management platform that streamlines scheduling, attendance, payroll, and team collaboration with real-time synchronization.' },
-    { q: 'Is it mobile-friendly?', a: 'Absolutely! TeamPulse is designed mobile-first with an Android app available now (iOS coming soon), plus a responsive web interface optimized for all devices.' },
-    { q: 'How do I get started?', a: 'Simply click "Get Started" to create your free account. Our guided onboarding will help you set up your team and create your first schedule in minutes.' },
-    { q: 'Do you support payroll integration?', a: 'Yes! Our platform automatically calculates payroll from attendance data, overtime hours, and leave records with instant payslip generation.' },
-    { q: 'Is TeamPulse GDPR compliant?', a: 'We take data privacy seriously. TeamPulse is fully GDPR compliant with built-in consent management, data portability, and deletion tools.' },
-    { q: 'What kind of support do you offer?', a: 'We provide 24/7 email support for all plans, priority support for Pro users, and dedicated account management for Enterprise customers.' },
-    { q: 'Can I cancel anytime?', a: 'Yes, you can cancel your subscription at any time with no questions asked. Your data remains accessible during your current billing period.' },
-    { q: 'Do you offer a free trial?', a: 'Yes! Get started with our free plan that includes up to 5 employees and basic features. No credit card required.' },
-  ];
-
+  const faqs = [{
+    q: 'What is TeamPulse?',
+    a: 'TeamPulse is a comprehensive employee management platform that streamlines scheduling, attendance, payroll, and team collaboration with real-time synchronization.'
+  }, {
+    q: 'Is it mobile-friendly?',
+    a: 'Absolutely! TeamPulse is designed mobile-first with an Android app available now (iOS coming soon), plus a responsive web interface optimized for all devices.'
+  }, {
+    q: 'How do I get started?',
+    a: 'Simply click "Get Started" to create your free account. Our guided onboarding will help you set up your team and create your first schedule in minutes.'
+  }, {
+    q: 'Do you support payroll integration?',
+    a: 'Yes! Our platform automatically calculates payroll from attendance data, overtime hours, and leave records with instant payslip generation.'
+  }, {
+    q: 'Is TeamPulse GDPR compliant?',
+    a: 'We take data privacy seriously. TeamPulse is fully GDPR compliant with built-in consent management, data portability, and deletion tools.'
+  }, {
+    q: 'What kind of support do you offer?',
+    a: 'We provide 24/7 email support for all plans, priority support for Pro users, and dedicated account management for Enterprise customers.'
+  }, {
+    q: 'Can I cancel anytime?',
+    a: 'Yes, you can cancel your subscription at any time with no questions asked. Your data remains accessible during your current billing period.'
+  }, {
+    q: 'Do you offer a free trial?',
+    a: 'Yes! Get started with our free plan that includes up to 5 employees and basic features. No credit card required.'
+  }];
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: faqs.map((f) => ({
+    mainEntity: faqs.map(f => ({
       '@type': 'Question',
       name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.a },
-    })),
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.a
+      }
+    }))
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+  return <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <Helmet>
         <title>TeamPulse - Modern Employee Management Platform</title>
         <meta name="description" content="Boost productivity with better employee management. Modern scheduling, attendance tracking, and payroll automation in one platform." />
@@ -61,11 +78,7 @@ const LandingPage: React.FC = () => {
       <header className="relative backdrop-blur-sm bg-background/80 border-b border-border/50 sticky top-0 z-50">
         <nav className="responsive-container py-4 md:py-6 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 hover-scale" aria-label="TeamPulse Home">
-            <img 
-              src="/lovable-uploads/6498c422-3293-40e4-99c1-a94a137934f6.png" 
-              alt="TeamPulse Logo" 
-              className="h-10 w-auto animate-bounce hover:animate-spin hover:scale-110 transition-all duration-500 cursor-pointer"
-            />
+            <img src="/lovable-uploads/6498c422-3293-40e4-99c1-a94a137934f6.png" alt="TeamPulse Logo" className="h-10 w-auto animate-bounce hover:animate-spin hover:scale-110 transition-all duration-500 cursor-pointer" />
             <span className="font-bold text-xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">TeamPulse</span>
           </Link>
           <div className="hidden md:flex items-center gap-8">
@@ -75,25 +88,21 @@ const LandingPage: React.FC = () => {
             <a href="#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
           </div>
           <div className="flex items-center gap-3">
-            {!isAuthenticated ? (
-              <>
+            {!isAuthenticated ? <>
                 <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
                   <Link to="/auth">Log in</Link>
                 </Button>
                 <Button asChild size="sm" className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg">
                   <Link to="/auth?tab=signup">Sign up</Link>
                 </Button>
-              </>
-            ) : (
-              <>
+              </> : <>
                 <Button asChild size="sm">
                   <Link to="/dashboard">Dashboard</Link>
                 </Button>
                 <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
                   <Link to="/schedule">{isManager ? 'Manage' : 'Schedule'}</Link>
                 </Button>
-              </>
-            )}
+              </>}
           </div>
         </nav>
       </header>
@@ -114,33 +123,29 @@ const LandingPage: React.FC = () => {
                   By implementing these methods, you can boost productivity, reduce turnover, and ultimately achieve your business objectives with a more engaged and high-performing team.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  {isAuthenticated ? (
-                    <>
+                  {isAuthenticated ? <>
                       <Button asChild size="lg" className="bg-gradient-to-r from-primary to-primary/90 shadow-lg text-base px-8">
                         <Link to="/dashboard">Open Dashboard</Link>
                       </Button>
                       <Button asChild variant="outline" size="lg" className="text-base px-8">
                         <Link to="/schedule">View Schedule</Link>
                       </Button>
-                    </>
-                  ) : (
-                    <>
+                    </> : <>
                       <Button asChild size="lg" className="bg-gradient-to-r from-primary to-primary/90 shadow-lg text-base px-8 hover:shadow-xl transition-all">
                         <Link to="/auth?tab=signup">Get started</Link>
                       </Button>
-                      <Button variant="outline" size="lg" className="text-base px-8" onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}>
+                      <Button variant="outline" size="lg" className="text-base px-8" onClick={() => document.getElementById('demo')?.scrollIntoView({
+                    behavior: 'smooth'
+                  })}>
                         See demo
                       </Button>
-                    </>
-                  )}
+                    </>}
                 </div>
                 <div className="flex items-center gap-4 pt-4">
                   <div className="flex -space-x-2">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-background flex items-center justify-center text-sm">
+                    {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-background flex items-center justify-center text-sm">
                         {i === 3 ? '👤' : ''}
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                   <div>
                     <p className="text-3xl font-bold">500K+</p>
@@ -191,8 +196,7 @@ const LandingPage: React.FC = () => {
                     <div className="space-y-2">
                       <div className="text-sm font-semibold">List Employee</div>
                       <div className="space-y-2">
-                        {['Bruno Cooper', 'Amy Hopkins', 'Mia', 'Jason Lee', 'Charley Mary'].map((name, i) => (
-                          <div key={name} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                        {['Bruno Cooper', 'Amy Hopkins', 'Mia', 'Jason Lee', 'Charley Mary'].map((name, i) => <div key={name} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
                             <div className="flex items-center gap-2">
                               <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/30 to-primary/10"></div>
                               <span className="text-sm">{name}</span>
@@ -200,8 +204,7 @@ const LandingPage: React.FC = () => {
                             <div className={`text-xs px-2 py-1 rounded-full ${i % 2 === 0 ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
                               {i % 2 === 0 ? 'Available' : 'Busy'}
                             </div>
-                          </div>
-                        ))}
+                          </div>)}
                       </div>
                     </div>
                   </div>
@@ -215,18 +218,7 @@ const LandingPage: React.FC = () => {
         </section>
 
         {/* Company Logos */}
-        <section aria-label="Trusted by companies" className="responsive-container py-16 border-b border-border/20">
-          <div className="text-center mb-12">
-            <p className="text-muted-foreground text-lg">Join 4,000+ companies already growing</p>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-12 opacity-60">
-            {['Layers', 'Sisyphus', 'Circooles', 'Catalog', 'Quotient'].map((brand) => (
-              <div key={brand} className="text-xl font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                {brand}
-              </div>
-            ))}
-          </div>
-        </section>
+        
 
         {/* Best Platform Section */}
         <section className="responsive-container py-24">
@@ -442,27 +434,62 @@ const LandingPage: React.FC = () => {
             </p>
           </div>
           {(() => {
-            const target = (path: string) => (isAuthenticated ? path : '/auth?tab=signup');
-            const featureItems = [
-              { icon: <CalendarDays className="h-10 w-10" />, title: 'Scheduling', description: 'Create and manage shifts with conflict detection and notifications.', href: target('/schedule') },
-              { icon: <Clock className="h-10 w-10" />, title: 'Attendance', description: 'Track working hours and attendance across teams.', href: target('/attendance') },
-              { icon: <UserCheck className="h-10 w-10" />, title: 'Leave Management', description: 'Request, approve and track leave balances seamlessly.', href: target('/leave-management') },
-              { icon: <Timer className="h-10 w-10" />, title: 'Time Clock', description: 'Kiosk and mobile clock-in/out for staff and managers.', href: target('/time-clock') },
-              { icon: <AlarmClock className="h-10 w-10" />, title: 'Overtime', description: 'Configure rules and track overtime automatically.', href: target('/overtime-management') },
-              { icon: <DollarSign className="h-10 w-10" />, title: 'Payroll', description: 'Automate payroll from attendance and overtime data.', href: target('/payroll') },
-              { icon: <FileText className="h-10 w-10" />, title: 'Payslips', description: 'Generate and distribute digital payslips with ease.', href: target('/payslips') },
-              { icon: <BarChart3 className="h-10 w-10" />, title: 'Reports', description: 'Analytics dashboards for workforce and payroll insights.', href: target('/payroll-reports') },
-              { icon: <Users className="h-10 w-10" />, title: 'People', description: 'Centralized employee directory with roles.', href: target('/people') },
-              { icon: <Settings className="h-10 w-10" />, title: 'Profile & Settings', description: 'Manage profile, preferences and security.', href: target('/settings') },
-            ];
-            return (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {featureItems.map((f) => (
-                  <FeatureCard key={f.title} icon={f.icon} title={f.title} description={f.description} href={f.href} ctaLabel={isAuthenticated ? 'Open' : 'Explore'} />
-                ))}
-              </div>
-            );
-          })()}
+          const target = (path: string) => isAuthenticated ? path : '/auth?tab=signup';
+          const featureItems = [{
+            icon: <CalendarDays className="h-10 w-10" />,
+            title: 'Scheduling',
+            description: 'Create and manage shifts with conflict detection and notifications.',
+            href: target('/schedule')
+          }, {
+            icon: <Clock className="h-10 w-10" />,
+            title: 'Attendance',
+            description: 'Track working hours and attendance across teams.',
+            href: target('/attendance')
+          }, {
+            icon: <UserCheck className="h-10 w-10" />,
+            title: 'Leave Management',
+            description: 'Request, approve and track leave balances seamlessly.',
+            href: target('/leave-management')
+          }, {
+            icon: <Timer className="h-10 w-10" />,
+            title: 'Time Clock',
+            description: 'Kiosk and mobile clock-in/out for staff and managers.',
+            href: target('/time-clock')
+          }, {
+            icon: <AlarmClock className="h-10 w-10" />,
+            title: 'Overtime',
+            description: 'Configure rules and track overtime automatically.',
+            href: target('/overtime-management')
+          }, {
+            icon: <DollarSign className="h-10 w-10" />,
+            title: 'Payroll',
+            description: 'Automate payroll from attendance and overtime data.',
+            href: target('/payroll')
+          }, {
+            icon: <FileText className="h-10 w-10" />,
+            title: 'Payslips',
+            description: 'Generate and distribute digital payslips with ease.',
+            href: target('/payslips')
+          }, {
+            icon: <BarChart3 className="h-10 w-10" />,
+            title: 'Reports',
+            description: 'Analytics dashboards for workforce and payroll insights.',
+            href: target('/payroll-reports')
+          }, {
+            icon: <Users className="h-10 w-10" />,
+            title: 'People',
+            description: 'Centralized employee directory with roles.',
+            href: target('/people')
+          }, {
+            icon: <Settings className="h-10 w-10" />,
+            title: 'Profile & Settings',
+            description: 'Manage profile, preferences and security.',
+            href: target('/settings')
+          }];
+          return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {featureItems.map(f => <FeatureCard key={f.title} icon={f.icon} title={f.title} description={f.description} href={f.href} ctaLabel={isAuthenticated ? 'Open' : 'Explore'} />)}
+              </div>;
+        })()}
         </section>
 
         {/* Pricing Section */}
@@ -473,28 +500,10 @@ const LandingPage: React.FC = () => {
               Choose the plan that fits your business best and take a step closer to achieving your objectives with ease.
             </p>
             <div className="inline-flex items-center rounded-full bg-muted p-1 shadow-inner">
-              <button
-                type="button"
-                aria-pressed={!yearly}
-                onClick={() => setYearly(false)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                  !yearly 
-                    ? 'bg-background text-foreground shadow-sm' 
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
+              <button type="button" aria-pressed={!yearly} onClick={() => setYearly(false)} className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${!yearly ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
                 Monthly
               </button>
-              <button
-                type="button"
-                aria-pressed={yearly}
-                onClick={() => setYearly(true)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                  yearly 
-                    ? 'bg-background text-foreground shadow-sm' 
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
+              <button type="button" aria-pressed={yearly} onClick={() => setYearly(true)} className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${yearly ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
                 Annually
               </button>
             </div>
@@ -504,62 +513,36 @@ const LandingPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {[
-              { 
-                name: 'Basic', 
-                subtitle: 'For individuals',
-                monthly: 10, 
-                popular: false,
-                description: 'This plan offers the essential features to start your journey to success without spending a lot of money.',
-                features: [
-                  'All analytics features',
-                  'Normal support',
-                  'Up to 3 team members'
-                ]
-              },
-              { 
-                name: 'Pro', 
-                subtitle: 'For startups',
-                monthly: 50, 
-                popular: true,
-                description: 'It is the choice of professional and businesses who want to improve their performance and capabilities.',
-                features: [
-                  'All analytics features',
-                  'Premium support',
-                  'Up to 40 team members'
-                ]
-              },
-              { 
-                name: 'Enterprise', 
-                subtitle: 'For big companies',
-                monthly: 100, 
-                popular: false,
-                description: 'Designed offers a comprehensive set of features and services to drive your success.',
-                features: [
-                  'All analytics features',
-                  'Normal support',
-                  'Up to 100 team members'
-                ]
-              },
-            ].map((plan) => {
-              const discountedPerMo = Math.round(((plan.monthly * 12 * 0.8) / 12));
-              const price = yearly ? discountedPerMo : plan.monthly;
-              return (
-                <Card 
-                  key={plan.name} 
-                  className={`relative group hover:-translate-y-2 transition-all duration-300 border-2 ${
-                    plan.popular 
-                      ? 'border-primary bg-gradient-to-br from-primary/5 to-primary/10 shadow-xl' 
-                      : 'border-border hover:border-primary/50 shadow-lg hover:shadow-xl'
-                  }`}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+            {[{
+            name: 'Basic',
+            subtitle: 'For individuals',
+            monthly: 10,
+            popular: false,
+            description: 'This plan offers the essential features to start your journey to success without spending a lot of money.',
+            features: ['All analytics features', 'Normal support', 'Up to 3 team members']
+          }, {
+            name: 'Pro',
+            subtitle: 'For startups',
+            monthly: 50,
+            popular: true,
+            description: 'It is the choice of professional and businesses who want to improve their performance and capabilities.',
+            features: ['All analytics features', 'Premium support', 'Up to 40 team members']
+          }, {
+            name: 'Enterprise',
+            subtitle: 'For big companies',
+            monthly: 100,
+            popular: false,
+            description: 'Designed offers a comprehensive set of features and services to drive your success.',
+            features: ['All analytics features', 'Normal support', 'Up to 100 team members']
+          }].map(plan => {
+            const discountedPerMo = Math.round(plan.monthly * 12 * 0.8 / 12);
+            const price = yearly ? discountedPerMo : plan.monthly;
+            return <Card key={plan.name} className={`relative group hover:-translate-y-2 transition-all duration-300 border-2 ${plan.popular ? 'border-primary bg-gradient-to-br from-primary/5 to-primary/10 shadow-xl' : 'border-border hover:border-primary/50 shadow-lg hover:shadow-xl'}`}>
+                  {plan.popular && <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                       <span className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground px-4 py-1 rounded-full text-sm font-medium shadow-lg">
                         For startups
                       </span>
-                    </div>
-                  )}
+                    </div>}
                   <CardHeader className="text-center pb-8">
                     <div className="space-y-3">
                       <CardTitle className="text-2xl">{plan.name}</CardTitle>
@@ -579,30 +562,20 @@ const LandingPage: React.FC = () => {
                     <div className="space-y-3">
                       <p className="font-semibold">What's included</p>
                       <ul className="space-y-3">
-                        {plan.features.map((feature) => (
-                          <li key={feature} className="flex items-center gap-3">
+                        {plan.features.map(feature => <li key={feature} className="flex items-center gap-3">
                             <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                               <div className="w-2 h-2 rounded-full bg-primary"></div>
                             </div>
                             <span className="text-sm">{feature}</span>
-                          </li>
-                        ))}
+                          </li>)}
                       </ul>
                     </div>
-                    <Button 
-                      className={`w-full ${
-                        plan.popular 
-                          ? 'bg-gradient-to-r from-primary to-primary/90 shadow-lg hover:shadow-xl' 
-                          : ''
-                      }`}
-                      onClick={handleStripe}
-                    >
+                    <Button className={`w-full ${plan.popular ? 'bg-gradient-to-r from-primary to-primary/90 shadow-lg hover:shadow-xl' : ''}`} onClick={handleStripe}>
                       Get started
                     </Button>
                   </CardContent>
-                </Card>
-              );
-            })}
+                </Card>;
+          })}
           </div>
         </section>
 
@@ -615,14 +588,7 @@ const LandingPage: React.FC = () => {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="flex items-center gap-3 px-8 py-6 text-base bg-black text-white hover:bg-black/90 border-black rounded-xl"
-              onClick={() => handleAppDownload('ios')}
-              disabled
-              aria-disabled="true"
-            >
+            <Button size="lg" variant="outline" className="flex items-center gap-3 px-8 py-6 text-base bg-black text-white hover:bg-black/90 border-black rounded-xl" onClick={() => handleAppDownload('ios')} disabled aria-disabled="true">
               <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                 <Download className="w-5 h-5 text-black" />
               </div>
@@ -631,12 +597,7 @@ const LandingPage: React.FC = () => {
                 <div className="font-semibold">App Store</div>
               </div>
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="flex items-center gap-3 px-8 py-6 text-base bg-black text-white hover:bg-black/90 border-black rounded-xl"
-              onClick={() => handleAppDownload('android')}
-            >
+            <Button size="lg" variant="outline" className="flex items-center gap-3 px-8 py-6 text-base bg-black text-white hover:bg-black/90 border-black rounded-xl" onClick={() => handleAppDownload('android')}>
               <div className="w-8 h-8 bg-gradient-to-br from-green-400 via-blue-500 to-red-500 rounded-lg flex items-center justify-center">
                 <Download className="w-5 h-5 text-white" />
               </div>
@@ -657,11 +618,7 @@ const LandingPage: React.FC = () => {
             </p>
           </div>
           <div className="max-w-4xl mx-auto space-y-4">
-            {faqs.map((faq, index) => (
-              <details 
-                key={index} 
-                className="group rounded-xl border-2 border-border bg-card hover:border-primary/30 transition-all duration-300 overflow-hidden"
-              >
+            {faqs.map((faq, index) => <details key={index} className="group rounded-xl border-2 border-border bg-card hover:border-primary/30 transition-all duration-300 overflow-hidden">
                 <summary className="cursor-pointer list-none p-6 font-semibold text-lg flex items-center justify-between hover:bg-primary/5 transition-colors">
                   <span className="flex-1 text-left">{faq.q}</span>
                   <ChevronDown className="w-5 h-5 text-muted-foreground group-open:rotate-180 transition-transform duration-300 flex-shrink-0 ml-4" />
@@ -669,15 +626,13 @@ const LandingPage: React.FC = () => {
                 <div className="px-6 pb-6">
                   <p className="text-muted-foreground leading-relaxed">{faq.a}</p>
                 </div>
-              </details>
-            ))}
+              </details>)}
           </div>
         </section>
       </main>
 
       {/* Mobile sticky CTA */}
-      {!isAuthenticated && isMobile && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 p-3 flex items-center justify-between">
+      {!isAuthenticated && isMobile && <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 p-3 flex items-center justify-between">
           <span className="text-sm">Start free today</span>
           <div className="flex gap-2">
             <Button asChild size="sm">
@@ -685,21 +640,19 @@ const LandingPage: React.FC = () => {
             </Button>
             <Button variant="outline" size="sm" onClick={handleStripe}>Subscribe</Button>
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Newsletter */}
       <section aria-labelledby="newsletter" className="responsive-container mt-16 md:mt-24">
         <div className="rounded-xl border bg-card p-6 md:p-8">
           <h2 id="newsletter" className="text-xl md:text-2xl font-semibold">Join our newsletter</h2>
           <p className="mt-1 text-sm text-muted-foreground">We’ll send you one nice email per week. No spam.</p>
-          <form
-            className="mt-4 flex flex-col sm:flex-row gap-3"
-            onSubmit={(e) => { e.preventDefault(); toast.success('Subscribed. Thanks for joining!'); }}
-          >
+          <form className="mt-4 flex flex-col sm:flex-row gap-3" onSubmit={e => {
+          e.preventDefault();
+          toast.success('Subscribed. Thanks for joining!');
+        }}>
             <label htmlFor="email" className="sr-only">Email</label>
-            <input id="email" name="email" type="email" required placeholder="Enter your email"
-              className="flex-1 rounded-md border bg-background px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+            <input id="email" name="email" type="email" required placeholder="Enter your email" className="flex-1 rounded-md border bg-background px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring" />
             <Button type="submit">Subscribe</Button>
           </form>
         </div>
@@ -716,10 +669,8 @@ const LandingPage: React.FC = () => {
           </nav>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 interface FeatureCardProps {
   icon: React.ReactNode;
   title: string;
@@ -727,10 +678,14 @@ interface FeatureCardProps {
   href: string;
   ctaLabel?: string;
 }
-
-const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, href, ctaLabel = 'Explore' }) => {
-  return (
-    <Card className="group transition-all duration-300 hover:-translate-y-2 hover:shadow-xl border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+const FeatureCard: React.FC<FeatureCardProps> = ({
+  icon,
+  title,
+  description,
+  href,
+  ctaLabel = 'Explore'
+}) => {
+  return <Card className="group transition-all duration-300 hover:-translate-y-2 hover:shadow-xl border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
       <CardHeader className="pb-6">
         <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 p-4 rounded-2xl w-fit mb-6 group-hover:scale-110 transition-transform duration-300">
           <div className="text-primary">
@@ -747,8 +702,6 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, hre
           </Button>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default LandingPage;
