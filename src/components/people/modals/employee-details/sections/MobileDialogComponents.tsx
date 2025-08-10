@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { X, Settings, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -13,19 +13,19 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   onClose,
   isLoading = false
 }) => (
-  <div className="flex-shrink-0 bg-white material-elevation-2 z-10 px-4 pt-4 pb-3 border-b border-gray-200">
+  <div className="flex-shrink-0 bg-background border-b border-border z-10 px-4 py-4">
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded bg-blue-600 flex items-center justify-center material-elevation-1">
+        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm">
           {isLoading ? (
-            <Loader2 className="h-5 w-5 text-white animate-spin" aria-hidden="true" />
+            <Loader2 className="h-5 w-5 text-primary-foreground animate-spin" aria-hidden="true" />
           ) : (
-            <Settings className="h-5 w-5 text-white" aria-hidden="true" />
+            <Settings className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
           )}
         </div>
         <div>
-          <h1 className="text-lg font-medium text-gray-900">Edit Account</h1>
-          <p className="text-sm text-gray-600" aria-label={`Editing account for ${employeeName}`}>
+          <h1 className="text-lg font-semibold text-foreground">Edit Account</h1>
+          <p className="text-sm text-muted-foreground" aria-label={`Editing account for ${employeeName}`}>
             {employeeName}
           </p>
         </div>
@@ -34,11 +34,11 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
         variant="ghost"
         size="icon"
         onClick={onClose}
-        className="h-10 w-10 rounded android-touch-feedback touch-target"
+        className="h-10 w-10 rounded-full android-touch-feedback touch-target"
         disabled={isLoading}
         aria-label="Close dialog"
       >
-        <X className="h-5 w-5 text-gray-600" aria-hidden="true" />
+        <X className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
       </Button>
     </div>
   </div>
@@ -84,36 +84,76 @@ export const FormActions: React.FC<FormActionsProps> = ({
   isLoading,
   submitLabel = "Update Account",
   disabled = false
-}) => (
-  <div className="flex gap-2 pt-4 border-t fixed bottom-0 left-0 right-0 bg-white p-4 rounded-t-xl shadow-lg z-40">
-    <Button 
-      type="button"
-      variant="outline" 
-      onClick={onCancel} 
-      className="flex-1 ios-button"
-      disabled={isLoading}
-      aria-label="Cancel changes"
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    
+    // Handle iOS viewport changes
+    const handleViewportChange = () => {
+      const visualViewport = window.visualViewport;
+      if (visualViewport) {
+        const viewportHeight = visualViewport.height;
+        const windowHeight = window.innerHeight;
+        const keyboardHeight = windowHeight - viewportHeight;
+        
+        if (keyboardHeight > 100) {
+          // Keyboard is open - move actions higher
+          container.style.bottom = `${keyboardHeight}px`;
+          container.style.paddingBottom = '0px';
+        } else {
+          // Keyboard is closed - return to bottom
+          container.style.bottom = '0px';
+          container.style.paddingBottom = 'env(safe-area-inset-bottom)';
+        }
+      }
+    };
+    
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      return () => {
+        window.visualViewport?.removeEventListener('resize', handleViewportChange);
+      };
+    }
+  }, []);
+  
+  return (
+    <div 
+      ref={containerRef}
+      className="flex gap-3 pt-4 border-t border-border/50 fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm p-4 rounded-t-xl shadow-lg z-50 transition-all duration-200 ease-out"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      Cancel
-    </Button>
-    <Button 
-      type="submit"
-      onClick={onSubmit} 
-      className="flex-1 bg-blue-500 hover:bg-blue-600 text-white ios-button relative"
-      disabled={isLoading || disabled}
-      aria-label={isLoading ? "Updating account..." : submitLabel}
-    >
-      {isLoading ? (
-        <>
-          <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden="true" />
-          <span>Updating...</span>
-        </>
-      ) : (
-        submitLabel
-      )}
-    </Button>
-  </div>
-);
+      <Button 
+        type="button"
+        variant="outline" 
+        onClick={onCancel} 
+        className="flex-1 h-12 text-base android-touch-feedback touch-target"
+        disabled={isLoading}
+        aria-label="Cancel changes"
+      >
+        Cancel
+      </Button>
+      <Button 
+        type="submit"
+        onClick={onSubmit} 
+        className="flex-1 h-12 text-base android-touch-feedback touch-target"
+        disabled={isLoading || disabled}
+        aria-label={isLoading ? "Updating account..." : submitLabel}
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden="true" />
+            <span>Updating...</span>
+          </>
+        ) : (
+          submitLabel
+        )}
+      </Button>
+    </div>
+  );
+};
 
 interface ErrorMessageProps {
   error: string | null;

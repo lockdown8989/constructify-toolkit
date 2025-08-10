@@ -286,74 +286,130 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     }
   }, [formData, employee, updateEmployee, syncEmployee, toast, onClose]);
 
-  const MobileContent = () => (
-    <FormErrorBoundary onError={(error) => setFormError(error.message)}>
-      <div className="flex flex-col h-full max-h-[90vh] bg-gray-50 relative mobile-viewport">
-        <LoadingOverlay isVisible={isSubmitting} message="Updating account..." />
-        
-        <MobileHeader 
-          employeeName={employee.name} 
-          onClose={onClose}
-          isLoading={isSubmitting}
-        />
-        
+  const MobileContent = () => {
+    const containerRef = React.useRef<HTMLDivElement>(null);
+    
+    React.useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+      
+      // Handle viewport changes for mobile keyboards
+      const handleViewportChange = () => {
+        const visualViewport = window.visualViewport;
+        if (visualViewport) {
+          const scale = visualViewport.scale;
+          const viewportHeight = visualViewport.height;
+          const windowHeight = window.innerHeight;
+          
+          // Calculate available height accounting for keyboard
+          const availableHeight = Math.min(viewportHeight, windowHeight * 0.9);
+          container.style.height = `${availableHeight}px`;
+        }
+      };
+      
+      // Handle input focus to prevent jumping
+      const handleFocusIn = (e: FocusEvent) => {
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA') {
+          setTimeout(() => {
+            target.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center',
+              inline: 'nearest'
+            });
+          }, 300); // Wait for keyboard animation
+        }
+      };
+      
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleViewportChange);
+        handleViewportChange(); // Initial call
+      }
+      
+      container.addEventListener('focusin', handleFocusIn);
+      
+      return () => {
+        window.visualViewport?.removeEventListener('resize', handleViewportChange);
+        container.removeEventListener('focusin', handleFocusIn);
+      };
+    }, []);
+    
+    return (
+      <FormErrorBoundary onError={(error) => setFormError(error.message)}>
         <div 
-          className="flex-1 overflow-y-scroll overscroll-behavior-contain ios-scroll-container" 
+          ref={containerRef}
+          className="flex flex-col h-[90vh] bg-background relative mobile-viewport"
           style={{ 
-            WebkitOverflowScrolling: 'touch',
+            maxHeight: '90vh',
             contain: 'layout style paint',
-            willChange: 'scroll-position'
-          }} 
-          data-scroll-container="true"
+            overscrollBehavior: 'contain'
+          }}
         >
-          <form onSubmit={handleFormSubmit} className="px-6 py-6 space-y-8 min-h-full ios-form-container">
-            <ErrorMessage error={formError} onDismiss={() => setFormError(null)} />
-            
-            <PersonalInfoSection 
-              formData={formData}
-              handleInputChange={handleInputChange}
-              isLoading={isSubmitting}
-            />
+          <LoadingOverlay isVisible={isSubmitting} message="Updating account..." />
+          
+          <MobileHeader 
+            employeeName={employee?.name || 'Employee'} 
+            onClose={onClose}
+            isLoading={isSubmitting}
+          />
+          
+          <div 
+            className="flex-1 overflow-y-auto ios-scroll-container pb-24" 
+            style={{ 
+              WebkitOverflowScrolling: 'touch',
+              scrollBehavior: 'smooth',
+              overscrollBehavior: 'contain',
+              contain: 'layout style paint',
+              willChange: 'scroll-position'
+            }} 
+            data-scroll-container="true"
+          >
+            <form onSubmit={handleFormSubmit} className="px-4 py-6 space-y-6 ios-form-container">
+              <ErrorMessage error={formError} onDismiss={() => setFormError(null)} />
+              
+              <PersonalInfoSection 
+                formData={formData}
+                handleInputChange={handleInputChange}
+                isLoading={isSubmitting}
+              />
 
-            <div className="h-px bg-gray-200" role="separator" aria-hidden="true"></div>
-
-            <LoginInfoSection 
-              formData={formData}
-              handleInputChange={handleInputChange}
-              isLoading={isSubmitting}
-            />
-
-            <div className="h-px bg-gray-200" role="separator" aria-hidden="true"></div>
-
-            <EmploymentDetailsSection 
-              formData={formData}
-              handleInputChange={handleInputChange}
-              isLoading={isSubmitting}
-            />
-
-            <div className="h-px bg-gray-200" role="separator" aria-hidden="true"></div>
-
-            <SalarySection 
-              formData={formData}
-              handleInputChange={handleInputChange}
-              salaryBreakdown={salaryBreakdown}
-              isLoading={isSubmitting}
-            />
-
-            {/* Spacer for fixed bottom buttons */}
-            <div className="h-20" aria-hidden="true"></div>
-          </form>
+              <Separator className="my-6" />
+              
+              <LoginInfoSection 
+                formData={formData}
+                handleInputChange={handleInputChange}
+                isLoading={isSubmitting}
+              />
+              
+              <Separator className="my-6" />
+              
+              <EmploymentDetailsSection 
+                formData={formData}
+                handleInputChange={handleInputChange}
+                isLoading={isSubmitting}
+              />
+              
+              <Separator className="my-6" />
+              
+              <SalarySection 
+                formData={formData}
+                handleInputChange={handleInputChange}
+                salaryBreakdown={salaryBreakdown}
+                isLoading={isSubmitting}
+              />
+            </form>
+          </div>
+          
+          <FormActions
+            onCancel={onClose}
+            onSubmit={handleFormSubmit}
+            isLoading={isSubmitting}
+            disabled={!formData.firstName.trim() || !formData.lastName.trim() || !formData.loginEmail.trim()}
+          />
         </div>
-        
-        <FormActions
-          onCancel={onClose}
-          onSubmit={handleFormSubmit}
-          isLoading={isSubmitting}
-          disabled={!formData.firstName.trim() || !formData.lastName.trim() || !formData.loginEmail.trim()}
-        />
-      </div>
-    </FormErrorBoundary>
-  );
+      </FormErrorBoundary>
+    );
+  };
 
   const DesktopContent = () => (
     <FormErrorBoundary onError={(error) => setFormError(error.message)}>
@@ -439,7 +495,14 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
     <ErrorBoundary>
       {isMobile ? (
         <Sheet open={isOpen} onOpenChange={onClose}>
-          <SheetContent side="bottom" className="h-[90vh] rounded-t-lg p-0">
+          <SheetContent 
+            side="bottom" 
+            className="h-[90vh] rounded-t-2xl p-0 border-0 bg-background"
+            style={{
+              maxHeight: '90vh',
+              height: 'min(90vh, 100dvh - 60px)'
+            }}
+          >
             <MobileContent />
           </SheetContent>
         </Sheet>
