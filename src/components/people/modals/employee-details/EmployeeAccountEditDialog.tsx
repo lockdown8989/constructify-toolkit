@@ -338,9 +338,9 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
       <FormErrorBoundary onError={(error) => setFormError(error.message)}>
         <div 
           ref={containerRef}
-          className="flex flex-col h-[90vh] bg-background relative mobile-viewport"
+          className="flex flex-col h-[90dvh] bg-background relative mobile-viewport"
           style={{ 
-            maxHeight: '90vh',
+            maxHeight: '90dvh',
             contain: 'layout style paint',
             overscrollBehavior: 'contain'
           }}
@@ -351,6 +351,7 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
             employeeName={employee?.name || 'Employee'} 
             onClose={onClose}
             isLoading={isSubmitting}
+            showCloseIcon={false}
           />
           
           <div 
@@ -500,11 +501,13 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
         <Sheet open={isOpen} onOpenChange={onClose}>
           <SheetContent 
             side="bottom" 
-            className="h-[90vh] rounded-t-2xl p-0 border-0 bg-background"
+            className="h-[90dvh] rounded-t-2xl p-0 border-0 bg-background"
             style={{
-              maxHeight: '90vh',
-              height: 'min(90vh, 100dvh - 60px)'
+              maxHeight: '90dvh',
+              height: 'min(90dvh, 100dvh - 60px)'
             }}
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            onCloseAutoFocus={(e) => e.preventDefault()}
           >
             <MobileContent />
           </SheetContent>

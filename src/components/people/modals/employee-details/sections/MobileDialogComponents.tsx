@@ -6,12 +6,14 @@ interface MobileHeaderProps {
   employeeName: string;
   onClose: () => void;
   isLoading?: boolean;
+  showCloseIcon?: boolean;
 }
 
 export const MobileHeader: React.FC<MobileHeaderProps> = ({
   employeeName,
   onClose,
-  isLoading = false
+  isLoading = false,
+  showCloseIcon = true
 }) => (
   <div className="flex-shrink-0 bg-background border-b border-border z-10 px-4 py-4">
     <div className="flex items-center justify-between">
@@ -30,16 +32,18 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
           </p>
         </div>
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onClose}
-        className="h-10 w-10 rounded-full android-touch-feedback touch-target"
-        disabled={isLoading}
-        aria-label="Close dialog"
-      >
-        <X className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-      </Button>
+      {showCloseIcon && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="h-10 w-10 rounded-full android-touch-feedback touch-target"
+          disabled={isLoading}
+          aria-label="Close dialog"
+        >
+          <X className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+        </Button>
+      )}
     </div>
   </div>
 );
