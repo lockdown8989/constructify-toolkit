@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useAuth } from '@/hooks/auth';
+import React from 'react';
+import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,29 +8,17 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Save, ArrowLeft } from 'lucide-react';
+import { Settings, Save, ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { usePayrollSettings } from '@/hooks/use-payroll-settings';
 
 const PayrollSettings = () => {
   const { user, isPayroll } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [settings, setSettings] = useState({
-    payPeriod: 'monthly',
-    overtimeRate: 1.5,
-    defaultWorkingHours: 40,
-    autoApprovePayroll: false,
-    emailNotifications: true,
-    taxRate: 20,
-    niRate: 12,
-    pensionRate: 5,
-    companyName: 'Your Company Ltd',
-    payrollCurrency: 'GBP',
-    paymentMethod: 'bank_transfer',
-    processingDelay: 2
-  });
+  const { settings, setSettings, isLoading, isSaving, save } = usePayrollSettings();
 
   if (!isPayroll) {
     return (
@@ -43,12 +31,20 @@ const PayrollSettings = () => {
     );
   }
 
-  const handleSave = () => {
-    // In a real app, this would save to the database
-    toast({
-      title: "Settings Saved",
-      description: "Payroll settings have been updated successfully.",
-    });
+  const handleSave = async () => {
+    const result = await save(settings);
+    if (result.success) {
+      toast({
+        title: "Settings Saved",
+        description: "Payroll settings have been updated successfully.",
+      });
+    } else {
+      toast({
+        title: "Save Failed",
+        description: result.error ?? "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleInputChange = (key: string, value: string | number | boolean) => {
@@ -75,9 +71,13 @@ const PayrollSettings = () => {
             <h1 className="text-2xl font-bold">Payroll Settings</h1>
           </div>
         </div>
-        <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-          <Save className="h-4 w-4 mr-2" />
-          Save Changes
+        <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700" disabled={isSaving}>
+          {isSaving ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4 mr-2" />
+          )}
+          {isSaving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
 
