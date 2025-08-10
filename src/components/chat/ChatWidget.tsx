@@ -31,7 +31,8 @@ export const ChatWidget = () => {
     sendMessage: sendChatMessage,
     sendAiMessage,
     clearMessages,
-    messagesEndRef
+    messagesEndRef,
+    currentEmployee
   } = useChat();
   
   const [isOpen, setIsOpen] = useState(false);
@@ -466,9 +467,8 @@ export const ChatWidget = () => {
         ) : (
           <div className="space-y-4 md:space-y-4">
             {chatMessages.map((msg) => {
-              // Get current user's employee ID for comparison
-              const isCurrentUser = msg.sender?.name && user && 
-                (msg.sender_type === 'human_admin' || msg.sender_type === 'human_employee');
+              // Determine if this message was sent by the current user
+              const isCurrentUser = msg.sender_id === currentEmployee?.id;
               
               return (
                 <div key={msg.id} className={`flex ${msg.sender_type === 'ai_bot' ? 'justify-start' : isCurrentUser ? 'justify-end' : 'justify-start'}`}>
