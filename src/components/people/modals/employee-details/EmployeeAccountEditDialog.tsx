@@ -424,6 +424,9 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
               size="sm"
             />
           </DialogTitle>
+          <div className="text-sm text-muted-foreground mt-1">
+            Update {employee?.name || 'employee'}'s account information and settings.
+          </div>
         </DialogHeader>
         
         <div className="overflow-y-auto px-6 py-4">
