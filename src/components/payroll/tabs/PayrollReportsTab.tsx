@@ -15,10 +15,100 @@ export const PayrollReportsTab: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<string>('current-month');
   const [reportType, setReportType] = useState<string>('summary');
 
+  // Color palette using design tokens where possible
+  const palette = [
+    'hsl(var(--primary))',
+    'hsl(var(--secondary))',
+    'hsl(var(--muted-foreground))',
+    'hsl(var(--accent))',
+    'hsl(var(--destructive))',
+    '#0ea5e9',
+    '#22c55e',
+    '#f59e0b',
+  ];
+
+  const getPeriodRange = (period: string) => {
+    const now = new Date();
+    const start = new Date();
+    const end = new Date();
+
+    switch (period) {
+      case 'last-month': {
+        start.setMonth(start.getMonth() - 1, 1);
+        start.setHours(0, 0, 0, 0);
+        end.setMonth(end.getMonth(), 0); // last day of previous month
+        end.setHours(23, 59, 59, 999);
+        break;
+      }
+      case 'quarter': {
+        const currentQuarter = Math.floor(now.getMonth() / 3);
+        start.setMonth(currentQuarter * 3, 1);
+        start.setHours(0, 0, 0, 0);
+        end.setMonth(start.getMonth() + 3, 0);
+        end.setHours(23, 59, 59, 999);
+        break;
+      }
+      case 'year': {
+        start.setMonth(0, 1);
+        start.setHours(0, 0, 0, 0);
+        end.setMonth(11, 31);
+        end.setHours(23, 59, 59, 999);
+        break;
+      }
+      case 'current-month':
+      default: {
+        start.setDate(1);
+        start.setHours(0, 0, 0, 0);
+        end.setMonth(end.getMonth() + 1, 0);
+        end.setHours(23, 59, 59, 999);
+        break;
+      }
+    }
+
+    return { startDate: start, endDate: end };
+  };
+
+  const buildChartData = (records: any[], period: string) => {
+    if (!records?.length) return [] as Array<{ label: string; amount: number }>;
+
+    const map = new Map<string, number>();
+
+    const isDaily = period === 'current-month' || period === 'last-month';
+
+    for (const r of records) {
+      const d = r.payment_date ? new Date(r.payment_date) : null;
+      if (!d) continue;
+      const key = isDaily
+        ? String(d.getDate())
+        : d.toLocaleString('en-GB', { month: 'short' });
+      map.set(key, (map.get(key) || 0) + (r.salary_paid || 0));
+    }
+
+    const arr = Array.from(map.entries())
+      .map(([label, amount]) => ({ label, amount }))
+      .sort((a, b) => {
+        const toNum = (s: string) => (isDaily ? Number(s) : new Date(`${s} 1, 2000`).getMonth());
+        return toNum(a.label) - toNum(b.label);
+      });
+
+    return arr;
+  };
+
+  const buildDepartmentData = (records: any[]) => {
+    if (!records?.length) return [] as Array<{ name: string; value: number }>;
+    const map = new Map<string, number>();
+    for (const r of records) {
+      const dept = r.employees?.department || 'Other';
+      map.set(dept, (map.get(dept) || 0) + (r.salary_paid || 0));
+    }
+    return Array.from(map.entries()).map(([name, value]) => ({ name, value }));
+  };
+
   // Fetch payroll data for reports with period filtering
   const { data: payrollData, isLoading } = useQuery({
     queryKey: ['payroll-reports', selectedPeriod],
     queryFn: async () => {
+      const { startDate, endDate } = getPeriodRange(selectedPeriod);
       const { data, error } = await supabase
         .from('payroll')
         .select(`
@@ -30,8 +120,10 @@ export const PayrollReportsTab: React.FC = () => {
             site
           )
         `)
+        .gte('payment_date', startDate.toISOString())
+        .lte('payment_date', endDate.toISOString())
         .order('payment_date', { ascending: false })
-        .limit(100); // Limit to prevent large data loads
+        .limit(200); // Reasonable cap for UI
       
       if (error) {
         console.error('Payroll reports error:', error);
@@ -43,22 +135,16 @@ export const PayrollReportsTab: React.FC = () => {
     refetchInterval: 60000, // Refresh every minute
   });
 
-  // Sample chart data
-  const monthlyData = [
-    { month: 'Jan', amount: 45000 },
-    { month: 'Feb', amount: 47000 },
-    { month: 'Mar', amount: 49000 },
-    { month: 'Apr', amount: 46000 },
-    { month: 'May', amount: 51000 },
-    { month: 'Jun', amount: 48000 },
-  ];
+  // Build charts from real data
+  const chartData = React.useMemo(
+    () => buildChartData(payrollData || [], selectedPeriod),
+    [payrollData, selectedPeriod]
+  );
 
-  const departmentData = [
-    { name: 'Finance', value: 35000, color: '#0088FE' },
-    { name: 'Engineering', value: 45000, color: '#00C49F' },
-    { name: 'Marketing', value: 25000, color: '#FFBB28' },
-    { name: 'HR', value: 20000, color: '#FF8042' },
-  ];
+  const deptData = React.useMemo(
+    () => buildDepartmentData(payrollData || []),
+    [payrollData]
+  );
 
   const handleExportReport = () => {
     toast({
@@ -82,12 +168,12 @@ export const PayrollReportsTab: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-4">
+            <div className="flex items-center gap-2 w-full md:w-auto">
               <label className="text-sm font-medium">Period:</label>
               <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
+                <SelectTrigger className="w-full md:w-48">
+                  <SelectValue placeholder="Select period" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="current-month">Current Month</SelectItem>
@@ -98,11 +184,11 @@ export const PayrollReportsTab: React.FC = () => {
               </Select>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full md:w-auto">
               <label className="text-sm font-medium">Report Type:</label>
               <Select value={reportType} onValueChange={setReportType}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
+                <SelectTrigger className="w-full md:w-48">
+                  <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="summary">Summary Report</SelectItem>
@@ -113,7 +199,7 @@ export const PayrollReportsTab: React.FC = () => {
               </Select>
             </div>
 
-            <Button onClick={handleExportReport} className="ml-auto">
+            <Button onClick={handleExportReport} className="md:ml-auto w-full md:w-auto">
               <Download className="h-4 w-4 mr-2" />
               Export Report
             </Button>
@@ -172,16 +258,16 @@ export const PayrollReportsTab: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Payroll Trend</CardTitle>
+            <CardTitle>Payroll Trend</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyData}>
+              <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => `£${value / 1000}k`} />
+                <XAxis dataKey="label" />
+                <YAxis tickFormatter={(value) => `£${Math.round(Number(value) / 1000)}k`} />
                 <Tooltip formatter={(value) => [formatCurrency(Number(value)), 'Amount']} />
-                <Bar dataKey="amount" fill="#3b82f6" />
+                <Bar dataKey="amount" fill={palette[0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -195,16 +281,16 @@ export const PayrollReportsTab: React.FC = () => {
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={departmentData}
+                  data={deptData}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
                   outerRadius={120}
                   dataKey="value"
-                  label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
+                  label={({ name, value }) => `${name}: ${formatCurrency(Number(value))}`}
                 >
-                  {departmentData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {deptData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={palette[index % palette.length]} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => formatCurrency(Number(value))} />

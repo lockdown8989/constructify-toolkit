@@ -20,6 +20,7 @@ import { PayrollApprovalsTab } from '@/components/payroll/tabs/PayrollApprovalsT
 import { formatCurrency } from '@/utils/format';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { Helmet } from 'react-helmet-async';
 
 const PayrollDashboard = () => {
   const { user, isPayroll } = useAuth();
