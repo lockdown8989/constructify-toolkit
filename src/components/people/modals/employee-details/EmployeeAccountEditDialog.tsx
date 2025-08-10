@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -424,9 +424,9 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
               size="sm"
             />
           </DialogTitle>
-          <div className="text-sm text-muted-foreground mt-1">
+          <DialogDescription>
             Update {employee?.name || 'employee'}'s account information and settings.
-          </div>
+          </DialogDescription>
         </DialogHeader>
         
         <div className="overflow-y-auto px-6 py-4">
@@ -518,4 +518,6 @@ const EmployeeAccountEditDialog: React.FC<EmployeeAccountEditDialogProps> = ({
   );
 };
 
-export default EmployeeAccountEditDialog;
+export default React.memo(EmployeeAccountEditDialog, (prev, next) => {
+  return prev.isOpen === next.isOpen && prev.onClose === next.onClose && (prev.employee?.id === next.employee?.id);
+});

@@ -192,4 +192,4 @@ const PeopleTable: React.FC<PeopleTableProps> = ({
   );
 };
 
-export default PeopleTable;
+export default React.memo(PeopleTable);

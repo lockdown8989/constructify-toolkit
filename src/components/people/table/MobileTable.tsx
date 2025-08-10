@@ -119,4 +119,4 @@ const MobileTable: React.FC<MobileTableProps> = ({
   );
 };
 
-export default MobileTable;
+export default React.memo(MobileTable);

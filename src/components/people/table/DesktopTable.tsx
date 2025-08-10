@@ -56,4 +56,4 @@ const DesktopTable: React.FC<DesktopTableProps> = ({
   );
 };
 
-export default DesktopTable;
+export default React.memo(DesktopTable);

@@ -19,7 +19,7 @@ interface PersonalInfoSectionProps {
   isLoading?: boolean;
 }
 
-export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
+const PersonalInfoSectionComponent: React.FC<PersonalInfoSectionProps> = ({
   formData,
   handleInputChange,
   isLoading = false
@@ -130,6 +130,8 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
   </div>
 );
 
+export const PersonalInfoSection = React.memo(PersonalInfoSectionComponent);
+
 interface LoginInfoSectionProps {
   formData: {
     loginEmail: string;
@@ -138,7 +140,7 @@ interface LoginInfoSectionProps {
   isLoading?: boolean;
 }
 
-export const LoginInfoSection: React.FC<LoginInfoSectionProps> = ({
+const LoginInfoSectionComponent: React.FC<LoginInfoSectionProps> = ({
   formData,
   handleInputChange,
   isLoading = false
@@ -199,6 +201,8 @@ export const LoginInfoSection: React.FC<LoginInfoSectionProps> = ({
   </div>
 );
 
+export const LoginInfoSection = React.memo(LoginInfoSectionComponent);
+
 interface EmploymentDetailsSectionProps {
   formData: {
     position: string;
@@ -213,7 +217,7 @@ interface EmploymentDetailsSectionProps {
   isLoading?: boolean;
 }
 
-export const EmploymentDetailsSection: React.FC<EmploymentDetailsSectionProps> = ({
+const EmploymentDetailsSectionComponent: React.FC<EmploymentDetailsSectionProps> = ({
   formData,
   handleInputChange,
   isLoading = false
@@ -307,6 +311,8 @@ export const EmploymentDetailsSection: React.FC<EmploymentDetailsSectionProps> =
   </div>
 );
 
+export const EmploymentDetailsSection = React.memo(EmploymentDetailsSectionComponent);
+
 interface SalarySectionProps {
   formData: {
     salary: number;
@@ -324,7 +330,7 @@ interface SalarySectionProps {
   isLoading?: boolean;
 }
 
-export const SalarySection: React.FC<SalarySectionProps> = ({
+const SalarySectionComponent: React.FC<SalarySectionProps> = ({
   formData,
   handleInputChange,
   salaryBreakdown,
@@ -424,3 +430,5 @@ export const SalarySection: React.FC<SalarySectionProps> = ({
     </div>
   </div>
 );
+
+export const SalarySection = React.memo(SalarySectionComponent);
