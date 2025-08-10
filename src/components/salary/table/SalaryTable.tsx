@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
@@ -20,14 +20,16 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
   const [isProcessing, setIsProcessing] = useState<{ [key: string]: boolean }>({});
   const { toast } = useToast();
 
-  const filteredEmployees = employees.filter(employee => {
-    const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         employee.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'All' || employee.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredEmployees = useMemo(() => {
+    return employees.filter(employee => {
+      const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           employee.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'All' || employee.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [employees, searchQuery, statusFilter]);
 
-  const handleDownloadPayslip = async (employee: typeof employees[0]) => {
+  const handleDownloadPayslip = useCallback(async (employee: typeof employees[0]) => {
     setIsProcessing(prev => ({ ...prev, [employee.id]: true }));
     try {
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated download
@@ -44,9 +46,9 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
     } finally {
       setIsProcessing(prev => ({ ...prev, [employee.id]: false }));
     }
-  };
+  }, [toast]);
 
-  const handleAttachToResume = async (employee: typeof employees[0]) => {
+  const handleAttachToResume = useCallback(async (employee: typeof employees[0]) => {
     setIsProcessing(prev => ({ ...prev, [employee.id]: true }));
     try {
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated attachment
@@ -63,14 +65,14 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
     } finally {
       setIsProcessing(prev => ({ ...prev, [employee.id]: false }));
     }
-  };
+  }, [toast]);
 
-  const statusCount = {
+  const statusCount = useMemo(() => ({
     All: employees.length,
     Paid: employees.filter(e => e.status === 'Paid').length,
     Pending: employees.filter(e => e.status === 'Pending').length,
     Absent: employees.filter(e => e.status === 'Absent').length
-  };
+  }), [employees]);
 
   return (
     <div className={cn("bg-white rounded-3xl p-6 card-shadow", className)}>
@@ -121,4 +123,4 @@ const SalaryTable: React.FC<SalaryTableProps> = ({
   );
 };
 
-export default SalaryTable;
+export default React.memo(SalaryTable);

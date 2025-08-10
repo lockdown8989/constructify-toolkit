@@ -1,10 +1,11 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import EmployeeMobileCard from './EmployeeMobileCard';
 import { Employee } from '../types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronDown } from 'lucide-react';
+import { useVirtualizedEmployees } from '@/hooks/use-optimized-employees';
 
 interface MobileTableProps {
   employees: Employee[];
@@ -32,7 +33,7 @@ const MobileTable: React.FC<MobileTableProps> = ({
   // Function to scroll to the top smoothly
   const scrollToTop = () => {
     if (scrollAreaRef.current) {
-      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement | null;
       if (viewport) {
         viewport.scrollTo({
           top: 0,
@@ -41,6 +42,32 @@ const MobileTable: React.FC<MobileTableProps> = ({
       }
     }
   };
+
+  // Virtualization setup for large lists
+  const ITEM_HEIGHT = 96;
+  const { getItemOffset, getVisibleRange, totalHeight } = useVirtualizedEmployees(employees as any, ITEM_HEIGHT);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(0);
+
+  useEffect(() => {
+    const viewport = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement | null;
+    if (!viewport) return;
+
+    const onScroll = () => setScrollTop(viewport.scrollTop);
+    const measure = () => setViewportHeight(viewport.clientHeight);
+
+    measure();
+    viewport.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', measure);
+
+    return () => {
+      viewport.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
+
+  const { start, end } = useMemo(() => getVisibleRange(scrollTop, viewportHeight), [scrollTop, viewportHeight, getVisibleRange]);
+  const topPadding = getItemOffset(start);
 
   // Add touch feedback for better mobile experience
   useEffect(() => {

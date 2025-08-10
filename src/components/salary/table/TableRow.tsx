@@ -15,7 +15,7 @@ interface TableRowProps {
   onAttachToResume: (employee: Employee) => Promise<void>;
 }
 
-export const TableRow: React.FC<TableRowProps> = ({
+const TableRowComponent: React.FC<TableRowProps> = ({
   employee,
   isProcessing,
   onSelectEmployee,
@@ -87,3 +87,6 @@ export const TableRow: React.FC<TableRowProps> = ({
     </tr>
   );
 };
+
+export const TableRow = React.memo(TableRowComponent);
+
