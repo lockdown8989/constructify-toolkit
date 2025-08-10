@@ -51,7 +51,7 @@ export const NavigationLinks = () => {
         <>
           <SidebarNavLink to="/payroll" icon={DollarSign} label="Payroll" isActive={isActive('/payroll')} isCollapsed={false} />
           <SidebarNavLink to="/payroll-dashboard" icon={BarChart3} label="Payroll Dashboard" isActive={isActive('/payroll-dashboard')} isCollapsed={false} />
-          <SidebarNavLink to="/payroll-reports" icon={FileText} label="Reports" isActive={isActive('/payroll-reports')} isCollapsed={false} />
+          <SidebarNavLink to="/payroll-reports" icon={FileText} label="Payroll Reports" isActive={isActive('/payroll-reports')} isCollapsed={false} />
           <SidebarNavLink to="/payslips" icon={FileText} label="Payslips" isActive={isActive('/payslips')} isCollapsed={false} />
         </>
       )}

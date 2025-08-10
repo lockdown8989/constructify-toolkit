@@ -27,13 +27,17 @@ export const PayrollStatsCards: React.FC<PayrollStatsCardsProps> = ({
   const { data: monthlyPayrollData } = useQuery({
     queryKey: ['monthly-payroll'],
     queryFn: async () => {
-      const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const monthStartStr = startOfMonth.toISOString().split('T')[0];
+      const nextMonthStartStr = nextMonthStart.toISOString().split('T')[0];
       
       const { data, error } = await supabase
         .from('payroll')
         .select('salary_paid, payment_status')
-        .gte('payment_date', `${currentMonth}-01`)
-        .lt('payment_date', `${currentMonth}-32`);
+        .gte('payment_date', monthStartStr)
+        .lt('payment_date', nextMonthStartStr);
       
       if (error) {
         console.error('Error fetching monthly payroll:', error);

@@ -114,7 +114,7 @@ const CommonSection = ({
           <MobileNavLink
             to="/payroll-reports"
             icon={FileText}
-            label="📊 Reports"
+            label="📊 Payroll Reports"
             onClick={onClose}
           />
           <MobileNavLink
