@@ -259,13 +259,13 @@ const AddShiftSheet: React.FC<AddShiftSheetProps> = ({
             </Label>
             <Select 
               value={formData.employee_id}
-              onValueChange={(value) => handleChange('employee_id', value)}
+              onValueChange={(value) => handleChange('employee_id', value === '__open__' ? '' : value)}
             >
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Leave empty for open shift" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Create as Open Shift</SelectItem>
+                <SelectItem value="__open__">Create as Open Shift</SelectItem>
                 {employees.map(employee => (
                   <SelectItem key={employee.id} value={employee.id}>
                     {employee.name}
