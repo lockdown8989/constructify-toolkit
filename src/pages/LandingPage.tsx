@@ -15,23 +15,13 @@ const LandingPage: React.FC = () => {
   const isMobile = useIsMobile();
   const [yearly, setYearly] = React.useState(false);
 
-  // Direct APK download from your website
-  const APK_DOWNLOAD_URL = '/downloads/teampulse.apk'; // Place your APK file in public/downloads/
-
   const handleStripe = () => {
     toast.info('Stripe checkout coming soon. This button will start Stripe.', { duration: 3500 });
   };
 
   const handleAppDownload = (platform: 'ios' | 'android') => {
     if (platform === 'android') {
-      // Create download link for APK
-      const link = document.createElement('a');
-      link.href = APK_DOWNLOAD_URL;
-      link.download = 'TeamPulse.apk';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success('TeamPulse APK download started!');
+      toast.info('To get the TeamPulse APK, please follow the setup instructions below.', { duration: 4000 });
     } else {
       toast.info('iOS app coming soon!');
     }
