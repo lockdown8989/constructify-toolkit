@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useAuth } from "@/hooks/use-auth";
 import DashboardHeader from "./DashboardHeader";
@@ -6,22 +5,20 @@ import DashboardStatsSection from "./DashboardStatsSection";
 import AttendanceOverview from "./AttendanceOverview";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Users, TrendingUp, FileText } from "lucide-react";
-
 interface PayrollDashboardProps {
   firstName: string;
   employeeCount?: number;
   hiredCount?: number;
 }
-
-const PayrollDashboard: React.FC<PayrollDashboardProps> = ({ 
+const PayrollDashboard: React.FC<PayrollDashboardProps> = ({
   firstName,
   employeeCount = 0,
-  hiredCount = 0 
+  hiredCount = 0
 }) => {
-  const { user } = useAuth();
-
-  return (
-    <div className="min-h-screen bg-gray-50">
+  const {
+    user
+  } = useAuth();
+  return <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <DashboardHeader firstName={firstName} />
         
@@ -78,7 +75,7 @@ const PayrollDashboard: React.FC<PayrollDashboardProps> = ({
           <AttendanceOverview />
           
           {/* Additional payroll-specific content can be added here */}
-          <Card>
+          <Card className="mx-0 py-[25px]">
             <CardHeader>
               <CardTitle>Payroll Processing</CardTitle>
             </CardHeader>
@@ -88,8 +85,6 @@ const PayrollDashboard: React.FC<PayrollDashboardProps> = ({
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default PayrollDashboard;
