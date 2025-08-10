@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Download, FileText, TrendingUp, Users, PoundSterling, Calendar } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/utils/format';
 import { useToast } from '@/hooks/use-toast';
 
 export const PayrollReportsTab: React.FC = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedPeriod, setSelectedPeriod] = useState<string>('current-month');
   const [reportType, setReportType] = useState<string>('summary');
 
@@ -26,6 +27,8 @@ export const PayrollReportsTab: React.FC = () => {
     '#22c55e',
     '#f59e0b',
   ];
+
+  const toISODate = (d: Date) => d.toISOString().split('T')[0];
 
   const getPeriodRange = (period: string) => {
     const now = new Date();
@@ -120,8 +123,8 @@ export const PayrollReportsTab: React.FC = () => {
             site
           )
         `)
-        .gte('payment_date', startDate.toISOString())
-        .lte('payment_date', endDate.toISOString())
+        .gte('payment_date', toISODate(startDate))
+        .lte('payment_date', toISODate(endDate))
         .order('payment_date', { ascending: false })
         .limit(200); // Reasonable cap for UI
       
@@ -145,6 +148,20 @@ export const PayrollReportsTab: React.FC = () => {
     () => buildDepartmentData(payrollData || []),
     [payrollData]
   );
+
+  // Realtime updates: refresh charts on payroll changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('payroll-reports-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payroll' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['payroll-reports'] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const handleExportReport = () => {
     toast({
@@ -261,15 +278,21 @@ export const PayrollReportsTab: React.FC = () => {
             <CardTitle>Payroll Trend</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" />
-                <YAxis tickFormatter={(value) => `£${Math.round(Number(value) / 1000)}k`} />
-                <Tooltip formatter={(value) => [formatCurrency(Number(value)), 'Amount']} />
-                <Bar dataKey="amount" fill={palette[0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {chartData.length === 0 ? (
+              <div className="h-[300px] flex items-center justify-center text-sm text-muted-foreground">
+                No payroll records for the selected period.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartData} className="animate-fade-in">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="label" />
+                  <YAxis tickFormatter={(value) => `£${Math.round(Number(value) / 1000)}k`} />
+                  <Tooltip wrapperStyle={{ zIndex: 1000 }} formatter={(value) => [formatCurrency(Number(value)), 'Amount']} />
+                  <Bar dataKey="amount" fill={palette[0]} isAnimationActive animationDuration={700} animationEasing="ease-out" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -278,24 +301,33 @@ export const PayrollReportsTab: React.FC = () => {
             <CardTitle>Payroll by Department</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={deptData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={120}
-                  dataKey="value"
-                  label={({ name, value }) => `${name}: ${formatCurrency(Number(value))}`}
-                >
-                  {deptData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={palette[index % palette.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-              </PieChart>
-            </ResponsiveContainer>
+            {deptData.length === 0 ? (
+              <div className="h-[300px] flex items-center justify-center text-sm text-muted-foreground">
+                No departmental payroll data for the selected period.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart className="animate-fade-in">
+                  <Pie
+                    data={deptData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={120}
+                    dataKey="value"
+                    isAnimationActive
+                    animationDuration={700}
+                    animationEasing="ease-out"
+                    label={({ name, value }) => `${name}: ${formatCurrency(Number(value))}`}
+                  >
+                    {deptData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={palette[index % palette.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip wrapperStyle={{ zIndex: 1000 }} formatter={(value) => formatCurrency(Number(value))} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
