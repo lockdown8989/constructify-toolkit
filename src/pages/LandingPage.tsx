@@ -566,7 +566,7 @@ const LandingPage: React.FC = () => {
                       <p className="text-sm text-muted-foreground">{plan.subtitle}</p>
                       <div className="space-y-1">
                         <div className="text-5xl font-bold">
-                          ${price}
+                          £{price}
                           <span className="text-lg text-muted-foreground">/monthly</span>
                         </div>
                       </div>
