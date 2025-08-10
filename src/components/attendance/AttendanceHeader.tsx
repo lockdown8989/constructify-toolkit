@@ -107,7 +107,7 @@ const AttendanceHeader = ({
         </div>
       </div>
       
-      {isMobile ? <div className="flex justify-end gap-2 bg-slate-50 text-slate-950">
+      {isMobile ? <div className="flex justify-end gap-2 text-slate-900 bg-slate-50">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="text-slate-950 bg-slate-50">
@@ -126,10 +126,10 @@ const AttendanceHeader = ({
             </DropdownMenuContent>
           </DropdownMenu>
         </div> : <div className="flex items-center gap-2 self-end md:self-auto">
-          <Button variant="outline" onClick={handleViewDetails} className="text-slate-50">
+          <Button variant="outline" className="text-gray-600" onClick={handleViewDetails}>
             View Details
           </Button>
-          <Button variant="outline" onClick={handleExportData} className="text-slate-50">
+          <Button variant="outline" className="text-gray-600" onClick={handleExportData}>
             Export Data
           </Button>
           <Button variant="ghost" size="icon">
