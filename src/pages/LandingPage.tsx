@@ -15,6 +15,9 @@ const LandingPage: React.FC = () => {
   const isMobile = useIsMobile();
   const [yearly, setYearly] = React.useState(false);
 
+  // Provide your published Google Play URL here (e.g., https://play.google.com/store/apps/details?id=com.company.app)
+  const PLAY_STORE_URL = '';
+
   const handleStripe = () => {
     toast.info('Stripe checkout coming soon. This button will start Stripe.', { duration: 3500 });
   };
@@ -25,7 +28,7 @@ const LandingPage: React.FC = () => {
 
   const faqs = [
     { q: 'What is TeamPulse?', a: 'TeamPulse is a comprehensive employee management platform that streamlines scheduling, attendance, payroll, and team collaboration with real-time synchronization.' },
-    { q: 'Is it mobile-friendly?', a: 'Absolutely! TeamPulse is designed mobile-first with native iOS and Android apps, plus a responsive web interface optimized for all devices.' },
+    { q: 'Is it mobile-friendly?', a: 'Absolutely! TeamPulse is designed mobile-first with an Android app available now (iOS coming soon), plus a responsive web interface optimized for all devices.' },
     { q: 'How do I get started?', a: 'Simply click "Get Started" to create your free account. Our guided onboarding will help you set up your team and create your first schedule in minutes.' },
     { q: 'Do you support payroll integration?', a: 'Yes! Our platform automatically calculates payroll from attendance data, overtime hours, and leave records with instant payslip generation.' },
     { q: 'Is TeamPulse GDPR compliant?', a: 'We take data privacy seriously. TeamPulse is fully GDPR compliant with built-in consent management, data portability, and deletion tools.' },
@@ -605,7 +608,7 @@ const LandingPage: React.FC = () => {
           <div className="text-center mb-16 space-y-6">
             <h2 className="text-4xl md:text-5xl font-bold">Download Our Mobile App</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Take TeamPulse with you anywhere. Available on iOS and Android devices.
+              Take TeamPulse with you anywhere. Android available today; iOS coming soon.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
@@ -614,12 +617,14 @@ const LandingPage: React.FC = () => {
               variant="outline" 
               className="flex items-center gap-3 px-8 py-6 text-base bg-black text-white hover:bg-black/90 border-black rounded-xl"
               onClick={() => handleAppDownload('ios')}
+              disabled
+              aria-disabled="true"
             >
               <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                 <Download className="w-5 h-5 text-black" />
               </div>
               <div className="text-left">
-                <div className="text-xs text-gray-300">Download on the</div>
+                <div className="text-xs text-gray-300">COMING SOON</div>
                 <div className="font-semibold">App Store</div>
               </div>
             </Button>
@@ -627,7 +632,13 @@ const LandingPage: React.FC = () => {
               size="lg" 
               variant="outline" 
               className="flex items-center gap-3 px-8 py-6 text-base bg-black text-white hover:bg-black/90 border-black rounded-xl"
-              onClick={() => handleAppDownload('android')}
+              onClick={() => {
+                if (PLAY_STORE_URL) {
+                  window.open(PLAY_STORE_URL, '_blank', 'noopener,noreferrer');
+                } else {
+                  toast.info('Google Play link coming soon');
+                }
+              }}
             >
               <div className="w-8 h-8 bg-gradient-to-br from-green-400 via-blue-500 to-red-500 rounded-lg flex items-center justify-center">
                 <Download className="w-5 h-5 text-white" />
