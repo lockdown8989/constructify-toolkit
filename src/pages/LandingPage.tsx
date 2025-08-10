@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, CalendarDays, UserCheck, DollarSign, FileText } from 'lucide-react';
+import { Clock, CalendarDays, UserCheck, DollarSign, FileText, ChevronDown, Users, TrendingUp, Shield, Smartphone, Download } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
@@ -19,12 +19,19 @@ const LandingPage: React.FC = () => {
     toast.info('Stripe checkout coming soon. This button will start Stripe.', { duration: 3500 });
   };
 
+  const handleAppDownload = (platform: 'ios' | 'android') => {
+    toast.info(`${platform === 'ios' ? 'App Store' : 'Google Play'} download coming soon!`);
+  };
+
   const faqs = [
-    { q: 'What is the Synchronized Employee Management System?', a: 'An all-in-one HR platform to manage shifts, attendance, leave, payroll, and payslips with synchronized data across modules.' },
-    { q: 'Is it mobile friendly?', a: 'Yes. The interface is designed mobile-first with large touch targets, smooth animations, and responsive layouts.' },
-    { q: 'How do I get started?', a: 'Click Get Started to create an account, then follow the onboarding to import employees and set up your first schedule.' },
-    { q: 'Does it support payroll?', a: 'Yes. Payroll is calculated automatically from attendance, overtime, and leave data with payslip generation.' },
-    { q: 'Is it GDPR compliant?', a: 'We provide tools and policies to help you stay compliant, including data access, deletion, and cookie consent controls.' },
+    { q: 'What is TeamPulse?', a: 'TeamPulse is a comprehensive employee management platform that streamlines scheduling, attendance, payroll, and team collaboration with real-time synchronization.' },
+    { q: 'Is it mobile-friendly?', a: 'Absolutely! TeamPulse is designed mobile-first with native iOS and Android apps, plus a responsive web interface optimized for all devices.' },
+    { q: 'How do I get started?', a: 'Simply click "Get Started" to create your free account. Our guided onboarding will help you set up your team and create your first schedule in minutes.' },
+    { q: 'Do you support payroll integration?', a: 'Yes! Our platform automatically calculates payroll from attendance data, overtime hours, and leave records with instant payslip generation.' },
+    { q: 'Is TeamPulse GDPR compliant?', a: 'We take data privacy seriously. TeamPulse is fully GDPR compliant with built-in consent management, data portability, and deletion tools.' },
+    { q: 'What kind of support do you offer?', a: 'We provide 24/7 email support for all plans, priority support for Pro users, and dedicated account management for Enterprise customers.' },
+    { q: 'Can I cancel anytime?', a: 'Yes, you can cancel your subscription at any time with no questions asked. Your data remains accessible during your current billing period.' },
+    { q: 'Do you offer a free trial?', a: 'Yes! Get started with our free plan that includes up to 5 employees and basic features. No credit card required.' },
   ];
 
   const faqJsonLd = {
@@ -38,171 +45,447 @@ const LandingPage: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <Helmet>
-        <title>Synchronized Employee Management System</title>
-        <meta name="description" content="Manage shifts, attendance, leave, payroll and payslips in one synchronized HR platform." />
+        <title>TeamPulse - Modern Employee Management Platform</title>
+        <meta name="description" content="Boost productivity with better employee management. Modern scheduling, attendance tracking, and payroll automation in one platform." />
+        <meta name="keywords" content="employee management, scheduling software, attendance tracking, payroll automation, team collaboration" />
         <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : ''} />
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
       </Helmet>
 
-      <header className="relative">
+      <header className="relative backdrop-blur-sm bg-background/80 border-b border-border/50 sticky top-0 z-50">
         <nav className="responsive-container py-4 md:py-6 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 hover-scale" aria-label="Home">
-            <div className="h-8 w-8 rounded-md bg-primary/15 border border-primary/20" />
-            <span className="font-semibold">Synchronized EMS</span>
+          <Link to="/" className="flex items-center gap-2 hover-scale" aria-label="TeamPulse Home">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+              <span className="text-white font-bold text-lg">T</span>
+            </div>
+            <span className="font-bold text-xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">TeamPulse</span>
           </Link>
-          <div className="hidden md:flex items-center gap-2">
-            <Link to="#features" className="story-link px-2 py-1">Features</Link>
-            <Link to="#pricing" className="story-link px-2 py-1">Pricing</Link>
-            <Link to="#faq" className="story-link px-2 py-1">FAQ</Link>
-            <Link to="/privacy" className="px-2 py-1">Privacy</Link>
+          <div className="hidden md:flex items-center gap-8">
+            <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</a>
+            <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+            <a href="#resources" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Resources</a>
+            <a href="#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {!isAuthenticated ? (
               <>
-                <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
-                  <Link to="/auth">Sign in</Link>
+                <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
+                  <Link to="/auth">Log in</Link>
                 </Button>
-                <Button asChild size="sm">
-                  <Link to="/auth?tab=signup">Get Started</Link>
+                <Button asChild size="sm" className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg">
+                  <Link to="/auth?tab=signup">Sign up</Link>
                 </Button>
               </>
             ) : (
               <>
                 <Button asChild size="sm">
-                  <Link to="/schedule">{isManager ? 'Manage Schedule' : 'My Schedule'}</Link>
+                  <Link to="/dashboard">Dashboard</Link>
                 </Button>
                 <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
-                  <Link to="/dashboard">Dashboard</Link>
+                  <Link to="/schedule">{isManager ? 'Manage' : 'Schedule'}</Link>
                 </Button>
               </>
             )}
           </div>
         </nav>
-
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <div className="pointer-events-none mx-auto max-w-5xl md:max-w-6xl lg:max-w-7xl px-4">
-            <div className="h-48 md:h-72 w-full bg-gradient-to-b from-primary/20 to-transparent rounded-b-[2rem] blur-2xl" />
-          </div>
-        </div>
       </header>
 
       <main>
-        {/* Hero */}
-        <section className="responsive-container pt-8 md:pt-16 text-center">
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight animate-fade-in">
-            Synchronized Employee Management System
-          </h1>
-          <p className="mt-4 md:mt-6 text-base md:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in">
-            Manage shifts, attendance, leave, payroll and payslips — all in one modern, mobile‑first HR platform.
-          </p>
-          <div className="mt-6 md:mt-8 flex items-center justify-center gap-3">
-            {isAuthenticated ? (
-              <>
-                <Button asChild size={isMobile ? 'sm' : 'lg'}>
-                  <Link to="/dashboard">Open Dashboard</Link>
-                </Button>
-                <Button asChild variant="outline" size={isMobile ? 'sm' : 'lg'}>
-                  <Link to="/schedule">{isManager ? 'Manage Schedule' : 'View Schedule'}</Link>
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button asChild size={isMobile ? 'sm' : 'lg'}>
-                  <Link to="/auth?tab=signup">Get Started Free</Link>
-                </Button>
-                <Button variant="outline" size={isMobile ? 'sm' : 'lg'} onClick={handleStripe}>
-                  Subscribe (Stripe)
-                </Button>
-              </>
-            )}
-          </div>
-          <p className="mt-3 text-xs md:text-sm text-muted-foreground">No credit card required to start. Cancel anytime.</p>
-        </section>
-
-        {/* Logo cloud + social proof */}
-        <section aria-label="Trusted by companies" className="responsive-container mt-12 md:mt-16">
-          <p className="text-center text-sm md:text-base text-muted-foreground">Join 4,000+ companies already growing</p>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 opacity-70">
-            {['Layers','Sisyphus','Circooles','Catalog','Quotient'].map((brand) => (
-              <span key={brand} className="text-sm md:text-base">{brand}</span>
-            ))}
-          </div>
-        </section>
-
-        {/* Stats */}
-        <section aria-label="Platform usage stats" className="responsive-container mt-10 md:mt-14">
-          <div className="mx-auto max-w-3xl text-center rounded-xl border bg-card p-6 md:p-8">
-            <div className="text-3xl md:text-4xl font-bold">500K+</div>
-            <p className="mt-1 text-sm md:text-base text-muted-foreground">Active users across industries</p>
-          </div>
-        </section>
-
-        {/* Best Platform section */}
-        <section className="responsive-container mt-12 md:mt-20">
-          <div className="text-center mb-6 md:mb-8">
-            <h2 className="text-2xl md:text-3xl font-semibold">Best Platform for Employee Management</h2>
-            <p className="text-sm md:text-base text-muted-foreground">Advanced features tailored to modern teams.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { title: 'Menu that makes management easy', desc: 'Experience seamless, stress‑free control in one hub.' },
-              { title: 'Control the duty to be carried out', desc: 'Achieve goals with precision and clear responsibilities.' },
-              { title: 'View additional profit status charts', desc: 'Unlock insights with our enhanced reports.' },
-            ].map((item) => (
-              <Card key={item.title} className="hover:-translate-y-1 transition-transform">
-                <CardHeader>
-                  <CardTitle className="text-base md:text-lg">{item.title}</CardTitle>
-                  <CardDescription>{item.desc}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-28 md:h-36 rounded-md bg-gradient-to-br from-primary/10 to-primary/5 border" aria-hidden="true"></div>
-                  <Button variant="link" className="mt-3 px-0">Read details</Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* Regulations section */}
-        <section className="responsive-container mt-12 md:mt-20 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-semibold">Manage Employee Schedules According to Regulations</h2>
-            <p className="mt-2 text-sm md:text-base text-muted-foreground">Maintain fair, compliant schedules and employee well‑being.</p>
-            <div className="mt-4">
-              <Button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}>Learn more</Button>
+        {/* Hero Section */}
+        <section className="relative overflow-hidden">
+          <div className="responsive-container pt-20 pb-16 md:pt-28 md:pb-24">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="text-left space-y-8 animate-fade-in">
+                <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight">
+                  Increase Productivity Through{' '}
+                  <span className="bg-gradient-to-r from-primary via-primary to-primary/70 bg-clip-text text-transparent">
+                    Better Employee Management
+                  </span>
+                </h1>
+                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-lg">
+                  By implementing these methods, you can boost productivity, reduce turnover, and ultimately achieve your business objectives with a more engaged and high-performing team.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {isAuthenticated ? (
+                    <>
+                      <Button asChild size="lg" className="bg-gradient-to-r from-primary to-primary/90 shadow-lg text-base px-8">
+                        <Link to="/dashboard">Open Dashboard</Link>
+                      </Button>
+                      <Button asChild variant="outline" size="lg" className="text-base px-8">
+                        <Link to="/schedule">View Schedule</Link>
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button asChild size="lg" className="bg-gradient-to-r from-primary to-primary/90 shadow-lg text-base px-8 hover:shadow-xl transition-all">
+                        <Link to="/auth?tab=signup">Get started</Link>
+                      </Button>
+                      <Button variant="outline" size="lg" className="text-base px-8" onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}>
+                        See demo
+                      </Button>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-4 pt-4">
+                  <div className="flex -space-x-2">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-background flex items-center justify-center text-sm">
+                        {i === 3 ? '👤' : ''}
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <p className="text-3xl font-bold">500K+</p>
+                    <p className="text-sm text-muted-foreground">Currently active users from various countries. Very helpful in work</p>
+                  </div>
+                </div>
+              </div>
+              <div className="relative animate-scale-in">
+                <div className="relative bg-white rounded-2xl shadow-2xl border overflow-hidden">
+                  {/* Mock Dashboard */}
+                  <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-4 border-b">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded bg-primary/20"></div>
+                        <span className="font-semibold text-sm">Employee Dashboard</span>
+                      </div>
+                      <div className="flex gap-1">
+                        <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                        <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                        <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="bg-gradient-to-br from-orange-100 to-orange-50 p-3 rounded-lg">
+                        <div className="text-xs text-orange-600 mb-1">Profit</div>
+                        <div className="font-bold text-orange-800">$30,666</div>
+                        <div className="text-xs text-green-600">+2.5%</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-blue-100 to-blue-50 p-3 rounded-lg">
+                        <div className="text-xs text-blue-600 mb-1">Survey</div>
+                        <div className="space-y-1">
+                          <div className="w-full bg-blue-200 h-1 rounded-full"></div>
+                          <div className="w-3/4 bg-blue-300 h-1 rounded-full"></div>
+                          <div className="w-1/2 bg-blue-400 h-1 rounded-full"></div>
+                        </div>
+                      </div>
+                      <div className="bg-gradient-to-br from-purple-100 to-purple-50 p-3 rounded-lg">
+                        <div className="text-xs text-purple-600 mb-1">Team</div>
+                        <div className="flex -space-x-1">
+                          <div className="w-4 h-4 rounded-full bg-purple-400"></div>
+                          <div className="w-4 h-4 rounded-full bg-purple-500"></div>
+                          <div className="w-4 h-4 rounded-full bg-purple-600"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="text-sm font-semibold">List Employee</div>
+                      <div className="space-y-2">
+                        {['Bruno Cooper', 'Amy Hopkins', 'Mia', 'Jason Lee', 'Charley Mary'].map((name, i) => (
+                          <div key={name} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/30 to-primary/10"></div>
+                              <span className="text-sm">{name}</span>
+                            </div>
+                            <div className={`text-xs px-2 py-1 rounded-full ${i % 2 === 0 ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                              {i % 2 === 0 ? 'Available' : 'Busy'}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Floating elements */}
+                <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-xl"></div>
+                <div className="absolute -bottom-6 -left-6 w-16 h-16 bg-gradient-to-br from-primary/15 to-transparent rounded-full blur-lg"></div>
+              </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4" aria-hidden="true">
-            <div className="h-28 rounded-xl bg-gradient-to-br from-primary/15 to-transparent border" />
-            <div className="h-28 rounded-xl bg-gradient-to-br from-primary/10 to-transparent border" />
-            <div className="col-span-2 h-28 rounded-xl bg-gradient-to-br from-primary/20 to-transparent border" />
+        </section>
+
+        {/* Company Logos */}
+        <section aria-label="Trusted by companies" className="responsive-container py-16 border-b border-border/20">
+          <div className="text-center mb-12">
+            <p className="text-muted-foreground text-lg">Join 4,000+ companies already growing</p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-12 opacity-60">
+            {['Layers', 'Sisyphus', 'Circooles', 'Catalog', 'Quotient'].map((brand) => (
+              <div key={brand} className="text-xl font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                {brand}
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* Feature grid */}
-        <section id="features" className="responsive-container mt-12 md:mt-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <FeatureCard icon={<Clock className="h-8 w-8" />} title="Time & Attendance" description="Track time, automate attendance, and manage clock-in/clock-out with ease." />
-            <FeatureCard icon={<CalendarDays className="h-8 w-8" />} title="Shift Management" description="Create, assign and manage shifts with notifications and conflict detection." />
-            <FeatureCard icon={<UserCheck className="h-8 w-8" />} title="Leave Management" description="Streamlined leave requests, approvals, and balance tracking integrated with shifts." />
-            <FeatureCard icon={<DollarSign className="h-8 w-8" />} title="Payroll Processing" description="Automatically calculate salaries from attendance, overtime and leave data." />
-            <FeatureCard icon={<FileText className="h-8 w-8" />} title="Payslip Generation" description="Generate and distribute digital payslips with clear breakdowns and tax info." />
-            <FeatureCard icon={<Clock className="h-8 w-8" />} title="Synchronized Data" description="All modules stay in sync for consistent, accurate records across the platform." />
+        {/* Best Platform Section */}
+        <section className="responsive-container py-24">
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-4xl md:text-5xl font-bold">Best Platform for Employee Management</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              With advanced features tailored to meet the unique needs of modern businesses, 
+              you can now achieve new levels of efficiency and teamwork.
+            </p>
+            <Button size="lg" className="mt-8 bg-gradient-to-r from-primary to-primary/90 shadow-lg">
+              Learn more
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-20">
+            <Card className="group hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-xl border-0 bg-gradient-to-br from-card to-card/50">
+              <CardHeader className="pb-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-4">
+                  <Users className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">Menu that makes management easy</CardTitle>
+                <CardDescription className="text-base leading-relaxed">
+                  Experience the future of seamless and stress-free control in one convenient menu.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-48 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border flex items-center justify-center mb-4">
+                  <div className="w-24 h-24 bg-blue-200 rounded-lg flex items-center justify-center">
+                    <Users className="w-12 h-12 text-blue-600" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 text-primary font-semibold">Read details</Button>
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-xl border-0 bg-gradient-to-br from-card to-card/50">
+              <CardHeader className="pb-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-4">
+                  <Shield className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">Control the duty to be carried out</CardTitle>
+                <CardDescription className="text-base leading-relaxed">
+                  Achieve your goals with precision by taking control of your duties today.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-48 rounded-xl bg-gradient-to-br from-green-50 to-green-100 border flex items-center justify-center mb-4">
+                  <div className="w-24 h-24 bg-green-200 rounded-lg flex items-center justify-center">
+                    <Shield className="w-12 h-12 text-green-600" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 text-primary font-semibold">Read details</Button>
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-xl border-0 bg-gradient-to-br from-card to-card/50">
+              <CardHeader className="pb-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-4">
+                  <TrendingUp className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-xl">View additional profit status charts</CardTitle>
+                <CardDescription className="text-base leading-relaxed">
+                  Unlock a wealth of financial knowledge at your fingertips with our enhanced profit.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-48 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 border flex items-center justify-center mb-4">
+                  <div className="w-24 h-24 bg-purple-200 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-12 h-12 text-purple-600" />
+                  </div>
+                </div>
+                <Button variant="link" className="p-0 text-primary font-semibold">Read details</Button>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
-        <section id="pricing" className="responsive-container mt-16 md:mt-24">
-          <div className="text-center mb-6 md:mb-8">
-            <h2 className="text-2xl md:text-3xl font-semibold">Our Plans Suit Your Business</h2>
-            <p className="text-sm md:text-base text-muted-foreground">Choose a plan that fits your team. Stripe checkout coming soon.</p>
-            <div className="mt-4 inline-flex items-center rounded-full border p-1">
+        {/* Schedule Management Section */}
+        <section className="responsive-container py-24 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-3xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="relative">
+              <div className="bg-white rounded-2xl shadow-xl p-6 border">
+                <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-4 rounded-lg mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold">Schedule</h3>
+                    <Button variant="ghost" size="sm">×</Button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Name</span>
+                      <span className="text-muted-foreground">Team</span>
+                    </div>
+                    <hr className="border-border/50" />
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <span className="text-sm font-medium">Night shift</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded-full">Pending</span>
+                      <Button variant="ghost" size="sm">✎</Button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <span className="text-sm font-medium">Morning shift</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full">Active</span>
+                      <Button variant="ghost" size="sm">✎</Button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <span className="text-sm font-medium">Morning shift</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded-full">Active</span>
+                      <Button variant="ghost" size="sm">✎</Button>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-6 pt-4 border-t">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                      <span className="text-sm">Morning shift</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                      <span className="text-sm">Night shift</span>
+                    </div>
+                  </div>
+                  <Button className="w-full bg-gradient-to-r from-primary to-primary/90">Add</Button>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-8">
+              <h2 className="text-4xl md:text-5xl font-bold leading-tight">
+                Manage Employee Schedules According to Regulations
+              </h2>
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                Discover the best practices for maintaining fair and compliant schedules while ensuring your employees' well-being.
+              </p>
+              <Button size="lg" className="bg-gradient-to-r from-primary to-primary/90 shadow-lg text-lg px-8">
+                Learn more
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* Real-time Monitoring Section */}
+        <section id="demo" className="responsive-container py-24">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="space-y-8">
+              <h2 className="text-4xl md:text-5xl font-bold leading-tight">
+                Monitor Project Progress in Real-time
+              </h2>
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                With up-to-the-minute data and visual insights, you can effortlessly track tasks, milestones, and team performance as they happen.
+              </p>
+              <Button size="lg" className="bg-gradient-to-r from-primary to-primary/90 shadow-lg text-lg px-8">
+                Learn more
+              </Button>
+            </div>
+            <div className="relative">
+              <div className="bg-white rounded-2xl shadow-xl p-6 border">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-semibold text-lg">Current Project</h3>
+                  <Button variant="link" className="text-primary text-sm">See all ›</Button>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium">SaaS Finance</span>
+                      <span className="text-xs bg-green-200 text-green-800 px-3 py-1 rounded-full">In progress</span>
+                    </div>
+                    <div className="text-sm text-muted-foreground mb-3">
+                      <div className="flex justify-between">
+                        <span>Project manager</span>
+                        <span>Design lead</span>
+                      </div>
+                      <div className="flex justify-between mt-1">
+                        <div className="flex items-center gap-1">
+                          <div className="w-5 h-5 rounded-full bg-green-400"></div>
+                          <span>Devon Lane</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="w-5 h-5 rounded-full bg-blue-400"></div>
+                          <span>Irma</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      <div className="flex justify-between">
+                        <span>Start date</span>
+                        <span>Due date</span>
+                      </div>
+                      <div className="flex justify-between font-medium">
+                        <span>4 Jan, 2023</span>
+                        <span>31 Jan, 2023</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Features Grid */}
+        <section id="features" className="responsive-container py-24 bg-gradient-to-br from-background to-primary/5 rounded-3xl">
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-4xl md:text-5xl font-bold">Powerful Features</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Everything you need to manage your team efficiently
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <FeatureCard 
+              icon={<Clock className="h-10 w-10" />} 
+              title="Time & Attendance" 
+              description="Track time, automate attendance, and manage clock-in/clock-out with precision and ease." 
+            />
+            <FeatureCard 
+              icon={<CalendarDays className="h-10 w-10" />} 
+              title="Smart Scheduling" 
+              description="Create, assign and manage shifts with intelligent notifications and automatic conflict detection." 
+            />
+            <FeatureCard 
+              icon={<UserCheck className="h-10 w-10" />} 
+              title="Leave Management" 
+              description="Streamlined leave requests, approvals, and balance tracking seamlessly integrated with shifts." 
+            />
+            <FeatureCard 
+              icon={<DollarSign className="h-10 w-10" />} 
+              title="Payroll Automation" 
+              description="Automatically calculate salaries from attendance, overtime and leave data with zero errors." 
+            />
+            <FeatureCard 
+              icon={<FileText className="h-10 w-10" />} 
+              title="Digital Payslips" 
+              description="Generate and distribute professional payslips with detailed breakdowns and tax information." 
+            />
+            <FeatureCard 
+              icon={<Smartphone className="h-10 w-10" />} 
+              title="Mobile Ready" 
+              description="Access everything from anywhere with our native mobile apps for iOS and Android devices." 
+            />
+          </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section id="pricing" className="responsive-container py-24">
+          <div className="text-center mb-16 space-y-6">
+            <h2 className="text-4xl md:text-5xl font-bold">Our Plans Suit Your Business</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Choose the plan that fits your business best and take a step closer to achieving your objectives with ease.
+            </p>
+            <div className="inline-flex items-center rounded-full bg-muted p-1 shadow-inner">
               <button
                 type="button"
                 aria-pressed={!yearly}
                 onClick={() => setYearly(false)}
-                className={`px-4 py-1.5 rounded-full text-sm ${!yearly ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                  !yearly 
+                    ? 'bg-background text-foreground shadow-sm' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
               >
                 Monthly
               </button>
@@ -210,37 +493,116 @@ const LandingPage: React.FC = () => {
                 type="button"
                 aria-pressed={yearly}
                 onClick={() => setYearly(true)}
-                className={`px-4 py-1.5 rounded-full text-sm ${yearly ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
+                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                  yearly 
+                    ? 'bg-background text-foreground shadow-sm' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
               >
                 Annually
               </button>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">{yearly ? 'Save about 20% with annual billing' : 'Switch to annual and save ~20%'}</p>
+            <p className="text-sm text-muted-foreground">
+              {yearly ? 'Save 20% with annual billing' : 'Switch to annual and save 20%'}
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {[
-              { name: 'Starter', monthly: 0, features: ['Up to 5 employees', 'Basic scheduling', 'Email support'] },
-              { name: 'Pro', monthly: 49, features: ['Up to 50 employees', 'Attendance & leave', 'Priority support'] },
-              { name: 'Business', monthly: 99, features: ['Unlimited employees', 'Payroll & payslips', 'SLA support'] },
+              { 
+                name: 'Basic', 
+                subtitle: 'For individuals',
+                monthly: 10, 
+                popular: false,
+                description: 'This plan offers the essential features to start your journey to success without spending a lot of money.',
+                features: [
+                  'All analytics features',
+                  'Normal support',
+                  'Up to 3 team members'
+                ]
+              },
+              { 
+                name: 'Pro', 
+                subtitle: 'For startups',
+                monthly: 50, 
+                popular: true,
+                description: 'It is the choice of professional and businesses who want to improve their performance and capabilities.',
+                features: [
+                  'All analytics features',
+                  'Premium support',
+                  'Up to 40 team members'
+                ]
+              },
+              { 
+                name: 'Enterprise', 
+                subtitle: 'For big companies',
+                monthly: 100, 
+                popular: false,
+                description: 'Designed offers a comprehensive set of features and services to drive your success.',
+                features: [
+                  'All analytics features',
+                  'Normal support',
+                  'Up to 100 team members'
+                ]
+              },
             ].map((plan) => {
               const discountedPerMo = Math.round(((plan.monthly * 12 * 0.8) / 12));
-              const label = plan.monthly === 0 ? 'Free' : (yearly ? `$${discountedPerMo}/mo` : `$${plan.monthly}/mo`);
+              const price = yearly ? discountedPerMo : plan.monthly;
               return (
-                <Card key={plan.name} className="hover:-translate-y-1 transition-transform">
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <span>{plan.name}</span>
-                      <span className="text-lg md:text-xl font-semibold">{label}</span>
-                    </CardTitle>
+                <Card 
+                  key={plan.name} 
+                  className={`relative group hover:-translate-y-2 transition-all duration-300 border-2 ${
+                    plan.popular 
+                      ? 'border-primary bg-gradient-to-br from-primary/5 to-primary/10 shadow-xl' 
+                      : 'border-border hover:border-primary/50 shadow-lg hover:shadow-xl'
+                  }`}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                      <span className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground px-4 py-1 rounded-full text-sm font-medium shadow-lg">
+                        For startups
+                      </span>
+                    </div>
+                  )}
+                  <CardHeader className="text-center pb-8">
+                    <div className="space-y-3">
+                      <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{plan.subtitle}</p>
+                      <div className="space-y-1">
+                        <div className="text-5xl font-bold">
+                          ${price}
+                          <span className="text-lg text-muted-foreground">/monthly</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {plan.description}
+                      </p>
+                    </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <ul className="text-sm text-muted-foreground list-disc list-inside">
-                      {plan.features.map((f) => (
-                        <li key={f}>{f}</li>
-                      ))}
-                    </ul>
-                    <Button className="w-full" onClick={handleStripe}>Choose {plan.name}</Button>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-3">
+                      <p className="font-semibold">What's included</p>
+                      <ul className="space-y-3">
+                        {plan.features.map((feature) => (
+                          <li key={feature} className="flex items-center gap-3">
+                            <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                              <div className="w-2 h-2 rounded-full bg-primary"></div>
+                            </div>
+                            <span className="text-sm">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <Button 
+                      className={`w-full ${
+                        plan.popular 
+                          ? 'bg-gradient-to-r from-primary to-primary/90 shadow-lg hover:shadow-xl' 
+                          : ''
+                      }`}
+                      onClick={handleStripe}
+                    >
+                      Get started
+                    </Button>
                   </CardContent>
                 </Card>
               );
@@ -248,20 +610,67 @@ const LandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* FAQ */}
-        <section id="faq" className="responsive-container mt-16 md:mt-24">
-          <div className="text-center mb-6 md:mb-8">
-            <h2 className="text-2xl md:text-3xl font-semibold">Frequently Asked Questions</h2>
-            <p className="text-sm md:text-base text-muted-foreground">Everything you need to know, in one place.</p>
+        {/* App Download Section */}
+        <section id="resources" className="responsive-container py-24 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-3xl">
+          <div className="text-center mb-16 space-y-6">
+            <h2 className="text-4xl md:text-5xl font-bold">Download Our Mobile App</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Take TeamPulse with you anywhere. Available on iOS and Android devices.
+            </p>
           </div>
-          <div className="max-w-3xl mx-auto space-y-3">
-            {faqs.map((f) => (
-              <details key={f.q} className="group rounded-lg border bg-card p-4 transition-all">
-                <summary className="cursor-pointer list-none font-medium flex items-center justify-between">
-                  {f.q}
-                  <span className="ml-4 text-muted-foreground group-open:rotate-180 transition-transform">⌄</span>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="flex items-center gap-3 px-8 py-6 text-base bg-black text-white hover:bg-black/90 border-black rounded-xl"
+              onClick={() => handleAppDownload('ios')}
+            >
+              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                <Download className="w-5 h-5 text-black" />
+              </div>
+              <div className="text-left">
+                <div className="text-xs text-gray-300">Download on the</div>
+                <div className="font-semibold">App Store</div>
+              </div>
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="flex items-center gap-3 px-8 py-6 text-base bg-black text-white hover:bg-black/90 border-black rounded-xl"
+              onClick={() => handleAppDownload('android')}
+            >
+              <div className="w-8 h-8 bg-gradient-to-br from-green-400 via-blue-500 to-red-500 rounded-lg flex items-center justify-center">
+                <Download className="w-5 h-5 text-white" />
+              </div>
+              <div className="text-left">
+                <div className="text-xs text-gray-300">GET IT ON</div>
+                <div className="font-semibold">Google Play</div>
+              </div>
+            </Button>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section id="faq" className="responsive-container py-24">
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-4xl md:text-5xl font-bold">Frequently Asked Questions</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Everything you need to know about TeamPulse, all in one place.
+            </p>
+          </div>
+          <div className="max-w-4xl mx-auto space-y-4">
+            {faqs.map((faq, index) => (
+              <details 
+                key={index} 
+                className="group rounded-xl border-2 border-border bg-card hover:border-primary/30 transition-all duration-300 overflow-hidden"
+              >
+                <summary className="cursor-pointer list-none p-6 font-semibold text-lg flex items-center justify-between hover:bg-primary/5 transition-colors">
+                  <span className="flex-1 text-left">{faq.q}</span>
+                  <ChevronDown className="w-5 h-5 text-muted-foreground group-open:rotate-180 transition-transform duration-300 flex-shrink-0 ml-4" />
                 </summary>
-                <p className="mt-2 text-sm text-muted-foreground">{f.a}</p>
+                <div className="px-6 pb-6">
+                  <p className="text-muted-foreground leading-relaxed">{faq.a}</p>
+                </div>
               </details>
             ))}
           </div>
@@ -321,15 +730,17 @@ interface FeatureCardProps {
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description }) => {
   return (
-    <Card className="transition-transform duration-300 hover:-translate-y-1">
-      <CardHeader>
-        <div className="bg-primary/10 p-3 rounded-lg w-fit mb-4">
-          {icon}
+    <Card className="group transition-all duration-300 hover:-translate-y-2 hover:shadow-xl border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+      <CardHeader className="pb-6">
+        <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 p-4 rounded-2xl w-fit mb-6 group-hover:scale-110 transition-transform duration-300">
+          <div className="text-primary">
+            {icon}
+          </div>
         </div>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle className="text-xl group-hover:text-primary transition-colors">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <CardDescription>{description}</CardDescription>
+        <CardDescription className="text-base leading-relaxed">{description}</CardDescription>
       </CardContent>
     </Card>
   );
