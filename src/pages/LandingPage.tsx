@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, CalendarDays, UserCheck, DollarSign, FileText, ChevronDown, Users, TrendingUp, Shield, Smartphone, Download } from 'lucide-react';
+import { Clock, CalendarDays, UserCheck, DollarSign, FileText, ChevronDown, Users, TrendingUp, Shield, Smartphone, Download, Timer, AlarmClock, BarChart3, Settings } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
@@ -430,43 +430,33 @@ const LandingPage: React.FC = () => {
         {/* Features Grid */}
         <section id="features" className="responsive-container py-24 bg-gradient-to-br from-background to-primary/5 rounded-3xl">
           <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl md:text-5xl font-bold">Powerful Features</h2>
+            <h2 className="text-4xl md:text-5xl font-bold">What You Can Do With TeamPulse</h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Everything you need to manage your team efficiently
+              Real features from your app — click to jump in.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <FeatureCard 
-              icon={<Clock className="h-10 w-10" />} 
-              title="Time & Attendance" 
-              description="Track time, automate attendance, and manage clock-in/clock-out with precision and ease." 
-            />
-            <FeatureCard 
-              icon={<CalendarDays className="h-10 w-10" />} 
-              title="Smart Scheduling" 
-              description="Create, assign and manage shifts with intelligent notifications and automatic conflict detection." 
-            />
-            <FeatureCard 
-              icon={<UserCheck className="h-10 w-10" />} 
-              title="Leave Management" 
-              description="Streamlined leave requests, approvals, and balance tracking seamlessly integrated with shifts." 
-            />
-            <FeatureCard 
-              icon={<DollarSign className="h-10 w-10" />} 
-              title="Payroll Automation" 
-              description="Automatically calculate salaries from attendance, overtime and leave data with zero errors." 
-            />
-            <FeatureCard 
-              icon={<FileText className="h-10 w-10" />} 
-              title="Digital Payslips" 
-              description="Generate and distribute professional payslips with detailed breakdowns and tax information." 
-            />
-            <FeatureCard 
-              icon={<Smartphone className="h-10 w-10" />} 
-              title="Mobile Ready" 
-              description="Access everything from anywhere with our native mobile apps for iOS and Android devices." 
-            />
-          </div>
+          {(() => {
+            const target = (path: string) => (isAuthenticated ? path : '/auth?tab=signup');
+            const featureItems = [
+              { icon: <CalendarDays className="h-10 w-10" />, title: 'Scheduling', description: 'Create and manage shifts with conflict detection and notifications.', href: target('/schedule') },
+              { icon: <Clock className="h-10 w-10" />, title: 'Attendance', description: 'Track working hours and attendance across teams.', href: target('/attendance') },
+              { icon: <UserCheck className="h-10 w-10" />, title: 'Leave Management', description: 'Request, approve and track leave balances seamlessly.', href: target('/leave-management') },
+              { icon: <Timer className="h-10 w-10" />, title: 'Time Clock', description: 'Kiosk and mobile clock-in/out for staff and managers.', href: target('/time-clock') },
+              { icon: <AlarmClock className="h-10 w-10" />, title: 'Overtime', description: 'Configure rules and track overtime automatically.', href: target('/overtime-management') },
+              { icon: <DollarSign className="h-10 w-10" />, title: 'Payroll', description: 'Automate payroll from attendance and overtime data.', href: target('/payroll') },
+              { icon: <FileText className="h-10 w-10" />, title: 'Payslips', description: 'Generate and distribute digital payslips with ease.', href: target('/payslips') },
+              { icon: <BarChart3 className="h-10 w-10" />, title: 'Reports', description: 'Analytics dashboards for workforce and payroll insights.', href: target('/payroll-reports') },
+              { icon: <Users className="h-10 w-10" />, title: 'People', description: 'Centralized employee directory with roles.', href: target('/people') },
+              { icon: <Settings className="h-10 w-10" />, title: 'Profile & Settings', description: 'Manage profile, preferences and security.', href: target('/settings') },
+            ];
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {featureItems.map((f) => (
+                  <FeatureCard key={f.title} icon={f.icon} title={f.title} description={f.description} href={f.href} ctaLabel={isAuthenticated ? 'Open' : 'Explore'} />
+                ))}
+              </div>
+            );
+          })()}
         </section>
 
         {/* Pricing Section */}
@@ -726,9 +716,11 @@ interface FeatureCardProps {
   icon: React.ReactNode;
   title: string;
   description: string;
+  href: string;
+  ctaLabel?: string;
 }
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description }) => {
+const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, href, ctaLabel = 'Explore' }) => {
   return (
     <Card className="group transition-all duration-300 hover:-translate-y-2 hover:shadow-xl border-0 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
       <CardHeader className="pb-6">
@@ -741,6 +733,11 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description }) =
       </CardHeader>
       <CardContent>
         <CardDescription className="text-base leading-relaxed">{description}</CardDescription>
+        <div className="mt-4">
+          <Button asChild variant="link" className="p-0">
+            <Link to={href} aria-label={`${ctaLabel} ${title}`}>{ctaLabel} →</Link>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
