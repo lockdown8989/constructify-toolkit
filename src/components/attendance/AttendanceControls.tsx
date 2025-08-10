@@ -17,12 +17,12 @@ interface AttendanceControlsProps {
 
 const AttendanceControls = ({ onSearchChange, onEmployeeSelect, onDateChange }: AttendanceControlsProps) => {
   const { data: employees = [] } = useEmployees();
-  const { isManager, isAdmin, isHR } = useAuth();
+  const { isManager, isAdmin, isHR, isPayroll } = useAuth();
   const [selectedMonth, setSelectedMonth] = useState(startOfMonth(new Date()));
   const isMobile = useIsMobile();
   
   // Check if user can select different employees
-  const canSelectEmployees = (isManager || isAdmin || isHR) && onEmployeeSelect;
+  const canSelectEmployees = (isManager || isAdmin || isHR || isPayroll) && onEmployeeSelect;
   
   useEffect(() => {
     // Notify parent component of date changes

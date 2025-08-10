@@ -14,16 +14,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+interface AttendanceHeaderProps {
+  overrideEmployeeId?: string;
+  overrideEmployeeName?: string;
+}
 
-const AttendanceHeader = () => {
+const AttendanceHeader = ({ overrideEmployeeId, overrideEmployeeName }: AttendanceHeaderProps) => {
   const { employeeData, isLoading } = useEmployeeDataManagement();
   const { isManager } = useAuth();
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
+  const targetEmployeeId = overrideEmployeeId || employeeData?.id;
+  const targetEmployeeName = overrideEmployeeName || employeeData?.name;
+
   const handleViewDetails = () => {
-    if (employeeData?.id) {
+    if (targetEmployeeId) {
       setIsDetailsModalOpen(true);
     } else {
       toast({
@@ -89,8 +96,8 @@ const AttendanceHeader = () => {
       <AttendanceDetailsModal
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
-        employeeId={employeeData?.id}
-        employeeName={employeeData?.name}
+        employeeId={targetEmployeeId}
+        employeeName={targetEmployeeName}
       />
       
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 gap-4">

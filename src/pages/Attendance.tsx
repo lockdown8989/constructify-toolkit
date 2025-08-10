@@ -74,7 +74,7 @@ const Attendance = () => {
   return (
     <div className={`${isMobile ? 'px-0 py-2' : 'container max-w-[1200px] mx-auto px-4 py-8'}`}>
       <div className={isMobile ? 'px-4' : ''}>
-        <AttendanceHeader />
+        <AttendanceHeader overrideEmployeeId={effectiveEmployeeId} />
       </div>
       
       {/* Always show stats - even if effectiveEmployeeId is undefined, the component will handle it */}

@@ -125,7 +125,7 @@ const PayrollDashboard = () => {
   return (
     <div className={cn(
       "animate-fade-in pb-safe-area-inset-bottom",
-      isMobile ? "px-4 py-4" : "container py-6"
+      isMobile ? "px-4 py-4 overflow-y-auto touch-pan-y will-change-transform" : "container py-6"
     )}>
       <PayrollHeader
         lastUpdated={payrollMetrics.lastUpdated}
@@ -172,8 +172,8 @@ const PayrollDashboard = () => {
           )}
         </TabsList>
 
-        <TabsContent value="overview" className={cn("space-y-6", isMobile && "space-y-4")}>
-          <div className={cn(isMobile && "mobile-scroll-container")}>
+        <TabsContent value="overview" className={cn("space-y-6", isMobile && "space-y-4")}> 
+          <div className={cn(isMobile && "mt-0")}>
             <PayrollStatsCards
               totalEmployees={actualEmployeeCount}
               pendingEmployees={payrollMetrics.pendingEmployees}
@@ -183,7 +183,7 @@ const PayrollDashboard = () => {
               onCardClick={handleCardClick}
             />
 
-            <div className={cn(isMobile && "mt-4")}>
+            <div className={cn(isMobile && "mt-4")}> 
               <PayrollOverviewChart
                 data={payrollMetrics.chartData}
                 timeRange={timeRange}
@@ -194,11 +194,11 @@ const PayrollDashboard = () => {
               />
             </div>
 
-            <div className={cn(isMobile && "mt-4")}>
+            <div className={cn(isMobile && "mt-4")}> 
               <PayrollInsights analysis={payrollMetrics.analysis} />
             </div>
 
-            <div className={cn(isMobile && "mt-4")}>
+            <div className={cn(isMobile && "mt-4")}> 
               <PayrollEmployeeTable
                 employees={employees}
                 actualEmployeeCount={actualEmployeeCount}

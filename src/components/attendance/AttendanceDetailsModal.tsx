@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { useAttendance } from "@/hooks/use-attendance";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, isSameMonth, parseISO } from "date-fns";
 
 interface AttendanceDetailsModalProps {
   isOpen: boolean;
@@ -42,49 +42,44 @@ const AttendanceDetailsModal = ({
   const { data: attendanceData, isLoading } = useAttendance(employeeId, selectedDate);
   const isMobile = useIsMobile();
 
-  // Mock detailed attendance data - in real app, this would come from API
-  const attendanceRecords = [
-    {
-      date: "2025-07-12",
-      status: "Present",
-      checkIn: "08:55",
-      checkOut: "17:45",
-      hoursWorked: "8h 50m",
-      overtime: "0h 20m",
-      location: "Main Office",
-      isLate: false,
-    },
-    {
-      date: "2025-07-11",
-      status: "Present",
-      checkIn: "09:10",
-      checkOut: "17:30",
-      hoursWorked: "8h 20m",
-      overtime: "0h 0m",
-      location: "Main Office",
-      isLate: true,
-    },
-    {
-      date: "2025-07-10",
-      status: "Present",
-      checkIn: "08:45",
-      checkOut: "18:00",
-      hoursWorked: "9h 15m",
-      overtime: "1h 15m",
-      location: "Main Office",
-      isLate: false,
-    },
-    {
-      date: "2025-07-09",
-      status: "Absent",
-      checkIn: "-",
-      checkOut: "-",
-      hoursWorked: "0h 0m",
-      overtime: "0h 0m",
-      location: "-",
-      isLate: false,
-    },
-  ];
+  // Use real attendance records from hook
+  const records = attendanceData?.recentRecords || [];
+
+  const monthStart = startOfMonth(selectedDate);
+  const monthEnd = endOfMonth(selectedDate);
+  const monthRecords = records.filter(r => {
+    if (!r.date) return false;
+    // r.date is ISO date string (YYYY-MM-DD)
+    const d = parseISO(String(r.date));
+    return d >= monthStart && d <= monthEnd && isSameMonth(d, monthStart);
+  });
+
+  const presentCount = monthRecords.filter(r => r.attendance_status === 'Present').length;
+  const totalMinutes = monthRecords.reduce((sum, r) => sum + (r.working_minutes || 0), 0);
+  const overtimeMinutes = monthRecords.reduce((sum, r) => sum + (r.overtime_minutes || 0), 0);
+  const attendanceRate = monthRecords.length > 0 ? Math.round((presentCount / monthRecords.length) * 100) : 0;
+
+  const formatMinutes = (mins: number) => {
+    const h = Math.floor(mins / 60);
+    const m = Math.round(mins % 60);
+    return `${h}h ${m}m`;
+  };
+
+  const formatTime = (iso: string | null | undefined) => {
+    if (!iso) return "-";
+    try { return format(new Date(iso), "HH:mm"); } catch { return "-"; }
+  };
+
+  const derivedRecords = monthRecords.map(r => ({
+    date: r.date || '',
+    status: r.attendance_status || r.status || 'Pending',
+    checkIn: formatTime(r.check_in),
+    checkOut: formatTime(r.check_out),
+    hoursWorked: formatMinutes(r.working_minutes || 0),
+    overtime: formatMinutes(r.overtime_minutes || 0),
+    location: r.location || '-',
+    isLate: !!r.is_late,
+  }));
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -103,10 +98,9 @@ const AttendanceDetailsModal = ({
 
   const exportDetailedData = () => {
     const csvContent = "data:text/csv;charset=utf-8,Date,Status,Check In,Check Out,Hours Worked,Overtime,Location,Late\n";
-    const dataRows = attendanceRecords.map(record => 
+    const dataRows = derivedRecords.map(record => 
       `${record.date},${record.status},${record.checkIn},${record.checkOut},${record.hoursWorked},${record.overtime},${record.location},${record.isLate ? "Yes" : "No"}`
     );
-    
     const fullCsv = csvContent + dataRows.join('\n');
     const encodedUri = encodeURI(fullCsv);
     const link = document.createElement("a");
@@ -151,10 +145,11 @@ const AttendanceDetailsModal = ({
                   <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>This Month</CardTitle>
                 </CardHeader>
                 <CardContent className={isMobile ? 'px-3 pb-3' : ''}>
-                  <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>{attendanceData?.present || 4}</div>
+                  <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>{presentCount}</div>
                   <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-green-600 flex items-center`}>
                     <TrendingUp className="h-3 w-3 mr-1" />
-                    +1 vs last month
+                    {/* Placeholder delta until comparative data added */}
+                    +0 vs last month
                   </div>
                 </CardContent>
               </Card>
@@ -164,10 +159,10 @@ const AttendanceDetailsModal = ({
                   <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Total Hours</CardTitle>
                 </CardHeader>
                 <CardContent className={isMobile ? 'px-3 pb-3' : ''}>
-                  <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>42.5h</div>
+                  <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>{formatMinutes(totalMinutes)}</div>
                   <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-green-600 flex items-center`}>
                     <TrendingUp className="h-3 w-3 mr-1" />
-                    +5.2h vs last month
+                    +0h vs last month
                   </div>
                 </CardContent>
               </Card>
@@ -177,10 +172,10 @@ const AttendanceDetailsModal = ({
                   <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Overtime</CardTitle>
                 </CardHeader>
                 <CardContent className={isMobile ? 'px-3 pb-3' : ''}>
-                  <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>2.5h</div>
+                  <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>{formatMinutes(overtimeMinutes)}</div>
                   <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-red-600 flex items-center`}>
                     <TrendingDown className="h-3 w-3 mr-1" />
-                    -1.2h vs last month
+                    -0h vs last month
                   </div>
                 </CardContent>
               </Card>
@@ -190,7 +185,7 @@ const AttendanceDetailsModal = ({
                   <CardTitle className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>Attendance Rate</CardTitle>
                 </CardHeader>
                 <CardContent className={isMobile ? 'px-3 pb-3' : ''}>
-                  <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>95%</div>
+                  <div className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold`}>{attendanceRate}%</div>
                   <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-600 flex items-center`}>
                     <Minus className="h-3 w-3 mr-1" />
                     Same as last month
@@ -207,7 +202,7 @@ const AttendanceDetailsModal = ({
               </CardHeader>
               <CardContent className={isMobile ? 'px-3 pb-3' : ''}>
                 <div className={isMobile ? 'space-y-2' : 'space-y-3'}>
-                  {attendanceRecords.slice(0, 4).map((record, index) => (
+                  {derivedRecords.slice(0, 4).map((record, index) => (
                     <div key={index} className={`${isMobile ? 'flex flex-col gap-2 p-2' : 'flex items-center justify-between p-3'} bg-gray-50 rounded-lg`}>
                       <div className={`flex items-center ${isMobile ? 'justify-between' : 'gap-3'}`}>
                         <div className="flex items-center gap-2">
@@ -261,7 +256,7 @@ const AttendanceDetailsModal = ({
                   </CardHeader>
                   <CardContent className={isMobile ? 'px-3 pb-3' : ''}>
                     <div className={isMobile ? 'space-y-2' : 'space-y-3'}>
-                      {attendanceRecords.map((record, index) => (
+                      {derivedRecords.map((record, index) => (
                         <div key={index} className={`border rounded-lg ${isMobile ? 'p-3' : 'p-4'}`}>
                           <div className={`flex justify-between items-start ${isMobile ? 'mb-2' : 'mb-3'}`}>
                             <div className="flex items-center gap-2">
@@ -274,7 +269,6 @@ const AttendanceDetailsModal = ({
                               {record.hoursWorked}
                             </div>
                           </div>
-                          
                           <div className={`grid grid-cols-2 ${isMobile ? 'gap-2 text-xs' : 'gap-4 text-sm'}`}>
                             <div>
                               <span className="text-gray-500">Check In:</span>
