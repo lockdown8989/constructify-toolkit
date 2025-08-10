@@ -19,6 +19,8 @@ import LoadingSpinner from './components/ui/loading-spinner';
 import { useAttendanceMonitoring } from './hooks/use-attendance-monitoring';
 import { useIsMobile } from './hooks/use-mobile';
 import './App.css';
+import CookieConsent from './components/legal/CookieConsent';
+
 
 // Lazy load pages for better performance
 const People = lazy(() => import('./pages/People'));
@@ -41,6 +43,13 @@ const ScheduleRequests = lazy(() => import('./pages/ScheduleRequests'));
 const Profile = lazy(() => import('./pages/Profile'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const OvertimeManagement = lazy(() => import('./pages/OvertimeManagement'));
+
+// Public marketing and legal pages
+import LandingPage from './pages/LandingPage';
+const Privacy = lazy(() => import('./pages/legal/Privacy'));
+const Terms = lazy(() => import('./pages/legal/Terms'));
+const Cookies = lazy(() => import('./pages/legal/Cookies'));
+const GDPR = lazy(() => import('./pages/legal/GDPR'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,6 +100,27 @@ const AppContent = () => {
         <Routes>
           {/* Public routes without layout */}
           <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/privacy" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <Privacy />
+            </Suspense>
+          } />
+          <Route path="/terms" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <Terms />
+            </Suspense>
+          } />
+          <Route path="/cookies" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <Cookies />
+            </Suspense>
+          } />
+          <Route path="/gdpr" element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <GDPR />
+            </Suspense>
+          } />
           
           {/* Protected routes with layout */}
           <Route path="/*" element={
@@ -222,6 +252,7 @@ const AppContent = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
+      <CookieConsent />
     </ErrorBoundaryComponent>
   );
 };
