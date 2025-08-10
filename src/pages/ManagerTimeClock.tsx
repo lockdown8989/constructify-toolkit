@@ -10,7 +10,7 @@ import EmployeeList from '@/components/time-clock/EmployeeList';
 import ClockActions from '@/components/time-clock/ClockActions';
 import { useClockActions } from '@/components/time-clock/useClockActions';
 import { useMediaQuery } from '@/hooks/use-media-query';
-
+import FaceRecognitionPanel from '@/components/time-clock/FaceRecognitionPanel';
 const ManagerTimeClock = () => {
   const { isManager, isAdmin, isHR, isPayroll } = useAuth();
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ const ManagerTimeClock = () => {
     name: string;
     avatar?: string;
   } | null>(null);
-  
+  const [showFaceMode, setShowFaceMode] = useState(false);
   const {
     selectedEmployee,
     action,
@@ -79,8 +79,8 @@ const ManagerTimeClock = () => {
     <div className="fixed inset-0 bg-black text-white z-50 flex flex-col">
       {/* Header - responsive */}
       <div className="p-3 sm:p-4 flex items-center justify-between border-b border-gray-800">
-        <div className="flex items-center">
-          <h1 className="text-lg sm:text-xl font-bold tracking-wide">TeamPulse</h1>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" size="sm" onClick={() => setShowFaceMode(true)} className="hidden sm:inline-flex">Face Mode</Button>
         </div>
         <Button 
           variant="ghost" 
@@ -163,10 +163,12 @@ const ManagerTimeClock = () => {
             </div>
             
             <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-auto">
-              {/* Company logo/header */}
-              <div className="text-center mb-4">
-                <div className="text-base uppercase tracking-wider">TeamPulse</div>
-                <p className="text-xs text-gray-400">{new Date().toLocaleDateString()}</p>
+              <div className="text-center mb-4 flex items-center justify-between gap-3 w-full">
+                <div>
+                  <div className="text-base uppercase tracking-wider">TeamPulse</div>
+                  <p className="text-xs text-gray-400">{new Date().toLocaleDateString()}</p>
+                </div>
+                <Button size="sm" onClick={() => setShowFaceMode(true)}>Face Mode</Button>
               </div>
               
               {/* Digital clock */}
@@ -186,6 +188,13 @@ const ManagerTimeClock = () => {
               />
             </div>
           </div>
+        )}
+        {showFaceMode && (
+          <FaceRecognitionPanel
+            onClose={() => setShowFaceMode(false)}
+            onSelectEmployee={handleSelectEmployee}
+            onClockAction={handleClockAction}
+          />
         )}
       </div>
     </div>
