@@ -665,7 +665,7 @@ const LandingPage: React.FC = () => {
             <Link to="/privacy" className="hover:underline">Privacy</Link>
             <Link to="/terms" className="hover:underline">Terms</Link>
             <Link to="/cookies" className="hover:underline">Cookies</Link>
-            <Link to="/gdpr" className="hover:underline">GDPR</Link>
+            
           </nav>
         </div>
       </footer>
