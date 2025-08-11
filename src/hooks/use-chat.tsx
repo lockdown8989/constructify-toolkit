@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 
@@ -380,7 +380,7 @@ export const useChat = () => {
       console.error('Error sending AI message:', error);
       toast.error('Failed to get AI response');
 
-      // Graceful fallback so the user always gets an answer
+      // Always show the user's message first
       const userMessage: ChatMessage = {
         id: crypto.randomUUID(),
         chat_id: 'ai-standalone',
@@ -397,6 +397,39 @@ export const useChat = () => {
         }
       };
 
+      // Try a direct fetch fallback to the Edge Function (some environments block invoke)
+      try {
+        const conversationHistory = messages.slice(-10);
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/chat-ai-assistant`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ message: content.trim(), conversationHistory })
+        });
+
+        const json = await res.json().catch(() => null);
+        if (res.ok && json?.response) {
+          const aiMessage: ChatMessage = {
+            id: crypto.randomUUID(),
+            chat_id: 'ai-standalone',
+            sender_id: 'ai-bot',
+            content: json.response,
+            message_type: 'ai_response',
+            sender_type: 'ai_bot',
+            is_read: true,
+            created_at: new Date().toISOString(),
+            sender: { id: 'ai-bot', name: 'AI Assistant', avatar_url: undefined }
+          };
+          setMessages(prev => [...prev, userMessage, aiMessage]);
+          return; // Stop here since we succeeded
+        }
+      } catch (directErr) {
+        console.error('Direct edge function fetch failed:', directErr);
+      }
+
+      // Final graceful fallback so the user always gets an answer
       const aiFallback: ChatMessage = {
         id: crypto.randomUUID(),
         chat_id: 'ai-standalone',
