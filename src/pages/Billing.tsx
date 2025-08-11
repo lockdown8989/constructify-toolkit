@@ -440,7 +440,7 @@ export default function Billing() {
         ))}
       </main>
 
-      <aside className="mt-4 flex flex-wrap gap-3">
+      <aside className="mt-4 flex flex-col sm:flex-row flex-wrap gap-3">
         <Button variant="outline" onClick={handleManage} disabled={isLoading !== null}>
           {isLoading === 'manage' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Manage subscription
