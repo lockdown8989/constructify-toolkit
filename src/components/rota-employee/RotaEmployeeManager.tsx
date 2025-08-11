@@ -221,7 +221,8 @@ const RotaEmployeeManager = () => {
         patternName: pattern.name,
         startTime: pattern.start_time,
         endTime: pattern.end_time,
-        weeksToGenerate: 12
+        weeksToGenerate: 12,
+        daysOfWeek: pattern.days_of_week || [0,1,2,3,4,5,6]
       });
 
       if (result.success) {

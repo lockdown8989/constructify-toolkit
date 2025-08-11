@@ -124,9 +124,12 @@ export const createAndConfirmRecurringRotas = async (params: {
   startTime: string;
   endTime: string;
   weeksToGenerate: number;
+  daysOfWeek?: number[];
 }) => {
-  const { employeeIds, shiftPatternId, patternName, startTime, endTime, weeksToGenerate } = params;
+  const { employeeIds, shiftPatternId, patternName, startTime, endTime, weeksToGenerate, daysOfWeek: daysOfWeekParam } = params;
+  const daysOfWeek = (daysOfWeekParam && daysOfWeekParam.length > 0) ? daysOfWeekParam : [0,1,2,3,4,5,6];
   
+
   try {
     const schedules = [];
     const today = new Date();
@@ -135,6 +138,8 @@ export const createAndConfirmRecurringRotas = async (params: {
       for (let day = 0; day < 7; day++) {
         const scheduleDate = new Date(today);
         scheduleDate.setDate(today.getDate() + (week * 7) + day);
+        const dow = scheduleDate.getDay();
+        if (!daysOfWeek.includes(dow)) continue;
         
         for (const employeeId of employeeIds) {
           const startDateTime = new Date(scheduleDate);
