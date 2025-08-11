@@ -93,31 +93,54 @@ export default function Billing() {
       }
       
       console.log('✅ Session valid, calling create-checkout...');
-      
+
+      const payload = {
+        planTier: planId,
+        interval: interval,
+        currency: 'gbp',
+      };
+
+      // Primary call via Supabase client
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
         },
-        body: {
-          planTier: planId,
-          interval: interval,
-          currency: 'gbp',
-        },
+        body: payload,
       });
-      
+
       console.log('📦 create-checkout response:', { data, error });
-      
-      if (error) {
-        console.error('❌ Edge function error:', error);
-        throw error;
+
+      let checkoutUrl = data?.url as string | undefined;
+
+      // Fallback: direct fetch to Edge Function if supabase-js invoke fails to reach it
+      if (!checkoutUrl) {
+        console.warn('⚠️ Falling back to direct fetch for create-checkout...');
+        const functionUrl = 'https://fphmujxruswmvlwceodl.supabase.co/functions/v1/create-checkout';
+        const resp = await fetch(functionUrl, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwaG11anhydXN3bXZsd2Nlb2RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIyMDc5NjcsImV4cCI6MjA1Nzc4Mzk2N30.NCTLZVRuiaEopQi0uWdEFn_7noYoEnTvF2CqqD7S-y4',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+        if (!resp.ok) {
+          const text = await resp.text();
+          console.error('❌ Direct fetch failed:', resp.status, text);
+          throw new Error(`Checkout failed (${resp.status})`);
+        }
+        const json = await resp.json();
+        checkoutUrl = json?.url;
       }
-      
-      if (data?.url) {
-        console.log('🚀 Opening checkout URL:', data.url);
-        window.open(data.url, '_blank');
+
+      if (checkoutUrl) {
+        console.log('🚀 Opening checkout URL:', checkoutUrl);
+        window.open(checkoutUrl, '_blank');
         toast({ description: 'Redirecting to checkout...' });
       } else {
-        console.error('❌ No URL in response:', data);
+        console.error('❌ No URL in response');
         throw new Error('No checkout URL received');
       }
     } catch (e: any) {
