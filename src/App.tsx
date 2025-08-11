@@ -20,6 +20,7 @@ import { useAttendanceMonitoring } from './hooks/use-attendance-monitoring';
 import { useIsMobile } from './hooks/use-mobile';
 import './App.css';
 import CookieConsent from './components/legal/CookieConsent';
+import WebchatAssistant from './components/ai/WebchatAssistant';
 
 
 // Lazy load pages for better performance
@@ -376,6 +377,7 @@ const AppContent = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
+      <WebchatAssistant />
       <CookieConsent />
     </ErrorBoundaryComponent>
   );
