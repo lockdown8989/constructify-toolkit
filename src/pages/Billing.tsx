@@ -509,12 +509,9 @@ export default function Billing() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={(e) => {
-                    console.log('🖱️ Cancel button clicked');
-                    handleCancelSubscription();
-                  }}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                <Button
+                  onClick={handleCancelSubscription}
+                  variant="destructive"
                   disabled={isLoading === 'cancel'}
                 >
                   {isLoading === 'cancel' ? (
@@ -525,7 +522,7 @@ export default function Billing() {
                   ) : (
                     'Yes, Cancel Subscription'
                   )}
-                </AlertDialogAction>
+                </Button>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
