@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 useAuthDebugger({ user, session, isLoading });
 
 // Refresh org subscription status
-const refreshSubscription = async () => {
+const refreshSubscription = async (silent = false) => {
   try {
     console.log('🔄 Starting subscription refresh...');
     const { data: { session } } = await supabase.auth.getSession();
@@ -129,11 +129,13 @@ const refreshSubscription = async () => {
       toast({ description: 'Your free trial has ended. Your current plan has started.' });
     }
 
-    // Cross-tab subscription sync: notify other tabs/windows
-    try { localStorage.setItem('subscription-updated', String(Date.now())); } catch {}
-    try { const bc = new BroadcastChannel('subscription'); bc.postMessage({ type: 'updated' }); bc.close(); } catch {}
-    // Realtime broadcast to other connected users
-    try { subscriptionChannelRef.current?.send({ type: 'broadcast', event: 'updated', payload: { ts: Date.now(), subscribed: nowSubscribed, tier: normalizedTier } }); } catch {}
+    if (!silent) {
+      // Cross-tab subscription sync: notify other tabs/windows
+      try { localStorage.setItem('subscription-updated', String(Date.now())); } catch {}
+      try { const bc = new BroadcastChannel('subscription'); bc.postMessage({ type: 'updated' }); bc.close(); } catch {}
+      // Realtime broadcast to other connected users
+      try { subscriptionChannelRef.current?.send({ type: 'broadcast', event: 'updated', payload: { ts: Date.now(), subscribed: nowSubscribed, tier: normalizedTier } }); } catch {}
+    }
   } catch (e) {
     console.error('❌ Subscription check failed:', e);
     setSubscribed(false);
@@ -293,7 +295,7 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'subscription-updated') {
-        refreshSubscription();
+        refreshSubscription(true);
       }
     };
     window.addEventListener('storage', onStorage);
@@ -314,7 +316,7 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
       .channel('subscription_broadcast', { config: { broadcast: { self: false } } })
       .on('broadcast', { event: 'updated' }, () => {
         // When any client broadcasts a subscription update, re-check status
-        refreshSubscription();
+        refreshSubscription(true);
       });
 
     const subscribe = async () => {
