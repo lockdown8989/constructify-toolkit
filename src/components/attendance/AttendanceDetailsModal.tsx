@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,8 +21,13 @@ import {
   Download,
   Eye,
 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAttendance } from "@/hooks/use-attendance";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
+import { useEmployeeDataManagement } from "@/hooks/use-employee-data-management";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, isSameMonth, parseISO } from "date-fns";
 
 interface AttendanceDetailsModalProps {
@@ -39,9 +44,21 @@ const AttendanceDetailsModal = ({
   employeeName = "Employee"
 }: AttendanceDetailsModalProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const { data: attendanceData, isLoading } = useAttendance(employeeId, selectedDate);
   const isMobile = useIsMobile();
-
+  const { isAdmin } = useAuth();
+  const { employeeId: currentEmployeeId } = useEmployeeDataManagement();
+  const effectiveEmployeeId = useMemo(() => {
+    if (isAdmin) return employeeId ?? currentEmployeeId ?? undefined;
+    return employeeId && currentEmployeeId && employeeId !== currentEmployeeId
+      ? currentEmployeeId
+      : (employeeId ?? currentEmployeeId ?? undefined);
+  }, [isAdmin, employeeId, currentEmployeeId]);
+  const effectiveEmployeeName = useMemo(() => {
+    if (!isAdmin && employeeId && currentEmployeeId && employeeId !== currentEmployeeId) return "Your Attendance";
+    return employeeName;
+  }, [isAdmin, employeeId, currentEmployeeId, employeeName]);
+  const { data: attendanceData, isLoading } = useAttendance(effectiveEmployeeId, selectedDate);
+  const { toast } = useToast();
   // Use real attendance records from hook
   const records = attendanceData?.recentRecords || [];
 
@@ -105,19 +122,60 @@ const AttendanceDetailsModal = ({
     const encodedUri = encodeURI(fullCsv);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `detailed_attendance_${employeeName?.replace(" ", "_")}_${format(new Date(), "yyyy-MM-dd")}.csv`);
+    link.setAttribute("download", `detailed_attendance_${(effectiveEmployeeName || "employee").replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
+  const exportAllEmployeesMonth = async () => {
+    try {
+      if (!isAdmin) return;
+      const from = format(monthStart, "yyyy-MM-dd");
+      const to = format(monthEnd, "yyyy-MM-dd");
+      const { data, error } = await supabase
+        .from('attendance')
+        .select(`
+          id, employee_id, date, check_in, check_out, working_minutes, overtime_minutes, attendance_status, location, is_late,
+          employees:employee_id ( name )
+        `)
+        .gte('date', from)
+        .lte('date', to)
+        .order('date', { ascending: true });
+      if (error) throw error;
+      const header = 'Employee,Date,Status,Check In,Check Out,Working Minutes,Overtime Minutes,Late,Location\n';
+      const rows = (data || []).map((r: any) => [
+        r.employees?.name || '',
+        r.date || '',
+        r.attendance_status || r.status || 'Pending',
+        formatTime(r.check_in),
+        formatTime(r.check_out),
+        String(r.working_minutes ?? 0),
+        String(r.overtime_minutes ?? 0),
+        r.is_late ? 'Yes' : 'No',
+        r.location || ''
+      ].join(','));
+      const csv = header + rows.join('\n');
+      const encodedUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `attendance_all_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({ title: 'Export complete', description: `${rows.length} records exported for ${format(monthStart, 'MMM yyyy')}` });
+    } catch (err: any) {
+      console.error('Export all employees failed', err);
+      toast({ title: 'Export failed', description: 'Could not export all employees for this month', variant: 'destructive' });
+    }
+  };
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[95vh] p-3' : 'max-w-6xl max-h-[90vh]'} overflow-y-auto`}>
         <DialogHeader className={isMobile ? 'pb-3' : ''}>
           <DialogTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
             <Eye className={isMobile ? 'h-4 w-4' : 'h-5 w-5'} />
-            Attendance Details - {employeeName}
+            Attendance Details - {effectiveEmployeeName}
           </DialogTitle>
           <DialogDescription className={isMobile ? 'text-sm' : ''}>
             Comprehensive attendance overview and detailed records
