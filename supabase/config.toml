@@ -43,3 +43,15 @@ verify_jwt = false
 [[functions]]
 name = "calendar-sync"
 verify_jwt = true
+
+[[functions]]
+name = "create-checkout"
+verify_jwt = true
+
+[[functions]]
+name = "check-subscription"
+verify_jwt = true
+
+[[functions]]
+name = "customer-portal"
+verify_jwt = true

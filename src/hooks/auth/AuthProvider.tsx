@@ -46,13 +46,28 @@ useAuthDebugger({ user, session, isLoading });
 // Refresh org subscription status
 const refreshSubscription = async () => {
   try {
-    const { data, error } = await supabase.functions.invoke('check-subscription');
-    if (error) throw error as any;
+    console.log('🔄 Starting subscription refresh...');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      console.warn('❌ No active session for subscription check');
+      setSubscribed(false);
+      return;
+    }
+
+    const { data, error } = await supabase.functions.invoke('check-subscription', {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+    
+    if (error) throw error;
+    
+    console.log('✅ Subscription data received:', data);
     setSubscribed(!!data?.subscribed);
     setSubscriptionTier(data?.subscription_tier ?? null);
     setSubscriptionEnd(data?.subscription_end ?? null);
   } catch (e) {
-    console.warn('Subscription check failed:', e);
+    console.error('❌ Subscription check failed:', e);
     setSubscribed(false);
     setSubscriptionTier(null);
     setSubscriptionEnd(null);

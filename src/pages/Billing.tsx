@@ -57,7 +57,15 @@ export default function Billing() {
     }
     setIsLoading(planId);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No active session');
+      }
+
       const { data, error } = await supabase.functions.invoke('create-checkout', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: {
           planTier: planId,
           interval: interval,
@@ -80,7 +88,16 @@ export default function Billing() {
   const handleManage = async () => {
     setIsLoading('manage');
     try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No active session');
+      }
+
+      const { data, error } = await supabase.functions.invoke('customer-portal', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank');
     } catch (e: any) {

@@ -38,10 +38,22 @@ if (!user) {
   return <Navigate to="/auth" replace />;
 }
 
-// Org subscription gating: if unsubscribed, allow only /billing
+// Org subscription gating: if unsubscribed, allow admins to access billing and dashboard
+// but redirect non-admins to billing page to encourage subscription
 const isBillingPath = location.pathname.startsWith('/billing');
+const isDashboardPath = location.pathname.startsWith('/dashboard');
+
 if (subscribed === false && !isBillingPath) {
-  return <Navigate to="/billing" replace />;
+  // Admins can access dashboard even without subscription to manage billing
+  if (isAdmin && isDashboardPath) {
+    // Allow access
+  } else if (!isAdmin) {
+    // Non-admins must wait for subscription
+    return <Navigate to="/billing" replace />;
+  } else if (isAdmin && !isDashboardPath && !isBillingPath) {
+    // Admins can access dashboard or billing, redirect to dashboard
+    return <Navigate to="/dashboard" replace />;
+  }
 }
 
   // Check single required role
