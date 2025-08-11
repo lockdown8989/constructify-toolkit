@@ -6,10 +6,11 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Check, X, ExternalLink } from 'lucide-react';
+import { Loader2, Check, X, ExternalLink, AlertTriangle } from 'lucide-react';
 import { useToast, toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
+
 const plans = [
   {
     id: 'pro',
@@ -73,6 +74,7 @@ export default function Billing() {
       navigate('/dashboard', { replace: true });
     }
   }, [isEmployee, isPayroll, navigate]);
+
   const displayPrice = (value: number | null) => {
     if (value == null) return 'Contact sales';
     return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(value);
@@ -197,6 +199,45 @@ export default function Billing() {
     } catch (e: any) {
       console.error('Portal error', e);
       toast({ description: e.message || 'Failed to open customer portal' });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!subscribed) {
+      toast({ description: 'No active subscription to cancel' });
+      return;
+    }
+
+    setIsLoading('cancel');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No active session');
+      }
+
+      // Use the customer portal to handle cancellation
+      const { data, error } = await supabase.functions.invoke('customer-portal', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      
+      if (error) throw error;
+      
+      if (data?.url) {
+        toast({ 
+          description: 'Opening Stripe portal where you can cancel your subscription...',
+          duration: 4000
+        });
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error('No portal URL received');
+      }
+    } catch (e: any) {
+      console.error('Cancel subscription error', e);
+      toast({ description: e.message || 'Failed to open cancellation portal' });
     } finally {
       setIsLoading(null);
     }
@@ -341,6 +382,23 @@ export default function Billing() {
           {isLoading === 'manage' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Manage subscription
         </Button>
+        
+        {subscribed && isAdmin && (
+          <Button 
+            variant="destructive" 
+            onClick={handleCancelSubscription} 
+            disabled={isLoading !== null}
+            className="flex items-center gap-2"
+          >
+            {isLoading === 'cancel' ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <AlertTriangle className="h-4 w-4" />
+            )}
+            Cancel Subscription
+          </Button>
+        )}
+        
         {subscribed === false && !isAdmin && (
           <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
             <X className="h-4 w-4" /> Your organization needs an active subscription. Ask your admin to subscribe.
