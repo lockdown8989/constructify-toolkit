@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/hooks/use-auth';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Shield } from 'lucide-react';
@@ -19,6 +20,7 @@ const SubscriptionBadge = () => {
       return;
     }
     try {
+      console.log('🔄 Opening subscription management from navbar PRO badge...');
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error('No active session');
       const { data, error } = await supabase.functions.invoke('customer-portal', {
@@ -26,6 +28,8 @@ const SubscriptionBadge = () => {
       });
       if (error) throw error;
       if (data?.url) {
+        console.log('🚀 Redirecting to subscription portal:', data.url);
+        toast({ description: 'Opening subscription management portal...' });
         window.location.href = data.url;
       } else {
         throw new Error('No portal URL received');
@@ -43,7 +47,7 @@ const SubscriptionBadge = () => {
     return (
       <Badge 
         variant="secondary" 
-        className="text-xs cursor-pointer"
+        className="text-xs cursor-pointer hover:bg-secondary/80 transition-colors"
         onClick={() => isAdmin ? navigate('/billing') : toast({ description: 'Please contact an administrator to manage billing' })}
         title={isAdmin ? 'Go to billing' : 'Billing (admins only)'}
       >
@@ -59,7 +63,7 @@ const SubscriptionBadge = () => {
   return (
     <Badge 
       variant="default" 
-      className="text-xs cursor-pointer"
+      className="text-xs cursor-pointer hover:bg-primary/90 transition-colors"
       onClick={handleManageClick}
       title="Manage subscription"
     >
