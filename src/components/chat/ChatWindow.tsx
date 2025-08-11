@@ -59,12 +59,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
   };
 
   const handleStartAiChat = () => {
+    if (!canUseAI) return;
     clearMessages(); // Clear any existing messages
     setView('ai');
     setIsAiMode(true);
   };
 
   const isAdmin = ['admin', 'employer', 'hr'].includes(userRole);
+  const canUseAI = ['admin', 'payroll'].includes(userRole);
 
   return (
     <div className="flex flex-col h-full bg-background rounded-lg overflow-hidden">
@@ -107,31 +109,35 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
                 </Button>
               )}
               
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleStartAiChat}
-                className="p-1 h-auto"
-                title="Start AI assistant chat"
-              >
-                <Bot className="w-4 h-4" />
-              </Button>
+              {canUseAI && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleStartAiChat}
+                  className="p-1 h-auto"
+                  title="Start AI assistant chat"
+                >
+                  <Bot className="w-4 h-4" />
+                </Button>
+              )}
             </>
           )}
           
           {view === 'chat' && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsAiMode(!isAiMode)}
-              className={cn(
-                "p-1 h-auto",
-                isAiMode && "bg-primary/10 text-primary"
-              )}
-              title={isAiMode ? "Switch to human chat" : "Switch to AI assistant"}
-            >
-              {isAiMode ? <Users className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-            </Button>
+            canUseAI && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsAiMode(!isAiMode)}
+                className={cn(
+                  "p-1 h-auto",
+                  isAiMode && "bg-primary/10 text-primary"
+                )}
+                title={isAiMode ? "Switch to human chat" : "Switch to AI assistant"}
+              >
+                {isAiMode ? <Users className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+              </Button>
+            )
           )}
           
           <Button
