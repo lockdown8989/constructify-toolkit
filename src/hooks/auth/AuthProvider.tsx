@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 useAuthDebugger({ user, session, isLoading });
 
 // Refresh org subscription status
-const refreshSubscription = async () => {
+const refreshSubscription = async (options?: { silent?: boolean }) => {
   try {
     console.log('🔄 Starting subscription refresh...');
     const { data: { session } } = await supabase.auth.getSession();
@@ -129,11 +129,19 @@ const refreshSubscription = async () => {
       toast({ description: 'Your free trial has ended. Your current plan has started.' });
     }
 
-    // Cross-tab subscription sync: notify other tabs/windows
-    try { localStorage.setItem('subscription-updated', String(Date.now())); } catch {}
-    try { const bc = new BroadcastChannel('subscription'); bc.postMessage({ type: 'updated' }); bc.close(); } catch {}
-    // Realtime broadcast to other connected users
-    try { subscriptionChannelRef.current?.send({ type: 'broadcast', event: 'updated', payload: { ts: Date.now(), subscribed: nowSubscribed, tier: normalizedTier } }); } catch {}
+    if (!options?.silent) {
+      // Cross-tab subscription sync: notify other tabs/windows
+      try { localStorage.setItem('subscription-updated', String(Date.now())); } catch {}
+      try { const bc = new BroadcastChannel('subscription'); bc.postMessage({ type: 'updated' }); bc.close(); } catch {}
+      // Realtime broadcast to other connected users
+      try {
+        subscriptionChannelRef.current?.send({
+          type: 'broadcast',
+          event: 'updated',
+          payload: { ts: Date.now(), subscribed: nowSubscribed, tier: normalizedTier }
+        });
+      } catch {}
+    }
   } catch (e) {
     console.error('❌ Subscription check failed:', e);
     setSubscribed(false);
@@ -293,14 +301,14 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'subscription-updated') {
-        refreshSubscription();
+        refreshSubscription({ silent: true });
       }
     };
     window.addEventListener('storage', onStorage);
     let bc: BroadcastChannel | null = null;
     try {
       bc = new BroadcastChannel('subscription');
-      bc.onmessage = () => refreshSubscription();
+      bc.onmessage = () => refreshSubscription({ silent: true });
     } catch {}
     return () => {
       window.removeEventListener('storage', onStorage);
@@ -314,7 +322,7 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
       .channel('subscription_broadcast', { config: { broadcast: { self: false } } })
       .on('broadcast', { event: 'updated' }, () => {
         // When any client broadcasts a subscription update, re-check status
-        refreshSubscription();
+        refreshSubscription({ silent: true });
       });
 
     const subscribe = async () => {
