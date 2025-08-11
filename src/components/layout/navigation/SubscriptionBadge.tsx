@@ -5,7 +5,8 @@ import { Crown, Shield } from 'lucide-react';
 const SubscriptionBadge = () => {
   const { subscribed, subscriptionTier, isAdmin } = useAuth();
 
-  if (!isAdmin || subscribed === null) return null;
+  // Show badge to all authenticated users once subscription state is known
+  if (subscribed === undefined) return null;
 
   if (!subscribed) {
     return (
@@ -22,7 +23,9 @@ const SubscriptionBadge = () => {
   return (
     <Badge variant="default" className="text-xs">
       <TierIcon className="w-3 h-3 mr-1" />
-      {subscriptionTier?.charAt(0).toUpperCase() + subscriptionTier?.slice(1) || 'Active'}
+      {subscriptionTier === 'pro' 
+        ? 'PRO' 
+        : subscriptionTier?.charAt(0).toUpperCase() + subscriptionTier?.slice(1) || 'Active'}
     </Badge>
   );
 };

@@ -11,23 +11,16 @@ import { useToast, toast } from '@/hooks/use-toast';
 
 const plans = [
   {
-    id: 'basic',
-    name: 'Basic',
-    features: ['Core HR', 'Attendance tracking', 'Email support'],
-    monthly: 7.99,
-    annual: 79.99,
-  },
-  {
     id: 'pro',
-    name: 'Pro',
-    features: ['Everything in Basic', 'Advanced scheduling', 'Payroll exports', 'Priority support'],
+    name: 'PRO',
+    features: ['All features unlocked', 'Advanced scheduling', 'Payroll exports', 'Priority support'],
     monthly: 14.99,
     annual: 149.99,
   },
   {
     id: 'custom',
     name: 'Custom',
-    features: ['Tailored onboarding', 'Role-based training', 'SLA & SSO options'],
+    features: ['Pick exactly what you need', 'Per-feature pricing', 'SLA & SSO options'],
     monthly: null,
     annual: null,
   },
@@ -39,6 +32,7 @@ export default function Billing() {
   const { isAdmin, subscribed, subscriptionTier, subscriptionEnd, refreshSubscription } = useAuth();
   const [interval, setInterval] = useState<Interval>('month');
   const [isLoading, setIsLoading] = useState<string | null>(null);
+  const [customSelections, setCustomSelections] = useState<string[]>([]);
   const currency = 'GBP';
 
   const displayPrice = (value: number | null) => {
@@ -50,7 +44,7 @@ export default function Billing() {
     <span className="ml-2 inline-flex items-center rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">14‑day trial</span>
   );
 
-  const handleSubscribe = async (planId: 'basic'|'pro') => {
+  const handleSubscribe = async (planId: 'pro') => {
     if (!isAdmin) {
       toast({ description: 'Only administrators can start a subscription' });
       return;
@@ -109,11 +103,14 @@ export default function Billing() {
   };
 
   const handleRefresh = async () => {
+    setIsLoading('refresh');
     try {
       await refreshSubscription?.();
       toast({ description: 'Subscription status refreshed' });
     } catch (e: any) {
       toast({ description: 'Could not refresh subscription' });
+    } finally {
+      setIsLoading(null);
     }
   };
 
@@ -130,7 +127,7 @@ export default function Billing() {
     <div className="container mx-auto px-4 py-6 space-y-6">
       <Helmet>
         <title>Billing & Subscription | TeamPulse HR</title>
-        <meta name="description" content="Manage your TeamPulse HR subscription. Basic, Pro, and Custom plans with a 14‑day free trial for administrators." />
+        <meta name="description" content="Manage your TeamPulse HR subscription. PRO and Custom plans with a 14‑day free trial for administrators." />
         <link rel="canonical" href={`${window.location.origin}/billing`} />
       </Helmet>
 
@@ -174,6 +171,29 @@ export default function Billing() {
                   </li>
                 ))}
               </ul>
+
+              {p.id === 'custom' && (
+                <div className="space-y-2">
+                  <Label className="text-sm">Select features</Label>
+                  <div className="grid grid-cols-1 gap-2">
+                    {['Core HR','Attendance tracking','Scheduling','Payroll exports','Priority support','SSO','SLA'].map((opt) => (
+                      <label key={opt} className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 accent-primary"
+                          checked={customSelections.includes(opt)}
+                          onChange={(e) =>
+                            setCustomSelections((prev) =>
+                              e.target.checked ? [...prev, opt] : prev.filter((x) => x !== opt)
+                            )
+                          }
+                        />
+                        <span>{opt}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {p.id === 'custom' ? (
                 <Button variant="outline" onClick={() => window.open('#contact', '_self')}>
