@@ -43,6 +43,7 @@ const ScheduleRequests = lazy(() => import('./pages/ScheduleRequests'));
 const Profile = lazy(() => import('./pages/Profile'));
 const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
 const OvertimeManagement = lazy(() => import('./pages/OvertimeManagement'));
+const Billing = lazy(() => import('./pages/Billing'));
 
 // Public marketing and legal pages
 import LandingPage from './pages/LandingPage';
@@ -151,6 +152,18 @@ const AppContent = () => {
             <Route index element={
               <Suspense fallback={<LoadingSpinner />}>
                 <ProfileSettings />
+              </Suspense>
+            } />
+</Route>
+          
+          <Route path="/billing" element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={
+              <Suspense fallback={<LoadingSpinner />}>
+                <Billing />
               </Suspense>
             } />
           </Route>

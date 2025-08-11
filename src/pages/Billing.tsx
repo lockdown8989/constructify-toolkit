@@ -1,0 +1,201 @@
+import React, { useMemo, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2, Check, X, ExternalLink } from 'lucide-react';
+import { useToast, toast } from '@/hooks/use-toast';
+
+const plans = [
+  {
+    id: 'basic',
+    name: 'Basic',
+    features: ['Core HR', 'Attendance tracking', 'Email support'],
+    monthly: 7.99,
+    annual: 79.99,
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    features: ['Everything in Basic', 'Advanced scheduling', 'Payroll exports', 'Priority support'],
+    monthly: 14.99,
+    annual: 149.99,
+  },
+  {
+    id: 'custom',
+    name: 'Custom',
+    features: ['Tailored onboarding', 'Role-based training', 'SLA & SSO options'],
+    monthly: null,
+    annual: null,
+  },
+] as const;
+
+type Interval = 'month' | 'year';
+
+export default function Billing() {
+  const { isAdmin, subscribed, subscriptionTier, subscriptionEnd, refreshSubscription } = useAuth();
+  const [interval, setInterval] = useState<Interval>('month');
+  const [isLoading, setIsLoading] = useState<string | null>(null);
+  const currency = 'GBP';
+
+  const displayPrice = (value: number | null) => {
+    if (value == null) return 'Contact sales';
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(value);
+  };
+
+  const trialBadge = (
+    <span className="ml-2 inline-flex items-center rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">14‑day trial</span>
+  );
+
+  const handleSubscribe = async (planId: 'basic'|'pro') => {
+    if (!isAdmin) {
+      toast({ description: 'Only administrators can start a subscription' });
+      return;
+    }
+    setIsLoading(planId);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          planTier: planId,
+          interval: interval,
+          currency: 'gbp',
+          trialDays: 14,
+        },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (e: any) {
+      console.error('Subscribe error', e);
+      toast({ description: e.message || 'Failed to start checkout' });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const handleManage = async () => {
+    setIsLoading('manage');
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+      if (error) throw error;
+      if (data?.url) window.open(data.url, '_blank');
+    } catch (e: any) {
+      console.error('Portal error', e);
+      toast({ description: e.message || 'Failed to open customer portal' });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      await refreshSubscription?.();
+      toast({ description: 'Subscription status refreshed' });
+    } catch (e: any) {
+      toast({ description: 'Could not refresh subscription' });
+    }
+  };
+
+  const subtitle = useMemo(() => {
+    if (subscribed) {
+      const end = subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString() : '';
+      return `Your plan: ${subscriptionTier ?? 'Active'} • Renews ${end}`;
+    }
+    if (subscribed === false) return 'No active subscription. Access is limited until you subscribe.';
+    return 'Choose a plan that fits your team';
+  }, [subscribed, subscriptionEnd, subscriptionTier]);
+
+  return (
+    <div className="container mx-auto px-4 py-6 space-y-6">
+      <Helmet>
+        <title>Billing & Subscription | TeamPulse HR</title>
+        <meta name="description" content="Manage your TeamPulse HR subscription. Basic, Pro, and Custom plans with a 14‑day free trial for administrators." />
+        <link rel="canonical" href={`${window.location.origin}/billing`} />
+      </Helmet>
+
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Billing & Subscription</h1>
+          <p className="text-muted-foreground text-sm mt-1">{subtitle}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="interval">{interval === 'month' ? 'Monthly' : 'Annually'}</Label>
+            <Switch id="interval" checked={interval === 'year'} onCheckedChange={(v) => setInterval(v ? 'year' : 'month')} />
+          </div>
+          <Button variant="secondary" onClick={handleRefresh} disabled={isLoading !== null}>
+            Refresh status
+          </Button>
+        </div>
+      </header>
+
+      <main className="grid gap-4 md:grid-cols-3">
+        {plans.map((p) => (
+          <Card key={p.id} className={p.id === 'pro' ? 'ring-1 ring-primary' : ''}>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>{p.name}</span>
+                {p.id !== 'custom' && trialBadge}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-3xl font-semibold">
+                {p.id === 'custom' ? 'Custom' : displayPrice(interval === 'month' ? p.monthly : p.annual)}
+                {p.id !== 'custom' && (
+                  <span className="ml-1 text-sm text-muted-foreground">/ {interval}</span>
+                )}
+              </div>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {p.features.map((f) => (
+                  <li key={f} className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-primary" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {p.id === 'custom' ? (
+                <Button variant="outline" onClick={() => window.open('#contact', '_self')}>
+                  Contact sales
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  className="w-full"
+                  onClick={() => handleSubscribe(p.id)}
+                  disabled={isLoading !== null || !isAdmin}
+                >
+                  {isLoading === p.id ? (
+                    <span className="inline-flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</span>
+                  ) : (
+                    <span>{isAdmin ? 'Start 14‑day trial' : 'Admin required'}</span>
+                  )}
+                </Button>
+              )}
+
+              <div className="text-xs text-muted-foreground">
+                {p.id !== 'custom' ? 'Cancel anytime. Only the admin is charged; team inherits access.' : 'Let’s tailor features and pricing for your org.'}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </main>
+
+      <aside className="mt-4 flex flex-wrap gap-3">
+        <Button variant="outline" onClick={handleManage} disabled={isLoading !== null}>
+          {isLoading === 'manage' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Manage subscription
+        </Button>
+        {subscribed === false && !isAdmin && (
+          <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+            <X className="h-4 w-4" /> Your organization needs an active subscription. Ask your admin to subscribe.
+          </div>
+        )}
+      </aside>
+    </div>
+  );
+}

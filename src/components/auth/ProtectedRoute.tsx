@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 
 interface ProtectedRouteProps {
@@ -14,7 +14,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRole, 
   requiredRoles 
 }) => {
-  const { user, isLoading, isAdmin, isHR, isManager, isEmployee, isPayroll } = useAuth();
+  const { user, isLoading, isAdmin, isHR, isManager, isEmployee, isPayroll, subscribed } = useAuth();
+  const location = useLocation();
 
   console.log('ProtectedRoute check:', {
     isLoading,
@@ -32,10 +33,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  if (!user) {
-    console.log('No user, redirecting to auth');
-    return <Navigate to="/auth" replace />;
-  }
+if (!user) {
+  console.log('No user, redirecting to auth');
+  return <Navigate to="/auth" replace />;
+}
+
+// Org subscription gating: if unsubscribed, allow only /billing
+const isBillingPath = location.pathname.startsWith('/billing');
+if (subscribed === false && !isBillingPath) {
+  return <Navigate to="/billing" replace />;
+}
 
   // Check single required role
   if (requiredRole) {

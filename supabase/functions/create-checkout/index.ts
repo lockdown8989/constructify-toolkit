@@ -11,6 +11,19 @@ const log = (step: string, details?: unknown) => {
   console.log(`[CREATE-CHECKOUT] ${step}`, details ?? "");
 };
 
+type Payload = {
+  planTier?: 'basic' | 'pro';
+  interval?: 'month' | 'year';
+  currency?: string; // e.g., 'gbp'
+  trialDays?: number; // default 14
+  priceId?: string; // optional Stripe Price ID to override
+};
+
+const prices = {
+  basic: { month: 799, year: 7999 },
+  pro: { month: 1499, year: 14999 },
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -68,7 +81,13 @@ serve(async (req) => {
       organizationId = inserted.id;
     }
 
-    // Create Checkout session for subscription
+    // Parse payload
+    const body = (await req.json().catch(() => ({}))) as Payload;
+    const planTier = body.planTier ?? 'basic';
+    const interval = body.interval ?? 'month';
+    const currency = (body.currency ?? 'gbp').toLowerCase();
+    const trialDays = typeof body.trialDays === 'number' ? body.trialDays : 14;
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
     // Reuse existing customer if present
@@ -78,31 +97,43 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
-    // Defaults: Monthly 7.99 GBP; can be changed later to Price IDs
+    // Determine price
+    const priceId = body.priceId;
+    let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[];
+    if (priceId) {
+      lineItems = [{ price: priceId, quantity: 1 }];
+    } else {
+      const unit_amount = prices[planTier][interval];
+      lineItems = [{
+        price_data: {
+          currency,
+          product_data: { name: `${planTier === 'basic' ? 'Basic' : 'Pro'} Plan Subscription (${interval})` },
+          unit_amount,
+          recurring: { interval },
+        },
+        quantity: 1,
+      }];
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price_data: {
-            currency: "gbp",
-            product_data: { name: "Pro Plan Subscription" },
-            unit_amount: 799,
-            recurring: { interval: "month" },
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: lineItems,
       mode: "subscription",
-      success_url: `${origin}/billing?status=success`,
-      cancel_url: `${origin}/billing?status=canceled`,
+      success_url: `${origin}/billing?status=success&plan=${planTier}&interval=${interval}`,
+      cancel_url: `${origin}/billing?status=canceled&plan=${planTier}&interval=${interval}`,
+      subscription_data: {
+        trial_period_days: trialDays,
+      },
       metadata: {
         organization_id: organizationId!,
         owner_user_id: user.id,
+        plan: planTier,
+        interval,
       },
     });
 
-    log("Checkout session created", { sessionId: session.id, organizationId });
+    log("Checkout session created", { sessionId: session.id, organizationId, planTier, interval });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
