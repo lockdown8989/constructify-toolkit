@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, CalendarDays, UserCheck, DollarSign, FileText, ChevronDown, Users, TrendingUp, Shield, Smartphone, Download, Timer, AlarmClock, BarChart3, Settings } from 'lucide-react';
+import { Clock, CalendarDays, UserCheck, DollarSign, FileText, ChevronDown, Users, TrendingUp, Shield, Smartphone, Download, Timer, AlarmClock, BarChart3, Settings, Bell, ClipboardList } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
@@ -425,71 +425,264 @@ const LandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Features Grid */}
-        <section id="features" className="responsive-container py-24 bg-gradient-to-br from-background to-primary/5 rounded-3xl">
+        {/* Comprehensive Features Section */}
+        <section id="features" className="responsive-container py-24">
           <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl md:text-5xl font-bold">What You Can Do With TeamPulse</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Real features from your app — click to jump in.
+            <h2 className="text-4xl md:text-5xl font-bold">Complete Workforce Management Solution</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Everything you need to manage your team efficiently, from scheduling to payroll, in one powerful platform
             </p>
+            <Button asChild size="lg" className="mt-8 bg-gradient-to-r from-primary to-primary/90 shadow-lg">
+              <Link to="/learn-more#features">See Demo</Link>
+            </Button>
           </div>
-          {(() => {
-          const target = (path: string) => isAuthenticated ? path : '/auth?tab=signup';
-          const featureItems = [{
-            icon: <CalendarDays className="h-10 w-10" />,
-            title: 'Scheduling',
-            description: 'Create and manage shifts with conflict detection and notifications.',
-            href: target('/schedule')
-          }, {
-            icon: <Clock className="h-10 w-10" />,
-            title: 'Attendance',
-            description: 'Track working hours and attendance across teams.',
-            href: target('/attendance')
-          }, {
-            icon: <UserCheck className="h-10 w-10" />,
-            title: 'Leave Management',
-            description: 'Request, approve and track leave balances seamlessly.',
-            href: target('/leave-management')
-          }, {
-            icon: <Timer className="h-10 w-10" />,
-            title: 'Time Clock',
-            description: 'Kiosk and mobile clock-in/out for staff and managers.',
-            href: target('/time-clock')
-          }, {
-            icon: <AlarmClock className="h-10 w-10" />,
-            title: 'Overtime',
-            description: 'Configure rules and track overtime automatically.',
-            href: target('/overtime-management')
-          }, {
-            icon: <DollarSign className="h-10 w-10" />,
-            title: 'Payroll',
-            description: 'Automate payroll from attendance and overtime data.',
-            href: target('/payroll')
-          }, {
-            icon: <FileText className="h-10 w-10" />,
-            title: 'Payslips',
-            description: 'Generate and distribute digital payslips with ease.',
-            href: target('/payslips')
-          }, {
-            icon: <BarChart3 className="h-10 w-10" />,
-            title: 'Reports',
-            description: 'Analytics dashboards for workforce and payroll insights.',
-            href: target('/payroll-reports')
-          }, {
-            icon: <Users className="h-10 w-10" />,
-            title: 'People',
-            description: 'Centralized employee directory with roles.',
-            href: target('/people')
-          }, {
-            icon: <Settings className="h-10 w-10" />,
-            title: 'Profile & Settings',
-            description: 'Manage profile, preferences and security.',
-            href: target('/settings')
-          }];
-          return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {featureItems.map(f => <FeatureCard key={f.title} icon={f.icon} title={f.title} description={f.description} href={f.href} ctaLabel={isAuthenticated ? 'Open' : 'Explore'} />)}
-              </div>;
-        })()}
+
+          {/* Core Features - Quick Access */}
+          <div className="mb-20">
+            <h3 className="text-2xl font-bold text-center mb-8">Quick Access Features</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+              {(() => {
+                const target = (path: string) => isAuthenticated ? path : '/auth?tab=signup';
+                const quickFeatures = [
+                  {
+                    icon: <BarChart3 className="h-8 w-8" />,
+                    title: 'Dashboard',
+                    href: target('/dashboard')
+                  },
+                  {
+                    icon: <UserCheck className="h-8 w-8" />,
+                    title: 'Attendance',
+                    href: target('/attendance')
+                  },
+                  {
+                    icon: <FileText className="h-8 w-8" />,
+                    title: 'Leave Mgmt',
+                    href: target('/leave-management')
+                  },
+                  {
+                    icon: <Bell className="h-8 w-8" />,
+                    title: 'Requests',
+                    href: target('/schedule-requests')
+                  },
+                  {
+                    icon: <CalendarDays className="h-8 w-8" />,
+                    title: 'Schedule',
+                    href: target('/schedule')
+                  }
+                ];
+                
+                return quickFeatures.map(feature => (
+                  <Card key={feature.title} className="group hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                    <Link to={feature.href} className="block p-4 text-center">
+                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-primary/20 transition-colors">
+                        <div className="text-primary">
+                          {feature.icon}
+                        </div>
+                      </div>
+                      <h4 className="font-medium text-sm">{feature.title}</h4>
+                    </Link>
+                  </Card>
+                ));
+              })()}
+            </div>
+          </div>
+
+          {/* Role-Based Feature Sections */}
+          <div className="space-y-20">
+            {/* Employee Features */}
+            <div className="bg-gradient-to-br from-blue-50/50 to-blue-100/30 rounded-3xl p-8 md:p-12">
+              <div className="text-center mb-12">
+                <h3 className="text-3xl font-bold mb-4">For Employees</h3>
+                <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+                  Empower your team with self-service tools and mobile-first experience
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[
+                  {
+                    icon: <Smartphone className="w-8 h-8" />,
+                    title: 'Mobile Time Clock',
+                    description: 'Clock in/out from anywhere with GPS verification and face recognition security.',
+                    href: '/learn-more#mobile-time-clock'
+                  },
+                  {
+                    icon: <FileText className="w-8 h-8" />,
+                    title: 'Leave Requests',
+                    description: 'Submit leave requests, track balances, and view approval status in real-time.',
+                    href: '/learn-more#employee-leave'
+                  },
+                  {
+                    icon: <CalendarDays className="w-8 h-8" />,
+                    title: 'Schedule Access',
+                    description: 'View schedules, request changes, and get notifications for updates.',
+                    href: '/learn-more#employee-schedule'
+                  }
+                ].map((feature, index) => (
+                  <FeatureCard
+                    key={index}
+                    icon={feature.icon}
+                    title={feature.title}
+                    description={feature.description}
+                    href={feature.href}
+                    ctaLabel="Learn More"
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Manager Features */}
+            <div className="bg-gradient-to-br from-green-50/50 to-green-100/30 rounded-3xl p-8 md:p-12">
+              <div className="text-center mb-12">
+                <h3 className="text-3xl font-bold mb-4">For Managers & Administrators</h3>
+                <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+                  Complete oversight and management tools for team leaders
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {(() => {
+                  const target = (path: string) => isAuthenticated ? path : '/auth?tab=signup';
+                  return [
+                    {
+                      icon: <Users className="w-8 h-8" />,
+                      title: 'People Management',
+                      description: 'Manage employee profiles, roles, permissions, and organizational hierarchy.',
+                      href: isAuthenticated ? '/people' : target('/people')
+                    },
+                    {
+                      icon: <CalendarDays className="w-8 h-8" />,
+                      title: 'Shift Calendar',
+                      description: 'Visual scheduling interface with drag-and-drop, shift templates, and bulk operations.',
+                      href: isAuthenticated ? '/shift-calendar' : target('/shift-calendar')
+                    },
+                    {
+                      icon: <Timer className="w-8 h-8" />,
+                      title: 'Employee Rotas',
+                      description: 'Create rotating schedules, manage shift patterns, and ensure fair distribution.',
+                      href: isAuthenticated ? '/rota-employee' : target('/rota-employee')
+                    },
+                    {
+                      icon: <ClipboardList className="w-8 h-8" />,
+                      title: 'Workflow Management',
+                      description: 'Track tasks, processes, and employee performance with customizable workflows.',
+                      href: isAuthenticated ? '/employee-workflow' : target('/employee-workflow')
+                    },
+                    {
+                      icon: <Clock className="w-8 h-8" />,
+                      title: 'Manager Time Clock',
+                      description: 'Monitor employee attendance, approve timesheets, and manage exceptions.',
+                      href: isAuthenticated ? '/manager-time-clock' : target('/manager-time-clock')
+                    },
+                    {
+                      icon: <BarChart3 className="w-8 h-8" />,
+                      title: 'Analytics Dashboard',
+                      description: 'Real-time insights, attendance reports, and performance metrics.',
+                      href: target('/dashboard')
+                    }
+                  ].map((feature, index) => (
+                    <FeatureCard
+                      key={index}
+                      icon={feature.icon}
+                      title={feature.title}
+                      description={feature.description}
+                      href={feature.href}
+                      ctaLabel={isAuthenticated ? 'Open' : 'Explore'}
+                    />
+                  ));
+                })()}
+              </div>
+            </div>
+
+            {/* Payroll Administrator Features */}
+            <div className="bg-gradient-to-br from-purple-50/50 to-purple-100/30 rounded-3xl p-8 md:p-12">
+              <div className="text-center mb-12">
+                <h3 className="text-3xl font-bold mb-4">For Payroll Administrators</h3>
+                <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+                  Comprehensive payroll management with automated processing and compliance
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {(() => {
+                  const target = (path: string) => isAuthenticated ? path : '/auth?tab=signup';
+                  return [
+                    {
+                      icon: <DollarSign className="w-8 h-8" />,
+                      title: 'Payroll Processing',
+                      description: 'Automated payroll runs with overtime, deductions, taxes, and compliance features.',
+                      href: isAuthenticated ? '/payroll' : target('/payroll')
+                    },
+                    {
+                      icon: <BarChart3 className="w-8 h-8" />,
+                      title: 'Payroll Dashboard',
+                      description: 'Real-time payroll analytics, cost tracking, and budget monitoring.',
+                      href: isAuthenticated ? '/payroll-dashboard' : target('/payroll-dashboard')
+                    },
+                    {
+                      icon: <FileText className="w-8 h-8" />,
+                      title: 'Payroll Reports',
+                      description: 'Comprehensive reporting for tax filings, audits, and financial analysis.',
+                      href: isAuthenticated ? '/payroll-reports' : target('/payroll-reports')
+                    },
+                    {
+                      icon: <FileText className="w-8 h-8" />,
+                      title: 'Payslip Management',
+                      description: 'Generate, distribute, and manage digital payslips with employee portal access.',
+                      href: isAuthenticated ? '/payslips' : target('/payslips')
+                    }
+                  ].map((feature, index) => (
+                    <FeatureCard
+                      key={index}
+                      icon={feature.icon}
+                      title={feature.title}
+                      description={feature.description}
+                      href={feature.href}
+                      ctaLabel={isAuthenticated ? 'Open' : 'Learn More'}
+                    />
+                  ));
+                })()}
+              </div>
+            </div>
+
+            {/* Integration Features */}
+            <div className="bg-gradient-to-br from-orange-50/50 to-orange-100/30 rounded-3xl p-8 md:p-12">
+              <div className="text-center mb-12">
+                <h3 className="text-3xl font-bold mb-4">Advanced Integrations</h3>
+                <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+                  Connect with your existing tools and streamline your workflow
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[
+                  {
+                    icon: <Settings className="w-8 h-8" />,
+                    title: 'Payment Processing',
+                    description: 'Stripe integration for seamless payment handling, reimbursements, and subscription management.',
+                    href: '/learn-more#payment-integration'
+                  },
+                  {
+                    icon: <Bell className="w-8 h-8" />,
+                    title: 'Smart Notifications',
+                    description: 'Email and SMS alerts for schedules, payroll, leave requests, and important updates.',
+                    href: '/learn-more#notifications'
+                  },
+                  {
+                    icon: <CalendarDays className="w-8 h-8" />,
+                    title: 'Calendar Sync',
+                    description: 'Two-way sync with Google Calendar and Outlook for seamless schedule management.',
+                    href: '/learn-more#calendar-sync'
+                  }
+                ].map((feature, index) => (
+                  <FeatureCard
+                    key={index}
+                    icon={feature.icon}
+                    title={feature.title}
+                    description={feature.description}
+                    href={feature.href}
+                    ctaLabel="See Demo"
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Pricing Section */}
