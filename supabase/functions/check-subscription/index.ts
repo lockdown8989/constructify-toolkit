@@ -87,16 +87,23 @@ serve(async (req) => {
 
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
-      const subs = await stripe.subscriptions.list({ customer: customerId, status: "active", limit: 1 });
-      subscribed = subs.data.length > 0;
-      if (subscribed) {
-        const sub = subs.data[0];
+      // Fetch subscriptions with all statuses and determine active/trialing
+      const subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 5 });
+      const activeOrTrial = subs.data.find((s) => s.status === "active" || s.status === "trialing");
+      subscribed = !!activeOrTrial;
+      if (activeOrTrial) {
+        const sub = activeOrTrial;
+        const isTrial = sub.status === "trialing";
+        // End of current period; for trial also capture trial_end
         subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
         const price = sub.items.data[0].price;
         const amount = price.unit_amount || 0;
         if (amount <= 999) subscriptionTier = "Basic";
         else if (amount <= 1999) subscriptionTier = "Premium";
         else subscriptionTier = "Enterprise";
+        // Attach trial flags to be returned (handled below)
+        (req as any)._subscription_is_trial = isTrial;
+        (req as any)._subscription_trial_end = sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null;
       }
     }
 
@@ -122,6 +129,8 @@ serve(async (req) => {
         subscribed,
         subscription_tier: subscriptionTier,
         subscription_end: subscriptionEnd,
+        subscription_is_trial: (req as any)._subscription_is_trial ?? false,
+        subscription_trial_end: (req as any)._subscription_trial_end ?? null,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );

@@ -8,6 +8,7 @@ import { useRoles } from './useRoles';
 import { useAuthDebugger } from './useAuthDebugger';
 import { SessionTimeoutWarning } from '@/components/auth/SessionTimeoutWarning';
 import { ErrorBoundary } from '@/components/auth/ErrorBoundary';
+import { toast } from '@/hooks/use-toast';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -26,6 +27,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [subscribed, setSubscribed] = useState<boolean | undefined>(undefined);
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [subscriptionIsTrial, setSubscriptionIsTrial] = useState<boolean>(false);
+  const [subscriptionTrialEnd, setSubscriptionTrialEnd] = useState<string | null>(null);
 
   console.log("🔐 AuthProvider roles state:", {
     isAdmin,
@@ -63,9 +66,17 @@ const refreshSubscription = async () => {
     if (error) throw error;
     
     console.log('✅ Subscription data received:', data);
-    setSubscribed(!!data?.subscribed);
+    const wasTrial = subscriptionIsTrial;
+    const nowSubscribed = !!data?.subscribed;
+    const nowIsTrial = !!data?.subscription_is_trial;
+    setSubscribed(nowSubscribed);
     setSubscriptionTier(data?.subscription_tier ?? null);
     setSubscriptionEnd(data?.subscription_end ?? null);
+    setSubscriptionIsTrial(nowIsTrial);
+    setSubscriptionTrialEnd(data?.subscription_trial_end ?? null);
+    if (wasTrial && !nowIsTrial && nowSubscribed) {
+      toast({ description: 'Your free trial has ended. Your current plan has started.' });
+    }
   } catch (e) {
     console.error('❌ Subscription check failed:', e);
     setSubscribed(false);
@@ -214,6 +225,8 @@ const value: AuthContextType = {
   subscribed,
   subscriptionTier,
   subscriptionEnd,
+  subscriptionIsTrial,
+  subscriptionTrialEnd,
   refreshSubscription,
   ...authActions, // This includes signIn, signUp, resetPassword, updatePassword, signOut, deleteAccount
 };
