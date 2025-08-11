@@ -2,19 +2,12 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Calendar, UserPlus, Loader2 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/use-employees';
 import { createShiftAssignment } from '@/utils/calendar-actions';
-
 interface DateActionMenuProps {
   isOpen: boolean;
   onClose: () => void;
@@ -23,7 +16,6 @@ interface DateActionMenuProps {
   hasManagerAccess?: boolean;
   selectedDate?: Date;
 }
-
 const DateActionMenu: React.FC<DateActionMenuProps> = ({
   isOpen,
   onClose,
@@ -32,16 +24,21 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
   hasManagerAccess = false,
   selectedDate
 }) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const { data: employees = [] } = useEmployees({});
+  const {
+    user
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
+  const {
+    data: employees = []
+  } = useEmployees({});
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   // Function to log calendar actions - keep this for analytics
   const logCalendarAction = async (actionType: string) => {
     if (!user) return;
-    
-    try {      
+    try {
       await supabase.from('calendar_actions').insert({
         action_type: actionType,
         date: selectedDate?.toISOString(),
@@ -60,15 +57,14 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
   const handleAddShift = async () => {
     try {
       setIsProcessing(true);
-      
+
       // Log the action but don't show a toast message
       await logCalendarAction('open_add_shift_dialog');
-      
       if (selectedDate) {
         // Format time to be at the start of business hours (9 AM)
         const startTime = new Date(selectedDate);
         startTime.setHours(9, 0, 0, 0);
-        
+
         // End time is 8 hours later
         const endTime = new Date(startTime);
         endTime.setHours(startTime.getHours() + 8);
@@ -84,7 +80,6 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
           }
         });
       }
-      
       if (onAddShift) {
         onAddShift(); // Call the parent component's handler to open the dialog
       }
@@ -105,10 +100,9 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
   const handleAddEmployee = async () => {
     try {
       setIsProcessing(true);
-      
+
       // Log the action but don't show a toast message
       await logCalendarAction('open_add_employee_dialog');
-      
       if (selectedDate) {
         // Record the intent in database without showing a toast
         await supabase.from('calendar_actions').insert({
@@ -121,14 +115,13 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
           }
         });
       }
-      
       if (onAddEmployee) {
         onAddEmployee();
       }
     } catch (error) {
       console.error('Error in handleAddEmployee:', error);
       toast({
-        title: "Error", 
+        title: "Error",
         description: "Failed to open employee dialog",
         variant: "destructive"
       });
@@ -137,13 +130,8 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
       onClose();
     }
   };
-
-  const dateString = selectedDate 
-    ? format(selectedDate, 'EEEE, MMMM d, yyyy')
-    : 'Selected Date';
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+  const dateString = selectedDate ? format(selectedDate, 'EEEE, MMMM d, yyyy') : 'Selected Date';
+  return <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{dateString}</DialogTitle>
@@ -153,35 +141,14 @@ const DateActionMenu: React.FC<DateActionMenuProps> = ({
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
-          <Button
-            onClick={handleAddShift}
-            className="flex items-center gap-2"
-            disabled={!hasManagerAccess || isProcessing}
-          >
-            {isProcessing ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <Calendar className="h-5 w-5" />
-            )}
+          <Button onClick={handleAddShift} className="flex items-center gap-2" disabled={!hasManagerAccess || isProcessing}>
+            {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Calendar className="h-5 w-5" />}
             Add shift
           </Button>
           
-          <Button
-            onClick={handleAddEmployee}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-            disabled={!hasManagerAccess || isProcessing}
-          >
-            {isProcessing ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <UserPlus className="h-5 w-5" />
-            )}
-            Add employee
-          </Button>
+          
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
-
 export default DateActionMenu;
