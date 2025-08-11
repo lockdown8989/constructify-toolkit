@@ -165,7 +165,7 @@ serve(async (req) => {
 
       const summary = summarizeAction(fallback);
       return new Response(
-        JSON.stringify({ response: summary, action: fallback }),
+        JSON.stringify({ response: summary, action: fallback, note: 'gemini_error_fallback', gemini_error: String(geminiErr) }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -173,9 +173,21 @@ serve(async (req) => {
     const parsed = extractJson(modelText);
     if (!parsed || typeof parsed !== 'object') {
       console.warn('Model returned non-JSON or unparsable output:', modelText);
+      // Graceful fallback to heuristic mapping instead of 502
+      const lower = message.toLowerCase();
+      const fallback = lower.includes('swap')
+        ? { route: '/api/shifts/swap', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['from_employee_id','to_employee_id','date','start_time','end_time','location'] }
+        : lower.includes('conflict')
+        ? { route: '/api/shifts/conflict-check', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['employee_id','date','start_time','end_time','location'] }
+        : lower.includes('overtime')
+        ? { route: '/api/shifts/overtime-log', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['employee_id','date','minutes'] }
+        : lower.includes('clock') || lower.includes('attendance')
+        ? { route: '/api/shifts/track', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['employee_id','date','action'] }
+        : { route: '/api/shifts/publish', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['employee_id','date','start_time','end_time','role','location'] };
+      const summary = summarizeAction(fallback);
       return new Response(
-        JSON.stringify({ error: 'AI returned invalid format', raw: modelText }),
-        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ response: summary, action: fallback, note: 'fallback_used' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
