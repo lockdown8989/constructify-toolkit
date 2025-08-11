@@ -287,7 +287,7 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
       toast({ description: 'Payment canceled.' });
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [refreshSubscription]);
+  }, []);
 
   // Listen for subscription updates from other tabs/windows
   useEffect(() => {
@@ -306,7 +306,7 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
       window.removeEventListener('storage', onStorage);
       try { bc?.close(); } catch {}
     };
-  }, [refreshSubscription]);
+  }, []);
 
   // Realtime listener for subscription updates from other users
   useEffect(() => {
@@ -332,7 +332,7 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
       try { if (subscriptionChannelRef.current) supabase.removeChannel(subscriptionChannelRef.current); } catch {}
       subscriptionChannelRef.current = null;
     };
-  }, [refreshSubscription]);
+  }, []);
 
 const value: AuthContextType = {
   user,
