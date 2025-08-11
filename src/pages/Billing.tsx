@@ -29,7 +29,7 @@ const plans = [
 type Interval = 'month' | 'year';
 
 export default function Billing() {
-  const { isAdmin, subscribed, subscriptionTier, subscriptionEnd, refreshSubscription } = useAuth();
+  const { user, isAdmin, subscribed, subscriptionTier, subscriptionEnd, refreshSubscription } = useAuth();
   const [interval, setInterval] = useState<Interval>('month');
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [customSelections, setCustomSelections] = useState<string[]>([]);
@@ -45,17 +45,31 @@ export default function Billing() {
   );
 
   const handleSubscribe = async (planId: 'pro') => {
+    console.log('🎯 handleSubscribe called:', { planId, isAdmin, userEmail: user?.email });
+    
     if (!isAdmin) {
+      console.warn('❌ User is not admin:', { isAdmin });
       toast({ description: 'Only administrators can start a subscription' });
       return;
     }
+    
     setIsLoading(planId);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('🔐 Getting session...');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('❌ Session error:', sessionError);
+        throw new Error(`Session error: ${sessionError.message}`);
+      }
+      
       if (!session?.access_token) {
+        console.error('❌ No active session');
         throw new Error('No active session');
       }
-
+      
+      console.log('✅ Session valid, calling create-checkout...');
+      
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -67,13 +81,36 @@ export default function Billing() {
           trialDays: 14,
         },
       });
-      if (error) throw error;
+      
+      console.log('📦 create-checkout response:', { data, error });
+      
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        throw error;
+      }
+      
       if (data?.url) {
+        console.log('🚀 Opening checkout URL:', data.url);
         window.open(data.url, '_blank');
+        toast({ description: 'Redirecting to checkout...' });
+      } else {
+        console.error('❌ No URL in response:', data);
+        throw new Error('No checkout URL received');
       }
     } catch (e: any) {
-      console.error('Subscribe error', e);
-      toast({ description: e.message || 'Failed to start checkout' });
+      console.error('💥 Subscribe error:', e);
+      
+      // More detailed error messages
+      let errorMessage = 'Failed to start checkout';
+      if (e.name === 'FunctionsFetchError') {
+        errorMessage = 'Cannot connect to payment service. Please check your connection and try again.';
+      } else if (e.message?.includes('No active session')) {
+        errorMessage = 'Session expired. Please refresh the page and try again.';
+      } else if (e.message) {
+        errorMessage = e.message;
+      }
+      
+      toast({ description: errorMessage });
     } finally {
       setIsLoading(null);
     }
