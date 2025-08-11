@@ -73,42 +73,11 @@ async function callGemini(systemPrompt: string, userMessage: string, conversatio
 
 function buildSystemPrompt() {
   return (
-    'System Role: You are the AI assistant for an employee scheduling system.\n' +
-    'You ONLY respond with a strict JSON object, no prose, no markdown.\n' +
-    'Understand user intent and map it to one of these backend routes and methods:\n' +
-    '- POST /api/shifts/publish\n' +
-    '- POST /api/shifts/conflict-check\n' +
-    '- POST /api/shifts/swap\n' +
-    '- POST /api/shifts/track\n' +
-    '- POST /api/shifts/overtime-log\n' +
-    '\n' +
-    'Data expectations:\n' +
-    '- Single Shift Publishing payload: { employee_id, date, start_time, end_time, role, location }\n' +
-    '- Conflict Check payload: proposed shift details and any matching key fields (employee_id and/or location)\n' +
-    '- Swap payload: { from_employee_id, to_employee_id, date, start_time, end_time, location } (adjust if context provides IDs of two shifts)\n' +
-    '- Track payload (attendance): { employee_id, date, action: "clock_in"|"clock_out"|"break_start"|"break_end", timestamp?, notes? }\n' +
-    '- Overtime Log payload: { employee_id, date, minutes, reason?, approved_by? }\n' +
-    '\n' +
-    'Statuses:\n' +
-    '- "ready": sufficient data to proceed\n' +
-    '- "missing_data": data needed is incomplete; include which fields are missing in payload under missing_fields array\n' +
-    '- "conflict_detected": a conflict is present; add conflict_details array\n' +
-    '- "swap_possible": both employees appear available; include both shift details\n' +
-    '- "tracking_update": a valid attendance/compliance action\n' +
-    '\n' +
-    'Output format (strict JSON):\n' +
-    '{\n' +
-    '  "route": "/api/...",\n' +
-    '  "method": "POST",\n' +
-    '  "payload": { ... },\n' +
-    '  "status": "ready" | "missing_data" | "conflict_detected" | "swap_possible" | "tracking_update",\n' +
-    '  "conflict_details": [ ... ]\n' +
-    '}\n' +
-    '\n' +
-    'Rules:\n' +
-    '- Never include markdown or natural language commentary.\n' +
-    '- If unsure, choose the closest route and set status to "missing_data" with missing_fields.\n' +
-    '- Use ISO date (YYYY-MM-DD) and 24h time (HH:MM).\n'
+    'You are a helpful, friendly AI assistant.\n' +
+    'Answer ANY user question directly and concisely in plain text.\n' +
+    'Keep responses short, practical, and free of code fences or markdown blocks.\n' +
+    'If additional details are needed, ask a brief clarifying question.\n' +
+    'Prefer bullet points for steps, but keep them compact.\n'
   );
 }
 
@@ -162,51 +131,18 @@ serve(async (req) => {
     try {
       modelText = await callGemini(systemPrompt, message, conversationHistory);
     } catch (geminiErr) {
-      // Fallback to basic heuristic if Gemini fails
       console.error('Gemini call failed:', geminiErr);
-      const lower = message.toLowerCase();
-      const fallback = lower.includes('swap')
-        ? { route: '/api/shifts/swap', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['from_employee_id','to_employee_id','date','start_time','end_time','location'] }
-        : lower.includes('conflict')
-        ? { route: '/api/shifts/conflict-check', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['employee_id','date','start_time','end_time','location'] }
-        : lower.includes('overtime')
-        ? { route: '/api/shifts/overtime-log', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['employee_id','date','minutes'] }
-        : lower.includes('clock') || lower.includes('attendance')
-        ? { route: '/api/shifts/track', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['employee_id','date','action'] }
-        : { route: '/api/shifts/publish', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['employee_id','date','start_time','end_time','role','location'] };
-
-      const summary = summarizeAction(fallback);
-      const missingSecret = String(geminiErr).includes('Missing GEMINI_API_KEY');
+      const missingSecret = String(geminiErr).toLowerCase().includes('missing gemini_api_key');
+      const response = "I'm having trouble reaching the AI service right now. Please try again in a moment.";
       return new Response(
-        JSON.stringify({ response: summary, action: fallback, note: 'gemini_error_fallback', gemini_error: String(geminiErr), needs_secret: missingSecret }),
+        JSON.stringify({ response, note: 'gemini_error_fallback', gemini_error: String(geminiErr), needs_secret: missingSecret }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const parsed = extractJson(modelText);
-    if (!parsed || typeof parsed !== 'object') {
-      console.warn('Model returned non-JSON or unparsable output:', modelText);
-      // Graceful fallback to heuristic mapping instead of 502
-      const lower = message.toLowerCase();
-      const fallback = lower.includes('swap')
-        ? { route: '/api/shifts/swap', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['from_employee_id','to_employee_id','date','start_time','end_time','location'] }
-        : lower.includes('conflict')
-        ? { route: '/api/shifts/conflict-check', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['employee_id','date','start_time','end_time','location'] }
-        : lower.includes('overtime')
-        ? { route: '/api/shifts/overtime-log', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['employee_id','date','minutes'] }
-        : lower.includes('clock') || lower.includes('attendance')
-        ? { route: '/api/shifts/track', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['employee_id','date','action'] }
-        : { route: '/api/shifts/publish', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['employee_id','date','start_time','end_time','role','location'] };
-      const summary = summarizeAction(fallback);
-      return new Response(
-        JSON.stringify({ response: summary, action: fallback, note: 'fallback_used' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const summary = summarizeAction(parsed);
+    const responseText = (modelText || '').trim();
     return new Response(
-      JSON.stringify({ response: summary, action: parsed }),
+      JSON.stringify({ response: responseText }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
