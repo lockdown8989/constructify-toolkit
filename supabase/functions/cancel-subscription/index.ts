@@ -44,13 +44,17 @@ serve(async (req) => {
 
     log("User authenticated", { userId: user.id, email: user.email });
 
-    // Only admins can cancel subscriptions
-    const { data: roles } = await supabaseAnon
+    // Only admins (or equivalent) can cancel subscriptions
+    const { data: roles, error: rolesError } = await supabaseSvc
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id);
-    const isAdmin = roles?.some((r: any) => r.role === "admin");
-    if (!isAdmin) {
+    if (rolesError) {
+      log("Warning: Could not fetch user roles", { error: rolesError.message });
+    }
+    const isAuthorized = roles?.some((r: any) => ["admin", "employer", "hr"].includes(String(r.role)));
+    if (!isAuthorized) {
+      log("Unauthorized cancellation attempt", { userId: user.id, roles });
       return new Response(JSON.stringify({ error: "Only administrators can cancel subscriptions" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 403,
@@ -109,9 +113,10 @@ serve(async (req) => {
     }
 
     log("Using payer email", { payerEmail, organizationId });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    log("Stripe client initialized");
     
     const customers = await stripe.customers.list({ email: payerEmail, limit: 1 });
-    log("Stripe customers retrieved", { count: customers.data.length });
 
     if (customers.data.length === 0) {
       log("No Stripe customer found");
