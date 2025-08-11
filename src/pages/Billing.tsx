@@ -57,30 +57,30 @@ export default function Billing() {
   const navigate = useNavigate();
   const [interval, setInterval] = useState<Interval>('month');
   const [isLoading, setIsLoading] = useState<string | null>(null);
-  const [customSelections, setCustomSelections] = useState<string[]>([]);
-  const [isCancelledButActive, setIsCancelledButActive] = useState(false);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
+const [customSelections, setCustomSelections] = useState<string[]>([]);
+const [seatCount, setSeatCount] = useState<number>(1);
+const [isCancelledButActive, setIsCancelledButActive] = useState(false);
+const [showCancelDialog, setShowCancelDialog] = useState(false);
 const currency = 'GBP';
+const SEAT_PRICE_PER_MONTH = 2; // GBP per employee seat
 
 // Derived pricing for custom plan
 const customMonthlyTotal = useMemo(() =>
-  CUSTOM_FEATURES.filter(f => customSelections.includes(f.id)).reduce((sum, f) => sum + f.monthly, 0),
-  [customSelections]
+  CUSTOM_FEATURES.filter(f => customSelections.includes(f.id)).reduce((sum, f) => sum + f.monthly, 0) + (seatCount * SEAT_PRICE_PER_MONTH),
+  [customSelections, seatCount]
 );
 
 const customDisplayTotal = useMemo(() => {
-  if (customSelections.length === 0) return 0;
   return interval === 'year'
     ? Math.round(customMonthlyTotal * 12 * 0.85 * 100) / 100 // ~15% annual discount
     : Math.round(customMonthlyTotal * 100) / 100;
-}, [customMonthlyTotal, interval, customSelections.length]);
+}, [customMonthlyTotal, interval]);
 
 const customAmountCents = useMemo(() => {
-  if (customSelections.length === 0) return 0;
   return interval === 'year'
     ? Math.round(customMonthlyTotal * 12 * 0.85 * 100)
     : Math.round(customMonthlyTotal * 100);
-}, [customMonthlyTotal, interval, customSelections.length]);
+}, [customMonthlyTotal, interval]);
 
 
   const currentPlanId = useMemo(() => {
@@ -129,8 +129,8 @@ const customAmountCents = useMemo(() => {
     console.log('🎯 handleSubscribe called:', { planId, isAdmin, userEmail: user?.email });
     
 if (planId === 'custom') {
-  if (customSelections.length === 0) {
-    toast({ description: 'Select at least one feature for a custom plan' });
+  if (customAmountCents <= 0) {
+    toast({ description: 'Add employees or select features to proceed' });
     return;
   }
 }
@@ -517,6 +517,22 @@ if (planId === 'custom') {
   </label>
 ))}
 
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border p-2 text-sm">
+                    <label className="flex-1">Employee seats</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={1}
+                        value={seatCount}
+                        onChange={(e) => setSeatCount(Math.max(1, Number(e.target.value) || 1))}
+                        className="w-20 rounded-md border px-2 py-1 bg-background"
+                        aria-label="Number of employees"
+                      />
+                      <span className="text-muted-foreground">
+                        {new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(2)} / seat / mo
+                      </span>
+                    </div>
                   </div>
                   <div className="flex items-center justify-between rounded-md border p-2 text-sm">
                     <span>Estimated total</span>
