@@ -182,22 +182,48 @@ export default function Billing() {
   };
 
   const handleManage = async () => {
+    if (!isAdmin) {
+      console.warn('❌ User is not admin:', { isAdmin });
+      toast({ description: 'Only administrators can manage subscriptions' });
+      return;
+    }
+
     setIsLoading('manage');
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('🔐 Getting session for manage...');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('❌ Session error:', sessionError);
+        throw new Error(`Session error: ${sessionError.message}`);
+      }
+      
       if (!session?.access_token) {
+        console.error('❌ No active session');
         throw new Error('No active session');
       }
 
+      console.log('✅ Session valid, calling customer-portal...');
       const { data, error } = await supabase.functions.invoke('customer-portal', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
+      
+      console.log('📦 customer-portal response:', { data, error });
+      
       if (error) throw error;
-      if (data?.url) window.open(data.url, '_blank');
+      
+      if (data?.url) {
+        console.log('🚀 Opening customer portal URL:', data.url);
+        window.open(data.url, '_blank');
+        toast({ description: 'Opening subscription management portal...' });
+      } else {
+        console.error('❌ No URL in response');
+        throw new Error('No portal URL received');
+      }
     } catch (e: any) {
-      console.error('Portal error', e);
+      console.error('💥 Portal error:', e);
       toast({ description: e.message || 'Failed to open customer portal' });
     } finally {
       setIsLoading(null);
@@ -205,18 +231,37 @@ export default function Billing() {
   };
 
   const handleCancelSubscription = async () => {
+    console.log('🎯 handleCancelSubscription called:', { subscribed, isAdmin });
+    
     if (!subscribed) {
+      console.warn('❌ No active subscription');
       toast({ description: 'No active subscription to cancel' });
+      return;
+    }
+
+    if (!isAdmin) {
+      console.warn('❌ User is not admin:', { isAdmin });
+      toast({ description: 'Only administrators can cancel subscriptions' });
       return;
     }
 
     setIsLoading('cancel');
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('🔐 Getting session for cancel...');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('❌ Session error:', sessionError);
+        throw new Error(`Session error: ${sessionError.message}`);
+      }
+      
       if (!session?.access_token) {
+        console.error('❌ No active session');
         throw new Error('No active session');
       }
 
+      console.log('✅ Session valid, calling customer-portal for cancellation...');
+      
       // Use the customer portal to handle cancellation
       const { data, error } = await supabase.functions.invoke('customer-portal', {
         headers: {
@@ -224,20 +269,38 @@ export default function Billing() {
         },
       });
       
-      if (error) throw error;
+      console.log('📦 customer-portal response for cancel:', { data, error });
+      
+      if (error) {
+        console.error('❌ Customer portal error:', error);
+        throw error;
+      }
       
       if (data?.url) {
+        console.log('🚀 Opening cancellation portal URL:', data.url);
         toast({ 
           description: 'Opening Stripe portal where you can cancel your subscription...',
           duration: 4000
         });
         window.open(data.url, '_blank');
       } else {
+        console.error('❌ No portal URL received');
         throw new Error('No portal URL received');
       }
     } catch (e: any) {
-      console.error('Cancel subscription error', e);
-      toast({ description: e.message || 'Failed to open cancellation portal' });
+      console.error('💥 Cancel subscription error:', e);
+      
+      // More detailed error messages
+      let errorMessage = 'Failed to open cancellation portal';
+      if (e.name === 'FunctionsFetchError') {
+        errorMessage = 'Cannot connect to subscription service. Please check your connection and try again.';
+      } else if (e.message?.includes('No active session')) {
+        errorMessage = 'Session expired. Please refresh the page and try again.';
+      } else if (e.message) {
+        errorMessage = e.message;
+      }
+      
+      toast({ description: errorMessage });
     } finally {
       setIsLoading(null);
     }
