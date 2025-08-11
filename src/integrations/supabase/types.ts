@@ -3016,6 +3016,10 @@ export type Database = {
         }
         Returns: Json
       }
+      update_rota_attendance_statuses: {
+        Args: { p_date?: string }
+        Returns: Json
+      }
       upsert_appearance_settings: {
         Args: {
           p_user_id: string
