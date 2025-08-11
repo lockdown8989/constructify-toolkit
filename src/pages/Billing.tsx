@@ -107,6 +107,8 @@ export default function Billing() {
         planTier: planId,
         interval: interval,
         currency: 'gbp',
+        successUrl: `${window.location.origin}/billing?status=success&plan=${planId}`,
+        cancelUrl: `${window.location.origin}/billing?status=canceled`
       };
 
       // Primary call via Supabase client

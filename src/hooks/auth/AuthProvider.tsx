@@ -57,14 +57,55 @@ const refreshSubscription = async () => {
       return;
     }
 
-    const { data, error } = await supabase.functions.invoke('check-subscription', {
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-      },
-    });
-    
-    if (error) throw error;
-    
+    // 1) Primary: invoke edge function via supabase client
+    let data: any | null = null;
+    let invokeError: any | null = null;
+    try {
+      const resp = await supabase.functions.invoke('check-subscription', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      data = resp.data;
+      invokeError = resp.error ?? null;
+    } catch (err) {
+      invokeError = err;
+    }
+
+    // 2) Fallback: direct fetch to edge function URL (handles rare invoke routing issues)
+    if ((!data || invokeError) && typeof fetch !== 'undefined') {
+      console.warn('⚠️ Falling back to direct fetch for check-subscription...', invokeError?.message || invokeError);
+      try {
+        const resp = await fetch('https://fphmujxruswmvlwceodl.supabase.co/functions/v1/check-subscription', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwaG11anhydXN3bXZsd2Nlb2RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIyMDc5NjcsImV4cCI6MjA1Nzc4Mzk2N30.NCTLZVRuiaEopQi0uWdEFn_7noYoEnTvF2CqqD7S-y4',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({}),
+        });
+        if (resp.ok) {
+          data = await resp.json();
+        } else {
+          console.error('❌ Direct fetch failed for check-subscription', resp.status);
+        }
+      } catch (err) {
+        console.error('❌ Direct fetch exception for check-subscription', err);
+      }
+    }
+
+    // 3) Last-resort fallback: read from subscribers table if available
+    if (!data) {
+      try {
+        const { data: subRow } = await supabase
+          .from('subscribers')
+          .select('subscribed, subscription_tier, subscription_end, subscription_is_trial, subscription_trial_end')
+          .maybeSingle();
+        if (subRow) data = subRow as any;
+      } catch {}
+    }
+
+    if (!data) throw new Error('No subscription data received');
+
     console.log('✅ Subscription data received:', data);
     const wasTrial = subscriptionIsTrial;
     const nowSubscribed = !!data?.subscribed;
@@ -89,14 +130,8 @@ const refreshSubscription = async () => {
     }
 
     // Cross-tab subscription sync: notify other tabs/windows
-    try {
-      localStorage.setItem('subscription-updated', String(Date.now()));
-    } catch {}
-    try {
-      const bc = new BroadcastChannel('subscription');
-      bc.postMessage({ type: 'updated' });
-      bc.close();
-    } catch {}
+    try { localStorage.setItem('subscription-updated', String(Date.now())); } catch {}
+    try { const bc = new BroadcastChannel('subscription'); bc.postMessage({ type: 'updated' }); bc.close(); } catch {}
   } catch (e) {
     console.error('❌ Subscription check failed:', e);
     setSubscribed(false);
