@@ -40,10 +40,6 @@ export default function Billing() {
     return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(value);
   };
 
-  const trialBadge = (
-    <span className="ml-2 inline-flex items-center rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">14‑day trial</span>
-  );
-
   const handleSubscribe = async (planId: 'pro') => {
     console.log('🎯 handleSubscribe called:', { planId, isAdmin, userEmail: user?.email });
     
@@ -78,7 +74,6 @@ export default function Billing() {
           planTier: planId,
           interval: interval,
           currency: 'gbp',
-          trialDays: 14,
         },
       });
       
@@ -164,7 +159,7 @@ export default function Billing() {
     <div className="container mx-auto px-4 py-6 space-y-6">
       <Helmet>
         <title>Billing & Subscription | TeamPulse HR</title>
-        <meta name="description" content="Manage your TeamPulse HR subscription. PRO and Custom plans with a 14‑day free trial for administrators." />
+        <meta name="description" content="Manage your TeamPulse HR subscription. PRO and Custom plans for administrators." />
         <link rel="canonical" href={`${window.location.origin}/billing`} />
       </Helmet>
 
@@ -190,7 +185,6 @@ export default function Billing() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>{p.name}</span>
-                {p.id !== 'custom' && trialBadge}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -246,7 +240,7 @@ export default function Billing() {
                   {isLoading === p.id ? (
                     <span className="inline-flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</span>
                   ) : (
-                    <span>{isAdmin ? 'Start 14‑day trial' : 'Admin required'}</span>
+                    <span>{isAdmin ? 'Subscribe now' : 'Admin required'}</span>
                   )}
                 </Button>
               )}

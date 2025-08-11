@@ -122,9 +122,6 @@ serve(async (req) => {
       mode: "subscription",
       success_url: `${origin}/billing?status=success&plan=${planTier}&interval=${interval}`,
       cancel_url: `${origin}/billing?status=canceled&plan=${planTier}&interval=${interval}`,
-      subscription_data: {
-        trial_period_days: trialDays,
-      },
       metadata: {
         organization_id: organizationId!,
         owner_user_id: user.id,
