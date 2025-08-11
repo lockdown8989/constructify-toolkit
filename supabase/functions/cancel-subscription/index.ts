@@ -60,40 +60,61 @@ serve(async (req) => {
     log("Admin verification passed");
 
     // Determine payer email (owner of org). If no org, use self.
-    const { data: ownOrg } = await supabaseSvc
-      .from("organizations")
-      .select("id, owner_user_id")
-      .eq("owner_user_id", user.id)
-      .maybeSingle();
-
     let payerEmail = user.email as string;
-    let organizationId = ownOrg?.id ?? null;
+    let organizationId = null;
 
-    if (!ownOrg) {
-      const { data: memberOrg } = await supabaseSvc
-        .from("organization_members")
-        .select("organization_id, organizations ( id, owner_user_id )")
-        .eq("user_id", user.id)
-        .limit(1)
+    try {
+      const { data: ownOrg, error: ownOrgError } = await supabaseSvc
+        .from("organizations")
+        .select("id, owner_user_id")
+        .eq("owner_user_id", user.id)
         .maybeSingle();
-      const orgRow: any = memberOrg?.organizations;
-      if (orgRow) {
-        organizationId = orgRow.id;
-        const { data: ownerProfile } = await supabaseSvc
-          .from("profiles")
-          .select("email")
-          .eq("id", orgRow.owner_user_id)
-          .maybeSingle();
-        if (ownerProfile?.email) payerEmail = ownerProfile.email;
+
+      if (ownOrgError) {
+        log("Warning: Could not fetch own organization", { error: ownOrgError.message });
       }
+
+      organizationId = ownOrg?.id ?? null;
+
+      if (!ownOrg) {
+        const { data: memberOrg, error: memberOrgError } = await supabaseSvc
+          .from("organization_members")
+          .select("organization_id, organizations ( id, owner_user_id )")
+          .eq("user_id", user.id)
+          .limit(1)
+          .maybeSingle();
+          
+        if (memberOrgError) {
+          log("Warning: Could not fetch member organization", { error: memberOrgError.message });
+        }
+        
+        const orgRow: any = memberOrg?.organizations;
+        if (orgRow) {
+          organizationId = orgRow.id;
+          const { data: ownerProfile, error: ownerProfileError } = await supabaseSvc
+            .from("profiles")
+            .select("email")
+            .eq("id", orgRow.owner_user_id)
+            .maybeSingle();
+            
+          if (ownerProfileError) {
+            log("Warning: Could not fetch owner profile", { error: ownerProfileError.message });
+          }
+          
+          if (ownerProfile?.email) payerEmail = ownerProfile.email;
+        }
+      }
+    } catch (orgError: any) {
+      log("Warning: Organization lookup failed, proceeding with user email", { error: orgError.message });
     }
 
     log("Using payer email", { payerEmail, organizationId });
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    
     const customers = await stripe.customers.list({ email: payerEmail, limit: 1 });
+    log("Stripe customers retrieved", { count: customers.data.length });
 
     if (customers.data.length === 0) {
+      log("No Stripe customer found");
       return new Response(JSON.stringify({ error: "No Stripe customer found for this organization" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 404,
@@ -109,8 +130,10 @@ serve(async (req) => {
       status: "active",
       limit: 1 
     });
+    log("Retrieved subscriptions", { count: subscriptions.data.length });
 
     if (subscriptions.data.length === 0) {
+      log("No active subscription found");
       return new Response(JSON.stringify({ error: "No active subscription found" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 404,
@@ -118,9 +141,27 @@ serve(async (req) => {
     }
 
     const subscription = subscriptions.data[0];
-    log("Found active subscription", { subscriptionId: subscription.id });
+    log("Found active subscription", { subscriptionId: subscription.id, status: subscription.status });
+    
+    // Check if already cancelled
+    if (subscription.cancel_at_period_end) {
+      log("Subscription already scheduled for cancellation");
+      return new Response(JSON.stringify({ 
+        success: true,
+        message: "Subscription is already scheduled for cancellation",
+        subscription: {
+          id: subscription.id,
+          status: "cancel_at_period_end",
+          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        }
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
     
     // Cancel the subscription at period end
+    log("Attempting to cancel subscription at period end");
     const canceledSubscription = await stripe.subscriptions.update(subscription.id, {
       cancel_at_period_end: true,
     });
@@ -131,39 +172,46 @@ serve(async (req) => {
       currentPeriodEnd: new Date(canceledSubscription.current_period_end * 1000)
     });
 
-    // Record the cancellation event in our database
-    await supabaseSvc.from("subscription_events").insert({
-      user_id: user.id,
-      organization_id: organizationId,
-      event_type: "cancelled",
-      stripe_customer_id: customerId,
-      stripe_subscription_id: subscription.id,
-      previous_status: "active",
-      new_status: "cancel_at_period_end",
-      event_data: {
-        cancel_at_period_end: true,
-        current_period_end: new Date(canceledSubscription.current_period_end * 1000).toISOString(),
-        cancellation_reason: "user_requested",
-        cancelled_by: user.id,
-        cancelled_at: new Date().toISOString()
-      }
-    });
-
-    log("Recorded cancellation event in database");
+    // Record the cancellation event in our database (optional, continue if fails)
+    try {
+      await supabaseSvc.from("subscription_events").insert({
+        user_id: user.id,
+        organization_id: organizationId,
+        event_type: "cancelled",
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscription.id,
+        previous_status: "active",
+        new_status: "cancel_at_period_end",
+        event_data: {
+          cancel_at_period_end: true,
+          current_period_end: new Date(canceledSubscription.current_period_end * 1000).toISOString(),
+          cancellation_reason: "user_requested",
+          cancelled_by: user.id,
+          cancelled_at: new Date().toISOString()
+        }
+      });
+      log("Recorded cancellation event in database");
+    } catch (eventError: any) {
+      log("Warning: Failed to record cancellation event", { error: eventError.message });
+    }
 
     // Update the subscribers table
-    await supabaseSvc.from("subscribers").upsert({
-      email: payerEmail,
-      organization_id: organizationId,
-      user_id: user.id,
-      stripe_customer_id: customerId,
-      subscribed: true, // Still active until period end
-      subscription_status: "cancel_at_period_end",
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "email" });
+    try {
+      await supabaseSvc.from("subscribers").upsert({
+        email: payerEmail,
+        organization_id: organizationId,
+        user_id: user.id,
+        stripe_customer_id: customerId,
+        subscribed: true, // Still active until period end
+        subscription_status: "cancel_at_period_end",
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "email" });
+      log("Updated subscribers table");
+    } catch (updateError: any) {
+      log("Warning: Failed to update subscribers table", { error: updateError.message });
+    }
 
-    log("Updated subscribers table");
-
+    log("Function completed successfully");
     return new Response(
       JSON.stringify({
         success: true,

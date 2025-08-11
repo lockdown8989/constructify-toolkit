@@ -334,6 +334,9 @@ export default function Billing() {
       if (data?.success) {
         console.log('✅ Subscription cancelled successfully');
         
+        // Close the dialog immediately
+        setShowCancelDialog(false);
+        
         // Immediately update the UI to show cancellation status
         setIsCancelledButActive(true);
         
@@ -345,7 +348,7 @@ export default function Billing() {
         // Refresh subscription status to reflect the cancellation
         setTimeout(() => {
           refreshSubscription?.();
-        }, 1000);
+        }, 500);
       } else {
         console.error('❌ Cancellation failed:', data);
         throw new Error(data?.error || 'Failed to cancel subscription');
