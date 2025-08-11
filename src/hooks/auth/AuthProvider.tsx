@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthContextType, UserRole } from './types';
@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [subscriptionIsTrial, setSubscriptionIsTrial] = useState<boolean>(false);
   const [subscriptionTrialEnd, setSubscriptionTrialEnd] = useState<string | null>(null);
-
+  const subscriptionChannelRef = useRef<any>(null);
   console.log("🔐 AuthProvider roles state:", {
     isAdmin,
     isHR, 
@@ -132,6 +132,8 @@ const refreshSubscription = async () => {
     // Cross-tab subscription sync: notify other tabs/windows
     try { localStorage.setItem('subscription-updated', String(Date.now())); } catch {}
     try { const bc = new BroadcastChannel('subscription'); bc.postMessage({ type: 'updated' }); bc.close(); } catch {}
+    // Realtime broadcast to other connected users
+    try { subscriptionChannelRef.current?.send({ type: 'broadcast', event: 'updated', payload: { ts: Date.now(), subscribed: nowSubscribed, tier: normalizedTier } }); } catch {}
   } catch (e) {
     console.error('❌ Subscription check failed:', e);
     setSubscribed(false);
@@ -303,6 +305,32 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
     return () => {
       window.removeEventListener('storage', onStorage);
       try { bc?.close(); } catch {}
+    };
+  }, [refreshSubscription]);
+
+  // Realtime listener for subscription updates from other users
+  useEffect(() => {
+    const channel = supabase
+      .channel('subscription_broadcast', { config: { broadcast: { self: false } } })
+      .on('broadcast', { event: 'updated' }, () => {
+        // When any client broadcasts a subscription update, re-check status
+        refreshSubscription();
+      });
+
+    const subscribe = async () => {
+      try {
+        const status = await channel.subscribe();
+        console.log('📡 Subscription broadcast channel status:', status);
+        subscriptionChannelRef.current = channel;
+      } catch (err) {
+        console.warn('⚠️ Failed to subscribe to subscription broadcast channel', err);
+      }
+    };
+    subscribe();
+
+    return () => {
+      try { if (subscriptionChannelRef.current) supabase.removeChannel(subscriptionChannelRef.current); } catch {}
+      subscriptionChannelRef.current = null;
     };
   }, [refreshSubscription]);
 
