@@ -210,6 +210,20 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
     }
   }, [user]);
 
+  // Handle Stripe checkout return globally
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    if (status === 'success') {
+      toast({ description: 'Payment successful! Updating subscription...' });
+      setTimeout(() => { refreshSubscription(); }, 300);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (status === 'canceled') {
+      toast({ description: 'Payment canceled.' });
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [refreshSubscription]);
+
 const value: AuthContextType = {
   user,
   session,
