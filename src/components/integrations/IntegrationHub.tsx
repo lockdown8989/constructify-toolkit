@@ -170,9 +170,22 @@ export const IntegrationHub: React.FC = () => {
   const handleTestIntegration = async (integrationId: string) => {
     try {
       switch (integrationId) {
-        case 'stripe':
+        case 'stripe': {
           toast({ title: "Testing Stripe...", description: "Creating test payment session" });
+          const { data, error } = await supabase.functions.invoke('create-payment', {
+            body: {
+              amount: 1, // minimal test amount
+              description: 'Integration Test Payment',
+              currency: 'gbp',
+              type: 'payroll'
+            }
+          });
+          if (error) throw error;
+          if (data?.url) {
+            window.open(data.url, '_blank');
+          }
           break;
+        }
         case 'resend':
           const { error } = await supabase.functions.invoke('send-notification-email', {
             body: {
