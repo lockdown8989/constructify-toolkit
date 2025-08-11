@@ -62,7 +62,3 @@ verify_jwt = true
 [[functions]]
 name = "shifts-api"
 verify_jwt = true
-
-[[functions]]
-name = "webchat-assistant"
-verify_jwt = true
