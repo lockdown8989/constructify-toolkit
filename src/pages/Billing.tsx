@@ -245,6 +245,15 @@ export default function Billing() {
       return;
     }
 
+    // Show confirmation dialog first
+    const confirmed = window.confirm(
+      'Are you sure you want to cancel your subscription? Your access will continue until the end of the current billing period.'
+    );
+    
+    if (!confirmed) {
+      return;
+    }
+
     setIsLoading('cancel');
     try {
       console.log('🔐 Getting session for cancel...');
@@ -260,47 +269,56 @@ export default function Billing() {
         throw new Error('No active session');
       }
 
-      console.log('✅ Session valid, calling customer-portal for cancellation...');
+      console.log('✅ Session valid, calling cancel-subscription...');
       
-      // Use the customer portal to handle cancellation
-      const { data, error } = await supabase.functions.invoke('customer-portal', {
+      // Use our new cancel subscription endpoint
+      const { data, error } = await supabase.functions.invoke('cancel-subscription', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
       
-      console.log('📦 customer-portal response for cancel:', { data, error });
+      console.log('📦 cancel-subscription response:', { data, error });
       
       if (error) {
-        console.error('❌ Customer portal error:', error);
+        console.error('❌ Cancel subscription error:', error);
         throw error;
       }
       
-      if (data?.url) {
-        console.log('🚀 Opening cancellation portal URL:', data.url);
+      if (data?.success) {
+        console.log('✅ Subscription cancelled successfully');
         toast({ 
-          description: 'Opening Stripe portal where you can cancel your subscription...',
-          duration: 4000
+          description: data.message || 'Subscription has been scheduled for cancellation at the end of your current billing period.',
+          duration: 5000
         });
-        window.open(data.url, '_blank');
+        
+        // Refresh subscription status to reflect the cancellation
+        setTimeout(() => {
+          refreshSubscription?.();
+        }, 1000);
       } else {
-        console.error('❌ No portal URL received');
-        throw new Error('No portal URL received');
+        console.error('❌ Cancellation failed:', data);
+        throw new Error(data?.error || 'Failed to cancel subscription');
       }
     } catch (e: any) {
       console.error('💥 Cancel subscription error:', e);
       
       // More detailed error messages
-      let errorMessage = 'Failed to open cancellation portal';
+      let errorMessage = 'Failed to cancel subscription';
       if (e.name === 'FunctionsFetchError') {
         errorMessage = 'Cannot connect to subscription service. Please check your connection and try again.';
       } else if (e.message?.includes('No active session')) {
         errorMessage = 'Session expired. Please refresh the page and try again.';
+      } else if (e.message?.includes('No active subscription')) {
+        errorMessage = 'No active subscription found to cancel.';
       } else if (e.message) {
         errorMessage = e.message;
       }
       
-      toast({ description: errorMessage });
+      toast({ 
+        description: errorMessage,
+        variant: 'destructive'
+      });
     } finally {
       setIsLoading(null);
     }
