@@ -42,7 +42,7 @@ const plans = [
 type Interval = 'month' | 'year';
 
 export default function Billing() {
-  const { user, isAdmin, isEmployee, isPayroll, subscribed, subscriptionTier, subscriptionEnd, refreshSubscription } = useAuth();
+  const { user, isAdmin, isEmployee, isPayroll, subscribed, subscriptionTier, subscriptionEnd, subscriptionStatus, refreshSubscription } = useAuth();
   const navigate = useNavigate();
   const [interval, setInterval] = useState<Interval>('month');
   const [isLoading, setIsLoading] = useState<string | null>(null);
@@ -388,12 +388,13 @@ export default function Billing() {
   const subtitle = useMemo(() => {
     if (subscribed) {
       const end = subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString() : '';
-      const status = isCancelledButActive ? 'Working until' : 'Renews';
+      const isCancelled = subscriptionStatus === 'cancel_at_period_end' || isCancelledButActive;
+      const status = isCancelled ? 'Working until' : 'Renews';
       return `Your plan: ${subscriptionTier ?? 'Active'} • ${status} ${end}`;
     }
     if (subscribed === false) return 'No active subscription. Access is limited until you subscribe.';
     return 'Choose a plan that fits your team';
-  }, [subscribed, subscriptionEnd, subscriptionTier, isCancelledButActive]);
+  }, [subscribed, subscriptionEnd, subscriptionTier, subscriptionStatus, isCancelledButActive]);
 
   if (isEmployee || isPayroll) {
     return null;

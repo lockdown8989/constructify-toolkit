@@ -27,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [subscribed, setSubscribed] = useState<boolean | undefined>(undefined);
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionIsTrial, setSubscriptionIsTrial] = useState<boolean>(false);
   const [subscriptionTrialEnd, setSubscriptionTrialEnd] = useState<string | null>(null);
   const subscriptionChannelRef = useRef<any>(null);
@@ -98,7 +99,7 @@ const refreshSubscription = async (silent = false) => {
       try {
         const { data: subRow } = await supabase
           .from('subscribers')
-          .select('subscribed, subscription_tier, subscription_end, subscription_is_trial, subscription_trial_end')
+          .select('subscribed, subscription_tier, subscription_end, subscription_status, subscription_is_trial, subscription_trial_end')
           .maybeSingle();
         if (subRow) data = subRow as any;
       } catch {}
@@ -123,6 +124,7 @@ const refreshSubscription = async (silent = false) => {
     setSubscribed(nowSubscribed);
     setSubscriptionTier(normalizedTier);
     setSubscriptionEnd(data?.subscription_end ?? null);
+    setSubscriptionStatus(data?.subscription_status ?? null);
     setSubscriptionIsTrial(nowIsTrial);
     setSubscriptionTrialEnd(data?.subscription_trial_end ?? null);
     if (wasTrial && !nowIsTrial && nowSubscribed) {
@@ -351,6 +353,7 @@ const value: AuthContextType = {
   subscribed,
   subscriptionTier,
   subscriptionEnd,
+  subscriptionStatus,
   subscriptionIsTrial,
   subscriptionTrialEnd,
   refreshSubscription,
