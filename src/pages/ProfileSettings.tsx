@@ -34,25 +34,63 @@ const ProfileSettings = () => {
   };
   
   const [activeSection, setActiveSection] = useState(getInitialSection());
+  const [isManagingSubscription, setIsManagingSubscription] = useState(false);
   
   const handleManageSubscription = async () => {
-    if (!isAdmin) return;
+    if (!isAdmin || isManagingSubscription) return;
+    
+    setIsManagingSubscription(true);
     try {
+      console.log('🔄 Starting subscription management...');
+      
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error('No active session');
-      if (subscribed === false) { navigate('/billing'); return; }
+      if (!session?.access_token) {
+        throw new Error('No active session');
+      }
+
+      // If not subscribed, redirect to billing page
+      if (subscribed === false) {
+        console.log('🔗 Not subscribed, redirecting to billing');
+        navigate('/billing');
+        return;
+      }
+
+      console.log('🔄 Calling customer portal...');
       const { data, error } = await supabase.functions.invoke('customer-portal', {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
-      if (error) throw error;
+
+      if (error) {
+        console.error('❌ Customer portal error:', error);
+        throw error;
+      }
+
       if (data?.url) {
+        console.log('🚀 Redirecting to customer portal:', data.url);
+        toast({ description: 'Opening subscription management portal...' });
+        // Use window.location.href for same-tab redirect
         window.location.href = data.url;
       } else {
         throw new Error('No portal URL received');
       }
     } catch (e: any) {
-      console.error('Customer portal error', e);
-      toast({ description: e.message || 'Failed to open customer portal' });
+      console.error('💥 Customer portal error:', e);
+      let errorMessage = 'Failed to open subscription management';
+      
+      if (e.message?.includes('No active session')) {
+        errorMessage = 'Session expired. Please refresh the page and try again.';
+      } else if (e.message?.includes('No portal URL')) {
+        errorMessage = 'Unable to create portal session. Please try again.';
+      } else if (e.message) {
+        errorMessage = e.message;
+      }
+      
+      toast({ 
+        description: errorMessage,
+        duration: 5000
+      });
+    } finally {
+      setIsManagingSubscription(false);
     }
   };
   
@@ -201,9 +239,14 @@ const ProfileSettings = () => {
                   variant="ghost"
                   className="w-full justify-start"
                   onClick={handleManageSubscription}
+                  disabled={isManagingSubscription}
                 >
-                  <Crown className="mr-2 h-4 w-4" />
-                  Manage Subscription Plan
+                  {isManagingSubscription ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Crown className="mr-2 h-4 w-4" />
+                  )}
+                  {isManagingSubscription ? 'Opening Portal...' : 'Manage Subscription Plan'}
                 </Button>
               )}
 
