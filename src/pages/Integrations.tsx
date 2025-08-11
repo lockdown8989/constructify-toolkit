@@ -3,10 +3,15 @@ import { IntegrationHub } from '@/components/integrations/IntegrationHub';
 import { PaymentIntegration } from '@/components/integrations/PaymentIntegration';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-
+import { Helmet } from 'react-helmet-async';
 export default function Integrations() {
   return (
     <div className="container mx-auto py-6 space-y-6">
+      <Helmet>
+        <title>HR System Integrations | HRIS, Accounting, Email</title>
+        <meta name="description" content="Connect BambooHR, Workday, QuickBooks, Xero, email and SMS to automate payroll, leave, schedules and notifications." />
+        <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : ''} />
+      </Helmet>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Integrations</h1>

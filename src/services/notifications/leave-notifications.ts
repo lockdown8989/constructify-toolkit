@@ -95,7 +95,7 @@ export const notifyEmployeeAboutLeaveStatus = async (
     // Get employee's user ID from employees table
     const { data: employeeData, error: employeeError } = await supabase
       .from('employees')
-      .select('user_id, name')
+      .select('user_id, name, email')
       .eq('id', employeeId)
       .single();
       
@@ -135,6 +135,29 @@ export const notifyEmployeeAboutLeaveStatus = async (
     if (notificationError) {
       console.error("Error creating employee notification:", notificationError);
       return false;
+    }
+
+    // Also send email notification to the employee
+    try {
+      if (employeeData.email) {
+        await supabase.functions.invoke('send-notification-email', {
+          body: {
+            to: employeeData.email,
+            subject: `Leave Request ${status}`,
+            type: status === 'Approved' ? 'leave_approved' : 'leave_rejected',
+            data: {
+              employeeName: employeeData.name || 'Employee',
+              startDate,
+              endDate,
+              leaveType,
+              managerNotes: null,
+              loginUrl: typeof window !== 'undefined' ? window.location.origin : ''
+            }
+          }
+        });
+      }
+    } catch (emailError) {
+      console.error('Error sending leave status email:', emailError);
     }
     
     return true;

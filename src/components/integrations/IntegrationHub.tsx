@@ -87,6 +87,46 @@ const integrations: Integration[] = [
     status: 'connected',
     category: 'automation',
     features: ['Real-time events', 'Custom integrations', 'API endpoints']
+  },
+  {
+    id: 'bamboohr',
+    name: 'BambooHR',
+    description: 'Sync employees and time-off from BambooHR',
+    icon: Settings,
+    status: 'disconnected',
+    category: 'automation',
+    features: ['Employee sync', 'Time-off import', 'Webhook updates'],
+    requiresSetup: true
+  },
+  {
+    id: 'workday',
+    name: 'Workday',
+    description: 'Enterprise HRIS data sync',
+    icon: Settings,
+    status: 'disconnected',
+    category: 'automation',
+    features: ['Employee sync', 'Job profiles', 'Time-off'],
+    requiresSetup: true
+  },
+  {
+    id: 'quickbooks',
+    name: 'QuickBooks',
+    description: 'Export payroll to QuickBooks for accounting',
+    icon: CreditCard,
+    status: 'disconnected',
+    category: 'payment',
+    features: ['Payroll export', 'Journal entries', 'Tax categories'],
+    requiresSetup: true
+  },
+  {
+    id: 'xero',
+    name: 'Xero',
+    description: 'Export payroll and expenses to Xero',
+    icon: CreditCard,
+    status: 'disconnected',
+    category: 'payment',
+    features: ['Payroll export', 'Invoices', 'Tax reporting'],
+    requiresSetup: true
   }
 ];
 
@@ -152,6 +192,18 @@ export const IntegrationHub: React.FC = () => {
               type: 'general'
             }
           });
+          break;
+        case 'bamboohr':
+          await supabase.functions.invoke('hris-sync', { body: { provider: 'bamboohr', action: 'test_connection' } });
+          break;
+        case 'workday':
+          await supabase.functions.invoke('hris-sync', { body: { provider: 'workday', action: 'test_connection' } });
+          break;
+        case 'quickbooks':
+          await supabase.functions.invoke('accounting-export', { body: { provider: 'quickbooks', action: 'test_connection' } });
+          break;
+        case 'xero':
+          await supabase.functions.invoke('accounting-export', { body: { provider: 'xero', action: 'test_connection' } });
           break;
         default:
           break;

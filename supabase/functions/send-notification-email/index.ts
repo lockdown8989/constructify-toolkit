@@ -12,7 +12,7 @@ const corsHeaders = {
 interface NotificationEmailRequest {
   to: string;
   subject: string;
-  type: 'payslip' | 'leave_approved' | 'leave_rejected' | 'schedule_updated' | 'overtime_approved';
+  type: 'payslip' | 'leave_approved' | 'leave_rejected' | 'schedule_updated' | 'shift_assigned' | 'overtime_approved' | 'overtime_rejected' | 'general';
   data: Record<string, any>;
 }
 
@@ -61,20 +61,67 @@ const getEmailTemplate = (type: string, data: Record<string, any>) => {
           </div>
         </div>
       `;
-    case 'schedule_updated':
+    case 'leave_rejected':
       return `
         ${baseStyles}
         <div class="container">
           <div class="header">
-            <h1>📅 Schedule Updated</h1>
+            <h1>❌ Leave Request Rejected</h1>
           </div>
           <div class="content">
             <p>Hello ${data.employeeName},</p>
-            <p>Your schedule has been updated:</p>
+            <p>Your leave request from ${data.startDate} to ${data.endDate} was not approved.</p>
+            <p><strong>Type:</strong> ${data.leaveType}</p>
+            ${data.managerNotes ? `<p><strong>Manager notes:</strong> ${data.managerNotes}</p>` : ''}
+            <a href="${data.loginUrl}" class="button">Review Request</a>
+          </div>
+        </div>
+      `;
+    case 'schedule_updated':
+    case 'shift_assigned':
+      return `
+        ${baseStyles}
+        <div class="container">
+          <div class="header">
+            <h1>📅 ${type === 'shift_assigned' ? 'New Shift Assigned' : 'Schedule Updated'}</h1>
+          </div>
+          <div class="content">
+            <p>Hello ${data.employeeName},</p>
+            <p>${type === 'shift_assigned' ? 'You have been assigned a new shift:' : 'Your schedule has been updated:'}</p>
             <p><strong>Date:</strong> ${data.date}</p>
             <p><strong>Time:</strong> ${data.startTime} - ${data.endTime}</p>
-            <p><strong>Location:</strong> ${data.location}</p>
+            ${data.location ? `<p><strong>Location:</strong> ${data.location}</p>` : ''}
             <a href="${data.loginUrl}" class="button">View Schedule</a>
+          </div>
+        </div>
+      `;
+    case 'overtime_approved':
+      return `
+        ${baseStyles}
+        <div class="container">
+          <div class="header">
+            <h1>✅ Overtime Approved</h1>
+          </div>
+          <div class="content">
+            <p>Hello ${data.employeeName},</p>
+            <p>Your overtime of <strong>${data.overtimeMinutes} minutes</strong> has been approved.</p>
+            ${data.managerNotes ? `<p><strong>Manager notes:</strong> ${data.managerNotes}</p>` : ''}
+            <a href="${data.loginUrl}" class="button">View Attendance</a>
+          </div>
+        </div>
+      `;
+    case 'overtime_rejected':
+      return `
+        ${baseStyles}
+        <div class="container">
+          <div class="header">
+            <h1>⚠️ Overtime Rejected</h1>
+          </div>
+          <div class="content">
+            <p>Hello ${data.employeeName},</p>
+            <p>Your overtime request of <strong>${data.overtimeMinutes} minutes</strong> was not approved.</p>
+            ${data.managerNotes ? `<p><strong>Manager notes:</strong> ${data.managerNotes}</p>` : ''}
+            <a href="${data.loginUrl}" class="button">View Details</a>
           </div>
         </div>
       `;
