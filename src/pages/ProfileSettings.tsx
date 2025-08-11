@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/auth";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/hooks/use-language";
-import { Loader2, ArrowLeft, User, Bell, Palette, Clock } from "lucide-react";
+import { Loader2, ArrowLeft, User, Bell, Palette, Clock, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
@@ -15,9 +15,11 @@ import { DeleteAccountSection } from "@/components/profile-settings/DeleteAccoun
 import WeeklyAvailabilitySection from "@/components/profile/WeeklyAvailabilitySection";
 import { NotificationProvider } from "@/hooks/use-notification-settings";
 import { AppearanceProvider } from "@/hooks/use-appearance-settings";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const ProfileSettings = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAdmin, subscribed } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,6 +34,27 @@ const ProfileSettings = () => {
   };
   
   const [activeSection, setActiveSection] = useState(getInitialSection());
+  
+  const handleManageSubscription = async () => {
+    if (!isAdmin) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('No active session');
+      if (subscribed === false) { navigate('/billing'); return; }
+      const { data, error } = await supabase.functions.invoke('customer-portal', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No portal URL received');
+      }
+    } catch (e: any) {
+      console.error('Customer portal error', e);
+      toast({ description: e.message || 'Failed to open customer portal' });
+    }
+  };
   
   if (isLoading) {
     return (
@@ -172,6 +195,18 @@ const ProfileSettings = () => {
                 <Palette className="mr-2 h-4 w-4" />
                 {t('regionCurrency')}
               </Button>
+
+              {isAdmin && (
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={handleManageSubscription}
+                >
+                  <Crown className="mr-2 h-4 w-4" />
+                  Manage Subscription Plan
+                </Button>
+              )}
+
             </nav>
           </div>
           
