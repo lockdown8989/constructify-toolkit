@@ -18,6 +18,8 @@ serve(async (req) => {
   }
 
   try {
+    log("Function started");
+    
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
@@ -40,6 +42,8 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated");
 
+    log("User authenticated", { userId: user.id, email: user.email });
+
     // Only admins can cancel subscriptions
     const { data: roles } = await supabaseAnon
       .from("user_roles")
@@ -52,6 +56,8 @@ serve(async (req) => {
         status: 403,
       });
     }
+
+    log("Admin verification passed");
 
     // Determine payer email (owner of org). If no org, use self.
     const { data: ownOrg } = await supabaseSvc
@@ -82,6 +88,8 @@ serve(async (req) => {
       }
     }
 
+    log("Using payer email", { payerEmail, organizationId });
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     const customers = await stripe.customers.list({ email: payerEmail, limit: 1 });
 
@@ -93,6 +101,7 @@ serve(async (req) => {
     }
 
     const customerId = customers.data[0].id;
+    log("Found Stripe customer", { customerId });
     
     // Get active subscriptions
     const subscriptions = await stripe.subscriptions.list({ 
@@ -109,6 +118,7 @@ serve(async (req) => {
     }
 
     const subscription = subscriptions.data[0];
+    log("Found active subscription", { subscriptionId: subscription.id });
     
     // Cancel the subscription at period end
     const canceledSubscription = await stripe.subscriptions.update(subscription.id, {
@@ -139,6 +149,8 @@ serve(async (req) => {
       }
     });
 
+    log("Recorded cancellation event in database");
+
     // Update the subscribers table
     await supabaseSvc.from("subscribers").upsert({
       email: payerEmail,
@@ -149,6 +161,8 @@ serve(async (req) => {
       subscription_status: "cancel_at_period_end",
       updated_at: new Date().toISOString(),
     }, { onConflict: "email" });
+
+    log("Updated subscribers table");
 
     return new Response(
       JSON.stringify({
@@ -163,7 +177,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error: any) {
-    console.error("[CANCEL-SUBSCRIPTION] Error:", error);
+    log("Error occurred", { error: error.message, stack: error.stack });
     return new Response(JSON.stringify({ error: error.message || String(error) }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

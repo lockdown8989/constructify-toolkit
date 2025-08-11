@@ -10,6 +10,17 @@ import { Loader2, Check, X, ExternalLink, AlertTriangle } from 'lucide-react';
 import { useToast, toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const plans = [
   {
@@ -235,22 +246,19 @@ export default function Billing() {
     
     if (!subscribed) {
       console.warn('❌ No active subscription');
-      toast({ description: 'No active subscription to cancel' });
+      toast({ 
+        description: 'No active subscription to cancel',
+        variant: 'destructive'
+      });
       return;
     }
 
     if (!isAdmin) {
       console.warn('❌ User is not admin:', { isAdmin });
-      toast({ description: 'Only administrators can cancel subscriptions' });
-      return;
-    }
-
-    // Show confirmation dialog first
-    const confirmed = window.confirm(
-      'Are you sure you want to cancel your subscription? Your access will continue until the end of the current billing period.'
-    );
-    
-    if (!confirmed) {
+      toast({ 
+        description: 'Only administrators can cancel subscriptions',
+        variant: 'destructive'
+      });
       return;
     }
 
@@ -271,7 +279,6 @@ export default function Billing() {
 
       console.log('✅ Session valid, calling cancel-subscription...');
       
-      // Use our new cancel subscription endpoint
       const { data, error } = await supabase.functions.invoke('cancel-subscription', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -303,7 +310,6 @@ export default function Billing() {
     } catch (e: any) {
       console.error('💥 Cancel subscription error:', e);
       
-      // More detailed error messages
       let errorMessage = 'Failed to cancel subscription';
       if (e.name === 'FunctionsFetchError') {
         errorMessage = 'Cannot connect to subscription service. Please check your connection and try again.';
@@ -465,19 +471,55 @@ export default function Billing() {
         </Button>
         
         {subscribed && isAdmin && (
-          <Button 
-            variant="destructive" 
-            onClick={handleCancelSubscription} 
-            disabled={isLoading !== null}
-            className="flex items-center gap-2"
-          >
-            {isLoading === 'cancel' ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <AlertTriangle className="h-4 w-4" />
-            )}
-            Cancel Subscription
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                variant="destructive" 
+                disabled={isLoading !== null}
+                className="flex items-center gap-2"
+              >
+                <AlertTriangle className="h-4 w-4" />
+                Cancel Subscription
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="sm:max-w-md">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                  Cancel Subscription
+                </AlertDialogTitle>
+                <AlertDialogDescription className="space-y-2">
+                  <p>Are you sure you want to cancel your subscription?</p>
+                  <div className="bg-muted p-3 rounded-md">
+                    <p className="text-sm font-medium">What happens next:</p>
+                    <ul className="text-sm text-muted-foreground mt-1 space-y-1">
+                      <li>• Your subscription will remain active until {subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString() : 'the end of the current billing period'}</li>
+                      <li>• You'll continue to have full access until then</li>
+                      <li>• You can reactivate anytime before the period ends</li>
+                      <li>• No immediate charges or loss of access</li>
+                    </ul>
+                  </div>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleCancelSubscription}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  disabled={isLoading === 'cancel'}
+                >
+                  {isLoading === 'cancel' ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Cancelling...
+                    </>
+                  ) : (
+                    'Yes, Cancel Subscription'
+                  )}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
         
         {subscribed === false && !isAdmin && (
