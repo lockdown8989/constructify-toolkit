@@ -69,8 +69,18 @@ const refreshSubscription = async () => {
     const wasTrial = subscriptionIsTrial;
     const nowSubscribed = !!data?.subscribed;
     const nowIsTrial = !!data?.subscription_is_trial;
+
+    // Normalize Stripe tier to app plan keys
+    const normalizedTier = (() => {
+      const t = (data?.subscription_tier as string | null)?.toLowerCase();
+      if (!t) return null;
+      if (t === 'premium' || t === 'pro') return 'pro';
+      if (t === 'enterprise' || t === 'custom') return 'custom';
+      return t;
+    })();
+
     setSubscribed(nowSubscribed);
-    setSubscriptionTier(data?.subscription_tier ?? null);
+    setSubscriptionTier(normalizedTier);
     setSubscriptionEnd(data?.subscription_end ?? null);
     setSubscriptionIsTrial(nowIsTrial);
     setSubscriptionTrialEnd(data?.subscription_trial_end ?? null);

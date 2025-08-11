@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Check, X, ExternalLink } from 'lucide-react';
 import { useToast, toast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 const plans = [
   {
@@ -34,6 +35,14 @@ export default function Billing() {
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [customSelections, setCustomSelections] = useState<string[]>([]);
   const currency = 'GBP';
+
+  const currentPlanId = useMemo(() => {
+    if (!subscribed) return null;
+    const t = subscriptionTier?.toLowerCase();
+    if (t === 'premium' || t === 'pro') return 'pro';
+    if (t === 'enterprise' || t === 'custom') return 'custom';
+    return null;
+  }, [subscribed, subscriptionTier]);
 
   // Handle successful payment redirect
   useEffect(() => {
@@ -236,6 +245,9 @@ export default function Billing() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>{p.name}</span>
+                {currentPlanId === p.id && (
+                  <Badge variant="secondary" className="ml-2">Current plan</Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -283,17 +295,23 @@ export default function Billing() {
                   <ExternalLink className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
-                <Button
-                  className="w-full"
-                  onClick={() => handleSubscribe(p.id)}
-                  disabled={isLoading !== null || !isAdmin}
-                >
-                  {isLoading === p.id ? (
-                    <span className="inline-flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</span>
-                  ) : (
-                    <span>{isAdmin ? 'Subscribe now' : 'Admin required'}</span>
-                  )}
-                </Button>
+                {currentPlanId === p.id ? (
+                  <Button className="w-full" variant="secondary" disabled>
+                    Current plan
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full"
+                    onClick={() => handleSubscribe(p.id)}
+                    disabled={isLoading !== null || !isAdmin}
+                  >
+                    {isLoading === p.id ? (
+                      <span className="inline-flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</span>
+                    ) : (
+                      <span>{isAdmin ? 'Subscribe now' : 'Admin required'}</span>
+                    )}
+                  </Button>
+                )}
               )}
 
               <div className="text-xs text-muted-foreground">
