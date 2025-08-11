@@ -47,6 +47,7 @@ export default function Billing() {
   const [interval, setInterval] = useState<Interval>('month');
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [customSelections, setCustomSelections] = useState<string[]>([]);
+  const [isCancelledButActive, setIsCancelledButActive] = useState(false);
   const currency = 'GBP';
 
   const currentPlanId = useMemo(() => {
@@ -294,6 +295,10 @@ export default function Billing() {
       
       if (data?.success) {
         console.log('✅ Subscription cancelled successfully');
+        
+        // Immediately update the UI to show cancellation status
+        setIsCancelledButActive(true);
+        
         toast({ 
           description: data.message || 'Subscription has been scheduled for cancellation at the end of your current billing period.',
           duration: 5000
@@ -345,11 +350,12 @@ export default function Billing() {
   const subtitle = useMemo(() => {
     if (subscribed) {
       const end = subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString() : '';
-      return `Your plan: ${subscriptionTier ?? 'Active'} • Renews ${end}`;
+      const status = isCancelledButActive ? 'Working until' : 'Renews';
+      return `Your plan: ${subscriptionTier ?? 'Active'} • ${status} ${end}`;
     }
     if (subscribed === false) return 'No active subscription. Access is limited until you subscribe.';
     return 'Choose a plan that fits your team';
-  }, [subscribed, subscriptionEnd, subscriptionTier]);
+  }, [subscribed, subscriptionEnd, subscriptionTier, isCancelledButActive]);
 
   if (isEmployee || isPayroll) {
     return null;
