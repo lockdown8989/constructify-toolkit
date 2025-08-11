@@ -379,6 +379,37 @@ export const useChat = () => {
     } catch (error) {
       console.error('Error sending AI message:', error);
       toast.error('Failed to get AI response');
+
+      // Graceful fallback so the user always gets an answer
+      const userMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        chat_id: 'ai-standalone',
+        sender_id: currentEmployee.id,
+        content: content.trim(),
+        message_type: 'text',
+        sender_type: ['admin', 'employer', 'hr'].includes(userRole) ? 'human_admin' : 'human_employee',
+        is_read: true,
+        created_at: new Date().toISOString(),
+        sender: {
+          id: currentEmployee.id,
+          name: currentEmployee.name,
+          avatar_url: currentEmployee.avatar_url
+        }
+      };
+
+      const aiFallback: ChatMessage = {
+        id: crypto.randomUUID(),
+        chat_id: 'ai-standalone',
+        sender_id: 'ai-bot',
+        content: "I'm having trouble reaching the AI service right now, but I still understood your request. Try again in a moment or be more specific (date, shift times, employee).",
+        message_type: 'ai_response',
+        sender_type: 'ai_bot',
+        is_read: true,
+        created_at: new Date().toISOString(),
+        sender: { id: 'ai-bot', name: 'AI Assistant', avatar_url: undefined }
+      };
+
+      setMessages(prev => [...prev, userMessage, aiFallback]);
     } finally {
       setIsTyping(false);
     }
