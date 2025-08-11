@@ -243,7 +243,7 @@ export default function Billing() {
   };
 
   const handleCancelSubscription = async () => {
-    console.log('🎯 handleCancelSubscription called:', { subscribed, isAdmin });
+    console.log('🎯 handleCancelSubscription called:', { subscribed, isAdmin, user: user?.email });
     
     if (!subscribed) {
       console.warn('❌ No active subscription');
@@ -510,7 +510,10 @@ export default function Billing() {
               <AlertDialogFooter>
                 <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={handleCancelSubscription}
+                  onClick={(e) => {
+                    console.log('🖱️ Cancel button clicked');
+                    handleCancelSubscription();
+                  }}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   disabled={isLoading === 'cancel'}
                 >
