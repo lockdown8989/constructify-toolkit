@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Check, X, ExternalLink } from 'lucide-react';
 import { useToast, toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-
+import { useNavigate } from 'react-router-dom';
 const plans = [
   {
     id: 'pro',
@@ -30,7 +30,8 @@ const plans = [
 type Interval = 'month' | 'year';
 
 export default function Billing() {
-  const { user, isAdmin, subscribed, subscriptionTier, subscriptionEnd, refreshSubscription } = useAuth();
+  const { user, isAdmin, isEmployee, isPayroll, subscribed, subscriptionTier, subscriptionEnd, refreshSubscription } = useAuth();
+  const navigate = useNavigate();
   const [interval, setInterval] = useState<Interval>('month');
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [customSelections, setCustomSelections] = useState<string[]>([]);
@@ -67,6 +68,11 @@ export default function Billing() {
     }
   }, [refreshSubscription]);
 
+  useEffect(() => {
+    if (isEmployee || isPayroll) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isEmployee, isPayroll, navigate]);
   const displayPrice = (value: number | null) => {
     if (value == null) return 'Contact sales';
     return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(value);
@@ -216,6 +222,10 @@ export default function Billing() {
     if (subscribed === false) return 'No active subscription. Access is limited until you subscribe.';
     return 'Choose a plan that fits your team';
   }, [subscribed, subscriptionEnd, subscriptionTier]);
+
+  if (isEmployee || isPayroll) {
+    return null;
+  }
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">

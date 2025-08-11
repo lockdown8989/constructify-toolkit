@@ -51,9 +51,9 @@ if (subscribed === false && !isBillingPath) {
       return <Navigate to="/dashboard" replace />;
     }
   } else {
-    // Non-admins must wait for subscription - redirect to billing
-    return <Navigate to="/billing" replace />;
-  }
+    // Non-admins must wait for subscription - redirect to dashboard
+    return <Navigate to="/dashboard" replace />;
+   }
 } else if (subscribed === true) {
   // Subscribed users get full access to all routes - no restrictions
   console.log('✅ User has active subscription - full access granted');

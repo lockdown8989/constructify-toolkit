@@ -44,8 +44,8 @@ const SubscriptionBadge = () => {
       <Badge 
         variant="secondary" 
         className="text-xs cursor-pointer"
-        onClick={() => navigate('/billing')}
-        title="Go to billing"
+        onClick={() => isAdmin ? navigate('/billing') : toast({ description: 'Please contact an administrator to manage billing' })}
+        title={isAdmin ? 'Go to billing' : 'Billing (admins only)'}
       >
         <Shield className="w-3 h-3 mr-1" />
         Free
