@@ -122,6 +122,8 @@ export const usePreviousMonthPayslips = () => {
           payment_status,
           payment_date,
           pay_period,
+          document_url,
+          document_name,
           employees (
             name,
             job_title,

@@ -114,22 +114,47 @@ const EmployeeWorkflow: React.FC = () => {
     }
   };
   
+  // Helper to download a file from a URL
+  const downloadFile = async (url: string, filename: string) => {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Failed to fetch payslip file');
+    const blob = await res.blob();
+    const link = document.createElement('a');
+    const objectUrl = URL.createObjectURL(blob);
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  };
+  
   // Handle payslip download
-  const handleDownloadPayslip = async (payslipId: string, paymentDate: string) => {
+  const handleDownloadPayslip = async (
+    payslipId: string,
+    paymentDate: string,
+    documentUrl?: string | null,
+    documentName?: string | null
+  ) => {
     if (!employeeId || !employeeData) return;
     
     setIsDownloading(prev => ({ ...prev, [payslipId]: true }));
     try {
       const paymentMonth = format(new Date(paymentDate), 'MMMM yyyy');
+      const fallbackName = documentName || `Payslip_${paymentMonth.replace(/\s+/g, '_')}.pdf`;
       
-      await generatePayslipPDF(employeeId, {
-        name: employeeData.name,
-        title: employeeData.job_title,
-        department: employeeData.department,
-        salary: employeeData.salary.toString(),
-        paymentDate: paymentDate,
-        payPeriod: paymentMonth,
-      });
+      if (documentUrl && documentUrl.startsWith('http')) {
+        await downloadFile(documentUrl, fallbackName);
+      } else {
+        await generatePayslipPDF(employeeId, {
+          name: employeeData.name,
+          title: employeeData.job_title,
+          department: employeeData.department,
+          salary: employeeData.salary.toString(),
+          paymentDate: paymentDate,
+          payPeriod: paymentMonth,
+        });
+      }
       
       toast({
         title: "Payslip Downloaded",
@@ -492,7 +517,7 @@ const EmployeeWorkflow: React.FC = () => {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => handleDownloadPayslip(payslip.id, payslip.payment_date)}
+                              onClick={() => handleDownloadPayslip(payslip.id, payslip.payment_date, (payslip as any).document_url, (payslip as any).document_name)}
                               disabled={isDownloading[payslip.id]}
                             >
                               {isDownloading[payslip.id] ? (

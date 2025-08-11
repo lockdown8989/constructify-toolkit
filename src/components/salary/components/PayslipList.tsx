@@ -41,42 +41,70 @@ export const PayslipList: React.FC<PayslipListProps> = ({ employeeId }) => {
     staleTime: 0 // Always consider data stale to ensure fresh fetches
   });
   
-  const handleDownloadPayslip = async (payslipId: string, paymentDate: string) => {
+  const handleDownloadPayslip = async (
+    payslipId: string,
+    paymentDate: string,
+    documentUrl?: string | null,
+    documentName?: string | null
+  ) => {
     setIsDownloading(prev => ({ ...prev, [payslipId]: true }));
     
+    const downloadFile = async (url: string, filename: string) => {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Failed to fetch payslip file');
+      const blob = await res.blob();
+      const link = document.createElement('a');
+      const objectUrl = URL.createObjectURL(blob);
+      link.href = objectUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+    };
+    
     try {
-      // Get employee details
-      const { data: employee } = await supabase
-        .from('employees')
-        .select('name, job_title, department, salary')
-        .eq('id', employeeId)
-        .single();
+      // Try downloading from existing URL first
+      const paymentMonth = format(new Date(paymentDate), 'MMMM yyyy');
+      const fallbackName = documentName || `Payslip_${paymentMonth.replace(/\s+/g, '_')}.pdf`;
+
+      if (documentUrl && documentUrl.startsWith('http')) {
+        await downloadFile(documentUrl, fallbackName);
+      } else {
+        // Fallback: regenerate PDF from data
+        // Get employee details
+        const { data: employee } = await supabase
+          .from('employees')
+          .select('name, job_title, department, salary')
+          .eq('id', employeeId)
+          .single();
+          
+        if (!employee) {
+          throw new Error('Employee information not found');
+        }
         
-      if (!employee) {
-        throw new Error('Employee information not found');
-      }
-      
-      // Get payslip details
-      const { data: payslip } = await supabase
-        .from('payroll')
-        .select('*')
-        .eq('id', payslipId)
-        .single();
+        // Get payslip details
+        const { data: payslip } = await supabase
+          .from('payroll')
+          .select('*')
+          .eq('id', payslipId)
+          .single();
+          
+        if (!payslip) {
+          throw new Error('Payslip information not found');
+        }
         
-      if (!payslip) {
-        throw new Error('Payslip information not found');
+        // Generate PDF
+        await generatePayslipPDF(employeeId, {
+          name: employee.name,
+          title: employee.job_title,
+          department: employee.department,
+          salary: payslip.base_pay?.toString() || employee.salary?.toString() || '0',
+          paymentDate: payslip.payment_date || paymentDate,
+          overtimeHours: payslip.overtime_hours || 0,
+          contractualHours: payslip.working_hours || 0
+        });
       }
-      
-      // Generate PDF
-      await generatePayslipPDF(employeeId, {
-        name: employee.name,
-        title: employee.job_title,
-        department: employee.department,
-        salary: payslip.base_pay?.toString() || employee.salary?.toString() || '0',
-        paymentDate: payslip.payment_date || paymentDate,
-        overtimeHours: payslip.overtime_hours || 0,
-        contractualHours: payslip.working_hours || 0
-      });
       
       toast({
         title: 'Payslip downloaded',
@@ -186,7 +214,7 @@ export const PayslipList: React.FC<PayslipListProps> = ({ employeeId }) => {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => handleDownloadPayslip(payslip.id, payslip.payment_date)}
+                onClick={() => handleDownloadPayslip(payslip.id, payslip.payment_date, (payslip as any).document_url, (payslip as any).document_name)}
                 disabled={isDownloading[payslip.id]}
               >
                 {isDownloading[payslip.id] ? (
