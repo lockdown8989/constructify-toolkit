@@ -41,6 +41,17 @@ const plans = [
 
 type Interval = 'month' | 'year';
 
+const CUSTOM_FEATURES = [
+  { id: 'core_hr', label: 'Core HR', monthly: 6 },
+  { id: 'attendance', label: 'Attendance tracking', monthly: 4 },
+  { id: 'scheduling', label: 'Scheduling', monthly: 4 },
+  { id: 'payroll', label: 'Payroll exports', monthly: 3 },
+  { id: 'support', label: 'Priority support', monthly: 3 },
+  { id: 'sso', label: 'SSO', monthly: 4 },
+  { id: 'sla', label: 'SLA', monthly: 5 },
+] as const;
+
+
 export default function Billing() {
   const { user, isAdmin, isEmployee, isPayroll, subscribed, subscriptionTier, subscriptionEnd, subscriptionStatus, refreshSubscription } = useAuth();
   const navigate = useNavigate();
@@ -49,7 +60,28 @@ export default function Billing() {
   const [customSelections, setCustomSelections] = useState<string[]>([]);
   const [isCancelledButActive, setIsCancelledButActive] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const currency = 'GBP';
+const currency = 'GBP';
+
+// Derived pricing for custom plan
+const customMonthlyTotal = useMemo(() =>
+  CUSTOM_FEATURES.filter(f => customSelections.includes(f.id)).reduce((sum, f) => sum + f.monthly, 0),
+  [customSelections]
+);
+
+const customDisplayTotal = useMemo(() => {
+  if (customSelections.length === 0) return 0;
+  return interval === 'year'
+    ? Math.round(customMonthlyTotal * 12 * 0.85 * 100) / 100 // ~15% annual discount
+    : Math.round(customMonthlyTotal * 100) / 100;
+}, [customMonthlyTotal, interval, customSelections.length]);
+
+const customAmountCents = useMemo(() => {
+  if (customSelections.length === 0) return 0;
+  return interval === 'year'
+    ? Math.round(customMonthlyTotal * 12 * 0.85 * 100)
+    : Math.round(customMonthlyTotal * 100);
+}, [customMonthlyTotal, interval, customSelections.length]);
+
 
   const currentPlanId = useMemo(() => {
     if (!subscribed) return null;
@@ -96,11 +128,13 @@ export default function Billing() {
   const handleSubscribe = async (planId: 'pro' | 'custom') => {
     console.log('🎯 handleSubscribe called:', { planId, isAdmin, userEmail: user?.email });
     
-    if (planId === 'custom') {
-      window.open('#contact', '_self');
-      return;
-    }
-    
+if (planId === 'custom') {
+  if (customSelections.length === 0) {
+    toast({ description: 'Select at least one feature for a custom plan' });
+    return;
+  }
+}
+
     if (!isAdmin) {
       console.warn('❌ User is not admin:', { isAdmin });
       toast({ description: 'Only administrators can start a subscription' });
@@ -124,13 +158,21 @@ export default function Billing() {
       
       console.log('✅ Session valid, calling create-checkout...');
 
-      const payload = {
-        planTier: planId,
-        interval: interval,
-        currency: 'gbp',
-        successUrl: `${window.location.origin}/billing?status=success&plan=${planId}`,
-        cancelUrl: `${window.location.origin}/billing?status=canceled`
-      };
+const payload: any = {
+  planTier: planId,
+  interval: interval,
+  currency: 'gbp',
+  successUrl: `${window.location.origin}/billing?status=success&plan=${planId}`,
+  cancelUrl: `${window.location.origin}/billing?status=canceled`
+};
+
+if (planId === 'custom') {
+  payload.customAmountCents = customAmountCents;
+  payload.features = CUSTOM_FEATURES
+    .filter(f => customSelections.includes(f.id))
+    .map(f => f.label);
+}
+
 
       // Primary call via Supabase client
       const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -458,51 +500,73 @@ export default function Billing() {
                 <div className="space-y-2">
                   <Label className="text-sm">Select features</Label>
                   <div className="grid grid-cols-1 gap-2">
-                    {['Core HR','Attendance tracking','Scheduling','Payroll exports','Priority support','SSO','SLA'].map((opt) => (
-                      <label key={opt} className="flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 accent-primary"
-                          checked={customSelections.includes(opt)}
-                          onChange={(e) =>
-                            setCustomSelections((prev) =>
-                              e.target.checked ? [...prev, opt] : prev.filter((x) => x !== opt)
-                            )
-                          }
-                        />
-                        <span>{opt}</span>
-                      </label>
-                    ))}
+{CUSTOM_FEATURES.map((opt) => (
+  <label key={opt.id} className="flex items-center gap-2 text-sm">
+    <input
+      type="checkbox"
+      className="h-4 w-4 accent-primary"
+      checked={customSelections.includes(opt.id)}
+      onChange={(e) =>
+        setCustomSelections((prev) =>
+          e.target.checked ? [...prev, opt.id] : prev.filter((x) => x !== opt.id)
+        )
+      }
+    />
+    <span className="flex-1">{opt.label}</span>
+    <span className="text-muted-foreground">{new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(opt.monthly)} / mo</span>
+  </label>
+))}
+
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border p-2 text-sm">
+                    <span>Estimated total</span>
+                    <span className="font-medium">
+                      {new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(customDisplayTotal)} / {interval}
+                    </span>
                   </div>
                 </div>
               )}
 
-              {p.id === 'custom' ? (
-                <Button variant="outline" onClick={() => window.open('#contact', '_self')}>
-                  Contact sales
-                  <ExternalLink className="ml-2 h-4 w-4" />
-                </Button>
-              ) : (
-                <>
-                  {currentPlanId === p.id ? (
-                    <Button className="w-full" variant="secondary" disabled>
-                      Current plan
-                    </Button>
-                  ) : (
-                    <Button
-                      className="w-full"
-                      onClick={() => handleSubscribe(p.id)}
-                      disabled={isLoading !== null || !isAdmin}
-                    >
-                      {isLoading === p.id ? (
-                        <span className="inline-flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</span>
-                      ) : (
-                        <span>{isAdmin ? 'Subscribe now' : 'Admin required'}</span>
-                      )}
-                    </Button>
-                  )}
-                </>
-              )}
+
+{p.id === 'custom' ? (
+  <div className="space-y-2">
+    <Button
+      className="w-full"
+      variant="default"
+      onClick={() => handleSubscribe('custom')}
+      disabled={isLoading !== null || !isAdmin || customSelections.length === 0}
+    >
+      {isLoading === 'custom' ? (
+        <span className="inline-flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</span>
+      ) : (
+        <span>{!isAdmin ? 'Admin required' : customSelections.length === 0 ? 'Select features' : 'Choose plan'}</span>
+      )}
+    </Button>
+    <div className="text-xs text-muted-foreground">
+      Billed {interval}. You can modify features anytime from the Stripe portal.
+    </div>
+  </div>
+) : (
+  <>
+    {currentPlanId === p.id ? (
+      <Button className="w-full" variant="secondary" disabled>
+        Current plan
+      </Button>
+    ) : (
+      <Button
+        className="w-full"
+        onClick={() => handleSubscribe(p.id)}
+        disabled={isLoading !== null || !isAdmin}
+      >
+        {isLoading === p.id ? (
+          <span className="inline-flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</span>
+        ) : (
+          <span>{isAdmin ? 'Subscribe now' : 'Admin required'}</span>
+        )}
+      </Button>
+    )}
+  </>
+)}
 
               <div className="text-xs text-muted-foreground">
                 {p.id !== 'custom' ? 'Cancel anytime. Only the admin is charged; team inherits access.' : 'Let’s tailor features and pricing for your org.'}

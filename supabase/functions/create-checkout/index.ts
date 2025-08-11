@@ -12,12 +12,17 @@ const log = (step: string, details?: unknown) => {
 };
 
 type Payload = {
-  planTier?: 'basic' | 'pro';
+  planTier?: 'basic' | 'pro' | 'custom';
   interval?: 'month' | 'year';
   currency?: string; // e.g., 'gbp'
   trialDays?: number; // default 14
   priceId?: string; // optional Stripe Price ID to override
+  customAmountCents?: number; // for custom plans - total amount in cents
+  features?: string[]; // selected features for custom plan
+  successUrl?: string;
+  cancelUrl?: string;
 };
+
 
 const prices = {
   basic: { month: 799, year: 7999 },
@@ -97,31 +102,42 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
-    // Determine price
-    const priceId = body.priceId;
-    let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[];
-    if (priceId) {
-      lineItems = [{ price: priceId, quantity: 1 }];
-    } else {
-      const unit_amount = prices[planTier][interval];
-      lineItems = [{
-        price_data: {
-          currency,
-          product_data: { name: `${planTier === 'basic' ? 'Basic' : 'Pro'} Plan Subscription (${interval})` },
-          unit_amount,
-          recurring: { interval },
-        },
-        quantity: 1,
-      }];
-    }
+// Determine price
+const priceId = body.priceId;
+let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[];
+if (priceId) {
+  lineItems = [{ price: priceId, quantity: 1 }];
+} else if (planTier === 'custom' && typeof body.customAmountCents === 'number' && body.customAmountCents > 0) {
+  lineItems = [{
+    price_data: {
+      currency,
+      product_data: { name: `Custom Plan Subscription (${interval})`, metadata: { features: JSON.stringify(body.features || []) } },
+      unit_amount: body.customAmountCents,
+      recurring: { interval },
+    },
+    quantity: 1,
+  }];
+} else {
+  const unit_amount = prices[planTier][interval];
+  lineItems = [{
+    price_data: {
+      currency,
+      product_data: { name: `${planTier === 'basic' ? 'Basic' : 'Pro'} Plan Subscription (${interval})` },
+      unit_amount,
+      recurring: { interval },
+    },
+    quantity: 1,
+  }];
+}
+
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: lineItems,
       mode: "subscription",
-      success_url: `${origin}/billing?status=success&plan=${planTier}&interval=${interval}`,
-      cancel_url: `${origin}/billing?status=canceled&plan=${planTier}&interval=${interval}`,
+success_url: body.successUrl || `${origin}/billing?status=success&plan=${planTier}&interval=${interval}`,
+cancel_url: body.cancelUrl || `${origin}/billing?status=canceled&plan=${planTier}&interval=${interval}`,
       metadata: {
         organization_id: organizationId!,
         owner_user_id: user.id,
