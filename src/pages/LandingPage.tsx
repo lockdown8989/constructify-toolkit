@@ -228,8 +228,8 @@ const LandingPage: React.FC = () => {
               With advanced features tailored to meet the unique needs of modern businesses, 
               you can now achieve new levels of efficiency and teamwork.
             </p>
-            <Button size="lg" className="mt-8 bg-gradient-to-r from-primary to-primary/90 shadow-lg">
-              Learn more
+            <Button asChild size="lg" className="mt-8 bg-gradient-to-r from-primary to-primary/90 shadow-lg">
+              <Link to="/learn-more#best-platform">Learn more</Link>
             </Button>
           </div>
           
@@ -250,7 +250,7 @@ const LandingPage: React.FC = () => {
                     <Users className="w-12 h-12 text-blue-600" />
                   </div>
                 </div>
-                <Button variant="link" className="p-0 text-primary font-semibold">Read details</Button>
+                <Button asChild variant="link" className="p-0 text-primary font-semibold"><Link to="/learn-more#management-menu">Read details</Link></Button>
               </CardContent>
             </Card>
 
@@ -270,7 +270,7 @@ const LandingPage: React.FC = () => {
                     <Shield className="w-12 h-12 text-green-600" />
                   </div>
                 </div>
-                <Button variant="link" className="p-0 text-primary font-semibold">Read details</Button>
+                <Button asChild variant="link" className="p-0 text-primary font-semibold"><Link to="/learn-more#duty-control">Read details</Link></Button>
               </CardContent>
             </Card>
 
@@ -290,7 +290,7 @@ const LandingPage: React.FC = () => {
                     <TrendingUp className="w-12 h-12 text-purple-600" />
                   </div>
                 </div>
-                <Button variant="link" className="p-0 text-primary font-semibold">Read details</Button>
+                <Button asChild variant="link" className="p-0 text-primary font-semibold"><Link to="/learn-more#profit-charts">Read details</Link></Button>
               </CardContent>
             </Card>
           </div>
@@ -359,8 +359,8 @@ const LandingPage: React.FC = () => {
               <p className="text-xl text-muted-foreground leading-relaxed">
                 Discover the best practices for maintaining fair and compliant schedules while ensuring your employees' well-being.
               </p>
-              <Button size="lg" className="bg-gradient-to-r from-primary to-primary/90 shadow-lg text-lg px-8">
-                Learn more
+              <Button asChild size="lg" className="bg-gradient-to-r from-primary to-primary/90 shadow-lg text-lg px-8">
+                <Link to="/learn-more#schedule">Learn more</Link>
               </Button>
             </div>
           </div>
@@ -376,8 +376,8 @@ const LandingPage: React.FC = () => {
               <p className="text-xl text-muted-foreground leading-relaxed">
                 With up-to-the-minute data and visual insights, you can effortlessly track tasks, milestones, and team performance as they happen.
               </p>
-              <Button size="lg" className="bg-gradient-to-r from-primary to-primary/90 shadow-lg text-lg px-8">
-                Learn more
+              <Button asChild size="lg" className="bg-gradient-to-r from-primary to-primary/90 shadow-lg text-lg px-8">
+                <Link to="/learn-more#monitoring">Learn more</Link>
               </Button>
             </div>
             <div className="relative">

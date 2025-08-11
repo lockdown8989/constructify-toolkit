@@ -32,6 +32,10 @@ const routes: RouteObject[] = [
     path: '/profile',
     Component: lazy(() => import('@/pages/Profile')),
   },
+  {
+    path: '/learn-more',
+    Component: lazy(() => import('@/pages/LearnMore')),
+  },
 ];
 
 export const createAppRoutes = () => routes;
