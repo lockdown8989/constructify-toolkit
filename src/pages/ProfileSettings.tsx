@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/hooks/auth";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -37,52 +36,71 @@ const ProfileSettings = () => {
   const [isManagingSubscription, setIsManagingSubscription] = useState(false);
   
   const handleManageSubscription = async () => {
-    if (!isAdmin || isManagingSubscription) return;
+    if (!isAdmin) {
+      toast({ 
+        description: 'Only administrators can manage billing',
+        duration: 3000
+      });
+      return;
+    }
+
+    if (isManagingSubscription) return;
     
     setIsManagingSubscription(true);
+    
     try {
-      console.log('🔄 Starting subscription management...');
+      console.log('🔄 Starting subscription management from ProfileSettings...');
       
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
-        throw new Error('No active session');
+        throw new Error('No active session found. Please refresh the page and try again.');
       }
 
       // If not subscribed, redirect to billing page
       if (subscribed === false) {
-        console.log('🔗 Not subscribed, redirecting to billing');
+        console.log('🔗 User not subscribed, redirecting to billing page');
         navigate('/billing');
+        toast({ 
+          description: 'Redirecting to billing page...',
+          duration: 2000
+        });
         return;
       }
 
-      console.log('🔄 Calling customer portal...');
+      console.log('🔄 Calling customer portal function...');
       const { data, error } = await supabase.functions.invoke('customer-portal', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { 
+          Authorization: `Bearer ${session.access_token}` 
+        },
       });
 
       if (error) {
         console.error('❌ Customer portal error:', error);
-        throw error;
+        throw new Error(error.message || 'Failed to create customer portal session');
       }
 
       if (data?.url) {
         console.log('🚀 Redirecting to customer portal:', data.url);
-        toast({ description: 'Opening subscription management portal...' });
-        // Use window.location.href for same-tab redirect
+        toast({ 
+          description: 'Opening subscription management portal...',
+          duration: 2000
+        });
+        // Redirect to Stripe Customer Portal in the same tab
         window.location.href = data.url;
       } else {
-        throw new Error('No portal URL received');
+        throw new Error('No portal URL received from the server');
       }
-    } catch (e: any) {
-      console.error('💥 Customer portal error:', e);
+    } catch (error: any) {
+      console.error('💥 Subscription management error:', error);
+      
       let errorMessage = 'Failed to open subscription management';
       
-      if (e.message?.includes('No active session')) {
+      if (error.message?.includes('No active session')) {
         errorMessage = 'Session expired. Please refresh the page and try again.';
-      } else if (e.message?.includes('No portal URL')) {
-        errorMessage = 'Unable to create portal session. Please try again.';
-      } else if (e.message) {
-        errorMessage = e.message;
+      } else if (error.message?.includes('No portal URL')) {
+        errorMessage = 'Unable to create portal session. Please try again later.';
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       
       toast({ 
