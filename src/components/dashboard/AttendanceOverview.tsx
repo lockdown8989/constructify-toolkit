@@ -1,110 +1,139 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEmployees } from '@/hooks/use-employees';
 import { Plane, Clock, LogOut } from 'lucide-react';
 import AttendanceDetailModal from './AttendanceDetailModal';
+import { debug } from '@/utils/debug';
 
-const AttendanceOverview = () => {
+const AttendanceOverview = React.memo(() => {
   const { data: employees = [] } = useEmployees();
   const [selectedCardType, setSelectedCardType] = useState<'holiday' | 'clocked-in' | 'clocked-out' | null>(null);
 
-  // Get today's date
-  const today = new Date().toISOString().split('T')[0];
+  // Memoized today's date
+  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
   
-  // Fetch leave requests (holidays) for today
+  // Optimized leave requests query - select only needed columns
   const { data: leaves = [] } = useQuery({
     queryKey: ['leaves-today', today],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('leave_calendar')
-        .select('*')
+        .select('employee_id, status, start_date, end_date')
         .eq('status', 'Approved')
         .lte('start_date', today)
         .gte('end_date', today);
 
       if (error) {
-        console.error('Error fetching leaves:', error);
+        debug.error('Error fetching leaves:', error);
         return [];
       }
 
-      console.log('Leaves data for today:', data);
+      debug.api('Leaves data for today:', data);
       return data || [];
     },
     refetchInterval: 10000,
   });
 
-  // Fetch real attendance data for today
+  // Optimized attendance data query - select only needed columns
   const { data: attendanceData = [] } = useQuery({
     queryKey: ['attendance-overview', today],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('attendance')
         .select(`
-          *,
+          employee_id,
+          active_session,
+          check_in,
+          check_out,
           employees!inner(id, name, avatar_url, job_title, department)
         `)
         .eq('date', today);
 
       if (error) {
-        console.error('Error fetching attendance data:', error);
+        debug.error('Error fetching attendance data:', error);
         return [];
       }
 
-      console.log('All attendance data for today:', data);
+      debug.api('All attendance data for today:', data);
       return data || [];
     },
     refetchInterval: 5000, // More frequent updates
   });
 
-  // Calculate holiday count (employees on approved leave today)
-  const employeesOnHoliday = employees.filter(employee => {
-    return leaves.some(leave => leave.employee_id === employee.id);
-  });
-  const holidayCount = employeesOnHoliday.length;
+  // Memoized calculations for better performance
+  const attendanceCalculations = useMemo(() => {
+    // Calculate holiday count (employees on approved leave today)
+    const employeesOnHoliday = employees.filter(employee => {
+      return leaves.some(leave => leave.employee_id === employee.id);
+    });
+    const holidayCount = employeesOnHoliday.length;
 
-  // Calculate clocked in count (employees with active sessions)
-  const clockedInEmployees = attendanceData
-    .filter(record => 
-      record.active_session === true && 
-      record.check_in && 
-      !record.check_out
-    )
-    .map(record => record.employees)
-    .filter(Boolean);
-  const clockedInCount = clockedInEmployees.length;
+    // Calculate clocked in count (employees with active sessions)
+    const clockedInEmployees = attendanceData
+      .filter(record => 
+        record.active_session === true && 
+        record.check_in && 
+        !record.check_out
+      )
+      .map(record => Array.isArray(record.employees) ? record.employees[0] : record.employees)
+      .filter(Boolean);
+    const clockedInCount = clockedInEmployees.length;
 
-  // Calculate clocked out count (total employees - clocked in - on holiday)
-  const totalActiveEmployees = employees.filter(emp => emp.status === 'Active').length;
-  const clockedOutCount = Math.max(0, totalActiveEmployees - clockedInCount - holidayCount);
+    // Calculate clocked out count (total employees - clocked in - on holiday)
+    const totalActiveEmployees = employees.filter(emp => emp.status === 'Active').length;
+    const clockedOutCount = Math.max(0, totalActiveEmployees - clockedInCount - holidayCount);
 
-  // Get employees who are clocked out
-  const clockedInEmployeeIds = new Set(clockedInEmployees.map(emp => emp.id));
-  const holidayEmployeeIds = new Set(employeesOnHoliday.map(emp => emp.id));
-  const clockedOutEmployees = employees.filter(emp => 
-    emp.status === 'Active' &&
-    !clockedInEmployeeIds.has(emp.id) && 
-    !holidayEmployeeIds.has(emp.id)
-  );
+    // Get employees who are clocked out
+    const clockedInEmployeeIds = new Set(clockedInEmployees.map(emp => emp.id));
+    const holidayEmployeeIds = new Set(employeesOnHoliday.map(emp => emp.id));
+    const clockedOutEmployees = employees.filter(emp => 
+      emp.status === 'Active' &&
+      !clockedInEmployeeIds.has(emp.id) && 
+      !holidayEmployeeIds.has(emp.id)
+    );
 
-  console.log('AttendanceOverview calculations:', {
-    totalActiveEmployees,
+    const calculations = {
+      employeesOnHoliday,
+      holidayCount,
+      clockedInEmployees,
+      clockedInCount,
+      clockedOutEmployees,
+      clockedOutCount,
+      totalActiveEmployees
+    };
+
+    debug.performance('AttendanceOverview calculations:', {
+      totalActiveEmployees,
+      holidayCount,
+      clockedInCount,
+      clockedOutCount,
+      attendanceRecords: attendanceData.length,
+      leaves: leaves.length,
+      clockedInEmployees: clockedInEmployees.length,
+      clockedOutEmployees: clockedOutEmployees.length
+    });
+
+    return calculations;
+  }, [employees, leaves, attendanceData]);
+
+  const {
+    employeesOnHoliday,
     holidayCount,
+    clockedInEmployees,
     clockedInCount,
+    clockedOutEmployees,
     clockedOutCount,
-    attendanceRecords: attendanceData.length,
-    leaves: leaves.length,
-    clockedInEmployees: clockedInEmployees.length,
-    clockedOutEmployees: clockedOutEmployees.length
-  });
+    totalActiveEmployees
+  } = attendanceCalculations;
 
   const handleCardClick = (cardType: 'holiday' | 'clocked-in' | 'clocked-out') => {
     setSelectedCardType(cardType);
   };
 
-  const getEmployeesForModal = () => {
+  const getEmployeesForModal = (): any[] => {
     switch (selectedCardType) {
       case 'holiday':
         return employeesOnHoliday;
@@ -274,6 +303,8 @@ const AttendanceOverview = () => {
       />
     </>
   );
-};
+});
+
+AttendanceOverview.displayName = 'AttendanceOverview';
 
 export default AttendanceOverview;
