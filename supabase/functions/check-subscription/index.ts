@@ -83,6 +83,7 @@ serve(async (req) => {
     let subscribed = false;
     let subscriptionTier: string | null = null;
     let subscriptionEnd: string | null = null;
+    let subscriptionStatus: string | null = null;
     let customerId: string | null = null;
 
     if (customers.data.length > 0) {
@@ -92,11 +93,19 @@ serve(async (req) => {
       if (subscribed) {
         const sub = subs.data[0];
         subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
+        subscriptionStatus = sub.cancel_at_period_end ? "cancel_at_period_end" : "active";
         const price = sub.items.data[0].price;
         const amount = price.unit_amount || 0;
         if (amount <= 999) subscriptionTier = "Basic";
         else if (amount <= 1999) subscriptionTier = "Premium";
         else subscriptionTier = "Enterprise";
+        
+        log("Subscription found", { 
+          subscriptionId: sub.id,
+          subscriptionStatus,
+          cancelAtPeriodEnd: sub.cancel_at_period_end,
+          currentPeriodEnd: subscriptionEnd
+        });
       }
     }
 
@@ -109,6 +118,7 @@ serve(async (req) => {
       subscribed,
       subscription_tier: subscriptionTier,
       subscription_end: subscriptionEnd,
+      subscription_status: subscriptionStatus,
       updated_at: new Date().toISOString(),
     };
 
@@ -122,6 +132,7 @@ serve(async (req) => {
         subscribed,
         subscription_tier: subscriptionTier,
         subscription_end: subscriptionEnd,
+        subscription_status: subscriptionStatus,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );

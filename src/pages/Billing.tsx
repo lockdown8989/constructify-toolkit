@@ -48,6 +48,7 @@ export default function Billing() {
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [customSelections, setCustomSelections] = useState<string[]>([]);
   const [isCancelledButActive, setIsCancelledButActive] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const currency = 'GBP';
 
   const currentPlanId = useMemo(() => {
@@ -244,6 +245,7 @@ export default function Billing() {
 
   const handleCancelSubscription = async () => {
     console.log('🎯 handleCancelSubscription called:', { subscribed, isAdmin, user: user?.email });
+    setShowCancelDialog(false); // Close dialog first
     
     if (!subscribed) {
       console.warn('❌ No active subscription');
@@ -280,11 +282,47 @@ export default function Billing() {
 
       console.log('✅ Session valid, calling cancel-subscription...');
       
-      const { data, error } = await supabase.functions.invoke('cancel-subscription', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      // Primary call via Supabase client
+      let data: any = null;
+      let error: any = null;
+      
+      try {
+        const response = await supabase.functions.invoke('cancel-subscription', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+        data = response.data;
+        error = response.error;
+      } catch (invokeError) {
+        error = invokeError;
+      }
+      
+      // Fallback: direct fetch to Edge Function if supabase-js invoke fails
+      if (!data || error) {
+        console.warn('⚠️ Falling back to direct fetch for cancel-subscription...', error?.message || error);
+        try {
+          const response = await fetch('https://fphmujxruswmvlwceodl.supabase.co/functions/v1/cancel-subscription', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+              apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwaG11anhydXN3bXZsd2Nlb2RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIyMDc5NjcsImV4cCI6MjA1Nzc4Mzk2N30.NCTLZVRuiaEopQi0uWdEFn_7noYoEnTvF2CqqD7S-y4',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}),
+          });
+          if (response.ok) {
+            data = await response.json();
+            error = null;
+          } else {
+            const errorText = await response.text();
+            error = new Error(`HTTP ${response.status}: ${errorText}`);
+          }
+        } catch (fetchError) {
+          console.error('❌ Direct fetch failed for cancel-subscription', fetchError);
+          error = fetchError;
+        }
+      }
       
       console.log('📦 cancel-subscription response:', { data, error });
       
@@ -477,55 +515,65 @@ export default function Billing() {
         </Button>
         
         {subscribed && isAdmin && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button 
-                variant="destructive" 
-                disabled={isLoading !== null}
-                className="flex items-center gap-2"
-              >
-                <AlertTriangle className="h-4 w-4" />
-                Cancel Subscription
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="sm:max-w-md">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-destructive" />
-                  Cancel Subscription
-                </AlertDialogTitle>
-                <AlertDialogDescription className="space-y-2">
-                  <p>Are you sure you want to cancel your subscription?</p>
-                  <div className="bg-muted p-3 rounded-md">
-                    <p className="text-sm font-medium">What happens next:</p>
-                    <ul className="text-sm text-muted-foreground mt-1 space-y-1">
-                      <li>• Your subscription will remain active until {subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString() : 'the end of the current billing period'}</li>
-                      <li>• You'll continue to have full access until then</li>
-                      <li>• You can reactivate anytime before the period ends</li>
-                      <li>• No immediate charges or loss of access</li>
-                    </ul>
-                  </div>
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
-                <Button
-                  onClick={handleCancelSubscription}
-                  variant="destructive"
-                  disabled={isLoading === 'cancel'}
-                >
-                  {isLoading === 'cancel' ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Cancelling...
-                    </>
-                  ) : (
-                    'Yes, Cancel Subscription'
-                  )}
-                </Button>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <>
+            <Button 
+              variant="destructive" 
+              disabled={isLoading !== null}
+              className="flex items-center gap-2"
+              onClick={() => {
+                console.log('🖱️ Cancel subscription button clicked');
+                setShowCancelDialog(true);
+              }}
+            >
+              <AlertTriangle className="h-4 w-4" />
+              Cancel Subscription
+            </Button>
+
+            <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+              <AlertDialogContent className="sm:max-w-md">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-destructive" />
+                    Cancel Subscription
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-2">
+                    <p>Are you sure you want to cancel your subscription?</p>
+                    <div className="bg-muted p-3 rounded-md">
+                      <p className="text-sm font-medium">What happens next:</p>
+                      <ul className="text-sm text-muted-foreground mt-1 space-y-1">
+                        <li>• Your subscription will remain active until {subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString() : 'the end of the current billing period'}</li>
+                        <li>• You'll continue to have full access until then</li>
+                        <li>• You can reactivate anytime before the period ends</li>
+                        <li>• No immediate charges or loss of access</li>
+                      </ul>
+                    </div>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setShowCancelDialog(false)}>
+                    Keep Subscription
+                  </AlertDialogCancel>
+                  <Button
+                    onClick={() => {
+                      console.log('🖱️ Yes, Cancel Subscription clicked');
+                      handleCancelSubscription();
+                    }}
+                    variant="destructive"
+                    disabled={isLoading === 'cancel'}
+                  >
+                    {isLoading === 'cancel' ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Cancelling...
+                      </>
+                    ) : (
+                      'Yes, Cancel Subscription'
+                    )}
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
         )}
         
         {subscribed === false && !isAdmin && (
