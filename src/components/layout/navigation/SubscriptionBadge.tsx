@@ -10,34 +10,19 @@ const SubscriptionBadge = () => {
   const { subscribed, subscriptionTier, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  const handleManageClick = async () => {
-    if (!subscribed) {
-      navigate('/billing');
-      return;
-    }
+  const handleBadgeClick = async () => {
     if (!isAdmin) {
-      toast({ description: 'Only administrators can manage billing' });
+      toast({ 
+        description: 'Please contact an administrator to manage billing',
+        duration: 3000
+      });
       return;
     }
-    try {
-      console.log('🔄 Opening subscription management from navbar PRO badge...');
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error('No active session');
-      const { data, error } = await supabase.functions.invoke('customer-portal', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      if (error) throw error;
-      if (data?.url) {
-        console.log('🚀 Redirecting to subscription portal:', data.url);
-        toast({ description: 'Opening subscription management portal...' });
-        window.location.href = data.url;
-      } else {
-        throw new Error('No portal URL received');
-      }
-    } catch (e: any) {
-      console.error('Customer portal error', e);
-      toast({ description: e.message || 'Failed to open customer portal' });
-    }
+
+    // Always redirect to billing page first where they can see their current plan
+    // and manage their subscription
+    console.log('🔗 Redirecting to billing page from PRO badge...');
+    navigate('/billing');
   };
 
   // Show badge to all authenticated users once subscription state is known
@@ -48,7 +33,7 @@ const SubscriptionBadge = () => {
       <Badge 
         variant="secondary" 
         className="text-xs cursor-pointer hover:bg-secondary/80 transition-colors"
-        onClick={() => isAdmin ? navigate('/billing') : toast({ description: 'Please contact an administrator to manage billing' })}
+        onClick={handleBadgeClick}
         title={isAdmin ? 'Go to billing' : 'Billing (admins only)'}
       >
         <Shield className="w-3 h-3 mr-1" />
@@ -64,8 +49,8 @@ const SubscriptionBadge = () => {
     <Badge 
       variant="default" 
       className="text-xs cursor-pointer hover:bg-primary/90 transition-colors"
-      onClick={handleManageClick}
-      title="Manage subscription"
+      onClick={handleBadgeClick}
+      title="View and manage your subscription plan"
     >
       <TierIcon className="w-3 h-3 mr-1" />
       {subscriptionTier === 'pro' 
