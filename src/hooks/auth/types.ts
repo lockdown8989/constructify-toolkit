@@ -12,6 +12,11 @@ export interface AuthContextType {
   isPayroll: boolean;
   rolesLoaded: boolean;
   isAuthenticated: boolean;
+  // Subscription state (org-level)
+  subscribed?: boolean;
+  subscriptionTier?: string | null;
+  subscriptionEnd?: string | null;
+  refreshSubscription?: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, userData: any) => Promise<any>;
   resetPassword: (email: string) => Promise<any>;

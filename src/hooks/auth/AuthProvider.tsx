@@ -22,6 +22,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Employee is anyone who is authenticated but doesn't have other roles - FIXED LOGIC
   const isEmployee = !!user && !isAdmin && !isHR && !isManager && !isPayroll;
 
+  // Subscription state (org-level)
+  const [subscribed, setSubscribed] = useState<boolean | undefined>(undefined);
+  const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
+  const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+
   console.log("🔐 AuthProvider roles state:", {
     isAdmin,
     isHR, 
@@ -35,8 +40,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Use auth actions hook
   const authActions = useAuthActions();
 
-  // Add debugging hook
-  useAuthDebugger({ user, session, isLoading });
+// Add debugging hook
+useAuthDebugger({ user, session, isLoading });
+
+// Refresh org subscription status
+const refreshSubscription = async () => {
+  try {
+    const { data, error } = await supabase.functions.invoke('check-subscription');
+    if (error) throw error as any;
+    setSubscribed(!!data?.subscribed);
+    setSubscriptionTier(data?.subscription_tier ?? null);
+    setSubscriptionEnd(data?.subscription_end ?? null);
+  } catch (e) {
+    console.warn('Subscription check failed:', e);
+    setSubscribed(false);
+    setSubscriptionTier(null);
+    setSubscriptionEnd(null);
+  }
+};
 
   useEffect(() => {
     let mounted = true;
@@ -82,13 +103,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         // For INITIAL_SESSION and SIGNED_IN events - only update if we have a session
-        if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
-          console.log(`🔄 ${event} event - updating session state`);
-          setSession(session);
-          setUser(session.user);
-          setIsLoading(false);
-          return;
-        }
+if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
+  console.log(`🔄 ${event} event - updating session state`);
+  setSession(session);
+  setUser(session.user);
+  setIsLoading(false);
+  // Defer subscription check to avoid deadlocks
+  setTimeout(() => { refreshSubscription(); }, 0);
+  return;
+}
         
         // For INITIAL_SESSION with no session, only clear if we don't already have a session
         if (event === 'INITIAL_SESSION' && !session) {
@@ -161,19 +184,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
-  const value: AuthContextType = {
-    user,
-    session,
-    isLoading,
-    isAdmin,
-    isHR,
-    isManager,
-    isEmployee,
-    isPayroll,
-    rolesLoaded,
-    isAuthenticated: !!session?.user,
-    ...authActions, // This includes signIn, signUp, resetPassword, updatePassword, signOut, deleteAccount
-  };
+const value: AuthContextType = {
+  user,
+  session,
+  isLoading,
+  isAdmin,
+  isHR,
+  isManager,
+  isEmployee,
+  isPayroll,
+  rolesLoaded,
+  isAuthenticated: !!session?.user,
+  // Subscription
+  subscribed,
+  subscriptionTier,
+  subscriptionEnd,
+  refreshSubscription,
+  ...authActions, // This includes signIn, signUp, resetPassword, updatePassword, signOut, deleteAccount
+};
 
   return (
     <ErrorBoundary>
