@@ -38,22 +38,25 @@ if (!user) {
   return <Navigate to="/auth" replace />;
 }
 
-// Org subscription gating: if unsubscribed, allow admins to access billing and dashboard
-// but redirect non-admins to billing page to encourage subscription
+// Org subscription gating: 
+// - Subscribed users get full access
+// - Unsubscribed: admins can access billing and dashboard, non-admins redirected to billing
 const isBillingPath = location.pathname.startsWith('/billing');
 const isDashboardPath = location.pathname.startsWith('/dashboard');
 
 if (subscribed === false && !isBillingPath) {
-  // Admins can access dashboard even without subscription to manage billing
-  if (isAdmin && isDashboardPath) {
-    // Allow access
-  } else if (!isAdmin) {
-    // Non-admins must wait for subscription
+  if (isAdmin) {
+    // Admins can access dashboard to manage billing, otherwise redirect non-essential pages to dashboard
+    if (!isDashboardPath) {
+      return <Navigate to="/dashboard" replace />;
+    }
+  } else {
+    // Non-admins must wait for subscription - redirect to billing
     return <Navigate to="/billing" replace />;
-  } else if (isAdmin && !isDashboardPath && !isBillingPath) {
-    // Admins can access dashboard or billing, redirect to dashboard
-    return <Navigate to="/dashboard" replace />;
   }
+} else if (subscribed === true) {
+  // Subscribed users get full access to all routes - no restrictions
+  console.log('✅ User has active subscription - full access granted');
 }
 
   // Check single required role

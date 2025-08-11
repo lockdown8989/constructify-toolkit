@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,13 +35,41 @@ export default function Billing() {
   const [customSelections, setCustomSelections] = useState<string[]>([]);
   const currency = 'GBP';
 
+  // Handle successful payment redirect
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status');
+    const plan = urlParams.get('plan');
+    
+    if (status === 'success' && plan) {
+      console.log('🎉 Payment successful, refreshing subscription...');
+      toast({ description: 'Payment successful! Your subscription is now active.' });
+      // Refresh subscription status after successful payment
+      setTimeout(() => {
+        refreshSubscription?.();
+      }, 1000);
+      // Clean up URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (status === 'canceled') {
+      console.log('❌ Payment canceled');
+      toast({ description: 'Payment was canceled. You can try again anytime.' });
+      // Clean up URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [refreshSubscription]);
+
   const displayPrice = (value: number | null) => {
     if (value == null) return 'Contact sales';
     return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(value);
   };
 
-  const handleSubscribe = async (planId: 'pro') => {
+  const handleSubscribe = async (planId: 'pro' | 'custom') => {
     console.log('🎯 handleSubscribe called:', { planId, isAdmin, userEmail: user?.email });
+    
+    if (planId === 'custom') {
+      window.open('#contact', '_self');
+      return;
+    }
     
     if (!isAdmin) {
       console.warn('❌ User is not admin:', { isAdmin });
