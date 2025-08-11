@@ -11,3 +11,8 @@ verify_jwt = true
 [[functions]]
 name = "sync-open-shift-to-calendar"
 verify_jwt = true
+
+[[functions]]
+name = "chat-ai-assistant"
+verify_jwt = true
+
