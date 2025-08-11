@@ -326,7 +326,8 @@ export const useChat = () => {
 
       const { data, error } = await supabase.functions.invoke('chat-ai-assistant', {
         body: {
-          message: content.trim()
+          message: content.trim(),
+          conversationHistory
         }
       });
 
