@@ -22,9 +22,16 @@ function extractJson(text: string): any | null {
 }
 
 async function callGemini(systemPrompt: string, userMessage: string, conversationHistory?: any[]) {
-  const apiKey = Deno.env.get('GEMINI_API_KEY');
+  const apiKey =
+    Deno.env.get('GEMINI_API_KEY') ||
+    Deno.env.get('GOOGLE_API_KEY') ||
+    Deno.env.get('GOOGLE_GENAI_API_KEY') ||
+    Deno.env.get('GOOGLE_GEMINI_API_KEY') ||
+    Deno.env.get('GOOGLE_AI_STUDIO_API_KEY') ||
+    Deno.env.get('GENAI_API_KEY') ||
+    Deno.env.get('GEMINI_KEY');
   if (!apiKey) {
-    throw new Error('Missing GEMINI_API_KEY secret');
+    throw new Error('Missing GEMINI_API_KEY (also checked GOOGLE_API_KEY/GOOGLE_GENAI_API_KEY/GOOGLE_GEMINI_API_KEY/GOOGLE_AI_STUDIO_API_KEY/GENAI_API_KEY/GEMINI_KEY)');
   }
 
   const historyText = Array.isArray(conversationHistory) && conversationHistory.length
@@ -59,7 +66,8 @@ async function callGemini(systemPrompt: string, userMessage: string, conversatio
   }
 
   const data = await res.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  const parts = data?.candidates?.[0]?.content?.parts || [];
+  const text = Array.isArray(parts) ? parts.map((p: any) => p.text || '').join('') : (data?.candidates?.[0]?.content?.parts?.[0]?.text || '');
   return text as string;
 }
 
