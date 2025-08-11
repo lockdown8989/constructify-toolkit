@@ -1,4 +1,4 @@
-
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const corsHeaders = {
@@ -21,11 +21,15 @@ function extractJson(text: string): any | null {
   }
 }
 
-async function callGemini(systemPrompt: string, userMessage: string) {
+async function callGemini(systemPrompt: string, userMessage: string, conversationHistory?: any[]) {
   const apiKey = Deno.env.get('GEMINI_API_KEY');
   if (!apiKey) {
     throw new Error('Missing GEMINI_API_KEY secret');
   }
+
+  const historyText = Array.isArray(conversationHistory) && conversationHistory.length
+    ? `Conversation history (last ${Math.min(conversationHistory.length, 10)} messages):\n${JSON.stringify(conversationHistory.slice(-10))}\n\n`
+    : '';
 
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
 
@@ -37,7 +41,7 @@ async function callGemini(systemPrompt: string, userMessage: string) {
         {
           role: 'user',
           parts: [
-            { text: systemPrompt + '\n\nUser message:\n' + userMessage }
+            { text: `${systemPrompt}\n\n${historyText}User message:\n${userMessage}` }
           ]
         }
       ],
@@ -148,7 +152,7 @@ serve(async (req) => {
 
     let modelText = '';
     try {
-      modelText = await callGemini(systemPrompt, message);
+      modelText = await callGemini(systemPrompt, message, conversationHistory);
     } catch (geminiErr) {
       // Fallback to basic heuristic if Gemini fails
       console.error('Gemini call failed:', geminiErr);
@@ -164,8 +168,9 @@ serve(async (req) => {
         : { route: '/api/shifts/publish', method: 'POST', payload: {}, status: 'missing_data', conflict_details: [], missing_fields: ['employee_id','date','start_time','end_time','role','location'] };
 
       const summary = summarizeAction(fallback);
+      const missingSecret = String(geminiErr).includes('Missing GEMINI_API_KEY');
       return new Response(
-        JSON.stringify({ response: summary, action: fallback, note: 'gemini_error_fallback', gemini_error: String(geminiErr) }),
+        JSON.stringify({ response: summary, action: fallback, note: 'gemini_error_fallback', gemini_error: String(geminiErr), needs_secret: missingSecret }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
