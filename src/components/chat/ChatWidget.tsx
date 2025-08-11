@@ -251,6 +251,18 @@ export const ChatWidget = () => {
       
       
 
+      {/* AI Assistant option */}
+      <Button onClick={() => { setIsAiMode(true); setSelectedUser(null); clearMessages(); setChatMode('ai'); }} className="w-full h-20 md:h-16 bg-blue-50 hover:bg-blue-100 text-blue-700 border-2 border-blue-200 rounded-2xl flex items-center gap-5 text-left touch-manipulation active:scale-[0.97] transition-all duration-150 shadow-sm hover:shadow-md" variant="outline">
+        <div className="w-12 h-12 md:w-10 md:h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+          <Bot className="w-7 h-7 md:w-6 md:h-6 text-blue-600" />
+        </div>
+        <div className="text-left flex-1">
+          <div className="font-bold text-lg md:text-base text-blue-800">AI Assistant</div>
+          <div className="text-sm md:text-sm text-blue-600 mt-1">Get help with HR questions</div>
+        </div>
+      </Button>
+
+      {/* Human-to-human option */}
       <Button onClick={() => setChatMode('human')} className="w-full h-20 md:h-16 bg-green-50 hover:bg-green-100 text-green-700 border-2 border-green-200 rounded-2xl flex items-center gap-5 text-left touch-manipulation active:scale-[0.97] transition-all duration-150 shadow-sm hover:shadow-md" variant="outline">
         <div className="w-12 h-12 md:w-10 md:h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
           <Users className="w-7 h-7 md:w-6 md:h-6 text-green-600" />
