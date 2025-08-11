@@ -295,23 +295,25 @@ export default function Billing() {
                   <ExternalLink className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
-                {currentPlanId === p.id ? (
-                  <Button className="w-full" variant="secondary" disabled>
-                    Current plan
-                  </Button>
-                ) : (
-                  <Button
-                    className="w-full"
-                    onClick={() => handleSubscribe(p.id)}
-                    disabled={isLoading !== null || !isAdmin}
-                  >
-                    {isLoading === p.id ? (
-                      <span className="inline-flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</span>
-                    ) : (
-                      <span>{isAdmin ? 'Subscribe now' : 'Admin required'}</span>
-                    )}
-                  </Button>
-                )}
+                <>
+                  {currentPlanId === p.id ? (
+                    <Button className="w-full" variant="secondary" disabled>
+                      Current plan
+                    </Button>
+                  ) : (
+                    <Button
+                      className="w-full"
+                      onClick={() => handleSubscribe(p.id)}
+                      disabled={isLoading !== null || !isAdmin}
+                    >
+                      {isLoading === p.id ? (
+                        <span className="inline-flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</span>
+                      ) : (
+                        <span>{isAdmin ? 'Subscribe now' : 'Admin required'}</span>
+                      )}
+                    </Button>
+                  )}
+                </>
               )}
 
               <div className="text-xs text-muted-foreground">
