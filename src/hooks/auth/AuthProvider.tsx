@@ -87,6 +87,16 @@ const refreshSubscription = async () => {
     if (wasTrial && !nowIsTrial && nowSubscribed) {
       toast({ description: 'Your free trial has ended. Your current plan has started.' });
     }
+
+    // Cross-tab subscription sync: notify other tabs/windows
+    try {
+      localStorage.setItem('subscription-updated', String(Date.now()));
+    } catch {}
+    try {
+      const bc = new BroadcastChannel('subscription');
+      bc.postMessage({ type: 'updated' });
+      bc.close();
+    } catch {}
   } catch (e) {
     console.error('❌ Subscription check failed:', e);
     setSubscribed(false);
@@ -226,12 +236,39 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
     const status = params.get('status');
     if (status === 'success') {
       toast({ description: 'Payment successful! Updating subscription...' });
-      setTimeout(() => { refreshSubscription(); }, 300);
+      // Immediate refresh + short polling to handle Stripe processing latency
+      refreshSubscription();
+      let attempts = 0;
+      const maxAttempts = 6; // ~12s total
+      const interval = setInterval(() => {
+        attempts += 1;
+        refreshSubscription();
+        if (attempts >= maxAttempts) clearInterval(interval);
+      }, 2000);
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (status === 'canceled') {
       toast({ description: 'Payment canceled.' });
       window.history.replaceState({}, document.title, window.location.pathname);
     }
+  }, [refreshSubscription]);
+
+  // Listen for subscription updates from other tabs/windows
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'subscription-updated') {
+        refreshSubscription();
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel('subscription');
+      bc.onmessage = () => refreshSubscription();
+    } catch {}
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      try { bc?.close(); } catch {}
+    };
   }, [refreshSubscription]);
 
 const value: AuthContextType = {
