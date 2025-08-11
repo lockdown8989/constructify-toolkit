@@ -1477,6 +1477,65 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_members: {
+        Row: {
+          created_at: string
+          id: string
+          org_role: string
+          organization_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          org_role?: string
+          organization_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          org_role?: string
+          organization_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          mgr_code: string
+          name: string
+          owner_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mgr_code?: string
+          name: string
+          owner_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mgr_code?: string
+          name?: string
+          owner_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payroll: {
         Row: {
           base_pay: number | null
@@ -2443,6 +2502,53 @@ export type Database = {
           },
         ]
       }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          organization_id: string | null
+          stripe_customer_id: string | null
+          subscribed: boolean
+          subscription_end: string | null
+          subscription_tier: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          organization_id?: string | null
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          organization_id?: string | null
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscribers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_chat_notifications: {
         Row: {
           chat_id: string
@@ -2754,6 +2860,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
+      generate_mgr_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_pin_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -2788,6 +2898,14 @@ export type Database = {
         Args:
           | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
           | { _user_id: string; _role: string }
+        Returns: boolean
+      }
+      is_org_admin: {
+        Args: { p_org_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      is_org_member: {
+        Args: { p_org_id: string; p_user_id: string }
         Returns: boolean
       }
       log_clock_action: {
