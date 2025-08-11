@@ -317,10 +317,6 @@ export const useChat = () => {
 
   const sendAiMessage = async (content: string) => {
     if (!currentEmployee || !content.trim()) return;
-    if (!['admin','payroll'].includes(userRole)) {
-      toast.error('AI Assistant is available to administrators and payroll only.');
-      return;
-    }
 
     try {
       setIsTyping(true);
