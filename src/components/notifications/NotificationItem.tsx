@@ -57,11 +57,37 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onCli
             navigate('/leave-management', { state: { initialView: 'employee' } });
           }
           break;
-        case 'schedules':
-          navigate('/schedule');
+        case 'schedules': {
+          const title = (notification.title || '').toLowerCase();
+          const message = (notification.message || '').toLowerCase();
+          const isOpenShift = title.includes('open shift') || message.includes('open shift');
+          const isRota = title.includes('rota') || message.includes('rota');
+
+          if (isOpenShift) {
+            // Deep-link employees to Available tab to claim open shifts
+            navigate('/schedule?tab=available');
+          } else if ((isManager || isAdmin || isHR) && isRota) {
+            // Managers viewing rota publications should land on the Shift Calendar
+            navigate('/shift-calendar');
+          } else {
+            // Default to the employee schedule view
+            navigate('/schedule');
+          }
           break;
+        }
         case 'open_shifts':
-          navigate('/restaurant-schedule');
+          // Ensure open shift notifications land on the available tab
+          navigate('/schedule?tab=available');
+          break;
+        case 'shift_swaps':
+          navigate('/schedule-requests');
+          break;
+        case 'employees':
+          if (isManager || isAdmin || isHR) {
+            navigate('/people');
+          } else {
+            navigate('/schedule');
+          }
           break;
         case 'attendance':
           navigate('/attendance');
