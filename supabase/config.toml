@@ -66,7 +66,3 @@ verify_jwt = true
 [[functions]]
 name = "chat-ai-assistant"
 verify_jwt = false
-
-[[functions]]
-name = "publish-rota"
-verify_jwt = true

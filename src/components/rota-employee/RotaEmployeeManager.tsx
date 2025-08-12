@@ -214,7 +214,7 @@ const RotaEmployeeManager = () => {
         return;
       }
 
-      // Create and auto-confirm recurring schedules (idempotent)
+      // Create and auto-confirm recurring schedules
       const result = await createAndConfirmRecurringRotas({
         employeeIds: assignedEmployees.map(emp => emp.id),
         shiftPatternId: patternId,
@@ -226,17 +226,10 @@ const RotaEmployeeManager = () => {
       });
 
       if (result.success) {
-        if ((result as any).alreadySynced) {
-          toast({
-            title: "Already Synced",
-            description: `${pattern.name} was already synchronized. Existing shifts were marked confirmed and published; no duplicates created.`,
-          });
-        } else {
-          toast({
-            title: "Rota synced successfully",
-            description: `${pattern.name} has been synced to ${assignedEmployees.length} employee calendars for the next 12 weeks. All shifts are automatically confirmed and employees will be notified.`,
-          });
-        }
+        toast({
+          title: "Rota synced successfully",
+          description: `${pattern.name} has been synced to ${assignedEmployees.length} employee calendars for the next 12 weeks. All shifts are automatically confirmed and employees will be notified.`,
+        });
       } else {
         throw new Error('Failed to sync rota');
       }
@@ -302,26 +295,10 @@ const RotaEmployeeManager = () => {
           } catch (notificationError) {
             console.warn('Failed to send rota update notifications:', notificationError);
           }
-
-          // Auto-sync to calendars on publish (idempotent)
-          try {
-            const syncResult = await createAndConfirmRecurringRotas({
-              employeeIds: selectedEmployees,
-              shiftPatternId: editingPattern.id,
-              patternName: formData.name,
-              startTime: formData.start_time,
-              endTime: formData.end_time,
-              weeksToGenerate: 12,
-              daysOfWeek: formData.days_of_week || [0,1,2,3,4,5,6]
-            });
-            console.log('Auto-sync on update result:', syncResult);
-          } catch (syncError) {
-            console.warn('Auto-sync on update failed:', syncError);
-          }
           
           toast({
-            title: "✅ Rota Updated & Synced",
-            description: `Rota pattern updated, ${selectedEmployees.length} employee(s) assigned, and shifts synchronized to calendars.`,
+            title: "✅ Rota Updated Successfully",
+            description: `Rota pattern updated and ${selectedEmployees.length} employee(s) assigned. 🔔 Notifications sent to assigned employees.`,
           });
         } else {
           toast({
@@ -350,25 +327,19 @@ const RotaEmployeeManager = () => {
             employeeIds: selectedEmployees,
           });
 
-          // Auto-sync to calendars on publish (idempotent)
+          // Send notifications to assigned employees about the new rota
           try {
-            const syncResult = await createAndConfirmRecurringRotas({
-              employeeIds: selectedEmployees,
-              shiftPatternId: newPattern.id,
-              patternName: formData.name,
-              startTime: formData.start_time,
-              endTime: formData.end_time,
-              weeksToGenerate: 12,
-              daysOfWeek: formData.days_of_week || [0,1,2,3,4,5,6]
+            await supabase.rpc('notify_employees_rota_published', {
+              p_shift_template_id: newPattern.id
             });
-            console.log('Auto-sync on create result:', syncResult);
-          } catch (syncError) {
-            console.warn('Auto-sync on create failed:', syncError);
+            console.log('Rota creation notifications sent successfully');
+          } catch (notificationError) {
+            console.warn('Failed to send rota creation notifications:', notificationError);
           }
           
           toast({
-            title: "✅ Rota Created & Synced",
-            description: `Rota pattern created, ${selectedEmployees.length} employee(s) assigned, and shifts synchronized to calendars. Notifications sent to employees.`,
+            title: "✅ Rota Created Successfully",
+            description: `Rota pattern created and ${selectedEmployees.length} employee(s) assigned. 🔔 Notifications sent to employees. Use "Sync to Calendar" to create confirmed shifts.`,
           });
         } else {
           toast({

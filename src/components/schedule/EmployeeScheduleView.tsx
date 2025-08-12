@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEmployeeSchedule } from '@/hooks/use-employee-schedule';
 import { usePublishedShifts } from '@/hooks/use-published-shifts';
@@ -13,7 +13,6 @@ import ModernCalendar from './calendar/ModernCalendar';
 import MobileScheduleCalendar from './mobile/MobileScheduleCalendar';
 import MobileShiftList from './mobile/MobileShiftList';
 import { Schedule } from '@/hooks/use-schedules';
-import { useSearchParams } from 'react-router-dom';
 
 const EmployeeScheduleView: React.FC = () => {
   const isMobile = useIsMobile();
@@ -38,16 +37,6 @@ const EmployeeScheduleView: React.FC = () => {
   const handleScheduleClick = (schedule: Schedule) => {
     setSelectedSchedule(schedule);
   };
-
-  // Support deep linking via ?tab=... (calendar | my-shifts | available | manage)
-  const [searchParams] = useSearchParams();
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    const validTabs = new Set(['calendar', 'my-shifts', 'available', 'manage']);
-    if (tab && validTabs.has(tab)) {
-      setActiveTab(tab);
-    }
-  }, [searchParams, setActiveTab]);
 
   const handleDateChange = (date: Date) => {
     setCurrentDate(date);
