@@ -1,4 +1,5 @@
 
+import React from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSignUpForm } from "./useSignUpForm";
 import { useUserRole } from "./useUserRole";
@@ -22,7 +23,7 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
   const validation = useSignUpValidation(roleManager.userRole, roleManager.managerId);
   
   // Use the submit hook without rate limiting
-  const { signUpError, handleSubmit } = useSignUpSubmit({
+  const { signUpError, handleSubmit, clearSignUpError } = useSignUpSubmit({
     onSignUp,
     email: formState.email,
     password: formState.password,
@@ -36,6 +37,19 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
     getFullName: formState.getFullName,
     validateForm: formState.validateForm
   });
+
+  // Clear error when password becomes valid
+  const isPasswordValid = formState.password.length >= 8 && 
+    /[A-Z]/.test(formState.password) && 
+    /[a-z]/.test(formState.password) && 
+    /\d/.test(formState.password) && 
+    /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formState.password);
+
+  React.useEffect(() => {
+    if (isPasswordValid && signUpError && (signUpError.toLowerCase().includes('password') || signUpError.toLowerCase().includes('weak'))) {
+      clearSignUpError();
+    }
+  }, [isPasswordValid, signUpError, clearSignUpError]);
 
   return {
     ...formState,

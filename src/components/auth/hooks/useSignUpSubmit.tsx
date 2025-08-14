@@ -234,8 +234,13 @@ export const useSignUpSubmit = ({
     }
   };
 
+  const clearSignUpError = () => {
+    setSignUpError(null);
+  };
+
   return {
     signUpError,
-    handleSubmit
+    handleSubmit,
+    clearSignUpError
   };
 };
