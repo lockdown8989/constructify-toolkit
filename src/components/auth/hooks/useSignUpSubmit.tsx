@@ -56,6 +56,37 @@ export const useSignUpSubmit = ({
         setIsLoading(false);
         return;
       }
+
+      // Enhanced password validation
+      if (password.length < 8) {
+        setSignUpError("Password must be at least 8 characters long");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!/[A-Z]/.test(password)) {
+        setSignUpError("Password must contain at least one uppercase letter");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!/[a-z]/.test(password)) {
+        setSignUpError("Password must contain at least one lowercase letter");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!/\d/.test(password)) {
+        setSignUpError("Password must contain at least one number");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        setSignUpError("Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;':\",./<>?)");
+        setIsLoading(false);
+        return;
+      }
       
       // Require manager ID for employees and payroll users
       if ((userRole === 'employee' || userRole === 'payroll') && !managerId) {
