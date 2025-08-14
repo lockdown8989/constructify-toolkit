@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -2449,6 +2449,108 @@ export type Database = {
           },
         ]
       }
+      shift_template_releases: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_end_date: string | null
+          effective_start_date: string | null
+          id: string
+          notes: string | null
+          published_at: string | null
+          shift_template_id: string
+          snapshot_break_duration: number | null
+          snapshot_days_of_week: number[] | null
+          snapshot_employee_ids: string[] | null
+          snapshot_end_time: string | null
+          snapshot_grace_period_minutes: number | null
+          snapshot_location: string | null
+          snapshot_name: string | null
+          snapshot_overtime_threshold_minutes: number | null
+          snapshot_start_time: string | null
+          status: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_end_date?: string | null
+          effective_start_date?: string | null
+          id?: string
+          notes?: string | null
+          published_at?: string | null
+          shift_template_id: string
+          snapshot_break_duration?: number | null
+          snapshot_days_of_week?: number[] | null
+          snapshot_employee_ids?: string[] | null
+          snapshot_end_time?: string | null
+          snapshot_grace_period_minutes?: number | null
+          snapshot_location?: string | null
+          snapshot_name?: string | null
+          snapshot_overtime_threshold_minutes?: number | null
+          snapshot_start_time?: string | null
+          status?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_end_date?: string | null
+          effective_start_date?: string | null
+          id?: string
+          notes?: string | null
+          published_at?: string | null
+          shift_template_id?: string
+          snapshot_break_duration?: number | null
+          snapshot_days_of_week?: number[] | null
+          snapshot_employee_ids?: string[] | null
+          snapshot_end_time?: string | null
+          snapshot_grace_period_minutes?: number | null
+          snapshot_location?: string | null
+          snapshot_name?: string | null
+          snapshot_overtime_threshold_minutes?: number | null
+          snapshot_start_time?: string | null
+          status?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      shift_template_sync_state: {
+        Row: {
+          created_at: string
+          id: string
+          last_published_release_id: string | null
+          last_sync_status: string | null
+          last_synced_at: string | null
+          shift_template_id: string
+          sync_hash: string | null
+          synced_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_published_release_id?: string | null
+          last_sync_status?: string | null
+          last_synced_at?: string | null
+          shift_template_id: string
+          sync_hash?: string | null
+          synced_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_published_release_id?: string | null
+          last_sync_status?: string | null
+          last_synced_at?: string | null
+          shift_template_id?: string
+          sync_hash?: string | null
+          synced_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shift_templates: {
         Row: {
           break_duration: number | null
@@ -2812,7 +2914,7 @@ export type Database = {
         Returns: Json
       }
       admin_update_user_password: {
-        Args: { user_email: string; new_password: string }
+        Args: { new_password: string; user_email: string }
         Returns: Json
       }
       anonymize_user_data: {
@@ -2821,8 +2923,8 @@ export type Database = {
       }
       approve_overtime: {
         Args: {
-          p_attendance_id: string
           p_approved: boolean
+          p_attendance_id: string
           p_manager_notes?: string
         }
         Returns: boolean
@@ -2830,32 +2932,32 @@ export type Database = {
       calculate_attendance_metrics: {
         Args: {
           p_attendance_id: string
-          p_employee_id: string
           p_check_in_time: string
           p_check_out_time?: string
+          p_employee_id: string
         }
         Returns: undefined
       }
       calculate_final_salary: {
         Args: {
           base_salary: number
-          total_hours: number
           overtime_hours: number
+          total_hours: number
         }
         Returns: number
       }
       calculate_labor_cost: {
         Args: {
-          p_schedule_id: string
-          p_hourly_rate: number
-          p_start_time: string
-          p_end_time: string
           p_break_duration?: number
+          p_end_time: string
+          p_hourly_rate: number
+          p_schedule_id: string
+          p_start_time: string
         }
         Returns: number
       }
       calculate_weekly_labor_analytics: {
-        Args: { start_date: string; end_date: string; dept?: string }
+        Args: { dept?: string; end_date: string; start_date: string }
         Returns: undefined
       }
       can_edit_shift: {
@@ -2917,22 +3019,22 @@ export type Database = {
         Args: { p_employee_id: string }
         Returns: {
           attendance_id: string
+          break_start_time: string
+          check_in_time: string
           is_clocked_in: boolean
           on_break: boolean
-          check_in_time: string
-          break_start_time: string
         }[]
       }
       get_employee_rota_shift_times: {
-        Args: { p_employee_id: string; p_date?: string }
+        Args: { p_date?: string; p_employee_id: string }
         Returns: {
-          shift_template_id: string
-          template_name: string
-          start_time: string
-          end_time: string
           break_duration: number
+          end_time: string
           grace_period_minutes: number
           overtime_threshold_minutes: number
+          shift_template_id: string
+          start_time: string
+          template_name: string
         }[]
       }
       get_employee_shift_assignments: {
@@ -2941,8 +3043,8 @@ export type Database = {
       }
       has_role: {
         Args:
-          | { _user_id: string; _role: Database["public"]["Enums"]["app_role"] }
-          | { _user_id: string; _role: string }
+          | { _role: Database["public"]["Enums"]["app_role"]; _user_id: string }
+          | { _role: string; _user_id: string }
         Returns: boolean
       }
       is_org_admin: {
@@ -2955,10 +3057,10 @@ export type Database = {
       }
       log_clock_action: {
         Args: {
-          p_employee_id: string
           p_action_type: string
-          p_message: string
           p_attendance_id?: string
+          p_employee_id: string
+          p_message: string
         }
         Returns: string
       }
@@ -2974,11 +3076,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      publish_shift_template: {
+        Args: { p_shift_template_id: string }
+        Returns: Json
+      }
       publish_weekly_schedule: {
         Args: {
-          start_date: string
           end_date: string
           notification_message?: string
+          start_date: string
         }
         Returns: Json
       }
@@ -3005,14 +3111,14 @@ export type Database = {
       update_employee_shift_assignments: {
         Args: {
           p_employee_id: string
-          p_shift_pattern_id?: string
+          p_friday_shift_id?: string
           p_monday_shift_id?: string
+          p_saturday_shift_id?: string
+          p_shift_pattern_id?: string
+          p_sunday_shift_id?: string
+          p_thursday_shift_id?: string
           p_tuesday_shift_id?: string
           p_wednesday_shift_id?: string
-          p_thursday_shift_id?: string
-          p_friday_shift_id?: string
-          p_saturday_shift_id?: string
-          p_sunday_shift_id?: string
         }
         Returns: Json
       }
@@ -3022,37 +3128,37 @@ export type Database = {
       }
       upsert_appearance_settings: {
         Args: {
-          p_user_id: string
-          p_theme?: string
           p_color_scheme?: string
+          p_compact_mode?: boolean
           p_font_size?: string
           p_high_contrast?: boolean
           p_reduced_motion?: boolean
-          p_compact_mode?: boolean
+          p_theme?: string
+          p_user_id: string
         }
         Returns: undefined
       }
       upsert_user_presence: {
         Args: {
-          p_user_id: string
           p_employee_id: string
           p_is_online: boolean
           p_socket_id?: string
+          p_user_id: string
         }
         Returns: string
       }
       validate_rota_compliance: {
         Args: {
-          p_employee_id: string
-          p_action_type: string
           p_action_time?: string
+          p_action_type: string
+          p_employee_id: string
         }
         Returns: {
+          actual_time: string
           is_compliant: boolean
           message: string
-          scheduled_time: string
-          actual_time: string
           minutes_difference: number
+          scheduled_time: string
         }[]
       }
     }
