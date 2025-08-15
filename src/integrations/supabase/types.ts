@@ -2992,6 +2992,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      delete_user_account: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
       detect_schedule_conflicts: {
         Args: { p_schedule_id: string }
         Returns: {
