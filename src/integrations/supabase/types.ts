@@ -3151,6 +3151,10 @@ export type Database = {
         }
         Returns: string
       }
+      validate_manager_id_strict: {
+        Args: { p_manager_id: string }
+        Returns: Json
+      }
       validate_rota_compliance: {
         Args: {
           p_action_time?: string
