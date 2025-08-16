@@ -81,10 +81,34 @@ export const useEmployees = (filters: {
   return useQuery({
     queryKey: ['employees', filters],
     queryFn: async () => {
+      // Get current user's role and manager_id first to ensure data isolation
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data: currentEmployee } = await supabase
+        .from('employees')
+        .select('manager_id, role')
+        .eq('user_id', user.id)
+        .single();
+
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+
+      const hasManagementRole = userRoles?.some(ur => 
+        ['admin', 'employer', 'hr', 'manager', 'payroll'].includes(ur.role)
+      );
+
       let query = supabase
         .from('employees')
         .select('*')
         .order('name', { ascending: true });
+
+      // Apply data isolation based on manager_id for non-management users
+      if (!hasManagementRole && currentEmployee?.manager_id) {
+        query = query.or(`user_id.eq.${user.id},manager_id.eq.${currentEmployee.manager_id}`);
+      }
 
       if (department) {
         query = query.eq('department', department);
