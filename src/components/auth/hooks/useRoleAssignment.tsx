@@ -48,7 +48,7 @@ export const useRoleAssignment = () => {
       
       console.log(`🔄 Mapped UI role ${userRole} to DB role ${dbRole}`);
       
-      // Remove any existing roles first to avoid conflicts
+      // ALWAYS remove any existing roles first to ensure single role per user
       const { error: deleteError } = await supabase
         .from('user_roles')
         .delete()
@@ -56,6 +56,13 @@ export const useRoleAssignment = () => {
         
       if (deleteError) {
         console.error("Error removing existing roles:", deleteError);
+        toast({
+          title: "Warning",
+          description: "Could not clear existing roles, but will proceed with new role assignment",
+          variant: "default",
+        });
+      } else {
+        console.log(`✅ Cleared existing roles for user ${userId}`);
       }
       
       // Insert the new role

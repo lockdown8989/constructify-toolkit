@@ -7,6 +7,8 @@ import { useEmployeeRecord } from "./employee-record";
 import { useRoleAssignment } from "./useRoleAssignment";
 import { useSignUpValidation } from "./useSignUpValidation";
 import { useSignUpSubmit } from "./useSignUpSubmit";
+import { useEmployeeValidator } from "./employee-record/useEmployeeValidator";
+import { UserRole } from "./useUserRole";
 
 type UseSignUpProps = {
   onSignUp: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;
@@ -18,6 +20,17 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
   const roleManager = useUserRole();
   const employeeManager = useEmployeeRecord();
   const roleAssigner = useRoleAssignment();
+  const { ensureSingleRole } = useEmployeeValidator();
+  
+  // Enhanced assign user role that ensures single role
+  const assignUserRoleSingle = async (userId: string, userRole: UserRole) => {
+    const roleAssigned = await roleAssigner.assignUserRole(userId, userRole);
+    if (roleAssigned) {
+      // Ensure user has only one role
+      await ensureSingleRole(userId);
+    }
+    return roleAssigned;
+  };
   
   // Use the validation hook
   const validation = useSignUpValidation(roleManager.userRole, roleManager.managerId);
@@ -32,7 +45,7 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
     setIsLoading: formState.setIsLoading,
     userRole: roleManager.userRole,
     managerId: roleManager.managerId,
-    assignUserRole: roleAssigner.assignUserRole,
+    assignUserRole: assignUserRoleSingle,
     createOrUpdateEmployeeRecord: employeeManager.createOrUpdateEmployeeRecord,
     getFullName: formState.getFullName,
     validateForm: formState.validateForm

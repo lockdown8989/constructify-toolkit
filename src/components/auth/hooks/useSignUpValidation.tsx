@@ -15,8 +15,8 @@ export const useSignUpValidation = (userRole: UserRole, managerId: string | null
     setIsManagerIdValid(undefined);
     setManagerName(null);
     
-    // Only validate if this is an employee role with a manager ID
-    if (userRole === 'employee' && managerId) {
+    // Only validate if role requires manager connection (employee or payroll)
+    if ((userRole === 'employee' || userRole === 'payroll') && managerId) {
       console.log(`Validating manager ID for employee: ${managerId}`);
       setIsValidatingManagerId(true);
       

@@ -102,6 +102,26 @@ export const useSignUpSubmit = ({
         return;
       }
       
+      // For employees and payroll users, verify the manager ID exists and is valid
+      if ((userRole === 'employee' || userRole === 'payroll') && managerId) {
+        try {
+          const { data: validationResult, error } = await supabase.rpc('validate_manager_id_strict', {
+            p_manager_id: managerId
+          });
+          
+          if (error || !validationResult?.valid) {
+            setSignUpError(`Manager ID ${managerId} is not valid. Please check with your manager for the correct ID.`);
+            setIsLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.error("Manager validation error:", error);
+          setSignUpError("Unable to validate manager ID. Please try again.");
+          setIsLoading(false);
+          return;
+        }
+      }
+      
       // Create proper metadata object for Supabase
       const userMetadata = {
         first_name: firstName.trim(),
