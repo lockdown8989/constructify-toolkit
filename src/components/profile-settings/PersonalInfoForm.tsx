@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { ManagerIdField } from "@/components/profile/ManagerIdField";
+import { ManagerIdSection } from "@/components/profile/ManagerIdSection";
 
 interface PersonalInfoFormProps {
   user: User | null;
