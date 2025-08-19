@@ -22,9 +22,44 @@ const LandingPage: React.FC = () => {
   };
   const handleAppDownload = (platform: 'ios' | 'android') => {
     if (platform === 'android') {
-      toast.info('To get the TeamPulse APK, please follow the setup instructions below.', {
-        duration: 4000
-      });
+      // Check if APK file exists, if not show instructions
+      const link = document.createElement('a');
+      link.href = '/downloads/teampulse-schedule.apk';
+      link.download = 'teampulse-schedule.apk';
+      
+      // Try to download, if file doesn't exist, show build instructions
+      link.onclick = (e) => {
+        fetch(link.href, { method: 'HEAD' })
+          .then(response => {
+            if (!response.ok) {
+              e.preventDefault();
+              toast.info('APK not yet available. Please follow build instructions below.', {
+                duration: 5000,
+                description: 'Clone the repo and run the build steps to generate your APK'
+              });
+              // Scroll to build instructions
+              setTimeout(() => {
+                document.getElementById('build-instructions')?.scrollIntoView({ behavior: 'smooth' });
+              }, 1000);
+            } else {
+              toast.success('Downloading APK...', {
+                duration: 3000,
+                description: 'Make sure to enable "Install unknown apps" in your Android settings'
+              });
+            }
+          })
+          .catch(() => {
+            e.preventDefault();
+            toast.info('APK not yet available. Please follow build instructions below.', {
+              duration: 5000,
+              description: 'Clone the repo and run the build steps to generate your APK'
+            });
+          });
+      };
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } else {
       toast.info('iOS app coming soon!');
     }
@@ -795,10 +830,80 @@ const LandingPage: React.FC = () => {
                 <Download className="w-5 h-5 text-white" />
               </div>
               <div className="text-left">
-                <div className="text-xs text-gray-300">GET IT ON</div>
-                <div className="font-semibold">Google Play</div>
+                <div className="text-xs text-gray-300">DOWNLOAD APK</div>
+                <div className="font-semibold">Android APK</div>
               </div>
             </Button>
+          </div>
+        </section>
+
+        {/* Build Instructions Section */}
+        <section id="build-instructions" className="responsive-container py-24 bg-gradient-to-r from-secondary/10 via-transparent to-secondary/10 rounded-3xl">
+          <div className="text-center mb-16 space-y-6">
+            <h2 className="text-4xl md:text-5xl font-bold">Build Your Own APK</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Follow these simple steps to create your own Android APK from the source code.
+            </p>
+          </div>
+          
+          <div className="max-w-4xl mx-auto space-y-8">
+            <Card className="p-6 border-l-4 border-primary bg-gradient-to-r from-primary/5 to-transparent">
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold flex items-center gap-2">
+                  <span className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                  Export & Clone Repository
+                </h3>
+                <div className="bg-background rounded-lg p-4 font-mono text-sm border">
+                  <p className="mb-2">1. Click "Export to Github" button</p>
+                  <p className="mb-2">2. Clone your repository:</p>
+                  <code className="bg-muted px-2 py-1 rounded">git clone [your-repo-url]</code>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 border-l-4 border-primary bg-gradient-to-r from-primary/5 to-transparent">
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold flex items-center gap-2">
+                  <span className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                  Install Dependencies & Add Android
+                </h3>
+                <div className="bg-background rounded-lg p-4 font-mono text-sm border space-y-2">
+                  <p>npm install</p>
+                  <p>npx cap add android</p>
+                  <p>npx cap update android</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 border-l-4 border-primary bg-gradient-to-r from-primary/5 to-transparent">
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold flex items-center gap-2">
+                  <span className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                  Build & Generate APK
+                </h3>
+                <div className="bg-background rounded-lg p-4 font-mono text-sm border space-y-2">
+                  <p>npm run build</p>
+                  <p>npx cap sync</p>
+                  <p>npx cap run android</p>
+                  <p className="text-muted-foreground"># Or use Android Studio to build release APK</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 border border-amber-200 bg-gradient-to-r from-amber-50 to-transparent">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-amber-800 flex items-center gap-2">
+                  <Smartphone className="w-5 h-5" />
+                  Installation Instructions for Users
+                </h3>
+                <div className="text-amber-700 space-y-2">
+                  <p>• Enable "Install unknown apps" in Android Settings → Security</p>
+                  <p>• Download the APK file from this page</p>
+                  <p>• Tap the downloaded APK to install</p>
+                  <p>• Allow installation from unknown sources when prompted</p>
+                </div>
+              </div>
+            </Card>
           </div>
         </section>
 

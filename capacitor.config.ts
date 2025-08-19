@@ -5,7 +5,10 @@ const config: CapacitorConfig = {
   appName: 'teampulse-schedule',
   webDir: 'dist',
   server: {
-    url: 'https://cf2c1411-239a-41fb-a1e0-a8276b3f45dd.lovableproject.com?forceHideBadge=true',
+    // Use live URL for development, remove for production build
+    url: process.env.NODE_ENV === 'development' 
+      ? 'https://cf2c1411-239a-41fb-a1e0-a8276b3f45dd.lovableproject.com?forceHideBadge=true'
+      : undefined,
     cleartext: true
   },
   android: {
