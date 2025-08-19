@@ -337,6 +337,26 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
       subscriptionChannelRef.current = null;
     };
   }, []);
+  
+  // Realtime updates from subscribers table (reflect admin plan changes instantly)
+  useEffect(() => {
+    const channel = supabase
+      .channel('subscribers-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'subscribers' },
+        (payload) => {
+          console.log('📡 Subscribers table change detected:', payload.eventType);
+          // Silent refresh to avoid duplicate cross-tab broadcasts
+          refreshSubscription(true);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      try { supabase.removeChannel(channel); } catch {}
+    };
+  }, [user?.id]);
 
 const value: AuthContextType = {
   user,

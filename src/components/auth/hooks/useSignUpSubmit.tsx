@@ -56,6 +56,37 @@ export const useSignUpSubmit = ({
         setIsLoading(false);
         return;
       }
+
+      // Enhanced password validation
+      if (password.length < 8) {
+        setSignUpError("Password must be at least 8 characters long");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!/[A-Z]/.test(password)) {
+        setSignUpError("Password must contain at least one uppercase letter");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!/[a-z]/.test(password)) {
+        setSignUpError("Password must contain at least one lowercase letter");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!/\d/.test(password)) {
+        setSignUpError("Password must contain at least one number");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        setSignUpError("Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;':\",./<>?)");
+        setIsLoading(false);
+        return;
+      }
       
       // Require manager ID for employees and payroll users
       if ((userRole === 'employee' || userRole === 'payroll') && !managerId) {
@@ -69,6 +100,26 @@ export const useSignUpSubmit = ({
         setSignUpError("Invalid Manager ID format. Manager IDs must start with 'MGR-'");
         setIsLoading(false);
         return;
+      }
+      
+      // For employees and payroll users, verify the manager ID exists and is valid
+      if ((userRole === 'employee' || userRole === 'payroll') && managerId) {
+        try {
+          const { data: validationResult, error } = await supabase.rpc('validate_manager_id_strict', {
+            p_manager_id: managerId
+          });
+          
+          if (error || !validationResult?.valid) {
+            setSignUpError(`Manager ID ${managerId} is not valid. Please check with your manager for the correct ID.`);
+            setIsLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.error("Manager validation error:", error);
+          setSignUpError("Unable to validate manager ID. Please try again.");
+          setIsLoading(false);
+          return;
+        }
       }
       
       // Create proper metadata object for Supabase
@@ -203,8 +254,13 @@ export const useSignUpSubmit = ({
     }
   };
 
+  const clearSignUpError = () => {
+    setSignUpError(null);
+  };
+
   return {
     signUpError,
-    handleSubmit
+    handleSubmit,
+    clearSignUpError
   };
 };

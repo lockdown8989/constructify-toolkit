@@ -8,6 +8,8 @@ const AccountTypeDisplay = () => {
   const { isAdmin, isHR, isManager, isPayroll, isEmployee } = useAuth();
 
   const getAccountTypeInfo = () => {
+    // Show roles in priority order to avoid conflicts
+    // Admin has highest priority
     if (isAdmin) {
       return {
         type: 'Administrator',
@@ -16,6 +18,8 @@ const AccountTypeDisplay = () => {
         description: 'Full system access'
       };
     }
+    
+    // HR Manager has second priority
     if (isHR) {
       return {
         type: 'HR Manager',
@@ -24,6 +28,8 @@ const AccountTypeDisplay = () => {
         description: 'HR and employee management'
       };
     }
+    
+    // Manager has third priority
     if (isManager) {
       return {
         type: 'Manager',
@@ -32,6 +38,8 @@ const AccountTypeDisplay = () => {
         description: 'Team and schedule management'
       };
     }
+    
+    // Payroll Administrator has fourth priority
     if (isPayroll) {
       return {
         type: 'Payroll Administrator',
@@ -40,6 +48,8 @@ const AccountTypeDisplay = () => {
         description: 'Payroll and salary management'
       };
     }
+    
+    // Employee is the default/lowest priority role
     return {
       type: 'Employee',
       icon: User,
