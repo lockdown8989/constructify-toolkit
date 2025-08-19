@@ -26,7 +26,6 @@ export const ManagerIdField = ({ managerId, onChange, isManager, isEditable = fa
   };
   
   // Don't render this component if the ID is already shown prominently (for managers)
-  // But do render it if the manager doesn't have an ID yet
   if (isManager && managerId) return null;
   
   return (
@@ -42,7 +41,7 @@ export const ManagerIdField = ({ managerId, onChange, isManager, isEditable = fa
           onChange={onChange}
           disabled={!isEditable}
           className={`${!isEditable ? 'bg-gray-100' : ''} ${isManager ? 'font-mono' : ''}`}
-          placeholder={isManager && !managerId ? "No Manager ID - Use button above to generate" : isEditable ? "Enter your manager's ID (e.g., MGR-12345)" : "Not available"}
+          placeholder={isManager && !managerId ? "Loading or generating ID..." : isEditable ? "Enter your manager's ID (e.g., MGR-12345)" : "Not available"}
         />
         {isManager && managerId && (
           <Button 
@@ -60,7 +59,7 @@ export const ManagerIdField = ({ managerId, onChange, isManager, isEditable = fa
         <p className="text-xs text-gray-500">
           {managerId 
             ? "Share this ID with your employees to connect them to your account" 
-            : "Use the 'Generate Manager ID' button above to create your Manager ID"}
+            : "Save your profile first to generate a Manager ID"}
         </p>
       ) : (
         <p className="text-xs text-gray-500">

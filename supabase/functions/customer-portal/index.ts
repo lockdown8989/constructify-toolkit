@@ -45,9 +45,8 @@ serve(async (req) => {
       .select("role")
       .eq("user_id", user.id);
     const isAdmin = roles?.some((r: any) => r.role === "admin");
-    const isManager = roles?.some((r: any) => r.role === "employer");
-    if (!(isAdmin || isManager)) {
-      return new Response(JSON.stringify({ error: "Only administrators or managers can manage the subscription" }), {
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: "Only administrators can manage the subscription" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 403,
       });
