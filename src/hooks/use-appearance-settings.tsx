@@ -51,7 +51,7 @@ export const AppearanceProvider = ({ children }: { children: React.ReactNode }) 
         
         const { data, error } = await supabase
           .from('appearance_settings')
-          .select('theme, color_scheme, font_size, high_contrast, reduced_motion, compact_mode')
+          .select('*')
           .eq('user_id', user.id)
           .maybeSingle();
 

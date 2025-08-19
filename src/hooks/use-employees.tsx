@@ -264,11 +264,7 @@ export function useEmployeeFilters() {
         lifecycles,
         statuses
       };
-    },
-    // Static-ish reference data: cache aggressively
-    staleTime: 1000 * 60 * 60 * 6, // 6 hours
-    gcTime: 1000 * 60 * 60 * 24,    // 24 hours
-    refetchOnWindowFocus: false,
+    }
   });
 }
 

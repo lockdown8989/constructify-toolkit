@@ -48,62 +48,40 @@ serve(async (req) => {
     
     console.log("Deleting user:", user.id);
     
-    // Use the comprehensive delete_user_account function for data cleanup
+    // Use the database function for safe user data deletion
     try {
       const { data: deletionResult, error: deletionError } = await supabaseAdmin
-        .rpc('delete_user_account', { target_user_id: user.id });
+        .rpc('safe_delete_user_data', { target_user_id: user.id });
       
       if (deletionError) {
-        console.error("Error in delete_user_account:", deletionError);
+        console.error("Error in safe_delete_user_data:", deletionError);
         return new Response(
-          JSON.stringify({ 
-            success: false,
-            error: 'Failed to delete user data', 
-            details: deletionError.message 
-          }),
+          JSON.stringify({ error: 'Failed to delete user data', details: deletionError.message }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       
-      console.log("User data deletion completed:", deletionResult);
-      
-      // Finally, delete the user from auth.users using admin client
-      const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
-      
-      if (authDeleteError) {
-        console.error("Error deleting user from auth:", authDeleteError);
-        return new Response(
-          JSON.stringify({ 
-            success: false,
-            error: 'Failed to delete user account', 
-            details: authDeleteError.message 
-          }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      
-      console.log("User completely deleted:", user.id);
-      
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: 'Your account and all associated data have been permanently deleted',
-          details: deletionResult
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-      
+      console.log("User data deletion result:", deletionResult);
     } catch (error) {
-      console.error("Exception during user account deletion:", error);
+      console.error("Exception during user data deletion:", error);
+      // Continue with auth deletion even if data deletion fails partially
+    }
+    
+    // Delete the user from auth.users using admin API
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+    
+    if (deleteError) {
+      console.error("Error deleting user:", deleteError);
       return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: 'An unexpected error occurred during account deletion', 
-          details: error.message 
-        }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: 'Failed to delete user', details: deleteError.message }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    
+    return new Response(
+      JSON.stringify({ success: true, message: 'User and all associated data deleted successfully' }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   } catch (error) {
     console.error("Error in delete-user-account function:", error);
     return new Response(

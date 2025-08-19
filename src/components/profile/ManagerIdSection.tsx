@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Copy, RefreshCw, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ManagerIdSectionProps {
@@ -13,15 +13,6 @@ interface ManagerIdSectionProps {
 export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps) => {
   const { toast } = useToast();
   const [isRegenerating, setIsRegenerating] = useState(false);
-  const [autoTriggered, setAutoTriggered] = useState(false);
-
-  // Auto-generate a Manager ID for new managers with no ID yet (mobile-friendly, zero setup)
-  useEffect(() => {
-    if (isManager && !managerId && !isRegenerating && !autoTriggered) {
-      setAutoTriggered(true);
-      generateManagerId();
-    }
-  }, [isManager, managerId, isRegenerating, autoTriggered]);
   
   const copyManagerId = () => {
     if (managerId) {
