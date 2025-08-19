@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "@/hooks/auth";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -17,13 +18,19 @@ import { NotificationProvider } from "@/hooks/use-notification-settings";
 import { AppearanceProvider } from "@/hooks/use-appearance-settings";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+// Newly added imports
+import { ManagerIdSection } from "@/components/profile/ManagerIdSection";
+import { useProfileData } from "@/components/profile/useProfileData";
 
 const ProfileSettings = () => {
   const { user, isLoading, isAdmin, isManager, isPayroll, isEmployee, isHR, subscribed } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
+  // Fetch managerId for the currently signed-in user (auto-generates via ManagerIdSection if missing)
+  const { managerId: profileManagerId } = useProfileData(user, isManager);
+
   // Get section from location state or URL parameter
   const getInitialSection = () => {
     if (location.state?.section) {
@@ -135,6 +142,12 @@ const ProfileSettings = () => {
               </CardTitle>
               <CardDescription>{t('updatePersonalInfo')}</CardDescription>
             </CardHeader>
+
+            {/* Manager ID area for managers; auto-generates if missing */}
+            <div className="px-6 pt-4">
+              <ManagerIdSection managerId={profileManagerId} isManager={isManager} />
+            </div>
+
             <PersonalInfoForm user={user} />
             <DeleteAccountSection />
           </Card>
