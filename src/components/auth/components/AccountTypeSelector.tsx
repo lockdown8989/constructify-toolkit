@@ -27,15 +27,15 @@ export const AccountTypeSelector = ({ userRole, onRoleChange, disabled = false }
           </Label>
         </div>
         <div className="flex items-center space-x-2">
-          <RadioGroupItem value="manager_administrator" id="manager_administrator" disabled={disabled} />
-          <Label htmlFor="manager_administrator" className={disabled ? "text-muted-foreground" : ""}>
-            Manager-Administrator
+          <RadioGroupItem value="manager" id="manager" disabled={disabled} />
+          <Label htmlFor="manager" className={disabled ? "text-muted-foreground" : ""}>
+            Manager Administrator
           </Label>
         </div>
         <div className="flex items-center space-x-2">
-          <RadioGroupItem value="payroll_administrator" id="payroll_administrator" disabled={disabled} />
-          <Label htmlFor="payroll_administrator" className={disabled ? "text-muted-foreground" : ""}>
-            Payroll-Administrator
+          <RadioGroupItem value="payroll" id="payroll" disabled={disabled} />
+          <Label htmlFor="payroll" className={disabled ? "text-muted-foreground" : ""}>
+            Payroll Administrator
           </Label>
         </div>
       </RadioGroup>

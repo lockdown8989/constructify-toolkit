@@ -32,17 +32,7 @@ const AccountTypeDisplay = () => {
       };
     }
     
-    // Manager-Administrator has second priority and admin-level access
-    if (isManager) {
-      return {
-        type: 'Manager-Administrator',
-        icon: Users,
-        color: 'bg-blue-100 text-blue-800',
-        description: 'Full management and admin access'
-      };
-    }
-    
-    // HR Manager has third priority  
+    // HR Manager has second priority  
     if (isHR) {
       return {
         type: 'HR Manager',
@@ -52,10 +42,20 @@ const AccountTypeDisplay = () => {
       };
     }
     
-    // Payroll-Administrator has fourth priority
+    // Manager has third priority
+    if (isManager) {
+      return {
+        type: 'Manager',
+        icon: Users,
+        color: 'bg-blue-100 text-blue-800',
+        description: 'Team and schedule management'
+      };
+    }
+    
+    // Payroll Administrator has fourth priority
     if (isPayroll) {
       return {
-        type: 'Payroll-Administrator',
+        type: 'Payroll Administrator',
         icon: Calculator,
         color: 'bg-green-100 text-green-800',
         description: 'Payroll and salary management'

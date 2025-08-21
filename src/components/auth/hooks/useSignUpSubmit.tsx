@@ -88,22 +88,22 @@ export const useSignUpSubmit = ({
         return;
       }
       
-      // Require manager ID for employees and payroll administrators
-      if ((userRole === 'employee' || userRole === 'payroll_administrator') && !managerId) {
-        setSignUpError("Manager ID is required for employee and payroll administrator accounts");
+      // Require manager ID for employees and payroll users
+      if ((userRole === 'employee' || userRole === 'payroll') && !managerId) {
+        setSignUpError("Manager ID is required for employee and payroll accounts");
         setIsLoading(false);
         return;
       }
       
-      // Validate manager ID format for employees and payroll administrators
-      if ((userRole === 'employee' || userRole === 'payroll_administrator') && managerId && !managerId.startsWith('MGR-')) {
+      // Validate manager ID format for employees and payroll users
+      if ((userRole === 'employee' || userRole === 'payroll') && managerId && !managerId.startsWith('MGR-')) {
         setSignUpError("Invalid Manager ID format. Manager IDs must start with 'MGR-'");
         setIsLoading(false);
         return;
       }
       
-      // For employees and payroll administrators, verify the manager ID exists and is valid
-      if ((userRole === 'employee' || userRole === 'payroll_administrator') && managerId) {
+      // For employees and payroll users, verify the manager ID exists and is valid
+      if ((userRole === 'employee' || userRole === 'payroll') && managerId) {
         try {
           const { data: validationResult, error } = await supabase.rpc('validate_manager_id_strict', {
             p_manager_id: managerId
@@ -205,16 +205,16 @@ export const useSignUpSubmit = ({
         console.log("Employee record creation result:", employeeSuccess);
         
         // Show appropriate success message based on role
-        if (userRole === 'manager_administrator') {
+        if (userRole === 'manager') {
           toast({
             title: "Success",
-            description: `Manager-Administrator account created. Your Manager ID is ${managerId}. Share this with your employees to connect them to your account.`,
+            description: `Manager account created. Your Manager ID is ${managerId}. Share this with your employees to connect them to your account.`,
             duration: 6000,
           });
-        } else if (userRole === 'payroll_administrator' && managerId) {
+        } else if (userRole === 'payroll' && managerId) {
           toast({
             title: "Success", 
-            description: `Payroll-Administrator account created and linked to manager with ID ${managerId}.`,
+            description: `Payroll account created and linked to manager with ID ${managerId}.`,
           });
         } else if (userRole === 'employee' && managerId) {
           toast({
