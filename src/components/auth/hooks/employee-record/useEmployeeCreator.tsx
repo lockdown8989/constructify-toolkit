@@ -10,9 +10,6 @@ export const useEmployeeCreator = () => {
   const { validateManagerId } = useManagerValidator();
   const { notifyManager } = useManagerNotifier();
 
-  // New: simple helper to generate a Manager ID like MGR-12345
-  const generateManagerIdValue = () => `MGR-${Math.floor(10000 + Math.random() * 90000)}`;
-
   const createEmployeeRecord = async (
     userId: string, 
     fullName: string, 
@@ -21,8 +18,8 @@ export const useEmployeeCreator = () => {
   ) => {
     console.log(`🎯 Creating new employee record with role: ${userRole}, manager ID: ${managerId || 'none'}`);
     
-    let managerIdToUse: string | null = null;
-    let managerName: string | null = null;
+    let managerIdToUse = null;
+    let managerName = null;
     
     // If employee with manager ID, validate it
     if (userRole === 'employee' && managerId) {
@@ -45,12 +42,10 @@ export const useEmployeeCreator = () => {
       }
     }
     
-    // If this is a manager, ensure they have a Manager ID
+    // If this is a manager, use their own manager ID
     if (userRole === 'manager') {
-      // Auto-generate if not provided during signup
-      const effectiveManagerId = managerId ?? generateManagerIdValue();
-      console.log(`🎯 Manager registering with manager ID: ${effectiveManagerId} (auto-generated: ${!managerId})`);
-      managerIdToUse = effectiveManagerId;
+      console.log(`🎯 Manager registering with manager ID: ${managerId}`);
+      managerIdToUse = managerId;
     }
     
     // Create record based on role
@@ -70,7 +65,7 @@ export const useEmployeeCreator = () => {
       } else if (userRole === 'manager') {
         toast({
           title: "Manager Account Created",
-          description: `Manager account created successfully. Your Manager ID is ${managerIdToUse}`,
+          description: `Manager account created successfully. Your Manager ID is ${managerId}`,
         });
       }
       

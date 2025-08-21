@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { startOfWeek, endOfWeek, startOfDay, endOfDay, formatISO } from 'date-fns';
+import { startOfWeek, endOfWeek, formatISO } from 'date-fns';
 
 interface LaborStats {
   scheduledHours: number;

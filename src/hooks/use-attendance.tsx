@@ -5,7 +5,6 @@ import { useToast } from '@/hooks/use-toast';
 import type { AttendanceRecord } from '@/types/supabase';
 import { useEffect } from 'react';
 import { format, addDays } from 'date-fns';
-import { debug } from '@/utils/debug';
 
 export type AttendanceData = {
   present: number;
@@ -22,7 +21,7 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
   const queryClient = useQueryClient();
   
   // Add debugging
-  debug.performance('useAttendance called with:', { employeeId, selectedDate });
+  console.log('useAttendance called with:', { employeeId, selectedDate });
   
   // Set up real-time subscription for attendance changes
   useEffect(() => {
@@ -39,7 +38,7 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
           filter: `employee_id=eq.${employeeId}`
         },
         () => {
-          debug.api('Attendance data changed for employee:', employeeId);
+          console.log('Attendance data changed for employee:', employeeId);
           queryClient.invalidateQueries({ queryKey: ['attendance', employeeId, format(selectedDate, 'yyyy-MM-dd')] });
         }
       )
@@ -53,7 +52,7 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
   const fetchAttendanceData = async (): Promise<AttendanceData> => {
     // If no employeeId provided, return empty data
     if (!employeeId) {
-      debug.performance('No employeeId provided to useAttendance hook');
+      console.log('No employeeId provided to useAttendance hook');
       return {
         present: 0,
         absent: 0,
@@ -71,21 +70,12 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
       startDate.setMonth(startDate.getMonth() - 1); // Go back 1 month
       const endDate = new Date();
       
-      debug.api(`Fetching attendance data for employee ${employeeId} from ${format(startDate, 'yyyy-MM-dd')} to ${format(endDate, 'yyyy-MM-dd')}`);
+      console.log(`Fetching attendance data for employee ${employeeId} from ${format(startDate, 'yyyy-MM-dd')} to ${format(endDate, 'yyyy-MM-dd')}`);
       
-      // Optimized query - select only needed columns
       const { data: records = [], error } = await supabase
         .from('attendance')
         .select(`
-          id,
-          employee_id,
-          date,
-          check_in,
-          check_out,
-          attendance_status,
-          status,
-          working_minutes,
-          overtime_minutes,
+          *,
           employees:employee_id (
             name
           )
@@ -96,15 +86,15 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
         .order('date', { ascending: false });
       
       if (error) {
-        debug.error('Supabase error:', error);
+        console.error('Supabase error:', error);
         throw error;
       }
       
-      debug.api('Raw attendance records:', records);
+      console.log('Raw attendance records:', records);
       
       const processedRecords: AttendanceRecord[] = records.map(record => ({
         ...record,
-        employee_name: (record.employees as any)?.name || 'Unknown',
+        employee_name: record.employees?.name,
       }));
       
       // Count based on attendance_status field
@@ -129,11 +119,11 @@ export function useAttendance(employeeId?: string, selectedDate: Date = new Date
         recentRecords: sortedRecords
       };
       
-      debug.performance(`Processed attendance data for employee ${employeeId}:`, resultData);
+      console.log(`Processed attendance data for employee ${employeeId}:`, resultData);
       
       return resultData;
     } catch (err) {
-      debug.error('Error fetching attendance data:', err);
+      console.error('Error fetching attendance data:', err);
       toast({
         title: "Failed to fetch attendance data",
         description: err instanceof Error ? err.message : "Unknown error occurred",

@@ -24,7 +24,7 @@ export const useStatusCheck = (
         // Check if there's an active session for today using the new current_status column
         const { data: records, error } = await supabase
           .from('attendance')
-          .select('id, current_status, break_start, check_out, on_break, check_in, active_session')
+          .select('*')
           .eq('employee_id', employeeId)
           .eq('date', today)
           .eq('active_session', true)
@@ -66,7 +66,7 @@ export const useStatusCheck = (
           // No active session - check if there are any records for today
           const { data: todayRecords, error: todayError } = await supabase
             .from('attendance')
-            .select('id, check_in, check_out, current_status, on_break, break_start')
+            .select('*')
             .eq('employee_id', employeeId)
             .eq('date', today)
             .order('check_in', { ascending: false });

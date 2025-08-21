@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/types/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { debug } from '@/utils/debug';
 
 export type Employee = Database['public']['Tables']['employees']['Row'];
 export type NewEmployee = Database['public']['Tables']['employees']['Insert'];
@@ -23,24 +22,23 @@ export function useEmployees(filters?: Partial<{
       try {
         // If no user, return empty array instead of throwing error
         if (!user) {
-          debug.auth('No authenticated user, returning empty employees list');
+          console.log('No authenticated user, returning empty employees list');
           return [];
         }
 
-        // Optimized query - select only necessary columns
         let query = supabase
           .from('employees')
-          .select('id, user_id, name, email, job_title, department, site, status, lifecycle, avatar_url, salary, start_date, manager_id, role');
+          .select('*');
         
-        debug.employee('Employee query - User roles:', { isManager, isPayroll, isAdmin, isHR });
+        console.log('Employee query - User roles:', { isManager, isPayroll, isAdmin, isHR });
         
         // For payroll users, admins, and HR - show all employees
         if (isPayroll || isAdmin || isHR) {
-          debug.employee("Payroll/Admin/HR user, fetching all employee data");
+          console.log("Payroll/Admin/HR user, fetching all employee data");
           // No restrictions for these roles - they should see all employees
         } else if (isManager && user) {
           // For managers - show employees under their management
-          debug.employee("Manager user, fetching team data");
+          console.log("Manager user, fetching team data");
           const { data: managerData, error: managerError } = await supabase
             .from('employees')
             .select('manager_id')
@@ -48,32 +46,32 @@ export function useEmployees(filters?: Partial<{
             .maybeSingle();
           
           if (managerError) {
-            debug.error('Error fetching manager data:', managerError);
+            console.error('Error fetching manager data:', managerError);
             // Continue with showing all employees if manager data fetch fails
           } else if (managerData && managerData.manager_id) {
             query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
           } else {
             // If manager doesn't have manager_id set, show all employees (they might be the top-level manager)
-            debug.employee("Manager without manager_id, showing all employees");
+            console.log("Manager without manager_id, showing all employees");
           }
         } else if (!isManager && !isPayroll && !isAdmin && !isHR && user) {
           // For regular employees - show only their own data
-          debug.employee("Regular employee user, fetching own data only");
+          console.log("Regular employee user, fetching own data only");
           const { data: currentEmployeeData, error: employeeError } = await supabase
             .from('employees')
-            .select('id, user_id, name, email, job_title, department, site, status')
+            .select('*')
             .eq('user_id', user.id)
             .maybeSingle();
             
           if (employeeError) {
-            debug.error('Error fetching employee data:', employeeError);
+            console.error('Error fetching employee data:', employeeError);
             return [];
           }
             
           if (currentEmployeeData) {
             query = query.eq('id', currentEmployeeData.id);
           } else {
-            debug.employee("No employee record found for user");
+            console.log("No employee record found for user");
             return [];
           }
         }
@@ -88,7 +86,7 @@ export function useEmployees(filters?: Partial<{
         const { data, error } = await query;
         
         if (error) {
-          debug.error("Error fetching employees:", error);
+          console.error("Error fetching employees:", error);
           // Return empty array instead of throwing to prevent app crashes
           return [];
         }
@@ -96,17 +94,17 @@ export function useEmployees(filters?: Partial<{
         // Validate and clean the employee data
         const validEmployees = (data || []).filter(employee => {
           if (!employee || !employee.id || !employee.name) {
-            debug.warn('Invalid employee record found:', employee);
+            console.warn('Invalid employee record found:', employee);
             return false;
           }
           return true;
         });
         
-        debug.employee("Fetched and validated employees data:", validEmployees.length, "employees");
+        console.log("Fetched and validated employees data:", validEmployees.length, "employees");
         return validEmployees as Employee[];
         
       } catch (error) {
-        debug.error("Error in employees query function:", error);
+        console.error("Error in employees query function:", error);
         // Return empty array instead of throwing to prevent app crashes
         return [];
       }
@@ -126,7 +124,7 @@ export function useEmployee(id: string | undefined) {
       
       const { data, error } = await supabase
         .from('employees')
-        .select('id, user_id, name, email, job_title, department, site, status, lifecycle, avatar_url, salary, start_date, manager_id, role')
+        .select('*')
         .eq('id', id)
         .single();
       
@@ -175,7 +173,7 @@ export function useUpdateEmployee() {
   
   return useMutation({
     mutationFn: async ({ id, ...update }: EmployeeUpdate & { id: string }) => {
-      debug.employee('Updating employee with data:', { id, ...update });
+      console.log('Updating employee with data:', { id, ...update });
       
       const { data, error } = await supabase
         .from('employees')
@@ -185,11 +183,11 @@ export function useUpdateEmployee() {
         .single();
       
       if (error) {
-        debug.error('Update employee error:', error);
+        console.error('Update employee error:', error);
         throw error;
       }
       
-      debug.employee('Employee updated successfully:', data);
+      console.log('Employee updated successfully:', data);
       return data as Employee;
     },
     onSuccess: (data) => {
@@ -202,7 +200,7 @@ export function useUpdateEmployee() {
       });
     },
     onError: (error) => {
-      debug.error('Update employee mutation error:', error);
+      console.error('Update employee mutation error:', error);
       toast({
         title: "Failed to update employee",
         description: error.message,
@@ -264,11 +262,7 @@ export function useEmployeeFilters() {
         lifecycles,
         statuses
       };
-    },
-    // Static-ish reference data: cache aggressively
-    staleTime: 1000 * 60 * 60 * 6, // 6 hours
-    gcTime: 1000 * 60 * 60 * 24,    // 24 hours
-    refetchOnWindowFocus: false,
+    }
   });
 }
 
@@ -280,32 +274,32 @@ export function useOwnEmployeeData() {
     queryKey: ['own-employee-data', user?.id],
     queryFn: async () => {
       if (!user) {
-        debug.auth('No authenticated user for employee data');
+        console.log('No authenticated user for employee data');
         return null;
       }
 
-      debug.employee("Fetching employee data for user:", user.id);
+      console.log("Fetching employee data for user:", user.id);
       
       try {
         const { data, error } = await supabase
           .from('employees')
-          .select('id, user_id, name, email, job_title, department, site, status, lifecycle, avatar_url, salary, start_date, manager_id, role')
+          .select('*')
           .eq('user_id', user.id)
           .maybeSingle();
 
         if (error) {
-          debug.error("Error fetching own employee data:", error);
+          console.error("Error fetching own employee data:", error);
           return null;
         }
 
         if (!data) {
-          debug.employee("No employee record found for user:", user.id);
+          console.log("No employee record found for user:", user.id);
           return null;
         }
 
         return data as Employee;
       } catch (error) {
-        debug.error("Exception in useOwnEmployeeData:", error);
+        console.error("Exception in useOwnEmployeeData:", error);
         return null;
       }
     },
