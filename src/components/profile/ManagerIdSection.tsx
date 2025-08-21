@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Copy, RefreshCw, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ManagerIdSectionProps {
@@ -13,10 +13,42 @@ interface ManagerIdSectionProps {
 export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps) => {
   const { toast } = useToast();
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [currentManagerId, setCurrentManagerId] = useState<string | null>(managerId);
+  
+  // Update local state when prop changes
+  useEffect(() => {
+    setCurrentManagerId(managerId);
+  }, [managerId]);
+
+  // Fetch manager ID on component mount for managers
+  useEffect(() => {
+    const fetchManagerId = async () => {
+      if (!isManager) return;
+      
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) return;
+
+        const { data: managerData, error } = await supabase.rpc(
+          'get_manager_details',
+          { p_user_id: userData.user.id }
+        );
+
+        if (!error && managerData && managerData.length > 0) {
+          const manager = managerData[0];
+          setCurrentManagerId(manager.manager_id);
+        }
+      } catch (error) {
+        console.error("Error fetching manager ID:", error);
+      }
+    };
+
+    fetchManagerId();
+  }, [isManager]);
   
   const copyManagerId = () => {
-    if (managerId) {
-      navigator.clipboard.writeText(managerId);
+    if (currentManagerId) {
+      navigator.clipboard.writeText(currentManagerId);
       toast({
         title: "Manager ID copied",
         description: "Manager ID has been copied to clipboard",
@@ -27,8 +59,7 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
   const generateManagerId = async () => {
     setIsRegenerating(true);
     try {
-      // Generate a new manager ID with format MGR-XXXXX
-      const randomPart = Math.floor(10000 + Math.random() * 90000); // 5-digit number
+      const randomPart = Math.floor(10000 + Math.random() * 90000);
       const newManagerId = `MGR-${randomPart}`;
       console.log(`Generated new manager ID: ${newManagerId}`);
 
@@ -37,10 +68,9 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
         throw new Error("User not authenticated");
       }
 
-      // Store the old manager ID for updating connected employees
-      const oldManagerId = managerId;
+      const oldManagerId = currentManagerId;
 
-      // Check if the user already has an employee record
+      // Check if user has an employee record
       const { data: existingEmployee, error: checkError } = await supabase
         .from("employees")
         .select("id, manager_id")
@@ -53,8 +83,7 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
       }
       
       if (existingEmployee) {
-        console.log("Existing employee record found, updating manager ID");
-        // Update the manager's own record
+        console.log("Updating existing employee record with manager ID");
         const { error } = await supabase
           .from("employees")
           .update({ 
@@ -68,14 +97,14 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
           throw new Error("Failed to update manager ID");
         }
 
-        // If there was an old manager ID, update all employees who were connected to it
+        // Update connected employees if there was an old manager ID
         if (oldManagerId) {
-          console.log(`Updating all employees connected to old manager ID: ${oldManagerId}`);
+          console.log(`Updating employees connected to old manager ID: ${oldManagerId}`);
           const { data: connectedEmployees, error: updateError } = await supabase
             .from("employees")
             .update({ manager_id: newManagerId })
             .eq("manager_id", oldManagerId)
-            .neq("user_id", userData.user.id) // Don't update the manager's own record again
+            .neq("user_id", userData.user.id)
             .select("name, user_id");
 
           if (updateError) {
@@ -90,7 +119,7 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
             
             // Send notifications to updated employees
             const notifications = connectedEmployees
-              .filter(emp => emp.user_id) // Only send to employees with user accounts
+              .filter(emp => emp.user_id)
               .map(emp => ({
                 user_id: emp.user_id,
                 title: "Manager ID Updated",
@@ -107,21 +136,18 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
               title: "Success",
               description: `Manager ID updated to ${newManagerId}. ${connectedEmployees.length} connected employees have been automatically updated.`,
             });
-          } else {
-            toast({
-              title: "Success",
-              description: `Manager ID updated to ${newManagerId}.`,
-            });
           }
-        } else {
-          toast({
-            title: "Success",
-            description: `Manager ID generated: ${newManagerId}`,
-          });
         }
+        
+        // Update local state immediately
+        setCurrentManagerId(newManagerId);
+        
+        toast({
+          title: "Success",
+          description: `Manager ID ${oldManagerId ? 'updated to' : 'generated:'} ${newManagerId}`,
+        });
       } else {
         // Create new employee record
-        // Get profile data for the name
         const { data: profileData } = await supabase
           .from("profiles")
           .select("first_name, last_name")
@@ -141,8 +167,8 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
             department: 'Management',
             site: 'Main Office',
             manager_id: newManagerId,
-            status: 'Present',
-            lifecycle: 'Employed',
+            status: 'Active',
+            lifecycle: 'Active',
             salary: 0,
             user_id: userData.user.id
           });
@@ -152,16 +178,14 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
           throw new Error("Failed to create manager record: " + error.message);
         }
 
+        // Update local state immediately
+        setCurrentManagerId(newManagerId);
+
         toast({
           title: "Success",
           description: `Manager ID generated: ${newManagerId}`,
         });
       }
-      
-      // Reload the page after a short delay to reflect the changes
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
       
     } catch (error) {
       console.error("Error generating manager ID:", error);
@@ -180,33 +204,35 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
   return (
     <div className="p-4 mb-4 bg-blue-50 border border-blue-200 rounded-md">
       <h3 className="text-lg font-medium text-blue-800 mb-1">Your Manager ID</h3>
-      {managerId ? (
+      {currentManagerId ? (
         <>
-          <div className="flex items-center">
-            <span className="font-mono text-lg text-blue-700 mr-2">{managerId}</span>
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="sm"
-              onClick={copyManagerId}
-              title="Copy Manager ID"
-              className="h-8 mr-2"
-            >
-              <Copy className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={generateManagerId}
-              disabled={isRegenerating}
-              title="Generate New ID"
-              className="h-8"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
-            </Button>
+          <div className="flex items-center flex-wrap gap-2">
+            <span className="font-mono text-lg text-blue-700 break-all">{currentManagerId}</span>
+            <div className="flex gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                onClick={copyManagerId}
+                title="Copy Manager ID"
+                className="h-8 shrink-0"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={generateManagerId}
+                disabled={isRegenerating}
+                title="Generate New ID"
+                className="h-8 shrink-0"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
           </div>
-          <p className="text-sm text-blue-600 mt-1">
+          <p className="text-sm text-blue-600 mt-2">
             Share this ID with your employees to connect them to your account. When you refresh this ID, all connected employees will be automatically updated.
           </p>
         </>

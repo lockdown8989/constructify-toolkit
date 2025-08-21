@@ -11,7 +11,7 @@ export const useManagerValidator = () => {
     }
     
     try {
-      // Use the strict validation function to ensure proper manager isolation
+      // Use the updated strict validation function
       const { data: validationResult, error } = await supabase.rpc('validate_manager_id_strict', {
         p_manager_id: managerId
       });
@@ -21,17 +21,20 @@ export const useManagerValidator = () => {
         return null;
       }
       
-      if (validationResult?.valid) {
-        console.log(`Valid manager ID ${managerId}: ${validationResult.manager_name}`);
+      // Handle the array response from the function
+      const result = validationResult && validationResult.length > 0 ? validationResult[0] : null;
+      
+      if (result?.valid) {
+        console.log(`Valid manager ID ${managerId}: ${result.manager_name}`);
         return {
-          id: managerId, // Return the manager ID as identifier
-          user_id: validationResult.manager_user_id,
-          name: validationResult.manager_name,
+          id: managerId,
+          user_id: result.manager_user_id,
+          name: result.manager_name,
           manager_id: managerId,
-          job_title: validationResult.manager_role || 'Manager'
+          job_title: result.manager_role || 'Manager'
         };
       } else {
-        console.log(`Manager ID validation failed: ${validationResult?.error}`);
+        console.log(`Manager ID validation failed: ${result?.error || 'Unknown error'}`);
         return null;
       }
     } catch (error) {

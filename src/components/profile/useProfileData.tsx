@@ -42,7 +42,6 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
         
         if (error) {
           console.error("Error fetching profile:", error);
-          // Don't show error toast for missing profiles
           setIsLoading(false);
           return;
         }
@@ -58,89 +57,40 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
           });
         }
         
-        // Fetch manager ID if the user is a manager - only retrieve, don't generate here
-        if (isManager) {
-          console.log("User is a manager, fetching manager ID");
-          const { data: employeeData, error: employeeError } = await supabase
-            .from("employees")
-            .select("manager_id")
-            .eq("user_id", user.id)
-            .maybeSingle();
-            
-          if (employeeError) {
-            console.error("Error fetching manager ID:", employeeError);
-            // Don't show error for missing employee records
-          } else if (employeeData && employeeData.manager_id) {
-            console.log("Found manager ID:", employeeData.manager_id);
-            setManagerId(employeeData.manager_id);
-            
-            // Auto-reconnect employees when manager ID is found
-            await reconnectEmployeesToManager(employeeData.manager_id);
-          } else {
-            console.log("No manager ID found for this manager account");
-            setManagerId(null);
+        // Use the new database function to get manager details
+        console.log("Fetching manager details for user:", user.id);
+        const { data: managerData, error: managerError } = await supabase.rpc(
+          'get_manager_details',
+          { p_user_id: user.id }
+        );
+        
+        if (managerError) {
+          console.error("Error fetching manager details:", managerError);
+        } else if (managerData && managerData.length > 0) {
+          const manager = managerData[0];
+          console.log("Found manager details:", manager);
+          setManagerId(manager.manager_id);
+          
+          if (isManager) {
+            toast({
+              title: "Manager Profile Loaded",
+              description: `Your Manager ID (${manager.manager_id}) is ready for sharing with employees.`,
+              variant: "default",
+            });
           }
         } else {
-          // Fetch manager ID for employee to display their manager's ID
-          console.log("User is an employee, fetching their manager's ID");
-          const { data: employeeData, error: employeeError } = await supabase
-            .from("employees")
-            .select("manager_id")
-            .eq("user_id", user.id)
-            .maybeSingle();
-            
-          if (!employeeError && employeeData && employeeData.manager_id) {
-            console.log("Found employee's manager ID:", employeeData.manager_id);
-            setManagerId(employeeData.manager_id);
-          }
+          console.log("No manager details found for user");
+          setManagerId(null);
         }
       } catch (error) {
         console.error("Error in fetchProfile:", error);
-        // Don't show error toast for profile fetch errors
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchProfile();
-  }, [user?.id, isManager]); // Removed toast from dependencies to prevent unnecessary re-renders
-  
-  const reconnectEmployeesToManager = async (currentManagerId: string) => {
-    try {
-      // Find all employees that might have been disconnected but should be connected to this manager
-      const { data: allEmployees, error } = await supabase
-        .from("employees")
-        .select("id, name, user_id, manager_id")
-        .neq("user_id", user?.id); // Exclude the manager themselves
-        
-      if (error) {
-        console.error("Error fetching employees for reconnection:", error);
-        return;
-      }
-      
-      if (allEmployees && allEmployees.length > 0) {
-        // Look for employees that might need to be reconnected
-        const employeesNeedingReconnection = allEmployees.filter(emp => 
-          !emp.manager_id || emp.manager_id === '' || emp.manager_id === 'undefined'
-        );
-        
-        if (employeesNeedingReconnection.length > 0) {
-          console.log(`Found ${employeesNeedingReconnection.length} employees that might need reconnection`);
-          
-          // Only show toast if user is still authenticated
-          if (user) {
-            toast({
-              title: "Manager Profile Updated",
-              description: `Your Manager ID (${currentManagerId}) is active. Employees can use this ID to connect to your account.`,
-              variant: "default",
-            });
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error in reconnectEmployeesToManager:", error);
-    }
-  };
+  }, [user?.id, isManager, toast]);
   
   return { profile, setProfile, managerId, isLoading };
 };
