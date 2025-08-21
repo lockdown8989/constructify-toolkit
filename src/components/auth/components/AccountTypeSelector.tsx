@@ -29,7 +29,7 @@ export const AccountTypeSelector = ({ userRole, onRoleChange, disabled = false }
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="manager" id="manager" disabled={disabled} />
           <Label htmlFor="manager" className={disabled ? "text-muted-foreground" : ""}>
-            Manager Administrator
+            Manager
           </Label>
         </div>
         <div className="flex items-center space-x-2">

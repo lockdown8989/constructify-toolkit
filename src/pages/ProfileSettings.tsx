@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/hooks/auth";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -7,7 +6,6 @@ import { useLanguage } from "@/hooks/use-language";
 import { Loader2, ArrowLeft, User, Bell, Palette, Clock, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { PersonalInfoForm } from "@/components/profile-settings/PersonalInfoForm";
@@ -18,19 +16,13 @@ import { NotificationProvider } from "@/hooks/use-notification-settings";
 import { AppearanceProvider } from "@/hooks/use-appearance-settings";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-// Newly added imports
-import { ManagerIdSection } from "@/components/profile/ManagerIdSection";
-import { useProfileData } from "@/components/profile/useProfileData";
 
 const ProfileSettings = () => {
-  const { user, isLoading, isAdmin, isManager, isPayroll, isEmployee, isHR, subscribed } = useAuth();
+  const { user, isLoading, isAdmin, subscribed } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Fetch managerId for the currently signed-in user (auto-generates via ManagerIdSection if missing)
-  const { managerId: profileManagerId } = useProfileData(user, isManager);
-
+  
   // Get section from location state or URL parameter
   const getInitialSection = () => {
     if (location.state?.section) {
@@ -44,9 +36,9 @@ const ProfileSettings = () => {
   const [isManagingSubscription, setIsManagingSubscription] = useState(false);
   
   const handleManageSubscription = async () => {
-    if (!(isAdmin || isManager)) {
+    if (!isAdmin) {
       toast({ 
-        description: 'Only administrators or managers can manage billing',
+        description: 'Only administrators can manage billing',
         duration: 3000
       });
       return;
@@ -129,7 +121,6 @@ const ProfileSettings = () => {
     );
   }
 
-  const roleLabel = isAdmin ? 'Administrator' : (isPayroll ? 'Payroll Administrator' : (isManager ? 'Manager' : 'Employee'));
   const renderSection = () => {
     switch (activeSection) {
       case 'personal-info':
@@ -142,12 +133,6 @@ const ProfileSettings = () => {
               </CardTitle>
               <CardDescription>{t('updatePersonalInfo')}</CardDescription>
             </CardHeader>
-
-            {/* Manager ID area for managers; auto-generates if missing */}
-            <div className="px-6 pt-4">
-              <ManagerIdSection managerId={profileManagerId} isManager={isManager} />
-            </div>
-
             <PersonalInfoForm user={user} />
             <DeleteAccountSection />
           </Card>
@@ -219,12 +204,9 @@ const ProfileSettings = () => {
         {/* Header Section */}
         <div className="mb-12 pt-12 md:pt-0">
           <div className="text-center md:text-left max-w-2xl">
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
               {t('profile_settings')}
             </h1>
-            <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-              <Badge variant="secondary">{roleLabel}</Badge>
-            </div>
             <p className="text-muted-foreground text-lg leading-relaxed">
               {t('manageSettings')}
             </p>

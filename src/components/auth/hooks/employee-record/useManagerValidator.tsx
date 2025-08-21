@@ -11,29 +11,44 @@ export const useManagerValidator = () => {
     }
     
     try {
-      // Use the strict validation function to ensure proper manager isolation
-      const { data: validationResult, error } = await supabase.rpc('validate_manager_id_strict', {
-        p_manager_id: managerId
-      });
-      
-      if (error) {
-        console.error("Error validating manager ID:", error);
+      // First try to find the manager by querying for records where manager_id equals the provided ID
+      const { data: managerData, error: managerError } = await supabase
+        .from('employees')
+        .select('id, user_id, name, manager_id, job_title')
+        .eq('manager_id', managerId)
+        .maybeSingle();
+        
+      if (managerError && managerError.code !== 'PGRST116') {
+        // This is a real error, not just "no results"
+        console.error("Error validating manager ID:", managerError);
         return null;
       }
       
-      if (validationResult?.valid) {
-        console.log(`Valid manager ID ${managerId}: ${validationResult.manager_name}`);
-        return {
-          id: managerId, // Return the manager ID as identifier
-          user_id: validationResult.manager_user_id,
-          name: validationResult.manager_name,
-          manager_id: managerId,
-          job_title: validationResult.manager_role || 'Manager'
-        };
-      } else {
-        console.log(`Manager ID validation failed: ${validationResult?.error}`);
+      if (managerData) {
+        console.log(`Found valid manager with ID: ${managerId}, name: ${managerData.name}`);
+        return managerData;
+      }
+      
+      // If no results from the first query, try another approach
+      // Look for any employee with this manager_id (could be the manager themselves)
+      const { data: employeeWithManagerId, error: empError } = await supabase
+        .from('employees')
+        .select('id, user_id, name, manager_id, job_title')
+        .eq('manager_id', managerId)
+        .maybeSingle();
+        
+      if (empError && empError.code !== 'PGRST116') {
+        console.error("Error in secondary manager ID validation:", empError);
         return null;
       }
+      
+      if (employeeWithManagerId) {
+        console.log(`Found employee with manager ID: ${managerId}`);
+        return employeeWithManagerId;
+      }
+      
+      console.log(`Manager ID ${managerId} not found in database`);
+      return null;
     } catch (error) {
       console.error("Manager validation error:", error);
       return null;

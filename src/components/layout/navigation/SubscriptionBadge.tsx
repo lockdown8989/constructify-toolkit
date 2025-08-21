@@ -7,13 +7,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 const SubscriptionBadge = () => {
-  const { subscribed, subscriptionTier, isAdmin, isManager } = useAuth();
+  const { subscribed, subscriptionTier, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const handleBadgeClick = async () => {
-    if (!(isAdmin || isManager)) {
+    if (!isAdmin) {
       toast({ 
-        description: 'Only administrators or managers can manage billing',
+        description: 'Please contact an administrator to manage billing',
         duration: 3000
       });
       return;
@@ -21,9 +21,10 @@ const SubscriptionBadge = () => {
 
     // Always redirect to billing page first where they can see their current plan
     // and manage their subscription
-    console.log('🔗 Redirecting to billing page from subscription badge...');
+    console.log('🔗 Redirecting to billing page from PRO badge...');
     navigate('/billing');
   };
+
   // Show badge to all authenticated users once subscription state is known
   if (subscribed === undefined) return null;
 
@@ -33,7 +34,7 @@ const SubscriptionBadge = () => {
         variant="secondary" 
         className="text-xs cursor-pointer hover:bg-secondary/80 transition-colors"
         onClick={handleBadgeClick}
-        title={(isAdmin || isManager) ? 'Go to billing' : 'Billing (admins/managers only)'}
+        title={isAdmin ? 'Go to billing' : 'Billing (admins only)'}
       >
         <Shield className="w-3 h-3 mr-1" />
         Free
