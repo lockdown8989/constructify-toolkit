@@ -26,12 +26,12 @@ export const useRoleAssignment = () => {
         return false;
       }
       
-      // Map the UI role to the database role - FIXED MAPPING
+      // Use the updated role mapping
       let dbRole: string;
       
       switch (userRole) {
-        case "manager":
-          dbRole = "employer"; // "employer" is the database representation of "manager"
+        case "manager_administrator":
+          dbRole = "manager_administrator";
           break;
         case "admin":
           dbRole = "admin";
@@ -39,8 +39,8 @@ export const useRoleAssignment = () => {
         case "hr":
           dbRole = "hr";
           break;
-        case "payroll":
-          dbRole = "payroll";
+        case "payroll_administrator":
+          dbRole = "payroll_administrator";
           break;
         default:
           dbRole = "employee";

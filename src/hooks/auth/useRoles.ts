@@ -39,17 +39,18 @@ export const useRoles = (user: User | null) => {
 
         const userRoles = roles?.map(r => r.role) || [];
         
+        // Updated role mappings for new role names
         setIsAdmin(userRoles.includes('admin'));
         setIsHR(userRoles.includes('hr'));
-        setIsManager(userRoles.includes('employer') || userRoles.includes('manager'));
-        setIsPayroll(userRoles.includes('payroll'));
+        setIsManager(userRoles.includes('manager_administrator'));
+        setIsPayroll(userRoles.includes('payroll_administrator'));
         setRolesLoaded(true);
 
         console.log('🎯 Roles set:', {
           isAdmin: userRoles.includes('admin'),
           isHR: userRoles.includes('hr'),
-          isManager: userRoles.includes('employer') || userRoles.includes('manager'),
-          isPayroll: userRoles.includes('payroll'),
+          isManager: userRoles.includes('manager_administrator'),
+          isPayroll: userRoles.includes('payroll_administrator'),
           userEmail: user.email
         });
 
