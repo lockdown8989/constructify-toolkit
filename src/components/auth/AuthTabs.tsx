@@ -50,20 +50,11 @@ export const AuthTabs = ({
         </TabsList>
         
         <TabsContent value="signin">
-          <SignInForm onSubmit={onSignIn} />
-          <div className="mt-4 text-center">
-            <Button
-              variant="link"
-              className="text-sm text-muted-foreground hover:text-primary"
-              onClick={onForgotPassword}
-            >
-              Forgot your password?
-            </Button>
-          </div>
+          <SignInForm onSignIn={onSignIn} onForgotPassword={onForgotPassword} />
         </TabsContent>
         
         <TabsContent value="signup">
-          <SignUpForm onSubmit={onSignUp} />
+          <SignUpForm onSignUp={onSignUp} />
         </TabsContent>
       </Tabs>
     </div>
