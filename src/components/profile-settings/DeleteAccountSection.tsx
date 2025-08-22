@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { 
   Dialog,
   DialogContent,
@@ -13,16 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, UserMinus, AlertTriangle } from "lucide-react";
-import { useLanguage } from "@/hooks/use-language";
 import { useToast } from "@/hooks/use-toast";
 import { useSecureDeleteAccount } from "@/hooks/auth/actions/useSecureDeleteAccount";
 
 export const DeleteAccountSection = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [confirmationText, setConfirmationText] = useState("");
-  const { t } = useLanguage();
   const { toast } = useToast();
-  const navigate = useNavigate();
   const { deleteAccount, isDeleting } = useSecureDeleteAccount();
 
   const handleDeleteAccount = async () => {
@@ -36,6 +32,7 @@ export const DeleteAccountSection = () => {
     }
 
     try {
+      console.log('🗑️ User confirmed deletion, proceeding...');
       await deleteAccount();
     } catch (error) {
       console.error("Error in deletion process:", error);

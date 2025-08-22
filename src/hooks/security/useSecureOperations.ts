@@ -11,6 +11,7 @@ export const useSecureOperations = () => {
   // Secure user deletion with additional validation
   const secureDeleteAccount = useCallback(async () => {
     if (!user) {
+      console.error('No authenticated user for deletion');
       throw new Error('No authenticated user');
     }
 
@@ -20,14 +21,21 @@ export const useSecureOperations = () => {
     }
 
     try {
-      const { error } = await supabase.functions.invoke('delete-user-account');
+      console.log('🔥 Calling delete-user-account function...');
+      
+      const { data, error } = await supabase.functions.invoke('delete-user-account', {
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        }
+      });
       
       if (error) {
         console.error('Account deletion error:', error);
-        throw new Error('Failed to delete account. Please contact support.');
+        throw new Error(`Failed to delete account: ${error.message}`);
       }
 
-      return { success: true };
+      console.log('✅ Account deletion completed:', data);
+      return { success: true, data };
     } catch (error) {
       console.error('Secure account deletion failed:', error);
       throw error;
