@@ -53,7 +53,7 @@ export const useSecureDeleteAccount = () => {
           window.location.replace('/auth?deleted=true');
         }, 2000);
       } else {
-        throw new Error(result?.error || 'Failed to delete account');
+        throw new Error('Failed to delete account');
       }
       
     } catch (error) {
