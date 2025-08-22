@@ -41,7 +41,7 @@ export const ManagerIdField = ({ managerId, onChange, isManager, isEditable = fa
           onChange={onChange}
           disabled={!isEditable}
           className={`${!isEditable ? 'bg-gray-100' : ''} ${isManager ? 'font-mono' : ''}`}
-          placeholder={isManager && !managerId ? "Loading or generating ID..." : isEditable ? "Enter your manager's ID (e.g., MGR-12345)" : "Not available"}
+          placeholder={isManager && !managerId ? "Loading Manager ID..." : isEditable ? "Enter your manager's ID (e.g., MGR-12345)" : "Not available"}
         />
         {isManager && managerId && (
           <Button 

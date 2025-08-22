@@ -60,18 +60,21 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
         
         // Fetch manager ID if the user is a manager - ensure it exists after registration
         if (isManager) {
-          console.log("User is a manager, ensuring manager ID exists");
+          console.log("User is a manager, ensuring manager ID exists for user:", user.id);
           const { data: employeeData, error: employeeError } = await supabase
             .from("employees")
             .select("id, manager_id")
             .eq("user_id", user.id)
             .maybeSingle();
             
+          console.log("Employee data query result:", { employeeData, employeeError });
+            
           if (employeeError) {
             console.error("Error fetching manager ID:", employeeError);
             // Don't show error for missing employee records
           } else if (employeeData && employeeData.manager_id) {
             console.log("Found manager ID:", employeeData.manager_id);
+            console.log("Setting managerId state to:", employeeData.manager_id);
             setManagerId(employeeData.manager_id);
             
             // Auto-reconnect employees when manager ID is found
@@ -188,5 +191,6 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
     }
   };
   
+  console.log("useProfileData returning:", { profile, managerId, isLoading });
   return { profile, setProfile, managerId, isLoading };
 };
