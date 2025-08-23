@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,76 +57,30 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
           });
         }
         
-        // Fetch manager ID if the user is a manager - ensure it exists after registration
+        // Fetch or create manager ID if the user is a manager
         if (isManager) {
-          console.log("User is a manager, ensuring manager ID exists for user:", user.id);
-          const { data: employeeData, error: employeeError } = await supabase
-            .from("employees")
-            .select("id, manager_id")
-            .eq("user_id", user.id)
-            .maybeSingle();
-            
-          console.log("Employee data query result:", { employeeData, employeeError });
-            
-          if (employeeError) {
-            console.error("Error fetching manager ID:", employeeError);
-            // Don't show error for missing employee records
-          } else if (employeeData && employeeData.manager_id) {
-            console.log("Found manager ID:", employeeData.manager_id);
-            console.log("Setting managerId state to:", employeeData.manager_id);
-            setManagerId(employeeData.manager_id);
-            
-            // Auto-reconnect employees when manager ID is found
-            await reconnectEmployeesToManager(employeeData.manager_id);
-          } else {
-            // No manager ID found - create or update the manager record with a new ID
-            try {
-              const newManagerId = `MGR-${Math.floor(10000 + Math.random() * 90000)}`;
-              console.log("No manager ID found; generating:", newManagerId);
-
-              if (employeeData?.id) {
-                // Update existing employee row for this manager
-                const { error: updateError } = await supabase
-                  .from("employees")
-                  .update({ manager_id: newManagerId, job_title: 'Manager' })
-                  .eq("id", employeeData.id);
-                if (updateError) throw updateError;
-              } else {
-                // Create a new employee row for this manager
-                const { data: profileData } = await supabase
-                  .from("profiles")
-                  .select("first_name, last_name")
-                  .eq("id", user.id)
-                  .maybeSingle();
-
-                const fullName = profileData ?
-                  `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() :
-                  user.email?.split('@')[0] || 'Manager';
-
-                const { error: insertError } = await supabase
-                  .from("employees")
-                  .insert({
-                    name: fullName,
-                    job_title: 'Manager',
-                    department: 'Management',
-                    site: 'Main Office',
-                    manager_id: newManagerId,
-                    status: 'Active',
-                    lifecycle: 'Active',
-                    salary: 0,
-                    user_id: user.id,
-                  });
-                if (insertError) throw insertError;
+          console.log("User is a manager, getting or creating manager ID for user:", user.id);
+          try {
+            const { data: managerId, error: managerIdError } = await supabase
+              .rpc("get_or_create_manager_id");
+              
+            console.log("Manager ID RPC result:", { managerId, managerIdError });
+              
+            if (managerIdError) {
+              console.error("Error getting/creating manager ID:", managerIdError);
+              setManagerId(null);
+            } else {
+              console.log("Manager ID obtained:", managerId);
+              setManagerId(managerId);
+              
+              // Auto-reconnect employees when manager ID is available
+              if (managerId) {
+                await reconnectEmployeesToManager(managerId);
               }
-
-              setManagerId(newManagerId);
-              toast({
-                title: "Manager ID created",
-                description: `Your Manager ID is ${newManagerId}. Share this with your employees.`,
-              });
-            } catch (e) {
-              console.error("Failed to create/update manager ID after registration:", e);
             }
+          } catch (error) {
+            console.error("Exception getting manager ID:", error);
+            setManagerId(null);
           }
         } else {
           // Fetch manager ID for employee to display their manager's ID
@@ -192,5 +145,5 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
   };
   
   console.log("useProfileData returning:", { profile, managerId, isLoading });
-  return { profile, setProfile, managerId, isLoading };
+  return { profile, setProfile, managerId, setManagerId, isLoading };
 };

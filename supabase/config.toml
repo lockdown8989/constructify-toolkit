@@ -66,3 +66,7 @@ verify_jwt = true
 [[functions]]
 name = "chat-ai-assistant"
 verify_jwt = false
+
+[[functions]]
+name = "delete-user-account"
+verify_jwt = true
