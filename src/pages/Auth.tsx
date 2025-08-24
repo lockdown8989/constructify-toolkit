@@ -80,18 +80,6 @@ const Auth = () => {
     return <ResetPasswordMode />;
   }
 
-  // Wrapper functions to match expected signatures
-  const handleSignIn = async (email: string, password: string): Promise<void> => {
-    await signIn(email, password);
-  };
-
-  const handleSignUp = async (email: string, password: string, userData: any): Promise<void> => {
-    // Extract firstName and lastName from userData
-    const firstName = userData?.first_name || userData?.firstName || '';
-    const lastName = userData?.last_name || userData?.lastName || '';
-    await signUp(email, password, firstName, lastName);
-  };
-
   console.log('📝 Showing auth tabs');
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
@@ -102,8 +90,8 @@ const Auth = () => {
           setActiveTab={setActiveTab}
           onForgotPassword={handleShowResetPassword}
           onBackToSignIn={handleBackToSignIn}
-          onSignIn={handleSignIn}
-          onSignUp={handleSignUp}
+          onSignIn={signIn}
+          onSignUp={signUp}
         />
       </div>
     </div>

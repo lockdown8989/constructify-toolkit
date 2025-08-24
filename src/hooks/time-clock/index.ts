@@ -76,7 +76,7 @@ export const useTimeClock = () => {
       
       const { data: records, error } = await supabase
         .from('attendance')
-        .select('*')
+        .select('id, on_break, break_start, check_in, check_out, active_session, manager_initiated')
         .eq('employee_id', employeeData.id)
         .eq('date', today)
         .eq('active_session', true)

@@ -28,7 +28,7 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
     setIsRegenerating(true);
     try {
       // Generate a new manager ID with format MGR-XXXXX
-      const randomPart = Math.floor(10000 + Math.random() * 90000);
+      const randomPart = Math.floor(10000 + Math.random() * 90000); // 5-digit number
       const newManagerId = `MGR-${randomPart}`;
       console.log(`Generated new manager ID: ${newManagerId}`);
 
@@ -75,7 +75,7 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
             .from("employees")
             .update({ manager_id: newManagerId })
             .eq("manager_id", oldManagerId)
-            .neq("user_id", userData.user.id)
+            .neq("user_id", userData.user.id) // Don't update the manager's own record again
             .select("name, user_id");
 
           if (updateError) {
@@ -90,7 +90,7 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
             
             // Send notifications to updated employees
             const notifications = connectedEmployees
-              .filter(emp => emp.user_id)
+              .filter(emp => emp.user_id) // Only send to employees with user accounts
               .map(emp => ({
                 user_id: emp.user_id,
                 title: "Manager ID Updated",
@@ -121,6 +121,7 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
         }
       } else {
         // Create new employee record
+        // Get profile data for the name
         const { data: profileData } = await supabase
           .from("profiles")
           .select("first_name, last_name")
@@ -140,8 +141,8 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
             department: 'Management',
             site: 'Main Office',
             manager_id: newManagerId,
-            status: 'Active',
-            lifecycle: 'Active',
+            status: 'Present',
+            lifecycle: 'Employed',
             salary: 0,
             user_id: userData.user.id
           });
@@ -181,39 +182,37 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
       <h3 className="text-lg font-medium text-blue-800 mb-1">Your Manager ID</h3>
       {managerId ? (
         <>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <span className="font-mono text-lg text-blue-700 break-all">{managerId}</span>
-            <div className="flex gap-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm"
-                onClick={copyManagerId}
-                title="Copy Manager ID"
-                className="h-8 flex-shrink-0"
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={generateManagerId}
-                disabled={isRegenerating}
-                title="Generate New ID"
-                className="h-8 flex-shrink-0"
-              >
-                <RefreshCw className={`h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
-              </Button>
-            </div>
+          <div className="flex items-center">
+            <span className="font-mono text-lg text-blue-700 mr-2">{managerId}</span>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={copyManagerId}
+              title="Copy Manager ID"
+              className="h-8 mr-2"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={generateManagerId}
+              disabled={isRegenerating}
+              title="Generate New ID"
+              className="h-8"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
+            </Button>
           </div>
-          <p className="text-sm text-blue-600 mt-2">
+          <p className="text-sm text-blue-600 mt-1">
             Share this ID with your employees to connect them to your account. When you refresh this ID, all connected employees will be automatically updated.
           </p>
         </>
       ) : (
-        <div className="flex flex-col gap-3">
-          <p className="text-blue-600">No Manager ID found. Generate one now:</p>
+        <div className="flex flex-col">
+          <p className="text-blue-600 mb-2">No Manager ID found. Generate one now:</p>
           <Button 
             type="button"
             variant="default"

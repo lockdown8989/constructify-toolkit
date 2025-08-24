@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
   const { user, isManager } = useAuth();
-  const { profile, managerId, setManagerId, isLoading } = useProfileData(user, isManager);
+  const { profile, managerId, isLoading } = useProfileData(user, isManager);
   const { t } = useLanguage();
   const navigate = useNavigate();
   

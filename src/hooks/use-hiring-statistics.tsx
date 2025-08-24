@@ -43,7 +43,7 @@ export function useHiringStatistics(year: number = new Date().getFullYear()) {
       try {
         const { data, error } = await supabase
           .from('hiring_statistics')
-          .select('*')
+          .select('month, year, design_count, others_count')
           .eq('year', selectedYear)
           .order('month', { ascending: true });
         
@@ -63,6 +63,9 @@ export function useHiringStatistics(year: number = new Date().getFullYear()) {
         return getSampleData();
       }
     },
+    staleTime: 1000 * 60 * 60 * 6, // 6 hours
+    gcTime: 1000 * 60 * 60 * 24,    // 24 hours
+    refetchOnWindowFocus: false,
   });
 
   const addHiringStatistic = async (newData: Omit<HiringStatistic, 'id' | 'created_at' | 'updated_at'>) => {

@@ -116,6 +116,8 @@ export const batchApproveAllPendingRotas = async () => {
 
 /**
  * Creates recurring schedules and auto-confirms them
+ * Idempotent: if schedules for this template and date range already exist,
+ * it will not create duplicates and will simply mark them confirmed/published.
  */
 export const createAndConfirmRecurringRotas = async (params: {
   employeeIds: string[];
@@ -128,28 +130,62 @@ export const createAndConfirmRecurringRotas = async (params: {
 }) => {
   const { employeeIds, shiftPatternId, patternName, startTime, endTime, weeksToGenerate, daysOfWeek: daysOfWeekParam } = params;
   const daysOfWeek = (daysOfWeekParam && daysOfWeekParam.length > 0) ? daysOfWeekParam : [0,1,2,3,4,5,6];
-  
 
   try {
-    const schedules = [];
     const today = new Date();
-    
+    const endDate = new Date(today);
+    endDate.setDate(today.getDate() + weeksToGenerate * 7);
+
+    // Check existing schedules for this template and range
+    const { data: existing, error: existingError } = await supabase
+      .from('schedules')
+      .select('id, status, published')
+      .eq('template_id', shiftPatternId)
+      .gte('start_time', today.toISOString())
+      .lte('start_time', endDate.toISOString());
+
+    if (existingError) throw existingError;
+
+    if (existing && existing.length > 0) {
+      // Ensure they are confirmed and published (no duplicates created)
+      const { error: updateError, data: updated } = await supabase
+        .from('schedules')
+        .update({
+          status: 'confirmed',
+          published: true,
+          published_at: new Date().toISOString(),
+          approval_required: false,
+          can_be_edited: false
+        })
+        .eq('template_id', shiftPatternId)
+        .gte('start_time', today.toISOString())
+        .lte('start_time', endDate.toISOString())
+        .select('id');
+
+      if (updateError) throw updateError;
+
+      return { success: true, alreadySynced: true, updatedCount: updated?.length ?? 0 };
+    }
+
+    // Build new schedules when none exist yet
+    const schedules: any[] = [];
+
     for (let week = 0; week < weeksToGenerate; week++) {
       for (let day = 0; day < 7; day++) {
         const scheduleDate = new Date(today);
         scheduleDate.setDate(today.getDate() + (week * 7) + day);
         const dow = scheduleDate.getDay();
         if (!daysOfWeek.includes(dow)) continue;
-        
+
         for (const employeeId of employeeIds) {
           const startDateTime = new Date(scheduleDate);
           const [startHour, startMinute] = startTime.split(':');
           startDateTime.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
-          
+
           const endDateTime = new Date(scheduleDate);
           const [endHour, endMinute] = endTime.split(':');
           endDateTime.setHours(parseInt(endHour), parseInt(endMinute), 0, 0);
-          
+
           schedules.push({
             employee_id: employeeId,
             title: patternName,
@@ -161,19 +197,20 @@ export const createAndConfirmRecurringRotas = async (params: {
             approval_required: false,
             can_be_edited: false,
             shift_type: 'recurring',
-            notes: 'Auto-generated rota shift'
+            notes: 'Auto-generated rota shift',
+            template_id: shiftPatternId
           });
         }
       }
     }
-    
+
     const { data, error } = await supabase
       .from('schedules')
       .insert(schedules)
-      .select();
-    
+      .select('id');
+
     if (error) throw error;
-    
+
     // Notify all employees about their new rota schedules
     for (const employeeId of employeeIds) {
       const { data: employee } = await supabase
@@ -181,7 +218,7 @@ export const createAndConfirmRecurringRotas = async (params: {
         .select('user_id, name')
         .eq('id', employeeId)
         .single();
-        
+
       if (employee?.user_id) {
         await sendNotification({
           user_id: employee.user_id,
@@ -193,8 +230,7 @@ export const createAndConfirmRecurringRotas = async (params: {
         });
       }
     }
-    
-    console.log(`Created and confirmed ${schedules.length} rota shifts`);
+
     return { success: true, data, count: schedules.length };
   } catch (error) {
     console.error('Error creating recurring rotas:', error);

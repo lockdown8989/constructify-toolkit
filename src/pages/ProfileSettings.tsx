@@ -11,17 +11,14 @@ import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { PersonalInfoForm } from "@/components/profile-settings/PersonalInfoForm";
 import RegionalPreferencesForm from "@/components/profile-settings/RegionalPreferencesForm";
 import { DeleteAccountSection } from "@/components/profile-settings/DeleteAccountSection";
-import { ManagerIdSection } from "@/components/settings/sections/ManagerIdSection";
 import WeeklyAvailabilitySection from "@/components/profile/WeeklyAvailabilitySection";
 import { NotificationProvider } from "@/hooks/use-notification-settings";
 import { AppearanceProvider } from "@/hooks/use-appearance-settings";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { useProfileData } from "@/components/profile/useProfileData";
 
 const ProfileSettings = () => {
-  const { user, isLoading, isAdmin, isManager, subscribed } = useAuth();
-  const { profile, managerId, setManagerId, isLoading: profileLoading } = useProfileData(user, isManager);
+  const { user, isLoading, isAdmin, subscribed } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -115,7 +112,7 @@ const ProfileSettings = () => {
     }
   };
   
-  if (isLoading || profileLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -137,12 +134,6 @@ const ProfileSettings = () => {
               <CardDescription>{t('updatePersonalInfo')}</CardDescription>
             </CardHeader>
             <PersonalInfoForm user={user} />
-            {isManager && (
-              <ManagerIdSection 
-                managerId={managerId} 
-                onManagerIdUpdate={setManagerId}
-              />
-            )}
             <DeleteAccountSection />
           </Card>
         );

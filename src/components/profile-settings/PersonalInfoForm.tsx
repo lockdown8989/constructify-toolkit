@@ -135,75 +135,23 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
         return;
       }
 
-      // Update employee data if manager_id changed (including when set to empty string or null)
-      if (!isManager) {
-        // Validate manager ID format if provided
-        if (profile.manager_id && profile.manager_id.trim() !== "") {
-          const managerIdPattern = /^MGR-\d{5}$/;
-          if (!managerIdPattern.test(profile.manager_id.trim())) {
-            toast({
-              title: "Invalid Manager ID",
-              description: "Manager ID must be in format MGR-12345",
-              variant: "destructive",
-            });
-            return;
-          }
-
-          // Verify manager exists
-          const { data: managerExists, error: managerCheckError } = await supabase
-            .from("employees")
-            .select("id, name")
-            .eq("manager_id", profile.manager_id.trim())
-            .maybeSingle();
-
-          if (managerCheckError) {
-            console.error("Error validating manager:", managerCheckError);
-            toast({
-              title: "Error validating manager",
-              description: "Failed to verify manager ID",
-              variant: "destructive",
-            });
-            return;
-          }
-
-          if (!managerExists) {
-            toast({
-              title: "Manager not found",
-              description: "No manager found with that ID. Please check and try again.",
-              variant: "destructive",
-            });
-            return;
-          }
-        }
-
+      // Update employee data if manager_id changed
+      if (profile.manager_id !== null) {
         const { error: employeeError } = await supabase
           .from("employees")
           .update({
-            manager_id: profile.manager_id?.trim() || null,
+            manager_id: profile.manager_id,
           })
           .eq("user_id", user.id);
 
         if (employeeError) {
           console.error("Error updating employee manager_id:", employeeError);
-          toast({
-            title: "Error connecting to manager",
-            description: employeeError.message,
-            variant: "destructive",
-          });
-          return;
         }
-      }
-
-      let successMessage = "Your profile has been successfully updated.";
-      if (!isManager && profile.manager_id?.trim()) {
-        successMessage = "Profile updated and successfully connected to manager!";
-      } else if (!isManager && (!profile.manager_id || profile.manager_id.trim() === "")) {
-        successMessage = "Profile updated and disconnected from manager.";
       }
 
       toast({
         title: "Profile updated",
-        description: successMessage,
+        description: "Your profile has been successfully updated.",
         variant: "default",
       });
     } catch (error) {

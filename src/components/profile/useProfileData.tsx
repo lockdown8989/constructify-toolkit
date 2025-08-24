@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,29 +58,26 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
           });
         }
         
-        // Fetch or create manager ID if the user is a manager
+        // Fetch manager ID if the user is a manager - only retrieve, don't generate here
         if (isManager) {
-          console.log("User is a manager, getting or creating manager ID for user:", user.id);
-          try {
-            const { data: managerId, error: managerIdError } = await supabase
-              .rpc("get_or_create_manager_id");
-              
-            console.log("Manager ID RPC result:", { managerId, managerIdError });
-              
-            if (managerIdError) {
-              console.error("Error getting/creating manager ID:", managerIdError);
-              setManagerId(null);
-            } else {
-              console.log("Manager ID obtained:", managerId);
-              setManagerId(managerId);
-              
-              // Auto-reconnect employees when manager ID is available
-              if (managerId) {
-                await reconnectEmployeesToManager(managerId);
-              }
-            }
-          } catch (error) {
-            console.error("Exception getting manager ID:", error);
+          console.log("User is a manager, fetching manager ID");
+          const { data: employeeData, error: employeeError } = await supabase
+            .from("employees")
+            .select("manager_id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+            
+          if (employeeError) {
+            console.error("Error fetching manager ID:", employeeError);
+            // Don't show error for missing employee records
+          } else if (employeeData && employeeData.manager_id) {
+            console.log("Found manager ID:", employeeData.manager_id);
+            setManagerId(employeeData.manager_id);
+            
+            // Auto-reconnect employees when manager ID is found
+            await reconnectEmployeesToManager(employeeData.manager_id);
+          } else {
+            console.log("No manager ID found for this manager account");
             setManagerId(null);
           }
         } else {
@@ -144,6 +142,5 @@ export const useProfileData = (user: User | null, isManager: boolean) => {
     }
   };
   
-  console.log("useProfileData returning:", { profile, managerId, isLoading });
-  return { profile, setProfile, managerId, setManagerId, isLoading };
+  return { profile, setProfile, managerId, isLoading };
 };
