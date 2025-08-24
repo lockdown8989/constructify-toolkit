@@ -27,7 +27,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [subscribed, setSubscribed] = useState<boolean | undefined>(undefined);
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionIsTrial, setSubscriptionIsTrial] = useState<boolean>(false);
   const [subscriptionTrialEnd, setSubscriptionTrialEnd] = useState<string | null>(null);
   const subscriptionChannelRef = useRef<any>(null);
@@ -48,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 useAuthDebugger({ user, session, isLoading });
 
 // Refresh org subscription status
-const refreshSubscription = async (silent = false) => {
+const refreshSubscription = async () => {
   try {
     console.log('🔄 Starting subscription refresh...');
     const { data: { session } } = await supabase.auth.getSession();
@@ -99,7 +98,7 @@ const refreshSubscription = async (silent = false) => {
       try {
         const { data: subRow } = await supabase
           .from('subscribers')
-          .select('subscribed, subscription_tier, subscription_end, subscription_status, subscription_is_trial, subscription_trial_end')
+          .select('subscribed, subscription_tier, subscription_end, subscription_is_trial, subscription_trial_end')
           .maybeSingle();
         if (subRow) data = subRow as any;
       } catch {}
@@ -124,20 +123,17 @@ const refreshSubscription = async (silent = false) => {
     setSubscribed(nowSubscribed);
     setSubscriptionTier(normalizedTier);
     setSubscriptionEnd(data?.subscription_end ?? null);
-    setSubscriptionStatus(data?.subscription_status ?? null);
     setSubscriptionIsTrial(nowIsTrial);
     setSubscriptionTrialEnd(data?.subscription_trial_end ?? null);
     if (wasTrial && !nowIsTrial && nowSubscribed) {
       toast({ description: 'Your free trial has ended. Your current plan has started.' });
     }
 
-    if (!silent) {
-      // Cross-tab subscription sync: notify other tabs/windows
-      try { localStorage.setItem('subscription-updated', String(Date.now())); } catch {}
-      try { const bc = new BroadcastChannel('subscription'); bc.postMessage({ type: 'updated' }); bc.close(); } catch {}
-      // Realtime broadcast to other connected users
-      try { subscriptionChannelRef.current?.send({ type: 'broadcast', event: 'updated', payload: { ts: Date.now(), subscribed: nowSubscribed, tier: normalizedTier } }); } catch {}
-    }
+    // Cross-tab subscription sync: notify other tabs/windows
+    try { localStorage.setItem('subscription-updated', String(Date.now())); } catch {}
+    try { const bc = new BroadcastChannel('subscription'); bc.postMessage({ type: 'updated' }); bc.close(); } catch {}
+    // Realtime broadcast to other connected users
+    try { subscriptionChannelRef.current?.send({ type: 'broadcast', event: 'updated', payload: { ts: Date.now(), subscribed: nowSubscribed, tier: normalizedTier } }); } catch {}
   } catch (e) {
     console.error('❌ Subscription check failed:', e);
     setSubscribed(false);
@@ -291,13 +287,13 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
       toast({ description: 'Payment canceled.' });
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, []);
+  }, [refreshSubscription]);
 
   // Listen for subscription updates from other tabs/windows
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'subscription-updated') {
-        refreshSubscription(true);
+        refreshSubscription();
       }
     };
     window.addEventListener('storage', onStorage);
@@ -310,7 +306,7 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
       window.removeEventListener('storage', onStorage);
       try { bc?.close(); } catch {}
     };
-  }, []);
+  }, [refreshSubscription]);
 
   // Realtime listener for subscription updates from other users
   useEffect(() => {
@@ -318,7 +314,7 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
       .channel('subscription_broadcast', { config: { broadcast: { self: false } } })
       .on('broadcast', { event: 'updated' }, () => {
         // When any client broadcasts a subscription update, re-check status
-        refreshSubscription(true);
+        refreshSubscription();
       });
 
     const subscribe = async () => {
@@ -336,7 +332,7 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
       try { if (subscriptionChannelRef.current) supabase.removeChannel(subscriptionChannelRef.current); } catch {}
       subscriptionChannelRef.current = null;
     };
-  }, []);
+  }, [refreshSubscription]);
 
 const value: AuthContextType = {
   user,
@@ -353,7 +349,6 @@ const value: AuthContextType = {
   subscribed,
   subscriptionTier,
   subscriptionEnd,
-  subscriptionStatus,
   subscriptionIsTrial,
   subscriptionTrialEnd,
   refreshSubscription,

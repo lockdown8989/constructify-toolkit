@@ -14,17 +14,16 @@ export const useAuthActions = () => {
     return { data, error };
   };
 
-const signUp = async (email: string, password: string, userData: any) => {
-  const { data, error } = await supabase.auth.signUp({ 
-    email, 
-    password,
-    options: {
-      data: userData,
-      emailRedirectTo: `${window.location.origin}/` // critical for confirmation flows
-    }
-  });
-  return { data, error };
-};
+  const signUp = async (email: string, password: string, userData: any) => {
+    const { data, error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        data: userData
+      }
+    });
+    return { data, error };
+  };
 
   const resetPassword = async (email: string) => {
     try {

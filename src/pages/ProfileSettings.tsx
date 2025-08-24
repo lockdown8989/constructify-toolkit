@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { useAuth } from "@/hooks/auth";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/hooks/use-language";
-import { Loader2, ArrowLeft, User, Bell, Palette, Clock, Crown } from "lucide-react";
+import { Loader2, ArrowLeft, User, Bell, Palette, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { NotificationSettings } from "@/components/settings/NotificationSettings";
@@ -14,11 +15,9 @@ import { DeleteAccountSection } from "@/components/profile-settings/DeleteAccoun
 import WeeklyAvailabilitySection from "@/components/profile/WeeklyAvailabilitySection";
 import { NotificationProvider } from "@/hooks/use-notification-settings";
 import { AppearanceProvider } from "@/hooks/use-appearance-settings";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
 
 const ProfileSettings = () => {
-  const { user, isLoading, isAdmin, subscribed } = useAuth();
+  const { user, isLoading } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,84 +32,6 @@ const ProfileSettings = () => {
   };
   
   const [activeSection, setActiveSection] = useState(getInitialSection());
-  const [isManagingSubscription, setIsManagingSubscription] = useState(false);
-  
-  const handleManageSubscription = async () => {
-    if (!isAdmin) {
-      toast({ 
-        description: 'Only administrators can manage billing',
-        duration: 3000
-      });
-      return;
-    }
-
-    if (isManagingSubscription) return;
-    
-    setIsManagingSubscription(true);
-    
-    try {
-      console.log('🔄 Starting subscription management from ProfileSettings...');
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('No active session found. Please refresh the page and try again.');
-      }
-
-      // If not subscribed, redirect to billing page
-      if (subscribed === false) {
-        console.log('🔗 User not subscribed, redirecting to billing page');
-        navigate('/billing');
-        toast({ 
-          description: 'Redirecting to billing page...',
-          duration: 2000
-        });
-        return;
-      }
-
-      console.log('🔄 Calling customer portal function...');
-      const { data, error } = await supabase.functions.invoke('customer-portal', {
-        headers: { 
-          Authorization: `Bearer ${session.access_token}` 
-        },
-      });
-
-      if (error) {
-        console.error('❌ Customer portal error:', error);
-        throw new Error(error.message || 'Failed to create customer portal session');
-      }
-
-      if (data?.url) {
-        console.log('🚀 Redirecting to customer portal:', data.url);
-        toast({ 
-          description: 'Opening subscription management portal...',
-          duration: 2000
-        });
-        // Redirect to Stripe Customer Portal in the same tab
-        window.location.href = data.url;
-      } else {
-        throw new Error('No portal URL received from the server');
-      }
-    } catch (error: any) {
-      console.error('💥 Subscription management error:', error);
-      
-      let errorMessage = 'Failed to open subscription management';
-      
-      if (error.message?.includes('No active session')) {
-        errorMessage = 'Session expired. Please refresh the page and try again.';
-      } else if (error.message?.includes('No portal URL')) {
-        errorMessage = 'Unable to create portal session. Please try again later.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast({ 
-        description: errorMessage,
-        duration: 5000
-      });
-    } finally {
-      setIsManagingSubscription(false);
-    }
-  };
   
   if (isLoading) {
     return (
@@ -188,120 +109,74 @@ const ProfileSettings = () => {
   };
   
   return (
-    <div className="min-h-screen bg-muted/20">
-      {/* Mobile Back Button */}
+    <div className="relative container mx-auto py-12 px-4 md:py-20 md:pt-24 max-w-3xl">
       <Button 
         variant="ghost" 
         size="icon" 
-        className="fixed top-4 left-4 z-10 md:hidden" 
+        className="absolute top-4 left-4 md:hidden" 
         onClick={() => navigate(-1)}
       >
         <ArrowLeft className="h-5 w-5" />
         <span className="sr-only">Back</span>
       </Button>
       
-      <div className="container mx-auto py-8 px-4 md:py-12 max-w-7xl">
-        {/* Header Section */}
-        <div className="mb-12 pt-12 md:pt-0">
-          <div className="text-center md:text-left max-w-2xl">
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-              {t('profile_settings')}
-            </h1>
-            <p className="text-muted-foreground text-lg leading-relaxed">
-              {t('manageSettings')}
-            </p>
-          </div>
-          <Separator className="mt-8" />
+      <div className="max-w-2xl mx-auto pt-10 md:pt-0">
+        <div className="mb-8 text-center md:text-left">
+          <h1 className="text-3xl font-semibold mb-2">{t('profile_settings')}</h1>
+          <p className="text-muted-foreground text-sm">
+            {t('manageSettings')}
+          </p>
+          <Separator className="mt-4" />
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Navigation Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="border rounded-xl shadow-sm sticky top-6">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold">Settings</CardTitle>
-              </CardHeader>
-              <div className="px-6 pb-6">
-                <nav className="space-y-2">
-                  <Button
-                    variant={activeSection === 'personal-info' ? 'default' : 'ghost'}
-                    className="w-full justify-start h-12 text-sm font-medium"
-                    onClick={() => setActiveSection('personal-info')}
-                  >
-                    <User className="mr-3 h-4 w-4" />
-                    {t('personalInfo')}
-                  </Button>
-                  
-                  <Button
-                    variant={activeSection === 'availability' ? 'default' : 'ghost'}
-                    className="w-full justify-start h-12 text-sm font-medium"
-                    onClick={() => setActiveSection('availability')}
-                  >
-                    <Clock className="mr-3 h-4 w-4" />
-                    Weekly Availability
-                  </Button>
-                  
-                  <Button
-                    variant={activeSection === 'notifications' ? 'default' : 'ghost'}
-                    className="w-full justify-start h-12 text-sm font-medium"
-                    onClick={() => setActiveSection('notifications')}
-                  >
-                    <Bell className="mr-3 h-4 w-4" />
-                    {t('notifications')}
-                  </Button>
-                  
-                  <Button
-                    variant={activeSection === 'appearance' ? 'default' : 'ghost'}
-                    className="w-full justify-start h-12 text-sm font-medium"
-                    onClick={() => setActiveSection('appearance')}
-                  >
-                    <Palette className="mr-3 h-4 w-4" />
-                    {t('appearance')}
-                  </Button>
-                  
-                  <Button
-                    variant={activeSection === 'regional' ? 'default' : 'ghost'}
-                    className="w-full justify-start h-12 text-sm font-medium"
-                    onClick={() => setActiveSection('regional')}
-                  >
-                    <Palette className="mr-3 h-4 w-4" />
-                    {t('regionCurrency')}
-                  </Button>
-
-                  {isAdmin && (
-                    <>
-                      <Separator className="my-4" />
-                      <div className="px-2 py-1">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          Admin
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start h-12 text-sm font-medium text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-                        onClick={handleManageSubscription}
-                        disabled={isManagingSubscription}
-                      >
-                        {isManagingSubscription ? (
-                          <Loader2 className="mr-3 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Crown className="mr-3 h-4 w-4" />
-                        )}
-                        {isManagingSubscription ? 'Opening Portal...' : 'Manage Subscription'}
-                      </Button>
-                    </>
-                  )}
-                </nav>
-              </div>
-            </Card>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="md:col-span-1">
+            <nav className="space-y-2">
+              <Button
+                variant={activeSection === 'personal-info' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => setActiveSection('personal-info')}
+              >
+                <User className="mr-2 h-4 w-4" />
+                {t('personalInfo')}
+              </Button>
+              <Button
+                variant={activeSection === 'availability' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => setActiveSection('availability')}
+              >
+                <Clock className="mr-2 h-4 w-4" />
+                Weekly Availability
+              </Button>
+              <Button
+                variant={activeSection === 'notifications' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => setActiveSection('notifications')}
+              >
+                <Bell className="mr-2 h-4 w-4" />
+                {t('notifications')}
+              </Button>
+              <Button
+                variant={activeSection === 'appearance' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => setActiveSection('appearance')}
+              >
+                <Palette className="mr-2 h-4 w-4" />
+                {t('appearance')}
+              </Button>
+              <Button
+                variant={activeSection === 'regional' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => setActiveSection('regional')}
+              >
+                <Palette className="mr-2 h-4 w-4" />
+                {t('regionCurrency')}
+              </Button>
+            </nav>
           </div>
           
-          {/* Content Area */}
-          <div className="lg:col-span-4">
-            <div className="space-y-6">
-              {renderSection()}
-            </div>
+          <div className="md:col-span-3">
+            {renderSection()}
           </div>
         </div>
       </div>

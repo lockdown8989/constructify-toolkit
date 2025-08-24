@@ -16,7 +16,6 @@ export interface AuthContextType {
   subscribed?: boolean;
   subscriptionTier?: string | null;
   subscriptionEnd?: string | null;
-  subscriptionStatus?: string | null;
   subscriptionIsTrial?: boolean;
   subscriptionTrialEnd?: string | null;
   refreshSubscription?: () => Promise<void>;

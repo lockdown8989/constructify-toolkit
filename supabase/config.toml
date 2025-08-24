@@ -55,7 +55,3 @@ verify_jwt = true
 [[functions]]
 name = "customer-portal"
 verify_jwt = true
-
-[[functions]]
-name = "cancel-subscription"
-verify_jwt = true

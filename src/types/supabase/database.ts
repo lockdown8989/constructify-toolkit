@@ -1,3 +1,4 @@
+
 import { Json } from '@/integrations/supabase/types';
 import type { 
   Employee, 
@@ -305,48 +306,6 @@ export interface Database {
         Row: PayrollHistoryRecord;
         Insert: Omit<PayrollHistoryRecord, 'id'> & { id?: string };
         Update: Partial<PayrollHistoryRecord>;
-        Relationships: [];
-      };
-      subscription_events: {
-        Row: {
-          id: string;
-          user_id: string;
-          organization_id: string | null;
-          event_type: string;
-          stripe_customer_id: string | null;
-          stripe_subscription_id: string | null;
-          previous_status: string | null;
-          new_status: string | null;
-          event_data: Json | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          organization_id?: string | null;
-          event_type: string;
-          stripe_customer_id?: string | null;
-          stripe_subscription_id?: string | null;
-          previous_status?: string | null;
-          new_status?: string | null;
-          event_data?: Json | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: Partial<{
-          id: string;
-          user_id: string;
-          organization_id: string | null;
-          event_type: string;
-          stripe_customer_id: string | null;
-          stripe_subscription_id: string | null;
-          previous_status: string | null;
-          new_status: string | null;
-          event_data: Json | null;
-          created_at: string;
-          updated_at: string;
-        }>;
         Relationships: [];
       };
     };

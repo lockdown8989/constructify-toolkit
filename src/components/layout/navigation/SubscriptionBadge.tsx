@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/hooks/use-auth';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Shield } from 'lucide-react';
@@ -10,19 +9,31 @@ const SubscriptionBadge = () => {
   const { subscribed, subscriptionTier, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  const handleBadgeClick = async () => {
-    if (!isAdmin) {
-      toast({ 
-        description: 'Please contact an administrator to manage billing',
-        duration: 3000
-      });
+  const handleManageClick = async () => {
+    if (!subscribed) {
+      navigate('/billing');
       return;
     }
-
-    // Always redirect to billing page first where they can see their current plan
-    // and manage their subscription
-    console.log('🔗 Redirecting to billing page from PRO badge...');
-    navigate('/billing');
+    if (!isAdmin) {
+      toast({ description: 'Only administrators can manage billing' });
+      return;
+    }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('No active session');
+      const { data, error } = await supabase.functions.invoke('customer-portal', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error('No portal URL received');
+      }
+    } catch (e: any) {
+      console.error('Customer portal error', e);
+      toast({ description: e.message || 'Failed to open customer portal' });
+    }
   };
 
   // Show badge to all authenticated users once subscription state is known
@@ -32,9 +43,9 @@ const SubscriptionBadge = () => {
     return (
       <Badge 
         variant="secondary" 
-        className="text-xs cursor-pointer hover:bg-secondary/80 transition-colors"
-        onClick={handleBadgeClick}
-        title={isAdmin ? 'Go to billing' : 'Billing (admins only)'}
+        className="text-xs cursor-pointer"
+        onClick={() => navigate('/billing')}
+        title="Go to billing"
       >
         <Shield className="w-3 h-3 mr-1" />
         Free
@@ -48,9 +59,9 @@ const SubscriptionBadge = () => {
   return (
     <Badge 
       variant="default" 
-      className="text-xs cursor-pointer hover:bg-primary/90 transition-colors"
-      onClick={handleBadgeClick}
-      title="View and manage your subscription plan"
+      className="text-xs cursor-pointer"
+      onClick={handleManageClick}
+      title="Manage subscription"
     >
       <TierIcon className="w-3 h-3 mr-1" />
       {subscriptionTier === 'pro' 
