@@ -42,14 +42,14 @@ export const useEmployeeCreator = () => {
       }
     }
     
-    // If this is a manager, use their own manager ID
-    if (userRole === 'manager') {
-      console.log(`🎯 Manager registering with manager ID: ${managerId}`);
+    // If this is an admin, use their own manager ID
+    if (userRole === 'admin') {
+      console.log(`🎯 Admin registering with manager ID: ${managerId}`);
       managerIdToUse = managerId;
     }
     
     // Create record based on role
-    if (userRole === 'employee' || userRole === 'manager') {
+    if (userRole === 'employee' || userRole === 'admin') {
       const result = await insertEmployeeRecord(userId, fullName, userRole, managerIdToUse);
       
       if (!result) {
@@ -62,10 +62,10 @@ export const useEmployeeCreator = () => {
           title: "Account created",
           description: `Your account has been connected to manager: ${managerName}`,
         });
-      } else if (userRole === 'manager') {
+      } else if (userRole === 'admin') {
         toast({
-          title: "Manager Account Created",
-          description: `Manager account created successfully. Your Manager ID is ${managerId}`,
+          title: "Admin Account Created",
+          description: `Admin account created successfully. Your Admin ID is ${managerId}`,
         });
       }
       
@@ -81,8 +81,8 @@ export const useEmployeeCreator = () => {
     userRole: UserRole,
     managerId: string | null
   ) => {
-    const jobTitle = userRole === 'manager' ? 'Manager' : 'Employee';
-    const employeeRole = userRole === 'manager' ? 'employer' : 'employee'; // Map to database role
+    const jobTitle = userRole === 'admin' ? 'Administrator' : 'Employee';
+    const employeeRole = userRole === 'admin' ? 'admin' : 'employee'; // Map to database role
     
     console.log(`🎯 Creating record with job title: ${jobTitle}, role: ${employeeRole}, and manager ID: ${managerId || 'none'}`);
     
@@ -124,9 +124,9 @@ export const useEmployeeCreator = () => {
         .insert({
           name: fullName,
           job_title: jobTitle,
-          department: userRole === 'manager' ? 'Management' : 'General',
+          department: userRole === 'admin' ? 'Administration' : 'General',
           site: 'Main Office',
-          salary: userRole === 'manager' ? 55000 : 35000, // Different salary for managers
+          salary: userRole === 'admin' ? 65000 : 35000, // Different salary for admins
           start_date: new Date().toISOString().split('T')[0],
           status: 'Active',
           lifecycle: 'Active',

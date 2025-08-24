@@ -27,7 +27,7 @@ export interface AuthContextType {
   deleteAccount: () => Promise<any>;
 }
 
-export type UserRole = 'admin' | 'hr' | 'manager' | 'employee' | 'payroll';
+export type UserRole = 'admin' | 'hr' | 'employee' | 'payroll';
 
 export const isAuthenticated = () => {
   // This function should be used within a component that has access to useAuth
@@ -41,8 +41,6 @@ export const isAuthenticated = () => {
  */
 export const mapUIRoleToDBRole = (uiRole: UserRole): string => {
   switch (uiRole) {
-    case "manager":
-      return "employer"; // "employer" is the database representation of "manager"
     case "admin":
       return "admin";
     case "hr":

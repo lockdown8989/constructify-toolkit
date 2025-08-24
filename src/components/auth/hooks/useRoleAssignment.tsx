@@ -30,9 +30,6 @@ export const useRoleAssignment = () => {
       let dbRole: string;
       
       switch (userRole) {
-        case "manager":
-          dbRole = "employer"; // "employer" is the database representation of "manager"
-          break;
         case "admin":
           dbRole = "admin";
           break;

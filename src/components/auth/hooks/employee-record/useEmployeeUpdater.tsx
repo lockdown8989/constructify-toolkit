@@ -18,7 +18,7 @@ export const useEmployeeUpdater = () => {
   ) => {
     // Only update if manager ID is provided and different from current
     if (newManagerId && currentManagerId !== newManagerId) {
-      if (userRole === 'manager') {
+      if (userRole === 'admin') {
         return await updateEmployerRecord(userId, newManagerId);
       } else if (userRole === 'employee' && newManagerId) {
         return await updateEmployeeManagerId(userId, newManagerId);
