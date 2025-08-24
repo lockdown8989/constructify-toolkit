@@ -39,20 +39,22 @@ export function useEmployees(filters?: Partial<{
         } else if (isManager && user) {
           // For managers - show employees under their management
           console.log("Manager user, fetching team data");
+          
+          // Get the manager's own manager_id (the ID they share with employees)
           const { data: managerData, error: managerError } = await supabase
-            .from('employees')
-            .select('manager_id')
-            .eq('user_id', user.id)
-            .maybeSingle();
+            .rpc('get_or_create_manager_id');
           
           if (managerError) {
-            console.error('Error fetching manager data:', managerError);
-            // Continue with showing all employees if manager data fetch fails
-          } else if (managerData && managerData.manager_id) {
-            query = query.or(`manager_id.eq.${managerData.manager_id},user_id.eq.${user.id}`);
+            console.error('Error getting manager ID:', managerError);
+            // Continue with showing all employees if manager ID fetch fails
+          } else if (managerData) {
+            // Show employees who have this manager's ID in their manager_id field
+            console.log("Manager ID:", managerData, "- filtering employees connected to this manager");
+            query = query.eq('manager_id', managerData);
           } else {
-            // If manager doesn't have manager_id set, show all employees (they might be the top-level manager)
-            console.log("Manager without manager_id, showing all employees");
+            // If no manager ID found, show empty list (manager has no connected employees)
+            console.log("No manager ID found, showing empty employee list");
+            query = query.eq('id', 'non-existent-id'); // This will return empty results
           }
         } else if (!isManager && !isPayroll && !isAdmin && !isHR && user) {
           // For regular employees - show only their own data
