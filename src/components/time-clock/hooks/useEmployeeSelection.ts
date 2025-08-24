@@ -23,7 +23,7 @@ export const useEmployeeSelection = () => {
       
       const { data: attendanceRecords, error } = await supabase
         .from('attendance')
-        .select('id, on_break, check_in, break_start')
+        .select('*')
         .eq('employee_id', employeeId)
         .eq('date', today)
         .eq('active_session', true)

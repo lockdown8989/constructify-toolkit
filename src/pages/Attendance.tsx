@@ -21,7 +21,7 @@ const Attendance = () => {
   
   // For employees, always use their own employee ID
   // For managers/admins/payroll, allow selection of different employees but default to their own
-  const canViewAllEmployees = isAdmin;
+  const canViewAllEmployees = isManager || isAdmin || isHR || isPayroll;
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | undefined>(
     // Default to their own employee ID for everyone initially
     employeeData?.id

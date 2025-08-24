@@ -18,7 +18,6 @@ import { startOfWeek, endOfWeek, formatISO } from 'date-fns';
 import { batchApproveAllPendingRotas } from '@/services/rota-management/rota-auto-confirm';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import LaborHoursCard from '@/components/dashboard/LaborHoursCard';
 
 interface ManagerScheduleControlsProps {
   onCreateShift: () => void;
@@ -240,7 +239,30 @@ const ManagerScheduleControls: React.FC<ManagerScheduleControlsProps> = ({
       </Card>
 
       {/* Labor Hours */}
-      <LaborHoursCard />
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center">
+            <Clock className="h-5 w-5 mr-2" />
+            Labor Hours
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-sm">Scheduled</span>
+              <span className="font-medium">192h</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm">Overtime</span>
+              <span className="font-medium text-orange-600">8h</span>
+            </div>
+            <div className="flex justify-between border-t pt-2">
+              <span className="text-sm font-medium">Labor Cost</span>
+              <span className="font-bold">£4,800</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useEmployees } from '@/hooks/use-employees';
 import { useInterviews } from '@/hooks/use-interviews';
@@ -12,15 +12,12 @@ import DashboardErrorBoundary from '@/components/dashboard/ErrorBoundary';
 import { Loader2 } from 'lucide-react';
 import { useMobileDebugger } from '@/hooks/useMobileDebugger';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { debug } from '@/utils/debug';
-import { usePerformance } from '@/hooks/use-performance';
 
-const Dashboard = React.memo(() => {
+const Dashboard = () => {
   const { isManager, isAdmin, isHR, isPayroll, isEmployee, isLoading: authLoading, user, rolesLoaded } = useAuth();
   const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
   const { data: interviews = [], isLoading: isLoadingInterviews } = useInterviews();
   const isMobile = useIsMobile();
-  const { measureOperation } = usePerformance('Dashboard');
   
   // Enable real-time sync at the dashboard level
   useAttendanceSync();
@@ -28,19 +25,14 @@ const Dashboard = React.memo(() => {
   // Enable mobile debugging
   useMobileDebugger();
 
-  // Memoized first name calculation
-  const firstName = useMemo(() => {
-    return user?.user_metadata?.first_name || 
-           user?.email?.split('@')[0] || 
-           'User';
-  }, [user?.user_metadata?.first_name, user?.email]);
+  // Get user's first name for greeting
+  const firstName = user?.user_metadata?.first_name || 
+                   user?.email?.split('@')[0] || 
+                   'User';
 
-  // Memoized dashboard type calculation
-  const dashboardType = useMemo(() => {
-    const operation = measureOperation('dashboard-type-calculation');
-    operation.start();
-    
-    debug.performance('Dashboard role determination', { 
+  // Determine dashboard type based on role priority - FIXED LOGIC
+  const getDashboardType = () => {
+    console.log("🎯 Dashboard role determination:", { 
       isManager, 
       isAdmin, 
       isHR, 
@@ -51,15 +43,16 @@ const Dashboard = React.memo(() => {
       isMobile
     });
     
-    const type = (isAdmin || isHR || isManager) ? 'manager' : 
-                 isPayroll ? 'payroll' : 'employee';
-    
-    operation.end();
-    return type;
-  }, [isManager, isAdmin, isHR, isPayroll, isEmployee, user?.email, rolesLoaded, isMobile, measureOperation]);
+    // Priority order: admin/hr/manager > payroll > employee
+    if (isAdmin || isHR || isManager) return 'manager';
+    if (isPayroll) return 'payroll';
+    return 'employee';
+  };
+
+  const dashboardType = getDashboardType();
                    
   useEffect(() => {
-    debug.performance('Dashboard role state', { 
+    console.log("📊 Dashboard role state:", { 
       isManager, 
       isAdmin, 
       isHR, 
@@ -74,7 +67,7 @@ const Dashboard = React.memo(() => {
     });
     
     if (user && rolesLoaded) {
-      debug.performance(`Dashboard will show: ${dashboardType} dashboard for user: ${user.email} ${isMobile ? '(mobile)' : '(desktop)'}`);
+      console.log("🎯 Dashboard will show:", dashboardType, "dashboard for user:", user.email, isMobile ? '(mobile)' : '(desktop)');
     }
   }, [user, isManager, isAdmin, isHR, isPayroll, isEmployee, rolesLoaded, dashboardType, isMobile]);
   
@@ -93,31 +86,27 @@ const Dashboard = React.memo(() => {
     );
   }
 
-  // Memoized employee count calculation
-  const employeeCount = useMemo(() => {
-    return (dashboardType === 'manager' || dashboardType === 'payroll')
-      ? employees.filter(emp => emp.user_id !== user?.id).length 
-      : 1;
-  }, [dashboardType, employees, user?.id]);
+  // Count employees excluding the manager themselves (for manager/payroll dashboards)
+  const employeeCount = (dashboardType === 'manager' || dashboardType === 'payroll')
+    ? employees.filter(emp => emp.user_id !== user?.id).length 
+    : 1;
   
-  // Memoized interview statistics calculation
-  const interviewStats = useMemo(() => {
-    if (dashboardType !== 'manager' && dashboardType !== 'payroll') {
-      return { interviews: 0, hired: 0, projectTime: 0, output: 0 };
-    }
-    
-    const interviewList = interviews.filter(i => i.stage === 'Interview');
-    const hiredList = interviews.filter(i => i.stage === 'Hired');
-    
-    return {
-      interviews: interviewList.reduce((acc, i) => acc + i.progress, 0) / Math.max(interviewList.length, 1),
-      hired: hiredList.reduce((acc, i) => acc + i.progress, 0) / Math.max(hiredList.length, 1),
-      projectTime: 15,
-      output: 5
-    };
-  }, [dashboardType, interviews]);
+  // Get interview statistics for manager and payroll dashboards
+  const interviewStats = (dashboardType === 'manager' || dashboardType === 'payroll') ? {
+    interviews: interviews.filter(i => i.stage === 'Interview').reduce((acc, i) => acc + i.progress, 0) / 
+                Math.max(interviews.filter(i => i.stage === 'Interview').length, 1),
+    hired: interviews.filter(i => i.stage === 'Hired').reduce((acc, i) => acc + i.progress, 0) / 
+           Math.max(interviews.filter(i => i.stage === 'Hired').length, 1),
+    projectTime: 15,
+    output: 5
+  } : {
+    interviews: 0,
+    hired: 0,
+    projectTime: 0,
+    output: 0
+  };
 
-  debug.performance(`Final dashboard type decision: ${dashboardType} ${isMobile ? '(mobile)' : '(desktop)'}`);
+  console.log("🎯 Final dashboard type decision:", dashboardType, isMobile ? '(mobile)' : '(desktop)');
 
   return (
     <DashboardErrorBoundary>
@@ -145,8 +134,6 @@ const Dashboard = React.memo(() => {
       </Tabs>
     </DashboardErrorBoundary>
   );
-});
-
-Dashboard.displayName = 'Dashboard';
+};
 
 export default Dashboard;

@@ -60,7 +60,6 @@ const EmployeeHeader: React.FC<EmployeeHeaderProps> = ({
             {employee.name}
           </DialogTitle>
           <p className="text-gray-600 font-medium">{employee.jobTitle}</p>
-          <p className="text-gray-500 text-xs font-mono">Employee ID: {employee.id.substring(0, 8)}</p>
         </div>
 
         {/* Status Badge */}

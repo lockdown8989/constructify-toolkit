@@ -55,7 +55,7 @@ export const useCalendarPreferences = () => {
         // Fetch calendar preferences for this employee
         const { data, error } = await supabase
           .from('calendar_preferences')
-          .select('id, employee_id, default_view, show_weekends, color_scheme, visible_hours, mobile_view_settings, updated_at')
+          .select('*')
           .eq('employee_id', employeeData.id)
           .single();
 

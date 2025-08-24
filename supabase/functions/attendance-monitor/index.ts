@@ -46,24 +46,6 @@ serve(async (req) => {
       console.log('✅ Attendance violations checked successfully');
     }
 
-    // Rota pattern compliance sweep (marks incomplete/missing attendance)
-    console.log('📘 Running rota pattern compliance sweep...');
-    const { error: rotaComplianceError } = await supabase.rpc('check_rota_pattern_compliance');
-    if (rotaComplianceError) {
-      console.error('❌ Error during rota compliance sweep:', rotaComplianceError);
-    } else {
-      console.log('✅ Rota compliance sweep completed');
-    }
-
-    // Auto-update attendance statuses for today based on rota times
-    console.log('🧠 Updating attendance statuses from rota...');
-    const { data: rotaUpdate, error: rotaUpdateError } = await supabase.rpc('update_rota_attendance_statuses');
-    if (rotaUpdateError) {
-      console.error('❌ Error updating attendance statuses:', rotaUpdateError);
-    } else {
-      console.log('✅ Attendance statuses updated:', rotaUpdate);
-    }
-
     // Monitor current sessions for overtime
     console.log('⏰ Monitoring active sessions for overtime...');
     const { data: activeSessions, error: sessionError } = await supabase

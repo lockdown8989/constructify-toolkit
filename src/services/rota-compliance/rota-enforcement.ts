@@ -62,7 +62,6 @@ export const generateComplianceReport = async (): Promise<RotaComplianceReport> 
         )
       `)
       .not('template_id', 'is', null) // Only rota pattern schedules
-      .in('status', ['confirmed', 'employee_accepted']) // Align with enforcement scope
       .gte('start_time', startDate.toISOString())
       .lte('start_time', endDate.toISOString());
 

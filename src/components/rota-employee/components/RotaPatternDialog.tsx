@@ -215,41 +215,6 @@ export const RotaPatternDialog: React.FC<RotaPatternDialogProps> = ({
             </div>
           </div>
 
-          {/* Days of Week: Monday to Sunday */}
-          <div className="space-y-2">
-            <Label className="text-base font-medium">Days of Week</Label>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { label: 'Mon', value: 1 },
-                { label: 'Tue', value: 2 },
-                { label: 'Wed', value: 3 },
-                { label: 'Thu', value: 4 },
-                { label: 'Fri', value: 5 },
-                { label: 'Sat', value: 6 },
-                { label: 'Sun', value: 0 },
-              ].map(({ label, value }) => {
-                const selected = (formData.days_of_week || []).includes(value);
-                return (
-                  <Button
-                    key={value}
-                    type="button"
-                    variant={selected ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => {
-                      const current = formData.days_of_week || [];
-                      const updated = selected
-                        ? current.filter((d) => d !== value)
-                        : [...current, value].sort((a, b) => a - b);
-                      onFormDataChange({ ...formData, days_of_week: updated });
-                    }}
-                  >
-                    {label}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-
           <div className="space-y-4 border-t pt-4">
             <Label className="text-base font-medium">Assign Employees to Rota</Label>
             

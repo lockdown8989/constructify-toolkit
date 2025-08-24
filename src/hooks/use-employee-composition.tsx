@@ -58,7 +58,7 @@ export const useEmployeeComposition = () => {
         // Check if we already have a record
         const { data: existingRecord } = await supabase
           .from('employee_composition')
-          .select('id, total_employees, male_percentage, female_percentage, updated_at')
+          .select('*')
           .order('updated_at', { ascending: false })
           .limit(1);
         
@@ -107,7 +107,7 @@ export const useEmployeeComposition = () => {
       try {
         const { data, error } = await supabase
           .from('employee_composition')
-          .select('id, total_employees, male_percentage, female_percentage, updated_at')
+          .select('*')
           .order('updated_at', { ascending: false })
           .limit(1);
         
@@ -144,9 +144,6 @@ export const useEmployeeComposition = () => {
         };
       }
     },
-    // Static-ish data: cache aggressively
-    staleTime: 1000 * 60 * 60 * 6, // 6 hours
-    gcTime: 1000 * 60 * 60 * 24,    // 24 hours
-    refetchOnWindowFocus: false,
+    refetchInterval: 60000, // Refetch every minute
   });
 };

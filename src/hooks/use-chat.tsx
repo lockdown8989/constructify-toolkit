@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 
@@ -321,14 +321,13 @@ export const useChat = () => {
     try {
       setIsTyping(true);
 
-      // Use last 10 messages to provide context
-      const conversationHistory = messages.slice(-10);
+      // Get conversation history for context (use current messages or empty array)
+      const conversationHistory = messages.slice(-10); // Last 10 messages for context
 
       const { data, error } = await supabase.functions.invoke('chat-ai-assistant', {
         body: {
-          message: content.trim(),
-          conversationHistory,
-        },
+          message: content.trim()
+        }
       });
 
       if (error) {
@@ -336,61 +335,11 @@ export const useChat = () => {
         throw error;
       }
 
-      const aiText = (data?.response || '').trim();
-      if (!aiText) throw new Error('No response from AI');
-
-      // If we have an active chat, persist the AI response to the DB
-      if (currentChat) {
-        // Persist AI reply
-        const insertPayload: any = {
-          chat_id: currentChat.id,
-          // We store current employee id to satisfy schema, and rely on sender_type to render AI properly
-          sender_id: currentEmployee.id,
-          content: aiText,
-          message_type: 'ai_response',
-          sender_type: 'ai_bot',
-        };
-
-        const { data: savedAi, error: saveErr } = await supabase
-          .from('messages')
-          .insert(insertPayload)
-          .select(`
-            *,
-            sender:employees(id, name, avatar_url)
-          `)
-          .single();
-
-        if (saveErr) {
-          console.error('Chat: Error saving AI message:', saveErr);
-        }
-
-        // Display with explicit AI identity for UI
-        const aiLocal: ChatMessage = {
-          ...(savedAi as any) || {
-            id: crypto.randomUUID(),
-            chat_id: currentChat.id,
-            sender_id: 'ai-bot' as any,
-            content: aiText,
-            message_type: 'ai_response',
-            sender_type: 'ai_bot',
-            is_read: true,
-            created_at: new Date().toISOString(),
-          },
-          sender: { id: 'ai-bot', name: 'AI Assistant', avatar_url: undefined },
-        };
-
-        setMessages((prev) => [...prev, aiLocal]);
-
-        // Update chat timestamps
-        await supabase
-          .from('chats')
-          .update({ last_message_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-          .eq('id', currentChat.id);
-
-        return;
+      if (!data?.response) {
+        throw new Error('No response from AI');
       }
 
-      // No active chat: keep local-only experience for AI
+      // For standalone AI chat, create temporary message objects
       const userMessage: ChatMessage = {
         id: crypto.randomUUID(),
         chat_id: 'ai-standalone',
@@ -403,131 +352,32 @@ export const useChat = () => {
         sender: {
           id: currentEmployee.id,
           name: currentEmployee.name,
-          avatar_url: currentEmployee.avatar_url,
-        },
+          avatar_url: currentEmployee.avatar_url
+        }
       };
 
       const aiMessage: ChatMessage = {
         id: crypto.randomUUID(),
         chat_id: 'ai-standalone',
         sender_id: 'ai-bot',
-        content: aiText,
+        content: data.response,
         message_type: 'ai_response',
         sender_type: 'ai_bot',
         is_read: true,
         created_at: new Date().toISOString(),
-        sender: { id: 'ai-bot', name: 'AI Assistant', avatar_url: undefined },
+        sender: {
+          id: 'ai-bot',
+          name: 'AI Assistant',
+          avatar_url: undefined
+        }
       };
 
-      setMessages((prev) => [...prev, userMessage, aiMessage]);
+      // Add both messages to local state
+      setMessages(prev => [...prev, userMessage, aiMessage]);
+
     } catch (error) {
       console.error('Error sending AI message:', error);
       toast.error('Failed to get AI response');
-
-      // Always show the user's message first when there is no chat context
-      if (!currentChat) {
-        const userMessage: ChatMessage = {
-          id: crypto.randomUUID(),
-          chat_id: 'ai-standalone',
-          sender_id: currentEmployee.id,
-          content: content.trim(),
-          message_type: 'text',
-          sender_type: ['admin', 'employer', 'hr'].includes(userRole) ? 'human_admin' : 'human_employee',
-          is_read: true,
-          created_at: new Date().toISOString(),
-          sender: {
-            id: currentEmployee.id,
-            name: currentEmployee.name,
-            avatar_url: currentEmployee.avatar_url,
-          },
-        };
-
-        // Try a direct fetch fallback to the Edge Function (some environments block invoke)
-        try {
-          const conversationHistory = messages.slice(-10);
-          const res = await fetch(`${SUPABASE_URL}/functions/v1/chat-ai-assistant`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-            },
-            body: JSON.stringify({ message: content.trim(), conversationHistory }),
-          });
-
-          const json = await res.json().catch(() => null);
-          if (res.ok && json?.response) {
-            const aiMessage: ChatMessage = {
-              id: crypto.randomUUID(),
-              chat_id: 'ai-standalone',
-              sender_id: 'ai-bot',
-              content: json.response,
-              message_type: 'ai_response',
-              sender_type: 'ai_bot',
-              is_read: true,
-              created_at: new Date().toISOString(),
-              sender: { id: 'ai-bot', name: 'AI Assistant', avatar_url: undefined },
-            };
-            setMessages((prev) => [...prev, userMessage, aiMessage]);
-            return;
-          }
-        } catch (directErr) {
-          console.error('Direct edge function fetch failed:', directErr);
-        }
-
-        const aiFallback: ChatMessage = {
-          id: crypto.randomUUID(),
-          chat_id: 'ai-standalone',
-          sender_id: 'ai-bot',
-          content:
-            "I'm having trouble reaching the AI service right now, but I still understood your request. Try again in a moment or be more specific (date, shift times, employee).",
-          message_type: 'ai_response',
-          sender_type: 'ai_bot',
-          is_read: true,
-          created_at: new Date().toISOString(),
-          sender: { id: 'ai-bot', name: 'AI Assistant', avatar_url: undefined },
-        };
-
-        setMessages((prev) => [...prev, userMessage, aiFallback]);
-      } else {
-        // If we do have a chat but AI failed, store a graceful fallback message in DB
-        const fallbackText =
-          "I'm having trouble reaching the AI service right now. Please try again in a moment.";
-        const insertPayload: any = {
-          chat_id: currentChat.id,
-          sender_id: currentEmployee.id,
-          content: fallbackText,
-          message_type: 'ai_response',
-          sender_type: 'ai_bot',
-        };
-        const { data: savedFallback } = await supabase
-          .from('messages')
-          .insert(insertPayload)
-          .select(`
-            *,
-            sender:employees(id, name, avatar_url)
-          `)
-          .single();
-
-        const aiLocal: ChatMessage = {
-          ...(savedFallback as any) || {
-            id: crypto.randomUUID(),
-            chat_id: currentChat.id,
-            sender_id: 'ai-bot' as any,
-            content: fallbackText,
-            message_type: 'ai_response',
-            sender_type: 'ai_bot',
-            is_read: true,
-            created_at: new Date().toISOString(),
-          },
-          sender: { id: 'ai-bot', name: 'AI Assistant', avatar_url: undefined },
-        };
-        setMessages((prev) => [...prev, aiLocal]);
-
-        await supabase
-          .from('chats')
-          .update({ last_message_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-          .eq('id', currentChat.id);
-      }
     } finally {
       setIsTyping(false);
     }
