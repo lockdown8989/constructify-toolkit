@@ -76,7 +76,7 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
           .eq("user_id", user.id)
           .maybeSingle();
 
-        const userIsManager = roleData?.role === 'employer' || roleData?.role === 'admin' || roleData?.role === 'hr' || roleData?.role === 'manager' || employeeData?.role === 'manager';
+        const userIsManager = roleData?.role === 'admin' || roleData?.role === 'hr' || employeeData?.role === 'manager';
         setIsManager(userIsManager);
 
         if (profileData) {
@@ -123,6 +123,7 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
           last_name: profile.last_name,
           position: profile.position,
           department: profile.department,
+          avatar_url: profile.avatar_url,
           updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
