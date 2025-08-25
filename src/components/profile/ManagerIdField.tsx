@@ -19,19 +19,58 @@ export const ManagerIdField = ({ managerId, onChange, isManager, isEditable = fa
     if (managerId) {
       navigator.clipboard.writeText(managerId);
       toast({
-        title: "Manager ID copied",
-        description: "Manager ID has been copied to clipboard",
+        title: "Administrator ID copied",
+        description: "Administrator ID has been copied to clipboard",
       });
     }
   };
   
-  // Don't render this component if the ID is already shown prominently (for managers)
-  if (isManager && managerId) return null;
+  // Show manager ID prominently for administrators/managers
+  if (isManager && managerId) {
+    return (
+      <div className="space-y-2">
+        <Label className="text-lg font-semibold text-primary">Your Administrator ID</Label>
+        <div className="flex items-center p-4 bg-primary/5 border border-primary/20 rounded-lg">
+          <Input
+            value={managerId}
+            disabled
+            className="font-mono text-lg font-semibold bg-transparent border-0 text-primary"
+          />
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="ml-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground" 
+            onClick={copyManagerId}
+            title="Copy Administrator ID"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+        </div>
+        <p className="text-sm text-primary/80 font-medium">
+          Share this ID with your employees to connect them to your account
+        </p>
+      </div>
+    );
+  }
+
+  // For administrators without an ID, show information message
+  if (isManager && !managerId) {
+    return (
+      <div className="space-y-2">
+        <Label className="text-lg font-semibold text-primary">Your Administrator ID</Label>
+        <div className="p-4 bg-muted/50 border border-muted-foreground/20 rounded-lg">
+          <p className="text-muted-foreground">
+            No Administrator ID generated yet. Use the section below to generate your ID, or save your profile first.
+          </p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-2">
       <Label htmlFor="manager_id">
-        {isManager ? "Your Manager ID" : "Your Manager's ID"}
+        {isManager ? "Your Administrator ID" : "Your Administrator's ID"}
       </Label>
       <div className="flex">
         <Input
@@ -41,7 +80,7 @@ export const ManagerIdField = ({ managerId, onChange, isManager, isEditable = fa
           onChange={onChange}
           disabled={!isEditable}
           className={`${!isEditable ? 'bg-gray-100' : ''} ${isManager ? 'font-mono' : ''}`}
-          placeholder={isManager && !managerId ? "Loading or generating ID..." : isEditable ? "Enter your manager's ID (e.g., MGR-12345)" : "Not available"}
+          placeholder={isManager && !managerId ? "Loading or generating ID..." : isEditable ? "Enter your administrator's ID (e.g., ADM-12345)" : "Not available"}
         />
         {isManager && managerId && (
           <Button 
@@ -49,7 +88,7 @@ export const ManagerIdField = ({ managerId, onChange, isManager, isEditable = fa
             variant="outline" 
             className="ml-2" 
             onClick={copyManagerId}
-            title="Copy Manager ID"
+            title="Copy Administrator ID"
           >
             <Copy className="h-4 w-4" />
           </Button>
@@ -59,15 +98,15 @@ export const ManagerIdField = ({ managerId, onChange, isManager, isEditable = fa
         <p className="text-xs text-gray-500">
           {managerId 
             ? "Share this ID with your employees to connect them to your account" 
-            : "Save your profile first to generate a Manager ID"}
+            : "Save your profile first to generate an Administrator ID"}
         </p>
       ) : (
         <p className="text-xs text-gray-500">
           {isEditable
-            ? "Enter your manager's ID to connect to their account"
+            ? "Enter your administrator's ID to connect to their account"
             : managerId 
-              ? "This is the ID of your manager's account" 
-              : "No manager connected to your account"}
+              ? "This is the ID of your administrator's account" 
+              : "No administrator connected to your account"}
         </p>
       )}
     </div>

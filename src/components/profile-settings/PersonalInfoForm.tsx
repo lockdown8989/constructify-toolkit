@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { ManagerIdField } from "@/components/profile/ManagerIdField";
+import { ManagerIdSection } from "@/components/profile/ManagerIdSection";
 
 interface PersonalInfoFormProps {
   user: User | null;
@@ -75,7 +76,7 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
           .eq("user_id", user.id)
           .maybeSingle();
 
-        const userIsManager = roleData?.role === 'employer' || roleData?.role === 'admin' || roleData?.role === 'hr' || employeeData?.role === 'manager';
+        const userIsManager = roleData?.role === 'employer' || roleData?.role === 'admin' || roleData?.role === 'hr' || roleData?.role === 'manager' || employeeData?.role === 'manager';
         setIsManager(userIsManager);
 
         if (profileData) {
@@ -135,17 +136,57 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
         return;
       }
 
-      // Update employee data if manager_id changed
-      if (profile.manager_id !== null) {
+      // Update or create employee data
+      const { data: existingEmployee } = await supabase
+        .from("employees")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (existingEmployee) {
+        // Update existing employee record
+        const updateData: any = {};
+        if (profile.manager_id !== null) {
+          updateData.manager_id = profile.manager_id;
+        }
+        if (profile.first_name && profile.last_name) {
+          updateData.name = `${profile.first_name} ${profile.last_name}`.trim();
+        }
+        if (profile.position) {
+          updateData.job_title = profile.position;
+        }
+        if (profile.department) {
+          updateData.department = profile.department;
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          const { error: employeeError } = await supabase
+            .from("employees")
+            .update(updateData)
+            .eq("user_id", user.id);
+
+          if (employeeError) {
+            console.error("Error updating employee data:", employeeError);
+          }
+        }
+      } else {
+        // Create new employee record if one doesn't exist
         const { error: employeeError } = await supabase
           .from("employees")
-          .update({
+          .insert({
+            user_id: user.id,
+            name: `${profile.first_name} ${profile.last_name}`.trim() || user.email?.split('@')[0] || 'User',
+            job_title: profile.position || 'Employee',
+            department: profile.department || 'General',
+            site: 'Main Office',
             manager_id: profile.manager_id,
-          })
-          .eq("user_id", user.id);
+            status: 'Active',
+            lifecycle: 'Active',
+            salary: 0,
+          });
 
         if (employeeError) {
-          console.error("Error updating employee manager_id:", employeeError);
+          console.error("Error creating employee record:", employeeError);
         }
       }
 
@@ -269,6 +310,14 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
           isManager={isManager}
           isEditable={!isManager}
         />
+
+        {/* Manager ID Generation Section for administrators without ID */}
+        {isManager && !profile.manager_id && (
+          <ManagerIdSection 
+            managerId={profile.manager_id} 
+            isManager={isManager}
+          />
+        )}
       </CardContent>
       
       <CardFooter className="border-t bg-muted/10 p-6">

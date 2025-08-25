@@ -18,8 +18,8 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
     if (managerId) {
       navigator.clipboard.writeText(managerId);
       toast({
-        title: "Manager ID copied",
-        description: "Manager ID has been copied to clipboard",
+        title: "Administrator ID copied",
+        description: "Administrator ID has been copied to clipboard",
       });
     }
   };
@@ -27,10 +27,10 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
   const generateManagerId = async () => {
     setIsRegenerating(true);
     try {
-      // Generate a new manager ID with format MGR-XXXXX
+      // Generate a new administrator ID with format ADM-XXXXX
       const randomPart = Math.floor(10000 + Math.random() * 90000); // 5-digit number
-      const newManagerId = `MGR-${randomPart}`;
-      console.log(`Generated new manager ID: ${newManagerId}`);
+      const newManagerId = `ADM-${randomPart}`;
+      console.log(`Generated new administrator ID: ${newManagerId}`);
 
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) {
@@ -93,8 +93,8 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
               .filter(emp => emp.user_id) // Only send to employees with user accounts
               .map(emp => ({
                 user_id: emp.user_id,
-                title: "Manager ID Updated",
-                message: `Your manager has updated their ID to ${newManagerId}. Your connection has been automatically maintained.`,
+                title: "Administrator ID Updated",
+                message: `Your administrator has updated their ID to ${newManagerId}. Your connection has been automatically maintained.`,
                 type: "info",
                 related_entity: "profile",
               }));
@@ -105,18 +105,18 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
 
             toast({
               title: "Success",
-              description: `Manager ID updated to ${newManagerId}. ${connectedEmployees.length} connected employees have been automatically updated.`,
+              description: `Administrator ID updated to ${newManagerId}. ${connectedEmployees.length} connected employees have been automatically updated.`,
             });
           } else {
             toast({
               title: "Success",
-              description: `Manager ID updated to ${newManagerId}.`,
+              description: `Administrator ID updated to ${newManagerId}.`,
             });
           }
         } else {
           toast({
             title: "Success",
-            description: `Manager ID generated: ${newManagerId}`,
+            description: `Administrator ID generated: ${newManagerId}`,
           });
         }
       } else {
@@ -154,7 +154,7 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
 
         toast({
           title: "Success",
-          description: `Manager ID generated: ${newManagerId}`,
+          description: `Administrator ID generated: ${newManagerId}`,
         });
       }
       
@@ -167,7 +167,7 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
       console.error("Error generating manager ID:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to generate Manager ID. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to generate Administrator ID. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -178,18 +178,18 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
   if (!isManager) return null;
   
   return (
-    <div className="p-4 mb-4 bg-blue-50 border border-blue-200 rounded-md">
-      <h3 className="text-lg font-medium text-blue-800 mb-1">Your Manager ID</h3>
+    <div className="p-4 mb-4 bg-primary/5 border border-primary/20 rounded-lg">
+      <h3 className="text-lg font-medium text-primary mb-1">Your Administrator ID</h3>
       {managerId ? (
         <>
           <div className="flex items-center">
-            <span className="font-mono text-lg text-blue-700 mr-2">{managerId}</span>
+            <span className="font-mono text-lg text-primary mr-2">{managerId}</span>
             <Button 
               type="button" 
               variant="outline" 
               size="sm"
               onClick={copyManagerId}
-              title="Copy Manager ID"
+              title="Copy Administrator ID"
               className="h-8 mr-2"
             >
               <Copy className="h-4 w-4" />
@@ -206,13 +206,13 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
               <RefreshCw className={`h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
             </Button>
           </div>
-          <p className="text-sm text-blue-600 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Share this ID with your employees to connect them to your account. When you refresh this ID, all connected employees will be automatically updated.
           </p>
         </>
       ) : (
         <div className="flex flex-col">
-          <p className="text-blue-600 mb-2">No Manager ID found. Generate one now:</p>
+          <p className="text-muted-foreground mb-2">No Administrator ID found. Generate one now:</p>
           <Button 
             type="button"
             variant="default"
@@ -229,7 +229,7 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
             ) : (
               <>
                 <Plus className="h-4 w-4 mr-2" />
-                Generate Manager ID
+                Generate Administrator ID
               </>
             )}
           </Button>
