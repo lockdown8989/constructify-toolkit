@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { ManagerIdField } from "@/components/profile/ManagerIdField";
-import { ManagerIdSection } from "@/components/profile/ManagerIdSection";
+import { AdminIdGenerator } from "@/components/profile/AdminIdGenerator";
 
 interface PersonalInfoFormProps {
   user: User | null;
@@ -32,6 +32,7 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
     avatar_url: null as string | null,
     manager_id: null as string | null,
   });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -97,15 +98,30 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
     };
 
     fetchProfileData();
+    
+    // Listen for Administrator ID updates
+    const handleAdminIdUpdate = (event: CustomEvent) => {
+      const { newManagerId } = event.detail;
+      setProfile(prev => ({ ...prev, manager_id: newManagerId }));
+      setHasUnsavedChanges(false);
+    };
+    
+    window.addEventListener('adminIdUpdated', handleAdminIdUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('adminIdUpdated', handleAdminIdUpdate as EventListener);
+    };
   }, [user, toast]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
+    setHasUnsavedChanges(true);
   };
 
   const handleAvatarChange = (url: string | null) => {
     setProfile((prev) => ({ ...prev, avatar_url: url }));
+    setHasUnsavedChanges(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -191,6 +207,7 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
         }
       }
 
+      setHasUnsavedChanges(false);
       toast({
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
@@ -314,24 +331,46 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
 
         {/* Manager ID Generation Section for administrators without ID */}
         {isManager && !profile.manager_id && (
-          <ManagerIdSection 
-            managerId={profile.manager_id} 
-            isManager={isManager}
-          />
+          <>
+            <Separator />
+            <AdminIdGenerator 
+              managerId={profile.manager_id} 
+              isManager={isManager}
+              onIdGenerated={(newId) => {
+                setProfile(prev => ({ ...prev, manager_id: newId }));
+                setHasUnsavedChanges(false);
+              }}
+            />
+          </>
         )}
       </CardContent>
       
       <CardFooter className="border-t bg-muted/10 p-6">
-        <Button type="submit" className="ml-auto" disabled={isSaving}>
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t('saving')}
-            </>
-          ) : (
-            t('saveChanges')
+        <div className="flex items-center justify-between w-full">
+          {hasUnsavedChanges && (
+            <span className="text-sm text-amber-600 font-medium">
+              You have unsaved changes
+            </span>
           )}
-        </Button>
+          <Button 
+            type="submit" 
+            className={`${hasUnsavedChanges ? 'ml-auto' : 'w-full'}`} 
+            disabled={isSaving}
+            variant={hasUnsavedChanges ? "default" : "secondary"}
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t('saving')}
+              </>
+            ) : (
+              <>
+                {t('saveChanges')}
+                {hasUnsavedChanges && <span className="ml-2 text-xs">•</span>}
+              </>
+            )}
+          </Button>
+        </div>
       </CardFooter>
     </form>
   );

@@ -64,11 +64,15 @@ export const useSignUpSubmit = ({
         return;
       }
       
-      // Validate manager ID format for employees and payroll users
-      if ((userRole === 'employee' || userRole === 'payroll') && managerId && !managerId.startsWith('MGR-')) {
-        setSignUpError("Invalid Manager ID format. Manager IDs must start with 'MGR-'");
-        setIsLoading(false);
-        return;
+      // Validate manager ID format for employees and payroll users - support both ADM- and MGR- formats
+      if ((userRole === 'employee' || userRole === 'payroll') && managerId) {
+        const { data: isValid, error: validationError } = await supabase.rpc('validate_admin_id', { p_admin_id: managerId });
+        
+        if (validationError || !isValid) {
+          setSignUpError("Invalid Administrator ID format. Administrator IDs must be in ADM-#### or MGR-#### format (e.g., ADM-1234 or MGR-5678)");
+          setIsLoading(false);
+          return;
+        }
       }
       
       // Create proper metadata object for Supabase
@@ -155,20 +159,45 @@ export const useSignUpSubmit = ({
         
         // Show appropriate success message based on role
         if (userRole === 'admin') {
-          toast({
-            title: "Success",
-            description: `Admin account created. Your Admin ID is ${managerId}. Share this with your employees to connect them to your account.`,
-            duration: 6000,
-          });
+          // Generate Administrator ID for new admins
+          try {
+            const { data: newManagerId, error: rpcError } = await supabase.rpc('generate_admin_id');
+            
+            if (!rpcError && newManagerId) {
+              // Update the user's employee record with the new Administrator ID
+              await supabase
+                .from("employees")
+                .update({ manager_id: newManagerId })
+                .eq("user_id", result.data.user.id);
+                
+              toast({
+                title: "Success",
+                description: `Admin account created. Your Administrator ID is ${newManagerId}. Share this with your employees to connect them to your account.`,
+                duration: 8000,
+              });
+            } else {
+              toast({
+                title: "Success",
+                description: "Admin account created. You can generate your Administrator ID from your profile.",
+                duration: 6000,
+              });
+            }
+          } catch (error) {
+            toast({
+              title: "Success",
+              description: "Admin account created. You can generate your Administrator ID from your profile.",
+              duration: 6000,
+            });
+          }
         } else if (userRole === 'payroll' && managerId) {
           toast({
             title: "Success", 
-            description: `Payroll account created and linked to manager with ID ${managerId}.`,
+            description: `Payroll account created and linked to administrator with ID ${managerId}.`,
           });
         } else if (userRole === 'employee' && managerId) {
           toast({
             title: "Success", 
-            description: `Account created and linked to your manager with ID ${managerId}.`,
+            description: `Account created and linked to your administrator with ID ${managerId}.`,
           });
         } else {
           toast({

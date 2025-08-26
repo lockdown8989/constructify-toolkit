@@ -2613,8 +2613,10 @@ export type Database = {
           stripe_customer_id: string | null
           subscribed: boolean
           subscription_end: string | null
+          subscription_is_trial: boolean | null
           subscription_status: string | null
           subscription_tier: string | null
+          subscription_trial_end: string | null
           updated_at: string
           user_id: string | null
         }
@@ -2626,8 +2628,10 @@ export type Database = {
           stripe_customer_id?: string | null
           subscribed?: boolean
           subscription_end?: string | null
+          subscription_is_trial?: boolean | null
           subscription_status?: string | null
           subscription_tier?: string | null
+          subscription_trial_end?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -2639,8 +2643,10 @@ export type Database = {
           stripe_customer_id?: string | null
           subscribed?: boolean
           subscription_end?: string | null
+          subscription_is_trial?: boolean | null
           subscription_status?: string | null
           subscription_tier?: string | null
+          subscription_trial_end?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -3011,6 +3017,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
+      generate_admin_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_manager_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -3162,6 +3172,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      validate_admin_id: {
+        Args: { p_admin_id: string }
+        Returns: boolean
       }
       validate_manager_id_strict: {
         Args: { p_manager_id: string }

@@ -27,9 +27,14 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
   const generateManagerId = async () => {
     setIsRegenerating(true);
     try {
-      // Generate a new administrator ID with format ADM-XXXXX
-      const randomPart = Math.floor(10000 + Math.random() * 90000); // 5-digit number
-      const newManagerId = `ADM-${randomPart}`;
+      // Use the database RPC function to generate a unique Administrator ID
+      const { data: newManagerId, error: rpcError } = await supabase.rpc('generate_admin_id');
+      
+      if (rpcError) {
+        console.error("Error generating Administrator ID:", rpcError);
+        throw new Error("Failed to generate unique Administrator ID");
+      }
+      
       console.log(`Generated new administrator ID: ${newManagerId}`);
 
       const { data: userData } = await supabase.auth.getUser();
@@ -158,10 +163,17 @@ export const ManagerIdSection = ({ managerId, isManager }: ManagerIdSectionProps
         });
       }
       
-      // Reload the page after a short delay to reflect the changes
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      // Instead of reloading, trigger a re-render by updating parent state
+      // The parent component should handle the state update
+      toast({
+        title: "Refreshing",
+        description: "Updating your profile with the new Administrator ID...",
+      });
+      
+      // Trigger a custom event to notify parent components
+      window.dispatchEvent(new CustomEvent('adminIdUpdated', { 
+        detail: { newManagerId } 
+      }));
       
     } catch (error) {
       console.error("Error generating manager ID:", error);

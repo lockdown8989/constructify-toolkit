@@ -2,8 +2,9 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Copy } from "lucide-react";
+import { Copy, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface ManagerIdFieldProps {
   managerId: string | null;
@@ -14,14 +15,25 @@ interface ManagerIdFieldProps {
 
 export const ManagerIdField = ({ managerId, onChange, isManager, isEditable = false }: ManagerIdFieldProps) => {
   const { toast } = useToast();
+  const [justCopied, setJustCopied] = useState(false);
   
-  const copyManagerId = () => {
+  const copyManagerId = async () => {
     if (managerId) {
-      navigator.clipboard.writeText(managerId);
-      toast({
-        title: "Administrator ID copied",
-        description: "Administrator ID has been copied to clipboard",
-      });
+      try {
+        await navigator.clipboard.writeText(managerId);
+        setJustCopied(true);
+        toast({
+          title: "Administrator ID copied",
+          description: "Administrator ID has been copied to clipboard",
+        });
+        setTimeout(() => setJustCopied(false), 2000);
+      } catch (error) {
+        toast({
+          title: "Copy failed",
+          description: "Unable to copy to clipboard",
+          variant: "destructive",
+        });
+      }
     }
   };
   
@@ -42,8 +54,13 @@ export const ManagerIdField = ({ managerId, onChange, isManager, isEditable = fa
             className="ml-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground" 
             onClick={copyManagerId}
             title="Copy Administrator ID"
+            disabled={justCopied}
           >
-            <Copy className="h-4 w-4" />
+            {justCopied ? (
+              <CheckCircle className="h-4 w-4 text-green-600" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
           </Button>
         </div>
         <p className="text-sm text-primary/80 font-medium">
@@ -80,7 +97,7 @@ export const ManagerIdField = ({ managerId, onChange, isManager, isEditable = fa
           onChange={onChange}
           disabled={!isEditable}
           className={`${!isEditable ? 'bg-gray-100' : ''} ${isManager ? 'font-mono' : ''}`}
-          placeholder={isManager && !managerId ? "Loading or generating ID..." : isEditable ? "Enter your administrator's ID (e.g., ADM-12345)" : "Not available"}
+          placeholder={isManager && !managerId ? "Loading or generating ID..." : isEditable ? "Enter Administrator's ID (ADM-#### or MGR-####)" : "Not available"}
         />
         {isManager && managerId && (
           <Button 
@@ -89,8 +106,13 @@ export const ManagerIdField = ({ managerId, onChange, isManager, isEditable = fa
             className="ml-2" 
             onClick={copyManagerId}
             title="Copy Administrator ID"
+            disabled={justCopied}
           >
-            <Copy className="h-4 w-4" />
+            {justCopied ? (
+              <CheckCircle className="h-4 w-4 text-green-600" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
           </Button>
         )}
       </div>
