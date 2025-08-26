@@ -109,6 +109,8 @@ serve(async (req) => {
       subscribed,
       subscription_tier: subscriptionTier,
       subscription_end: subscriptionEnd,
+      subscription_is_trial: false, // Add missing trial field
+      subscription_trial_end: null, // Add missing trial end field
       updated_at: new Date().toISOString(),
     };
 

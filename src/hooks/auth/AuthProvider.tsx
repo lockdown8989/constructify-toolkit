@@ -99,6 +99,7 @@ const refreshSubscription = async () => {
         const { data: subRow } = await supabase
           .from('subscribers')
           .select('subscribed, subscription_tier, subscription_end, subscription_is_trial, subscription_trial_end')
+          .eq('user_id', session.user.id)
           .maybeSingle();
         if (subRow) data = subRow as any;
       } catch {}
