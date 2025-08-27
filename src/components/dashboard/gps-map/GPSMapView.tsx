@@ -44,24 +44,58 @@ const GPSMapView: React.FC<GPSMapViewProps> = ({
     // Create a simple map placeholder since we don't have Google Maps
     // This would be replaced with actual map implementation
     const mapContainer = mapRef.current;
-    mapContainer.innerHTML = `
-      <div class="w-full h-full bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center relative overflow-hidden">
-        <div class="absolute inset-0 opacity-10">
-          <svg viewBox="0 0 100 100" class="w-full h-full">
-            <defs>
-              <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#94a3b8" stroke-width="0.5"/>
-              </pattern>
-            </defs>
-            <rect width="100" height="100" fill="url(#grid)" />
-          </svg>
-        </div>
-        <div class="text-center z-10">
-          <div class="text-lg font-semibold text-gray-600 mb-2">Interactive Map View</div>
-          <div class="text-sm text-gray-500">GPS restrictions and employee locations</div>
-        </div>
-      </div>
-    `;
+    
+    // Secure DOM creation without innerHTML to prevent XSS
+    const mapDiv = document.createElement('div');
+    mapDiv.className = 'w-full h-full bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center relative overflow-hidden';
+    
+    const backgroundDiv = document.createElement('div');
+    backgroundDiv.className = 'absolute inset-0 opacity-10';
+    
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 100 100');
+    svg.setAttribute('class', 'w-full h-full');
+    
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    const pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+    pattern.setAttribute('id', 'grid');
+    pattern.setAttribute('width', '10');
+    pattern.setAttribute('height', '10');
+    pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+    
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M 10 0 L 0 0 0 10');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', '#94a3b8');
+    path.setAttribute('stroke-width', '0.5');
+    
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('width', '100');
+    rect.setAttribute('height', '100');
+    rect.setAttribute('fill', 'url(#grid)');
+    
+    pattern.appendChild(path);
+    defs.appendChild(pattern);
+    svg.appendChild(defs);
+    svg.appendChild(rect);
+    backgroundDiv.appendChild(svg);
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'text-center z-10';
+    
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'text-lg font-semibold text-gray-600 mb-2';
+    titleDiv.textContent = 'Interactive Map View';
+    
+    const subtitleDiv = document.createElement('div');
+    subtitleDiv.className = 'text-sm text-gray-500';
+    subtitleDiv.textContent = 'GPS restrictions and employee locations';
+    
+    contentDiv.appendChild(titleDiv);
+    contentDiv.appendChild(subtitleDiv);
+    mapDiv.appendChild(backgroundDiv);
+    mapDiv.appendChild(contentDiv);
+    mapContainer.appendChild(mapDiv);
 
     // Add restriction markers
     restrictions.forEach((restriction, index) => {

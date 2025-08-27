@@ -67,7 +67,7 @@ const Dashboard = () => {
     });
     
     if (user && rolesLoaded) {
-      console.log("🎯 Dashboard will show:", dashboardType, "dashboard for user:", user.email, isMobile ? '(mobile)' : '(desktop)');
+      console.log("🎯 Dashboard will show:", dashboardType, "dashboard", isMobile ? '(mobile)' : '(desktop)');
     }
   }, [user, isManager, isAdmin, isHR, isPayroll, isEmployee, rolesLoaded, dashboardType, isMobile]);
   

@@ -60,7 +60,7 @@ export const useSignInForm = ({ onSignIn }: UseSignInFormProps = {}) => {
         }
       } else if (result?.data?.user) {
         // Successful sign in - redirect will be handled by auth provider
-        console.log("✅ Sign in successful for:", result.data.user.email);
+        console.log("✅ Sign in successful");
         setErrorMessage(""); // Clear any previous errors
       }
     } catch (error) {

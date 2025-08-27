@@ -54,7 +54,7 @@ export const useAuthPage = () => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('🔐 Auth page sign in attempt for:', email);
+      console.log('🔐 Auth page sign in attempt');
       const result = await authSignIn(email, password);
       
       if (result?.error) {
@@ -88,7 +88,7 @@ export const useAuthPage = () => {
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
-      console.log('📝 Auth page sign up attempt for:', email);
+      console.log('📝 Auth page sign up attempt');
       const result = await authSignUp(email, password, { first_name: firstName, last_name: lastName });
       
       if (result?.error) {

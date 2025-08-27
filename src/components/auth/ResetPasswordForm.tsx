@@ -33,7 +33,7 @@ export const ResetPasswordForm = ({ onBackToSignIn }: ResetPasswordFormProps) =>
     }
     
     try {
-      console.log("Starting password reset for email:", email);
+      console.log("Starting password reset request");
       const { error } = await resetPassword(email);
       
       if (error) {

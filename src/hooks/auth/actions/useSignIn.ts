@@ -30,7 +30,7 @@ export const useSignIn = () => {
         };
       }
       
-      console.log("🔐 Attempting sign in for:", trimmedEmail);
+      console.log("🔐 Attempting sign in");
       
       const { data, error } = await supabase.auth.signInWithPassword({ 
         email: trimmedEmail, 
@@ -75,7 +75,7 @@ export const useSignIn = () => {
         
         return { error, data: undefined };
       } else {
-        console.log("✅ Sign in successful for:", trimmedEmail, "User ID:", data.user?.id);
+        console.log("✅ Sign in successful");
         
         // For manager accounts, log additional info
         if (trimmedEmail === 'd0bl3@abv.bg') {
@@ -98,7 +98,7 @@ export const useSignIn = () => {
   const resetPassword = async (email: string) => {
     try {
       const trimmedEmail = email.trim().toLowerCase();
-      console.log("🔄 Sending password reset for:", trimmedEmail);
+      console.log("🔄 Sending password reset request");
       
       const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
         redirectTo: `${window.location.origin}/auth?mode=recovery`
@@ -109,7 +109,7 @@ export const useSignIn = () => {
         return { error };
       }
       
-      console.log("✅ Password reset email sent to:", trimmedEmail);
+      console.log("✅ Password reset email sent");
       return { error: null };
     } catch (error) {
       console.error("💥 Password reset exception:", error);

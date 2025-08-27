@@ -15,20 +15,43 @@ const EmployeeList = ({ employees }: EmployeeListProps) => {
     e.dataTransfer.setData('employeeId', employeeId);
     e.dataTransfer.effectAllowed = 'move';
     
-    // Create and append ghost image element
+    // Create and append ghost image element securely
     const ghostEl = document.createElement('div');
     ghostEl.className = 'fixed top-0 left-0 -translate-x-full bg-white rounded-lg shadow-lg p-3 pointer-events-none';
-    ghostEl.innerHTML = `
-      <div class="flex items-center">
-        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 mr-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-        </div>
-        <div>Assigning...</div>
-      </div>
-    `;
+    
+    // Secure DOM creation without innerHTML
+    const flexDiv = document.createElement('div');
+    flexDiv.className = 'flex items-center';
+    
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 mr-2';
+    
+    const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svgEl.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svgEl.setAttribute('class', 'h-4 w-4');
+    svgEl.setAttribute('viewBox', '0 0 24 24');
+    svgEl.setAttribute('fill', 'none');
+    svgEl.setAttribute('stroke', 'currentColor');
+    svgEl.setAttribute('stroke-width', '2');
+    
+    const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path1.setAttribute('d', 'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2');
+    
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', '12');
+    circle.setAttribute('cy', '7');
+    circle.setAttribute('r', '4');
+    
+    svgEl.appendChild(path1);
+    svgEl.appendChild(circle);
+    avatarDiv.appendChild(svgEl);
+    
+    const textDiv = document.createElement('div');
+    textDiv.textContent = 'Assigning...';
+    
+    flexDiv.appendChild(avatarDiv);
+    flexDiv.appendChild(textDiv);
+    ghostEl.appendChild(flexDiv);
     document.body.appendChild(ghostEl);
     
     if (e.dataTransfer.setDragImage) {

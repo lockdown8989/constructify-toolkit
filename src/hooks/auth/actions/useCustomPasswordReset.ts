@@ -22,7 +22,7 @@ export const useCustomPasswordReset = () => {
         };
       }
       
-      console.log("Calling send-password-reset function with email:", trimmedEmail);
+      console.log("Calling send-password-reset function");
       
       // Call our custom edge function instead of Supabase's built-in reset
       const { data, error } = await supabase.functions.invoke('send-password-reset', {

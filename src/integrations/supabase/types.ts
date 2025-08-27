@@ -3090,6 +3090,10 @@ export type Database = {
         }
         Returns: string
       }
+      log_security_event: {
+        Args: { details?: Json; event_type: string }
+        Returns: undefined
+      }
       mark_expired_open_shifts: {
         Args: Record<PropertyKey, never>
         Returns: number

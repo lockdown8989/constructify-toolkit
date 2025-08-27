@@ -174,7 +174,7 @@ const refreshEmployeeCache = async (employeeId: string) => {
 
 export const syncEmployeeEmailWithAuth = async (userId: string, newEmail: string) => {
   try {
-    console.log('Syncing email with auth for user:', userId, 'new email:', newEmail);
+    console.log('Syncing email with auth for user:', userId);
     
     // Update auth email
     const { error: authError } = await supabase.auth.updateUser({

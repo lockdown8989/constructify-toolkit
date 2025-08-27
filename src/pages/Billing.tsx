@@ -73,7 +73,7 @@ export default function Billing() {
   };
 
   const handleSubscribe = async (planId: 'pro' | 'custom') => {
-    console.log('🎯 handleSubscribe called:', { planId, isAdmin, userEmail: user?.email });
+    console.log('🎯 handleSubscribe called');
     
     if (planId === 'custom') {
       window.open('#contact', '_self');

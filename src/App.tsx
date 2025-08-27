@@ -75,7 +75,7 @@ const AppContent = () => {
   // Start background notification service when user is authenticated
   useEffect(() => {
     if (user) {
-      console.log('🔔 Starting background notification service for user:', user.email);
+      console.log('🔔 Starting background notification service');
       const notificationService = BackgroundNotificationService.getInstance();
       notificationService.start();
 
