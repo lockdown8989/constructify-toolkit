@@ -6,9 +6,47 @@ import { Resend } from "npm:resend@2.0.0";
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://fphmujxruswmvlwceodl.supabase.co",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+// Rate limiting storage
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+// Rate limiting function
+function checkRateLimit(identifier: string, maxAttempts: number = 3, windowMs: number = 900000): boolean {
+  const now = Date.now();
+  const record = rateLimitStore.get(identifier);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitStore.set(identifier, { count: 1, resetTime: now + windowMs });
+    return true;
+  }
+  
+  if (record.count >= maxAttempts) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
+// Input validation function
+function validateEmail(email: string): { isValid: boolean; sanitized: string } {
+  if (!email || typeof email !== "string") {
+    return { isValid: false, sanitized: "" };
+  }
+  
+  const sanitized = email.trim().toLowerCase();
+  
+  if (sanitized.length > 254) {
+    return { isValid: false, sanitized };
+  }
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return { isValid: emailRegex.test(sanitized), sanitized };
+}
 
 interface PasswordResetRequest {
   email: string;
@@ -30,11 +68,31 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { email }: PasswordResetRequest = await req.json();
 
-    if (!email || !email.trim()) {
+    // Input validation with sanitization
+    const { isValid, sanitized } = validateEmail(email);
+    if (!isValid) {
       return new Response(
-        JSON.stringify({ error: "Email is required" }),
+        JSON.stringify({ error: "Invalid email format" }),
         {
           status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Rate limiting by IP and email
+    const clientIP = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    const emailKey = `email:${sanitized}`;
+    const ipKey = `ip:${clientIP}`;
+    
+    if (!checkRateLimit(emailKey, 3, 900000) || !checkRateLimit(ipKey, 5, 900000)) {
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: "If an account with this email exists, you will receive a password reset link." 
+        }),
+        {
+          status: 200,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );

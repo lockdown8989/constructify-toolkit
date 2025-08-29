@@ -6,77 +6,49 @@ import { UserRole } from "@/hooks/auth/types";
 export const useRoleAssignment = () => {
   const { toast } = useToast();
 
-  const assignUserRole = async (userId: string, userRole: UserRole) => {
+  const assignUserRole = async (userId: string, userRole: UserRole): Promise<boolean> => {
     try {
-      console.log(`🎯 Assigning role ${userRole} to user ${userId}`);
+      console.log('🔄 Assigning role via secure function:', { userId, userRole });
       
-      // First check if user already has any roles
-      const { data: existingRoles, error: roleCheckError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId);
-        
-      if (roleCheckError) {
-        console.error("Error checking existing roles:", roleCheckError);
+      // Use the secure server-side function for role assignment
+      const { data, error } = await supabase.rpc('assign_user_role', {
+        target_user_id: userId,
+        new_role: userRole
+      });
+
+      if (error) {
+        console.error('❌ Error assigning role:', error);
         toast({
           title: "Error",
-          description: "Could not check user roles: " + roleCheckError.message,
+          description: error.message || "Failed to assign role",
           variant: "destructive",
         });
         return false;
       }
-      
-      // Map the UI role to the database role - FIXED MAPPING
-      let dbRole: string;
-      
-      switch (userRole) {
-        case "admin":
-          dbRole = "admin";
-          break;
-        case "hr":
-          dbRole = "hr";
-          break;
-        case "payroll":
-          dbRole = "payroll";
-          break;
-        default:
-          dbRole = "employee";
-      }
-      
-      console.log(`🔄 Mapped UI role ${userRole} to DB role ${dbRole}`);
-      
-      // Remove any existing roles first to avoid conflicts
-      const { error: deleteError } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
-        
-      if (deleteError) {
-        console.error("Error removing existing roles:", deleteError);
-      }
-      
-      // Insert the new role
-      const { error: insertError } = await supabase
-        .from('user_roles')
-        .insert({ 
-          user_id: userId, 
-          role: dbRole 
+
+      if (data?.success) {
+        console.log('✅ Role assigned successfully via secure function');
+        toast({
+          title: "Success",
+          description: `Role ${userRole} assigned successfully`,
         });
-          
-      if (insertError) {
-        console.error("Role insertion error:", insertError);
+        return true;
+      } else {
+        console.error('❌ Role assignment failed:', data);
         toast({
           title: "Error",
-          description: "Could not assign user role: " + insertError.message,
+          description: "Failed to assign role",
           variant: "destructive",
         });
         return false;
-      } 
-      
-      console.log(`✅ Role ${dbRole} inserted successfully for user ${userId}`);
-      return true;
+      }
     } catch (error) {
-      console.error("💥 Role assignment error:", error);
+      console.error('💥 Exception in assignUserRole:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
       return false;
     }
   };

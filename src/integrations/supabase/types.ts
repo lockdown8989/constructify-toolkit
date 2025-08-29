@@ -2935,6 +2935,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      assign_user_role: {
+        Args: {
+          new_role: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+        }
+        Returns: Json
+      }
       calculate_attendance_metrics: {
         Args: {
           p_attendance_id: string
