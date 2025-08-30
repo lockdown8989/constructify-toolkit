@@ -10,26 +10,30 @@ interface ValidationResult {
 
 export const useSecurityValidation = () => {
   const { sanitizeText, sanitizeEmail, sanitizeName } = useInputSanitization();
-  const [rateLimitCache, setRateLimitCache] = useState<Map<string, number>>(new Map());
+  const [rateLimitCache, setRateLimitCache] = useState<Map<string, { count: number; timestamp: number }>>(new Map());
 
-  // Rate limiting for sensitive operations
+  // Enhanced rate limiting for sensitive operations
   const checkRateLimit = useCallback((key: string, maxAttempts: number = 5, windowMs: number = 300000): boolean => {
     const now = Date.now();
-    const attempts = rateLimitCache.get(key) || 0;
+    const existing = rateLimitCache.get(key);
     
     // Clean old entries
     const windowStart = now - windowMs;
     const filteredEntries = new Map(
-      Array.from(rateLimitCache.entries()).filter(([k, time]) => 
-        time > windowStart || k === key
+      Array.from(rateLimitCache.entries()).filter(([k, entry]) => 
+        entry.timestamp > windowStart || k === key
       )
     );
     
-    if (attempts >= maxAttempts) {
-      return false;
+    if (existing && existing.timestamp > windowStart) {
+      if (existing.count >= maxAttempts) {
+        return false;
+      }
+      filteredEntries.set(key, { count: existing.count + 1, timestamp: now });
+    } else {
+      filteredEntries.set(key, { count: 1, timestamp: now });
     }
     
-    filteredEntries.set(key, now);
     setRateLimitCache(filteredEntries);
     return true;
   }, [rateLimitCache]);

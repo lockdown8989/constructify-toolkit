@@ -42,13 +42,41 @@ export const getSecureErrorMessage = (error: unknown): string => {
 };
 
 export const logSecureError = (error: unknown, context: string) => {
+  // Mask sensitive information before logging
+  const sanitizedError = maskSensitiveData(error);
+  
   // In production, this would integrate with your logging service
   if (process.env.NODE_ENV === 'development') {
-    console.error(`[${context}]`, error);
+    console.error(`[${context}]`, sanitizedError);
   }
   
   // Here you would send to your logging service like Sentry, LogRocket, etc.
-  // Example: Sentry.captureException(error, { tags: { context } });
+  // Example: Sentry.captureException(sanitizedError, { tags: { context } });
+};
+
+const maskSensitiveData = (data: unknown): unknown => {
+  if (typeof data === 'string') {
+    return data
+      .replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, '****-****-****-****') // Credit cards
+      .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '***@***.***') // Emails
+      .replace(/\b\d{3}[-.]?\d{2}[-.]?\d{4}\b/g, '***-**-****'); // SSN-like patterns
+  }
+  
+  if (data && typeof data === 'object') {
+    const masked = { ...data } as any;
+    const sensitiveKeys = ['password', 'token', 'secret', 'key', 'ssn', 'credit_card'];
+    
+    for (const key of Object.keys(masked)) {
+      if (sensitiveKeys.some(sensitive => key.toLowerCase().includes(sensitive))) {
+        masked[key] = '***REDACTED***';
+      } else if (typeof masked[key] === 'object') {
+        masked[key] = maskSensitiveData(masked[key]);
+      }
+    }
+    return masked;
+  }
+  
+  return data;
 };
 
 export const handleAuthError = (error: AuthError | Error, context: string): string => {

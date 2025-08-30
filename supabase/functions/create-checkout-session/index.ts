@@ -8,6 +8,12 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// Allowed price IDs for security
+const ALLOWED_PRICE_IDS = [
+  'price_1234567890', // Add your actual Stripe price IDs here
+  'price_0987654321',
+];
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -69,10 +75,10 @@ serve(async (req) => {
       );
     }
 
-    // Validate price ID format (Stripe price IDs start with 'price_')
-    if (!priceId.startsWith("price_")) {
+    // Validate price ID format and whitelist
+    if (!priceId.startsWith("price_") || !ALLOWED_PRICE_IDS.includes(priceId)) {
       return new Response(
-        JSON.stringify({ error: "Invalid price ID format" }),
+        JSON.stringify({ error: "Invalid or unauthorized price ID" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -101,8 +107,8 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `${req.headers.get("origin") || "https://fphmujxruswmvlwceodl.supabase.co"}/billing?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin") || "https://fphmujxruswmvlwceodl.supabase.co"}/billing?canceled=true`,
+      success_url: "https://fphmujxruswmvlwceodl.supabase.co/billing?success=true&session_id={CHECKOUT_SESSION_ID}",
+      cancel_url: "https://fphmujxruswmvlwceodl.supabase.co/billing?canceled=true",
       customer_email: user.email,
       metadata: {
         user_id: user.id,
