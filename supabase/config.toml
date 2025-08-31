@@ -26,7 +26,7 @@ verify_jwt = false
 
 [[functions]]
 name = "face-verify"
-verify_jwt = false
+verify_jwt = true
 
 [[functions]]
 name = "create-payment"

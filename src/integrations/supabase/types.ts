@@ -2942,6 +2942,14 @@ export type Database = {
         }
         Returns: Json
       }
+      assign_user_role_secure: {
+        Args: {
+          new_role: Database["public"]["Enums"]["app_role"]
+          requester_manager_id?: string
+          target_user_id: string
+        }
+        Returns: Json
+      }
       calculate_attendance_metrics: {
         Args: {
           p_attendance_id: string

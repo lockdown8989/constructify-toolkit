@@ -22,6 +22,30 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Get JWT token from Authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Authorization required' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Initialize Supabase client with anon key (for JWT validation)
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { 
+        auth: { persistSession: false },
+        global: { 
+          headers: { Authorization: authHeader } 
+        }
+      }
+    );
+
+    // Verify user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Invalid authentication' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const { imageBase64, action }: RequestBody = await req.json();
 
     if (!imageBase64 || !action) {
@@ -34,13 +58,6 @@ serve(async (req) => {
     if (!FACE_API_KEY) {
       return new Response(JSON.stringify({ requiresSetup: true, message: 'FACE_API_KEY not configured' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-
-    // Initialize Supabase client
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
 
     // AWS Rekognition configuration
     const AWS_ACCESS_KEY = Deno.env.get("AWS_ACCESS_KEY_ID");
@@ -57,10 +74,10 @@ serve(async (req) => {
         requiresAWSSetup: true
       };
     } else {
-      // Get employees with face encodings
+      // Get employees with face encodings (only ID and encoding - no PII)
       const { data: employees, error: employeesError } = await supabase
         .from('employees')
-        .select('id, name, face_encoding')
+        .select('id, face_encoding')
         .not('face_encoding', 'is', null);
 
       if (employeesError || !employees) {
@@ -93,10 +110,10 @@ serve(async (req) => {
         }
       }
 
+      // Don't return employee name in response to prevent PII leakage
       response = {
         matchedEmployeeId: bestMatch?.id || null,
         confidence: highestConfidence / 100,
-        employeeName: bestMatch?.name || null,
         awsConfigured: true
       };
     }

@@ -11,7 +11,7 @@ export const useRoleAssignment = () => {
       console.log('🔄 Assigning role via secure function:', { userId, userRole });
       
       // Use the secure server-side function for role assignment
-      const { data, error } = await supabase.rpc('assign_user_role', {
+      const { data, error } = await supabase.rpc('assign_user_role_secure', {
         target_user_id: userId,
         new_role: userRole
       });
