@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { User } from "@supabase/supabase-js";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,12 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Mail, User as UserIcon, Save, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, Mail, User as UserIcon, Save, CheckCircle2, AlertCircle, Wifi, WifiOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { ManagerIdField } from "@/components/profile/ManagerIdField";
 import { AdminIdGenerator } from "@/components/profile/AdminIdGenerator";
+import { useRealtimeProfile } from "@/hooks/profile/useRealtimeProfile";
+import { useOptimisticUpdates } from "@/hooks/profile/useOptimisticUpdates";
+import { useRetryLogic } from "@/hooks/profile/useRetryLogic";
 
 interface PersonalInfoFormProps {
   user: User | null;
@@ -35,6 +38,41 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'pending' | 'error'>('synced');
+
+  // Enhanced hooks for better functionality
+  const { 
+    profile: realtimeProfile, 
+    isConnected, 
+    lastSync 
+  } = useRealtimeProfile(user?.id);
+  
+  const { 
+    optimisticUpdate, 
+    revertUpdate, 
+    pendingUpdates 
+  } = useOptimisticUpdates();
+  
+  const { 
+    retryOperation, 
+    isRetrying, 
+    failureCount 
+  } = useRetryLogic();
+
+  // Network status monitoring
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -44,7 +82,21 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
       }
 
       try {
-        // Fetch profile data
+        // Use realtime profile data if available, otherwise fetch fresh
+        if (realtimeProfile) {
+          setProfile({
+            first_name: realtimeProfile.first_name || "",
+            last_name: realtimeProfile.last_name || "",
+            position: realtimeProfile.position || "",
+            department: realtimeProfile.department || "",
+            avatar_url: realtimeProfile.avatar_url || null,
+            manager_id: realtimeProfile.manager_id || null,
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        // Fallback to direct fetch if realtime not available
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("first_name, last_name, position, department, avatar_url")
@@ -94,6 +146,7 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
         }
       } catch (error) {
         console.error("Error:", error);
+        setSyncStatus('error');
       } finally {
         setIsLoading(false);
       }
@@ -113,7 +166,7 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
     return () => {
       window.removeEventListener('adminIdUpdated', handleAdminIdUpdate as EventListener);
     };
-  }, [user, toast]);
+  }, [user, toast, realtimeProfile]);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -169,8 +222,13 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
 
     setIsSaving(true);
     setSaveSuccess(false);
+    setSyncStatus('pending');
 
-    try {
+    // Apply optimistic update
+    const updateId = `profile-${Date.now()}`;
+    optimisticUpdate(updateId, profile);
+
+    const saveOperation = async () => {
       // Update profile data
       const { error: profileError } = await supabase
         .from("profiles")
@@ -185,12 +243,7 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
         .eq("id", user.id);
 
       if (profileError) {
-        toast({
-          title: "Error updating profile",
-          description: profileError.message,
-          variant: "destructive",
-        });
-        return;
+        throw new Error(profileError.message);
       }
 
       // Update or create employee data
@@ -246,22 +299,32 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
           console.error("Error creating employee record:", employeeError);
         }
       }
+    };
 
+    try {
+      await retryOperation(saveOperation, "Profile Update");
+      
       setHasUnsavedChanges(false);
       setSaveSuccess(true);
+      setSyncStatus('synced');
+      
       toast({
         title: "Profile updated successfully",
-        description: "Your personal information has been saved.",
+        description: isOnline ? "Your personal information has been saved." : "Changes saved locally and will sync when online.",
         variant: "default",
       });
       
       // Hide success state after 3 seconds
       setTimeout(() => setSaveSuccess(false), 3000);
+      
     } catch (error) {
       console.error("Error:", error);
+      setSyncStatus('error');
+      revertUpdate(updateId);
+      
       toast({
-        title: "An unexpected error occurred",
-        description: "Please try again later",
+        title: "Update failed",
+        description: isOnline ? "Please try again later" : "You're offline. Changes will be saved when connection is restored.",
         variant: "destructive",
       });
     } finally {
@@ -416,6 +479,28 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
       <CardFooter className="border-t bg-muted/30 p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-4">
           <div className="flex flex-col gap-1">
+            {/* Connection Status */}
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              {isOnline ? (
+                <>
+                  <Wifi className="h-3 w-3 text-success" />
+                  <span>Online</span>
+                  {isConnected && (
+                    <>
+                      <span>• Real-time sync</span>
+                      {lastSync && <span>• Last sync: {lastSync.toLocaleTimeString()}</span>}
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <WifiOff className="h-3 w-3 text-warning" />
+                  <span>Offline - Changes will sync when connection is restored</span>
+                </>
+              )}
+            </div>
+
+            {/* Status Messages */}
             {hasUnsavedChanges && (
               <span className="text-sm text-warning font-medium flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
@@ -428,19 +513,37 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
                 Changes saved successfully
               </span>
             )}
+            {syncStatus === 'pending' && (
+              <span className="text-sm text-primary font-medium flex items-center gap-1">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Syncing changes...
+              </span>
+            )}
+            {syncStatus === 'error' && failureCount > 0 && (
+              <span className="text-sm text-destructive font-medium flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Sync failed ({failureCount} attempt{failureCount > 1 ? 's' : ''})
+              </span>
+            )}
+            {isRetrying && (
+              <span className="text-sm text-warning font-medium flex items-center gap-1">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Retrying operation...
+              </span>
+            )}
           </div>
           
           <Button 
             type="submit" 
             className="w-full sm:w-auto min-w-[120px]"
-            disabled={isSaving || !hasUnsavedChanges}
+            disabled={isSaving || (!hasUnsavedChanges && !isRetrying)}
             variant={hasUnsavedChanges ? "default" : "secondary"}
             size="lg"
           >
-            {isSaving ? (
+            {isSaving || isRetrying ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
+                {isRetrying ? 'Retrying...' : 'Saving...'}
               </>
             ) : saveSuccess ? (
               <>
