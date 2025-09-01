@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Mail, User as UserIcon } from "lucide-react";
+import { Loader2, Mail, User as UserIcon, Save, CheckCircle2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/hooks/use-language";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
@@ -33,6 +33,8 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
     manager_id: null as string | null,
   });
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -113,22 +115,60 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
     };
   }, [user, toast]);
 
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    if (!profile.first_name.trim()) {
+      errors.first_name = "First name is required";
+    }
+    if (!profile.last_name.trim()) {
+      errors.last_name = "Last name is required";
+    }
+    if (profile.first_name.trim().length < 2) {
+      errors.first_name = "First name must be at least 2 characters";
+    }
+    if (profile.last_name.trim().length < 2) {
+      errors.last_name = "Last name must be at least 2 characters";
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
     setHasUnsavedChanges(true);
+    setSaveSuccess(false);
+    
+    // Clear field-specific error when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleAvatarChange = (url: string | null) => {
     setProfile((prev) => ({ ...prev, avatar_url: url }));
     setHasUnsavedChanges(true);
+    setSaveSuccess(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
+    // Validate form before submission
+    if (!validateForm()) {
+      toast({
+        title: "Please fix the errors below",
+        description: "Some required fields are missing or invalid.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSaving(true);
+    setSaveSuccess(false);
 
     try {
       // Update profile data
@@ -208,11 +248,15 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
       }
 
       setHasUnsavedChanges(false);
+      setSaveSuccess(true);
       toast({
-        title: "Profile updated",
-        description: "Your profile has been successfully updated.",
+        title: "Profile updated successfully",
+        description: "Your personal information has been saved.",
         variant: "default",
       });
+      
+      // Hide success state after 3 seconds
+      setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
       console.error("Error:", error);
       toast({
@@ -255,43 +299,63 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="first_name">First Name</Label>
+            <Label htmlFor="first_name" className="text-sm font-medium">
+              First Name <span className="text-destructive">*</span>
+            </Label>
             <div className="relative">
-              <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="first_name"
                 name="first_name"
                 value={profile.first_name}
                 onChange={handleChange}
-                className="pl-10"
+                className={`pl-10 ${formErrors.first_name ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                placeholder="Enter your first name"
+                disabled={isSaving}
               />
             </div>
+            {formErrors.first_name && (
+              <p className="text-sm text-destructive flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {formErrors.first_name}
+              </p>
+            )}
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="last_name">Last Name</Label>
+            <Label htmlFor="last_name" className="text-sm font-medium">
+              Last Name <span className="text-destructive">*</span>
+            </Label>
             <div className="relative">
-              <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="last_name"
                 name="last_name"
                 value={profile.last_name}
                 onChange={handleChange}
-                className="pl-10"
+                className={`pl-10 ${formErrors.last_name ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                placeholder="Enter your last name"
+                disabled={isSaving}
               />
             </div>
+            {formErrors.last_name && (
+              <p className="text-sm text-destructive flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {formErrors.last_name}
+              </p>
+            )}
           </div>
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="email">Email Address</Label>
+          <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               id="email"
               value={user?.email || ""}
               disabled
-              className="bg-gray-50 pl-10"
+              className="bg-muted/50 pl-10 text-muted-foreground"
             />
           </div>
           <p className="text-xs text-muted-foreground">
@@ -299,26 +363,30 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
           </p>
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="position">Position</Label>
-          <Input
-            id="position"
-            name="position"
-            value={profile.position}
-            onChange={handleChange}
-            placeholder="e.g. Software Developer"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="department">Department</Label>
-          <Input
-            id="department"
-            name="department"
-            value={profile.department}
-            onChange={handleChange}
-            placeholder="e.g. Engineering"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="position" className="text-sm font-medium">Position</Label>
+            <Input
+              id="position"
+              name="position"
+              value={profile.position}
+              onChange={handleChange}
+              placeholder="e.g. Software Developer"
+              disabled={isSaving}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="department" className="text-sm font-medium">Department</Label>
+            <Input
+              id="department"
+              name="department"
+              value={profile.department}
+              onChange={handleChange}
+              placeholder="e.g. Engineering"
+              disabled={isSaving}
+            />
+          </div>
         </div>
 
         {/* Manager ID Field */}
@@ -345,28 +413,44 @@ export const PersonalInfoForm = ({ user }: PersonalInfoFormProps) => {
         )}
       </CardContent>
       
-      <CardFooter className="border-t bg-muted/10 p-6">
-        <div className="flex items-center justify-between w-full">
-          {hasUnsavedChanges && (
-            <span className="text-sm text-amber-600 font-medium">
-              You have unsaved changes
-            </span>
-          )}
+      <CardFooter className="border-t bg-muted/30 p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-4">
+          <div className="flex flex-col gap-1">
+            {hasUnsavedChanges && (
+              <span className="text-sm text-warning font-medium flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                You have unsaved changes
+              </span>
+            )}
+            {saveSuccess && (
+              <span className="text-sm text-success font-medium flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                Changes saved successfully
+              </span>
+            )}
+          </div>
+          
           <Button 
             type="submit" 
-            className={`${hasUnsavedChanges ? 'ml-auto' : 'w-full'}`} 
-            disabled={isSaving}
+            className="w-full sm:w-auto min-w-[120px]"
+            disabled={isSaving || !hasUnsavedChanges}
             variant={hasUnsavedChanges ? "default" : "secondary"}
+            size="lg"
           >
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {t('saving')}
+                Saving...
+              </>
+            ) : saveSuccess ? (
+              <>
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Saved
               </>
             ) : (
               <>
-                {t('saveChanges')}
-                {hasUnsavedChanges && <span className="ml-2 text-xs">•</span>}
+                <Save className="mr-2 h-4 w-4" />
+                {hasUnsavedChanges ? 'Save Changes' : 'No Changes'}
               </>
             )}
           </Button>
