@@ -11,6 +11,10 @@ export const useUserRole = (initialRole: UserRole = "employee") => {
   // Handler for role change
   const handleRoleChange = (role: string) => {
     setUserRole(role as UserRole);
+    // Clear manager ID when switching from non-manager roles
+    if (role !== 'employee' && role !== 'manager') {
+      setManagerId("");
+    }
   };
 
   // Generate a new manager ID
