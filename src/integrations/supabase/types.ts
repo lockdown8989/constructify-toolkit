@@ -3048,6 +3048,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      generate_unique_manager_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_employee_attendance_status: {
         Args: { p_employee_id: string }
         Returns: {
@@ -3149,6 +3153,10 @@ export type Database = {
         Args: { p_attendance_id: string }
         Returns: boolean
       }
+      sync_manager_employee_relationships: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       sync_payroll_user_data: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -3195,6 +3203,10 @@ export type Database = {
       validate_admin_id: {
         Args: { p_admin_id: string }
         Returns: boolean
+      }
+      validate_manager_id: {
+        Args: { p_manager_id: string }
+        Returns: Json
       }
       validate_manager_id_strict: {
         Args: { p_manager_id: string }
