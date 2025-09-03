@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useEnhancedSignIn } from "./hooks/useEnhancedSignIn";
+import { useConsolidatedSignIn } from "./hooks/useConsolidatedSignIn";
 import { SignInFields } from "./components/SignInFields";
 import { AlertCircle, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,7 +27,7 @@ export const SignInForm = ({ onSignIn, onForgotPassword }: SignInFormProps) => {
     handlePasswordChange,
     handleSubmit,
     handlePasswordReset
-  } = useEnhancedSignIn();
+  } = useConsolidatedSignIn();
 
   const handleGoogleSignIn = async () => {
     try {

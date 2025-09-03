@@ -3005,6 +3005,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      complete_user_registration: {
+        Args: {
+          p_email: string
+          p_first_name: string
+          p_last_name: string
+          p_manager_id?: string
+          p_user_id: string
+          p_user_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: Json
+      }
       create_shift_notifications: {
         Args: Record<PropertyKey, never>
         Returns: undefined

@@ -1,11 +1,7 @@
 
-import { useToast } from "@/hooks/use-toast";
 import { useSignUpForm } from "./useSignUpForm";
 import { useUserRole } from "./useUserRole";
-import { useEmployeeRecord } from "./employee-record";
-import { useRoleAssignment } from "./useRoleAssignment";
-import { useSignUpValidation } from "./useSignUpValidation";
-import { useSignUpSubmit } from "./useSignUpSubmit";
+import { useServerSignUp } from "./useServerSignUp";
 
 type UseSignUpProps = {
   onSignUp: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;
@@ -15,33 +11,36 @@ export const useSignUp = ({ onSignUp }: UseSignUpProps) => {
   // Compose the hooks
   const formState = useSignUpForm();
   const roleManager = useUserRole();
-  const employeeManager = useEmployeeRecord();
-  const roleAssigner = useRoleAssignment();
+  const serverSignUp = useServerSignUp({ onSignUp });
   
-  // Use the validation hook
-  const validation = useSignUpValidation(roleManager.userRole, roleManager.managerId);
-  
-  // Use the submit hook without rate limiting
-  const { signUpError, handleSubmit } = useSignUpSubmit({
-    onSignUp,
-    email: formState.email,
-    password: formState.password,
-    firstName: formState.firstName,
-    lastName: formState.lastName,
-    setIsLoading: formState.setIsLoading,
-    userRole: roleManager.userRole,
-    managerId: roleManager.managerId,
-    assignUserRole: roleAssigner.assignUserRole,
-    createOrUpdateEmployeeRecord: employeeManager.createOrUpdateEmployeeRecord,
-    getFullName: formState.getFullName,
-    validateForm: formState.validateForm
-  });
+  // Create consolidated submit handler
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formState.validateForm()) {
+      serverSignUp.setSignUpError("Please fill in all required fields");
+      return;
+    }
+    
+    await serverSignUp.handleSubmit(
+      formState.email,
+      formState.password,
+      formState.firstName,
+      formState.lastName,
+      roleManager.userRole,
+      roleManager.managerId
+    );
+  };
 
   return {
     ...formState,
     ...roleManager,
-    ...validation,
-    signUpError,
-    handleSubmit
+    signUpError: serverSignUp.signUpError,
+    isLoading: serverSignUp.isLoading,
+    handleSubmit,
+    // Add empty validation state for backward compatibility
+    isValidatingManagerId: false,
+    isManagerIdValid: true,
+    managerName: null
   };
 };

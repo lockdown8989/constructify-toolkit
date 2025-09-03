@@ -6,6 +6,7 @@ import { AuthContextType, UserRole } from './types';
 import { useAuthActions } from './useAuthActions';
 import { useRoles } from './useRoles';
 import { useAuthDebugger } from './useAuthDebugger';
+import { useAuthMonitoring } from './useAuthMonitoring';
 import { SessionTimeoutWarning } from '@/components/auth/SessionTimeoutWarning';
 import { ErrorBoundary } from '@/components/auth/ErrorBoundary';
 import { toast } from '@/hooks/use-toast';
@@ -22,6 +23,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Employee is anyone who is authenticated but doesn't have other roles - FIXED LOGIC
   const isEmployee = !!user && !isAdmin && !isHR && !isManager && !isPayroll;
+
+  // Use auth monitoring for realtime updates
+  useAuthMonitoring(user);
 
   // Subscription state (org-level)
   const [subscribed, setSubscribed] = useState<boolean | undefined>(undefined);
