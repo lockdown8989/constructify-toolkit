@@ -72,12 +72,14 @@ const Dashboard = () => {
   }, [user, isManager, isAdmin, isHR, isPayroll, isEmployee, rolesLoaded, dashboardType, isMobile]);
   
   // Show loading state while auth is loading or roles are loading
-  if (authLoading || !rolesLoaded) {
+  if (authLoading || !rolesLoaded || !user) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
-          <p className="text-gray-600">Loading your dashboard...</p>
+          <p className="text-gray-600">
+            {!user ? 'Authenticating...' : !rolesLoaded ? 'Loading your permissions...' : 'Loading your dashboard...'}
+          </p>
           {isMobile && (
             <p className="text-xs text-gray-400 mt-2">Mobile view</p>
           )}

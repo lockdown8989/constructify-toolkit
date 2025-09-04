@@ -117,7 +117,7 @@ export const useServerSignUp = ({ onSignUp }: UseServerSignUpProps) => {
             description: `Admin account created. Your Administrator ID is ${registrationResult.manager_id}. Share this with employees to connect them to your account.`,
             duration: 8000,
           });
-        } else if (userRole === 'employer' && registrationResult.manager_id) {
+        } else if ((userRole === 'employer' || userRole === 'manager') && registrationResult.manager_id) {
           toast({
             title: "Success! 🎉",
             description: `Manager account created. Your Manager ID is ${registrationResult.manager_id}. Share this with employees to connect them to your team.`,
@@ -143,10 +143,12 @@ export const useServerSignUp = ({ onSignUp }: UseServerSignUpProps) => {
         });
       }
       
-      // Auto-redirect to dashboard
+      // Wait for role assignment to complete before redirecting
+      // Give extra time for database triggers and role propagation
       setTimeout(() => {
+        // Force a full page reload to ensure clean auth state
         window.location.href = '/dashboard';
-      }, 1500);
+      }, 3000);
       
     } catch (error) {
       console.error("💥 Unexpected signup error:", error);

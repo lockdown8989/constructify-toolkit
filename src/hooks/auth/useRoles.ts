@@ -25,31 +25,60 @@ export const useRoles = (user: User | null) => {
       try {
         console.log('🔄 Fetching roles for user:', user.id);
         
-        const { data: roles, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id);
+        // Retry logic for role fetching to handle new user registrations
+        let roles = null;
+        let attempts = 0;
+        const maxAttempts = 3;
+        
+        while (!roles && attempts < maxAttempts) {
+          attempts++;
+          console.log(`🔄 Role fetch attempt ${attempts}/${maxAttempts}`);
+          
+          const { data, error } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id);
 
-        if (error) {
-          console.error('❌ Error fetching user roles:', error);
-          throw error;
+          if (error && attempts === maxAttempts) {
+            console.error('❌ Error fetching user roles:', error);
+            throw error;
+          } else if (error) {
+            console.warn(`⚠️ Role fetch attempt ${attempts} failed, retrying...`, error);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+            continue;
+          }
+
+          roles = data;
+          if (!roles || roles.length === 0) {
+            // For new registrations, roles might not be immediately available
+            console.log(`🔄 No roles found on attempt ${attempts}, ${attempts < maxAttempts ? 'retrying' : 'continuing with defaults'}...`);
+            if (attempts < maxAttempts) {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
         }
 
         console.log('✅ User roles fetched:', roles);
 
         const userRoles = roles?.map(r => r.role) || [];
         
-        setIsAdmin(userRoles.includes('admin'));
-        setIsHR(userRoles.includes('hr'));
-        setIsManager(userRoles.includes('employer') || userRoles.includes('manager'));
-        setIsPayroll(userRoles.includes('payroll'));
+        const isAdminRole = userRoles.includes('admin');
+        const isHRRole = userRoles.includes('hr');
+        const isManagerRole = userRoles.includes('employer') || userRoles.includes('manager');
+        const isPayrollRole = userRoles.includes('payroll');
+        
+        setIsAdmin(isAdminRole);
+        setIsHR(isHRRole);
+        setIsManager(isManagerRole);
+        setIsPayroll(isPayrollRole);
         setRolesLoaded(true);
 
         console.log('🎯 Roles set:', {
-          isAdmin: userRoles.includes('admin'),
-          isHR: userRoles.includes('hr'),
-          isManager: userRoles.includes('employer') || userRoles.includes('manager'),
-          isPayroll: userRoles.includes('payroll'),
+          userRoles,
+          isAdmin: isAdminRole,
+          isHR: isHRRole,
+          isManager: isManagerRole,
+          isPayroll: isPayrollRole,
           userEmail: user.email
         });
 
