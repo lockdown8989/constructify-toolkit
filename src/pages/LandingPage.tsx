@@ -3,22 +3,47 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, CalendarDays, UserCheck, DollarSign, FileText, ChevronDown, Users, TrendingUp, Shield, Smartphone, Download, Timer, AlarmClock, BarChart3, Settings, Bell, ClipboardList } from 'lucide-react';
+import { Clock, CalendarDays, UserCheck, DollarSign, FileText, ChevronDown, Users, TrendingUp, Shield, Smartphone, Download, Timer, AlarmClock, BarChart3, Settings, Bell, ClipboardList, Zap, CheckCircle, Star } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
+import { useSubscription } from '@/hooks/subscription/useSubscription';
 const LandingPage: React.FC = () => {
   const {
     user,
     isManager
   } = useAuth();
+  const subscription = useSubscription();
   const isAuthenticated = !!user;
   const isMobile = useIsMobile();
   const [yearly, setYearly] = React.useState(false);
+  
   const handleStripe = () => {
-    toast.info('Stripe checkout coming soon. This button will start Stripe.', {
-      duration: 3500
-    });
+    if (isAuthenticated) {
+      subscription.createCheckout();
+    } else {
+      toast.info('Please sign in to subscribe to our services.', {
+        duration: 3500,
+        action: {
+          label: 'Sign In',
+          onClick: () => window.location.href = '/auth'
+        }
+      });
+    }
+  };
+  
+  const handleOneTimePayment = () => {
+    if (isAuthenticated) {
+      subscription.createCheckout(undefined, 'payment');
+    } else {
+      toast.info('Please sign in to make a purchase.', {
+        duration: 3500,
+        action: {
+          label: 'Sign In',
+          onClick: () => window.location.href = '/auth'
+        }
+      });
+    }
   };
   const handleAppDownload = (platform: 'ios' | 'android') => {
     if (platform === 'android') {
@@ -113,105 +138,147 @@ const LandingPage: React.FC = () => {
           <div className="responsive-container pt-20 pb-16 md:pt-28 md:pb-24">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div className="text-left space-y-8 animate-fade-in">
-                <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight">
-                  Increase Productivity Through{' '}
-                  <span className="bg-gradient-to-r from-primary via-primary to-primary/70 bg-clip-text text-transparent">
-                    Better Employee Management
+                <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight animate-fade-up">
+                  <span className="inline-block animate-pulse-soft">Transform</span>{' '}
+                  <span className="bg-gradient-to-r from-teampulse-accent via-primary to-apple-blue bg-clip-text text-transparent animate-[fade-in_1s_ease-out_0.5s_forwards] opacity-0">
+                    Employee Management
+                  </span>
+                  <br className="hidden sm:block" />
+                  <span className="text-3xl md:text-4xl text-muted-foreground font-medium block mt-2 animate-[fade-in_1s_ease-out_1s_forwards] opacity-0">
+                    Boost Productivity by 40%
                   </span>
                 </h1>
-                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-lg">
-                  By implementing these methods, you can boost productivity, reduce turnover, and ultimately achieve your business objectives with a more engaged and high-performing team.
+                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-lg animate-[fade-in_1s_ease-out_1.5s_forwards] opacity-0">
+                  Modern workforce management platform with AI-powered scheduling, real-time attendance tracking, and automated payroll processing.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col sm:flex-row gap-4 animate-[fade-in_1s_ease-out_2s_forwards] opacity-0">
                   {isAuthenticated ? <>
-                      <Button asChild size="lg" className="bg-gradient-to-r from-primary to-primary/90 shadow-lg text-base px-8">
-                        <Link to="/dashboard">Open Dashboard</Link>
+                      <Button asChild size="lg" className="bg-gradient-to-r from-primary via-teampulse-accent to-primary shadow-lg text-base px-8 hover:shadow-xl hover:scale-105 transition-all">
+                        <Link to="/dashboard">
+                          <Zap className="w-5 h-5 mr-2" />
+                          Open Dashboard
+                        </Link>
                       </Button>
-                      <Button asChild variant="outline" size="lg" className="text-base px-8">
+                      <Button asChild variant="outline" size="lg" className="text-base px-8 border-2 hover:border-primary hover:shadow-lg transition-all">
                         <Link to="/schedule">View Schedule</Link>
                       </Button>
                     </> : <>
-                      <Button asChild size="lg" className="bg-gradient-to-r from-primary to-primary/90 shadow-lg text-base px-8 hover:shadow-xl transition-all">
-                        <Link to="/auth?tab=signup">Get started</Link>
+                      <Button asChild size="lg" className="bg-gradient-to-r from-primary via-teampulse-accent to-primary shadow-lg text-base px-8 hover:shadow-xl hover:scale-105 transition-all">
+                        <Link to="/auth?tab=signup">
+                          <Star className="w-5 h-5 mr-2" />
+                          Start Free Trial
+                        </Link>
                       </Button>
-                      <Button variant="outline" size="lg" className="text-base px-8" onClick={() => document.getElementById('demo')?.scrollIntoView({
+                      <Button variant="outline" size="lg" className="text-base px-8 border-2 hover:border-primary hover:shadow-lg transition-all" onClick={() => document.getElementById('demo')?.scrollIntoView({
                     behavior: 'smooth'
                   })}>
-                        See demo
+                        Watch Demo
                       </Button>
                     </>}
                 </div>
-                <div className="flex items-center gap-4 pt-4">
-                  <div className="flex -space-x-2">
-                    {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-background flex items-center justify-center text-sm">
-                        {i === 3 ? '👤' : ''}
+                <div className="flex items-center gap-6 pt-6 animate-[fade-in_1s_ease-out_2.5s_forwards] opacity-0">
+                  <div className="flex -space-x-3">
+                    {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/30 to-teampulse-accent/20 border-3 border-background flex items-center justify-center text-lg hover:scale-110 transition-transform">
+                        {i === 3 ? '👤' : ['💼', '🚀', '✨', '⭐', '🎯'][i-1]}
                       </div>)}
                   </div>
                   <div>
-                    <p className="text-3xl font-bold">500K+</p>
-                    <p className="text-sm text-muted-foreground">Currently active users from various countries. Very helpful in work</p>
+                    <p className="text-3xl font-bold bg-gradient-to-r from-teampulse-accent to-primary bg-clip-text text-transparent">
+                      25K+
+                    </p>
+                    <p className="text-sm text-muted-foreground leading-tight">
+                      Teams already boosting<br />productivity with TeamPulse
+                    </p>
                   </div>
                 </div>
               </div>
               <div className="relative animate-scale-in">
-                <div className="relative bg-white rounded-2xl shadow-2xl border overflow-hidden">
-                  {/* Mock Dashboard */}
-                  <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-4 border-b">
+                <div className="relative bg-gradient-to-br from-background to-card rounded-3xl shadow-2xl border border-border/50 overflow-hidden backdrop-blur-sm">
+                  {/* Mock Dashboard Header */}
+                  <div className="bg-gradient-to-r from-primary/10 via-teampulse-accent/10 to-primary/5 p-6 border-b border-border/30">
                     <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded bg-primary/20"></div>
-                        <span className="font-semibold text-sm">Employee Dashboard</span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/40 to-teampulse-accent/30 flex items-center justify-center">
+                          <Zap className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-lg">TeamPulse Dashboard</h3>
+                          <p className="text-xs text-muted-foreground">Real-time insights</p>
+                        </div>
                       </div>
-                      <div className="flex gap-1">
-                        <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                        <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                        <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                      <div className="flex gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-400 animate-pulse"></div>
+                        <div className="w-3 h-3 rounded-full bg-yellow-400 animate-pulse" style={{animationDelay: '0.5s'}}></div>
+                        <div className="w-3 h-3 rounded-full bg-green-400 animate-pulse" style={{animationDelay: '1s'}}></div>
                       </div>
                     </div>
                   </div>
-                  <div className="p-6 space-y-4">
+                  
+                  {/* Dashboard Content */}
+                  <div className="p-6 space-y-6">
+                    {/* Stats Grid */}
                     <div className="grid grid-cols-3 gap-4">
-                      <div className="bg-gradient-to-br from-orange-100 to-orange-50 p-3 rounded-lg">
-                        <div className="text-xs text-orange-600 mb-1">Profit</div>
-                        <div className="font-bold text-orange-800">$30,666</div>
-                        <div className="text-xs text-green-600">+2.5%</div>
+                      <div className="bg-gradient-to-br from-teampulse-success/20 to-teampulse-success/10 p-4 rounded-xl border border-teampulse-success/20 group hover:scale-105 transition-transform">
+                        <div className="text-xs text-teampulse-success mb-2 font-medium">Productivity</div>
+                        <div className="font-bold text-xl text-teampulse-success">+40%</div>
+                        <div className="text-xs text-teampulse-success/70">↗ This month</div>
                       </div>
-                      <div className="bg-gradient-to-br from-blue-100 to-blue-50 p-3 rounded-lg">
-                        <div className="text-xs text-blue-600 mb-1">Survey</div>
-                        <div className="space-y-1">
-                          <div className="w-full bg-blue-200 h-1 rounded-full"></div>
-                          <div className="w-3/4 bg-blue-300 h-1 rounded-full"></div>
-                          <div className="w-1/2 bg-blue-400 h-1 rounded-full"></div>
-                        </div>
+                      <div className="bg-gradient-to-br from-apple-blue/20 to-apple-blue/10 p-4 rounded-xl border border-apple-blue/20 group hover:scale-105 transition-transform">
+                        <div className="text-xs text-apple-blue mb-2 font-medium">Attendance</div>
+                        <div className="font-bold text-xl text-apple-blue">98.5%</div>
+                        <div className="text-xs text-apple-blue/70">Real-time</div>
                       </div>
-                      <div className="bg-gradient-to-br from-purple-100 to-purple-50 p-3 rounded-lg">
-                        <div className="text-xs text-purple-600 mb-1">Team</div>
-                        <div className="flex -space-x-1">
-                          <div className="w-4 h-4 rounded-full bg-purple-400"></div>
-                          <div className="w-4 h-4 rounded-full bg-purple-500"></div>
-                          <div className="w-4 h-4 rounded-full bg-purple-600"></div>
-                        </div>
+                      <div className="bg-gradient-to-br from-teampulse-accent/20 to-teampulse-accent/10 p-4 rounded-xl border border-teampulse-accent/20 group hover:scale-105 transition-transform">
+                        <div className="text-xs text-teampulse-accent mb-2 font-medium">Cost Saved</div>
+                        <div className="font-bold text-xl text-teampulse-accent">£15K</div>
+                        <div className="text-xs text-teampulse-accent/70">This quarter</div>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <div className="text-sm font-semibold">List Employee</div>
+                    
+                    {/* Employee List */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-base">Team Status</h4>
+                        <Button size="sm" variant="ghost" className="text-xs">View All</Button>
+                      </div>
                       <div className="space-y-2">
-                        {['Bruno Cooper', 'Amy Hopkins', 'Mia', 'Jason Lee', 'Charley Mary'].map((name, i) => <div key={name} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/30 to-primary/10"></div>
-                              <span className="text-sm">{name}</span>
+                        {[
+                          { name: 'Sarah Chen', role: 'Manager', status: 'Available', color: 'green' },
+                          { name: 'Michael Rodriguez', role: 'Developer', status: 'In Meeting', color: 'yellow' },
+                          { name: 'Emily Watson', role: 'Designer', status: 'Available', color: 'green' }
+                        ].map((person, i) => (
+                          <div key={person.name} className="flex items-center justify-between p-3 hover:bg-primary/5 rounded-lg transition-colors group">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${
+                                person.color === 'green' ? 'from-teampulse-success/30 to-teampulse-success/10' : 'from-teampulse-accent/30 to-teampulse-accent/10'
+                              } flex items-center justify-center`}>
+                                <div className={`w-3 h-3 rounded-full ${
+                                  person.color === 'green' ? 'bg-teampulse-success' : 'bg-teampulse-accent'
+                                } animate-pulse`}></div>
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium">{person.name}</div>
+                                <div className="text-xs text-muted-foreground">{person.role}</div>
+                              </div>
                             </div>
-                            <div className={`text-xs px-2 py-1 rounded-full ${i % 2 === 0 ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                              {i % 2 === 0 ? 'Available' : 'Busy'}
+                            <div className={`text-xs px-3 py-1 rounded-full font-medium ${
+                              person.color === 'green' 
+                                ? 'bg-teampulse-success/20 text-teampulse-success' 
+                                : 'bg-teampulse-accent/20 text-teampulse-accent'
+                            }`}>
+                              {person.status}
                             </div>
-                          </div>)}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
                 </div>
-                {/* Floating elements */}
-                <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-xl"></div>
-                <div className="absolute -bottom-6 -left-6 w-16 h-16 bg-gradient-to-br from-primary/15 to-transparent rounded-full blur-lg"></div>
+                
+                {/* Floating Elements */}
+                <div className="absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-br from-teampulse-accent/30 to-transparent rounded-full blur-2xl animate-pulse"></div>
+                <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-gradient-to-br from-primary/25 to-transparent rounded-full blur-xl animate-pulse" style={{animationDelay: '1s'}}></div>
+                <div className="absolute top-1/2 -left-4 w-16 h-16 bg-gradient-to-br from-apple-blue/20 to-transparent rounded-full blur-lg animate-pulse" style={{animationDelay: '2s'}}></div>
               </div>
             </div>
           </div>
@@ -763,8 +830,9 @@ const LandingPage: React.FC = () => {
                           </li>)}
                       </ul>
                     </div>
-                    <Button className={`w-full ${plan.popular ? 'bg-gradient-to-r from-primary to-primary/90 shadow-lg hover:shadow-xl' : ''}`} onClick={handleStripe}>
-                      Get started
+                    <Button className={`w-full ${plan.popular ? 'bg-gradient-to-r from-primary via-teampulse-accent to-primary shadow-lg hover:shadow-xl transform hover:scale-105' : 'hover:bg-primary hover:scale-105'} transition-all duration-300`} onClick={handleStripe}>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      {plan.popular ? 'Start Pro Trial' : 'Get Started'}
                     </Button>
                   </CardContent>
                 </Card>;
@@ -831,7 +899,10 @@ const LandingPage: React.FC = () => {
             <Button asChild size="sm">
               <Link to="/auth?tab=signup">Get Started</Link>
             </Button>
-            <Button variant="outline" size="sm" onClick={handleStripe}>Subscribe</Button>
+            <Button variant="outline" size="sm" onClick={handleOneTimePayment} className="bg-gradient-to-r from-teampulse-accent to-primary text-primary-foreground border-0 hover:shadow-lg hover:scale-105 transition-all">
+              <Zap className="w-4 h-4 mr-1" />
+              Setup
+            </Button>
           </div>
         </div>}
 

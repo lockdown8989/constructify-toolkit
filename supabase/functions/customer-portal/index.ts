@@ -7,8 +7,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const log = (step: string, details?: unknown) => {
-  console.log(`[CUSTOMER-PORTAL] ${step}`, details ?? "");
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[CUSTOMER-PORTAL] ${step}${detailsStr}`);
 };
 
 serve(async (req) => {
@@ -17,91 +18,55 @@ serve(async (req) => {
   }
 
   try {
+    logStep("Function started");
+
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    logStep("Stripe key verified");
 
-    const supabaseAnon = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
-    const supabaseSvc = createClient(
+    // Use service role key for database operations
+    const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Missing Authorization header");
+    if (!authHeader) throw new Error("No authorization header provided");
+    logStep("Authorization header found");
+
     const token = authHeader.replace("Bearer ", "");
-
-    const { data: userData, error: userErr } = await supabaseAnon.auth.getUser(token);
-    if (userErr) throw new Error(`Auth error: ${userErr.message}`);
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
     const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated");
-
-    // Only admins can open the portal
-    const { data: roles } = await supabaseAnon
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id);
-    const isAdmin = roles?.some((r: any) => r.role === "admin");
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: "Only administrators can manage the subscription" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 403,
-      });
-    }
-
-    // Determine payer email (owner of org). If no org, use self.
-    const { data: ownOrg } = await supabaseSvc
-      .from("organizations")
-      .select("id, owner_user_id")
-      .eq("owner_user_id", user.id)
-      .maybeSingle();
-
-    let payerEmail = user.email as string;
-    if (!ownOrg) {
-      const { data: memberOrg } = await supabaseSvc
-        .from("organization_members")
-        .select("organization_id, organizations ( id, owner_user_id )")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle();
-      const orgRow: any = memberOrg?.organizations;
-      if (orgRow) {
-        const { data: ownerProfile } = await supabaseSvc
-          .from("profiles")
-          .select("email")
-          .eq("id", orgRow.owner_user_id)
-          .maybeSingle();
-        if (ownerProfile?.email) payerEmail = ownerProfile.email;
-      }
-    }
+    if (!user?.email) throw new Error("User not authenticated or email not available");
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-    const customers = await stripe.customers.list({ email: payerEmail, limit: 1 });
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     if (customers.data.length === 0) {
-      return new Response(JSON.stringify({ error: "No Stripe customer found for this organization" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 404,
-      });
+      throw new Error("No Stripe customer found for this user");
     }
+    
+    const customerId = customers.data[0].id;
+    logStep("Found Stripe customer", { customerId });
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
-    const portal = await stripe.billingPortal.sessions.create({
-      customer: customers.data[0].id,
-      return_url: `${origin}/billing`,
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${origin}/`,
     });
+    
+    logStep("Customer portal session created", { sessionId: portalSession.id, url: portalSession.url });
 
-    log("Portal created", { sessionId: portal.id });
-
-    return new Response(JSON.stringify({ url: portal.url }), {
+    return new Response(JSON.stringify({ url: portalSession.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error: any) {
-    console.error("[CUSTOMER-PORTAL] Error:", error);
-    return new Response(JSON.stringify({ error: error.message || String(error) }), {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR in customer-portal", { message: errorMessage });
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

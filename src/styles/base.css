@@ -110,8 +110,25 @@
   --apple-teal: 198 100% 69%;
   --apple-pink: 348 100% 59%;
 
-  /* Font size variable */
-  --app-font-size: 16px;
+  /* Enhanced gradients and animations */
+  --gradient-primary: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--teampulse-accent)) 50%, hsl(var(--primary)) 100%);
+  --gradient-hero: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--primary) / 0.05) 50%, hsl(var(--teampulse-accent) / 0.1) 100%);
+  --gradient-card: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.8) 100%);
+  --gradient-border: linear-gradient(90deg, hsl(var(--border)) 0%, hsl(var(--primary) / 0.3) 50%, hsl(var(--border)) 100%);
+  
+  /* Enhanced shadows with brand colors */
+  --shadow-primary: 0 10px 40px -10px hsl(var(--primary) / 0.4);
+  --shadow-accent: 0 10px 40px -10px hsl(var(--teampulse-accent) / 0.4);
+  --shadow-success: 0 10px 40px -10px hsl(var(--teampulse-success) / 0.3);
+  --shadow-card: 0 4px 20px -4px hsl(var(--foreground) / 0.1);
+  --shadow-elevated: 0 20px 60px -10px hsl(var(--foreground) / 0.15);
+  
+  /* Animation variables */
+  --animation-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --animation-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: all 0.3s var(--animation-smooth);
+  --transition-fast: all 0.15s var(--animation-smooth);
+  --transition-slow: all 0.5s var(--animation-smooth);
   
   /* Sidebar colors */
   --sidebar-background: var(--background);
@@ -205,7 +222,42 @@
   padding: 1rem;
 }
 
-/* Font Size Application */
-html {
-  font-size: var(--app-font-size);
+/* Enhanced utility classes */
+.shadow-primary { box-shadow: var(--shadow-primary); }
+.shadow-accent { box-shadow: var(--shadow-accent); }
+.shadow-success { box-shadow: var(--shadow-success); }
+.shadow-card { box-shadow: var(--shadow-card); }
+.shadow-elevated { box-shadow: var(--shadow-elevated); }
+
+.gradient-primary { background: var(--gradient-primary); }
+.gradient-hero { background: var(--gradient-hero); }
+.gradient-card { background: var(--gradient-card); }
+.gradient-border { border-image: var(--gradient-border) 1; }
+
+.transition-base { transition: var(--transition-base); }
+.transition-fast { transition: var(--transition-fast); }
+.transition-slow { transition: var(--transition-slow); }
+
+/* Enhanced animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes glow {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 5px hsl(var(--primary) / 0.3)); }
+  50% { filter: brightness(1.1) drop-shadow(0 0 20px hsl(var(--primary) / 0.6)); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-float { animation: float 6s ease-in-out infinite; }
+.animate-glow { animation: glow 3s ease-in-out infinite; }
+.animate-shimmer { 
+  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
 }

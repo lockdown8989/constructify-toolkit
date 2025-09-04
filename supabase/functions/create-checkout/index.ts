@@ -7,21 +7,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const log = (step: string, details?: unknown) => {
-  console.log(`[CREATE-CHECKOUT] ${step}`, details ?? "");
-};
-
-type Payload = {
-  planTier?: 'basic' | 'pro';
-  interval?: 'month' | 'year';
-  currency?: string; // e.g., 'gbp'
-  trialDays?: number; // default 14
-  priceId?: string; // optional Stripe Price ID to override
-};
-
-const prices = {
-  basic: { month: 799, year: 7999 },
-  pro: { month: 1499, year: 14999 },
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
 serve(async (req) => {
@@ -30,115 +18,97 @@ serve(async (req) => {
   }
 
   try {
+    logStep("Function started");
+
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    logStep("Stripe key verified");
 
-    const supabase = createClient(
+    // Create Supabase client using anon key
+    const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Missing Authorization header");
+    if (!authHeader) throw new Error("No authorization header provided");
+    logStep("Authorization header found");
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userErr } = await supabase.auth.getUser(token);
-    if (userErr) throw new Error(`Auth error: ${userErr.message}`);
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Guard: only admins can start checkout
-    const { data: roles, error: rolesErr } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id);
-    if (rolesErr) throw new Error(`Roles lookup failed: ${rolesErr.message}`);
-    const isAdmin = roles?.some((r: any) => r.role === "admin");
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: "Only administrators can purchase subscriptions" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 403,
-      });
-    }
-
-    // Find or create an organization for this admin
-    const { data: org, error: orgErr } = await supabase
-      .from("organizations")
-      .select("id")
-      .eq("owner_user_id", user.id)
-      .maybeSingle();
-    if (orgErr) throw new Error(`Organization fetch failed: ${orgErr.message}`);
-
-    let organizationId = org?.id as string | undefined;
-    if (!organizationId) {
-      const defaultName = `Team of ${user.email}`;
-      const { data: inserted, error: insErr } = await supabase
-        .from("organizations")
-        .insert({ name: defaultName, owner_user_id: user.id })
-        .select("id")
-        .single();
-      if (insErr) throw new Error(`Organization create failed: ${insErr.message}`);
-      organizationId = inserted.id;
-    }
-
-    // Parse payload
-    const body = (await req.json().catch(() => ({}))) as Payload;
-    const planTier = body.planTier ?? 'basic';
-    const interval = body.interval ?? 'month';
-    const currency = (body.currency ?? 'gbp').toLowerCase();
-    const trialDays = typeof body.trialDays === 'number' ? body.trialDays : 14;
+    const { priceId, mode = 'subscription' } = await req.json();
+    logStep("Request body parsed", { priceId, mode });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-
-    // Reuse existing customer if present
+    
+    // Check if customer exists
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId: string | undefined;
-    if (customers.data.length > 0) customerId = customers.data[0].id;
-
-    const origin = req.headers.get("origin") || "http://localhost:3000";
-
-    // Determine price
-    const priceId = body.priceId;
-    let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[];
-    if (priceId) {
-      lineItems = [{ price: priceId, quantity: 1 }];
-    } else {
-      const unit_amount = prices[planTier][interval];
-      lineItems = [{
-        price_data: {
-          currency,
-          product_data: { name: `${planTier === 'basic' ? 'Basic' : 'Pro'} Plan Subscription (${interval})` },
-          unit_amount,
-          recurring: { interval },
-        },
-        quantity: 1,
-      }];
+    let customerId;
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id;
+      logStep("Found existing customer", { customerId });
     }
 
-    const session = await stripe.checkout.sessions.create({
+    // Create checkout session
+    const sessionConfig: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: lineItems,
-      mode: "subscription",
-      success_url: `${origin}/billing?status=success&plan=${planTier}&interval=${interval}`,
-      cancel_url: `${origin}/billing?status=canceled&plan=${planTier}&interval=${interval}`,
-      metadata: {
-        organization_id: organizationId!,
-        owner_user_id: user.id,
-        plan: planTier,
-        interval,
-      },
-    });
+      success_url: `${req.headers.get("origin")}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get("origin")}/`,
+      mode: mode,
+    };
 
-    log("Checkout session created", { sessionId: session.id, organizationId, planTier, interval });
+    if (priceId) {
+      sessionConfig.line_items = [{
+        price: priceId,
+        quantity: 1,
+      }];
+    } else {
+      // Default pricing for demo
+      if (mode === 'subscription') {
+        sessionConfig.line_items = [{
+          price_data: {
+            currency: "usd",
+            product_data: { 
+              name: "TeamPulse Pro",
+              description: "Professional employee management platform"
+            },
+            unit_amount: 2999, // $29.99
+            recurring: { interval: "month" },
+          },
+          quantity: 1,
+        }];
+      } else {
+        sessionConfig.line_items = [{
+          price_data: {
+            currency: "usd",
+            product_data: { 
+              name: "TeamPulse One-time Setup",
+              description: "One-time platform setup and configuration"
+            },
+            unit_amount: 9999, // $99.99
+          },
+          quantity: 1,
+        }];
+      }
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
+    logStep("Checkout session created", { sessionId: session.id, url: session.url });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error: any) {
-    console.error("[CREATE-CHECKOUT] Error:", error);
-    return new Response(JSON.stringify({ error: error.message || String(error) }), {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR in create-checkout", { message: errorMessage });
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
