@@ -21,8 +21,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Use the roles hook
   const { isAdmin, isHR, isManager, isPayroll, rolesLoaded } = useRoles(user);
   
-  // Employee is anyone who is authenticated but doesn't have other roles - FIXED LOGIC
-  const isEmployee = !!user && !isAdmin && !isHR && !isManager && !isPayroll;
+  // Employee is anyone who is authenticated but doesn't have other roles - Enhanced logic
+  const isEmployee = !!user && rolesLoaded && !isAdmin && !isHR && !isManager && !isPayroll;
 
   // Use auth monitoring for realtime updates
   useAuthMonitoring(user);
