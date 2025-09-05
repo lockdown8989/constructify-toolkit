@@ -28,7 +28,7 @@ export const useRoles = (user: User | null) => {
         // Retry logic for role fetching to handle new user registrations
         let roles = null;
         let attempts = 0;
-        const maxAttempts = 3;
+        const maxAttempts = 5;
         
         while (!roles && attempts < maxAttempts) {
           attempts++;
@@ -60,8 +60,24 @@ export const useRoles = (user: User | null) => {
 
         console.log('✅ User roles fetched:', roles);
 
-        const userRoles = roles?.map(r => r.role) || [];
-        
+        // Derive role flags; fallback to employees table if user_roles missing
+        let userRoles = roles?.map(r => r.role) || [];
+
+        if (!userRoles.length) {
+          console.log('ℹ️ No roles in user_roles; falling back to employees.role');
+          const { data: emp, error: empError } = await supabase
+            .from('employees')
+            .select('role')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          if (empError) {
+            console.warn('⚠️ Employees role fallback error:', empError);
+          }
+          if (emp?.role) {
+            userRoles = [emp.role as string];
+          }
+        }
+
         const isAdminRole = userRoles.includes('admin');
         const isHRRole = userRoles.includes('hr');
         const isManagerRole = userRoles.includes('employer') || userRoles.includes('manager');
@@ -72,7 +88,7 @@ export const useRoles = (user: User | null) => {
         setIsManager(isManagerRole);
         setIsPayroll(isPayrollRole);
         setRolesLoaded(true);
-
+        
         console.log('🎯 Roles set:', {
           userRoles,
           isAdmin: isAdminRole,
