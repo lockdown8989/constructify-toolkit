@@ -110,17 +110,25 @@ export const useServerSignUp = ({ onSignUp }: UseServerSignUpProps) => {
       } else if (registrationResult?.success) {
         console.log("✅ Registration completed successfully:", registrationResult);
         
-        // Show role-specific success message
-        if (userRole === 'manager' && registrationResult.manager_id) {
-          toast({
-            title: "Success! 🎉",
-            description: `Manager account created. Your Manager ID is ${registrationResult.manager_id}. Share this with employees to connect them to your team.`,
-            duration: 8000,
-          });
+        // Handle manager subscription requirement
+        if (userRole === 'manager') {
+          if (registrationResult.manager_id) {
+            toast({
+              title: "Manager Account Created! 🎉",
+              description: `Your Manager ID is ${registrationResult.manager_id}. You'll need to subscribe to activate your team's access.`,
+              duration: 10000,
+            });
+            
+            // For managers, redirect to subscription flow instead of dashboard
+            setTimeout(() => {
+              window.location.href = '/subscription-required';
+            }, 2000);
+            return;
+          }
         } else if ((userRole === 'employee' || userRole === 'payroll') && managerId) {
           toast({
             title: "Success! 🎉",
-            description: `Account created and linked to your manager with ID ${managerId}.`,
+            description: `Account created and linked to manager with ID ${managerId}. You'll have access once your manager subscribes.`,
           });
         } else {
           toast({
@@ -138,7 +146,6 @@ export const useServerSignUp = ({ onSignUp }: UseServerSignUpProps) => {
       }
       
       // Wait for role assignment to complete before redirecting
-      // Give extra time for database triggers and role propagation
       setTimeout(() => {
         // Force a full page reload to ensure clean auth state
         window.location.href = '/dashboard';
