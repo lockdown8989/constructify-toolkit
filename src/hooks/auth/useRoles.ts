@@ -78,9 +78,9 @@ export const useRoles = (user: User | null) => {
           }
         }
 
-        const isAdminRole = userRoles.includes('admin');
-        const isHRRole = userRoles.includes('hr');
-        const isManagerRole = userRoles.includes('employer') || userRoles.includes('manager');
+        const isAdminRole = false; // Deprecated
+        const isHRRole = false; // Deprecated  
+        const isManagerRole = userRoles.includes('manager');
         const isPayrollRole = userRoles.includes('payroll');
         
         setIsAdmin(isAdminRole);

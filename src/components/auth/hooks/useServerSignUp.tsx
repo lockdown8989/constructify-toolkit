@@ -111,13 +111,7 @@ export const useServerSignUp = ({ onSignUp }: UseServerSignUpProps) => {
         console.log("✅ Registration completed successfully:", registrationResult);
         
         // Show role-specific success message
-        if (userRole === 'admin' && registrationResult.manager_id) {
-          toast({
-            title: "Success! 🎉",
-            description: `Admin account created. Your Administrator ID is ${registrationResult.manager_id}. Share this with employees to connect them to your account.`,
-            duration: 8000,
-          });
-        } else if ((userRole === 'employer' || userRole === 'manager') && registrationResult.manager_id) {
+        if (userRole === 'manager' && registrationResult.manager_id) {
           toast({
             title: "Success! 🎉",
             description: `Manager account created. Your Manager ID is ${registrationResult.manager_id}. Share this with employees to connect them to your team.`,
