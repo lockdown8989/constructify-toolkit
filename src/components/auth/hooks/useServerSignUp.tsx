@@ -74,19 +74,8 @@ export const useServerSignUp = ({ onSignUp }: UseServerSignUpProps) => {
         return;
       }
 
-      // Handle email confirmation requirement
-      if (!authResult.user.email_confirmed_at) {
-        toast({
-          title: "Email verification required",
-          description: "Please check your email to verify your account before signing in.",
-        });
-        
-        setIsLoading(false);
-        setTimeout(() => {
-          window.location.href = '/auth';
-        }, 3000);
-        return;
-      }
+      // Proceed to complete registration immediately (email verification may still be required for login)
+      // We still send the verification email via redirect option above, but we finish profile/role setup now.
 
       // User is confirmed - complete registration with server function
       console.log(`✅ Auth user created: ${authResult.user.id}, completing registration...`);

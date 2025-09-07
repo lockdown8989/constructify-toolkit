@@ -208,6 +208,34 @@ export default function Billing() {
     }
   };
 
+  // Quick fix: if a user signed up as manager but role wasn't persisted, allow claiming manager role
+  const handleClaimManager = async () => {
+    setIsLoading('claim');
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) throw new Error('User not authenticated');
+      const firstName = (user.user_metadata?.first_name as string) || user.email.split('@')[0] || 'Manager';
+      const lastName = (user.user_metadata?.last_name as string) || '';
+
+      const { error } = await supabase.rpc('complete_user_registration', {
+        p_user_id: user.id,
+        p_email: user.email,
+        p_first_name: firstName,
+        p_last_name: lastName,
+        p_user_role: 'manager',
+        p_manager_id: null
+      });
+      if (error) throw error;
+      toast({ description: 'Manager role activated. Reloading...' });
+      setTimeout(() => window.location.reload(), 800);
+    } catch (e: any) {
+      console.error('Claim manager error', e);
+      toast({ description: e.message || 'Could not activate manager role' });
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
   const subtitle = useMemo(() => {
     if (subscribed) {
       const end = subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString() : '';
@@ -332,9 +360,15 @@ export default function Billing() {
           Manage subscription
         </Button>
         {subscribed === false && !isManager && (
-          <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-            <X className="h-4 w-4" /> Your organization needs an active subscription. Ask your manager to subscribe.
-          </div>
+          <>
+            <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+              <X className="h-4 w-4" /> Your organization needs an active subscription. Ask your manager to subscribe.
+            </div>
+            <Button variant="secondary" onClick={handleClaimManager} disabled={isLoading !== null}>
+              {isLoading === 'claim' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              I'm the manager – fix my access
+            </Button>
+          </>
         )}
       </aside>
     </div>
