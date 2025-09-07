@@ -123,7 +123,7 @@ export const SignUpForm = ({ onSignUp }: SignUpFormProps) => {
             disabled={false}
           />
           
-          {userRole === "admin" && (
+          {userRole === "manager" && (
             <ManagerIdInput 
               managerId={managerId}
               onGenerateManagerId={generateManagerId}

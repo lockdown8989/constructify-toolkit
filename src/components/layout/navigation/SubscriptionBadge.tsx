@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 const SubscriptionBadge = () => {
-  const { subscribed, subscriptionTier, isAdmin } = useAuth();
+  const { subscribed, subscriptionTier, isManager } = useAuth();
   const navigate = useNavigate();
 
   const handleManageClick = async () => {
@@ -14,8 +14,8 @@ const SubscriptionBadge = () => {
       navigate('/billing');
       return;
     }
-    if (!isAdmin) {
-      toast({ description: 'Only administrators can manage billing' });
+    if (!isManager) {
+      toast({ description: 'Only managers can manage billing' });
       return;
     }
     try {

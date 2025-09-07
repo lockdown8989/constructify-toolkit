@@ -30,7 +30,7 @@ const plans = [
 type Interval = 'month' | 'year';
 
 export default function Billing() {
-  const { user, isAdmin, subscribed, subscriptionTier, subscriptionEnd, refreshSubscription } = useAuth();
+  const { user, isManager, subscribed, subscriptionTier, subscriptionEnd, refreshSubscription } = useAuth();
   const [interval, setInterval] = useState<Interval>('month');
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const [customSelections, setCustomSelections] = useState<string[]>([]);
@@ -80,9 +80,9 @@ export default function Billing() {
       return;
     }
     
-    if (!isAdmin) {
-      console.warn('❌ User is not admin:', { isAdmin });
-      toast({ description: 'Only administrators can start a subscription' });
+    if (!isManager) {
+      console.warn('❌ User is not manager:', { isManager });
+      toast({ description: 'Only managers can start a subscription' });
       return;
     }
     
@@ -306,12 +306,12 @@ export default function Billing() {
                     <Button
                       className="w-full"
                       onClick={() => handleSubscribe(p.id)}
-                      disabled={isLoading !== null || !isAdmin}
+                      disabled={isLoading !== null || !isManager}
                     >
                       {isLoading === p.id ? (
                         <span className="inline-flex items-center"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</span>
                       ) : (
-                        <span>{isAdmin ? 'Subscribe now' : 'Admin required'}</span>
+                        <span>{isManager ? 'Subscribe now' : 'Manager required'}</span>
                       )}
                     </Button>
                   )}
@@ -319,7 +319,7 @@ export default function Billing() {
               )}
 
               <div className="text-xs text-muted-foreground">
-                {p.id !== 'custom' ? 'Cancel anytime. Only the admin is charged; team inherits access.' : 'Let’s tailor features and pricing for your org.'}
+                {p.id !== 'custom' ? 'Cancel anytime. Only the manager is charged; team inherits access.' : 'Let’s tailor features and pricing for your org.'}
               </div>
             </CardContent>
           </Card>
@@ -331,9 +331,9 @@ export default function Billing() {
           {isLoading === 'manage' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Manage subscription
         </Button>
-        {subscribed === false && !isAdmin && (
+        {subscribed === false && !isManager && (
           <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-            <X className="h-4 w-4" /> Your organization needs an active subscription. Ask your admin to subscribe.
+            <X className="h-4 w-4" /> Your organization needs an active subscription. Ask your manager to subscribe.
           </div>
         )}
       </aside>
