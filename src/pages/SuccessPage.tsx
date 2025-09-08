@@ -5,22 +5,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { CheckCircle, ArrowRight, Zap, Users, Calendar, DollarSign } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '@/hooks/use-auth';
-import { useSubscription } from '@/hooks/subscription/useSubscription';
 import { toast } from 'sonner';
 
 const SuccessPage: React.FC = () => {
   const { user } = useAuth();
-  const subscription = useSubscription();
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
     if (sessionId && user) {
-      // Refresh subscription status after successful payment
-      subscription.checkSubscription();
-      toast.success('Payment successful! Welcome to TeamPulse Pro! 🎉');
+      toast.success('Welcome to TeamPulse! 🎉');
     }
-  }, [sessionId, user, subscription.checkSubscription]);
+  }, [sessionId, user]);
 
   const features = [
     {
@@ -64,11 +60,11 @@ const SuccessPage: React.FC = () => {
             <h1 className="text-4xl md:text-5xl font-bold">
               Welcome to{' '}
               <span className="bg-gradient-to-r from-primary via-teampulse-accent to-primary bg-clip-text text-transparent">
-                TeamPulse Pro!
+                TeamPulse!
               </span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Your payment was successful and your subscription is now active. 
+              Thank you for choosing TeamPulse. 
               Get ready to transform your workforce management!
             </p>
           </div>
@@ -116,36 +112,6 @@ const SuccessPage: React.FC = () => {
               </Link>
             </Button>
           </div>
-
-          {/* Subscription Info */}
-          {subscription.subscribed && (
-            <Card className="bg-gradient-to-br from-primary/5 to-teampulse-accent/5 border-primary/20">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-teampulse-success" />
-                  Subscription Active
-                </CardTitle>
-                <CardDescription>
-                  You're on the <strong>{subscription.subscription_tier}</strong> plan
-                  {subscription.subscription_end && (
-                    <span className="block mt-1">
-                      Next billing: {new Date(subscription.subscription_end).toLocaleDateString()}
-                    </span>
-                  )}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={subscription.openCustomerPortal}
-                  className="w-full"
-                >
-                  Manage Subscription
-                </Button>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Support */}
           <div className="text-center pt-8 border-t">

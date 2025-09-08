@@ -7,44 +7,15 @@ import { Clock, CalendarDays, UserCheck, DollarSign, FileText, ChevronDown, User
 import { Helmet } from 'react-helmet-async';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
-import { useSubscription } from '@/hooks/subscription/useSubscription';
 const LandingPage: React.FC = () => {
   const {
     user,
     isManager
   } = useAuth();
-  const subscription = useSubscription();
   const isAuthenticated = !!user;
   const isMobile = useIsMobile();
   const [yearly, setYearly] = React.useState(false);
   
-  const handleStripe = () => {
-    if (isAuthenticated) {
-      subscription.createCheckout();
-    } else {
-      toast.info('Please sign in to subscribe to our services.', {
-        duration: 3500,
-        action: {
-          label: 'Sign In',
-          onClick: () => window.location.href = '/auth'
-        }
-      });
-    }
-  };
-  
-  const handleOneTimePayment = () => {
-    if (isAuthenticated) {
-      subscription.createCheckout(undefined, 'payment');
-    } else {
-      toast.info('Please sign in to make a purchase.', {
-        duration: 3500,
-        action: {
-          label: 'Sign In',
-          onClick: () => window.location.href = '/auth'
-        }
-      });
-    }
-  };
   const handleAppDownload = (platform: 'ios' | 'android') => {
     if (platform === 'android') {
       toast.info('To get the TeamPulse APK, please follow the setup instructions below.', {
@@ -830,9 +801,11 @@ const LandingPage: React.FC = () => {
                           </li>)}
                       </ul>
                     </div>
-                    <Button className={`w-full ${plan.popular ? 'bg-gradient-to-r from-primary via-teampulse-accent to-primary shadow-lg hover:shadow-xl transform hover:scale-105' : 'hover:bg-primary hover:scale-105'} transition-all duration-300`} onClick={handleStripe}>
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      {plan.popular ? 'Start Pro Trial' : 'Get Started'}
+                    <Button asChild className={`w-full ${plan.popular ? 'bg-gradient-to-r from-primary via-teampulse-accent to-primary shadow-lg hover:shadow-xl transform hover:scale-105' : 'hover:bg-primary hover:scale-105'} transition-all duration-300`}>
+                      <Link to="/auth?tab=signup">
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        {plan.popular ? 'Start Pro Trial' : 'Get Started'}
+                      </Link>
                     </Button>
                   </CardContent>
                 </Card>;
@@ -899,9 +872,11 @@ const LandingPage: React.FC = () => {
             <Button asChild size="sm">
               <Link to="/auth?tab=signup">Get Started</Link>
             </Button>
-            <Button variant="outline" size="sm" onClick={handleOneTimePayment} className="bg-gradient-to-r from-teampulse-accent to-primary text-primary-foreground border-0 hover:shadow-lg hover:scale-105 transition-all">
-              <Zap className="w-4 h-4 mr-1" />
-              Setup
+            <Button asChild variant="outline" size="sm" className="bg-gradient-to-r from-teampulse-accent to-primary text-primary-foreground border-0 hover:shadow-lg hover:scale-105 transition-all">
+              <Link to="/auth?tab=signup">
+                <Zap className="w-4 h-4 mr-1" />
+                Setup
+              </Link>
             </Button>
           </div>
         </div>}

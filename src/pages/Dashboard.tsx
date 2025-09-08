@@ -9,7 +9,7 @@ import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard';
 import ManagerDashboard from '@/components/dashboard/ManagerDashboard';
 import PayrollDashboard from '@/components/dashboard/PayrollDashboard';
 import DashboardErrorBoundary from '@/components/dashboard/ErrorBoundary';
-import SubscriptionGate from '@/components/subscription/SubscriptionGate';
+
 import { Loader2 } from 'lucide-react';
 import { useMobileDebugger } from '@/hooks/useMobileDebugger';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -147,32 +147,30 @@ const Dashboard = () => {
   });
 
   return (
-    <SubscriptionGate>
-      <DashboardErrorBoundary>
-        <Tabs defaultValue="dashboard">
-          <TabsContent value="dashboard" className={`pt-16 md:pt-20 ${isMobile ? 'px-2 pb-20' : 'px-4 sm:px-6 pb-10'} animate-fade-in`}>
-            <DashboardErrorBoundary>
-              {dashboardType === 'payroll' ? (
-                <PayrollDashboard 
-                  firstName={firstName}
-                  employeeCount={employeeCount}
-                  hiredCount={interviews.filter(i => i.stage === 'Hired').length}
-                />
-              ) : dashboardType === 'manager' ? (
-                <ManagerDashboard 
-                  firstName={firstName}
-                  employeeCount={employeeCount}
-                  hiredCount={interviews.filter(i => i.stage === 'Hired').length}
-                  interviewStats={interviewStats}
-                />
-              ) : (
-                <EmployeeDashboard firstName={firstName} />
-              )}
-            </DashboardErrorBoundary>
-          </TabsContent>
-        </Tabs>
-      </DashboardErrorBoundary>
-    </SubscriptionGate>
+    <DashboardErrorBoundary>
+      <Tabs defaultValue="dashboard">
+        <TabsContent value="dashboard" className={`pt-16 md:pt-20 ${isMobile ? 'px-2 pb-20' : 'px-4 sm:px-6 pb-10'} animate-fade-in`}>
+          <DashboardErrorBoundary>
+            {dashboardType === 'payroll' ? (
+              <PayrollDashboard 
+                firstName={firstName}
+                employeeCount={employeeCount}
+                hiredCount={interviews.filter(i => i.stage === 'Hired').length}
+              />
+            ) : dashboardType === 'manager' ? (
+              <ManagerDashboard 
+                firstName={firstName}
+                employeeCount={employeeCount}
+                hiredCount={interviews.filter(i => i.stage === 'Hired').length}
+                interviewStats={interviewStats}
+              />
+            ) : (
+              <EmployeeDashboard firstName={firstName} />
+            )}
+          </DashboardErrorBoundary>
+        </TabsContent>
+      </Tabs>
+    </DashboardErrorBoundary>
   );
 };
 

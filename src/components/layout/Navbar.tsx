@@ -6,7 +6,7 @@ import MobileNav from "./navigation/MobileNav"
 import UserMenu from "./navigation/UserMenu"
 import AuthButtons from "./navigation/AuthButtons"
 import ThemeToggle from "./navigation/ThemeToggle"
-import SubscriptionBadge from "./navigation/SubscriptionBadge"
+
 
 const Navbar = () => {
   const { user } = useAuth()
@@ -22,9 +22,6 @@ const Navbar = () => {
         
         {/* Push all the right side elements to the end */}
         <div className="ml-auto flex items-center space-x-2">
-          {/* Add subscription badge */}
-          {isAuthenticated && <SubscriptionBadge />}
-          
           {/* Add notification bell before user account menu */}
           {isAuthenticated && <NotificationBell />}
           
