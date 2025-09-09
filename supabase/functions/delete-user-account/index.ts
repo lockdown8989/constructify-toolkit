@@ -1,92 +1,130 @@
-
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
   }
-  
+
   try {
-    // Create a Supabase client with the service role key for admin operations
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-    
-    // Get user auth from the request
-    const authHeader = req.headers.get('Authorization');
+
+    // Get user from auth header
+    const authHeader = req.headers.get('authorization');
     if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: 'No authorization header' }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: 'Authorization required' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     }
-    
-    // Get current user
+
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (userError || !user) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error('Authentication failed:', authError);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized', details: userError?.message }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     }
+
+    // Rate limiting: Check recent deletion attempts
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     
-    console.log("Deleting user:", user.id);
-    
-    // Use the database function for safe user data deletion
-    try {
-      const { data: deletionResult, error: deletionError } = await supabaseAdmin
-        .rpc('safe_delete_user_data', { target_user_id: user.id });
-      
-      if (deletionError) {
-        console.error("Error in safe_delete_user_data:", deletionError);
-        return new Response(
-          JSON.stringify({ error: 'Failed to delete user data', details: deletionError.message }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      
-      console.log("User data deletion result:", deletionResult);
-    } catch (error) {
-      console.error("Exception during user data deletion:", error);
-      // Continue with auth deletion even if data deletion fails partially
+    const { data: recentAttempts } = await supabase
+      .from('auth_events')
+      .select('id')
+      .eq('email', user.email)
+      .eq('event_type', 'account_deletion_attempt')
+      .gte('created_at', fiveMinutesAgo);
+
+    if (recentAttempts && recentAttempts.length >= 3) {
+      console.log(`Account deletion rate limit exceeded for user: ${user.id}`);
+      return new Response(
+        JSON.stringify({ error: 'Too many deletion attempts. Please try again later.' }),
+        { 
+          status: 429, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
-    
-    // Delete the user from auth.users using admin API
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
-    
+
+    // Log the deletion attempt
+    await supabase
+      .from('auth_events')
+      .insert({
+        event_type: 'account_deletion_attempt',
+        email: user.email || '',
+        additional_data: { 
+          user_id: user.id,
+          ip: req.headers.get('cf-connecting-ip') || 'unknown' 
+        }
+      });
+
+    // Call the secure deletion function
+    const { data: deleteResult, error: deleteError } = await supabase
+      .rpc('safe_delete_user_data', { target_user_id: user.id });
+
     if (deleteError) {
-      console.error("Error deleting user:", deleteError);
+      console.error('User data deletion failed:', deleteError);
       return new Response(
-        JSON.stringify({ error: 'Failed to delete user', details: deleteError.message }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: 'Failed to delete user data' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     }
-    
+
+    // Delete the auth user
+    const { error: authDeleteError } = await supabase.auth.admin.deleteUser(user.id);
+
+    if (authDeleteError) {
+      console.error('Auth user deletion failed:', authDeleteError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to delete user account' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    console.log(`User account deleted successfully: ${user.id}`);
     return new Response(
-      JSON.stringify({ success: true, message: 'User and all associated data deleted successfully' }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ 
+        message: 'Account deleted successfully',
+        deletionDetails: deleteResult 
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
-  } catch (error) {
-    console.error("Error in delete-user-account function:", error);
+
+  } catch (error: any) {
+    console.error('Unexpected error during account deletion:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal error', details: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: 'Internal server error' }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
   }
 });
