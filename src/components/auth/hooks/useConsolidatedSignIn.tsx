@@ -226,11 +226,12 @@ export const useConsolidatedSignIn = () => {
 
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth?mode=recovery`,
+      const { data, error } = await supabase.functions.invoke('send-password-reset', {
+        body: { email: email.toLowerCase().trim() }
       });
-
+      
       if (error) {
+        console.error('Password reset error:', error);
         setErrorMessage("Failed to send password reset email: " + error.message);
       } else {
         toast({
