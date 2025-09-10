@@ -99,25 +99,19 @@ export const useServerSignUp = ({ onSignUp }: UseServerSignUpProps) => {
       } else if (registrationResult?.success) {
         console.log("✅ Registration completed successfully:", registrationResult);
         
-        // Handle manager subscription requirement
+        // Handle manager account creation
         if (userRole === 'manager') {
           if (registrationResult.manager_id) {
             toast({
               title: "Manager Account Created! 🎉",
-              description: `Your Manager ID is ${registrationResult.manager_id}. You'll need to subscribe to activate your team's access.`,
+              description: `Your Manager ID is ${registrationResult.manager_id}. You can now start managing your team.`,
               duration: 10000,
             });
-            
-            // For managers, redirect to subscription flow instead of dashboard
-            setTimeout(() => {
-              window.location.href = '/subscription-required';
-            }, 2000);
-            return;
           }
         } else if ((userRole === 'employee' || userRole === 'payroll') && managerId) {
           toast({
             title: "Success! 🎉",
-            description: `Account created and linked to manager with ID ${managerId}. You'll have access once your manager subscribes.`,
+            description: `Account created and linked to manager with ID ${managerId}.`,
           });
         } else {
           toast({

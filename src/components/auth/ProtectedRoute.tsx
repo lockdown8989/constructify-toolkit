@@ -14,7 +14,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRole, 
   requiredRoles 
 }) => {
-  const { user, isLoading, isAdmin, isHR, isManager, isEmployee, isPayroll, subscribed } = useAuth();
+  const { user, isLoading, isAdmin, isHR, isManager, isEmployee, isPayroll } = useAuth();
   const location = useLocation();
 
   console.log('ProtectedRoute check:', {
@@ -33,31 +33,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-if (!user) {
-  console.log('No user, redirecting to auth');
-  return <Navigate to="/auth" replace />;
-}
-
-// Org subscription gating: 
-// - Subscribed users get full access
-// - Unsubscribed: managers can access billing and dashboard, non-managers redirected to billing
-const isBillingPath = location.pathname.startsWith('/billing');
-const isDashboardPath = location.pathname.startsWith('/dashboard');
-
-if (subscribed === false && !isBillingPath) {
-  if (isManager) {
-    // Managers can access dashboard to manage billing, otherwise redirect non-essential pages to dashboard
-    if (!isDashboardPath) {
-      return <Navigate to="/dashboard" replace />;
-    }
-  } else {
-    // Non-managers must wait for subscription - redirect to billing
-    return <Navigate to="/billing" replace />;
+  if (!user) {
+    console.log('No user, redirecting to auth');
+    return <Navigate to="/auth" replace />;
   }
-} else if (subscribed === true) {
-  // Subscribed users get full access to all routes - no restrictions
-  console.log('✅ User has active subscription - full access granted');
-}
 
   // Check single required role
   if (requiredRole) {

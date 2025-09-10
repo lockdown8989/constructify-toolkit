@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthContextType, UserRole } from './types';
@@ -9,7 +8,6 @@ import { useAuthDebugger } from './useAuthDebugger';
 import { useAuthMonitoring } from './useAuthMonitoring';
 import { SessionTimeoutWarning } from '@/components/auth/SessionTimeoutWarning';
 import { ErrorBoundary } from '@/components/auth/ErrorBoundary';
-import { toast } from '@/hooks/use-toast';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -27,13 +25,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Use auth monitoring for realtime updates
   useAuthMonitoring(user);
 
-  // Subscription state (org-level)
-  const [subscribed, setSubscribed] = useState<boolean | undefined>(undefined);
-  const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
-  const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
-  const [subscriptionIsTrial, setSubscriptionIsTrial] = useState<boolean>(false);
-  const [subscriptionTrialEnd, setSubscriptionTrialEnd] = useState<string | null>(null);
-  const subscriptionChannelRef = useRef<any>(null);
   console.log("🔐 AuthProvider roles state:", {
     isAdmin,
     isHR, 
@@ -47,115 +38,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Use auth actions hook
   const authActions = useAuthActions();
 
-// Add debugging hook
-useAuthDebugger({ user, session, isLoading });
-
-// Refresh org subscription status
-const refreshSubscription = async () => {
-  try {
-    console.log('🔄 Starting subscription refresh...');
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) {
-      console.warn('❌ No active session for subscription check');
-      setSubscribed(false);
-      return;
-    }
-
-    // 1) Primary: invoke edge function via supabase client
-    let data: any | null = null;
-    let invokeError: any | null = null;
-    try {
-      const resp = await supabase.functions.invoke('check-subscription', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      data = resp.data;
-      invokeError = resp.error ?? null;
-    } catch (err) {
-      invokeError = err;
-    }
-
-    // 2) Fallback: direct fetch to edge function URL (handles rare invoke routing issues)
-    if ((!data || invokeError) && typeof fetch !== 'undefined') {
-      console.warn('⚠️ Falling back to direct fetch for check-subscription...', invokeError?.message || invokeError);
-      try {
-        const resp = await fetch('https://fphmujxruswmvlwceodl.supabase.co/functions/v1/check-subscription', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwaG11anhydXN3bXZsd2Nlb2RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIyMDc5NjcsImV4cCI6MjA1Nzc4Mzk2N30.NCTLZVRuiaEopQi0uWdEFn_7noYoEnTvF2CqqD7S-y4',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({}),
-        });
-        if (resp.ok) {
-          data = await resp.json();
-        } else {
-          console.error('❌ Direct fetch failed for check-subscription', resp.status);
-        }
-      } catch (err) {
-        console.error('❌ Direct fetch exception for check-subscription', err);
-      }
-    }
-
-    // 3) Last-resort fallback: read from subscribers table if available
-    if (!data) {
-      try {
-        const { data: subRow } = await supabase
-          .from('subscribers')
-          .select('subscribed, subscription_tier, subscription_end, subscription_is_trial, subscription_trial_end')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
-        if (subRow) data = subRow as any;
-      } catch {}
-    }
-
-    // Handle missing subscription data gracefully - don't block dashboard loading
-    if (!data) {
-      console.warn('⚠️ No subscription data received, using defaults');
-      // Set default values for free usage
-      setSubscribed(false);
-      setSubscriptionTier(null);
-      setSubscriptionEnd(null);
-      setSubscriptionIsTrial(false);
-      setSubscriptionTrialEnd(null);
-      return;
-    }
-
-    console.log('✅ Subscription data received:', data);
-    const wasTrial = subscriptionIsTrial;
-    const nowSubscribed = !!data?.subscribed;
-    const nowIsTrial = !!data?.subscription_is_trial;
-
-    // Normalize Stripe tier to app plan keys
-    const normalizedTier = (() => {
-      const t = (data?.subscription_tier as string | null)?.toLowerCase();
-      if (!t) return null;
-      if (t === 'premium' || t === 'pro') return 'pro';
-      if (t === 'enterprise' || t === 'custom') return 'custom';
-      return t;
-    })();
-
-    setSubscribed(nowSubscribed);
-    setSubscriptionTier(normalizedTier);
-    setSubscriptionEnd(data?.subscription_end ?? null);
-    setSubscriptionIsTrial(nowIsTrial);
-    setSubscriptionTrialEnd(data?.subscription_trial_end ?? null);
-    if (wasTrial && !nowIsTrial && nowSubscribed) {
-      toast({ description: 'Your free trial has ended. Your current plan has started.' });
-    }
-
-    // Cross-tab subscription sync: notify other tabs/windows
-    try { localStorage.setItem('subscription-updated', String(Date.now())); } catch {}
-    try { const bc = new BroadcastChannel('subscription'); bc.postMessage({ type: 'updated' }); bc.close(); } catch {}
-    // Realtime broadcast to other connected users
-    try { subscriptionChannelRef.current?.send({ type: 'broadcast', event: 'updated', payload: { ts: Date.now(), subscribed: nowSubscribed, tier: normalizedTier } }); } catch {}
-  } catch (e) {
-    console.error('❌ Subscription check failed:', e);
-    setSubscribed(false);
-    setSubscriptionTier(null);
-    setSubscriptionEnd(null);
-  }
-};
+  // Add debugging hook
+  useAuthDebugger({ user, session, isLoading });
 
   useEffect(() => {
     let mounted = true;
@@ -201,15 +85,13 @@ const refreshSubscription = async () => {
         }
         
         // For INITIAL_SESSION and SIGNED_IN events - only update if we have a session
-if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
-  console.log(`🔄 ${event} event - updating session state`);
-  setSession(session);
-  setUser(session.user);
-  setIsLoading(false);
-  // Defer subscription check to avoid deadlocks
-  setTimeout(() => { refreshSubscription(); }, 0);
-  return;
-}
+        if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
+          console.log(`🔄 ${event} event - updating session state`);
+          setSession(session);
+          setUser(session.user);
+          setIsLoading(false);
+          return;
+        }
         
         // For INITIAL_SESSION with no session, only clear if we don't already have a session
         if (event === 'INITIAL_SESSION' && !session) {
@@ -279,93 +161,19 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
     }
   }, [user, session]);
 
-  // Handle Stripe checkout return globally
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const status = params.get('status');
-    if (status === 'success') {
-      toast({ description: 'Payment successful! Updating subscription...' });
-      // Immediate refresh + short polling to handle Stripe processing latency
-      refreshSubscription();
-      let attempts = 0;
-      const maxAttempts = 6; // ~12s total
-      const interval = setInterval(() => {
-        attempts += 1;
-        refreshSubscription();
-        if (attempts >= maxAttempts) clearInterval(interval);
-      }, 2000);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (status === 'canceled') {
-      toast({ description: 'Payment canceled.' });
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, [refreshSubscription]);
-
-  // Listen for subscription updates from other tabs/windows
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'subscription-updated') {
-        refreshSubscription();
-      }
-    };
-    window.addEventListener('storage', onStorage);
-    let bc: BroadcastChannel | null = null;
-    try {
-      bc = new BroadcastChannel('subscription');
-      bc.onmessage = () => refreshSubscription();
-    } catch {}
-    return () => {
-      window.removeEventListener('storage', onStorage);
-      try { bc?.close(); } catch {}
-    };
-  }, [refreshSubscription]);
-
-  // Realtime listener for subscription updates from other users
-  useEffect(() => {
-    const channel = supabase
-      .channel('subscription_broadcast', { config: { broadcast: { self: false } } })
-      .on('broadcast', { event: 'updated' }, () => {
-        // When any client broadcasts a subscription update, re-check status
-        refreshSubscription();
-      });
-
-    const subscribe = async () => {
-      try {
-        const status = await channel.subscribe();
-        console.log('📡 Subscription broadcast channel status:', status);
-        subscriptionChannelRef.current = channel;
-      } catch (err) {
-        console.warn('⚠️ Failed to subscribe to subscription broadcast channel', err);
-      }
-    };
-    subscribe();
-
-    return () => {
-      try { if (subscriptionChannelRef.current) supabase.removeChannel(subscriptionChannelRef.current); } catch {}
-      subscriptionChannelRef.current = null;
-    };
-  }, [refreshSubscription]);
-
-const value: AuthContextType = {
-  user,
-  session,
-  isLoading,
-  isAdmin,
-  isHR,
-  isManager,
-  isEmployee,
-  isPayroll,
-  rolesLoaded,
-  isAuthenticated: !!session?.user,
-  // Subscription
-  subscribed,
-  subscriptionTier,
-  subscriptionEnd,
-  subscriptionIsTrial,
-  subscriptionTrialEnd,
-  refreshSubscription,
-  ...authActions, // This includes signIn, signUp, resetPassword, updatePassword, signOut, deleteAccount
-};
+  const value: AuthContextType = {
+    user,
+    session,
+    isLoading,
+    isAdmin,
+    isHR,
+    isManager,
+    isEmployee,
+    isPayroll,
+    rolesLoaded,
+    isAuthenticated: !!session?.user,
+    ...authActions, // This includes signIn, signUp, resetPassword, updatePassword, signOut, deleteAccount
+  };
 
   return (
     <ErrorBoundary>
