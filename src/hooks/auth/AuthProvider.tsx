@@ -109,7 +109,17 @@ const refreshSubscription = async () => {
       } catch {}
     }
 
-    if (!data) throw new Error('No subscription data received');
+    // Handle missing subscription data gracefully - don't block dashboard loading
+    if (!data) {
+      console.warn('⚠️ No subscription data received, using defaults');
+      // Set default values for free usage
+      setSubscribed(false);
+      setSubscriptionTier(null);
+      setSubscriptionEnd(null);
+      setSubscriptionIsTrial(false);
+      setSubscriptionTrialEnd(null);
+      return;
+    }
 
     console.log('✅ Subscription data received:', data);
     const wasTrial = subscriptionIsTrial;
