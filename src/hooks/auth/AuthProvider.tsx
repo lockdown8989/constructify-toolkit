@@ -260,17 +260,14 @@ if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session) {
     };
   }, []);
 
-  // Update loading state - ensure auth persists regardless of role loading
+  // Optimized loading state - reduce auth loading time
   useEffect(() => {
-    // If we have a user, they should stay authenticated regardless of role loading status
-    if (user) {
-      console.log('📝 User authenticated, setting loading to false regardless of roles');
-      setIsLoading(false);
-    } else if (!user) {
-      console.log('📝 No user, setting loading to false');
+    // Set loading to false as soon as we have user state determined
+    if (user || session !== undefined) {
+      console.log('📝 Auth state determined, stopping loading');
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, session]);
 
   // Handle Stripe checkout return globally
   useEffect(() => {

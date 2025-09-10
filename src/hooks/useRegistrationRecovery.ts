@@ -85,8 +85,8 @@ export const useRegistrationRecovery = () => {
       }
     };
 
-    // Run recovery check after a short delay to allow auth to settle
-    const timer = setTimeout(checkAndRecoverRegistration, 2000);
+    // Run recovery check with reduced delay to speed up dashboard loading
+    const timer = setTimeout(checkAndRecoverRegistration, 500);
     return () => clearTimeout(timer);
   }, [user, rolesLoaded, isRecovering, toast]);
 

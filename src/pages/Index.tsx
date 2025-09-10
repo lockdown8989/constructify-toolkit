@@ -5,6 +5,7 @@ import Dashboard from "./Dashboard";
 import { useMobileDebugger } from "@/hooks/useMobileDebugger";
 import { MobileAuthErrorBoundary } from "@/components/auth/MobileAuthErrorBoundary";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AuthLoadingOptimizer } from "@/components/auth/AuthLoadingOptimizer";
 import { Loader2 } from "lucide-react";
 
 const Index = () => {
@@ -42,9 +43,11 @@ const Index = () => {
   if (user) {
     console.log('✅ User authenticated, showing Dashboard');
     return (
-      <MobileAuthErrorBoundary>
-        <Dashboard />
-      </MobileAuthErrorBoundary>
+      <AuthLoadingOptimizer>
+        <MobileAuthErrorBoundary>
+          <Dashboard />
+        </MobileAuthErrorBoundary>
+      </AuthLoadingOptimizer>
     );
   }
 

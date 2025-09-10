@@ -56,6 +56,13 @@ const Dashboard = () => {
     // 4. Manager -> Manager Dashboard
     // 5. Payroll Administrator -> Payroll Dashboard
     // 6. Employee -> Employee Dashboard
+    
+    // If roles aren't loaded yet, default to employee to avoid errors
+    if (!rolesLoaded) {
+      console.log("🎯 Roles not loaded yet, defaulting to Employee Dashboard");
+      return 'employee';
+    }
+    
     if (isAdmin || isHR || isManager) {
       console.log("🎯 Routing to Manager Dashboard for:", { isAdmin, isHR, isManager });
       return 'manager';
@@ -90,29 +97,26 @@ const Dashboard = () => {
     }
   }, [user, isManager, isAdmin, isHR, isPayroll, isEmployee, rolesLoaded, dashboardType, isMobile]);
   
-  // Enhanced loading state with role information
-  if (authLoading || !rolesLoaded || !user || isRecovering) {
+  // Optimized loading state - only wait for essential auth data
+  if (authLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
         <div className="text-center max-w-md mx-auto">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
           <p className="text-gray-600 text-sm sm:text-base">
-            {!user ? 'Authenticating...' : 
-             isRecovering ? 'Setting up your account profile...' :
-             !rolesLoaded ? 'Loading your account permissions...' : 
-             'Preparing your dashboard...'}
+            {!user ? 'Authenticating...' : 'Preparing your dashboard...'}
           </p>
           {isMobile && (
             <p className="text-xs text-gray-400 mt-2">Mobile view optimized</p>
           )}
-          {user && !rolesLoaded && (
-            <p className="text-xs text-gray-500 mt-2">
-              Setting up {user.email?.split('@')[0] || 'your'} dashboard...
-            </p>
-          )}
         </div>
       </div>
     );
+  }
+
+  // Show recovery message but don't block dashboard
+  if (isRecovering) {
+    console.log('🔄 Registration recovery in progress, but showing dashboard');
   }
 
   // Count employees excluding the manager themselves (for manager/payroll dashboards)
