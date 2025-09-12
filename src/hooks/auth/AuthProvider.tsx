@@ -17,7 +17,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   // Use the roles hook
-  const { isAdmin, isHR, isManager, isPayroll, rolesLoaded } = useRoles(user);
+  const { isAdmin: baseIsAdmin, isHR, isManager, isPayroll, rolesLoaded } = useRoles(user);
+  
+  // Ensure managers have administrator access
+  const isAdmin = baseIsAdmin || isManager;
   
   // Employee is anyone who is authenticated but doesn't have other roles - Enhanced logic
   const isEmployee = !!user && rolesLoaded && !isAdmin && !isHR && !isManager && !isPayroll;

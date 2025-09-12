@@ -78,9 +78,10 @@ export const useRoles = (user: User | null) => {
           }
         }
 
-        const isAdminRole = false; // Deprecated
-        const isHRRole = false; // Deprecated  
-        const isManagerRole = userRoles.includes('manager');
+        // Map database roles to UI roles
+        const isAdminRole = userRoles.includes('admin');
+        const isHRRole = userRoles.includes('hr');
+        const isManagerRole = userRoles.includes('manager') || userRoles.includes('employer'); // Map 'employer' to manager
         const isPayrollRole = userRoles.includes('payroll');
         
         setIsAdmin(isAdminRole);

@@ -43,7 +43,7 @@ export const mapUIRoleToDBRole = (uiRole: UserRole): string => {
     case "employer":
       return "employer";
     case "manager":
-      return "manager";
+      return "employer"; // Map manager UI role to employer DB role
     case "employee":
     default:
       return "employee";
