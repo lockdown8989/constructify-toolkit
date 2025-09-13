@@ -56,14 +56,19 @@ export const ChatWidget = () => {
   // Get current user role
   useEffect(() => {
     const fetchUserRole = async () => {
-      const { data: roles } = await supabase
+      const { data: roleRow, error: roleErr } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
-      if (roles) {
-        setCurrentUserRole(roles.role);
+      if (roleErr) {
+        console.warn('ChatWidget: role lookup returned no/ambiguous rows; defaulting to employee', roleErr);
+      }
+      if (roleRow?.role) {
+        setCurrentUserRole(roleRow.role);
+      } else {
+        setCurrentUserRole('employee');
       }
     };
     
@@ -78,14 +83,14 @@ export const ChatWidget = () => {
 
     const setupPresence = async () => {
       // Get current user info first
-      const { data: employee } = await supabase
+      const { data: employee, error: empErr } = await supabase
         .from('employees')
         .select('id, name, avatar_url')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (!employee) {
-        console.log('ChatWidget: No employee found for user');
+      if (empErr || !employee) {
+        console.log('ChatWidget: No employee found for user; skipping presence setup', empErr);
         return;
       }
 
@@ -225,11 +230,11 @@ export const ChatWidget = () => {
   useEffect(() => {
     if (user && currentUserRole) {
       const updatePresence = async () => {
-        const { data: employee } = await supabase
+        const { data: employee, error: empErr } = await supabase
           .from('employees')
           .select('id, name, avatar_url')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (employee) {
           const { error } = await supabase.rpc('upsert_user_presence', {
@@ -373,11 +378,11 @@ export const ChatWidget = () => {
                 setSelectedUser(connectedUser);
                 setChatMode('human');
                 // Get employee ID for the selected user
-                const { data: employee } = await supabase
+                const { data: employee, error: empErr } = await supabase
                   .from('employees')
                   .select('id')
                   .eq('user_id', connectedUser.id)
-                  .single();
+                  .maybeSingle();
                   
                 console.log('ChatWidget: Found employee for user:', employee);
                 if (employee) {

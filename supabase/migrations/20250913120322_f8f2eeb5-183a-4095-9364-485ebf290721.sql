@@ -1,0 +1,22 @@
+-- Create employee record with default values
+INSERT INTO public.employees (
+  user_id,
+  name,
+  email,
+  job_title,
+  department,
+  site,
+  salary
+)
+SELECT 
+  'c684afbf-9856-4b6e-a240-1c9073d03d26',
+  'Manager User',
+  'd0bl3@abv.bg',
+  'Manager',
+  'Management',  
+  'Head Office',
+  50000
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.employees 
+  WHERE user_id = 'c684afbf-9856-4b6e-a240-1c9073d03d26'
+);
